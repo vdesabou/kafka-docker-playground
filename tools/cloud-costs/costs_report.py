@@ -13,6 +13,8 @@ still billing flagged), per environment and line type (ccloud) or resource group
   azure   Cost Management query, grouped by ServiceName and ResourceId (resources tagged cflt_managed_id=<user>)
 
 A month without file, or with a file that cannot be read, is shown as "no data" (the query failed).
+
+--range-file (ccloud): report of playground ccloud-costs, one range of dates instead of the months of --data-dir.
 """
 
 import argparse
@@ -498,6 +500,33 @@ def s3_section(months: List[dict], buckets: Optional[List[dict]], user: str) -> 
                                              "".join(parts)) + "</div>"
 
 
+def still_billing(records: List[dict]) -> set:
+    """ccloud: the resources with a cost on each of the last 3 days with data (not a connector of a short run that day)"""
+    last_day = max((r["day"] for r in records), default="")
+    if not last_day:
+        return set()
+    recent_days = {(date.fromisoformat(last_day) - timedelta(days=i)).isoformat() for i in range(3)}
+    billed_days: Dict[str, set] = defaultdict(set)
+    for r in records:
+        if r["day"] in recent_days and r["amount"] > 0:
+            billed_days[r["item_id"] or r["item"]].add(r["day"])
+    return {k for k, d in billed_days.items() if d == recent_days}
+
+
+def still_billing_card(records: List[dict], billing_now: set) -> str:
+    last_day = max(r["day"] for r in records)
+    last_cost = sum_by([r for r in records if r["day"] == last_day], lambda r: r["item_id"] or r["item"])
+    info = {}
+    for r in records:
+        info.setdefault(r["item_id"] or r["item"], r)
+    rows = [[e(info[k]["item"]), f"<span class='mono' style='word-break:normal;white-space:nowrap'>{e(info[k]['item_id'])}</span>",
+             e(info[k]["category"]), e(info[k]["group"]), money(last_cost.get(k, 0)), money(30 * last_cost.get(k, 0))]
+            for k in sorted(billing_now, key=lambda k: -last_cost.get(k, 0))][:30]
+    return rh.card(f"🔥 {len(billing_now)} resource{'s' if len(billing_now) > 1 else ''} still billing <span class='muted'>(billed on each of the last 3 days with data, "
+                   f"most expensive first)</span>",
+                   rh.table(["Resource", "Id", "Product", "Environment", f"Cost on {e(last_day)}", "≈ per month"], rows, num=(4, 5)))
+
+
 def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict]] = None) -> str:
     lab = LABELS[cloud]
     today = date.today()
@@ -524,15 +553,9 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
 
     # ccloud: still billing = a cost on each of the last 3 days with data (not a connector of a short run that day)
     # azure (monthly data): billed in the current period; aws: usage types are not resources, nothing flagged
-    last_day = max((r["day"] for r in records), default="")
     billing_now = set()
-    if cloud == "ccloud" and last_day:
-        recent_days = {(date.fromisoformat(last_day) - timedelta(days=i)).isoformat() for i in range(3)}
-        billed_days: Dict[str, set] = defaultdict(set)
-        for r in records:
-            if r["day"] in recent_days and r["amount"] > 0:
-                billed_days[r["item_id"] or r["item"]].add(r["day"])
-        billing_now = {k for k, d in billed_days.items() if d == recent_days}
+    if cloud == "ccloud":
+        billing_now = still_billing(records)
     elif cloud == "azure":
         billing_now = {r["item_id"] or r["item"] for r in (current["records"] if current else []) if r["amount"] > 0}
     billing_badge = "still billing" if cloud == "ccloud" else "billed this period"
@@ -615,16 +638,7 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
             body.append(s3_section(months, buckets, user))
 
         if cloud == "ccloud" and billing_now:
-            last_cost = sum_by([r for r in records if r["day"] == last_day], lambda r: r["item_id"] or r["item"])
-            info = {}
-            for r in records:
-                info.setdefault(r["item_id"] or r["item"], r)
-            rows = [[e(info[k]["item"]), f"<span class='mono' style='word-break:normal;white-space:nowrap'>{e(info[k]['item_id'])}</span>",
-                     e(info[k]["category"]), e(info[k]["group"]), money(last_cost.get(k, 0)), money(30 * last_cost.get(k, 0))]
-                    for k in sorted(billing_now, key=lambda k: -last_cost.get(k, 0))][:30]
-            body.append(rh.card(f"🔥 {len(billing_now)} resource{'s' if len(billing_now) > 1 else ''} still billing <span class='muted'>(billed on each of the last 3 days with data, "
-                                f"most expensive first)</span>",
-                                rh.table(["Resource", "Id", "Product", "Environment", f"Cost on {e(last_day)}", "≈ per month"], rows, num=(4, 5))))
+            body.append(still_billing_card(records, billing_now))
 
         # top items
         items: Dict[str, dict] = {}
@@ -712,13 +726,154 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
                    f"playground {'ccloud-costs-history' if cloud == 'ccloud' else 'cloud-resources ' + cloud + ' costs-history'}")
 
 
+def build_range(user: str, period: dict) -> str:
+    """ccloud, one range of dates (playground ccloud-costs): per day, product, environment, resource and line type"""
+    lab = LABELS["ccloud"]
+    records = period["records"]
+    total = sum(r["amount"] for r in records)
+    daily = sum_by(records, "day")
+    start, end = date.fromisoformat(period["start"]), date.fromisoformat(period["end"])
+    # the end date is exclusive
+    days = [(start + timedelta(days=i)).isoformat() for i in range(max(1, (end - start).days))]
+    with_data = [d for d in days if d in daily]
+    per_day = total / len(with_data) if with_data else 0.0
+    by_category = ranked(sum_by(records, "category"))
+    by_group = ranked(sum_by(records, "group"))
+    billing_now = still_billing(records)
+    billing_daily = sum(r["amount"] for r in records if r["day"] == max(daily, default="") and (r["item_id"] or r["item"]) in billing_now)
+
+    body = []
+    if not period["ok"]:
+        body.append(rh.verdict_html("warn", "⚠️ The cost data could not be read."))
+    elif not records:
+        body.append(rh.verdict_html("ok", f"✅ No {lab['name']} cost from {range_label(period)}."))
+    elif billing_now:
+        body.append(rh.verdict_html("warn", f"⚠️ {money(total)} from {range_label(period)}, {money(per_day)} per day on average: "
+                                            f"{len(billing_now)} resource{'s' if len(billing_now) > 1 else ''} still billing "
+                                            f"{money(billing_daily)} a day, check them below."))
+    else:
+        body.append(rh.verdict_html("ok", f"✅ {money(total)} from {range_label(period)}, {money(per_day)} per day on average, "
+                                          "nothing billed on each of the last 3 days."))
+
+    cards = [
+        rh.kpi("Total", money(total), range_label(period)),
+        rh.kpi("Days with data", f"{len(with_data)} / {len(days)}", "the last days can be incomplete"),
+        rh.kpi("Per day", money(per_day), "average over the days with data"),
+        rh.kpi("≈ per month", money(30 * per_day), "at this pace"),
+        rh.kpi(f"Top {lab['category']}", money(by_category[0][1]) if by_category else "-",
+               f"{by_category[0][0]} ({100 * by_category[0][1] / total:.0f}%)" if by_category and total else ""),
+        rh.kpi("Resources still billing", str(len(billing_now)), "billed on each of the last 3 days with data",
+               "warn" if billing_now else "ok"),
+    ]
+    discount = sum(r["discount"] for r in records)
+    if discount:
+        cards.append(rh.kpi("Discounts", money(abs(discount)), "already deducted"))
+    body.append(rh.kpis_html(cards))
+
+    if records:
+        body.append(rh.charts_grid([
+            ("📆 Cost per day", svg_columns(
+                [(datetime.strptime(d, "%Y-%m-%d").strftime("%b %d"), daily.get(d, 0.0), d, True) for d in days])),
+            (f"👛 Cost per {lab['category']}", rh.svg_hbars([(k, v, f"{k}: {money(v)}") for k, v in by_category[:15]], money)),
+            ("🌍 Cost per environment", rh.svg_hbars([(k or "(none)", v, f"{k}: {money(v)}") for k, v in by_group[:15]], money)),
+        ]))
+
+        if billing_now:
+            body.append(still_billing_card(records, billing_now))
+
+        # top resources
+        items: Dict[str, dict] = {}
+        for r in records:
+            it = items.setdefault(r["item_id"] or r["item"], {"item": r["item"], "item_id": r["item_id"], "category": r["category"],
+                                                              "group": r["group"], "details": set(), "total": 0.0, "days": set()})
+            it["total"] += r["amount"]
+            if r["detail"]:
+                it["details"].add(r["detail"])
+            if r["amount"] > 0:
+                it["days"].add(r["day"])
+        top = sorted((it for it in items.values() if round(it["total"], 4) != 0), key=lambda it: -it["total"])
+
+        def item_row(it: dict, with_category: bool = True) -> List[str]:
+            key = it["item_id"] or it["item"]
+            row = [e(it["item"]) + (" " + rh.badge("still billing", "warn") if key in billing_now else ""),
+                   f"<span class='mono' style='word-break:normal;white-space:nowrap'>{e(it['item_id'])}</span>"]
+            if with_category:
+                row.append(e(it["category"]))
+            days_billed = sorted(it["days"])
+            row += [e(it["group"]), f"<span class='mono'>{e(', '.join(sorted(it['details'])))}</span>", str(len(days_billed)),
+                    f"<span style='white-space:nowrap'>{e(days_billed[0] if days_billed else '-')}</span>",
+                    f"<span style='white-space:nowrap'>{e(days_billed[-1] if days_billed else '-')}</span>",
+                    money(it["total"]), f"{100 * it['total'] / total:.1f}%" if total else "-"]
+            return row
+
+        tail = ["Environment", "Line types", "Days billed", "First billed", "Last billed", "Total", "Share"]
+        headers = ["Resource", "Id", lab["category"].capitalize()] + tail
+        body.append(rh.card(f"🔝 Top {min(30, len(top))} {lab['items']} <span class='muted'>(of {len(top)})</span>",
+                            rh.table(headers, [item_row(it) for it in top[:30]], num=tuple(range(len(headers) - 4, len(headers))))))
+
+        # the resources of each product, like the text output
+        details = []
+        for c, v in by_category:
+            rows = [item_row(it, False) for it in top if it["category"] == c]
+            headers = ["Resource", "Id"] + tail
+            details.append(f"<details><summary><b>{e(c)}</b>: {money(v)} <span class='muted'>({100 * v / total:.1f}%, "
+                           f"{len(rows)} {lab['item'] if len(rows) == 1 else lab['items']})</span></summary>"
+                           + rh.table(headers, rows, num=tuple(range(len(headers) - 4, len(headers)))) + "</details>")
+        body.append(rh.card(f"🔍 {lab['items'].capitalize()} per {lab['category']}", "".join(details)))
+
+        # product x environment matrix
+        groups = [k for k, _ in by_group]
+        per_cat = {c: sum_by([r for r in records if r["category"] == c], "group") for c, _ in by_category}
+        mx = max((v for pc in per_cat.values() for v in pc.values()), default=0)
+        rows = [[e(c)] + [f"<span{heat(per_cat[c].get(g, 0), mx)}>{money(per_cat[c][g])}</span>" if round(per_cat[c].get(g, 0), 4)
+                          else "<span class='muted'>-</span>" for g in groups] + [f"<b>{money(v)}</b>"] for c, v in by_category]
+        rows.append(["<b>Total</b>"] + [f"<b>{money(v)}</b>" for _, v in by_group] + [f"<b>{money(total)}</b>"])
+        body.append(rh.card(f"🗂️ {lab['categories'].capitalize()} per environment",
+                            rh.table([lab["category"].capitalize()] + [e(g or "(none)") for g in groups] + ["Total"], rows,
+                                     num=tuple(range(1, len(groups) + 2)))))
+
+        lines = sum_by(records, lambda r: (r["category"], r["detail"]))
+        rows = [[e(c), f"<span class='mono'>{e(d)}</span>", money(v), f"{100 * v / total:.1f}%" if total else "-"]
+                for (c, d), v in sorted(lines.items(), key=lambda kv: -kv[1]) if round(v, 4) != 0][:30]
+        body.append(rh.card("🧾 Cost per line type", rh.table(["Product", "Line type", "Total", "Share"], rows, num=(2, 3))))
+
+    notes = [DELAY_NOTE["ccloud"],
+             "Costs of the whole organization the confluent CLI is logged into (confluent billing cost list), amounts after discounts.",
+             "The end date is excluded. One month is the maximum window, the start date can go back one year.",
+             "Cost per month over the last year: playground ccloud-costs-history."]
+    body.append(rh.card("💡 Notes", "<ul style='margin-left:18px;font-size:.86rem'>" + "".join(f"<li>{e(n)}</li>" for n in notes) + "</ul>"))
+
+    css = ("<style>.kpi-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.kpi-value{font-size:1.4rem;white-space:nowrap}"
+           "td .heat{display:block;margin:-7px -11px;padding:7px 11px}</style>")
+    return rh.page(f"{lab['name']} costs", f"💰 {e(lab['name'])} costs, {e(range_label(period))}",
+                   [f"☁️ {e(lab['name'])}", f"🗓️ {e(range_label(period))}"], css + "".join(body),
+                   f"playground ccloud-costs --start-date {period['start']} --end-date {period['end']}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cloud", required=True, choices=sorted(PARSERS))
-    ap.add_argument("--data-dir", required=True)
+    ap.add_argument("--data-dir")
     ap.add_argument("--user", default=os.environ.get("USER", ""))
     ap.add_argument("--html-out", required=True)
+    ap.add_argument("--range-file", help="ccloud only: report of this one range of dates (<start date>_<end date>.json) "
+                                         "instead of the months of --data-dir")
     a = ap.parse_args()
+    if a.range_file:
+        m = FILE_RE.match(os.path.basename(a.range_file))
+        if a.cloud != "ccloud" or not m:
+            ap.error("--range-file: ccloud only, file named <start date>_<end date>.json")
+        period = {"start": m.group(1), "end": m.group(2), "ok": True, "records": []}
+        try:
+            with open(a.range_file, encoding="utf-8") as fh:
+                period["records"] = parse_ccloud(json.load(fh), period)
+        except (OSError, ValueError):
+            period["ok"] = False
+        with open(a.html_out, "w", encoding="utf-8") as fh:
+            fh.write(build_range(a.user, period))
+        return 0
+    if not a.data_dir:
+        ap.error("--data-dir or --range-file is required")
     months = fill_missing_months(load_months(a.cloud, a.data_dir))
     # aws: the S3 buckets tagged cflt_managed_id=<user>, saved by costs-history (None: not listed)
     buckets = None

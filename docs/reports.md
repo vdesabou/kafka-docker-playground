@@ -148,7 +148,8 @@ report and click around: this is what you get on your own data.
       <h3><a href="#/playground%20ccloud-costs-history">💰 Cloud costs</a></h3>
       <p>What did the playground cost, and what is still billing? Cost per month and per day, per product, environment and line type, the resources still billing with a monthly estimate (a connector left behind…), and the details of each month. Same report for the AWS (see below) and Azure resources of the playground. This one uses dummy data.</p>
       <p><code>playground ccloud-costs-history</code> (also linked at the end of <code>playground run</code> of a ccloud, AWS or Azure example)</p>
-      <p>Try it: <code>playground ccloud-costs-history --sample ccloud_dummy</code></p>
+      <p>One range of dates instead of the last year: <code>playground ccloud-costs --start-date &lt;yyyy-mm-dd&gt; --end-date &lt;yyyy-mm-dd&gt;</code> (cost per day, the resources of each product, the product x environment matrix)</p>
+      <p>Try it: <code>playground ccloud-costs-history --sample ccloud_dummy</code>, <code>playground ccloud-costs --sample ccloud_dummy</code></p>
     </div>
   </div>
   <div class="report-card">

@@ -1719,6 +1719,8 @@ commands:
     One month is the maximum window between start and end dates
 
     For accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.
+
+    🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day, per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
   flags:
     - long: --start-date
       arg: start_date
@@ -1741,6 +1743,25 @@ commands:
       help: |-
         💰 display only total cost
     - *raw-output-file
+    - *cloud-costs-output-dir
+    - *cloud-costs-no-open
+    - long: --no-report
+      private: true
+      help: |-
+        🚫 Do not write the HTML report (used by ccloud-costs-history --detailed)
+    - long: --sample
+      short: -s
+      required: false
+      arg: sample
+      allowed: [ccloud_dummy]
+      help: |-
+        🧪 Sample of tools/cloud-costs/samples: writes the HTML report from the last month of this dummy billing data, without calling Confluent Cloud
+
+        To see what the report looks like before running it on your organization.
+  examples:
+    - playground ccloud-costs
+    - playground ccloud-costs --start-date 2026-09-01 --end-date 2026-10-01
+    - playground ccloud-costs --sample ccloud_dummy
 
 - name: ccloud-costs-history
   dependencies:

@@ -72,7 +72,7 @@ while true; do
         display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
         if [[ -n "$detailed" ]]
         then
-            playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" 
+            playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --no-report
         fi
         break
     fi
@@ -83,7 +83,7 @@ while true; do
 
     if [[ -n "$detailed" ]]
     then
-        playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" 
+        playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --no-report
     fi
 
     # Move to the next range

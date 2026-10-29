@@ -3926,7 +3926,7 @@ playground_cloud_resources_azure_costs_history_usage() {
 playground_ccloud_costs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ccloud-costs\n\n"
-    printf "  💰  Retrieve ccloud costs for a range of dates\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  Cost data can take up to 72 hours to become available.\n  \n  Start date can reach a maximum of one year into the past\n  \n  One month is the maximum window between start and end dates\n  \n  For accuracy, Confluent recommends using a start_date that is at least 72\n  hours prior to the current date and time.\n\n"
+    printf "  💰  Retrieve ccloud costs for a range of dates\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  Cost data can take up to 72 hours to become available.\n  \n  Start date can reach a maximum of one year into the past\n  \n  One month is the maximum window between start and end dates\n  \n  For accuracy, Confluent recommends using a start_date that is at least 72\n  hours prior to the current date and time.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per day, per\n  product and environment, the resources still billing, the top resources, the\n  resources of each product, the product x environment matrix and the cost per\n  line type.\n\n"
   else
     printf "playground ccloud-costs - 💰  Retrieve ccloud costs for a range of dates\n\n"
   fi
@@ -3966,10 +3966,40 @@ playground_ccloud_costs_usage() {
       echo
 
     fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default:\n    /tmp/playground-cloud-costs)\n"
+    printf "    %s\n" "Default: /tmp/playground-cloud-costs"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🚫 Do not open the HTML report in the browser\n"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-report")"
+      printf "    🚫 Do not write the HTML report (used by ccloud-costs-history --detailed)\n"
+      echo
+
+    fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sample, -s SAMPLE")"
+    printf "    🧪 Sample of tools/cloud-costs/samples: writes the HTML report from the last\n    month of this dummy billing data, without calling Confluent Cloud\n    \n    To see what the report looks like before running it on your organization.\n"
+    printf "    %s\n" "Allowed: ccloud_dummy"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ccloud-costs\n"
+    printf "  playground ccloud-costs --start-date 2026-09-01 --end-date 2026-10-01\n"
+    printf "  playground ccloud-costs --sample ccloud_dummy\n"
     echo
 
   fi
@@ -21920,6 +21950,29 @@ function write_cloud_costs_report() {
     open_html_report "$report" "$no_open"
 }
 
+# HTML report of playground ccloud-costs: one range of dates
+# $1: raw response of confluent billing cost list, named <start date>_<end date>.json, $2: output dir, $3: non-empty for --no-open, $4: user
+function write_ccloud_costs_range_report() {
+    local range_file="$1"
+    local output_dir="$2"
+    local no_open="$3"
+    local user="$4"
+    if ! command -v python3 > /dev/null 2>&1
+    then
+        logwarn "⚠️ python3 is not on PATH: no HTML report"
+        return 0
+    fi
+    mkdir -p "$output_dir"
+    output_dir=$(cd "$output_dir" && pwd)
+    local report="$output_dir/ccloud-costs-$(basename "$range_file" .json)-$(date '+%Y%m%d-%H%M%S').html"
+    if ! python3 -I "$root_folder/tools/cloud-costs/costs_report.py" --cloud ccloud --range-file "$range_file" --user "$user" --html-out "$report"
+    then
+        logerror "❌ could not write the HTML report"
+        return 1
+    fi
+    open_html_report "$report" "$no_open"
+}
+
 # Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
 # HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
@@ -36170,6 +36223,19 @@ playground_ccloud_costs_command() {
   end_date="${args[--end-date]}"
   display_only_total_cost="${args[--display-only-total-cost]}"
   raw_output_file="${args[--raw-output-file]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
+  no_report="${args[--no-report]}"
+  sample="${args[--sample]}"
+
+  if [[ -n "$sample" ]]
+  then
+      # last month of the dummy billing data, in the same format as the file saved below
+      sample_file=$(ls "$root_folder/tools/cloud-costs/samples/$sample/"*_*.json | sort | tail -1)
+      log "🧪 writing the HTML report from the dummy billing data of tools/cloud-costs/samples/$sample/$(basename "$sample_file")"
+      write_ccloud_costs_range_report "$sample_file" "$output_dir" "$no_open" "${USER}"
+      exit $?
+  fi
 
   if [[ ! -n "$start_date" ]]
   then
@@ -36229,7 +36295,8 @@ playground_ccloud_costs_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
-  INPUT_FILE="$tmp_dir/out.json"
+  # named <start date>_<end date>.json for the HTML report
+  INPUT_FILE="$tmp_dir/${start_date}_${end_date}.json"
 
   if [[ ! -n "$display_only_total_cost" ]]
   then
@@ -36320,6 +36387,11 @@ playground_ccloud_costs_command() {
   log "👛 environment costs"
   display_histogram "$tmp_dir/environment_costs.txt"
 
+  if [[ ! -n "$no_report" ]]
+  then
+      write_ccloud_costs_range_report "$INPUT_FILE" "$output_dir" "$no_open" "${USER}"
+  fi
+
 }
 
 # :command.function
@@ -36400,8 +36472,7 @@ playground_ccloud_costs_history_command() {
           display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
           if [[ -n "$detailed" ]]
           then
-              playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date"
-
+              playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --no-report
           fi
           break
       fi
@@ -36412,8 +36483,7 @@ playground_ccloud_costs_history_command() {
 
       if [[ -n "$detailed" ]]
       then
-          playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date"
-
+          playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --no-report
       fi
 
       # Move to the next range
@@ -75063,6 +75133,50 @@ playground_ccloud_costs_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-report)
+
+        # :flag.case_no_arg
+        args['--no-report']=1
+        shift
+        ;;
+
+      # :flag.case
+      --sample | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--sample']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--sample requires an argument: --sample, -s SAMPLE" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -75092,6 +75206,9 @@ playground_ccloud_costs_parse_requirements() {
     esac
   done
 
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-cloud-costs"
+
   # :command.validations
   # :flag.validations
   if [[ -v args['--start-date'] ]]; then
@@ -75109,6 +75226,12 @@ playground_ccloud_costs_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--end-date END_DATE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--sample']:-} ]] && [[ ! ${args['--sample']:-} =~ ^(ccloud_dummy)$ ]]; then
+    printf "%s\n" "--sample must be one of: ccloud_dummy" >&2
+    exit 1
   fi
 
 }
@@ -108822,6 +108945,35 @@ playground_ccloud_costs_completion() {
         completion_blocked_flags["--end-date"]=1
 
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
+      --sample | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ccloud_dummy"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--sample"]=1
+
+        ;;
       *)
         return
         ;;
@@ -108832,6 +108984,9 @@ playground_ccloud_costs_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --start-date "$completion_current" --start-date
     completion_flag_candidates --end-date "$completion_current" --end-date
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --sample "$completion_current" --sample -s
   fi
 
 }

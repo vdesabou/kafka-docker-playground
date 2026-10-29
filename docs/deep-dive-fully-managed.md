@@ -160,7 +160,7 @@ Gotchas:
 
 ```bash
 playground ccloud-costs-history                 # total per month since last year (--detailed for the lines) + HTML report
-playground ccloud-costs --start-date 2026-10-01 --end-date 2026-10-23
+playground ccloud-costs --start-date 2026-10-01 --end-date 2026-10-23   # one range of dates (one month max) + HTML report
 playground connector delete --connector DatagenSource_$USER
 playground stop                                 # in the example folder: maybe_delete_ccloud_environment
 playground cleanup-cloud-resources              # resources left behind by examples (buckets, functions, connectors…)
@@ -169,6 +169,9 @@ playground cleanup-cloud-resources              # resources left behind by examp
 Gotchas:
 
 - **Costs show up after up to 72 hours**: `ccloud-costs` of today is not the bill of today.
+- **`ccloud-costs` writes an HTML report of the range** in the same folder (same flags, `--sample ccloud_dummy`): cost per
+  day, per product and environment, the resources still billing, the top resources with the days they were billed, the
+  resources of each product, the product x environment matrix and the cost per line type.
 - **`ccloud-costs-history` also writes an HTML report** in `/tmp/playground-cloud-costs` (`--output-dir`, `--no-open`): cost
   per month and per day, per product, environment and line type, the resources still billing (a cost on each of the last 3
   days with data, with a monthly estimate) and the details of each month. `playground run` of a `ccloud` example prints its
@@ -266,7 +269,7 @@ playground stop                                                              # d
 | "we deploy with Terraform" | `create-or-update --terraform`: the same JSON becomes `connector.tf` (🏗️ session) |
 | "which version of the connector runs in Confluent Cloud?" | `connector-plugin sourcecode -c confluentinc/<Type> --only-show-url` (employees, see the [connector plugins deep dive](/deep-dive-connector-plugin.md)) |
 | "the example uses the wrong cluster" | `playground cleanup-cloud-details`, then export `CLUSTER_NAME`… or `CLUSTER_CLOUD` / `CLUSTER_REGION` |
-| "how much did that test cost?" | `playground ccloud-costs-history --detailed` (72 h delay), its HTML report for the resources still billing |
+| "how much did that test cost?" | `playground ccloud-costs --start-date <day before> --end-date <day after>` (72 h delay), its HTML report for the resources billed that day and the ones still billing; `ccloud-costs-history` for the trend |
 
 ---
 

@@ -2,6 +2,19 @@ start_date="${args[--start-date]}"
 end_date="${args[--end-date]}"
 display_only_total_cost="${args[--display-only-total-cost]}"
 raw_output_file="${args[--raw-output-file]}"
+output_dir="${args[--output-dir]}"
+no_open="${args[--no-open]}"
+no_report="${args[--no-report]}"
+sample="${args[--sample]}"
+
+if [[ -n "$sample" ]]
+then
+    # last month of the dummy billing data, in the same format as the file saved below
+    sample_file=$(ls "$root_folder/tools/cloud-costs/samples/$sample/"*_*.json | sort | tail -1)
+    log "🧪 writing the HTML report from the dummy billing data of tools/cloud-costs/samples/$sample/$(basename "$sample_file")"
+    write_ccloud_costs_range_report "$sample_file" "$output_dir" "$no_open" "${USER}"
+    exit $?
+fi
 
 if [[ ! -n "$start_date" ]]
 then
@@ -61,7 +74,8 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 
-INPUT_FILE="$tmp_dir/out.json"
+# named <start date>_<end date>.json for the HTML report
+INPUT_FILE="$tmp_dir/${start_date}_${end_date}.json"
 
 if [[ ! -n "$display_only_total_cost" ]]
 then
@@ -151,3 +165,8 @@ awk '{sum[$1] += $2} END {for (env in sum) print env, sum[env]}' | sort -k2 -nr 
 
 log "👛 environment costs"
 display_histogram "$tmp_dir/environment_costs.txt"
+
+if [[ ! -n "$no_report" ]]
+then
+    write_ccloud_costs_range_report "$INPUT_FILE" "$output_dir" "$no_open" "${USER}"
+fi

@@ -9,6 +9,7 @@ XStream connector forgotten since Oct 10 that is still billing ($86.40 a day).
 
 ```bash
 playground ccloud-costs-history --sample ccloud_dummy
+playground ccloud-costs --sample ccloud_dummy   # last month only
 ```
 
 It is also the report of the gallery of the documentation (`docs/reports.md`).
