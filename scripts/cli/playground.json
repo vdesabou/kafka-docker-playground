@@ -7215,7 +7215,7 @@
         },
         {
           "name": "restart",
-          "description": "♻️  Restart connector\n\nThe usual way to recover a connector whose tasks are FAILED after you\nfixed the cause. Use --task-id to restart a single failed task and leave\nthe healthy ones alone.",
+          "description": "♻️  Restart connector\n\nThe usual way to recover a connector whose tasks are FAILED after you\nfixed the cause. Use --task-id to restart a single failed task and leave\nthe healthy ones alone, or --only-failed to restart only what is FAILED,\nin every connector when --connector is not set.",
           "usage": "playground connector restart [OPTIONS]",
           "options": [
             {
@@ -7240,7 +7240,88 @@
                 "-t"
               ],
               "argument": "TASK_ID",
-              "description": "🔧 Restart specific task ID only (instead of restarting entire connector)"
+              "description": "🔧 Restart specific task ID only (instead of restarting entire connector)\n\nConflicts with: --only-failed"
+            },
+            {
+              "names": [
+                "--only-failed"
+              ],
+              "argument": "",
+              "description": "🩹 Restart only the connector instances and tasks that are FAILED, and leave the RUNNING ones alone\n\nA connector with nothing FAILED is skipped. Uses the KIP-745 REST call\n(restart?includeTasks=true&onlyFailed=true, CP 7.0+); with older CP\nversions and fully managed connectors, restarts each FAILED task one by one.\n\nConflicts with: --task-id"
+            }
+          ]
+        },
+        {
+          "name": "tasks",
+          "description": "🧵 Show the tasks of a connector: state, worker, config and partitions\n\nAnswers \"why does task 0 get all the tables, partitions or files?\" and\n\"which worker runs which task after a rebalance?\":\n\n  state and worker    of each task (/status), with a per-worker summary\n                      when there are several connect workers\n  task config         the keys whose value differs between the tasks,\n                      or from the connector config: this is how a\n                      connector splits its work (tables of a JDBC\n                      source, task.id, files...). --all-keys for the\n                      whole config of each task\n  partitions          for a sink, the topic partitions assigned to each\n                      task, from its consumer group connect-<connector>\n\n🎓 Tip: 'tasks.max' is a maximum, a source connector can create fewer\ntasks (one JDBC task per table at most).\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting",
+          "usage": "playground connector tasks [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors"
+            },
+            {
+              "names": [
+                "--all-keys"
+              ],
+              "argument": "",
+              "description": "📜 Show the whole config of each task, not only the keys that differ"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON"
+            }
+          ]
+        },
+        {
+          "name": "topics",
+          "description": "📚 Show the topics a connector is using, or reset that list\n\nThe active topics of each connector, as tracked by the worker (KIP-558):\nthe topics a source connector has written to, and the topics a sink\nconnector has consumed from (useful with topics.regex). The list only\ngrows while the connector runs: --reset empties it, and it fills again\nwith the topics used from then on.\n\n🎓 Tip: feed the result to 'playground topic consume --topic <t>' or\n'playground topic dlq inspect'.\n\n⚠️ Self-managed connectors only (CP 5.5+, topic.tracking.enable=true on\nthe worker, the default). --reset also needs\ntopic.tracking.allow.reset=true on the worker (the default).",
+          "usage": "playground connector topics [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors"
+            },
+            {
+              "names": [
+                "--reset"
+              ],
+              "argument": "",
+              "description": "🧹 Empty the list of active topics of the connector (PUT /connectors/<connector>/topics/reset)\n\nConflicts with: --json"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON\n\nConflicts with: --reset"
             }
           ]
         },
