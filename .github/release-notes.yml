@@ -4,3 +4,7 @@ changelog:
     labels: ["enhancement"]
   - title: "🐛 Bugs"
     labels: ["bug"]
+  # "*" drops the ":heart: Contributors" section entirely
+  contributors:
+    exclude:
+      names: ["*"]
