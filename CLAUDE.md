@@ -25,6 +25,7 @@ out of context.
 | "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`, `--json`) | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
 | "what is running right now?" | `playground status` (lists containers, flags exited/restarting ones) | `docker ps`, reading `playground.ini` |
 | "what is the state of the connectors?" | `playground connector status` | curl on the Connect REST API |
+| "is the cluster healthy? (a broker down, under-replicated / under min ISR / offline partitions, KRaft quorum)" | `playground broker health` (exit 1 when not healthy, `--wait-healthy --max-wait 120`, `--json`); `playground broker describe` for brokers, controller, `metadata.version` | `kafka-topics --under-replicated-partitions`, `kafka-metadata-quorum` |
 | "why is this connector not working?" | `playground connector diagnose [--connector <c>]` (status + error digest + lag/offsets + next steps, HTML report in `/tmp/playground-diagnose`, `--no-open`) | `status`, `container logs --errors`, `show-lag`, `offsets get` one by one |
 | "what is in the dead letter queue, and why?" | `playground topic dlq inspect [--topic <dlq> \| --connector <c>]` (records grouped by exception / root cause / original offsets, `--grep`, `--json`, HTML report); then `playground topic dlq replay` (`--to <t>`, `--dry-run`) once fixed | `topic consume` on the DLQ + reading `__connect.errors.*` headers by hand |
 | "is this connector config valid? what differs from the customer's?" | `playground connector validate` (config on stdin, or `--connector <c>` for the running one) / `playground connector diff --connector <c> --file cfg.json` (`--with-connector`, `--defaults`, side-by-side HTML report with the doc of each key) | `curl .../config/validate`, comparing JSON by eye |
@@ -110,7 +111,7 @@ behave like this" question, read the matching page first:
 | thread dumps, heap, GC, flight recorder | `docs/deep-dive-jvm-diagnostics.md` |
 | running examples, versions, update-version | `docs/deep-dive-run-and-versions.md` |
 | slow or broken network | `docs/deep-dive-network-traffic.md` |
-| topics: create, configs, counts | `docs/deep-dive-topic-administration.md` |
+| topics: create, configs, counts; brokers: health, stop / start, transactions | `docs/deep-dive-topic-administration.md` |
 | SASL / SSL / Kerberos / RBAC environments | `docs/deep-dive-secured-environments.md` |
 | two clusters (`mdc-*`), Replicator, MirrorMaker 2, Cluster Linking, offset translation | `docs/deep-dive-replication.md` |
 | Confluent for Kubernetes (`cfk`, `cfk-rbac`), k3d, support bundles | `docs/deep-dive-cfk.md` |
@@ -145,10 +146,14 @@ environments where the raw command only works on `plaintext`.
 | `kafka-consumer-groups --describe` for a connector | `playground connector show-lag` |
 | `kafka-consumer-groups --describe\|--reset-offsets\|--delete` for any other group | `playground consumer-group describe\|reset-offsets\|delete --group <g>` (`--to-earliest`, `--to-datetime`, `--shift-by`…, `--dry-run`) |
 | `sleep N` waiting for a connector to start, or for a source connector to produce | nothing: `playground connector create-or-update` waits for a self-managed connector to be RUNNING by default (strict in examples, warn-only in repro models; `--wait` strict everywhere and for fully managed, `--no-wait` to skip). Otherwise `playground connector wait --connector <c>` (`--state RUNNING\|PAUSED\|STOPPED\|FAILED`, `--max-wait 120`) / `playground topic wait-for-records --topic <t> --min-expected-messages N --max-wait 120` |
-| `kafka-console-producer`, `kafka-avro-console-producer` | `playground topic produce -t <t> --nb-messages N` (+ schema on stdin) |
+| `kafka-console-producer`, `kafka-avro-console-producer`, a transactional Java producer | `playground topic produce -t <t> --nb-messages N` (+ schema on stdin; `--transactional-id <id> --transaction commit\|abort\|open` for records in one transaction) |
 | `kafka-console-consumer` | `playground topic consume --topic <t> --min-expected-messages N --timeout 60` |
 | `kafka-configs --entity-type users\|clients` (client quotas) | `playground quota get\|set\|delete` (`--user`, `--client-id`, `--connector <c>` for its tasks, `--all-users`, `--all-client-ids`) |
 | `kafka-configs --entity-type brokers` (dynamic broker configs) | `playground broker config get\|set\|delete` (`--key <k>`, `--value <v>`, `--broker <id>`, cluster-wide without it; `get --key <k>` shows the value and its source, `--all` every config) |
+| `docker stop broker2`, restarting the brokers one by one | `playground broker stop --broker <id>` (`--kill` for a crash) / `playground broker start --broker <id>` (waits for a healthy cluster) / `playground broker rolling-restart` (`--brokers 3,2,1`, waits for a healthy cluster between brokers); needs `--enable-multiple-brokers`, not on cfk |
+| `kafka-transactions` (open or hanging transactions, a `read_committed` consumer stuck) | `playground broker transactions list\|describe\|describe-producers\|find-hanging\|abort` (`describe-producers --topic <t>` shows the start offset of each open transaction) |
+| `kafka-metadata-quorum`, `kafka-features`, `kafka-broker-api-versions` | `playground broker describe` (`--api-versions --broker <id>`) |
+| `get-jmx-metrics -c broker` to check broker load | `playground broker metrics` (one column per broker: idle ratios, p99, bytes in/out, `--topic <t>`, `--json`) |
 | `kafka-reassign-partitions`, `kafka-leader-election` | `playground topic reassign` (`--replicas 2,3`, `--brokers 1,2,3`, `--throttle`, `--no-wait` / `--verify-only`) / `playground topic elect-leader` (`--leader <broker>` for a controlled leader move, `--unclean`); needs `--enable-multiple-brokers` |
 | `kafka-topics --create\|--list\|--delete\|--describe` | `playground topic create\|list\|delete\|describe` |
 | `GetOffsetShell` / counting records | `playground topic get-number-records --topic <t>` |

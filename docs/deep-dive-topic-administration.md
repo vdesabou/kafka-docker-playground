@@ -3,7 +3,9 @@
 The commands that manage topics themselves, not their records: create a topic with the partitions and configs a
 repro needs, change a config on a live topic, see partitions and overrides, count and measure what a topic holds, wait
 until a connector has written something, and delete topics (with their Schema Registry subjects). The same commands
-work on every environment the playground starts, local or Confluent Cloud. Takes about 15 minutes to read and run.
+work on every environment the playground starts, local or Confluent Cloud. Around them, the `playground broker`
+commands check the health of the cluster, stop, start and restart brokers, inspect transactions and broker metrics
+(local environments). Takes about 20 minutes to read and run.
 
 > [!TIP]
 > 🎬 Short on time? The video session [🪛 A producer gets RecordTooLargeException](/sessions?id=🪛-a-producer-gets-recordtoolargeexception) shows it in 3 minutes: a topic created with the customer's configs, a `max.message.bytes` override that reproduces `RecordTooLargeException`, and the fix.
@@ -18,6 +20,11 @@ work on every environment the playground starts, local or Confluent Cloud. Takes
 | a topic with N partitions and some configs | `playground topic create -t <t> --nb-partitions 3 --config retention.ms=60000` |
 | change a config of a live topic | `playground topic alter -t <t> --add-config max.message.bytes=1000` (`--delete-config <k>` to remove it) |
 | change a config of the live brokers (the default of every topic, threads, throttles) | `playground broker config set --key log.retention.ms --value 60000` (`--broker <id>` for one broker, `get --key <k>` for the value and its source, `delete --key <k>`) |
+| is the cluster healthy? (a broker down, under-replicated, under min ISR or offline partitions, KRaft quorum) | `playground broker health` (`--wait-healthy --max-wait 120`, `--json`; exit 1 when not healthy) |
+| stop a broker (or crash it), start it again, restart them one by one | `playground broker stop --broker 2` (`--kill`) / `playground broker start --broker 2` / `playground broker rolling-restart` (needs `--enable-multiple-brokers`) |
+| open and hanging transactions (a `read_committed` consumer stuck) | `playground broker transactions list\|describe\|describe-producers\|find-hanging\|abort` |
+| brokers, active controller, `metadata.version`, API versions | `playground broker describe` (`--api-versions --broker <id>`) |
+| is the broker the bottleneck? (idle threads, p99 latency, bytes in/out) | `playground broker metrics` (`--topic <t>`, `--json`) |
 | partitions, replicas, ISR and config overrides | `playground topic describe [-t <t>]` |
 | the topics (without or with internal ones) | `playground topic list [--show-internal]` |
 | the topics by disk size | `playground topic list --sort-by-size` / `playground topic get-size [-t <t>]` |
@@ -202,7 +209,64 @@ Gotchas:
 
 ---
 
-## 7. Hands-on lab (≈10 min)
+## 7. The brokers: `broker health`, `stop` / `start`, `rolling-restart`, `transactions`, `describe`, `metrics`
+
+The `playground broker` commands look at the cluster rather than one topic. Like the topic commands, they run the
+Kafka tools next to the broker with the environment's credentials (plaintext, secured environments; `health`,
+`transactions` and `describe` on CFK too), and are not available on Confluent Cloud and `mdc-*` environments.
+
+- **`broker health` is the "is it the cluster?" check.** One digest of the broker containers that are down (stopped,
+  starting, fenced), the partitions that are under-replicated, under `min.insync.replicas` (acks=all producers get
+  `NotEnoughReplicasException`) or without leader, and the KRaft quorum (lag and last caught up time of each node, from
+  `kafka-metadata-quorum describe --replication`). It exits with 1 when something is wrong, so a script can wait for a
+  healthy cluster with `--wait-healthy --max-wait 120`. A topic whose replication factor is lower than
+  `min.insync.replicas` is reported as a ⚠️ warning only: it is a config problem, not a broker one.
+- **`stop`, `start` and `rolling-restart` drive the broker containers.** `stop` is a controlled shutdown (the leaders
+  move first), `stop --kill` a crash: the broker stays registered until its session times out, `health` reports it
+  as stopped right away. `start` waits for the broker to be registered and for the cluster to be healthy again.
+  `rolling-restart` refuses to start on an unhealthy cluster (`--force`), then restarts the brokers one by one and
+  waits for a healthy cluster before the next one. They need several brokers (`playground run
+  --enable-multiple-brokers`: ids 1, 2 and 3) to keep the cluster available, and are not available on CFK. With
+  `--enable-multiple-brokers`, the internal topics of the playground (`connect-offsets`, `__consumer_offsets`…) have one
+  replica: stopping a broker makes some of their partitions unavailable, `health` shows which.
+- **`transactions` wraps `kafka-transactions`.** An open transaction holds the last stable offset (LSO) of its
+  partitions: `read_committed` consumers don't read past it until it commits, aborts or reaches `transaction.timeout.ms`.
+  `describe-producers --topic <t>` shows the start offset of each open transaction (⚠️), `find-hanging` the
+  transactions that their coordinator forgot (they never end on their own; it prints the `abort` command of each), and
+  `abort --topic <t> --partition <p> --start-offset <o>` ends one.
+- **`describe` and `metrics` answer "what is this cluster?" and "is it the bottleneck?".** `describe`: brokers
+  (endpoint, rack, fenced, container), active controller, voters and observers, feature levels (`metadata.version`…),
+  and with `--api-versions` the API versions a broker supports (old clients and `UnsupportedVersionException`).
+  `metrics`: one column per broker with the key JMX metrics (request handler and network processor idle, request queue,
+  produce and fetch p99, bytes in and out, ISR shrinks, failed requests), read with `kafka-jmx` in the broker container.
+
+The example [`other/broker-health-and-transactions`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/broker-health-and-transactions)
+runs all of them on 3 brokers: a crash and a restart, a rolling restart, and an open transaction that blocks
+`read_committed` consumers until it is aborted.
+
+```bash
+playground broker stop --broker 2
+playground broker health; echo "exit=$?"
+# 🩺 Health of the cluster
+# 🖥️ registered brokers: 1,3
+# ❌ broker 2 (container broker2) is not registered: it is stopped (playground broker start --broker 2)
+# ❌ 61 under-replicated partitions
+# TOPIC     PARTITION  LEADER  REPLICAS  ISR
+# orders    0          1       1,2,3     1,3
+# …
+# ❌ cluster is not healthy: brokers down: 2, 61 under-replicated partitions, 57 unavailable
+# exit=1
+playground broker start --broker 2
+# ✅ broker 2 is registered, waiting for its replicas to be back in sync
+# ✅ cluster is healthy, broker 2 started in 11s
+playground broker transactions describe-producers --topic orders
+# PARTITION  PRODUCER_ID  EPOCH  COORDINATOR_EPOCH  LAST_SEQUENCE  LAST_TIMESTAMP  OPEN_TRANSACTION_START_OFFSET
+# 0          7000         0      -1                 692            1793292495687   0 ⚠️
+```
+
+---
+
+## 8. Hands-on lab (≈10 min)
 
 ```bash
 playground start-environment --environment plaintext
@@ -296,13 +360,54 @@ playground topic delete -t lab-nope; echo "exit=$?"
 # exit=0
 ```
 
+**Step 7: dynamic broker config, without restart**
+
+```bash
+playground broker config set --key log.retention.ms --value 60000
+# ⚙️ Setting log.retention.ms=60000 cluster-wide
+# BROKER   VALUE                SOURCE
+# 1        60000                DYNAMIC_DEFAULT_BROKER_CONFIG
+playground broker config set --key broker.id --value 3; echo "exit=$?"
+# … Cannot update these configs dynamically: Set(broker.id)
+# exit=1
+playground broker config delete --key log.retention.ms
+# BROKER   VALUE                SOURCE
+# 1        (not set)            -                     <- log.retention.hours gives the value
+```
+
+**Step 8: the health and the shape of the cluster**
+
+```bash
+playground broker health; echo "exit=$?"
+# 🩺 Health of the cluster
+# ✅ all brokers are registered: 1
+# ✅ no under-replicated partition
+# …
+# 🗳️ KRaft quorum: leader is node …
+# ✅ cluster is healthy
+# exit=0
+playground broker describe
+# 🖥️ Brokers (CP …)
+# ID  ENDPOINT     RACK  FENCED  CONTAINER
+# 1   broker:9092  null  false   broker
+# 🗳️ KRaft
+# 🏷️ Features
+playground broker transactions list --pattern 'lab-.*'
+# 🤷 no transaction found matching the filters
+playground broker metrics
+# 📈 Broker metrics
+# METRIC                       BROKER 1
+# Partitions                   …
+# Under-replicated partitions  0
+```
+
 ```bash
 playground stop
 ```
 
 ---
 
-## 8. Recipes for support repros
+## 9. Recipes for support repros
 
 | Customer symptom | Command |
 | --- | --- |
@@ -317,6 +422,12 @@ playground stop
 | "start the repro from scratch" | `topic delete -t 'repro-.*'` (subjects included), or `--skip-delete-schema` to keep the schema history |
 | "which topics fill the disk?" | `topic list --sort-by-size` |
 | "the client fails / pauses when a partition leader moves (`NOT_LEADER_OR_FOLLOWER`, metadata refresh)" | `playground run --enable-multiple-brokers`, `topic create -t <t> --nb-partitions 3 --replication-factor 3`, then while the client runs: `topic elect-leader -t <t> --partition 0 --leader 2` (a leader change without stopping a broker) |
+| "connector errors, duplicates or a rebalance when a broker goes down" | `playground run --enable-multiple-brokers`, `topic create -t <t> --replication-factor 3`, then while the connector runs: `broker stop --broker 2` (`--kill` for a crash), `broker health`, `broker start --broker 2`; `connector status` and `container logs -c connect --errors` in between |
+| "it only happens during a rolling upgrade / restart of the brokers" | `playground run --enable-multiple-brokers`, start the load, `broker rolling-restart` (one broker at a time, waits for a healthy cluster in between), then compare what the sink received. Example: `other/broker-health-and-transactions` |
+| "the lag of a `read_committed` sink never drains / an exactly-once source is stuck" | `broker transactions describe-producers --topic <t>` (an open transaction holds the LSO: `OPEN_TRANSACTION_START_OFFSET` ⚠️), `broker transactions find-hanging --topic <t>`, then `broker transactions abort --topic <t> --partition <p> --start-offset <o>`. Example: `other/broker-health-and-transactions` |
+| "`NotEnoughReplicasException` with acks=all" | `broker health`: under min ISR partitions, or the ⚠️ of a topic whose replication factor is lower than `min.insync.replicas` (`broker config get --key min.insync.replicas`) |
+| "an old client fails with `UnsupportedVersionException`" | `broker describe --api-versions --broker 1`: the versions of each API the broker supports, and the one the tools' client picks |
+| "is the broker the bottleneck of the connector?" | `broker metrics` (`--topic <t>`) during `connector benchmark`: request handler / network processor idle below 30% ⚠️, request queue size, produce p99 |
 | "something goes wrong during a partition reassignment / a rebalance" | `topic reassign -t <t> --replicas 2,3 --throttle 100000 --no-wait` (slow move: under-replicated partitions while it runs), follow with `--verify-only`; `--brokers 1,2,3` spreads the partitions like a rebalance; then `topic elect-leader -t <t>` (preferred leaders). Example: `other/topic-reassign-and-leader-election` |
 
 In a repro model, create the topics the scenario depends on **before** the producers and connectors, so their
@@ -329,7 +440,7 @@ playground topic produce -t orders --nb-messages 100 --key 'order-%g' --value '{
 
 ---
 
-## 9. Cheat sheet
+## 10. Cheat sheet
 
 ```bash
 playground topic create -t <t> [--nb-partitions N] [--config k=v]... [--replication-factor N] [--verbose]
@@ -348,6 +459,17 @@ playground topic display-consumer-offsets              # follows, ctrl-c
 playground broker config get [--broker <id>] [--key <k> | --all]
 playground broker config set --key <k> --value <v> [--broker <id>]   # cluster-wide without --broker
 playground broker config delete --key <k> [--broker <id>]
+playground broker health [--wait-healthy] [--max-wait 120] [--json]     # exit 1 when not healthy
+playground broker stop --broker <id> [--kill]
+playground broker start --broker <id> [--max-wait 180] [--no-wait]
+playground broker rolling-restart [--brokers 3,2,1] [--max-wait 300] [--force]
+playground broker transactions list [--state Ongoing] [--pattern <regex>]
+playground broker transactions describe --transactional-id <id>
+playground broker transactions describe-producers -t <t> [--partition N]
+playground broker transactions find-hanging [--broker <id> | -t <t> [--partition N]] [--max-transaction-timeout 15]
+playground broker transactions abort -t <t> --partition N --start-offset <o>
+playground broker describe [--api-versions [--broker <id>]]
+playground broker metrics [--broker <id>] [--topic <t>] [--json]
 playground topic tag list|create|delete|add|remove|show|search   # Confluent Cloud
 ```
 
@@ -356,8 +478,11 @@ playground topic tag list|create|delete|add|remove|show|search   # Confluent Clo
 - Internal = starts with `_` or `connect-`.
 - `delete` hard-deletes `<topic>-key` / `<topic>-value`; `--topic` is a regex when no exact match; no match = exit 0.
 - `create` fails on an existing topic; `alter` creates a missing one.
+- `broker stop` / `start` / `rolling-restart` / `metrics` drive the broker containers: not on CFK. `broker health`
+  and `find-hanging` exit 1 when they find a problem.
 - `reassign` / `elect-leader` need several brokers (`--enable-multiple-brokers`: ids 1, 2, 3), not on Confluent Cloud. A reassignment only moves the leader when the old one leaves the replicas: `elect-leader` moves the others.
 - Sources: [`commands/topic/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/topic),
+  [`commands/broker/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/broker),
   [`get-topic-list.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/get-topic-list.sh).
 
 ---

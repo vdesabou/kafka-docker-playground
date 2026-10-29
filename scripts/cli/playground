@@ -151,6 +151,13 @@ playground_usage() {
   printf "  %s   🗑️ Remove client quotas\n" "$(green "quota delete")                              "
   printf "  %s   🖥️ Broker commands\n" "$(green "broker")                                    "
   printf "  %s   ⚙️ Dynamic broker config commands\n" "$(green "broker config")                             "
+  printf "  %s   🩺 Check the health of the cluster\n" "$(green "broker health")                             "
+  printf "  %s   🛑 Stop a broker\n" "$(green "broker stop")                               "
+  printf "  %s   ▶️ Start a broker stopped with 'playground broker stop'\n" "$(green "broker start")                              "
+  printf "  %s   🔄 Restart the brokers one by one, like a rolling upgrade\n" "$(green "broker rolling-restart")                    "
+  printf "  %s   💱 Transaction commands\n" "$(green "broker transactions")                       "
+  printf "  %s   🗺️ Describe the cluster\n" "$(green "broker describe")                           "
+  printf "  %s   📈 Display the key JMX metrics of the brokers\n" "$(green "broker metrics")                            "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
   printf "  %s   🔰 Schema commands\n" "$(green "schema")                                    "
@@ -10892,6 +10899,23 @@ playground_topic_produce_usage() {
       echo
 
     fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--transactional-id TRANSACTIONAL-ID")"
+    printf "    💱 Produce the records in one transaction, with this transactional.id\n    \n    The records are produced as usual (keys, headers, schemas,\n    partitioning) to a hidden staging topic with the same number of\n    partitions, then copied byte for byte to the topic in one\n    transaction, which is committed, aborted or left open\n    (--transaction). With the default subject name strategy, the\n    schemas are registered under the subjects of the topic.\n    \n    Useful to reproduce what read_committed consumers do: an open\n    transaction holds the last stable offset of its partitions.\n    \n    Not available on Confluent Cloud, and not with --nb-messages -1.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--transaction TRANSACTION")"
+    printf "    💱 How the transaction of --transactional-id ends: commit\n    (default), abort, or open (left open, the coordinator aborts it\n    after --transaction-timeout)\n"
+    printf "    %s\n" "Allowed: commit, abort, open"
+    printf "    %s\n" "Default: commit"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--transaction-timeout MS")"
+    printf "    ⏱️ transaction.timeout.ms of the transactional producer, in ms\n    (default 60000): an open transaction is aborted by the coordinator\n    after it. At most transaction.max.timeout.ms of the brokers (15\n    minutes by default)\n"
+    printf "    %s\n" "Default: 60000"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -10900,7 +10924,7 @@ playground_topic_produce_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground topic produce --tombstone --topic a-topic --key mykey\n  \n  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n{\n    \"_meta\": {\n        \"topic\": \"\",\n        \"key\": \"\",\n        \"relationships\": []\n    },\n    \"nested\": {\n        \"phone\": \"faker.phone.imei()\",\n        \"website\": \"faker.internet.domainName()\"\n    },\n    \"id\": \"iteration.index\",\n    \"name\": \"faker.internet.userName()\",\n    \"email\": \"faker.internet.exampleEmail()\",\n    \"phone\": \"faker.phone.imei()\",\n    \"website\": \"faker.internet.domainName()\",\n    \"city\": \"faker.location.city()\",\n    \"company\": \"faker.company.name()\"\n}\nEOF\n  \n  playground topic produce -t topic-datagen-users --nb-messages 10 << 'EOF'\n{\n        \"namespace\": \"ksql\",\n        \"name\": \"users\",\n        \"type\": \"record\",\n        \"fields\": [\n                {\"name\": \"registertime\", \"type\": {\n                    \"type\": \"long\",\n                    \"arg.properties\": {\n                        \"range\": {\n                            \"min\": 1487715775521,\n                            \"max\": 1519273364600\n                        }\n                    }\n                }},\n                {\"name\": \"userid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"User_[1-9]\"\n                    }\n                }},\n                {\"name\": \"regionid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"Region_[1-9]\"\n                    }\n                }},\n                {\"name\": \"gender\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"options\": [\n                            \"MALE\",\n                            \"FEMALE\",\n                            \"OTHER\"\n                        ]\n                    }\n                }}\n        ]\n}\nEOF\n  \n  playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value\n  predefined-schemas/datagen/purchase.avro --derive-value-schema-as JSON\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"default\": null,\n      \"name\": \"address\",\n      \"type\": [\n        \"null\",\n        \"string\"\n      ]\n    },\n    {\n      \"name\": \"last_sale_date\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"name\": \"last_sale_price\",\n      \"type\": {\n        \"logicalType\": \"decimal\",\n        \"precision\": 15,\n        \"scale\": 2,\n        \"type\": \"bytes\"\n      }\n    },\n    {\n      \"name\": \"last_connection\",\n      \"type\": {\n        \"logicalType\": \"date\",\n        \"type\": \"int\"\n      }\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 1 << 'EOF'\nsyntax = \"proto3\";\n\npackage com.github.vdesabou;\n\nmessage Customer {\n    int64 count = 1;\n    string first_name = 2;\n    string last_name = 3;\n    string address = 4;\n}\nEOF\n  \n  playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'\nCREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY COMMENT 'faker.number.int({ min: 1, max: 1000000 })',\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.number.int()',\n    \"price\" int COMMENT 'faker.number.int()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime COMMENT 'faker.date.past().toISOString()'\n);\nEOF\n  \n  playground topic produce -t topic-json --nb-messages 1 --producer-property\n  \"max.request.size=990485760\" < bigjson.json\n  \n  playground topic produce -t topic-string --nb-messages 5000 << 'EOF'\nAd et ut pariatur officia eos.\nNesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet\natque.\nQuidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto\nneque.\nQuibusdam commodi explicabo dolores molestiae qui delectus dolorum fugiat\nmolestiae natus assumenda omnis expedita.\nEt sunt aut architecto suscipit fugiat qui voluptate iure vel doloremque eum\nculpa.\nQui enim facilis eos similique aperiam totam eius et at dolor dolores.\nUt sunt quia qui quia consectetur aut reiciendis.\nModi adipisci iusto aut voluptatem dolores laudantium.\nSequi sint quia quibusdam molestias minus et aliquid voluptatum aliquam.\nRerum aut amet quo possimus nihil velit quisquam ut cumque.\nPariatur ad officiis voluptatibus quia vel corporis ea fugit adipisci porro.\nEOF\n  \n  # key and headers\n  # mykey1 %%g can also be used\n  playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key\n  \"mykey1\" --headers \"header1:value1,header2:value2\" << 'EOF'\n{\"u_name\": \"scissors\", \"u_price\": 2.75, \"u_quantity\": 3}\n{\"u_name\": \"tape\", \"u_price\": 0.99, \"u_quantity\": 10}\n{\"u_name\": \"notebooks\", \"u_price\": 1.99, \"u_quantity\": 5}\nEOF\n  \n  # avro key\n  playground topic produce -t topic-avro-with-key --nb-messages 10 --key '\n  {\n    \"fields\": [\n      {\n        \"name\": \"id\",\n        \"type\": \"long\"\n      }\n    ],\n    \"name\": \"Key\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  ' << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # tombstone\n  playground topic produce -t topic-json-multiple-lines --tombstone --key\n  \"mykey1\"\n  \n  # input file\n  playground topic produce -t topic-avro-example3 < avro-schema.avsc\n  \n  # record-size\n  playground topic produce -t topic-avro-example-big-size --nb-messages 3\n  --record-size 10000000 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # validate\n  playground topic produce -t topic-json-schema-validate --nb-messages 3\n  --validate << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    },\n    \"holiday\": {\n      \"oneOf\": [\n        {\n          \"title\": \"Not included\",\n          \"type\": \"null\"\n        },\n        {}\n      ]\n    },\n    \"f2\": {}\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  #  --value-subject-name-strategy\n  playground topic produce -t topic-avro-example-value-subject-name-strategy\n  --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy <<\n  'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --generate-only\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 10 \n  --generate-only << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --forced-value\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 1\n  --forced-value '{\"count\":4,\"first_name\":\"Vincent\",\"last_name\":\"de\n  Saboulin\",\"address\":\"xxx\",\"createdDate\":1697852606000,\"warranty_expiration\":{\"int\":19653}}'\n  << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --derive-value-schema-as\n  playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF\n  --derive-key-schema-as PROTOBUF --key '{\"id\": \"1\"}' << 'EOF'\n{\"name\": \"Foo\", \"Age\": {\"int\": 12}}\nEOF\n"
+    printf "  playground topic produce --tombstone --topic a-topic --key mykey\n  \n  playground topic produce -t payments --nb-messages 10 --value 'payment-%%g'\n  --transactional-id payments-txn --transaction open --transaction-timeout\n  900000\n  \n  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n{\n    \"_meta\": {\n        \"topic\": \"\",\n        \"key\": \"\",\n        \"relationships\": []\n    },\n    \"nested\": {\n        \"phone\": \"faker.phone.imei()\",\n        \"website\": \"faker.internet.domainName()\"\n    },\n    \"id\": \"iteration.index\",\n    \"name\": \"faker.internet.userName()\",\n    \"email\": \"faker.internet.exampleEmail()\",\n    \"phone\": \"faker.phone.imei()\",\n    \"website\": \"faker.internet.domainName()\",\n    \"city\": \"faker.location.city()\",\n    \"company\": \"faker.company.name()\"\n}\nEOF\n  \n  playground topic produce -t topic-datagen-users --nb-messages 10 << 'EOF'\n{\n        \"namespace\": \"ksql\",\n        \"name\": \"users\",\n        \"type\": \"record\",\n        \"fields\": [\n                {\"name\": \"registertime\", \"type\": {\n                    \"type\": \"long\",\n                    \"arg.properties\": {\n                        \"range\": {\n                            \"min\": 1487715775521,\n                            \"max\": 1519273364600\n                        }\n                    }\n                }},\n                {\"name\": \"userid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"User_[1-9]\"\n                    }\n                }},\n                {\"name\": \"regionid\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"regex\": \"Region_[1-9]\"\n                    }\n                }},\n                {\"name\": \"gender\", \"type\": {\n                    \"type\": \"string\",\n                    \"arg.properties\": {\n                        \"options\": [\n                            \"MALE\",\n                            \"FEMALE\",\n                            \"OTHER\"\n                        ]\n                    }\n                }}\n        ]\n}\nEOF\n  \n  playground  topic produce -t topic-datagen-json-schema --nb-messages 1 --value\n  predefined-schemas/datagen/purchase.avro --derive-value-schema-as JSON\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"default\": null,\n      \"name\": \"address\",\n      \"type\": [\n        \"null\",\n        \"string\"\n      ]\n    },\n    {\n      \"name\": \"last_sale_date\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"name\": \"last_sale_price\",\n      \"type\": {\n        \"logicalType\": \"decimal\",\n        \"precision\": 15,\n        \"scale\": 2,\n        \"type\": \"bytes\"\n      }\n    },\n    {\n      \"name\": \"last_connection\",\n      \"type\": {\n        \"logicalType\": \"date\",\n        \"type\": \"int\"\n      }\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    }\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 1 << 'EOF'\nsyntax = \"proto3\";\n\npackage com.github.vdesabou;\n\nmessage Customer {\n    int64 count = 1;\n    string first_name = 2;\n    string last_name = 3;\n    string address = 4;\n}\nEOF\n  \n  playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'\nCREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY COMMENT 'faker.number.int({ min: 1, max: 1000000 })',\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.number.int()',\n    \"price\" int COMMENT 'faker.number.int()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime COMMENT 'faker.date.past().toISOString()'\n);\nEOF\n  \n  playground topic produce -t topic-json --nb-messages 1 --producer-property\n  \"max.request.size=990485760\" < bigjson.json\n  \n  playground topic produce -t topic-string --nb-messages 5000 << 'EOF'\nAd et ut pariatur officia eos.\nNesciunt fugit nam libero ut qui itaque sed earum at itaque nesciunt eveniet\natque.\nQuidem libero quis quod et illum excepturi voluptas et in perspiciatis iusto\nneque.\nQuibusdam commodi explicabo dolores molestiae qui delectus dolorum fugiat\nmolestiae natus assumenda omnis expedita.\nEt sunt aut architecto suscipit fugiat qui voluptate iure vel doloremque eum\nculpa.\nQui enim facilis eos similique aperiam totam eius et at dolor dolores.\nUt sunt quia qui quia consectetur aut reiciendis.\nModi adipisci iusto aut voluptatem dolores laudantium.\nSequi sint quia quibusdam molestias minus et aliquid voluptatum aliquam.\nRerum aut amet quo possimus nihil velit quisquam ut cumque.\nPariatur ad officiis voluptatibus quia vel corporis ea fugit adipisci porro.\nEOF\n  \n  # key and headers\n  # mykey1 %%g can also be used\n  playground topic produce -t topic-json-multiple-lines --nb-messages 10 --key\n  \"mykey1\" --headers \"header1:value1,header2:value2\" << 'EOF'\n{\"u_name\": \"scissors\", \"u_price\": 2.75, \"u_quantity\": 3}\n{\"u_name\": \"tape\", \"u_price\": 0.99, \"u_quantity\": 10}\n{\"u_name\": \"notebooks\", \"u_price\": 1.99, \"u_quantity\": 5}\nEOF\n  \n  # avro key\n  playground topic produce -t topic-avro-with-key --nb-messages 10 --key '\n  {\n    \"fields\": [\n      {\n        \"name\": \"id\",\n        \"type\": \"long\"\n      }\n    ],\n    \"name\": \"Key\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  ' << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # tombstone\n  playground topic produce -t topic-json-multiple-lines --tombstone --key\n  \"mykey1\"\n  \n  # input file\n  playground topic produce -t topic-avro-example3 < avro-schema.avsc\n  \n  # record-size\n  playground topic produce -t topic-avro-example-big-size --nb-messages 3\n  --record-size 10000000 << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # validate\n  playground topic produce -t topic-json-schema-validate --nb-messages 3\n  --validate << 'EOF'\n{\n  \"\$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"additionalProperties\": false,\n  \"\$id\": \"http://lh.test/Customer.schema.json\",\n  \"title\": \"Customer\",\n  \"description\": \"Customer description\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"description\": \"Customer name\",\n      \"type\": \"string\",\n      \"maxLength\": 25\n    },\n    \"surname\": {\n      \"description\": \"Customer surname\",\n      \"type\": \"string\",\n      \"minLength\": 2\n    },\n    \"email\": {\n      \"description\": \"Email\",\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n    },\n    \"holiday\": {\n      \"oneOf\": [\n        {\n          \"title\": \"Not included\",\n          \"type\": \"null\"\n        },\n        {}\n      ]\n    },\n    \"f2\": {}\n  },\n  \"required\": [\n    \"name\",\n    \"surname\"\n  ]\n}\nEOF\n  \n  #  --value-subject-name-strategy\n  playground topic produce -t topic-avro-example-value-subject-name-strategy\n  --nb-messages 10 --value-subject-name-strategy TopicRecordNameStrategy <<\n  'EOF'\n  {\n    \"fields\": [\n      {\n        \"doc\": \"count\",\n        \"name\": \"count\",\n        \"type\": \"long\"\n      },\n      {\n        \"doc\": \"First Name of Customer\",\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Last Name of Customer\",\n        \"name\": \"last_name\",\n        \"type\": \"string\"\n      },\n      {\n        \"doc\": \"Address of Customer\",\n        \"name\": \"address\",\n        \"type\": \"string\"\n      }\n    ],\n    \"name\": \"Customer\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"type\": \"record\"\n  }\n  EOF\n  \n  # --generate-only\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 10 \n  --generate-only << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --forced-value\n  playground topic produce -t topic-avro-example-forced-value --nb-messages 1\n  --forced-value '{\"count\":4,\"first_name\":\"Vincent\",\"last_name\":\"de\n  Saboulin\",\"address\":\"xxx\",\"createdDate\":1697852606000,\"warranty_expiration\":{\"int\":19653}}'\n  << 'EOF'\n{\n  \"fields\": [\n    {\n      \"doc\": \"count\",\n      \"name\": \"count\",\n      \"type\": \"long\"\n    },\n    {\n      \"doc\": \"First Name of Customer\",\n      \"name\": \"first_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Last Name of Customer\",\n      \"name\": \"last_name\",\n      \"type\": \"string\"\n    },\n    {\n      \"doc\": \"Address of Customer\",\n      \"name\": \"address\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"createdDate\",\n      \"type\": {\n        \"logicalType\": \"timestamp-millis\",\n        \"type\": \"long\"\n      }\n    },\n    {\n      \"default\": null,\n      \"name\": \"warranty_expiration\",\n      \"type\": [\n        \"null\",\n        {\n          \"logicalType\": \"date\",\n          \"type\": \"int\"\n        }\n      ]\n    }\n  ],\n  \"name\": \"Customer\",\n  \"namespace\": \"com.github.vdesabou\",\n  \"type\": \"record\"\n}\nEOF\n  \n  # --derive-value-schema-as\n  playground topic produce --topic tocpic --derive-value-schema-as PROTOBUF\n  --derive-key-schema-as PROTOBUF --key '{\"id\": \"1\"}' << 'EOF'\n{\"name\": \"Foo\", \"Age\": {\"int\": 12}}\nEOF\n"
 echo
 
 fi
@@ -11839,7 +11863,12 @@ playground_quota_delete_usage() {
 
 # :command.usage
 playground_broker_usage() {
-  printf "playground broker - 🖥️ Broker commands\n\n"
+  if [[ -n $long_usage ]]; then
+    printf "playground broker\n\n"
+    printf "  🖥️ Broker commands\n  \n    config            read and change dynamic broker configs\n    health            brokers down, partition problems, KRaft quorum\n    stop / start      stop (or kill) a broker, start it again\n    rolling-restart   restart the brokers one by one, safely\n    transactions      list transactions, find and abort hanging ones\n    describe          brokers, KRaft quorum, feature levels, API versions\n    metrics           key JMX metrics of each broker\n  \n  Not available on Confluent Cloud and multi data center environments.\n\n"
+  else
+    printf "playground broker - 🖥️ Broker commands\n\n"
+  fi
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground broker COMMAND\n"
@@ -11847,10 +11876,22 @@ playground_broker_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Kafka commands:")"
-  printf "  %s   ⚙️ Dynamic broker config commands\n" "$(green "config")       "
-  printf "  %s   🔎 Display dynamic broker configs\n" "$(green "config get")   "
-  printf "  %s   ⚙️ Set a dynamic broker config\n" "$(green "config set")   "
-  printf "  %s   🗑️ Remove a dynamic broker config\n" "$(green "config delete")"
+  printf "  %s   ⚙️ Dynamic broker config commands\n" "$(green "config")                         "
+  printf "  %s   🔎 Display dynamic broker configs\n" "$(green "config get")                     "
+  printf "  %s   ⚙️ Set a dynamic broker config\n" "$(green "config set")                     "
+  printf "  %s   🗑️ Remove a dynamic broker config\n" "$(green "config delete")                  "
+  printf "  %s   🩺 Check the health of the cluster\n" "$(green "health")                         "
+  printf "  %s   🛑 Stop a broker\n" "$(green "stop")                           "
+  printf "  %s   ▶️ Start a broker stopped with 'playground broker stop'\n" "$(green "start")                          "
+  printf "  %s   🔄 Restart the brokers one by one, like a rolling upgrade\n" "$(green "rolling-restart")                "
+  printf "  %s   💱 Transaction commands\n" "$(green "transactions")                   "
+  printf "  %s   📋 List the transactional ids\n" "$(green "transactions list")              "
+  printf "  %s   🔎 Describe a transactional id\n" "$(green "transactions describe")          "
+  printf "  %s   🏭 Describe the active producers of a topic\n" "$(green "transactions describe-producers")"
+  printf "  %s   🧟 Find hanging transactions\n" "$(green "transactions find-hanging")      "
+  printf "  %s   🧹 Abort a hanging transaction\n" "$(green "transactions abort")             "
+  printf "  %s   🗺️ Describe the cluster\n" "$(green "describe")                       "
+  printf "  %s   📈 Display the key JMX metrics of the brokers\n" "$(green "metrics")                        "
   echo
 
   # :command.long_usage
@@ -12054,6 +12095,612 @@ playground_broker_config_delete_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground broker config delete --key log.retention.ms\n"
     printf "  playground broker config delete --broker 1 --key num.io.threads\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_health_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker health\n\n"
+    printf "  🩺 Check the health of the cluster\n  \n  One digest of what makes a cluster unhealthy:\n  \n    - broker containers that are not registered (stopped, starting) or fenced\n    - under-replicated partitions (kafka-topics --under-replicated-partitions)\n    - partitions under min.insync.replicas (--under-min-isr-partitions):\n      acks=all producers fail with NotEnoughReplicasException (a topic\n      whose replication factor is below min.insync.replicas is only a ⚠️\n      warning: it is a config problem, not a broker one)\n    - unavailable partitions, without leader (--unavailable-partitions)\n    - the KRaft quorum: leader, lag and last caught up time of each node\n      (kafka-metadata-quorum describe --replication)\n  \n  Exits with 1 when the cluster is not healthy. With --wait-healthy, waits\n  until it is (for example after 'playground broker start' or a\n  'container restart'), up to --max-wait seconds.\n  \n  Works on plaintext, secured environments and cfk.\n\n"
+  else
+    printf "playground broker health - 🩺 Check the health of the cluster\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker health [OPTIONS]\n"
+  printf "  playground broker health --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--wait-healthy")"
+    printf "    ⏳ Wait until the cluster is healthy (up to --max-wait seconds)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX-WAIT")"
+    printf "    ⏳ Maximum time to wait with --wait-healthy, in seconds (default 120)\n"
+    printf "    %s\n" "Default: 120"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON (healthy, brokers, partitions, kraft_quorum), and\n    nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker health\n"
+    printf "  playground broker health --wait-healthy --max-wait 300\n"
+    printf "  playground broker health --json | jq '.under_replicated_partitions | length'\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_stop_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker stop\n\n"
+    printf "  🛑 Stop a broker\n  \n  Stops the container of a broker with a controlled shutdown: its leaders\n  move to the other replicas first. With --kill, the container is killed\n  instead, like a crash (no controlled shutdown, the leaders move only after\n  the broker session times out).\n  \n  Useful to reproduce what clients and connectors do when a broker goes\n  away: NOT_LEADER_OR_FOLLOWER, NotEnoughReplicasException, metadata\n  refresh, retries. Start it again with 'playground broker start'.\n  \n  🎓 Tip: needs several brokers to keep the cluster available, start the\n  example with 'playground run --enable-multiple-brokers'.\n\n"
+  else
+    printf "playground broker stop - 🛑 Stop a broker\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker stop [OPTIONS]\n"
+  printf "  playground broker stop --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER (required)")"
+    printf "    🖥️ Broker id\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--kill")"
+    printf "    🔫 Kill the broker (like a crash) instead of a controlled shutdown\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker stop --broker 2\n"
+    printf "  playground broker stop --broker 2 --kill\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_start_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker start\n\n"
+    printf "  ▶️ Start a broker stopped with 'playground broker stop'\n  \n  Starts the container of the broker, waits for it to be registered, then\n  for the cluster to be healthy again (its replicas back in sync, see\n  'playground broker health'), up to --max-wait seconds.\n\n"
+  else
+    printf "playground broker start - ▶️ Start a broker stopped with 'playground broker stop'\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker start [OPTIONS]\n"
+  printf "  playground broker start --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER (required)")"
+    printf "    🖥️ Broker id\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX-WAIT")"
+    printf "    ⏳ Maximum time to wait for the broker and the cluster, in seconds (default\n    180)\n"
+    printf "    %s\n" "Default: 180"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-wait")"
+    printf "    ⏩ Do not wait for the broker to be registered and the cluster to be healthy\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker start --broker 2\n"
+    printf "  playground broker start --broker 2 --no-wait\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_rolling_restart_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker rolling-restart\n\n"
+    printf "  🔄 Restart the brokers one by one, like a rolling upgrade\n  \n  Checks that the cluster is healthy (--force to skip), then for each\n  broker: restarts its container (controlled shutdown), waits for it to be\n  registered and for the cluster to be healthy again before the next one.\n  Stops at the first broker that does not come back healthy within\n  --max-wait seconds.\n  \n  Useful to reproduce connector or client errors, duplicates or rebalances\n  during a rolling upgrade or restart of the brokers.\n  \n  🎓 Tip: to change a broker setting that needs a restart, use 'playground\n  container set-environment-variables' (it recreates the container).\n\n"
+  else
+    printf "playground broker rolling-restart - 🔄 Restart the brokers one by one, like a rolling upgrade\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker rolling-restart [OPTIONS]\n"
+  printf "  playground broker rolling-restart --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--brokers BROKERS")"
+    printf "    🖥️ Comma separated broker ids, restarted in this order (default: all\n    brokers, by id)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX-WAIT")"
+    printf "    ⏳ Maximum time to wait for each broker to be back and the cluster healthy,\n    in seconds (default 300)\n"
+    printf "    %s\n" "Default: 300"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force")"
+    printf "    ☢️ Restart even if the cluster is not healthy before starting\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker rolling-restart\n"
+    printf "  playground broker rolling-restart --brokers 3,2,1 --max-wait 600\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_transactions_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker transactions\n\n"
+    printf "  💱 Transaction commands\n  \n  Inspect the transactions of the cluster and recover from hanging ones\n  (wraps kafka-transactions). Works on plaintext, secured environments and\n  cfk.\n  \n    list                 transactional ids, coordinator and state\n    describe             one transactional id: partitions, duration\n    describe-producers   producers of a topic, open transactions\n    find-hanging         transactions forgotten by their coordinator\n    abort                abort a hanging transaction\n  \n  An open transaction holds the last stable offset (LSO) of its partitions:\n  read_committed consumers (sink connectors of a topic written by an\n  exactly-once source, Kafka Streams with exactly_once_v2...) don't read\n  past it, and their lag never drains. It ends when it commits, aborts, or\n  after transaction.timeout.ms. A hanging transaction never ends: find it\n  with find-hanging and abort it.\n\n"
+  else
+    printf "playground broker transactions - 💱 Transaction commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker transactions COMMAND\n"
+  printf "  playground broker transactions [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Kafka commands:")"
+  printf "  %s   📋 List the transactional ids\n" "$(green "list")              "
+  printf "  %s   🔎 Describe a transactional id\n" "$(green "describe")          "
+  printf "  %s   🏭 Describe the active producers of a topic\n" "$(green "describe-producers")"
+  printf "  %s   🧟 Find hanging transactions\n" "$(green "find-hanging")      "
+  printf "  %s   🧹 Abort a hanging transaction\n" "$(green "abort")             "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_transactions_list_usage() {
+  printf "playground broker transactions list - 📋 List the transactional ids\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker transactions list [OPTIONS]\n"
+  printf "  playground broker transactions list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--state STATE")"
+    printf "    🔎 Only the transactional ids in this state\n"
+    printf "    %s\n" "Allowed: Empty, Ongoing, PrepareCommit, PrepareAbort, CompleteCommit, CompleteAbort, Dead, PrepareEpochFence"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--pattern REGEX")"
+    printf "    🔎 Only the transactional ids matching this regular expression\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker transactions list\n"
+    printf "  playground broker transactions list --state Ongoing\n"
+    printf "  playground broker transactions list --pattern \"connect-cluster-.*\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_transactions_describe_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker transactions describe\n\n"
+    printf "  🔎 Describe a transactional id\n  \n  State, producer id and epoch, timeout, start time and duration of the\n  current transaction, and the partitions it writes to.\n\n"
+  else
+    printf "playground broker transactions describe - 🔎 Describe a transactional id\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker transactions describe [OPTIONS]\n"
+  printf "  playground broker transactions describe --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--transactional-id, -i TRANSACTIONAL-ID (required)")"
+    printf "    🆔 Transactional id (playground broker transactions list)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker transactions describe --transactional-id my-txn-producer\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_transactions_describe_producers_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker transactions describe-producers\n\n"
+    printf "  🏭 Describe the active producers of a topic\n  \n  For each partition (or --partition only): the producers that wrote\n  to it recently, and the start offset of their open transaction (⚠️).\n  That offset is where read_committed consumers are blocked.\n\n"
+  else
+    printf "playground broker transactions describe-producers - 🏭 Describe the active producers of a topic\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker transactions describe-producers [OPTIONS]\n"
+  printf "  playground broker transactions describe-producers --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--partition, -p PARTITION")"
+    printf "    🔢 Only this partition (default: all the partitions of the topic)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker transactions describe-producers --topic orders\n"
+    printf "  playground broker transactions describe-producers --topic orders --partition 0\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_transactions_find_hanging_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker transactions find-hanging\n\n"
+    printf "  🧟 Find hanging transactions\n  \n  A transaction is hanging when it is open on a partition for longer\n  than --max-transaction-timeout minutes, and its coordinator does not\n  know it anymore: it will never end on its own. Searches every broker,\n  or --broker, or the partitions of --topic.\n  \n  Exits with 1 when hanging transactions are found, and prints the\n  abort command of each.\n\n"
+  else
+    printf "playground broker transactions find-hanging - 🧟 Find hanging transactions\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker transactions find-hanging [OPTIONS]\n"
+  printf "  playground broker transactions find-hanging --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER")"
+    printf "    🖥️ Only the partitions of this broker (default: all brokers)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Only the partitions of this topic\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--partition, -p PARTITION")"
+    printf "    🔢 Only this partition (needs --topic)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-transaction-timeout MINUTES")"
+    printf "    ⏱️ transaction.max.timeout.ms of the brokers, in minutes: only the\n    transactions open for longer are checked (default 15)\n"
+    printf "    %s\n" "Default: 15"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker transactions find-hanging\n"
+    printf "  playground broker transactions find-hanging --topic orders\n"
+    printf "  playground broker transactions find-hanging --broker 1\n  --max-transaction-timeout 5\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_transactions_abort_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker transactions abort\n\n"
+    printf "  🧹 Abort a hanging transaction\n  \n  Writes an abort marker for the transaction started at --start-offset\n  on a partition (requires administrative privileges). Its records are\n  discarded, and read_committed consumers move on. The start offset is\n  printed by find-hanging and describe-producers.\n\n"
+  else
+    printf "playground broker transactions abort - 🧹 Abort a hanging transaction\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker transactions abort [OPTIONS]\n"
+  printf "  playground broker transactions abort --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--partition, -p PARTITION (required)")"
+    printf "    🔢 Partition\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--start-offset OFFSET (required)")"
+    printf "    📍 Start offset of the transaction to abort\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker transactions abort --topic orders --partition 0\n  --start-offset 1234\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_describe_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker describe\n\n"
+    printf "  🗺️ Describe the cluster\n  \n  The brokers (id, endpoint, rack, fenced, container, and the broker\n  containers that are not registered), the KRaft quorum (cluster id,\n  active controller, voters and observers, from kafka-metadata-quorum\n  describe --status) and the feature levels (metadata.version... from\n  kafka-features describe).\n  \n  With --api-versions, the API versions supported by a broker (wraps\n  kafka-broker-api-versions): useful when an old client fails with\n  UnsupportedVersionException.\n\n"
+  else
+    printf "playground broker describe - 🗺️ Describe the cluster\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker describe [OPTIONS]\n"
+  printf "  playground broker describe --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--api-versions")"
+    printf "    🔌 Display the API versions supported by a broker instead\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER")"
+    printf "    🖥️ Broker id for --api-versions (default: the first broker)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker describe\n"
+    printf "  playground broker describe --api-versions --broker 2\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_metrics_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker metrics\n\n"
+    printf "  📈 Display the key JMX metrics of the brokers\n  \n  One column per broker: partitions and leaders, under-replicated and\n  under min ISR partitions, request handler and network processor idle\n  ratio, request queue size, produce and fetch p99 latency, messages and\n  bytes in and out per second, ISR shrinks and expands, failed produce and\n  fetch requests. ⚠️ marks the values to look at.\n  \n  Answers \"is the broker the bottleneck?\", for example during a\n  'playground connector benchmark'. With --topic, the rates and failed\n  requests are the ones of this topic.\n  \n  🎓 Tip: every metric of a broker: playground get-jmx-metrics -c broker\n\n"
+  else
+    printf "playground broker metrics - 📈 Display the key JMX metrics of the brokers\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker metrics [OPTIONS]\n"
+  printf "  playground broker metrics --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER")"
+    printf "    🖥️ Only this broker (default: all brokers)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Rates and failed requests of this topic only\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the raw values as JSON, one object per broker, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker metrics\n"
+    printf "  playground broker metrics --topic orders\n"
+    printf "  playground broker metrics --broker 1 --json\n"
     echo
 
   fi
@@ -18562,6 +19209,15 @@ function filter_not_ccloud_environment() {
   fi
 }
 
+function filter_not_cfk_environment() {
+  get_environment_used
+
+  if [[ "$environment" == cfk* ]]
+  then
+    logerror "this command is not available with $environment (the brokers are pods managed by Confluent for Kubernetes)"
+  fi
+}
+
 function filter_cfk_environment() {
   get_environment_used
 
@@ -24293,6 +24949,247 @@ function get_topic_partition_assignment () {
 # ids of the brokers of the cluster, one per line
 function get_broker_ids () {
   run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq
+}
+
+# copies every record of topic $1 to topic $2 in one transaction of transactional id $3, ended with $4 (commit, abort or
+# open) and transaction.timeout.ms $5, with scripts/cli/src/transactional-copier (built on first use, run with the
+# kafka-clients of the broker container): returns 1 on error
+function run_transactional_copier () {
+  local input_topic="$1" output_topic="$2" transactional_id="$3" transaction="$4" transaction_timeout="$5"
+  local copier_dir="$root_folder/scripts/cli/src/transactional-copier"
+  local jar="$copier_dir/target/transactional-copier-1.0.0.jar"
+  local output rc=0
+  if [ ! -f "$jar" ] || [ -n "$(find "$copier_dir/src" "$copier_dir/pom.xml" -newer "$jar" 2>/dev/null)" ]
+  then
+    log "🏗 Building jar for transactional-copier"
+    mkdir -p "$copier_dir/target"
+    # built from a copy of the sources, like schema-validator: an IDE may write its own classes in target/classes
+    build_java_component_with_retry "transactional-copier" docker run -i --rm -v "$copier_dir:/usr/src/transactional-copier:ro" -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "$copier_dir/target:/usr/src/target" maven:3.9.11-eclipse-temurin-17 bash -c "mkdir -p /usr/src/mymaven && cp -r /usr/src/transactional-copier/pom.xml /usr/src/transactional-copier/src /usr/src/mymaven/ && cd /usr/src/mymaven && mvn -s /tmp/settings.xml package && cp target/transactional-copier-1.0.0.jar /usr/src/target/"
+  fi
+
+  get_security_broker "--command-config"
+  local copier_cmd=(java -cp "/tmp/transactional-copier.jar:/usr/share/java/kafka/*" com.github.vdesabou.TransactionalCopier --bootstrap-server "$bootstrap_server" $security --input-topic "$input_topic" --output-topic "$output_topic" --transactional-id "$transactional_id" --transaction "$transaction" --transaction-timeout-ms "$transaction_timeout")
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 CLI command used (in $container)"
+    echo "${copier_cmd[*]}"
+  fi
+  if [[ "$environment" == cfk* ]]
+  then
+    kubectl -n confluent cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
+    output=$(kubectl -n confluent exec -i "$container" -- "${copier_cmd[@]}" 2>&1) || rc=$?
+  else
+    docker cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
+    output=$(docker exec -i "$container" "${copier_cmd[@]}" 2>&1) || rc=$?
+  fi
+  if [ $rc -ne 0 ] || ! echo "$output" | grep -q -E "^transaction (committed|aborted|left open)"
+  then
+    logerror "❌ the transactional copy to topic $output_topic failed:"
+    echo "$output" | grep -v -E "^[[:space:]]+at |^SLF4J|^log4j" | tail -20
+    return 1
+  fi
+  echo "$output" | grep -E "^records sent in the transaction|^transaction (committed|aborted|left open)"
+  return 0
+}
+
+# runs a kafka-* tool whose connection options go before its subcommand (kafka-transactions,
+# kafka-metadata-quorum, kafka-features): $1 tool, $2 subcommand, then the arguments of the subcommand
+function run_kafka_admin_subcommand_tool () {
+  local tool="$1" subcommand="$2"
+  shift 2
+  get_security_broker "--command-config"
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 CLI command used"
+    echo "$tool --bootstrap-server $bootstrap_server $security $subcommand $*"
+  fi
+  if [[ "$environment" == cfk* ]]
+  then
+    kubectl -n confluent exec -i $container -- $tool --bootstrap-server $bootstrap_server $security $subcommand "$@"
+  else
+    docker exec -i $container $tool --bootstrap-server $bootstrap_server $security $subcommand "$@"
+  fi
+}
+
+# id of the broker run by docker container $1 (running or stopped), empty when it is not a broker
+function get_broker_id_of_container () {
+  docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2>/dev/null | grep -E "^KAFKA_(BROKER|NODE)_ID=" | head -1 | cut -d= -f2
+}
+
+# docker containers of the brokers (running or stopped), one "<id> <container>" per line, sorted by id
+function get_broker_containers () {
+  local c id
+  for c in broker broker2 broker3
+  do
+    id=$(get_broker_id_of_container "$c")
+    if [[ -n "$id" ]]
+    then
+      echo "$id $c"
+    fi
+  done | sort -n
+}
+
+# docker container of broker $1: returns 1 (with an error) when there is none
+function get_broker_container_of_id () {
+  local id="$1" containers
+  containers=$(get_broker_containers)
+  broker_id_container=$(echo "$containers" | awk -v id="$id" '$1 == id { print $2 }')
+  if [[ -z "$broker_id_container" ]]
+  then
+    if [[ -z "$containers" ]]
+    then
+      logerror "❌ no broker container found, is an environment running? (playground status)"
+    else
+      logerror "❌ broker $id does not exist, brokers are: $(echo "$containers" | awk '{print $1}' | paste -sd, -)"
+    fi
+    return 1
+  fi
+  return 0
+}
+
+# partitions listed by kafka-topics --describe $1 (--under-replicated-partitions, --under-min-isr-partitions or
+# --unavailable-partitions), one "<topic> <partition> <leader> <replicas> <isr>" per line: returns 1 when kafka-topics fails
+function get_partitions_with_status () {
+  local output
+  output=$(run_kafka_admin_tool kafka-topics --describe "$1" 2>&1) || { echo "$output" | grep -v -E "^[[:space:]]+at " >&2 ; return 1 ; }
+  echo "$output" | awk '
+    /Partition:/ {
+      t=""; p=""; l=""; r=""; i=""
+      for (n = 1; n < NF; n++) {
+        if ($n == "Topic:") t = $(n+1)
+        if ($n == "Partition:") p = $(n+1)
+        if ($n == "Leader:") l = $(n+1)
+        if ($n == "Replicas:") r = $(n+1)
+        if ($n == "Isr:" && $(n+1) !~ /:$/) i = $(n+1)
+      }
+      if (i == "") i = "-"
+      print t, p, l, r, i
+    }'
+}
+
+# checks the health of the cluster and sets health_* (registered, fenced and not registered brokers, partitions
+# under-replicated, under min ISR and unavailable, KRaft quorum): returns 0 when healthy, 1 otherwise
+function get_cluster_health () {
+  local api_versions id container output now
+  health_ok=1
+  health_error=""
+
+  api_versions=$(run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -E "\(id: [0-9]+" || true)
+  health_registered=$(echo "$api_versions" | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq || true)
+  health_fenced=$(echo "$api_versions" | grep "isFenced: true" | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq || true)
+  if [[ -z "$health_registered" ]]
+  then
+    health_error="no broker answers, is an environment running? (playground status)"
+    health_ok=0
+    return 1
+  fi
+  [[ -n "$health_fenced" ]] && health_ok=0
+
+  # broker containers (not on cfk) whose broker is down: not registered (stopped, still starting), or stopped but
+  # still registered (a killed broker stays registered until its session times out)
+  health_not_registered=""
+  get_environment_used
+  if [[ "$environment" != cfk* ]]
+  then
+    while read -r id container
+    do
+      [[ -z "$id" ]] && continue
+      if ! echo "$health_registered" | grep -q -x "$id" || ! is_container_running "$container"
+      then
+        health_not_registered+="$id $container"$'\n'
+        health_ok=0
+      fi
+    done <<< "$(get_broker_containers)"
+  fi
+  health_not_registered=$(echo -n "$health_not_registered" | sed '/^$/d')
+
+  health_urp=$(get_partitions_with_status --under-replicated-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
+  health_under_min_isr=$(get_partitions_with_status --under-min-isr-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
+  health_unavailable=$(get_partitions_with_status --unavailable-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
+  # every replica in sync but still under min ISR: the replication factor is below min.insync.replicas, a config
+  # problem (acks=all producers always fail) rather than a broker problem, reported apart
+  health_rf_below_min_isr=$(echo "$health_under_min_isr" | awk 'NF && $3 != "none" && $3 != "-1" && $5 != "-" { if (split($4, r, ",") == split($5, i, ",")) print }')
+  health_under_min_isr=$(echo "$health_under_min_isr" | awk 'NF { if ($3 == "none" || $3 == "-1" || $5 == "-" || split($4, r, ",") != split($5, i, ",")) print }')
+  if [[ -n "$health_urp" ]] || [[ -n "$health_under_min_isr" ]] || [[ -n "$health_unavailable" ]]
+  then
+    health_ok=0
+  fi
+
+  # KRaft quorum, one "<node id> <status> <log end offset> <lag> <seconds since last caught up>" per line (empty with ZooKeeper)
+  health_quorum=""
+  health_quorum_leader=""
+  health_quorum_error=""
+  local rc=0
+  output=$(run_kafka_admin_subcommand_tool kafka-metadata-quorum describe --replication 2>&1) || rc=$?
+  if [ $rc -eq 0 ] && echo "$output" | grep -q "^NodeId"
+  then
+    now=$(($(date +%s) * 1000))
+    health_quorum=$(echo "$output" | awk -v now="$now" '
+      $1 ~ /^[0-9]+$/ {
+        # the DirectoryId column only exists in recent versions
+        if (NF >= 7) { leo = $3; lag = $4; caught = $6; status = $7 } else { leo = $2; lag = $3; caught = $5; status = $6 }
+        age = (caught > 0) ? int((now - caught) / 1000) : -1
+        if (age < 0 && caught > 0) age = 0
+        print $1, status, leo, lag, age
+      }')
+    health_quorum_leader=$(echo "$health_quorum" | awk '$2 == "Leader" { print $1 }')
+  elif ! echo "$output" | grep -q -E "UnsupportedVersion|ZooKeeper|zookeeper"
+  then
+    health_quorum_error=$(echo "$output" | grep -v -E "^[[:space:]]+at |SLF4J|log4j" | grep -E "Error|Exception" | head -3 || true)
+    [[ -z "$health_quorum_error" ]] && health_quorum_error=$(echo "$output" | head -3)
+    health_ok=0
+  fi
+
+  [ $health_ok -eq 1 ]
+}
+
+# waits up to $2 seconds for broker $1 to be registered (and not fenced): returns 1 on timeout
+function wait_for_broker_registered () {
+  local id="$1" max_wait="$2" start_time=$SECONDS api_versions
+  while true
+  do
+    api_versions=$(run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -E "\(id: ${id} " || true)
+    if [[ -n "$api_versions" ]] && ! echo "$api_versions" | grep -q "isFenced: true"
+    then
+      return 0
+    fi
+    if [ $((SECONDS - start_time)) -ge $max_wait ]
+    then
+      logerror "❌ broker $id is still not registered after ${max_wait}s"
+      return 1
+    fi
+    sleep 3
+  done
+}
+
+# waits up to $1 seconds for the cluster to be healthy (see get_cluster_health), logging the progress: returns 1 on timeout
+function wait_for_cluster_healthy () {
+  local max_wait="$1" start_time=$SECONDS
+  while ! get_cluster_health
+  do
+    if [ $((SECONDS - start_time)) -ge $max_wait ]
+    then
+      logerror "❌ cluster is still not healthy after ${max_wait}s: $(cluster_health_one_line)"
+      return 1
+    fi
+    log "⏳ cluster not healthy yet ($(cluster_health_one_line)), waiting... ($((SECONDS - start_time))s/${max_wait}s)"
+    sleep 5
+  done
+  return 0
+}
+
+# one line summary of the problems found by get_cluster_health
+function cluster_health_one_line () {
+  local problems=()
+  [[ -n "$health_error" ]] && problems+=("$health_error")
+  [[ -n "$health_not_registered" ]] && problems+=("brokers down: $(echo "$health_not_registered" | awk '{print $1}' | paste -sd, -)")
+  [[ -n "$health_fenced" ]] && problems+=("brokers fenced: $(echo "$health_fenced" | paste -sd, -)")
+  [[ -n "$health_urp" ]] && problems+=("$(echo "$health_urp" | wc -l | tr -d ' ') under-replicated partitions")
+  [[ -n "$health_under_min_isr" ]] && problems+=("$(echo "$health_under_min_isr" | wc -l | tr -d ' ') under min ISR")
+  [[ -n "$health_unavailable" ]] && problems+=("$(echo "$health_unavailable" | wc -l | tr -d ' ') unavailable")
+  [[ -n "$health_quorum_error" ]] && problems+=("KRaft quorum not available")
+  local IFS=","
+  echo "${problems[*]}" | sed 's/,/, /g'
 }
 
 # table of the partitions of a topic, with ⚠️ on the partitions whose leader is not the preferred (first) replica
@@ -53723,6 +54620,9 @@ playground_topic_produce_command() {
   value_format="${args[--value-format]}"
   key_format="${args[--key-format]}"
   throughput="${args[--throughput]}"
+  transactional_id="${args[--transactional-id]}"
+  transaction="${args[--transaction]}"
+  transaction_timeout="${args[--transaction-timeout]}"
 
   # Convert the space delimited string to an array
   eval "validate_config=(${args[--validate-config]})"
@@ -53881,6 +54781,20 @@ playground_topic_produce_command() {
 
   get_environment_used
   get_sr_url_and_security
+
+  if [[ -n "$transactional_id" ]]
+  then
+      if [[ "$environment" == "ccloud" ]]
+      then
+          logerror "❌ --transactional-id is not available on Confluent Cloud"
+          exit 1
+      fi
+      if [ "$nb_messages" == "-1" ]
+      then
+          logerror "❌ --transactional-id can't be used with --nb-messages -1: the records are sent in one transaction"
+          exit 1
+      fi
+  fi
 
   get_connect_image
 
@@ -54826,6 +55740,21 @@ playground_topic_produce_command() {
       playground topic set-schema-compatibility --topic $topic --compatibility $compatibility
   fi
 
+  # with --transactional-id, the console producer writes to a staging topic with the same number of partitions (same
+  # partitioning of the keys), and the records are copied to the topic in one transaction at the end
+  producer_topic="$topic"
+  if [[ -n "$transactional_id" ]]
+  then
+      producer_topic="_playground-txn-$topic"
+      staging_nb_partitions=$(playground topic describe --topic $topic 2>/dev/null | grep -oE 'Partition ?Count: *[0-9]+' | head -1 | grep -oE '[0-9]+')
+      log "💱 --transactional-id is set: the records are produced to staging topic $producer_topic ($staging_nb_partitions partitions), then copied to topic $topic in one transaction of $transactional_id (--transaction $transaction)"
+      if echo "$existing_topics" | grep -qFx "$producer_topic"
+      then
+          playground topic delete --topic "$producer_topic" > /dev/null 2>&1
+      fi
+      playground topic create --topic "$producer_topic" --nb-partitions "${staging_nb_partitions:-1}" > /dev/null
+  fi
+
   if [[ ! -n "$key" ]] && [[ -n "$key_subject_name_strategy" ]]
   then
       logerror "❌ --key-subject-name-strategy is set but not --key"
@@ -54906,6 +55835,10 @@ playground_topic_produce_command() {
       producer_args+=("$producer_property_name" "max.request.size=$((record_size + 1000))" "$producer_property_name" buffer.memory=67108864 "$producer_property_name" request.timeout.ms=60000)
       log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
       playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
+      if [ "$producer_topic" != "$topic" ]
+      then
+          playground topic alter --topic "$producer_topic" --add-config max.message.bytes=$((record_size + 1000)) > /dev/null
+      fi
   fi
 
   for producer_prop in "${producer_property[@]}"
@@ -55033,7 +55966,7 @@ playground_topic_produce_command() {
       fi
   fi
 
-  producer_cmd+=(--topic "$topic")
+  producer_cmd+=(--topic "$producer_topic")
 
   # $security only holds options without spaces
   read -r -a security_args <<< "$security"
@@ -55210,6 +56143,47 @@ playground_topic_produce_command() {
           exit 1
       fi
       log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
+  fi
+
+  if [[ -n "$transactional_id" ]]
+  then
+      rc=0
+      # the schemas were registered under the subjects of the staging topic: same schema, same id, under the subjects of the topic
+      for side in key value
+      do
+          strategy="$key_subject_name_strategy"
+          [ "$side" == "value" ] && strategy="$value_subject_name_strategy"
+          if [[ -n "$strategy" ]] && [ "$strategy" != "TopicNameStrategy" ]
+          then
+              continue
+          fi
+          latest=$(curl -s $sr_security "$sr_url/subjects/${producer_topic}-${side}/versions/latest" 2>/dev/null || true)
+          if ! echo "$latest" | jq -e '.schema' > /dev/null 2>&1
+          then
+              continue
+          fi
+          body=$(echo "$latest" | jq -c '{schema, schemaType: (.schemaType // "AVRO"), references: (.references // [])}')
+          registered=$(curl -s $sr_security -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "$body" "$sr_url/subjects/${topic}-${side}/versions" 2>/dev/null || true)
+          if ! echo "$registered" | jq -e '.id' > /dev/null 2>&1
+          then
+              logerror "❌ could not register the $side schema under subject ${topic}-${side}: $registered"
+              rc=1
+          fi
+      done
+      if [ $rc -eq 0 ]
+      then
+          log "💱 copying the records to topic $topic in a transaction of $transactional_id"
+          run_transactional_copier "$producer_topic" "$topic" "$transactional_id" "$transaction" "$transaction_timeout" || rc=$?
+      fi
+      playground topic delete --topic "$producer_topic" > /dev/null 2>&1 || true
+      if [ $rc -ne 0 ]
+      then
+          exit 1
+      fi
+      if [ "$transaction" == "open" ]
+      then
+          log "🎓 read_committed consumers of $topic don't read past it until the coordinator aborts it after ${transaction_timeout} ms: see it with playground broker transactions describe-producers --topic $topic"
+      fi
   fi
 
   if [[ -n "$consume" ]]
@@ -56167,6 +57141,765 @@ playground_broker_config_delete_command() {
   fi
   run_quota_kafka_configs "$(broker_config_entity "$broker")" --alter --delete-config "$key" || exit 1
   playground broker config get --key "$key" "${get_args[@]}"
+
+}
+
+# :command.function
+playground_broker_health_command() {
+
+  # src/commands/broker/health.sh
+  wait_healthy="${args[--wait-healthy]}"
+  max_wait="${args[--max-wait]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  healthy=0
+  start_time=$SECONDS
+  while true
+  do
+      if get_cluster_health
+      then
+          healthy=1
+          break
+      fi
+      if [[ -z "$wait_healthy" ]] || [ $((SECONDS - start_time)) -ge $max_wait ]
+      then
+          break
+      fi
+      if [[ -z "$json" ]]
+      then
+          log "⏳ cluster not healthy yet ($(cluster_health_one_line)), waiting... ($((SECONDS - start_time))s/${max_wait}s)"
+      fi
+      sleep 5
+  done
+
+  if [[ -n "$json" ]]
+  then
+      partitions_json='split("\n") | map(select(length > 0) | split(" ") | {
+          topic: .[0],
+          partition: (.[1] | tonumber),
+          leader: (.[2] | tonumber? // -1),
+          replicas: (.[3] | split(",") | map(tonumber? // empty)),
+          isr: (.[4] | split(",") | map(tonumber? // empty))
+      })'
+      ids_json='split("\n") | map(select(length > 0) | tonumber)'
+      jq -n \
+          --argjson healthy "$([ $healthy -eq 1 ] && echo true || echo false)" \
+          --arg error "$health_error" \
+          --argjson registered "$(echo -n "$health_registered" | jq -R -s "$ids_json")" \
+          --argjson fenced "$(echo -n "$health_fenced" | jq -R -s "$ids_json")" \
+          --argjson not_registered "$(echo -n "$health_not_registered" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), container: .[1]})')" \
+          --argjson urp "$(echo -n "$health_urp" | jq -R -s "$partitions_json")" \
+          --argjson under_min_isr "$(echo -n "$health_under_min_isr" | jq -R -s "$partitions_json")" \
+          --argjson rf_below_min_isr "$(echo -n "$health_rf_below_min_isr" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | .[0]) | unique')" \
+          --argjson unavailable "$(echo -n "$health_unavailable" | jq -R -s "$partitions_json")" \
+          --argjson quorum "$(echo -n "$health_quorum" | jq -R -s 'split("\n") | map(select(length > 0) | split(" ") | {id: (.[0] | tonumber), status: .[1], log_end_offset: (.[2] | tonumber), lag: (.[3] | tonumber), seconds_since_caught_up: (.[4] | tonumber)})')" \
+          --arg quorum_error "$health_quorum_error" \
+          '{
+              healthy: $healthy,
+              error: (if $error == "" then null else $error end),
+              brokers: { registered: $registered, fenced: $fenced, not_registered: $not_registered },
+              under_replicated_partitions: $urp,
+              under_min_isr_partitions: $under_min_isr,
+              topics_with_replication_factor_below_min_isr: $rf_below_min_isr,
+              unavailable_partitions: $unavailable,
+              kraft_quorum: (if $quorum_error != "" then { error: $quorum_error } elif ($quorum | length) == 0 then null else { nodes: $quorum } end)
+          }'
+      [ $healthy -eq 1 ] && exit 0 || exit 1
+  fi
+
+  log "🩺 Health of the cluster"
+  if [[ -n "$health_error" ]]
+  then
+      logerror "❌ $health_error"
+      exit 1
+  fi
+
+  if [[ -z "$health_not_registered" ]] && [[ -z "$health_fenced" ]]
+  then
+      log "✅ all brokers are registered: $(echo "$health_registered" | paste -sd, -)"
+  else
+      log "🖥️ registered brokers: $(echo "$health_registered" | paste -sd, -)"
+      while read -r id container
+      do
+          [[ -z "$id" ]] && continue
+          if is_container_running "$container"
+          then
+              logerror "❌ broker $id (container $container) is not registered: still starting? (playground container logs -c $container --errors)"
+          elif echo "$health_registered" | grep -q -x "$id"
+          then
+              logerror "❌ broker $id (container $container) is stopped, still registered until its session times out (playground broker start --broker $id)"
+          else
+              logerror "❌ broker $id (container $container) is not registered: it is stopped (playground broker start --broker $id)"
+          fi
+      done <<< "$health_not_registered"
+      for id in $health_fenced
+      do
+          logerror "❌ broker $id is fenced: registered, but not caught up with the cluster metadata"
+      done
+  fi
+
+  # prints the partitions ($2) found by a kafka-topics check ($1: label), at most 20
+  function print_partitions () {
+      local label="$1" partitions="$2" count
+      if [[ -z "$partitions" ]]
+      then
+          log "✅ no $label partition"
+          return
+      fi
+      count=$(echo "$partitions" | wc -l | tr -d ' ')
+      logerror "❌ $count $label partitions"
+      {
+          echo "TOPIC PARTITION LEADER REPLICAS ISR"
+          echo "$partitions" | head -20
+      } | column -t
+      if [ "$count" -gt 20 ]
+      then
+          echo "... and $((count - 20)) more"
+      fi
+  }
+
+  print_partitions "under-replicated" "$health_urp"
+  print_partitions "under min.insync.replicas" "$health_under_min_isr"
+  print_partitions "unavailable (no leader)" "$health_unavailable"
+  if [[ -n "$health_rf_below_min_isr" ]]
+  then
+      logwarn "⚠️ topics with a replication factor below min.insync.replicas (acks=all producers to them always fail with NotEnoughReplicasException): $(echo "$health_rf_below_min_isr" | awk '{print $1}' | sort -u | paste -sd, - | sed 's/,/, /g')"
+  fi
+
+  if [[ -n "$health_quorum_error" ]]
+  then
+      logerror "❌ KRaft quorum not available (kafka-metadata-quorum describe --replication):"
+      echo "$health_quorum_error"
+  elif [[ -n "$health_quorum" ]]
+  then
+      log "🗳️ KRaft quorum: leader is node $health_quorum_leader"
+      {
+          printf 'NODE\tSTATUS\tLOG_END_OFFSET\tLAG\tLAST_CAUGHT_UP\n'
+          echo "$health_quorum" | awk 'BEGIN { OFS = "\t" } {
+              caught = ($5 < 0) ? "never" : $5 "s ago"
+              if ($5 > 30 || $5 < 0) caught = caught " ⚠️"
+              print $1, $2, $3, $4, caught
+          }'
+      } | column -t -s $'\t'
+  fi
+
+  if [ $healthy -eq 1 ]
+  then
+      log "✅ cluster is healthy"
+  else
+      logerror "❌ cluster is not healthy: $(cluster_health_one_line)"
+      exit 1
+  fi
+
+}
+
+# :command.function
+playground_broker_stop_command() {
+
+  # src/commands/broker/stop.sh
+  broker="${args[--broker]}"
+  kill="${args[--kill]}"
+  verbose="${args[--verbose]}"
+
+  get_broker_container_of_id "$broker" || exit 1
+  container="$broker_id_container"
+
+  if ! is_container_running "$container"
+  then
+      logwarn "🤷 broker $broker (container $container) is already stopped"
+      exit 0
+  fi
+
+  running=0
+  while read -r id c
+  do
+      if is_container_running "$c"
+      then
+          running=$((running + 1))
+      fi
+  done <<< "$(get_broker_containers)"
+  if [ $running -eq 1 ]
+  then
+      logwarn "⚠️ broker $broker is the only running broker: the cluster is unavailable until it starts again"
+  fi
+
+  if [[ -n "$kill" ]]
+  then
+      log "🔫 Killing broker $broker (container $container): no controlled shutdown, like a crash"
+      docker kill "$container" > /dev/null || exit 1
+  else
+      log "🛑 Stopping broker $broker (container $container): controlled shutdown, its leaders move to the other replicas first"
+      docker stop -t 60 "$container" > /dev/null || exit 1
+  fi
+  log "🎓 see the impact with 'playground broker health', start it again with 'playground broker start --broker $broker'"
+
+}
+
+# :command.function
+playground_broker_start_command() {
+
+  # src/commands/broker/start.sh
+  broker="${args[--broker]}"
+  max_wait="${args[--max-wait]}"
+  no_wait="${args[--no-wait]}"
+  verbose="${args[--verbose]}"
+
+  get_broker_container_of_id "$broker" || exit 1
+  container="$broker_id_container"
+
+  if is_container_running "$container"
+  then
+      logwarn "🤷 broker $broker (container $container) is already running"
+  else
+      log "▶️ Starting broker $broker (container $container)"
+      docker start "$container" > /dev/null || exit 1
+  fi
+
+  if [[ -n "$no_wait" ]]
+  then
+      exit 0
+  fi
+
+  start_time=$SECONDS
+  log "⏳ Waiting for broker $broker to be registered"
+  wait_for_broker_registered "$broker" "$max_wait" || exit 1
+  log "✅ broker $broker is registered, waiting for its replicas to be back in sync"
+  wait_for_cluster_healthy $((max_wait - (SECONDS - start_time))) || exit 1
+  log "✅ cluster is healthy, broker $broker started in $((SECONDS - start_time))s"
+
+}
+
+# :command.function
+playground_broker_rolling_restart_command() {
+
+  # src/commands/broker/rolling-restart.sh
+  brokers="${args[--brokers]}"
+  max_wait="${args[--max-wait]}"
+  force="${args[--force]}"
+  verbose="${args[--verbose]}"
+
+  containers=$(get_broker_containers)
+  if [[ -z "$containers" ]]
+  then
+      logerror "❌ no broker container found, is an environment running? (playground status)"
+      exit 1
+  fi
+
+  if [[ -n "$brokers" ]]
+  then
+      ids=$(echo "$brokers" | tr ',' '\n' | sed '/^$/d')
+      for id in $ids
+      do
+          get_broker_container_of_id "$id" || exit 1
+      done
+  else
+      ids=$(echo "$containers" | awk '{print $1}')
+  fi
+  nb=$(echo "$ids" | wc -l | tr -d ' ')
+  if [ "$(echo "$containers" | wc -l | tr -d ' ')" == "1" ]
+  then
+      logwarn "⚠️ only one broker: the cluster is unavailable while it restarts (start the example with playground run --enable-multiple-brokers for a real rolling restart)"
+  fi
+
+  if ! get_cluster_health
+  then
+      if [[ -z "$force" ]]
+      then
+          logerror "❌ cluster is not healthy before the rolling restart: $(cluster_health_one_line)"
+          logerror "   check it with 'playground broker health', or use --force to restart anyway"
+          exit 1
+      fi
+      logwarn "⚠️ cluster is not healthy before the rolling restart ($(cluster_health_one_line)), restarting anyway (--force)"
+  fi
+
+  start_time=$SECONDS
+  i=0
+  for id in $ids
+  do
+      i=$((i + 1))
+      get_broker_container_of_id "$id" || exit 1
+      container="$broker_id_container"
+      broker_start_time=$SECONDS
+      log "🔄 [$i/$nb] Restarting broker $id (container $container)"
+      docker restart -t 60 "$container" > /dev/null || exit 1
+      wait_for_broker_registered "$id" "$max_wait" || exit 1
+      wait_for_cluster_healthy $((max_wait - (SECONDS - broker_start_time))) || {
+          logerror "❌ rolling restart stopped after broker $id: the next brokers were not restarted"
+          exit 1
+      }
+      log "✅ [$i/$nb] broker $id restarted, cluster is healthy ($((SECONDS - broker_start_time))s)"
+  done
+  log "🎉 rolling restart of brokers $(echo $ids | tr ' ' ',') done in $((SECONDS - start_time))s"
+
+}
+
+# :command.function
+playground_broker_transactions_list_command() {
+
+  # src/commands/broker/transactions/list.sh
+  state="${args[--state]}"
+  pattern="${args[--pattern]}"
+  verbose="${args[--verbose]}"
+
+  rc=0
+  output=$(run_kafka_admin_subcommand_tool kafka-transactions list 2>&1) || rc=$?
+  if [ $rc -ne 0 ] || ! echo "$output" | grep -q "^TransactionalId"
+  then
+      logerror "❌ kafka-transactions list failed:"
+      echo "$output" | grep -v -E "^[[:space:]]+at "
+      exit 1
+  fi
+
+  rows=$(echo "$output" | sed -n '/^TransactionalId/,$p' | tail -n +2 | awk -F'\t' -v state="$state" -v pattern="$pattern" 'BEGIN { OFS = "\t" } {
+      for (f = 1; f <= NF; f++) gsub(/^[ ]+|[ ]+$/, "", $f) ; }
+      $1 != "" && (state == "" || tolower($4) == tolower(state)) && (pattern == "" || $1 ~ pattern) { print $1, $2, $3, $4 }')
+  if [[ -z "$rows" ]]
+  then
+      log "🤷 no transaction found$([[ -n "$state$pattern" ]] && echo " matching the filters")"
+      exit 0
+  fi
+  log "💱 Transactions ($(echo "$rows" | wc -l | tr -d ' '))"
+  {
+      printf 'TRANSACTIONAL_ID\tCOORDINATOR\tPRODUCER_ID\tSTATE\n'
+      echo "$rows" | sort
+  } | column -t -s $'\t'
+  if echo "$rows" | awk -F'\t' '$4 == "Ongoing"' | grep -q .
+  then
+      log "🎓 details of an ongoing one: playground broker transactions describe --transactional-id <id>"
+  fi
+
+}
+
+# :command.function
+playground_broker_transactions_describe_command() {
+
+  # src/commands/broker/transactions/describe.sh
+  transactional_id="${args[--transactional-id]}"
+  verbose="${args[--verbose]}"
+
+  rc=0
+  output=$(run_kafka_admin_subcommand_tool kafka-transactions describe --transactional-id "$transactional_id" 2>&1) || rc=$?
+  if [ $rc -ne 0 ] || ! echo "$output" | grep -q "^CoordinatorId"
+  then
+      if echo "$output" | grep -q -E "TransactionalIdNotFound|could not be found"
+      then
+          logerror "❌ transactional id $transactional_id not found (playground broker transactions list)"
+      else
+          logerror "❌ kafka-transactions describe failed:"
+          echo "$output" | grep -v -E "^[[:space:]]+at "
+      fi
+      exit 1
+  fi
+
+  log "💱 Transaction $transactional_id"
+  # one "key: value" line per column of the single row
+  echo "$output" | sed -n '/^CoordinatorId/,$p' | head -2 | awk -F'\t' '
+      { for (f = 1; f <= NF; f++) gsub(/^[ ]+|[ ]+$/, "", $f) ; }
+      NR == 1 { for (i = 1; i <= NF; i++) header[i] = $i ; n = NF }
+      NR == 2 { for (i = 1; i <= n; i++) if (header[i] != "") printf "%-32s %s\n", header[i] ":", $i }'
+
+}
+
+# :command.function
+playground_broker_transactions_describe_producers_command() {
+
+  # src/commands/broker/transactions/describe-producers.sh
+  topic="${args[--topic]}"
+  partition="${args[--partition]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$partition" ]]
+  then
+      partitions="$partition"
+  else
+      partitions=$(get_topic_partition_assignment "$topic" | awk '{print $1}')
+      if [[ -z "$partitions" ]]
+      then
+          logerror "❌ topic $topic not found"
+          exit 1
+      fi
+  fi
+
+  log "🏭 Active producers of topic $topic"
+  rows=""
+  for p in $partitions
+  do
+      rc=0
+      output=$(run_kafka_admin_subcommand_tool kafka-transactions describe-producers --topic "$topic" --partition "$p" 2>&1) || rc=$?
+      if [ $rc -ne 0 ] || ! echo "$output" | grep -q "^ProducerId"
+      then
+          logerror "❌ kafka-transactions describe-producers failed on partition $p:"
+          echo "$output" | grep -v -E "^[[:space:]]+at "
+          exit 1
+      fi
+      rows+=$(echo "$output" | sed -n '/^ProducerId/,$p' | tail -n +2 | awk -F'\t' -v p="$p" 'BEGIN { OFS = "\t" } { for (f = 1; f <= NF; f++) gsub(/^[ ]+|[ ]+$/, "", $f) ; } $1 != "" {
+          open = ($6 == "-1" || $6 == "None" || $6 == "") ? "-" : $6 " ⚠️"
+          print p, $1, $2, $3, $4, $5, open
+      }')$'\n'
+  done
+  rows=$(echo -n "$rows" | sed '/^$/d')
+  if [[ -z "$rows" ]]
+  then
+      log "🤷 no active producer (producer state expires after transactional.id.expiration.ms / producer.id.expiration.ms)"
+      exit 0
+  fi
+  {
+      printf 'PARTITION\tPRODUCER_ID\tEPOCH\tCOORDINATOR_EPOCH\tLAST_SEQUENCE\tLAST_TIMESTAMP\tOPEN_TRANSACTION_START_OFFSET\n'
+      echo "$rows"
+  } | column -t -s $'\t'
+  if echo "$rows" | grep -q "⚠️"
+  then
+      log "🎓 an open transaction holds the last stable offset of its partition: read_committed consumers don't read past it until it commits, aborts or times out"
+      log "   is it hanging? playground broker transactions find-hanging --topic $topic"
+  fi
+
+}
+
+# :command.function
+playground_broker_transactions_find_hanging_command() {
+
+  # src/commands/broker/transactions/find-hanging.sh
+  broker="${args[--broker]}"
+  topic="${args[--topic]}"
+  partition="${args[--partition]}"
+  max_transaction_timeout="${args[--max-transaction-timeout]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$partition" ]] && [[ -z "$topic" ]]
+  then
+      logerror "❌ --partition needs --topic"
+      exit 1
+  fi
+
+  # one search per broker, unless the search is limited to a topic
+  searches=()
+  if [[ -n "$topic" ]]
+  then
+      search=(--topic "$topic")
+      [[ -n "$partition" ]] && search+=(--partition "$partition")
+      [[ -n "$broker" ]] && search+=(--broker-id "$broker")
+      searches+=("${search[*]}")
+      log "🔎 Searching hanging transactions on topic $topic$([[ -n "$partition" ]] && echo " partition $partition") (open for more than $max_transaction_timeout minutes)"
+  else
+      get_broker_config_ids "$broker" || exit 1
+      for id in "${broker_config_ids[@]}"
+      do
+          searches+=("--broker-id $id")
+      done
+      log "🔎 Searching hanging transactions on broker(s) $(echo "${broker_config_ids[@]}" | tr ' ' ',') (open for more than $max_transaction_timeout minutes)"
+  fi
+
+  rows=""
+  for search in "${searches[@]}"
+  do
+      rc=0
+      output=$(run_kafka_admin_subcommand_tool kafka-transactions find-hanging $search --max-transaction-timeout "$max_transaction_timeout" 2>&1) || rc=$?
+      if [ $rc -ne 0 ]
+      then
+          logerror "❌ kafka-transactions find-hanging $search failed:"
+          echo "$output" | grep -v -E "^[[:space:]]+at "
+          exit 1
+      fi
+      if echo "$output" | grep -q "^Topic"
+      then
+          rows+=$(echo "$output" | sed -n '/^Topic/,$p' | tail -n +2 | awk -F'\t' 'BEGIN { OFS = "\t" } { for (f = 1; f <= NF; f++) gsub(/^[ ]+|[ ]+$/, "", $f) ; $1 = $1 } $1 != "" { print }')$'\n'
+      fi
+  done
+  rows=$(echo -n "$rows" | sed '/^$/d' | sort -u)
+
+  if [[ -z "$rows" ]]
+  then
+      log "✅ no hanging transaction"
+      log "🎓 an open transaction that its coordinator still tracks is not hanging, it is aborted after transaction.timeout.ms: see them with playground broker transactions describe-producers --topic <topic>"
+      exit 0
+  fi
+  logerror "❌ $(echo "$rows" | wc -l | tr -d ' ') hanging transaction(s): they hold the last stable offset, read_committed consumers are stuck"
+  {
+      printf 'TOPIC\tPARTITION\tPRODUCER_ID\tEPOCH\tCOORDINATOR_EPOCH\tSTART_OFFSET\tLAST_TIMESTAMP\tDURATION_MIN\n'
+      echo "$rows"
+  } | column -t -s $'\t'
+  log "🧹 to abort them (requires administrative privileges):"
+  echo "$rows" | awk -F'\t' '{ printf "playground broker transactions abort --topic %s --partition %s --start-offset %s\n", $1, $2, $6 }'
+  exit 1
+
+}
+
+# :command.function
+playground_broker_transactions_abort_command() {
+
+  # src/commands/broker/transactions/abort.sh
+  topic="${args[--topic]}"
+  partition="${args[--partition]}"
+  start_offset="${args[--start-offset]}"
+  verbose="${args[--verbose]}"
+
+  log "🧹 Aborting the transaction of topic $topic partition $partition started at offset $start_offset"
+  rc=0
+  output=$(run_kafka_admin_subcommand_tool kafka-transactions abort --topic "$topic" --partition "$partition" --start-offset "$start_offset" 2>&1) || rc=$?
+  output=$(echo "$output" | grep -v -E "^$|SLF4J|log4j|^[[:space:]]+at " || true)
+  if [ $rc -ne 0 ] || echo "$output" | grep -q -E "^Error|Exception"
+  then
+      logerror "❌ kafka-transactions abort failed:"
+      echo "$output"
+      logerror "   the start offset must be the one of an open transaction: playground broker transactions describe-producers --topic $topic --partition $partition"
+      exit 1
+  fi
+  [[ -n "$output" ]] && echo "$output"
+  log "✅ transaction aborted"
+  playground broker transactions describe-producers --topic "$topic" --partition "$partition"
+
+}
+
+# :command.function
+playground_broker_describe_command() {
+
+  # src/commands/broker/describe.sh
+  api_versions="${args[--api-versions]}"
+  broker="${args[--broker]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$api_versions" ]]
+  then
+      output=$(run_kafka_admin_tool kafka-broker-api-versions 2>&1 | grep -v -E "^WARNING|SLF4J|log4j" || true)
+      if ! echo "$output" | grep -q -E "\(id: [0-9]+"
+      then
+          logerror "❌ kafka-broker-api-versions failed:"
+          echo "$output" | grep -v -E "^[[:space:]]+at "
+          exit 1
+      fi
+      if [[ -z "$broker" ]]
+      then
+          broker=$(echo "$output" | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | head -1)
+      fi
+      block=$(echo "$output" | awk -v id="$broker" '
+          /\(id: [0-9]+/ { keep = ($0 ~ "\\(id: " id " ") }
+          keep')
+      if [[ -z "$block" ]]
+      then
+          logerror "❌ broker $broker does not exist, brokers are: $(echo "$output" | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | paste -sd, -)"
+          exit 1
+      fi
+      log "🔌 API versions supported by broker $broker (min to max, [usable: N] is the version this client picks)"
+      echo "$block"
+      exit 0
+  fi
+
+  api_output=$(run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -E "\(id: [0-9]+" || true)
+  if [[ -z "$api_output" ]]
+  then
+      logerror "❌ no broker answers, is an environment running? (playground status)"
+      exit 1
+  fi
+
+  cp_tag=$(get_running_cp_tag)
+  log "🖥️ Brokers$([[ -n "$cp_tag" ]] && echo " (CP $cp_tag)")"
+  get_environment_used
+  containers=""
+  [[ "$environment" != cfk* ]] && containers=$(get_broker_containers)
+  {
+      printf 'ID\tENDPOINT\tRACK\tFENCED\tCONTAINER\n'
+      echo "$api_output" | sed -E 's/^([^ ]+) \(id: ([0-9]+) rack: ([^ )]+)( isFenced: ([a-z]+))?.*/\2 \1 \3 \5/' | sort -n | while read -r id endpoint rack fenced
+      do
+          container=$(echo "$containers" | awk -v id="$id" '$1 == id { print $2 }')
+          printf '%s\t%s\t%s\t%s\t%s\n' "$id" "$endpoint" "$rack" "${fenced:--}" "${container:--}"
+      done
+      # broker containers that are not registered (stopped or starting)
+      echo "$containers" | while read -r id container
+      do
+          [[ -z "$id" ]] && continue
+          if ! echo "$api_output" | grep -q "(id: $id "
+          then
+              state=$(docker inspect -f '{{.State.Status}}' "$container" 2>/dev/null)
+              printf '%s\t%s\t%s\t%s\t%s\n' "$id" "(not registered)" "-" "-" "$container ($state) ⚠️"
+          fi
+      done
+  } | column -t -s $'\t'
+
+  output=$(run_kafka_admin_subcommand_tool kafka-metadata-quorum describe --status 2>&1) || true
+  if echo "$output" | grep -q "^LeaderId"
+  then
+      field() { echo "$output" | grep -E "^$1:" | sed -E "s/^$1:[[:space:]]*//" ; }
+      voters=$(field CurrentVoters | grep -o -E '"id": [0-9]+' | grep -o -E "[0-9]+" | paste -sd, -)
+      [[ -z "$voters" ]] && voters=$(field CurrentVoters | tr -d '[] ')
+      observers=$(field CurrentObservers | grep -o -E '"id": [0-9]+' | grep -o -E "[0-9]+" | sort -n | paste -sd, -)
+      [[ -z "$observers" ]] && observers=$(field CurrentObservers | tr -d '[] ')
+      log "🗳️ KRaft"
+      printf '%-22s %s\n' "Cluster id:" "$(field ClusterId)"
+      printf '%-22s %s\n' "Active controller:" "$(field LeaderId) (epoch $(field LeaderEpoch))"
+      printf '%-22s %s\n' "Voters (controllers):" "$voters"
+      printf '%-22s %s\n' "Observers (brokers):" "$observers"
+      printf '%-22s %s\n' "Max follower lag:" "$(field MaxFollowerLag) records, $(field MaxFollowerLagTimeMs) ms"
+  elif echo "$output" | grep -q -E "UnsupportedVersion|ZooKeeper|zookeeper"
+  then
+      log "🐘 ZooKeeper mode (no KRaft quorum)"
+  else
+      logwarn "⚠️ could not describe the KRaft quorum:"
+      echo "$output" | grep -v -E "^[[:space:]]+at " | grep -E "Error|Exception" | head -3
+  fi
+
+  output=$(run_kafka_admin_subcommand_tool kafka-features describe 2>&1) || true
+  if echo "$output" | grep -q "^Feature:"
+  then
+      log "🏷️ Features"
+      {
+          printf 'FEATURE\tFINALIZED\tSUPPORTED\n'
+          echo "$output" | grep "^Feature:" | awk '{
+              feature = $2 ; finalized = "" ; min = "" ; max = ""
+              for (i = 3; i <= NF; i++) {
+                  if ($i == "SupportedMinVersion:") min = $(i+1)
+                  if ($i == "SupportedMaxVersion:") max = $(i+1)
+                  if ($i == "FinalizedVersionLevel:") { finalized = $(i+1) ; if ($(i+2) ~ /^[0-9]+$/) finalized = finalized " " $(i+2) }
+              }
+              printf "%s\t%s\t%s to %s\n", feature, finalized, min, max
+          }'
+      } | column -t -s $'\t'
+  fi
+  log "🎓 health of the cluster: playground broker health, API versions of a broker: playground broker describe --api-versions"
+
+}
+
+# :command.function
+playground_broker_metrics_command() {
+
+  # src/commands/broker/metrics.sh
+  broker="${args[--broker]}"
+  topic="${args[--topic]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$broker" ]]
+  then
+      get_broker_container_of_id "$broker" || exit 1
+      targets="$broker $broker_id_container"
+  else
+      targets=$(get_broker_containers)
+      if [[ -z "$targets" ]]
+      then
+          logerror "❌ no broker container found, is an environment running? (playground status)"
+          exit 1
+      fi
+  fi
+
+  topic_suffix=""
+  [[ -n "$topic" ]] && topic_suffix=",topic=$topic"
+
+  # label|object name|attribute|format|warning
+  metrics_spec="Partitions|kafka.server:type=ReplicaManager,name=PartitionCount|Value|int|
+  Leaders|kafka.server:type=ReplicaManager,name=LeaderCount|Value|int|
+  Under-replicated partitions|kafka.server:type=ReplicaManager,name=UnderReplicatedPartitions|Value|int|gt0
+  Under min ISR partitions|kafka.server:type=ReplicaManager,name=UnderMinIsrPartitionCount|Value|int|gt0
+  Request handler idle (1m)|kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent|OneMinuteRate|pct|lt30
+  Network processor idle|kafka.network:type=SocketServer,name=NetworkProcessorAvgIdlePercent|Value|pct|lt30
+  Request queue size|kafka.network:type=RequestChannel,name=RequestQueueSize|Value|int|
+  Produce p99|kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce|99thPercentile|ms|
+  Fetch consumer p99|kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer|99thPercentile|ms|
+  Fetch follower p99|kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchFollower|99thPercentile|ms|
+  Messages in/s (1m)|kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec$topic_suffix|OneMinuteRate|rate|
+  Bytes in/s (1m)|kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec$topic_suffix|OneMinuteRate|bytes|
+  Bytes out/s (1m)|kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec$topic_suffix|OneMinuteRate|bytes|
+  ISR shrinks (since start)|kafka.server:type=ReplicaManager,name=IsrShrinksPerSec|Count|int|
+  ISR expands (since start)|kafka.server:type=ReplicaManager,name=IsrExpandsPerSec|Count|int|
+  Failed produce requests (since start)|kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec$topic_suffix|Count|int|
+  Failed fetch requests (since start)|kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec$topic_suffix|Count|int|"
+
+  # the generated CLI indents the lines of this string
+  metrics_spec=$(echo "$metrics_spec" | sed 's/^[[:space:]]*//')
+
+  object_args=()
+  while IFS='|' read -r label object attribute format warning
+  do
+      object_args+=(--object-name "$object")
+  done <<< "$metrics_spec"
+
+  # "<broker id>|<label>|<raw value>" for every metric of every running broker
+  values=""
+  ids=""
+  while read -r id container
+  do
+      [[ -z "$id" ]] && continue
+      if ! is_container_running "$container"
+      then
+          logwarn "⚠️ broker $id (container $container) is not running, skipped"
+          continue
+      fi
+      port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
+      if [[ -z "$port" ]]
+      then
+          logwarn "⚠️ JMX is not enabled on broker $id (no KAFKA_JMX_PORT), skipped"
+          continue
+      fi
+      jmx_tool="kafka-jmx"
+      if ! docker exec "$container" bash -c "command -v kafka-jmx" > /dev/null 2>&1
+      then
+          # before Kafka 3.5
+          jmx_tool="kafka-run-class kafka.tools.JmxTool"
+      fi
+      [[ -n "$verbose" ]] && log "🐞 $jmx_tool --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv (in $container)"
+      output=$(docker exec "$container" $jmx_tool --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv 2>&1) || true
+      if ! echo "$output" | grep -q -E "^kafka\."
+      then
+          logwarn "⚠️ could not read the JMX metrics of broker $id:"
+          echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3
+          continue
+      fi
+      ids+="$id "
+      while IFS='|' read -r label object attribute format warning
+      do
+          value=$(echo "$output" | awk -F'\t' -v key="$object:$attribute" '$1 == key { print $2 ; exit }')
+          values+="$id|$label|$value"$'\n'
+      done <<< "$metrics_spec"
+  done <<< "$targets"
+
+  if [[ -z "$ids" ]]
+  then
+      logerror "❌ no broker metrics could be read"
+      exit 1
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      echo -n "$values" | jq -R -s 'split("\n") | map(select(length > 0) | split("|"))
+          | group_by(.[0]) | map({ broker: (.[0][0] | tonumber), metrics: (map({ (.[1]): (.[2] | tonumber? // null) }) | add) })'
+      exit 0
+  fi
+
+  log "📈 Broker metrics$([[ -n "$topic" ]] && echo " (rates and failed requests of topic $topic)")"
+  {
+      printf 'METRIC'
+      for id in $ids
+      do
+          printf '\tBROKER %s' "$id"
+      done
+      printf '\n'
+      while IFS='|' read -r label object attribute format warning
+      do
+          printf '%s' "$label"
+          for id in $ids
+          do
+              value=$(echo -n "$values" | awk -F'|' -v id="$id" -v label="$label" '$1 == id && $2 == label { print $3 ; exit }')
+              printf '\t%s' "$(echo "$value" | awk -v format="$format" -v warning="$warning" '
+                  $0 == "" { print "-" ; exit }
+                  {
+                      v = $0 + 0
+                      if (format == "pct") out = sprintf("%.0f%%", v * 100)
+                      else if (format == "ms") out = sprintf("%.0f ms", v)
+                      else if (format == "rate") out = sprintf("%.1f", v)
+                      else if (format == "bytes") {
+                          if (v >= 1048576) out = sprintf("%.1f MB", v / 1048576)
+                          else if (v >= 1024) out = sprintf("%.1f KB", v / 1024)
+                          else out = sprintf("%.0f B", v)
+                      }
+                      else out = sprintf("%.0f", v)
+                      if ((warning == "gt0" && v > 0) || (warning == "lt30" && v < 0.3)) out = out " ⚠️"
+                      print out
+                  }')"
+          done
+          printf '\n'
+      done <<< "$metrics_spec"
+  } | column -t -s $'\t'
+  log "🎓 idle below 30% means the broker threads are saturated (num.io.threads, num.network.threads)"
+  log "   fetch p99 includes the time a fetch waits for data (fetch.max.wait.ms, replica.fetch.wait.max.ms: 500 ms by default)"
 
 }
 
@@ -92867,6 +94600,48 @@ playground_topic_produce_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --transactional-id)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--transactional-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--transactional-id requires an argument: --transactional-id TRANSACTIONAL-ID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --transaction)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--transaction']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--transaction requires an argument: --transaction TRANSACTION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --transaction-timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--transaction-timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--transaction-timeout requires an argument: --transaction-timeout MS" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -92910,6 +94685,8 @@ playground_topic_produce_parse_requirements() {
   [[ -n ${args['--throughput']:-} ]] || args['--throughput']="0"
   [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']="1"
   [[ -n ${args['--record-size']:-} ]] || args['--record-size']="0"
+  [[ -n ${args['--transaction']:-} ]] || args['--transaction']="commit"
+  [[ -n ${args['--transaction-timeout']:-} ]] || args['--transaction-timeout']="60000"
 
   # :command.validations
   # :flag.validations
@@ -92984,6 +94761,15 @@ playground_topic_produce_parse_requirements() {
     fi
   fi
 
+  # :flag.validations
+  if [[ -v args['--transaction-timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--transaction-timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--transaction-timeout MS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
   # :command.whitelist_filter
   if [[ ${args['--value-format']:-} ]] && [[ ! ${args['--value-format']:-} =~ ^(avro|json-schema|protobuf|json|sql|datagen|raw)$ ]]; then
     printf "%s\n" "--value-format must be one of: avro, json-schema, protobuf, json, sql, datagen, raw" >&2
@@ -93025,6 +94811,10 @@ playground_topic_produce_parse_requirements() {
       exit 1
     fi
   done
+  if [[ ${args['--transaction']:-} ]] && [[ ! ${args['--transaction']:-} =~ ^(commit|abort|open)$ ]]; then
+    printf "%s\n" "--transaction must be one of: commit, abort, open" >&2
+    exit 1
+  fi
 
   # :command.user_filter
   filter_error=$(filter_schema_registry_running)
@@ -95242,6 +97032,55 @@ playground_broker_parse_requirements() {
       shift $#
       ;;
 
+    health)
+      action="health"
+      shift
+      playground_broker_health_parse_requirements "$@"
+      shift $#
+      ;;
+
+    stop)
+      action="stop"
+      shift
+      playground_broker_stop_parse_requirements "$@"
+      shift $#
+      ;;
+
+    start)
+      action="start"
+      shift
+      playground_broker_start_parse_requirements "$@"
+      shift $#
+      ;;
+
+    rolling-restart)
+      action="rolling-restart"
+      shift
+      playground_broker_rolling_restart_parse_requirements "$@"
+      shift $#
+      ;;
+
+    transactions)
+      action="transactions"
+      shift
+      playground_broker_transactions_parse_requirements "$@"
+      shift $#
+      ;;
+
+    describe)
+      action="describe"
+      shift
+      playground_broker_describe_parse_requirements "$@"
+      shift $#
+      ;;
+
+    metrics)
+      action="metrics"
+      shift
+      playground_broker_metrics_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_broker_usage >&2
@@ -95755,6 +97594,1501 @@ playground_broker_config_delete_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_health_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_health_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker health"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --wait-healthy)
+
+        # :flag.case_no_arg
+        args['--wait-healthy']=1
+        shift
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX-WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="120"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX-WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_stop_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_stop_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker stop"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --kill)
+
+        # :flag.case_no_arg
+        args['--kill']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--broker']+x} ]]; then
+    printf "missing required flag: --broker, -b BROKER\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_start_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_start_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker start"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX-WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-wait)
+
+        # :flag.case_no_arg
+        args['--no-wait']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--broker']+x} ]]; then
+    printf "missing required flag: --broker, -b BROKER\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="180"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX-WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_rolling_restart_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_rolling_restart_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker rolling-restart"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --brokers)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--brokers']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--brokers requires an argument: --brokers BROKERS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX-WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --force)
+
+        # :flag.case_no_arg
+        args['--force']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="300"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX-WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_transactions_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_transactions_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    list)
+      action="list"
+      shift
+      playground_broker_transactions_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    describe)
+      action="describe"
+      shift
+      playground_broker_transactions_describe_parse_requirements "$@"
+      shift $#
+      ;;
+
+    describe-producers)
+      action="describe-producers"
+      shift
+      playground_broker_transactions_describe_producers_parse_requirements "$@"
+      shift $#
+      ;;
+
+    find-hanging)
+      action="find-hanging"
+      shift
+      playground_broker_transactions_find_hanging_parse_requirements "$@"
+      shift $#
+      ;;
+
+    abort)
+      action="abort"
+      shift
+      playground_broker_transactions_abort_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_broker_transactions_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_transactions_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_transactions_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker transactions list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --state)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--state']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--state requires an argument: --state STATE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --pattern)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--pattern']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--pattern requires an argument: --pattern REGEX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ${args['--state']:-} ]] && [[ ! ${args['--state']:-} =~ ^(Empty|Ongoing|PrepareCommit|PrepareAbort|CompleteCommit|CompleteAbort|Dead|PrepareEpochFence)$ ]]; then
+    printf "%s\n" "--state must be one of: Empty, Ongoing, PrepareCommit, PrepareAbort, CompleteCommit, CompleteAbort, Dead, PrepareEpochFence" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_transactions_describe_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_transactions_describe_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker transactions describe"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --transactional-id | -i)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--transactional-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--transactional-id requires an argument: --transactional-id, -i TRANSACTIONAL-ID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--transactional-id']+x} ]]; then
+    printf "missing required flag: --transactional-id, -i TRANSACTIONAL-ID\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_transactions_describe_producers_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_transactions_describe_producers_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker transactions describe-producers"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --partition | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--partition']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--partition requires an argument: --partition, -p PARTITION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--partition'] ]]; then
+    validation_output="$(validate_integer "${args['--partition']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--partition, -p PARTITION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_transactions_find_hanging_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_transactions_find_hanging_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker transactions find-hanging"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --partition | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--partition']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--partition requires an argument: --partition, -p PARTITION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-transaction-timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-transaction-timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-transaction-timeout requires an argument: --max-transaction-timeout MINUTES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-transaction-timeout']:-} ]] || args['--max-transaction-timeout']="15"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--partition'] ]]; then
+    validation_output="$(validate_integer "${args['--partition']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--partition, -p PARTITION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-transaction-timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--max-transaction-timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-transaction-timeout MINUTES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_transactions_abort_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_transactions_abort_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker transactions abort"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --partition | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--partition']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--partition requires an argument: --partition, -p PARTITION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --start-offset)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--start-offset']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--start-offset requires an argument: --start-offset OFFSET" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--partition']+x} ]]; then
+    printf "missing required flag: --partition, -p PARTITION\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--start-offset']+x} ]]; then
+    printf "missing required flag: --start-offset OFFSET\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--partition'] ]]; then
+    validation_output="$(validate_integer "${args['--partition']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--partition, -p PARTITION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--start-offset'] ]]; then
+    validation_output="$(validate_integer "${args['--start-offset']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--start-offset OFFSET" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_describe_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_describe_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker describe"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --api-versions)
+
+        # :flag.case_no_arg
+        args['--api-versions']=1
+        shift
+        ;;
+
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_metrics_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_metrics_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker metrics"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
   fi
 
 }
@@ -118571,6 +121905,42 @@ playground_topic_produce_completion() {
         completion_blocked_flags["--record-size"]=1
 
         ;;
+      --transactional-id)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--transactional-id"]=1
+
+        ;;
+      --transaction)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "commit"
+            "abort"
+            "open"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--transaction"]=1
+
+        ;;
+      --transaction-timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--transaction-timeout"]=1
+
+        ;;
       *)
         return
         ;;
@@ -118610,6 +121980,9 @@ playground_topic_produce_completion() {
     completion_flag_candidates --validate-config "$completion_current" --validate-config
     completion_flag_candidates --producer-property "$completion_current" --producer-property
     completion_flag_candidates --record-size "$completion_current" --record-size
+    completion_flag_candidates --transactional-id "$completion_current" --transactional-id
+    completion_flag_candidates --transaction "$completion_current" --transaction
+    completion_flag_candidates --transaction-timeout "$completion_current" --transaction-timeout
   fi
 
 }
@@ -119754,6 +123127,41 @@ playground_broker_completion() {
         playground_broker_config_completion "$completion_current" "$@"
         return
         ;;
+      health)
+        shift
+        playground_broker_health_completion "$completion_current" "$@"
+        return
+        ;;
+      stop)
+        shift
+        playground_broker_stop_completion "$completion_current" "$@"
+        return
+        ;;
+      start)
+        shift
+        playground_broker_start_completion "$completion_current" "$@"
+        return
+        ;;
+      rolling-restart)
+        shift
+        playground_broker_rolling_restart_completion "$completion_current" "$@"
+        return
+        ;;
+      transactions)
+        shift
+        playground_broker_transactions_completion "$completion_current" "$@"
+        return
+        ;;
+      describe)
+        shift
+        playground_broker_describe_completion "$completion_current" "$@"
+        return
+        ;;
+      metrics)
+        shift
+        playground_broker_metrics_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -119763,7 +123171,7 @@ playground_broker_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" config
+  completion_candidates "$completion_current" config health stop start rolling-restart transactions describe metrics
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -119979,6 +123387,672 @@ playground_broker_config_delete_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --broker "$completion_current" --broker -b
     completion_flag_candidates --key "$completion_current" --key -k
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_health_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --wait-healthy)
+        completion_blocked_flags["--wait-healthy"]=1
+
+        shift
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --wait-healthy "$completion_current" --wait-healthy
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_stop_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+          completion_candidates "$completion_current" 1 2 3
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --kill)
+        completion_blocked_flags["--kill"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --kill "$completion_current" --kill
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_start_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+          completion_candidates "$completion_current" 1 2 3
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --no-wait)
+        completion_blocked_flags["--no-wait"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --no-wait "$completion_current" --no-wait
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_rolling_restart_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --brokers)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--brokers"]=1
+
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --force)
+        completion_blocked_flags["--force"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --brokers "$completion_current" --brokers
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --force "$completion_current" --force
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_transactions_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      list)
+        shift
+        playground_broker_transactions_list_completion "$completion_current" "$@"
+        return
+        ;;
+      describe)
+        shift
+        playground_broker_transactions_describe_completion "$completion_current" "$@"
+        return
+        ;;
+      describe-producers)
+        shift
+        playground_broker_transactions_describe_producers_completion "$completion_current" "$@"
+        return
+        ;;
+      find-hanging)
+        shift
+        playground_broker_transactions_find_hanging_completion "$completion_current" "$@"
+        return
+        ;;
+      abort)
+        shift
+        playground_broker_transactions_abort_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" list describe describe-producers find-hanging abort
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_transactions_list_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --state)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "Empty"
+            "Ongoing"
+            "PrepareCommit"
+            "PrepareAbort"
+            "CompleteCommit"
+            "CompleteAbort"
+            "Dead"
+            "PrepareEpochFence"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--state"]=1
+
+        ;;
+      --pattern)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--pattern"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --state "$completion_current" --state
+    completion_flag_candidates --pattern "$completion_current" --pattern
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_transactions_describe_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --transactional-id | -i)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--transactional-id"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --transactional-id "$completion_current" --transactional-id -i
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_transactions_describe_producers_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --partition | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--partition"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --partition "$completion_current" --partition -p
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_transactions_find_hanging_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --partition | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--partition"]=1
+
+        ;;
+      --max-transaction-timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-transaction-timeout"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --partition "$completion_current" --partition -p
+    completion_flag_candidates --max-transaction-timeout "$completion_current" --max-transaction-timeout
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_transactions_abort_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --partition | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--partition"]=1
+
+        ;;
+      --start-offset)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--start-offset"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --partition "$completion_current" --partition -p
+    completion_flag_candidates --start-offset "$completion_current" --start-offset
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_describe_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --api-versions)
+        completion_blocked_flags["--api-versions"]=1
+
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --api-versions "$completion_current" --api-versions
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_metrics_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
@@ -125364,6 +129438,18 @@ run() {
     "broker config get") playground_broker_config_get_command ;;
     "broker config set") playground_broker_config_set_command ;;
     "broker config delete") playground_broker_config_delete_command ;;
+    "broker health") playground_broker_health_command ;;
+    "broker stop") playground_broker_stop_command ;;
+    "broker start") playground_broker_start_command ;;
+    "broker rolling-restart") playground_broker_rolling_restart_command ;;
+    "broker transactions") playground_broker_transactions_command ;;
+    "broker transactions list") playground_broker_transactions_list_command ;;
+    "broker transactions describe") playground_broker_transactions_describe_command ;;
+    "broker transactions describe-producers") playground_broker_transactions_describe_producers_command ;;
+    "broker transactions find-hanging") playground_broker_transactions_find_hanging_command ;;
+    "broker transactions abort") playground_broker_transactions_abort_command ;;
+    "broker describe") playground_broker_describe_command ;;
+    "broker metrics") playground_broker_metrics_command ;;
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
     "consumer-group describe") playground_consumer_group_describe_command ;;

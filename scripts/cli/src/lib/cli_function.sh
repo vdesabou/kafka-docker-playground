@@ -2127,6 +2127,15 @@ function filter_not_ccloud_environment() {
   fi
 }
 
+function filter_not_cfk_environment() {
+  get_environment_used
+
+  if [[ "$environment" == cfk* ]]
+  then
+    logerror "this command is not available with $environment (the brokers are pods managed by Confluent for Kubernetes)"
+  fi
+}
+
 function filter_cfk_environment() {
   get_environment_used
 
@@ -7825,6 +7834,247 @@ function get_topic_partition_assignment () {
 # ids of the brokers of the cluster, one per line
 function get_broker_ids () {
   run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq
+}
+
+# copies every record of topic $1 to topic $2 in one transaction of transactional id $3, ended with $4 (commit, abort or
+# open) and transaction.timeout.ms $5, with scripts/cli/src/transactional-copier (built on first use, run with the
+# kafka-clients of the broker container): returns 1 on error
+function run_transactional_copier () {
+  local input_topic="$1" output_topic="$2" transactional_id="$3" transaction="$4" transaction_timeout="$5"
+  local copier_dir="$root_folder/scripts/cli/src/transactional-copier"
+  local jar="$copier_dir/target/transactional-copier-1.0.0.jar"
+  local output rc=0
+  if [ ! -f "$jar" ] || [ -n "$(find "$copier_dir/src" "$copier_dir/pom.xml" -newer "$jar" 2>/dev/null)" ]
+  then
+    log "🏗 Building jar for transactional-copier"
+    mkdir -p "$copier_dir/target"
+    # built from a copy of the sources, like schema-validator: an IDE may write its own classes in target/classes
+    build_java_component_with_retry "transactional-copier" docker run -i --rm -v "$copier_dir:/usr/src/transactional-copier:ro" -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "$copier_dir/target:/usr/src/target" maven:3.9.11-eclipse-temurin-17 bash -c "mkdir -p /usr/src/mymaven && cp -r /usr/src/transactional-copier/pom.xml /usr/src/transactional-copier/src /usr/src/mymaven/ && cd /usr/src/mymaven && mvn -s /tmp/settings.xml package && cp target/transactional-copier-1.0.0.jar /usr/src/target/"
+  fi
+
+  get_security_broker "--command-config"
+  local copier_cmd=(java -cp "/tmp/transactional-copier.jar:/usr/share/java/kafka/*" com.github.vdesabou.TransactionalCopier --bootstrap-server "$bootstrap_server" $security --input-topic "$input_topic" --output-topic "$output_topic" --transactional-id "$transactional_id" --transaction "$transaction" --transaction-timeout-ms "$transaction_timeout")
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 CLI command used (in $container)"
+    echo "${copier_cmd[*]}"
+  fi
+  if [[ "$environment" == cfk* ]]
+  then
+    kubectl -n confluent cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
+    output=$(kubectl -n confluent exec -i "$container" -- "${copier_cmd[@]}" 2>&1) || rc=$?
+  else
+    docker cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
+    output=$(docker exec -i "$container" "${copier_cmd[@]}" 2>&1) || rc=$?
+  fi
+  if [ $rc -ne 0 ] || ! echo "$output" | grep -q -E "^transaction (committed|aborted|left open)"
+  then
+    logerror "❌ the transactional copy to topic $output_topic failed:"
+    echo "$output" | grep -v -E "^[[:space:]]+at |^SLF4J|^log4j" | tail -20
+    return 1
+  fi
+  echo "$output" | grep -E "^records sent in the transaction|^transaction (committed|aborted|left open)"
+  return 0
+}
+
+# runs a kafka-* tool whose connection options go before its subcommand (kafka-transactions,
+# kafka-metadata-quorum, kafka-features): $1 tool, $2 subcommand, then the arguments of the subcommand
+function run_kafka_admin_subcommand_tool () {
+  local tool="$1" subcommand="$2"
+  shift 2
+  get_security_broker "--command-config"
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 CLI command used"
+    echo "$tool --bootstrap-server $bootstrap_server $security $subcommand $*"
+  fi
+  if [[ "$environment" == cfk* ]]
+  then
+    kubectl -n confluent exec -i $container -- $tool --bootstrap-server $bootstrap_server $security $subcommand "$@"
+  else
+    docker exec -i $container $tool --bootstrap-server $bootstrap_server $security $subcommand "$@"
+  fi
+}
+
+# id of the broker run by docker container $1 (running or stopped), empty when it is not a broker
+function get_broker_id_of_container () {
+  docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2>/dev/null | grep -E "^KAFKA_(BROKER|NODE)_ID=" | head -1 | cut -d= -f2
+}
+
+# docker containers of the brokers (running or stopped), one "<id> <container>" per line, sorted by id
+function get_broker_containers () {
+  local c id
+  for c in broker broker2 broker3
+  do
+    id=$(get_broker_id_of_container "$c")
+    if [[ -n "$id" ]]
+    then
+      echo "$id $c"
+    fi
+  done | sort -n
+}
+
+# docker container of broker $1: returns 1 (with an error) when there is none
+function get_broker_container_of_id () {
+  local id="$1" containers
+  containers=$(get_broker_containers)
+  broker_id_container=$(echo "$containers" | awk -v id="$id" '$1 == id { print $2 }')
+  if [[ -z "$broker_id_container" ]]
+  then
+    if [[ -z "$containers" ]]
+    then
+      logerror "❌ no broker container found, is an environment running? (playground status)"
+    else
+      logerror "❌ broker $id does not exist, brokers are: $(echo "$containers" | awk '{print $1}' | paste -sd, -)"
+    fi
+    return 1
+  fi
+  return 0
+}
+
+# partitions listed by kafka-topics --describe $1 (--under-replicated-partitions, --under-min-isr-partitions or
+# --unavailable-partitions), one "<topic> <partition> <leader> <replicas> <isr>" per line: returns 1 when kafka-topics fails
+function get_partitions_with_status () {
+  local output
+  output=$(run_kafka_admin_tool kafka-topics --describe "$1" 2>&1) || { echo "$output" | grep -v -E "^[[:space:]]+at " >&2 ; return 1 ; }
+  echo "$output" | awk '
+    /Partition:/ {
+      t=""; p=""; l=""; r=""; i=""
+      for (n = 1; n < NF; n++) {
+        if ($n == "Topic:") t = $(n+1)
+        if ($n == "Partition:") p = $(n+1)
+        if ($n == "Leader:") l = $(n+1)
+        if ($n == "Replicas:") r = $(n+1)
+        if ($n == "Isr:" && $(n+1) !~ /:$/) i = $(n+1)
+      }
+      if (i == "") i = "-"
+      print t, p, l, r, i
+    }'
+}
+
+# checks the health of the cluster and sets health_* (registered, fenced and not registered brokers, partitions
+# under-replicated, under min ISR and unavailable, KRaft quorum): returns 0 when healthy, 1 otherwise
+function get_cluster_health () {
+  local api_versions id container output now
+  health_ok=1
+  health_error=""
+
+  api_versions=$(run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -E "\(id: [0-9]+" || true)
+  health_registered=$(echo "$api_versions" | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq || true)
+  health_fenced=$(echo "$api_versions" | grep "isFenced: true" | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq || true)
+  if [[ -z "$health_registered" ]]
+  then
+    health_error="no broker answers, is an environment running? (playground status)"
+    health_ok=0
+    return 1
+  fi
+  [[ -n "$health_fenced" ]] && health_ok=0
+
+  # broker containers (not on cfk) whose broker is down: not registered (stopped, still starting), or stopped but
+  # still registered (a killed broker stays registered until its session times out)
+  health_not_registered=""
+  get_environment_used
+  if [[ "$environment" != cfk* ]]
+  then
+    while read -r id container
+    do
+      [[ -z "$id" ]] && continue
+      if ! echo "$health_registered" | grep -q -x "$id" || ! is_container_running "$container"
+      then
+        health_not_registered+="$id $container"$'\n'
+        health_ok=0
+      fi
+    done <<< "$(get_broker_containers)"
+  fi
+  health_not_registered=$(echo -n "$health_not_registered" | sed '/^$/d')
+
+  health_urp=$(get_partitions_with_status --under-replicated-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
+  health_under_min_isr=$(get_partitions_with_status --under-min-isr-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
+  health_unavailable=$(get_partitions_with_status --unavailable-partitions) || { health_error="kafka-topics failed" ; health_ok=0 ; return 1 ; }
+  # every replica in sync but still under min ISR: the replication factor is below min.insync.replicas, a config
+  # problem (acks=all producers always fail) rather than a broker problem, reported apart
+  health_rf_below_min_isr=$(echo "$health_under_min_isr" | awk 'NF && $3 != "none" && $3 != "-1" && $5 != "-" { if (split($4, r, ",") == split($5, i, ",")) print }')
+  health_under_min_isr=$(echo "$health_under_min_isr" | awk 'NF { if ($3 == "none" || $3 == "-1" || $5 == "-" || split($4, r, ",") != split($5, i, ",")) print }')
+  if [[ -n "$health_urp" ]] || [[ -n "$health_under_min_isr" ]] || [[ -n "$health_unavailable" ]]
+  then
+    health_ok=0
+  fi
+
+  # KRaft quorum, one "<node id> <status> <log end offset> <lag> <seconds since last caught up>" per line (empty with ZooKeeper)
+  health_quorum=""
+  health_quorum_leader=""
+  health_quorum_error=""
+  local rc=0
+  output=$(run_kafka_admin_subcommand_tool kafka-metadata-quorum describe --replication 2>&1) || rc=$?
+  if [ $rc -eq 0 ] && echo "$output" | grep -q "^NodeId"
+  then
+    now=$(($(date +%s) * 1000))
+    health_quorum=$(echo "$output" | awk -v now="$now" '
+      $1 ~ /^[0-9]+$/ {
+        # the DirectoryId column only exists in recent versions
+        if (NF >= 7) { leo = $3; lag = $4; caught = $6; status = $7 } else { leo = $2; lag = $3; caught = $5; status = $6 }
+        age = (caught > 0) ? int((now - caught) / 1000) : -1
+        if (age < 0 && caught > 0) age = 0
+        print $1, status, leo, lag, age
+      }')
+    health_quorum_leader=$(echo "$health_quorum" | awk '$2 == "Leader" { print $1 }')
+  elif ! echo "$output" | grep -q -E "UnsupportedVersion|ZooKeeper|zookeeper"
+  then
+    health_quorum_error=$(echo "$output" | grep -v -E "^[[:space:]]+at |SLF4J|log4j" | grep -E "Error|Exception" | head -3 || true)
+    [[ -z "$health_quorum_error" ]] && health_quorum_error=$(echo "$output" | head -3)
+    health_ok=0
+  fi
+
+  [ $health_ok -eq 1 ]
+}
+
+# waits up to $2 seconds for broker $1 to be registered (and not fenced): returns 1 on timeout
+function wait_for_broker_registered () {
+  local id="$1" max_wait="$2" start_time=$SECONDS api_versions
+  while true
+  do
+    api_versions=$(run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -E "\(id: ${id} " || true)
+    if [[ -n "$api_versions" ]] && ! echo "$api_versions" | grep -q "isFenced: true"
+    then
+      return 0
+    fi
+    if [ $((SECONDS - start_time)) -ge $max_wait ]
+    then
+      logerror "❌ broker $id is still not registered after ${max_wait}s"
+      return 1
+    fi
+    sleep 3
+  done
+}
+
+# waits up to $1 seconds for the cluster to be healthy (see get_cluster_health), logging the progress: returns 1 on timeout
+function wait_for_cluster_healthy () {
+  local max_wait="$1" start_time=$SECONDS
+  while ! get_cluster_health
+  do
+    if [ $((SECONDS - start_time)) -ge $max_wait ]
+    then
+      logerror "❌ cluster is still not healthy after ${max_wait}s: $(cluster_health_one_line)"
+      return 1
+    fi
+    log "⏳ cluster not healthy yet ($(cluster_health_one_line)), waiting... ($((SECONDS - start_time))s/${max_wait}s)"
+    sleep 5
+  done
+  return 0
+}
+
+# one line summary of the problems found by get_cluster_health
+function cluster_health_one_line () {
+  local problems=()
+  [[ -n "$health_error" ]] && problems+=("$health_error")
+  [[ -n "$health_not_registered" ]] && problems+=("brokers down: $(echo "$health_not_registered" | awk '{print $1}' | paste -sd, -)")
+  [[ -n "$health_fenced" ]] && problems+=("brokers fenced: $(echo "$health_fenced" | paste -sd, -)")
+  [[ -n "$health_urp" ]] && problems+=("$(echo "$health_urp" | wc -l | tr -d ' ') under-replicated partitions")
+  [[ -n "$health_under_min_isr" ]] && problems+=("$(echo "$health_under_min_isr" | wc -l | tr -d ' ') under min ISR")
+  [[ -n "$health_unavailable" ]] && problems+=("$(echo "$health_unavailable" | wc -l | tr -d ' ') unavailable")
+  [[ -n "$health_quorum_error" ]] && problems+=("KRaft quorum not available")
+  local IFS=","
+  echo "${problems[*]}" | sed 's/,/, /g'
 }
 
 # table of the partitions of a topic, with ⚠️ on the partitions whose leader is not the preferred (first) replica

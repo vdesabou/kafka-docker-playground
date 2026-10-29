@@ -78,7 +78,7 @@ CLI change that makes a page wrong shows up as a failing test.
 ### 🗂️ Topic administration: create, alter, counts, waiting
 
 - 📖 [Read the deep dive](/deep-dive-topic-administration.md)
-- 🧠 Commands: `topic create`, `alter`, `describe`, `list`, `get-number-records`, `get-offsets`, `wait-for-records`, `delete`
+- 🧠 Commands: `topic create`, `alter`, `describe`, `list`, `get-number-records`, `get-offsets`, `wait-for-records`, `delete`, `broker config`, `health`, `stop`, `start`, `rolling-restart`, `transactions`, `describe`, `metrics`
 - 🎬 Bite size session: [🪛 A producer gets RecordTooLargeException](/sessions?id=🪛-a-producer-gets-recordtoolargeexception)
 
 ### 🔰 Schema Registry: subjects, ids, compatibility, deletion

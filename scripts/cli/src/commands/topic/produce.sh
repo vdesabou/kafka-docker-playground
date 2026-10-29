@@ -29,6 +29,9 @@ schema_id_in_header="${args[--schema-id-in-header]}"
 value_format="${args[--value-format]}"
 key_format="${args[--key-format]}"
 throughput="${args[--throughput]}"
+transactional_id="${args[--transactional-id]}"
+transaction="${args[--transaction]}"
+transaction_timeout="${args[--transaction-timeout]}"
 
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
@@ -187,6 +190,20 @@ fi
 
 get_environment_used
 get_sr_url_and_security
+
+if [[ -n "$transactional_id" ]]
+then
+    if [[ "$environment" == "ccloud" ]]
+    then
+        logerror "❌ --transactional-id is not available on Confluent Cloud"
+        exit 1
+    fi
+    if [ "$nb_messages" == "-1" ]
+    then
+        logerror "❌ --transactional-id can't be used with --nb-messages -1: the records are sent in one transaction"
+        exit 1
+    fi
+fi
 
 
 get_connect_image
@@ -1128,6 +1145,21 @@ then
     playground topic set-schema-compatibility --topic $topic --compatibility $compatibility
 fi
 
+# with --transactional-id, the console producer writes to a staging topic with the same number of partitions (same
+# partitioning of the keys), and the records are copied to the topic in one transaction at the end
+producer_topic="$topic"
+if [[ -n "$transactional_id" ]]
+then
+    producer_topic="_playground-txn-$topic"
+    staging_nb_partitions=$(playground topic describe --topic $topic 2>/dev/null | grep -oE 'Partition ?Count: *[0-9]+' | head -1 | grep -oE '[0-9]+')
+    log "💱 --transactional-id is set: the records are produced to staging topic $producer_topic ($staging_nb_partitions partitions), then copied to topic $topic in one transaction of $transactional_id (--transaction $transaction)"
+    if echo "$existing_topics" | grep -qFx "$producer_topic"
+    then
+        playground topic delete --topic "$producer_topic" > /dev/null 2>&1
+    fi
+    playground topic create --topic "$producer_topic" --nb-partitions "${staging_nb_partitions:-1}" > /dev/null
+fi
+
 if [[ ! -n "$key" ]] && [[ -n "$key_subject_name_strategy" ]]
 then
     logerror "❌ --key-subject-name-strategy is set but not --key"
@@ -1205,6 +1237,10 @@ then
     producer_args+=("$producer_property_name" "max.request.size=$((record_size + 1000))" "$producer_property_name" buffer.memory=67108864 "$producer_property_name" request.timeout.ms=60000)
     log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
     playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
+    if [ "$producer_topic" != "$topic" ]
+    then
+        playground topic alter --topic "$producer_topic" --add-config max.message.bytes=$((record_size + 1000)) > /dev/null
+    fi
 fi
 
 for producer_prop in "${producer_property[@]}"
@@ -1332,7 +1368,7 @@ else
     fi
 fi
 
-producer_cmd+=(--topic "$topic")
+producer_cmd+=(--topic "$producer_topic")
 
 # $security only holds options without spaces
 read -r -a security_args <<< "$security"
@@ -1509,6 +1545,47 @@ else
         exit 1
     fi
     log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
+fi
+
+if [[ -n "$transactional_id" ]]
+then
+    rc=0
+    # the schemas were registered under the subjects of the staging topic: same schema, same id, under the subjects of the topic
+    for side in key value
+    do
+        strategy="$key_subject_name_strategy"
+        [ "$side" == "value" ] && strategy="$value_subject_name_strategy"
+        if [[ -n "$strategy" ]] && [ "$strategy" != "TopicNameStrategy" ]
+        then
+            continue
+        fi
+        latest=$(curl -s $sr_security "$sr_url/subjects/${producer_topic}-${side}/versions/latest" 2>/dev/null || true)
+        if ! echo "$latest" | jq -e '.schema' > /dev/null 2>&1
+        then
+            continue
+        fi
+        body=$(echo "$latest" | jq -c '{schema, schemaType: (.schemaType // "AVRO"), references: (.references // [])}')
+        registered=$(curl -s $sr_security -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "$body" "$sr_url/subjects/${topic}-${side}/versions" 2>/dev/null || true)
+        if ! echo "$registered" | jq -e '.id' > /dev/null 2>&1
+        then
+            logerror "❌ could not register the $side schema under subject ${topic}-${side}: $registered"
+            rc=1
+        fi
+    done
+    if [ $rc -eq 0 ]
+    then
+        log "💱 copying the records to topic $topic in a transaction of $transactional_id"
+        run_transactional_copier "$producer_topic" "$topic" "$transactional_id" "$transaction" "$transaction_timeout" || rc=$?
+    fi
+    playground topic delete --topic "$producer_topic" > /dev/null 2>&1 || true
+    if [ $rc -ne 0 ]
+    then
+        exit 1
+    fi
+    if [ "$transaction" == "open" ]
+    then
+        log "🎓 read_committed consumers of $topic don't read past it until the coordinator aborts it after ${transaction_timeout} ms: see it with playground broker transactions describe-producers --topic $topic"
+    fi
 fi
 
 if [[ -n "$consume" ]]

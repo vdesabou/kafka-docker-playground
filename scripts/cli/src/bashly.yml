@@ -7818,9 +7818,51 @@ commands:
 
           It sets --property value.schema.id=x --property auto.register=false --property use.latest.version=true
 
+      - long: --transactional-id
+        arg: transactional-id
+        required: false
+        help: |-
+          💱 Produce the records in one transaction, with this transactional.id
+
+          The records are produced as usual (keys, headers, schemas,
+          partitioning) to a hidden staging topic with the same number of
+          partitions, then copied byte for byte to the topic in one
+          transaction, which is committed, aborted or left open
+          (--transaction). With the default subject name strategy, the
+          schemas are registered under the subjects of the topic.
+
+          Useful to reproduce what read_committed consumers do: an open
+          transaction holds the last stable offset of its partitions.
+
+          Not available on Confluent Cloud, and not with --nb-messages -1.
+      - long: --transaction
+        arg: transaction
+        required: false
+        default: "commit"
+        allowed:
+        - commit
+        - abort
+        - open
+        help: |-
+          💱 How the transaction of --transactional-id ends: commit
+          (default), abort, or open (left open, the coordinator aborts it
+          after --transaction-timeout)
+      - long: --transaction-timeout
+        arg: ms
+        validate: integer
+        required: false
+        default: "60000"
+        help: |-
+          ⏱️ transaction.timeout.ms of the transactional producer, in ms
+          (default 60000): an open transaction is aborted by the coordinator
+          after it. At most transaction.max.timeout.ms of the brokers (15
+          minutes by default)
+
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey
+
+        playground topic produce -t payments --nb-messages 10 --value 'payment-%g' --transactional-id payments-txn --transaction open --transaction-timeout 900000
 
         playground topic produce -t topic-json --nb-messages 10 << 'EOF'
         {
@@ -8845,6 +8887,16 @@ commands:
   group: Kafka
   help: |-
     🖥️ Broker commands
+
+      config            read and change dynamic broker configs
+      health            brokers down, partition problems, KRaft quorum
+      stop / start      stop (or kill) a broker, start it again
+      rolling-restart   restart the brokers one by one, safely
+      transactions      list transactions, find and abort hanging ones
+      describe          brokers, KRaft quorum, feature levels, API versions
+      metrics           key JMX metrics of each broker
+
+    Not available on Confluent Cloud and multi data center environments.
   commands:
 
   - name: config
@@ -8977,6 +9029,469 @@ commands:
         examples:
         - playground broker config delete --key log.retention.ms
         - playground broker config delete --broker 1 --key num.io.threads
+
+  - name: health
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    help: |-
+      🩺 Check the health of the cluster
+
+      One digest of what makes a cluster unhealthy:
+
+        - broker containers that are not registered (stopped, starting) or fenced
+        - under-replicated partitions (kafka-topics --under-replicated-partitions)
+        - partitions under min.insync.replicas (--under-min-isr-partitions):
+          acks=all producers fail with NotEnoughReplicasException (a topic
+          whose replication factor is below min.insync.replicas is only a ⚠️
+          warning: it is a config problem, not a broker one)
+        - unavailable partitions, without leader (--unavailable-partitions)
+        - the KRaft quorum: leader, lag and last caught up time of each node
+          (kafka-metadata-quorum describe --replication)
+
+      Exits with 1 when the cluster is not healthy. With --wait-healthy, waits
+      until it is (for example after 'playground broker start' or a
+      'container restart'), up to --max-wait seconds.
+
+      Works on plaintext, secured environments and cfk.
+    flags:
+    - long: --wait-healthy
+      required: false
+      help: |-
+        ⏳ Wait until the cluster is healthy (up to --max-wait seconds)
+    - long: --max-wait
+      required: false
+      arg: max-wait
+      validate: integer
+      default: "120"
+      help: |-
+        ⏳ Maximum time to wait with --wait-healthy, in seconds (default 120)
+    - long: --json
+      required: false
+      help: |-
+        📗 Print the result as JSON (healthy, brokers, partitions, kraft_quorum), and nothing else
+    - *verbose
+    examples:
+    - playground broker health
+    - playground broker health --wait-healthy --max-wait 300
+    - playground broker health --json | jq '.under_replicated_partitions | length'
+    x_example_outputs:
+    - command: playground broker health
+      output: |-
+        17:42:10 ℹ️ 🩺 Health of the cluster
+        17:42:11 ℹ️ 🖥️ registered brokers: 1,3
+        17:42:11 ❌ broker 2 (container broker2) is not registered: it is stopped (playground broker start --broker 2)
+        17:42:13 ❌ 3 under-replicated partitions
+        TOPIC     PARTITION  LEADER  REPLICAS  ISR
+        orders    0          1       1,2,3     1,3
+        orders    1          3       2,3,1     3,1
+        orders    2          1       3,1,2     3,1
+        17:42:15 ℹ️ ✅ no under min.insync.replicas partition
+        17:42:17 ℹ️ ✅ no unavailable (no leader) partition
+        17:42:19 ℹ️ 🗳️ KRaft quorum: leader is node 4
+        NODE  STATUS    LOG_END_OFFSET  LAG  LAST_CAUGHT_UP
+        4     Leader    1250            0    0s ago
+        1     Observer  1250            0    0s ago
+        2     Observer  1100            150  85s ago ⚠️
+        3     Observer  1250            0    0s ago
+        17:42:19 ❌ cluster is not healthy: brokers down: 2, 3 under-replicated partitions
+
+  - name: stop
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    - not_cfk_environment
+    help: |-
+      🛑 Stop a broker
+
+      Stops the container of a broker with a controlled shutdown: its leaders
+      move to the other replicas first. With --kill, the container is killed
+      instead, like a crash (no controlled shutdown, the leaders move only after
+      the broker session times out).
+
+      Useful to reproduce what clients and connectors do when a broker goes
+      away: NOT_LEADER_OR_FOLLOWER, NotEnoughReplicasException, metadata
+      refresh, retries. Start it again with 'playground broker start'.
+
+      🎓 Tip: needs several brokers to keep the cluster available, start the
+      example with 'playground run --enable-multiple-brokers'.
+    flags:
+    - &broker-id-required
+      long: --broker
+      short: -b
+      required: true
+      arg: broker
+      validate: integer
+      completions:
+        static:
+        - "1"
+        - "2"
+        - "3"
+      help: |-
+        🖥️ Broker id
+    - long: --kill
+      required: false
+      help: |-
+        🔫 Kill the broker (like a crash) instead of a controlled shutdown
+    - *verbose
+    examples:
+    - playground broker stop --broker 2
+    - playground broker stop --broker 2 --kill
+
+  - name: start
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    - not_cfk_environment
+    help: |-
+      ▶️ Start a broker stopped with 'playground broker stop'
+
+      Starts the container of the broker, waits for it to be registered, then
+      for the cluster to be healthy again (its replicas back in sync, see
+      'playground broker health'), up to --max-wait seconds.
+    flags:
+    - *broker-id-required
+    - long: --max-wait
+      required: false
+      arg: max-wait
+      validate: integer
+      default: "180"
+      help: |-
+        ⏳ Maximum time to wait for the broker and the cluster, in seconds (default 180)
+    - long: --no-wait
+      required: false
+      help: |-
+        ⏩ Do not wait for the broker to be registered and the cluster to be healthy
+    - *verbose
+    examples:
+    - playground broker start --broker 2
+    - playground broker start --broker 2 --no-wait
+
+  - name: rolling-restart
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    - not_cfk_environment
+    help: |-
+      🔄 Restart the brokers one by one, like a rolling upgrade
+
+      Checks that the cluster is healthy (--force to skip), then for each
+      broker: restarts its container (controlled shutdown), waits for it to be
+      registered and for the cluster to be healthy again before the next one.
+      Stops at the first broker that does not come back healthy within
+      --max-wait seconds.
+
+      Useful to reproduce connector or client errors, duplicates or rebalances
+      during a rolling upgrade or restart of the brokers.
+
+      🎓 Tip: to change a broker setting that needs a restart, use 'playground
+      container set-environment-variables' (it recreates the container).
+    flags:
+    - long: --brokers
+      required: false
+      arg: brokers
+      help: |-
+        🖥️ Comma separated broker ids, restarted in this order (default: all brokers, by id)
+    - long: --max-wait
+      required: false
+      arg: max-wait
+      validate: integer
+      default: "300"
+      help: |-
+        ⏳ Maximum time to wait for each broker to be back and the cluster healthy, in seconds (default 300)
+    - long: --force
+      required: false
+      help: |-
+        ☢️ Restart even if the cluster is not healthy before starting
+    - *verbose
+    examples:
+    - playground broker rolling-restart
+    - playground broker rolling-restart --brokers 3,2,1 --max-wait 600
+    x_example_outputs:
+    - command: playground broker rolling-restart
+      output: |-
+        17:50:02 ℹ️ 🔄 [1/3] Restarting broker 1 (container broker)
+        17:50:31 ℹ️ ✅ [1/3] broker 1 restarted, cluster is healthy (29s)
+        17:50:31 ℹ️ 🔄 [2/3] Restarting broker 2 (container broker2)
+        17:50:58 ℹ️ ✅ [2/3] broker 2 restarted, cluster is healthy (27s)
+        17:50:58 ℹ️ 🔄 [3/3] Restarting broker 3 (container broker3)
+        17:51:26 ℹ️ ✅ [3/3] broker 3 restarted, cluster is healthy (28s)
+        17:51:26 ℹ️ 🎉 rolling restart of brokers 1,2,3 done in 84s
+
+  - name: transactions
+    expose: always
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    help: |-
+      💱 Transaction commands
+
+      Inspect the transactions of the cluster and recover from hanging ones
+      (wraps kafka-transactions). Works on plaintext, secured environments and
+      cfk.
+
+        list                 transactional ids, coordinator and state
+        describe             one transactional id: partitions, duration
+        describe-producers   producers of a topic, open transactions
+        find-hanging         transactions forgotten by their coordinator
+        abort                abort a hanging transaction
+
+      An open transaction holds the last stable offset (LSO) of its partitions:
+      read_committed consumers (sink connectors of a topic written by an
+      exactly-once source, Kafka Streams with exactly_once_v2...) don't read
+      past it, and their lag never drains. It ends when it commits, aborts, or
+      after transaction.timeout.ms. A hanging transaction never ends: find it
+      with find-hanging and abort it.
+    commands:
+
+      - name: list
+        group: Kafka
+        help: |-
+          📋 List the transactional ids
+        flags:
+        - long: --state
+          required: false
+          arg: state
+          allowed:
+          - Empty
+          - Ongoing
+          - PrepareCommit
+          - PrepareAbort
+          - CompleteCommit
+          - CompleteAbort
+          - Dead
+          - PrepareEpochFence
+          help: |-
+            🔎 Only the transactional ids in this state
+        - long: --pattern
+          required: false
+          arg: regex
+          help: |-
+            🔎 Only the transactional ids matching this regular expression
+        - *verbose
+        examples:
+        - playground broker transactions list
+        - playground broker transactions list --state Ongoing
+        - playground broker transactions list --pattern "connect-cluster-.*"
+
+      - name: describe
+        group: Kafka
+        help: |-
+          🔎 Describe a transactional id
+
+          State, producer id and epoch, timeout, start time and duration of the
+          current transaction, and the partitions it writes to.
+        flags:
+        - long: --transactional-id
+          short: -i
+          required: true
+          arg: transactional-id
+          help: |-
+            🆔 Transactional id (playground broker transactions list)
+        - *verbose
+        examples:
+        - playground broker transactions describe --transactional-id my-txn-producer
+
+      - name: describe-producers
+        group: Kafka
+        help: |-
+          🏭 Describe the active producers of a topic
+
+          For each partition (or --partition only): the producers that wrote
+          to it recently, and the start offset of their open transaction (⚠️).
+          That offset is where read_committed consumers are blocked.
+        flags:
+        - long: --topic
+          short: -t
+          required: true
+          arg: topic
+          completions:
+            dynamic:
+            - playground get-topic-list
+          help: |-
+            🗳 Topic name
+        - long: --partition
+          short: -p
+          required: false
+          arg: partition
+          validate: integer
+          help: |-
+            🔢 Only this partition (default: all the partitions of the topic)
+        - *verbose
+        examples:
+        - playground broker transactions describe-producers --topic orders
+        - playground broker transactions describe-producers --topic orders --partition 0
+
+      - name: find-hanging
+        group: Kafka
+        help: |-
+          🧟 Find hanging transactions
+
+          A transaction is hanging when it is open on a partition for longer
+          than --max-transaction-timeout minutes, and its coordinator does not
+          know it anymore: it will never end on its own. Searches every broker,
+          or --broker, or the partitions of --topic.
+
+          Exits with 1 when hanging transactions are found, and prints the
+          abort command of each.
+        flags:
+        - long: --broker
+          short: -b
+          required: false
+          arg: broker
+          validate: integer
+          help: |-
+            🖥️ Only the partitions of this broker (default: all brokers)
+        - long: --topic
+          short: -t
+          required: false
+          arg: topic
+          completions:
+            dynamic:
+            - playground get-topic-list
+          help: |-
+            🗳 Only the partitions of this topic
+        - long: --partition
+          short: -p
+          required: false
+          arg: partition
+          validate: integer
+          help: |-
+            🔢 Only this partition (needs --topic)
+        - long: --max-transaction-timeout
+          required: false
+          arg: minutes
+          validate: integer
+          default: "15"
+          help: |-
+            ⏱️ transaction.max.timeout.ms of the brokers, in minutes: only the transactions open for longer are checked (default 15)
+        - *verbose
+        examples:
+        - playground broker transactions find-hanging
+        - playground broker transactions find-hanging --topic orders
+        - playground broker transactions find-hanging --broker 1 --max-transaction-timeout 5
+
+      - name: abort
+        group: Kafka
+        help: |-
+          🧹 Abort a hanging transaction
+
+          Writes an abort marker for the transaction started at --start-offset
+          on a partition (requires administrative privileges). Its records are
+          discarded, and read_committed consumers move on. The start offset is
+          printed by find-hanging and describe-producers.
+        flags:
+        - long: --topic
+          short: -t
+          required: true
+          arg: topic
+          completions:
+            dynamic:
+            - playground get-topic-list
+          help: |-
+            🗳 Topic name
+        - long: --partition
+          short: -p
+          required: true
+          arg: partition
+          validate: integer
+          help: |-
+            🔢 Partition
+        - long: --start-offset
+          required: true
+          arg: offset
+          validate: integer
+          help: |-
+            📍 Start offset of the transaction to abort
+        - *verbose
+        examples:
+        - playground broker transactions abort --topic orders --partition 0 --start-offset 1234
+
+  - name: describe
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    help: |-
+      🗺️ Describe the cluster
+
+      The brokers (id, endpoint, rack, fenced, container, and the broker
+      containers that are not registered), the KRaft quorum (cluster id,
+      active controller, voters and observers, from kafka-metadata-quorum
+      describe --status) and the feature levels (metadata.version... from
+      kafka-features describe).
+
+      With --api-versions, the API versions supported by a broker (wraps
+      kafka-broker-api-versions): useful when an old client fails with
+      UnsupportedVersionException.
+    flags:
+    - long: --api-versions
+      required: false
+      help: |-
+        🔌 Display the API versions supported by a broker instead
+    - long: --broker
+      short: -b
+      required: false
+      arg: broker
+      validate: integer
+      help: |-
+        🖥️ Broker id for --api-versions (default: the first broker)
+    - *verbose
+    examples:
+    - playground broker describe
+    - playground broker describe --api-versions --broker 2
+
+  - name: metrics
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    - not_cfk_environment
+    help: |-
+      📈 Display the key JMX metrics of the brokers
+
+      One column per broker: partitions and leaders, under-replicated and
+      under min ISR partitions, request handler and network processor idle
+      ratio, request queue size, produce and fetch p99 latency, messages and
+      bytes in and out per second, ISR shrinks and expands, failed produce and
+      fetch requests. ⚠️ marks the values to look at.
+
+      Answers "is the broker the bottleneck?", for example during a
+      'playground connector benchmark'. With --topic, the rates and failed
+      requests are the ones of this topic.
+
+      🎓 Tip: every metric of a broker: playground get-jmx-metrics -c broker
+    flags:
+    - long: --broker
+      short: -b
+      required: false
+      arg: broker
+      validate: integer
+      help: |-
+        🖥️ Only this broker (default: all brokers)
+    - long: --topic
+      short: -t
+      required: false
+      arg: topic
+      completions:
+        dynamic:
+        - playground get-topic-list
+      help: |-
+        🗳 Rates and failed requests of this topic only
+    - long: --json
+      required: false
+      help: |-
+        📗 Print the raw values as JSON, one object per broker, and nothing else
+    - *verbose
+    examples:
+    - playground broker metrics
+    - playground broker metrics --topic orders
+    - playground broker metrics --broker 1 --json
 
 - name: consumer-group
   expose: always
