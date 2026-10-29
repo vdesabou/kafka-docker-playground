@@ -4871,6 +4871,226 @@
       ]
     },
     {
+      "name": "quota",
+      "description": "🚦 Client quota commands\n\nRead, set and remove the client quotas of the brokers (wraps kafka-configs\n--entity-type users|clients): produce and fetch bandwidth, request time\nand partition mutation rate. Works on plaintext, secured environments and\ncfk (not on Confluent Cloud, where quotas are managed with the client\nquotas API).\n\n  get      quotas of a user, client id or connector, or all of them\n  set      set one or more quotas\n  delete   remove quotas\n\nA quota applies to --user, --client-id, or both (the quota of that client\nid for that user only). --all-users / --all-client-ids set the default\nquota, used by every user / client id without a more specific one.\n--connector targets the client ids of the tasks of a self-managed\nconnector: connector-consumer-<connector>-<task> for a sink,\nconnector-producer-<connector>-<task> for a source.\n\n🎓 Tip: to reproduce a throttled sink connector (lag growing,\nfetch-throttle-time-avg above 0), set a small --consumer-byte-rate on it,\nthen follow the lag with 'playground connector show-lag'.",
+      "usage": "playground quota COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "get",
+          "description": "🔎 Display client quotas\n\nWithout any flag, displays every quota (users, client ids, and users +\nclient ids).",
+          "usage": "playground quota get [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "👤 User (principal name, e.g. client for User:client)\n\nConflicts with: --all-users"
+            },
+            {
+              "names": [
+                "--client-id"
+              ],
+              "argument": "CLIENT-ID",
+              "description": "🏷️ Client id (client.id of the producer or consumer)\n\nConflicts with: --connector, --all-client-ids"
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Self-managed connector: use the client ids of its tasks\n\nconnector-consumer-<connector>-<task> for a sink,\nconnector-producer-<connector>-<task> for a source.\n\nConflicts with: --client-id, --all-client-ids"
+            },
+            {
+              "names": [
+                "--all-users"
+              ],
+              "argument": "",
+              "description": "👥 Default quota of all users (used by the users without their own quota)\n\nConflicts with: --user"
+            },
+            {
+              "names": [
+                "--all-client-ids"
+              ],
+              "argument": "",
+              "description": "🏷️ Default quota of all client ids (used by the client ids without their own quota)\n\nConflicts with: --client-id, --connector"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            }
+          ]
+        },
+        {
+          "name": "set",
+          "description": "🚦 Set client quotas\n\nSet one or more of --producer-byte-rate, --consumer-byte-rate,\n--request-percentage and --controller-mutation-rate, on --user,\n--client-id, --connector, --all-users or --all-client-ids. The\nquotas already set on the entity and not given here are kept.\n\nClients are throttled right away, without restart: the broker delays\nits responses, and the clients report it in their produce-throttle-time-avg\nand fetch-throttle-time-avg metrics.",
+          "usage": "playground quota set [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "👤 User (principal name, e.g. client for User:client)\n\nConflicts with: --all-users"
+            },
+            {
+              "names": [
+                "--client-id"
+              ],
+              "argument": "CLIENT-ID",
+              "description": "🏷️ Client id (client.id of the producer or consumer)\n\nConflicts with: --connector, --all-client-ids"
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Self-managed connector: use the client ids of its tasks\n\nconnector-consumer-<connector>-<task> for a sink,\nconnector-producer-<connector>-<task> for a source.\n\nConflicts with: --client-id, --all-client-ids"
+            },
+            {
+              "names": [
+                "--all-users"
+              ],
+              "argument": "",
+              "description": "👥 Default quota of all users (used by the users without their own quota)\n\nConflicts with: --user"
+            },
+            {
+              "names": [
+                "--all-client-ids"
+              ],
+              "argument": "",
+              "description": "🏷️ Default quota of all client ids (used by the client ids without their own quota)\n\nConflicts with: --client-id, --connector"
+            },
+            {
+              "names": [
+                "--producer-byte-rate"
+              ],
+              "argument": "BYTES",
+              "description": "📤 Produce bandwidth, in bytes per second, per broker (producer_byte_rate)"
+            },
+            {
+              "names": [
+                "--consumer-byte-rate"
+              ],
+              "argument": "BYTES",
+              "description": "📥 Fetch bandwidth, in bytes per second, per broker (consumer_byte_rate)"
+            },
+            {
+              "names": [
+                "--request-percentage"
+              ],
+              "argument": "PERCENTAGE",
+              "description": "⏱️ Share of the broker request handler and network threads time, in percent of one thread (request_percentage, decimals allowed, e.g. 0.2)"
+            },
+            {
+              "names": [
+                "--controller-mutation-rate"
+              ],
+              "argument": "RATE",
+              "description": "🧬 Partitions created or deleted per second (controller_mutation_rate)"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "description": "🗑️ Remove client quotas\n\nRemoves the quotas given with --producer-byte-rate,\n--consumer-byte-rate, --request-percentage and\n--controller-mutation-rate (no value), or all the quotas of the\nentity when none is given.",
+          "usage": "playground quota delete [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "👤 User (principal name, e.g. client for User:client)\n\nConflicts with: --all-users"
+            },
+            {
+              "names": [
+                "--client-id"
+              ],
+              "argument": "CLIENT-ID",
+              "description": "🏷️ Client id (client.id of the producer or consumer)\n\nConflicts with: --connector, --all-client-ids"
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Self-managed connector: use the client ids of its tasks\n\nconnector-consumer-<connector>-<task> for a sink,\nconnector-producer-<connector>-<task> for a source.\n\nConflicts with: --client-id, --all-client-ids"
+            },
+            {
+              "names": [
+                "--all-users"
+              ],
+              "argument": "",
+              "description": "👥 Default quota of all users (used by the users without their own quota)\n\nConflicts with: --user"
+            },
+            {
+              "names": [
+                "--all-client-ids"
+              ],
+              "argument": "",
+              "description": "🏷️ Default quota of all client ids (used by the client ids without their own quota)\n\nConflicts with: --client-id, --connector"
+            },
+            {
+              "names": [
+                "--producer-byte-rate"
+              ],
+              "argument": "",
+              "description": "📤 Only remove producer_byte_rate"
+            },
+            {
+              "names": [
+                "--consumer-byte-rate"
+              ],
+              "argument": "",
+              "description": "📥 Only remove consumer_byte_rate"
+            },
+            {
+              "names": [
+                "--request-percentage"
+              ],
+              "argument": "",
+              "description": "⏱️ Only remove request_percentage"
+            },
+            {
+              "names": [
+                "--controller-mutation-rate"
+              ],
+              "argument": "",
+              "description": "🧬 Only remove controller_mutation_rate"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "consumer-group",
       "description": "👥 Consumer group commands\n\nInspect any consumer group (not only the ones of sink connectors): which\ngroups exist, their state and members, and the committed offsets and lag\nper partition. Works on plaintext, secured environments, cfk and\nConfluent Cloud.\n\n  list            consumer groups, optionally with their state\n  describe        committed offsets and lag, or --state, or --members\n  reset-offsets   rewind or fast-forward a group (earliest, latest, datetime...)\n  delete          delete a group, or its offsets for one topic\n\n🎓 Tip: for a sink connector, 'playground connector show-lag' follows the\nlag until it reaches 0.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck",
       "usage": "playground consumer-group COMMAND",

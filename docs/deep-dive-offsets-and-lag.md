@@ -301,6 +301,7 @@ playground stop
 | "lag never goes to zero" | `show-lag --interval 10`: 🔸 same value = stuck tasks (`connector diagnose`, a thread dump), 🔻 slowly = throughput (`connector benchmark`), stuck at a small value right after the data landed = not committed yet (wait `offset.flush.interval.ms`) |
 | "the sink reprocessed everything after a rename" | the group name follows the connector name (`connect-<new name>`): the new group starts from `auto.offset.reset`. `consumer-group list` shows both |
 | "my app's consumer group is stuck / needs a rewind" | `consumer-group describe --group <g> --members`, stop the app, `consumer-group reset-offsets --group <g> … --dry-run` |
+| "the sink is throttled by a quota (`fetch-throttle-time-avg` above 0, lag growing)" | `quota set --connector <c> --consumer-byte-rate 1024` (client ids `connector-consumer-<c>-<task>`), `show-lag --interval 10`, then `quota delete --connector <c>`. `quota get` shows every quota of the cluster. Example: `connect/connect-filestream-sink/filestream-sink-throttled-by-quota.sh` |
 | "duplicates after a crash" | expected: at-least-once from the last commit. Lower `offset.flush.interval.ms` to narrow the window, make the target idempotent |
 
 ---

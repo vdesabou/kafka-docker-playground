@@ -8502,6 +8502,182 @@ commands:
         examples:
         - playground topic tag search --tag PII
 
+- name: quota
+  expose: always
+  group: Kafka
+  filters:
+  - not_mdc_environment
+  - not_ccloud_environment
+  help: |-
+    🚦 Client quota commands
+
+    Read, set and remove the client quotas of the brokers (wraps kafka-configs
+    --entity-type users|clients): produce and fetch bandwidth, request time
+    and partition mutation rate. Works on plaintext, secured environments and
+    cfk (not on Confluent Cloud, where quotas are managed with the client
+    quotas API).
+
+      get      quotas of a user, client id or connector, or all of them
+      set      set one or more quotas
+      delete   remove quotas
+
+    A quota applies to --user, --client-id, or both (the quota of that client
+    id for that user only). --all-users / --all-client-ids set the default
+    quota, used by every user / client id without a more specific one.
+    --connector targets the client ids of the tasks of a self-managed
+    connector: connector-consumer-<connector>-<task> for a sink,
+    connector-producer-<connector>-<task> for a source.
+
+    🎓 Tip: to reproduce a throttled sink connector (lag growing,
+    fetch-throttle-time-avg above 0), set a small --consumer-byte-rate on it,
+    then follow the lag with 'playground connector show-lag'.
+  commands:
+
+    - name: get
+      group: Kafka
+      help: |-
+        🔎 Display client quotas
+
+        Without any flag, displays every quota (users, client ids, and users +
+        client ids).
+      flags:
+      - &quota-user
+        long: --user
+        short: -u
+        required: false
+        arg: user
+        conflicts: [--all-users]
+        help: |-
+          👤 User (principal name, e.g. client for User:client)
+      - &quota-client-id
+        long: --client-id
+        required: false
+        arg: client-id
+        conflicts: [--connector, --all-client-ids]
+        help: |-
+          🏷️ Client id (client.id of the producer or consumer)
+      - &quota-connector
+        long: --connector
+        short: -c
+        required: false
+        arg: connector
+        conflicts: [--client-id, --all-client-ids]
+        completions:
+          dynamic:
+          - playground get-connector-list
+        help: |-
+          🔗 Self-managed connector: use the client ids of its tasks
+
+          connector-consumer-<connector>-<task> for a sink,
+          connector-producer-<connector>-<task> for a source.
+      - &quota-all-users
+        long: --all-users
+        required: false
+        conflicts: [--user]
+        help: |-
+          👥 Default quota of all users (used by the users without their own quota)
+      - &quota-all-client-ids
+        long: --all-client-ids
+        required: false
+        conflicts: [--client-id, --connector]
+        help: |-
+          🏷️ Default quota of all client ids (used by the client ids without their own quota)
+      - *verbose
+      examples:
+      - playground quota get
+      - playground quota get --connector filestream-sink
+      - playground quota get --user client --client-id my-app
+
+    - name: set
+      group: Kafka
+      help: |-
+        🚦 Set client quotas
+
+        Set one or more of --producer-byte-rate, --consumer-byte-rate,
+        --request-percentage and --controller-mutation-rate, on --user,
+        --client-id, --connector, --all-users or --all-client-ids. The
+        quotas already set on the entity and not given here are kept.
+
+        Clients are throttled right away, without restart: the broker delays
+        its responses, and the clients report it in their produce-throttle-time-avg
+        and fetch-throttle-time-avg metrics.
+      flags:
+      - *quota-user
+      - *quota-client-id
+      - *quota-connector
+      - *quota-all-users
+      - *quota-all-client-ids
+      - long: --producer-byte-rate
+        required: false
+        arg: bytes
+        validate: integer
+        help: |-
+          📤 Produce bandwidth, in bytes per second, per broker (producer_byte_rate)
+      - long: --consumer-byte-rate
+        required: false
+        arg: bytes
+        validate: integer
+        help: |-
+          📥 Fetch bandwidth, in bytes per second, per broker (consumer_byte_rate)
+      - long: --request-percentage
+        required: false
+        arg: percentage
+        help: |-
+          ⏱️ Share of the broker request handler and network threads time, in percent of one thread (request_percentage, decimals allowed, e.g. 0.2)
+      - long: --controller-mutation-rate
+        required: false
+        arg: rate
+        validate: integer
+        help: |-
+          🧬 Partitions created or deleted per second (controller_mutation_rate)
+      - *verbose
+      examples:
+      - playground quota set --connector filestream-sink --consumer-byte-rate 1024
+      - playground quota set --client-id my-producer --producer-byte-rate 10240
+      - playground quota set --all-users --request-percentage 50
+      x_example_outputs:
+      - command: playground quota set --connector filestream-sink --consumer-byte-rate 1024
+        output: |-
+          15:02:10 ℹ️ 🚦 Setting consumer_byte_rate=1024 on client-id connector-consumer-filestream-sink-0
+          Completed updating config for client-id connector-consumer-filestream-sink-0.
+          Quota configs for client-id 'connector-consumer-filestream-sink-0' are consumer_byte_rate=1024.0
+
+    - name: delete
+      group: Kafka
+      help: |-
+        🗑️ Remove client quotas
+
+        Removes the quotas given with --producer-byte-rate,
+        --consumer-byte-rate, --request-percentage and
+        --controller-mutation-rate (no value), or all the quotas of the
+        entity when none is given.
+      flags:
+      - *quota-user
+      - *quota-client-id
+      - *quota-connector
+      - *quota-all-users
+      - *quota-all-client-ids
+      - long: --producer-byte-rate
+        required: false
+        help: |-
+          📤 Only remove producer_byte_rate
+      - long: --consumer-byte-rate
+        required: false
+        help: |-
+          📥 Only remove consumer_byte_rate
+      - long: --request-percentage
+        required: false
+        help: |-
+          ⏱️ Only remove request_percentage
+      - long: --controller-mutation-rate
+        required: false
+        help: |-
+          🧬 Only remove controller_mutation_rate
+      - *verbose
+      examples:
+      - playground quota delete --connector filestream-sink
+      - playground quota delete --all-users --request-percentage
+
 - name: consumer-group
   expose: always
   group: Topic

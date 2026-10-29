@@ -145,6 +145,10 @@ playground_usage() {
   printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                        "
   printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                           "
+  printf "  %s   🚦 Client quota commands\n" "$(green "quota")                                     "
+  printf "  %s   🔎 Display client quotas\n" "$(green "quota get")                                 "
+  printf "  %s   🚦 Set client quotas\n" "$(green "quota set")                                 "
+  printf "  %s   🗑️ Remove client quotas\n" "$(green "quota delete")                              "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
   printf "  %s   🔰 Schema commands\n" "$(green "schema")                                    "
@@ -11366,6 +11370,288 @@ playground_topic_tag_search_usage() {
 }
 
 # :command.usage
+playground_quota_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground quota\n\n"
+    printf "  🚦 Client quota commands\n  \n  Read, set and remove the client quotas of the brokers (wraps kafka-configs\n  --entity-type users|clients): produce and fetch bandwidth, request time\n  and partition mutation rate. Works on plaintext, secured environments and\n  cfk (not on Confluent Cloud, where quotas are managed with the client\n  quotas API).\n  \n    get      quotas of a user, client id or connector, or all of them\n    set      set one or more quotas\n    delete   remove quotas\n  \n  A quota applies to --user, --client-id, or both (the quota of that client\n  id for that user only). --all-users / --all-client-ids set the default\n  quota, used by every user / client id without a more specific one.\n  --connector targets the client ids of the tasks of a self-managed\n  connector: connector-consumer-<connector>-<task> for a sink,\n  connector-producer-<connector>-<task> for a source.\n  \n  🎓 Tip: to reproduce a throttled sink connector (lag growing,\n  fetch-throttle-time-avg above 0), set a small --consumer-byte-rate on it,\n  then follow the lag with 'playground connector show-lag'.\n\n"
+  else
+    printf "playground quota - 🚦 Client quota commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground quota COMMAND\n"
+  printf "  playground quota [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Kafka commands:")"
+  printf "  %s   🔎 Display client quotas\n" "$(green "get")   "
+  printf "  %s   🚦 Set client quotas\n" "$(green "set")   "
+  printf "  %s   🗑️ Remove client quotas\n" "$(green "delete")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_quota_get_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground quota get\n\n"
+    printf "  🔎 Display client quotas\n  \n  Without any flag, displays every quota (users, client ids, and users +\n  client ids).\n\n"
+  else
+    printf "playground quota get - 🔎 Display client quotas\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground quota get [OPTIONS]\n"
+  printf "  playground quota get --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user, -u USER")"
+    printf "    👤 User (principal name, e.g. client for User:client)\n"
+    printf "    %s\n" "Conflicts: --all-users"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--client-id CLIENT-ID")"
+    printf "    🏷️ Client id (client.id of the producer or consumer)\n"
+    printf "    %s\n" "Conflicts: --connector, --all-client-ids"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Self-managed connector: use the client ids of its tasks\n    \n    connector-consumer-<connector>-<task> for a sink,\n    connector-producer-<connector>-<task> for a source.\n"
+    printf "    %s\n" "Conflicts: --client-id, --all-client-ids"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-users")"
+    printf "    👥 Default quota of all users (used by the users without their own quota)\n"
+    printf "    %s\n" "Conflicts: --user"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-client-ids")"
+    printf "    🏷️ Default quota of all client ids (used by the client ids without their own\n    quota)\n"
+    printf "    %s\n" "Conflicts: --client-id, --connector"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground quota get\n"
+    printf "  playground quota get --connector filestream-sink\n"
+    printf "  playground quota get --user client --client-id my-app\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_quota_set_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground quota set\n\n"
+    printf "  🚦 Set client quotas\n  \n  Set one or more of --producer-byte-rate, --consumer-byte-rate,\n  --request-percentage and --controller-mutation-rate, on --user,\n  --client-id, --connector, --all-users or --all-client-ids. The\n  quotas already set on the entity and not given here are kept.\n  \n  Clients are throttled right away, without restart: the broker delays\n  its responses, and the clients report it in their produce-throttle-time-avg\n  and fetch-throttle-time-avg metrics.\n\n"
+  else
+    printf "playground quota set - 🚦 Set client quotas\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground quota set [OPTIONS]\n"
+  printf "  playground quota set --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user, -u USER")"
+    printf "    👤 User (principal name, e.g. client for User:client)\n"
+    printf "    %s\n" "Conflicts: --all-users"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--client-id CLIENT-ID")"
+    printf "    🏷️ Client id (client.id of the producer or consumer)\n"
+    printf "    %s\n" "Conflicts: --connector, --all-client-ids"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Self-managed connector: use the client ids of its tasks\n    \n    connector-consumer-<connector>-<task> for a sink,\n    connector-producer-<connector>-<task> for a source.\n"
+    printf "    %s\n" "Conflicts: --client-id, --all-client-ids"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-users")"
+    printf "    👥 Default quota of all users (used by the users without their own quota)\n"
+    printf "    %s\n" "Conflicts: --user"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-client-ids")"
+    printf "    🏷️ Default quota of all client ids (used by the client ids without their own\n    quota)\n"
+    printf "    %s\n" "Conflicts: --client-id, --connector"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--producer-byte-rate BYTES")"
+    printf "    📤 Produce bandwidth, in bytes per second, per broker (producer_byte_rate)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--consumer-byte-rate BYTES")"
+    printf "    📥 Fetch bandwidth, in bytes per second, per broker (consumer_byte_rate)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--request-percentage PERCENTAGE")"
+    printf "    ⏱️ Share of the broker request handler and network threads time, in percent\n    of one thread (request_percentage, decimals allowed, e.g. 0.2)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--controller-mutation-rate RATE")"
+    printf "    🧬 Partitions created or deleted per second (controller_mutation_rate)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground quota set --connector filestream-sink --consumer-byte-rate 1024\n"
+    printf "  playground quota set --client-id my-producer --producer-byte-rate 10240\n"
+    printf "  playground quota set --all-users --request-percentage 50\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_quota_delete_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground quota delete\n\n"
+    printf "  🗑️ Remove client quotas\n  \n  Removes the quotas given with --producer-byte-rate,\n  --consumer-byte-rate, --request-percentage and\n  --controller-mutation-rate (no value), or all the quotas of the\n  entity when none is given.\n\n"
+  else
+    printf "playground quota delete - 🗑️ Remove client quotas\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground quota delete [OPTIONS]\n"
+  printf "  playground quota delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--user, -u USER")"
+    printf "    👤 User (principal name, e.g. client for User:client)\n"
+    printf "    %s\n" "Conflicts: --all-users"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--client-id CLIENT-ID")"
+    printf "    🏷️ Client id (client.id of the producer or consumer)\n"
+    printf "    %s\n" "Conflicts: --connector, --all-client-ids"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Self-managed connector: use the client ids of its tasks\n    \n    connector-consumer-<connector>-<task> for a sink,\n    connector-producer-<connector>-<task> for a source.\n"
+    printf "    %s\n" "Conflicts: --client-id, --all-client-ids"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-users")"
+    printf "    👥 Default quota of all users (used by the users without their own quota)\n"
+    printf "    %s\n" "Conflicts: --user"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-client-ids")"
+    printf "    🏷️ Default quota of all client ids (used by the client ids without their own\n    quota)\n"
+    printf "    %s\n" "Conflicts: --client-id, --connector"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--producer-byte-rate")"
+    printf "    📤 Only remove producer_byte_rate\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--consumer-byte-rate")"
+    printf "    📥 Only remove consumer_byte_rate\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--request-percentage")"
+    printf "    ⏱️ Only remove request_percentage\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--controller-mutation-rate")"
+    printf "    🧬 Only remove controller_mutation_rate\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground quota delete --connector filestream-sink\n"
+    printf "  playground quota delete --all-users --request-percentage\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_consumer_group_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground consumer-group\n\n"
@@ -17859,6 +18145,15 @@ function filter_ccloud_environment() {
   fi
 }
 
+function filter_not_ccloud_environment() {
+  get_environment_used
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+    logerror "this command is not available with Confluent Cloud"
+  fi
+}
+
 function filter_cfk_environment() {
   get_environment_used
 
@@ -23402,6 +23697,111 @@ function get_flink_rest_url () {
     return 1
   fi
   flink_rest_url="http://localhost:${mapped##*:}"
+}
+
+# client ids of the tasks of a self-managed connector, one per line: connector-consumer-<connector>-<task> for a sink,
+# connector-producer-<connector>-<task> for a source, or the consumer|producer.override.client.id of its config (then
+# shared by all the tasks)
+function get_connector_client_ids () {
+  local connector="$1" status config connector_kind role override
+  get_connect_url_and_security
+  status=$(curl $security -s "${connect_url}/connectors/${connector}/status")
+  connector_kind=$(echo "$status" | jq -r '.type // empty' 2>/dev/null)
+  if [[ -z "$connector_kind" ]]
+  then
+    logerror "❌ connector $connector not found on $connect_url"
+    return 1
+  fi
+  role="consumer"
+  if [[ "$connector_kind" == "source" ]]
+  then
+    role="producer"
+  fi
+  config=$(curl $security -s "${connect_url}/connectors/${connector}/config")
+  override=$(echo "$config" | jq -r --arg key "$role.override.client.id" '.[$key] // empty' 2>/dev/null)
+  if [[ -n "$override" ]]
+  then
+    echo "$override"
+    return 0
+  fi
+  echo "$status" | jq -r --arg prefix "connector-$role-$connector-" '.tasks[] | "\($prefix)\(.id)"'
+}
+
+# kafka-configs entities of the quota commands, from the --user, --client-id, --connector, --all-users and
+# --all-client-ids flags: fills quota_entities (one element per entity, its kafka-configs arguments separated by tabs)
+# and quota_entity_labels. returns 2 when no entity is set.
+function get_quota_entities () {
+  local user="$1" client_id="$2" connector="$3" all_users="$4" all_client_ids="$5"
+  local user_args="" user_label="" client_ids="" c
+  quota_entities=()
+  quota_entity_labels=()
+
+  if [[ -n "$user" ]]
+  then
+    user_args=$'--entity-type\tusers\t--entity-name\t'"$user"
+    user_label="user $user"
+  elif [[ -n "$all_users" ]]
+  then
+    user_args=$'--entity-type\tusers\t--entity-default'
+    user_label="all users"
+  fi
+
+  if [[ -n "$connector" ]]
+  then
+    local connector_type
+    connector_type=$(playground state get run.connector_type)
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+      logerror "❌ --connector only works with self-managed connectors"
+      return 1
+    fi
+    client_ids=$(get_connector_client_ids "$connector") || return 1
+  elif [[ -n "$client_id" ]]
+  then
+    client_ids="$client_id"
+  fi
+
+  if [[ -n "$client_ids" ]]
+  then
+    while IFS= read -r c
+    do
+      [[ -z "$c" ]] && continue
+      quota_entities+=("${user_args:+$user_args$'\t'}--entity-type"$'\t'"clients"$'\t'"--entity-name"$'\t'"$c")
+      quota_entity_labels+=("${user_label:+$user_label, }client-id $c")
+    done <<< "$client_ids"
+  elif [[ -n "$all_client_ids" ]]
+  then
+    quota_entities+=("${user_args:+$user_args$'\t'}--entity-type"$'\t'"clients"$'\t'"--entity-default")
+    quota_entity_labels+=("${user_label:+$user_label, }all client ids")
+  elif [[ -n "$user_args" ]]
+  then
+    quota_entities+=("$user_args")
+    quota_entity_labels+=("$user_label")
+  fi
+
+  if [ ${#quota_entities[@]} -eq 0 ]
+  then
+    return 2
+  fi
+}
+
+# runs kafka-configs for a quota entity of get_quota_entities ($1), with the other arguments: exits 1 on error (the
+# tool sometimes exits 0 on errors)
+function run_quota_kafka_configs () {
+  local entity="$1" output rc=0
+  shift
+  local entity_args=()
+  IFS=$'\t' read -r -a entity_args <<< "$entity"
+  output=$(run_kafka_admin_tool kafka-configs "$@" "${entity_args[@]}" 2>&1) || rc=$?
+  output=$(echo "$output" | grep -v -E "^$|SLF4J|log4j")
+  if [ $rc -ne 0 ] || echo "$output" | grep -q -E "^Error|Exception"
+  then
+    logerror "❌ kafka-configs failed:"
+    echo "$output"
+    return 1
+  fi
+  [[ -n "$output" ]] && echo "$output"
+  return 0
 }
 
 # src/lib/colors.sh
@@ -54647,6 +55047,175 @@ playground_topic_tag_search_command() {
 }
 
 # :command.function
+playground_quota_get_command() {
+
+  # src/commands/quota/get.sh
+  user="${args[--user]}"
+  client_id="${args[--client-id]}"
+  connector="${args[--connector]}"
+  all_users="${args[--all-users]}"
+  all_client_ids="${args[--all-client-ids]}"
+  verbose="${args[--verbose]}"
+
+  rc=0
+  get_quota_entities "$user" "$client_id" "$connector" "$all_users" "$all_client_ids" || rc=$?
+  if [ $rc -eq 1 ]
+  then
+      exit 1
+  fi
+
+  if [ $rc -eq 2 ]
+  then
+      log "🔎 Displaying all client quotas"
+      found=0
+      for entity in $'--entity-type\tusers' $'--entity-type\tclients' $'--entity-type\tusers\t--entity-type\tclients'
+      do
+          output=$(run_quota_kafka_configs "$entity" --describe) || exit 1
+          if [[ -n "$output" ]]
+          then
+              echo "$output"
+              found=1
+          fi
+      done
+      if [ $found -eq 0 ]
+      then
+          log "🤷 no client quota, set one with playground quota set"
+      fi
+      exit 0
+  fi
+
+  for i in "${!quota_entities[@]}"
+  do
+      log "🔎 Displaying client quotas of ${quota_entity_labels[$i]}"
+      output=$(run_quota_kafka_configs "${quota_entities[$i]}" --describe) || exit 1
+      if [[ -n "$output" ]]
+      then
+          echo "$output"
+      else
+          log "🤷 no quota"
+      fi
+  done
+
+}
+
+# :command.function
+playground_quota_set_command() {
+
+  # src/commands/quota/set.sh
+  user="${args[--user]}"
+  client_id="${args[--client-id]}"
+  connector="${args[--connector]}"
+  all_users="${args[--all-users]}"
+  all_client_ids="${args[--all-client-ids]}"
+  verbose="${args[--verbose]}"
+
+  configs=()
+  [[ -n "${args[--producer-byte-rate]}" ]] && configs+=("producer_byte_rate=${args[--producer-byte-rate]}")
+  [[ -n "${args[--consumer-byte-rate]}" ]] && configs+=("consumer_byte_rate=${args[--consumer-byte-rate]}")
+  [[ -n "${args[--request-percentage]}" ]] && configs+=("request_percentage=${args[--request-percentage]}")
+  [[ -n "${args[--controller-mutation-rate]}" ]] && configs+=("controller_mutation_rate=${args[--controller-mutation-rate]}")
+  if [[ -n "${args[--request-percentage]}" ]] && ! [[ "${args[--request-percentage]}" =~ ^[0-9]+(\.[0-9]+)?$ ]]
+  then
+      logerror "❌ --request-percentage must be a number, e.g. 50 or 0.2"
+      exit 1
+  fi
+  if [ ${#configs[@]} -eq 0 ]
+  then
+      logerror "❌ set at least one of --producer-byte-rate, --consumer-byte-rate, --request-percentage, --controller-mutation-rate"
+      exit 1
+  fi
+  add_config=$(IFS=,; echo "${configs[*]}")
+
+  rc=0
+  get_quota_entities "$user" "$client_id" "$connector" "$all_users" "$all_client_ids" || rc=$?
+  if [ $rc -eq 2 ]
+  then
+      logerror "❌ set the entity of the quota: --user, --client-id, --connector, --all-users or --all-client-ids"
+      exit 1
+  elif [ $rc -ne 0 ]
+  then
+      exit 1
+  fi
+
+  for i in "${!quota_entities[@]}"
+  do
+      log "🚦 Setting $add_config on ${quota_entity_labels[$i]}"
+      run_quota_kafka_configs "${quota_entities[$i]}" --alter --add-config "$add_config" || exit 1
+      run_quota_kafka_configs "${quota_entities[$i]}" --describe || exit 1
+  done
+  if [[ -n "$connector" ]]
+  then
+      log "🎓 the quota follows the client ids of the tasks that exist now: run it again if tasks.max changes"
+  fi
+
+}
+
+# :command.function
+playground_quota_delete_command() {
+
+  # src/commands/quota/delete.sh
+  user="${args[--user]}"
+  client_id="${args[--client-id]}"
+  connector="${args[--connector]}"
+  all_users="${args[--all-users]}"
+  all_client_ids="${args[--all-client-ids]}"
+  verbose="${args[--verbose]}"
+
+  keys=()
+  [[ -n "${args[--producer-byte-rate]}" ]] && keys+=("producer_byte_rate")
+  [[ -n "${args[--consumer-byte-rate]}" ]] && keys+=("consumer_byte_rate")
+  [[ -n "${args[--request-percentage]}" ]] && keys+=("request_percentage")
+  [[ -n "${args[--controller-mutation-rate]}" ]] && keys+=("controller_mutation_rate")
+
+  rc=0
+  get_quota_entities "$user" "$client_id" "$connector" "$all_users" "$all_client_ids" || rc=$?
+  if [ $rc -eq 2 ]
+  then
+      logerror "❌ set the entity of the quota: --user, --client-id, --connector, --all-users or --all-client-ids"
+      exit 1
+  elif [ $rc -ne 0 ]
+  then
+      exit 1
+  fi
+
+  for i in "${!quota_entities[@]}"
+  do
+      # kafka-configs refuses to delete a quota that is not set (Invalid config(s)), and then deletes none: only delete
+      # the ones the entity has, read from "Quota configs for ... are consumer_byte_rate=1024.0, request_percentage=50.0"
+      current=$(run_quota_kafka_configs "${quota_entities[$i]}" --describe) || exit 1
+      current_keys=$(echo "$current" | sed -n 's/.* are //p' | tr ',' '\n' | sed -n 's/^ *\([a-z_]*\)=.*/\1/p')
+      to_delete=()
+      if [ ${#keys[@]} -eq 0 ]
+      then
+          while IFS= read -r key
+          do
+              [[ -n "$key" ]] && to_delete+=("$key")
+          done <<< "$current_keys"
+      else
+          for key in "${keys[@]}"
+          do
+              if echo "$current_keys" | grep -qx "$key"
+              then
+                  to_delete+=("$key")
+              else
+                  logwarn "🤷 $key is not set on ${quota_entity_labels[$i]}"
+              fi
+          done
+      fi
+      if [ ${#to_delete[@]} -eq 0 ]
+      then
+          log "🤷 no quota to remove from ${quota_entity_labels[$i]}"
+          continue
+      fi
+      delete_config=$(IFS=,; echo "${to_delete[*]}")
+      log "🗑️ Removing $delete_config from ${quota_entity_labels[$i]}"
+      run_quota_kafka_configs "${quota_entities[$i]}" --alter --delete-config "$delete_config" || exit 1
+  done
+  log "✅ Done"
+
+}
+
+# :command.function
 playground_consumer_group_list_command() {
 
   # src/commands/consumer-group/list.sh
@@ -65599,6 +66168,13 @@ parse_requirements() {
       action="topic"
       shift
       playground_topic_parse_requirements "$@"
+      shift $#
+      ;;
+
+    quota)
+      action="quota"
+      shift
+      playground_quota_parse_requirements "$@"
       shift $#
       ;;
 
@@ -92520,6 +93096,700 @@ playground_topic_tag_search_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_quota_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_quota_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    get)
+      action="get"
+      shift
+      playground_quota_get_parse_requirements "$@"
+      shift $#
+      ;;
+
+    set)
+      action="set"
+      shift
+      playground_quota_set_parse_requirements "$@"
+      shift $#
+      ;;
+
+    delete)
+      action="delete"
+      shift
+      playground_quota_delete_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_quota_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_quota_get_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_quota_get_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="quota get"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --user | -u)
+        # :flag.conflicts
+        if [[ -n "${args['--all-users']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--all-users" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user, -u USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --client-id)
+        # :flag.conflicts
+        for conflict in --connector --all-client-ids; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--client-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--client-id requires an argument: --client-id CLIENT-ID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+        # :flag.conflicts
+        for conflict in --client-id --all-client-ids; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all-users)
+        # :flag.conflicts
+        if [[ -n "${args['--user']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--user" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--all-users']=1
+        shift
+        ;;
+
+      # :flag.case
+      --all-client-ids)
+        # :flag.conflicts
+        for conflict in --client-id --connector; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--all-client-ids']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_quota_set_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_quota_set_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="quota set"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --user | -u)
+        # :flag.conflicts
+        if [[ -n "${args['--all-users']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--all-users" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user, -u USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --client-id)
+        # :flag.conflicts
+        for conflict in --connector --all-client-ids; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--client-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--client-id requires an argument: --client-id CLIENT-ID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+        # :flag.conflicts
+        for conflict in --client-id --all-client-ids; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all-users)
+        # :flag.conflicts
+        if [[ -n "${args['--user']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--user" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--all-users']=1
+        shift
+        ;;
+
+      # :flag.case
+      --all-client-ids)
+        # :flag.conflicts
+        for conflict in --client-id --connector; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--all-client-ids']=1
+        shift
+        ;;
+
+      # :flag.case
+      --producer-byte-rate)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--producer-byte-rate']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--producer-byte-rate requires an argument: --producer-byte-rate BYTES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --consumer-byte-rate)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--consumer-byte-rate']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--consumer-byte-rate requires an argument: --consumer-byte-rate BYTES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --request-percentage)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--request-percentage']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--request-percentage requires an argument: --request-percentage PERCENTAGE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --controller-mutation-rate)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--controller-mutation-rate']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--controller-mutation-rate requires an argument: --controller-mutation-rate RATE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--producer-byte-rate'] ]]; then
+    validation_output="$(validate_integer "${args['--producer-byte-rate']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--producer-byte-rate BYTES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--consumer-byte-rate'] ]]; then
+    validation_output="$(validate_integer "${args['--consumer-byte-rate']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--consumer-byte-rate BYTES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--controller-mutation-rate'] ]]; then
+    validation_output="$(validate_integer "${args['--controller-mutation-rate']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--controller-mutation-rate RATE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_quota_delete_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_quota_delete_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="quota delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --user | -u)
+        # :flag.conflicts
+        if [[ -n "${args['--all-users']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--all-users" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--user']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--user requires an argument: --user, -u USER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --client-id)
+        # :flag.conflicts
+        for conflict in --connector --all-client-ids; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--client-id']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--client-id requires an argument: --client-id CLIENT-ID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+        # :flag.conflicts
+        for conflict in --client-id --all-client-ids; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all-users)
+        # :flag.conflicts
+        if [[ -n "${args['--user']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--user" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--all-users']=1
+        shift
+        ;;
+
+      # :flag.case
+      --all-client-ids)
+        # :flag.conflicts
+        for conflict in --client-id --connector; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--all-client-ids']=1
+        shift
+        ;;
+
+      # :flag.case
+      --producer-byte-rate)
+
+        # :flag.case_no_arg
+        args['--producer-byte-rate']=1
+        shift
+        ;;
+
+      # :flag.case
+      --consumer-byte-rate)
+
+        # :flag.case_no_arg
+        args['--consumer-byte-rate']=1
+        shift
+        ;;
+
+      # :flag.case
+      --request-percentage)
+
+        # :flag.case_no_arg
+        args['--request-percentage']=1
+        shift
+        ;;
+
+      # :flag.case
+      --controller-mutation-rate)
+
+        # :flag.case_no_arg
+        args['--controller-mutation-rate']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_consumer_group_parse_requirements() {
   local key
 
@@ -103038,6 +104308,11 @@ playground_completion() {
         playground_topic_completion "$completion_current" "$@"
         return
         ;;
+      quota)
+        shift
+        playground_quota_completion "$completion_current" "$@"
+        return
+        ;;
       consumer-group)
         shift
         playground_consumer_group_completion "$completion_current" "$@"
@@ -103102,7 +104377,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic consumer-group flink rbac connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota consumer-group flink rbac connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -115897,6 +117172,368 @@ playground_topic_tag_search_completion() {
 }
 
 # :command.completion_function
+playground_quota_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      get)
+        shift
+        playground_quota_get_completion "$completion_current" "$@"
+        return
+        ;;
+      set)
+        shift
+        playground_quota_set_completion "$completion_current" "$@"
+        return
+        ;;
+      delete)
+        shift
+        playground_quota_delete_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" get set delete
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_quota_get_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --user | -u)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+        completion_blocked_flags["--all-users"]=1
+
+        ;;
+      --client-id)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--all-client-ids"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--all-client-ids"]=1
+
+        ;;
+      --all-users)
+        completion_blocked_flags["--all-users"]=1
+        completion_blocked_flags["--user"]=1
+
+        shift
+        ;;
+      --all-client-ids)
+        completion_blocked_flags["--all-client-ids"]=1
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--connector"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --user "$completion_current" --user -u
+    completion_flag_candidates --client-id "$completion_current" --client-id
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --all-users "$completion_current" --all-users
+    completion_flag_candidates --all-client-ids "$completion_current" --all-client-ids
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_quota_set_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --user | -u)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+        completion_blocked_flags["--all-users"]=1
+
+        ;;
+      --client-id)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--all-client-ids"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--all-client-ids"]=1
+
+        ;;
+      --all-users)
+        completion_blocked_flags["--all-users"]=1
+        completion_blocked_flags["--user"]=1
+
+        shift
+        ;;
+      --all-client-ids)
+        completion_blocked_flags["--all-client-ids"]=1
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--connector"]=1
+
+        shift
+        ;;
+      --producer-byte-rate)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--producer-byte-rate"]=1
+
+        ;;
+      --consumer-byte-rate)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--consumer-byte-rate"]=1
+
+        ;;
+      --request-percentage)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--request-percentage"]=1
+
+        ;;
+      --controller-mutation-rate)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--controller-mutation-rate"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --user "$completion_current" --user -u
+    completion_flag_candidates --client-id "$completion_current" --client-id
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --all-users "$completion_current" --all-users
+    completion_flag_candidates --all-client-ids "$completion_current" --all-client-ids
+    completion_flag_candidates --producer-byte-rate "$completion_current" --producer-byte-rate
+    completion_flag_candidates --consumer-byte-rate "$completion_current" --consumer-byte-rate
+    completion_flag_candidates --request-percentage "$completion_current" --request-percentage
+    completion_flag_candidates --controller-mutation-rate "$completion_current" --controller-mutation-rate
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_quota_delete_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --user | -u)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--user"]=1
+        completion_blocked_flags["--all-users"]=1
+
+        ;;
+      --client-id)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--all-client-ids"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--all-client-ids"]=1
+
+        ;;
+      --all-users)
+        completion_blocked_flags["--all-users"]=1
+        completion_blocked_flags["--user"]=1
+
+        shift
+        ;;
+      --all-client-ids)
+        completion_blocked_flags["--all-client-ids"]=1
+        completion_blocked_flags["--client-id"]=1
+        completion_blocked_flags["--connector"]=1
+
+        shift
+        ;;
+      --producer-byte-rate)
+        completion_blocked_flags["--producer-byte-rate"]=1
+
+        shift
+        ;;
+      --consumer-byte-rate)
+        completion_blocked_flags["--consumer-byte-rate"]=1
+
+        shift
+        ;;
+      --request-percentage)
+        completion_blocked_flags["--request-percentage"]=1
+
+        shift
+        ;;
+      --controller-mutation-rate)
+        completion_blocked_flags["--controller-mutation-rate"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --user "$completion_current" --user -u
+    completion_flag_candidates --client-id "$completion_current" --client-id
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --all-users "$completion_current" --all-users
+    completion_flag_candidates --all-client-ids "$completion_current" --all-client-ids
+    completion_flag_candidates --producer-byte-rate "$completion_current" --producer-byte-rate
+    completion_flag_candidates --consumer-byte-rate "$completion_current" --consumer-byte-rate
+    completion_flag_candidates --request-percentage "$completion_current" --request-percentage
+    completion_flag_candidates --controller-mutation-rate "$completion_current" --controller-mutation-rate
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
 playground_consumer_group_completion() {
   local completion_current="$1"
   shift
@@ -121265,6 +122902,10 @@ run() {
     "topic tag remove") playground_topic_tag_remove_command ;;
     "topic tag show") playground_topic_tag_show_command ;;
     "topic tag search") playground_topic_tag_search_command ;;
+    "quota") playground_quota_command ;;
+    "quota get") playground_quota_get_command ;;
+    "quota set") playground_quota_set_command ;;
+    "quota delete") playground_quota_delete_command ;;
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
     "consumer-group describe") playground_consumer_group_describe_command ;;

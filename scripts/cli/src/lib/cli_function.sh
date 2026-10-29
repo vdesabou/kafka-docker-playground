@@ -2118,6 +2118,15 @@ function filter_ccloud_environment() {
   fi
 }
 
+function filter_not_ccloud_environment() {
+  get_environment_used
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+    logerror "this command is not available with Confluent Cloud"
+  fi
+}
+
 function filter_cfk_environment() {
   get_environment_used
 
@@ -7628,4 +7637,109 @@ function get_flink_rest_url () {
     return 1
   fi
   flink_rest_url="http://localhost:${mapped##*:}"
+}
+
+# client ids of the tasks of a self-managed connector, one per line: connector-consumer-<connector>-<task> for a sink,
+# connector-producer-<connector>-<task> for a source, or the consumer|producer.override.client.id of its config (then
+# shared by all the tasks)
+function get_connector_client_ids () {
+  local connector="$1" status config connector_kind role override
+  get_connect_url_and_security
+  status=$(curl $security -s "${connect_url}/connectors/${connector}/status")
+  connector_kind=$(echo "$status" | jq -r '.type // empty' 2>/dev/null)
+  if [[ -z "$connector_kind" ]]
+  then
+    logerror "❌ connector $connector not found on $connect_url"
+    return 1
+  fi
+  role="consumer"
+  if [[ "$connector_kind" == "source" ]]
+  then
+    role="producer"
+  fi
+  config=$(curl $security -s "${connect_url}/connectors/${connector}/config")
+  override=$(echo "$config" | jq -r --arg key "$role.override.client.id" '.[$key] // empty' 2>/dev/null)
+  if [[ -n "$override" ]]
+  then
+    echo "$override"
+    return 0
+  fi
+  echo "$status" | jq -r --arg prefix "connector-$role-$connector-" '.tasks[] | "\($prefix)\(.id)"'
+}
+
+# kafka-configs entities of the quota commands, from the --user, --client-id, --connector, --all-users and
+# --all-client-ids flags: fills quota_entities (one element per entity, its kafka-configs arguments separated by tabs)
+# and quota_entity_labels. returns 2 when no entity is set.
+function get_quota_entities () {
+  local user="$1" client_id="$2" connector="$3" all_users="$4" all_client_ids="$5"
+  local user_args="" user_label="" client_ids="" c
+  quota_entities=()
+  quota_entity_labels=()
+
+  if [[ -n "$user" ]]
+  then
+    user_args=$'--entity-type\tusers\t--entity-name\t'"$user"
+    user_label="user $user"
+  elif [[ -n "$all_users" ]]
+  then
+    user_args=$'--entity-type\tusers\t--entity-default'
+    user_label="all users"
+  fi
+
+  if [[ -n "$connector" ]]
+  then
+    local connector_type
+    connector_type=$(playground state get run.connector_type)
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+      logerror "❌ --connector only works with self-managed connectors"
+      return 1
+    fi
+    client_ids=$(get_connector_client_ids "$connector") || return 1
+  elif [[ -n "$client_id" ]]
+  then
+    client_ids="$client_id"
+  fi
+
+  if [[ -n "$client_ids" ]]
+  then
+    while IFS= read -r c
+    do
+      [[ -z "$c" ]] && continue
+      quota_entities+=("${user_args:+$user_args$'\t'}--entity-type"$'\t'"clients"$'\t'"--entity-name"$'\t'"$c")
+      quota_entity_labels+=("${user_label:+$user_label, }client-id $c")
+    done <<< "$client_ids"
+  elif [[ -n "$all_client_ids" ]]
+  then
+    quota_entities+=("${user_args:+$user_args$'\t'}--entity-type"$'\t'"clients"$'\t'"--entity-default")
+    quota_entity_labels+=("${user_label:+$user_label, }all client ids")
+  elif [[ -n "$user_args" ]]
+  then
+    quota_entities+=("$user_args")
+    quota_entity_labels+=("$user_label")
+  fi
+
+  if [ ${#quota_entities[@]} -eq 0 ]
+  then
+    return 2
+  fi
+}
+
+# runs kafka-configs for a quota entity of get_quota_entities ($1), with the other arguments: exits 1 on error (the
+# tool sometimes exits 0 on errors)
+function run_quota_kafka_configs () {
+  local entity="$1" output rc=0
+  shift
+  local entity_args=()
+  IFS=$'\t' read -r -a entity_args <<< "$entity"
+  output=$(run_kafka_admin_tool kafka-configs "$@" "${entity_args[@]}" 2>&1) || rc=$?
+  output=$(echo "$output" | grep -v -E "^$|SLF4J|log4j")
+  if [ $rc -ne 0 ] || echo "$output" | grep -q -E "^Error|Exception"
+  then
+    logerror "❌ kafka-configs failed:"
+    echo "$output"
+    return 1
+  fi
+  [[ -n "$output" ]] && echo "$output"
+  return 0
 }
