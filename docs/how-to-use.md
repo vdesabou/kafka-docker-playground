@@ -555,8 +555,10 @@ For Kafka to output quota metrics, at least one quota configuration is necessary
 A quota can be configured using:
 
 ```bash
-playground container exec -c broker --command "kafka-configs --bootstrap-server broker:9092 --alter --add-config 'producer_byte_rate=10000,consumer_byte_rate=30000,request_percentage=0.2' --entity-type users --entity-name unknown --entity-type clients --entity-name unknown"
+playground quota set --user unknown --client-id unknown --producer-byte-rate 10000 --consumer-byte-rate 30000 --request-percentage 0.2
 ```
+
+See [playground quota](/playground%20quota) to display (`quota get`) and remove (`quota delete`) quotas, or to set one on the tasks of a connector (`--connector`).
 
 ![Kafka quotas](images/kafka-quotas.png)
 

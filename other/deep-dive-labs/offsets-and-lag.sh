@@ -175,4 +175,24 @@ lab_run playground connector offsets reset --connector filestream-source
 lab_expect_contains "The offsets for this connector have been reset successfully"
 wait_for_record_count lab-source 21
 
+log "Step 7: throttle a sink with a client quota"
+lab_run playground quota set --connector filestream-sink --consumer-byte-rate 1024
+lab_expect_exit 0
+lab_expect_contains "Quota configs for client-id 'connector-consumer-filestream-sink-0' are consumer_byte_rate=1024.0"
+lab_run playground quota set --connector filestream-source --producer-byte-rate 2048
+lab_expect_contains "Quota configs for client-id 'connector-producer-filestream-source-0' are producer_byte_rate=2048.0"
+lab_run playground quota get
+lab_expect_contains "Quota configs for client-id 'connector-consumer-filestream-sink-0' are consumer_byte_rate=1024.0"
+lab_expect_contains "Quota configs for client-id 'connector-producer-filestream-source-0' are producer_byte_rate=2048.0"
+# only the quotas that are set are removed: kafka-configs fails on the others
+lab_run playground quota delete --connector filestream-sink --producer-byte-rate
+lab_expect_exit 0
+lab_expect_contains "producer_byte_rate is not set on client-id connector-consumer-filestream-sink-0"
+lab_run playground quota delete --connector filestream-sink
+lab_expect_contains "Removing consumer_byte_rate from client-id connector-consumer-filestream-sink-0"
+lab_run playground quota delete --connector filestream-source
+lab_expect_contains "Removing producer_byte_rate from client-id connector-producer-filestream-source-0"
+lab_run playground quota get
+lab_expect_contains "no client quota"
+
 log "✅ all the outputs of the page are as expected"

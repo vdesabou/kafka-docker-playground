@@ -147,6 +147,7 @@ environments where the raw command only works on `plaintext`.
 | `sleep N` waiting for a connector to start, or for a source connector to produce | nothing: `playground connector create-or-update` waits for a self-managed connector to be RUNNING by default (strict in examples, warn-only in repro models; `--wait` strict everywhere and for fully managed, `--no-wait` to skip). Otherwise `playground connector wait --connector <c>` (`--state RUNNING\|PAUSED\|STOPPED\|FAILED`, `--max-wait 120`) / `playground topic wait-for-records --topic <t> --min-expected-messages N --max-wait 120` |
 | `kafka-console-producer`, `kafka-avro-console-producer` | `playground topic produce -t <t> --nb-messages N` (+ schema on stdin) |
 | `kafka-console-consumer` | `playground topic consume --topic <t> --min-expected-messages N --timeout 60` |
+| `kafka-configs --entity-type users\|clients` (client quotas) | `playground quota get\|set\|delete` (`--user`, `--client-id`, `--connector <c>` for its tasks, `--all-users`, `--all-client-ids`) |
 | `kafka-topics --create\|--list\|--delete\|--describe` | `playground topic create\|list\|delete\|describe` |
 | `GetOffsetShell` / counting records | `playground topic get-number-records --topic <t>` |
 | `kafka-console-consumer` on `__consumer_offsets` | `playground topic display-consumer-offsets` |
