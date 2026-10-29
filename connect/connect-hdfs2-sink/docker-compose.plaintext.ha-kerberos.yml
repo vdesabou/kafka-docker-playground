@@ -1,5 +1,21 @@
 ---
 
+# Hadoop checks the Kerberos principal of its peers (jn/_HOST, nn/_HOST, dn/_HOST) against the name
+# returned by a reverse DNS lookup of their IP. Docker answers <container>.<network>, which is the FQDN here,
+# but podman (aardvark-dns) answers the short container name first, so the namenode rejects the journal nodes with
+# 'Server has invalid Kerberos principal: jn/journal1.kerberos-demo.local@EXAMPLE.COM' (#9652).
+# Static IPs + /etc/hosts entries make the reverse lookup return the FQDN with both engines.
+x-hadoop-hosts: &hadoop-hosts
+  - "namenode1.kerberos-demo.local:172.28.0.11"
+  - "namenode2.kerberos-demo.local:172.28.0.12"
+  - "journal1.kerberos-demo.local:172.28.0.13"
+  - "journal2.kerberos-demo.local:172.28.0.14"
+  - "journal3.kerberos-demo.local:172.28.0.15"
+  - "datanode.kerberos-demo.local:172.28.0.16"
+  - "resourcemanager.kerberos-demo.local:172.28.0.17"
+  - "activator.kerberos-demo.local:172.28.0.18"
+  - "connect.kerberos-demo.local:172.28.0.19"
+
 services:
 
   krb5:
@@ -15,6 +31,10 @@ services:
     image: flokkr/hadoop:latest
     hostname: namenode1.kerberos-demo.local
     container_name: namenode1
+    networks:
+      default:
+        ipv4_address: 172.28.0.11
+    extra_hosts: *hadoop-hosts
     depends_on:
       - krb5
     env_file:
@@ -38,6 +58,10 @@ services:
     image: flokkr/hadoop:latest
     hostname: namenode2.kerberos-demo.local
     container_name: namenode2
+    networks:
+      default:
+        ipv4_address: 172.28.0.12
+    extra_hosts: *hadoop-hosts
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     depends_on:
@@ -62,6 +86,10 @@ services:
     image: flokkr/hadoop:latest
     hostname: journal1.kerberos-demo.local
     container_name: journal1
+    networks:
+      default:
+        ipv4_address: 172.28.0.13
+    extra_hosts: *hadoop-hosts
     depends_on:
       - krb5
     env_file:
@@ -78,6 +106,10 @@ services:
     image: flokkr/hadoop:latest
     hostname: journal2.kerberos-demo.local
     container_name: journal2
+    networks:
+      default:
+        ipv4_address: 172.28.0.14
+    extra_hosts: *hadoop-hosts
     depends_on:
       - krb5
     env_file:
@@ -94,6 +126,10 @@ services:
     image: flokkr/hadoop:latest
     hostname: journal3.kerberos-demo.local
     container_name: journal3
+    networks:
+      default:
+        ipv4_address: 172.28.0.15
+    extra_hosts: *hadoop-hosts
     depends_on:
       - krb5
     env_file:
@@ -111,6 +147,10 @@ services:
     command: ["hdfs", "datanode"]
     hostname: datanode.kerberos-demo.local
     container_name: datanode
+    networks:
+      default:
+        ipv4_address: 172.28.0.16
+    extra_hosts: *hadoop-hosts
     depends_on:
       - krb5
     env_file:
@@ -127,6 +167,10 @@ services:
     image: flokkr/hadoop:latest
     hostname: resourcemanager.kerberos-demo.local
     container_name: resourcemanager
+    networks:
+      default:
+        ipv4_address: 172.28.0.17
+    extra_hosts: *hadoop-hosts
     depends_on:
       - krb5
     command: ["yarn", "resourcemanager"]
@@ -141,6 +185,10 @@ services:
     image: flokkr/hadoop:latest
     hostname: activator.kerberos-demo.local
     container_name: activator
+    networks:
+      default:
+        ipv4_address: 172.28.0.18
+    extra_hosts: *hadoop-hosts
     depends_on:
       - krb5
     command: kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/activator.kerberos-demo.local;hdfs haadmin -transitionToActive nn1
@@ -154,6 +202,10 @@ services:
 
   connect:
     hostname: connect.kerberos-demo.local
+    networks:
+      default:
+        ipv4_address: 172.28.0.19
+    extra_hosts: *hadoop-hosts
     volumes:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs2-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
@@ -166,3 +218,8 @@ services:
 networks:
   default:
     name: kerberos-demo.local
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          # containers without a static IP (broker, schema-registry...) get one from here, away from the static ones
+          ip_range: 172.28.1.0/24
