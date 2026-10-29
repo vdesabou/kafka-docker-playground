@@ -193,6 +193,40 @@ The output names each file with its path inside the archive, and only shows file
 ✅ HTML report saved: /home/me/log-analysis-output/support_bundle-log-report.html
 ```
 
+### 🧭 The summary, `--connector`, `--show-config`
+
+After the digest of each file, a short **summary** gives what the HTML report says first, across all the files:
+
+```text
+🧭 Summary: 6 occurrence(s) of 6 distinct record(s) in 1 file(s), 2026-10-14 10:03:58 → 2026-10-14 10:05:55
+   🔌 by connector: cdc-xstream-oracle-source 1 · no connector context 5
+🧠 Known causes
+   [HIGH] 🧨 A connector task was killed ×1 in connect-oracle-xstream-task-failure.log (first at line 5251, 2026-10-14 10:05:55)
+      → it stays FAILED until it is restarted: fix the cause (the exception chain of the record), then playground connector restart --connector <connector>
+   [HIGH] 🔑 Authentication failure ×1 in connect-oracle-xstream-task-failure.log (first at line 9, 2026-10-14 10:03:58)
+      → check the credentials (user, password, API key, keytab) of the client or of the external system
+🌳 Root causes not explained by a known cause
+   ERROR ×1 StreamsException: ORA-26804: Apply "XOUT" is disabled.
+   …
+⚙️ Configuration logged (24), the last dump of each: --show-config <connector|config class|client id> prints one
+   🧩 cdc-xstream-oracle-source: SourceConnectorConfig ×3, EnrichedConnectorConfig ×3, AbstractConfig, …
+   📡 Clients: AdminClientConfig, ConsumerConfig
+```
+
+| Flag | What it does |
+| --- | --- |
+| `--connector <name>` (`-c`, repeatable) | only the records and configs of that connector (`[name\|task-0]` / `[name\|worker]` context, `WorkerSinkTask{id=name-0}`), in the digest of each file, the summary, the HTML report and the JSON. The digest says how many records of the file it left out. `--with-worker` also keeps what has no connector context (worker, Kafka) |
+| `--show-config <name>` | prints the configuration logged at startup as `key = value` (sanitized), the last dump of each, with the keys changed between restarts. For a **connector**: its own configs only (`EnrichedSourceConnectorConfig`, the connector's own class such as `AbstractConfig`, converters, `TaskConfig`); a config contained in a bigger one with the same values (`SourceConnectorConfig`, the `[name\|worker]` copy of a `[name\|task-0]` one) is only named, and its producer / consumer / admin clients are summed up in one line. For a **config class** (`ProducerConfig`, `DistributedConfig`…) or a **client id**: every match |
+| `--json-sections summary,findings,root_causes` | with `--json`, only these sections (`summary`, `findings`, `known_causes`, `root_causes`, `files`, `files_without_findings`, `configuration`). The configuration is most of the JSON (one dump of 100 keys per client), so leave it out unless you need it |
+
+**🔁 Changed between restarts**: when a config is logged again (a restart of the connector or the worker) with
+another value for a key, the summary, `--show-config`, the HTML report and `.configuration[].changes` of `--json` list
+it, for example `SinkConnectorConfig [my-sink|worker]: tasks.max 1 → 4 · first line 12 (2026-10-29 10:10:00)`.
+That answers "did the customer change something before it broke?". Each dump lists every key of its config class,
+defaults included, so only values that differ count. Two configs logged with the same identity (the key and the
+value converter, two consumers with one `client.id`) would look like a value going back and forth: a change undone
+within 60 s is ignored.
+
 ### 🌐 The HTML report, and `--json`
 
 Besides the terminal digest, `analyze logs` writes a self-contained HTML report, `<first input>-log-report.html`, in
@@ -230,7 +264,7 @@ playground analyze logs -f support-bundle.zip --json 2>/dev/null | jq '.findings
 Gotchas:
 
 - **One digest per file**: the same error in `connect.log` and `connect.log.1` shows up twice, with line numbers of
-  each file. There is no cross-file timeline.
+  each file. The 🧭 summary, the HTML report and the JSON merge them (root causes, known causes, timeline).
 - `--max-findings` is **per file**.
 - No `--since` offline: to focus on a time window, cut the file first (`sed -n '/2026-10-14 10:05/,$p'`).
 - An empty file counts as skipped, like a binary one.
@@ -392,6 +426,7 @@ playground container logs -c <container> [-c <c2>] \
   [--no-follow [--tail N|all] [--since 10m] [--grep <pattern>]] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
 playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--include-warnings] [--max-findings N] [--output-dir <dir>] [--json]
+                       [--connector <name> [--with-worker]] [--show-config <name>] [--json-sections summary,findings]
                        [--no-sanitize] [--logs-only] [--component connect] [--severity high] # CFK support bundle
 playground analyze logs --sample connect_task_failure|support_bundle
 ```

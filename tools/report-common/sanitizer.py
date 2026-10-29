@@ -331,8 +331,9 @@ def _save_state(sanitizer: DataSanitizer, path: str):
 
 
 # marker lines of a records file whose payload (after the first tab) is log text: the context of a record, the lines of
-# a config. The other markers (counts, line numbers, timestamps) are kept as they are.
-PAYLOAD_MARKERS = ("@@PGCTX@@", "@@PGCFGL@@")
+# a config, the keys of a config that changed between restarts (key=previous<tab>key=new). The other markers (counts,
+# line numbers, timestamps) are kept as they are.
+PAYLOAD_MARKERS = ("@@PGCTX@@", "@@PGCFGL@@", "@@PGCFGCHG@@")
 
 
 def sanitize_stream(sanitizer: DataSanitizer, text: str) -> str:

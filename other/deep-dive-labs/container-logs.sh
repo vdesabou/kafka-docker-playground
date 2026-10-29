@@ -90,7 +90,18 @@ lab_expect_contains "1 file(s) with findings out of 1 scanned (binary files skip
 lab_expect_contains "✅ HTML report saved: $report_dir/lab-connect-$$-log-report.html"
 lab_expect_equals "$(grep -o 'A connector task was killed' "$report_dir/lab-connect-$$-log-report.html" | head -1)" "A connector task was killed" "known cause in the HTML report"
 lab_expect_equals "$(grep -o "<option value='bad-sink'>" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "<option value='bad-sink'>" "connector filter in the HTML report"
-lab_run playground analyze logs -f "$saved_log.gz" --json
+lab_expect_contains "🧭 Summary:"
+lab_expect_contains "🧠 Known causes"
+lab_expect_contains "🧨 A connector task was killed"
+lab_run playground analyze logs -f "$saved_log.gz" --connector bad-sink --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "for --connector bad-sink"
+lab_expect_contains "🧭 Summary (--connector bad-sink):"
+lab_run playground analyze logs --sample connect_task_failure --show-config cdc-xstream-oracle-source --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "⚙️ SourceConnectorConfig [cdc-xstream-oracle-source|worker]"
+lab_expect_contains "connector.class = io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector"
+lab_run playground analyze logs -f "$saved_log.gz" --json --json-sections summary,known_causes,files
 lab_expect_exit 0
 lab_expect_contains '"files_with_findings": 1'
 lab_expect_contains '"title": "🧲 Unknown magic byte"'

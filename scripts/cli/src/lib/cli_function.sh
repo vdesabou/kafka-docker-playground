@@ -5277,6 +5277,8 @@ function install_confluent_plugin() {
 # (optionally WARN), each with an occurrence count, the exception chain and a
 # few frames of the deepest cause, instead of tens of thousands of raw lines.
 # $1: max number of findings to print, $2: non-empty to include WARN records
+# PG_LOG_DIGEST_CONNECTORS (space separated) prints only the records of these connectors ([connector|task-0] context),
+# plus the records without connector context with PG_LOG_DIGEST_WITH_WORKER; the records file keeps them all.
 # When PG_LOG_DIGEST_RECORDS_FILE is set, every distinct record (not only the first $1) is also appended to that
 # file for the HTML reports (tools/log-analyzer/log_report.py), labelled with PG_LOG_DIGEST_LABEL:
 #   @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences
@@ -5288,11 +5290,13 @@ function install_confluent_plugin() {
 # [connector|task-0] context, ProducerConfig of a client…), the last one of each class / context / client.id, 50 at most:
 #   @@PGCFG@@<tab>config class<tab>[connector|task-0] context<tab>line<tab>timestamp<tab>client.id or name
 #   @@PGCFGL@@<tab>key=value, one per line
+#   @@PGCFGCHG@@<tab>line<tab>timestamp<tab>key=previous<tab>key=new: a key that changed since the previous dump of the config
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
 
     PG_LOG_DIGEST_RECORDS_FILE="${PG_LOG_DIGEST_RECORDS_FILE:-}" PG_LOG_DIGEST_LABEL="${PG_LOG_DIGEST_LABEL:-}" \
+    PG_LOG_DIGEST_CONNECTORS="${PG_LOG_DIGEST_CONNECTORS:-}" PG_LOG_DIGEST_WITH_WORKER="${PG_LOG_DIGEST_WITH_WORKER:-}" \
     awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
     # anything that does not look like the continuation of a stack trace or of a
     # multi-line message (indented line, "Caused by:", exception line) starts a record
@@ -5349,6 +5353,13 @@ function summarize_log_errors() {
         ctx[ctx_key] = ctx[ctx_key] ctx_line(NR, $0, " ")
         ctx_after--
     }
+    # a record of one of the connectors of PG_LOG_DIGEST_CONNECTORS: its [connector|task-0] / [connector|worker] context or
+    # its WorkerSourceTask{id=connector-0}; with PG_LOG_DIGEST_WITH_WORKER, also a record without connector context
+    function of_connectors(t,    n, i, names) {
+        n = split(connectors, names, " ")
+        for (i = 1; i <= n; i++) if (index(t, "[" names[i] "|") || index(t, "Task{id=" names[i] "-")) return 1
+        return with_worker != "" && t !~ /\[[^] |]+\|(task-[0-9]+|worker)/ && t !~ /Task\{id=/
+    }
     # a "<Class>Config values:" header: the "<tab>key = value" lines that follow are its config
     function cfg_start(    h) {
         cfg_end()
@@ -5372,7 +5383,28 @@ function summarize_log_errors() {
         sub(/ \([A-Za-z0-9_.$]*Config(:[0-9]+)?\)$/, "", v)
         if (length(v) > 1000) v = substr(v, 1, 1000) "..."
         if (k == "client.id" || (k == "name" && cfg_id == "")) cfg_id = v
+        # the key and the value converter of a task log the same class one after the other: two configs
+        if (k == "converter.type") cfg_id = cfg_id (cfg_id == "" ? "" : " ") v
         cfg_buf = cfg_buf k "=" v "\n"
+    }
+    # keys whose value differs between the previous dump of a config and this one (a restart with another config),
+    # appended to cfg_chg[key]: "line<tab>timestamp<tab>key=previous<tab>key=new" (key=value on both sides, so that the
+    # sanitizer redacts a secret on each). A dump lists every key of its config class, defaults included: a key in only
+    # one of them is another variant of the class logged at the same time (EnrichedConnectorConfig with or without the
+    # topic.creation.* group), not a change
+    function cfg_diff(key, old, new,    n, i, ol, nl, k, v, prev) {
+        split("", prev)
+        n = split(old, ol, "\n")
+        for (i = 1; i < n; i++) { k = substr(ol[i], 1, index(ol[i], "=") - 1); prev[k] = substr(ol[i], index(ol[i], "=") + 1) }
+        n = split(new, nl, "\n")
+        for (i = 1; i < n; i++) {
+            k = substr(nl[i], 1, index(nl[i], "=") - 1)
+            v = substr(nl[i], index(nl[i], "=") + 1)
+            if (nchg[key] < 50 && (k in prev) && prev[k] != v) {
+                cfg_chg[key] = cfg_chg[key] cfg_ln "\t" cfg_ts "\t" k "=" prev[k] "\t" k "=" v "\n"
+                nchg[key]++
+            }
+        }
     }
     function cfg_end(    key) {
         if (!cfg_on) return
@@ -5382,6 +5414,8 @@ function summarize_log_errors() {
         if (!(key in cfg_text)) {
             if (ncfg >= 50) return
             cfg_order[++ncfg] = key
+        } else if (cfg_text[key] != cfg_buf) {
+            cfg_diff(key, cfg_text[key], cfg_buf)
         }
         cfg_text[key] = cfg_buf
         cfg_head[key] = cfg_cls "\t" cfg_ctx "\t" cfg_ln "\t" cfg_ts "\t" cfg_id
@@ -5450,6 +5484,8 @@ function summarize_log_errors() {
     BEGIN {
         records_file = ENVIRON["PG_LOG_DIGEST_RECORDS_FILE"]
         label = ENVIRON["PG_LOG_DIGEST_LABEL"]
+        connectors = ENVIRON["PG_LOG_DIGEST_CONNECTORS"]
+        with_worker = ENVIRON["PG_LOG_DIGEST_WITH_WORKER"]
     }
     {
         # the 2 lines before a record, for its context
@@ -5501,26 +5537,38 @@ function summarize_log_errors() {
                 printf "@@PGCFG@@\t%s\n", cfg_head[k] >> records_file
                 n = split(cfg_text[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCFGL@@\t%s\n", cl[j] >> records_file
+                n = split(cfg_chg[k], cl, "\n")
+                for (j = 1; j < n; j++) printf "@@PGCFGCHG@@\t%s\n", cl[j] >> records_file
             }
             close(records_file)
         }
-        if (nkeys == 0) {
-            printf "✅ no %s record found in %d lines\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR
+        # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed
+        nshown_keys = nkeys
+        shown_occurrences = total_occurrences
+        if (connectors != "") {
+            nshown_keys = 0
+            shown_occurrences = 0
+            for (i = 1; i <= nkeys; i++) if (of_connectors(text[order[i]])) { nshown_keys++; shown_occurrences += count[order[i]] }
+        }
+        if (nshown_keys == 0) {
+            printf "✅ no %s record found in %d lines%s\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR, (connectors == "" ? "" : sprintf(" for --connector %s (%d distinct record(s) of other connectors or without connector context)", connectors, nkeys))
             exit 0
         }
-        printf "🔎 %d distinct record(s), %d occurrence(s), in %d lines\n", nkeys, total_occurrences, NR
+        if (connectors == "") printf "🔎 %d distinct record(s), %d occurrence(s), in %d lines\n", nkeys, total_occurrences, NR
+        else printf "🔎 %d distinct record(s), %d occurrence(s) for --connector %s (%d distinct record(s) in the file), in %d lines\n", nshown_keys, shown_occurrences, connectors, nkeys, NR
         shown = 0
         split("FATAL ERROR WARN", severities, " ")
         for (s = 1; s <= 3; s++) {
             for (i = 1; i <= nkeys && shown < max_findings; i++) {
                 k = order[i]
                 if (level[k] != severities[s]) continue
+                if (connectors != "" && !of_connectors(text[k])) continue
                 icon = (level[k] == "WARN") ? "🟠" : "🔴"
                 printf "\n%s %s x%d (first seen line %d, last seen line %d)\n%s\n", icon, level[k], count[k], first_seen[k], last_seen[k], text[k]
                 shown++
             }
         }
-        if (shown < nkeys) printf "\n✂️ %d more distinct record(s) not shown, increase --max-findings or narrow with --since\n", nkeys - shown
+        if (shown < nshown_keys) printf "\n✂️ %d more distinct record(s) not shown, increase --max-findings or narrow with --since\n", nshown_keys - shown
     }'
 }
 
