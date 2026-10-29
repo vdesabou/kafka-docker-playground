@@ -204,7 +204,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings) |
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records |
 | 🌳 root causes | records grouped by their deepest exception (or by message when they have none), with occurrences, files and connectors |
-| 📄 one card per file | every distinct record, with its count, connector, first and last line and timestamp, and its exception chain |
+| 📄 one card per file | every distinct record, with its count, connector, first and last line and timestamp, and its exception chain; **📋 Show context** unfolds the raw lines around its first occurrence (2 before, the record with its full stack trace up to 30 lines, 2 after), with their line numbers (`▶` on the first line of the record), also in `.files[].records[].context` of `--json` |
 
 A sticky bar above the root causes filters them and the records: FATAL / ERROR / WARN chips with several levels
 (`--include-warnings`), and a **Connector** picker when the records carry the connector context of the Connect log

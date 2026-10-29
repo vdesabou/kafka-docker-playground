@@ -20802,6 +20802,7 @@ function install_confluent_plugin() {
 #   @@PGREC@@<tab>level<tab>count<tab>first line<tab>last line<tab>first timestamp<tab>last timestamp
 #   <the record as printed in the digest, on one or more lines>
 #   @@PGTS@@<tab>timestamps of the occurrences, space separated (1000 per record at most)
+#   @@PGCTX@@<tab>raw lines around the first occurrence (2 before, the record (30 lines at most), 2 after), one per line
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
@@ -20853,7 +20854,17 @@ function summarize_log_errors() {
         sub(/ /, "T", t)
         return t
     }
-    function flush(    lvl, key, i, chain, frames, nframes, line, cause) {
+    # a line of the context of a record, with its line number (▶ for the first line of the record)
+    function ctx_line(n, s, mark) {
+        gsub(/\033\[[0-9;]*m/, "", s)
+        sub(/\r$/, "", s)
+        return sprintf("%6d %s %s\n", n, mark, short(s))
+    }
+    function capture_after() {
+        ctx[ctx_key] = ctx[ctx_key] ctx_line(NR, $0, " ")
+        ctx_after--
+    }
+    function flush(    lvl, key, i, chain, frames, nframes, line, cause, nrec) {
         if (nlines == 0) return
         # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
         if (rec[1] ~ /^[^ ]+ (FATAL|ERROR|WARN) x[0-9]+ \(first seen line [0-9]+, last seen line [0-9]+\)$/) { nlines = 0; return }
@@ -20887,6 +20898,7 @@ function summarize_log_errors() {
         gsub(/[0-9]+/, "#", key)
 
         total_occurrences++
+        nrec = nlines
         nlines = 0
         ts = timestamp_of(rec[1])
         if (records_file != "" && ts != "" && nts[key] < 1000) { timestamps[key] = timestamps[key] " " ts; nts[key]++ }
@@ -20904,16 +20916,29 @@ function summarize_log_errors() {
         level[key] = lvl
         order[++nkeys] = key
         text[key] = short(rec[1]) chain frames
+        if (records_file != "") {
+            ctx[key] = rec_before
+            for (i = 1; i <= nrec && i <= 30; i++) ctx[key] = ctx[key] ctx_line(rec_line + i - 1, rec[i], (i == 1 ? "▶" : " "))
+            if (nrec > 30) ctx[key] = ctx[key] sprintf("%6s   … %d more line(s)\n", "", nrec - 30)
+            # the 2 lines after the record are read next (capture_after)
+            ctx_key = key
+            ctx_after = 2
+        }
     }
     BEGIN {
         records_file = ENVIRON["PG_LOG_DIGEST_RECORDS_FILE"]
         label = ENVIRON["PG_LOG_DIGEST_LABEL"]
     }
     {
+        # the 2 lines before a record, for its context
+        prev2 = prev1
+        prev1 = cur
+        cur = $0
         # most lines of a big log have no level or exception word and do not continue a record: one regex (a
         # single pass over the line) sets them aside, as the start of a level-less record, without the work below
         if ($0 !~ /ERROR|FATAL|SEVERE|PANIC|WARN|level|Exception|Error|Throwable|[EFW][0-9][0-9][0-9][0-9] [0-9][0-9]:|^[ \t]|^Caused by:|\033/) {
             flush()
+            if (ctx_after > 0) capture_after()
             rec_line = NR
             rec[nlines = 1] = ""
             next
@@ -20923,7 +20948,11 @@ function summarize_log_errors() {
         if (!is_continuation($0) || nlines == 0 || nlines >= 400) {
             flush()
             rec_line = NR
+            if (records_file != "") {
+                rec_before = (NR > 2 ? ctx_line(NR - 2, prev2, " ") : "") (NR > 1 ? ctx_line(NR - 1, prev1, " ") : "")
+            }
         }
+        if (ctx_after > 0) capture_after()
         rec[++nlines] = $0
     }
     END {
@@ -20933,6 +20962,8 @@ function summarize_log_errors() {
             for (i = 1; i <= nkeys; i++) {
                 k = order[i]
                 printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], text[k], substr(timestamps[k], 2) >> records_file
+                n = split(ctx[k], cl, "\n")
+                for (j = 1; j < n; j++) printf "@@PGCTX@@\t%s\n", cl[j] >> records_file
             }
             close(records_file)
         }
