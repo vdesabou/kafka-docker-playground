@@ -8,7 +8,7 @@ import os
 import sys
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import recommendations
 
@@ -256,6 +256,12 @@ table.env { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12
 table.env th { text-align: left; color: #6b7280; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding: 4px 8px; }
 table.env td { border-bottom: 1px solid #f3f4f6; padding: 4px 8px; vertical-align: top; word-break: break-all; }
 table.env td.nowrap { white-space: nowrap; word-break: normal; }
+.panel details.cfg { margin: 6px 0; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 10px; }
+.panel details.cfg > summary { cursor: pointer; font-size: 13.5px; }
+.panel details.cfg pre { max-height: 420px; overflow: auto; }
+.panel h3 { font-size: 14px; margin: 14px 0 4px; }
+.panel .cfg-search { margin: 8px 0; width: 100%; max-width: 420px; }
+table.cfg td:first-child { width: 34%; }
 .affected { margin-top: 4px; font-size: 12.5px; }
 .affected > summary { cursor: pointer; color: #4b5563; }
 .recommendation {
@@ -349,6 +355,7 @@ body{background:#0f172a;color:#e2e8f0}
 .count{background:#334155;color:#cbd5e1}
 table.env th{color:#94a3b8;border-bottom-color:#334155}
 table.env td{border-bottom-color:#273449}
+.panel details.cfg{border-color:#334155}
 .affected > summary,.recommendation .why{color:#94a3b8}
 .recommendation{background:#172033;border-bottom-color:#334155}
 .recommendation ol li,.issue .message{color:#e2e8f0}
@@ -486,6 +493,24 @@ if (searchInput) {
     applyFilters();
   });
 }
+
+// ⚙️ Configuration: keys / values filter, opens the blocks with a match
+document.querySelectorAll('.cfg-search').forEach(input => {
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase().trim();
+    const panel = input.closest('.panel');
+    panel.querySelectorAll('tr.cfg-row').forEach(tr => { tr.hidden = q !== '' && !tr.textContent.toLowerCase().includes(q); });
+    panel.querySelectorAll('details.cfg').forEach(d => {
+      if (q) d.open = !!d.querySelector('tr.cfg-row:not([hidden])') || d.querySelector('summary').textContent.toLowerCase().includes(q);
+    });
+  });
+});
+// the connector picked in the issues filter: its config opens
+if (connectorSelect) {
+  connectorSelect.addEventListener('change', () => {
+    document.querySelectorAll('details.cfg[data-connector]').forEach(d => { d.open = d.dataset.connector === connectorSelect.value; });
+  });
+}
 """
 
 
@@ -619,6 +644,100 @@ def _environment_html(results: Dict, timeline_limit: int = 40) -> str:
           <table class="env"><tr><th>Time (UTC)</th><th>Object</th><th>Change</th></tr>{rows}</table>
         </details>""")
     return "".join(blocks)
+
+
+def _properties_table(text: str) -> Tuple[str, int]:
+    """key=value lines as a table (comments and blank lines left out), with the number of keys"""
+    rows = []
+    for line in (text or "").splitlines():
+        line = line.strip()
+        if not line or line.startswith(("#", "!")):
+            continue
+        key, _, value = line.partition("=")
+        rows.append(f'<tr class="cfg-row"><td><code>{_esc(key.strip())}</code></td><td><code>{_esc(value.strip())}</code></td></tr>')
+    return f'<table class="env cfg"><tr><th>Key</th><th>Value</th></tr>{"".join(rows)}</table>', len(rows)
+
+
+def _dump_where(dump: Dict) -> str:
+    where = dump.get("file", "")
+    if dump.get("line"):
+        where += f":{dump['line']}"
+    if dump.get("time"):
+        where += f" ({dump['time'].replace('T', ' ')})"
+    return where
+
+
+# components of the ⚙️ Configuration section: title, main properties file rendered by CFK, what the log dump holds
+CONFIG_COMPONENTS = (
+    ("kafka", "🧱 Kafka", "kafka.properties"),
+    ("zookeeper", "🦓 ZooKeeper", "zookeeper.properties"),
+    ("schemaregistry", "📜 Schema Registry", "schemaregistry.properties"),
+    ("connect", "🔌 Connect", "connect.properties"),
+    ("controlcenter", "🎛️ Control Center", "controlcenter.properties"),
+)
+
+
+def _component_config_html(name: str, config: Dict, main: str) -> str:
+    """One CR: main properties file of its ConfigMap, configOverrides, other ConfigMap files, config dumps of the logs"""
+    files = config.get("files") or {}
+    inner = []
+    nb_keys = 0
+    if files.get(main):
+        table, nb_keys = _properties_table(files[main])
+        inner.append(f'<div class="label">{_esc(main)} rendered by CFK, from {_esc(config.get("source", ""))}</div>{table}')
+    for key, text in (config.get("overrides") or {}).items():
+        if key == "server":
+            table, n = _properties_table(text)
+            inner.append(f'<details class="cfg"><summary>✏️ configOverrides.server of the CR ({n} keys, already in {_esc(main)} above)</summary>{table}</details>')
+        else:
+            inner.append(f'<details class="cfg"><summary>✏️ configOverrides.{_esc(key)} of the CR</summary><pre>{_esc(text)}</pre></details>')
+    for fname in ("jvm.config", "log4j.properties", "plugins.json"):
+        if files.get(fname):
+            inner.append(f'<details class="cfg"><summary>📄 {_esc(fname)}</summary><pre>{_esc(files[fname])}</pre></details>')
+    for dump in config.get("dumps") or []:
+        table, n = _properties_table(dump.get("text", ""))
+        inner.append(f'<details class="cfg"><summary>🪵 {_esc(dump.get("title", ""))} logged at startup, with the defaults ({n} keys) · '
+                     f'{_esc(_dump_where(dump))}</summary>{table}</details>')
+    what = f"{main}, {nb_keys} keys" if nb_keys else "no ConfigMap in the bundle"
+    return (f'<details class="cfg"><summary><strong>{_esc(name)}</strong> <span class="label">{_esc(what)}</span></summary>'
+            f'{"".join(inner)}</details>')
+
+
+def _configuration_html(results: Dict) -> str:
+    """Kafka, ZooKeeper, Schema Registry, Connect and Control Center CRs (ConfigMap rendered by CFK, configOverrides of the CR, config dumps of the
+    logs) and connectors (Connector CRs, config dumps of the Connect logs), one collapsible block each"""
+    config = results.get("configuration") or {}
+    components = config.get("components") or {}
+    connectors = config.get("connectors") or {}
+    if not any(components.values()) and not connectors:
+        return ""
+    blocks = []
+    for kind, title, main in CONFIG_COMPONENTS:
+        crs = components.get(kind) or {}
+        if crs:
+            blocks.append(f"<h3>{title} ({len(crs)})</h3>")
+            blocks += [_component_config_html(name, crs[name], main) for name in sorted(crs)]
+    blocks.append(f"<h3>🧩 Connectors ({len(connectors)})</h3>")
+    if not connectors:
+        blocks.append('<div class="label">No connector config in this bundle: no Connector CR, and no "…ConnectorConfig values:" '
+                      'dump in the Connect logs (logged when a connector starts, so missing when the logs begin later). Ask for '
+                      'the output of <code>curl -s http://&lt;connect&gt;:8083/connectors?expand=info</code> (configs) and '
+                      '<code>?expand=status</code>.</div>')
+    for name, conn in sorted(connectors.items()):
+        sources = ([conn["cr"]] if conn.get("cr") else []) + list((conn.get("dumps") or {}).values())
+        inner = []
+        for src in sources:
+            table, n = _properties_table(src.get("text", ""))
+            inner.append(f'<div class="label">{_esc(src.get("title", ""))} ({n} keys) · {_esc(_dump_where(src))}</div>{table}')
+        facts = " · ".join(_esc(x) for x in (conn.get("class", "").split(".")[-1], conn.get("cluster"), conn.get("state")) if x)
+        blocks.append(f'<details class="cfg" data-connector="{_esc(name)}"><summary>🧩 <strong>{_esc(name)}</strong> '
+                      f'<span class="label">{facts}</span></summary>{"".join(inner)}</details>')
+    return f"""
+        <details class="panel" open>
+          <summary>⚙️ Configuration <span class="label">Kafka, ZooKeeper, Schema Registry, Connect, Control Center: properties rendered by CFK (ConfigMap &lt;cr&gt;-shared-config), configOverrides of the CR, config logged at startup · connectors: Connector CRs, config logged when they start</span></summary>
+          <input class="search cfg-search" type="search" placeholder="Filter keys and values…" />
+          {"".join(blocks)}
+        </details>"""
 
 
 def render(results: Dict, bundle_label: str = "") -> str:
@@ -765,6 +884,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
     {verdict_html}
     {summary_html}
     {_environment_html(results)}
+    {_configuration_html(results)}
     {controls_html}
     {body_html}
   </main>

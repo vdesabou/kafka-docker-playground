@@ -203,6 +203,12 @@ def print_text_report(results, top: int):
               f"{r['emails']} emails, {r['ldap_dns']} LDAP DNs (best effort, review before sharing)")
     print()
     print_environment(results)
+    config = results.get("configuration") or {}
+    found = [f"{kind} {', '.join(sorted(crs))}" for kind, crs in (config.get("components") or {}).items() if crs]
+    if found or config.get("connectors"):
+        print(f"Configuration:    {'; '.join(found) or 'no Kafka / ZooKeeper / Schema Registry / Connect / Control Center CR'}; "
+              f"{len(config.get('connectors') or {})} connector config(s) (in the HTML report and --json .configuration)")
+        print()
 
     if not issues:
         print("No issues detected in the scanned files.")

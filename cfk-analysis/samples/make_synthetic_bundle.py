@@ -8,6 +8,9 @@ folders with their CR and logs, operator logs) that tells one story:
 - kafka-2 crash-loops: its TLS certificate expired (SSLHandshakeException in its log, BackOff events), and its
   PersistentVolumeClaim is still pending (FailedScheduling)
 - connect-0 was OOMKilled and restarted 6 times; the connector `orders-sink` has a FAILED task
+- the configuration: kafka.properties, schemaregistry.properties and connect.properties of the <cr>-shared-config
+  ConfigMaps, the configOverrides of the Connect CR, the configs of the Connector CR, and the config dumps of the
+  logs (KafkaConfig, SchemaRegistryConfig, DistributedConfig, connector configs)
 - schemaregistry-0 cannot authenticate to Kafka (SaslAuthenticationException)
 - the operator logs reconcile errors for the Kafka CR, which stays PROVISIONING with 2/3 ready replicas
 - cluster-details.txt (Kubernetes / CFK versions, images) and a `kubectl edit` of the Kafka CR the evening before,
@@ -175,6 +178,11 @@ metadata:
   namespace: {NS}
 spec:
   replicas: 1
+  configOverrides:
+    server:
+      - consumer.max.poll.records=2000
+    jvm:
+      - -Xmx1536m
   podTemplate:
     resources: {{limits: {{memory: 2Gi}}, requests: {{memory: 2Gi}}}}
 status:
@@ -191,6 +199,16 @@ metadata:
 spec:
   class: io.confluent.connect.jdbc.JdbcSinkConnector
   taskMax: 2
+  connectClusterRef:
+    name: connect
+  configs:
+    topics: orders
+    connection.url: jdbc:postgresql://postgres.{NS}.svc.cluster.local:5432/shop
+    connection.user: connect
+    connection.password: s3cr3t-in-clear
+    insert.mode: insert
+    auto.create: "false"
+    batch.size: "3000"
 status:
   state: CREATED
   connectorState: RUNNING
@@ -203,7 +221,93 @@ status:
       trace: 'org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.'
 """
 
+FILES[f"{NS}/connect/cm/configmaps.yaml"] = f"""apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: connect-shared-config
+    namespace: {NS}
+    annotations:
+      platform.confluent.io/cr-name: connect
+      platform.confluent.io/type: connect
+  data:
+    connect.properties: |
+      bootstrap.servers=kafka.{NS}.svc.cluster.local:9071
+      config.storage.topic={NS}.connect-configs
+      consumer.max.poll.records=2000
+      group.id={NS}.connect
+      key.converter=org.apache.kafka.connect.storage.StringConverter
+      listeners=http://0.0.0.0:8083
+      offset.storage.topic={NS}.connect-offsets
+      plugin.path=/usr/share/java,/usr/share/confluent-hub-components,/mnt/plugins
+      ssl.truststore.location=/mnt/sslcerts/truststore.p12
+      ssl.truststore.password=mystorepassword
+      status.storage.topic={NS}.connect-status
+      value.converter=io.confluent.connect.avro.AvroConverter
+      value.converter.schema.registry.url=http://schemaregistry.{NS}.svc.cluster.local:8081
+    jvm.config: |
+      -Xmx1536m
+      -XX:+UseG1GC
+"""
+
+FILES[f"{NS}/kafka/cm/configmaps.yaml"] = f"""apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: kafka-shared-config
+    namespace: {NS}
+    annotations:
+      platform.confluent.io/cr-name: kafka
+      platform.confluent.io/type: kafka
+  data:
+    kafka.properties: |
+      advertised.listeners=INTERNAL://${{POD_NAME}}.kafka.{NS}.svc.cluster.local:9071
+      default.replication.factor=3
+      listener.security.protocol.map=INTERNAL:SSL,CONTROLLER:SSL
+      listeners=INTERNAL://:9071
+      log.dirs=/mnt/data/data0/logs
+      min.insync.replicas=2
+      ssl.keystore.location=/mnt/sslcerts/keystore.p12
+      ssl.keystore.password=mykeystorepassword
+    jvm.config: |
+      -Xmx4g
+"""
+
+FILES[f"{NS}/schemaregistry/cm/configmaps.yaml"] = f"""apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: schemaregistry-shared-config
+    namespace: {NS}
+    annotations:
+      platform.confluent.io/cr-name: schemaregistry
+      platform.confluent.io/type: schemaregistry
+  data:
+    schemaregistry.properties: |
+      kafkastore.bootstrap.servers=SASL_SSL://kafka.{NS}.svc.cluster.local:9071
+      kafkastore.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="sr" password="sr-secret";
+      kafkastore.sasl.mechanism=PLAIN
+      kafkastore.security.protocol=SASL_SSL
+      kafkastore.topic=_schemas_schemaregistry_{NS}
+      listeners=http://0.0.0.0:8081
+      schema.registry.group.id=id_schemaregistry_{NS}
+"""
+
 FILES[f"{NS}/kafka/logs/kafka-2.log"] = """[2026-10-14 09:12:20,114] INFO Starting the controller-mode broker (kafka.server.KafkaRaftServer)
+[2026-10-14 09:12:20,530] INFO KafkaConfig values: 
+	advertised.listeners = INTERNAL://kafka-2.kafka.confluent.svc.cluster.local:9071
+	default.replication.factor = 3
+	log.retention.hours = 168
+	min.insync.replicas = 2
+	node.id = 2
+	ssl.keystore.password = [hidden]
+	unclean.leader.election.enable = false (kafka.server.KafkaConfig)
 [2026-10-14 09:12:24,902] ERROR [Controller id=2] Failed to connect to the quorum, retrying (org.apache.kafka.raft.KafkaRaftClient)
 javax.net.ssl.SSLHandshakeException: PKIX path validation failed: java.security.cert.CertPathValidatorException: validity check failed
 	at java.base/sun.security.ssl.Alert.createSSLException(Alert.java:130)
@@ -217,7 +321,33 @@ Caused by: java.security.cert.CertificateExpiredException: NotAfter: Mon Oct 13 
 org.apache.kafka.common.errors.SslAuthenticationException: SSL handshake failed
 """
 
-FILES[f"{NS}/connect/logs/connect-0.log"] = """[2026-10-14 09:01:12,400] INFO [orders-sink|task-1] Attempting to open connection #1 to PostgreSql (io.confluent.connect.jdbc.util.CachedConnectionProvider)
+FILES[f"{NS}/connect/logs/connect-0.log"] = """[2026-10-14 09:00:30,118] INFO DistributedConfig values: 
+	bootstrap.servers = [kafka.confluent.svc.cluster.local:9071]
+	config.storage.topic = confluent.connect-configs
+	connector.client.config.override.policy = All
+	group.id = confluent.connect
+	offset.flush.interval.ms = 10000
+	scheduled.rebalance.max.delay.ms = 300000
+	ssl.truststore.password = [hidden]
+	task.shutdown.graceful.timeout.ms = 10000 (org.apache.kafka.common.config.AbstractConfig)
+[2026-10-14 09:01:10,250] INFO [orders-sink|worker] SinkConnectorConfig values: 
+	config.action.reload = restart
+	connector.class = io.confluent.connect.jdbc.JdbcSinkConnector
+	errors.tolerance = none
+	key.converter = null
+	name = orders-sink
+	tasks.max = 2
+	topics = [orders]
+	value.converter = null (org.apache.kafka.common.config.AbstractConfig)
+[2026-10-14 09:01:11,980] INFO [orders-sink|task-1] JdbcSinkConfig values: 
+	auto.create = false
+	batch.size = 3000
+	connection.password = [hidden]
+	connection.url = jdbc:postgresql://postgres.confluent.svc.cluster.local:5432/shop
+	connection.user = connect
+	insert.mode = insert
+	max.retries = 10 (org.apache.kafka.common.config.AbstractConfig)
+[2026-10-14 09:01:12,400] INFO [orders-sink|task-1] Attempting to open connection #1 to PostgreSql (io.confluent.connect.jdbc.util.CachedConnectionProvider)
 [2026-10-14 09:04:58,771] ERROR [orders-sink|task-1] WorkerSinkTask{id=orders-sink-1} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
 org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 	at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:632)
@@ -229,6 +359,13 @@ java.lang.OutOfMemoryError: Java heap space
 """
 
 FILES[f"{NS}/schemaregistry/logs/schemaregistry-0.log"] = """[2026-10-14 09:10:40,551] INFO Starting Schema Registry (io.confluent.kafka.schemaregistry.rest.SchemaRegistryMain)
+[2026-10-14 09:10:41,020] INFO SchemaRegistryConfig values: 
+	kafkastore.bootstrap.servers = [SASL_SSL://kafka.confluent.svc.cluster.local:9071]
+	kafkastore.sasl.jaas.config = [hidden]
+	kafkastore.sasl.mechanism = PLAIN
+	kafkastore.timeout.ms = 500
+	leader.eligibility = true
+	mode.mutability = true (io.confluent.kafka.schemaregistry.rest.SchemaRegistryConfig)
 [2026-10-14 09:10:44,113] ERROR Error starting the schema registry (io.confluent.kafka.schemaregistry.rest.SchemaRegistryRestApplication)
 io.confluent.kafka.schemaregistry.exceptions.SchemaRegistryInitializationException: Error initializing kafka store while initializing schema registry
 Caused by: org.apache.kafka.common.errors.SaslAuthenticationException: Authentication failed during authentication due to invalid credentials with SASL mechanism PLAIN

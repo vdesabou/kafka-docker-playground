@@ -90,6 +90,23 @@ _APPLICATION_KINDS = {'kafkatopic', 'kafkarestclass', 'clusterlink', 'confluentr
 _CLUSTER_REFS = ('connectClusterRef', 'schemaRegistryClusterRef', 'kafkaClusterRef', 'kafkaRestClassRef')
 # Sub-folders of a component folder that are not the CR name
 _GENERIC_DIRS = {'logs', 'pods', 'cm', 'sts', 'svc', 'pv', 'pvc', 'pdb', 'deployment', 'secrets'}
+# Configuration (⚙️ section of the report): files of the <cr>-shared-config ConfigMap that CFK renders for a Kafka,
+# ZooKeeper, Schema Registry, Connect or Control Center CR, and the "<Class>Config values:" dumps of their logs (the connectors of a Connect log
+# with the [connector|task-0] MDC context of their header). Component -> CR kind, main properties file, config classes
+# of the effective config logged at startup
+_CONFIG_COMPONENTS = {
+    'kafka': ('Kafka', 'kafka.properties', ('KafkaConfig',)),
+    # ZooKeeper logs no "Config values:" dump
+    'zookeeper': ('Zookeeper', 'zookeeper.properties', ()),
+    'schemaregistry': ('SchemaRegistry', 'schemaregistry.properties', ('SchemaRegistryConfig',)),
+    'connect': ('Connect', 'connect.properties', ('DistributedConfig', 'StandaloneConfig')),
+    'controlcenter': ('ControlCenter', 'controlcenter.properties', ('ControlCenterConfig',)),
+}
+_CONFIGMAP_FILES = ('jvm.config', 'log4j.properties', 'plugins.json')
+_CONFIG_DUMP_RE = re.compile(r'(?:\[([^\s|\]]+)\|((?:task-\d+|worker))[^\]]*\]\s*)?([A-Za-z]+Config) values:\s*$')
+_CONFIG_VALUE_RE = re.compile(r'^\t(\S+) = (.*)$')
+_CONFIG_LOGGER_RE = re.compile(r' \([\w.$]*Config(?::\d+)?\)$')
+_LOG_TS_RE = re.compile(r'\d{4}-\d\d-\d\d[ T]\d\d:\d\d:\d\d')
 # Last resort for names that are not in the bundle: keywords, most specific first
 _NAME_KEYWORDS = (
     ('kraft', 'kraftcontroller'), ('zookeeper', 'zookeeper'), ('schemaregistry', 'schemaregistry'),
@@ -127,6 +144,10 @@ class CFKBundleAnalyzer:
         self.environment = {'components': {}}  # versions and images, see environment.py
         self.timeline = []  # changes (managedFields, pod restarts), newest first after the walk
         self.jvm_truststores = {}  # CR name -> JVM default truststore flags of its configOverrides / envVars
+        # Kafka / ZooKeeper / Schema Registry / Connect / Control Center CRs (component -> CR name -> ConfigMap files,
+        # configOverrides, config dumps of the logs) and connectors (name -> Connector CR and config dumps of the logs),
+        # as key=value text so that the sanitizer redacts secrets
+        self.configuration = {'components': {c: {} for c in _CONFIG_COMPONENTS}, 'connectors': {}}
         self.summary = {
             'total_issues': 0,
             'critical': 0,
@@ -302,6 +323,7 @@ class CFKBundleAnalyzer:
             'coverage': self.coverage,
             'environment': self.environment,
             'timeline': self.timeline,
+            'configuration': self.configuration,
             'issues': sorted(
                 self.issues,
                 key=lambda x: (_SEVERITY_ORDER.get(x['severity'], 4), -x.get('count', 1)),
@@ -589,6 +611,110 @@ class CFKBundleAnalyzer:
                 self._handle_k8s_line(rel, lines, line_num, line)
 
         flush()
+        component = self._component_from_path(rel)
+        if component and component[0] in _CONFIG_COMPONENTS:
+            self._collect_config_dumps(rel, lines, *component)
+
+    def _collect_config_dumps(self, rel: str, lines: List[str], kind: str, instance: Optional[str]):
+        """"<Class>Config values:" blocks of a component log (one tab-indented "key = value" per line): the effective
+        config of the component (KafkaConfig, SchemaRegistryConfig, DistributedConfig, ControlCenterConfig), and in a
+        Connect log the configs of the connectors (SourceConnectorConfig, the config of the plugin, ConsumerConfig of a
+        task… attributed with the [connector|task-0] context, else the name key).
+        The last dump of each config class wins."""
+        own_classes = _CONFIG_COMPONENTS[kind][2]
+        n = len(lines)
+        i = 0
+        while i < n:
+            line = lines[i]
+            i += 1
+            if 'Config values:' not in line:
+                continue
+            m = _CONFIG_DUMP_RE.search(line)
+            if not m:
+                continue
+            header = i
+            values = []
+            while i < n and lines[i].startswith('\t'):
+                v = _CONFIG_VALUE_RE.match(lines[i])
+                if v:
+                    # the logger of the record ends the last line: " (org.apache.kafka.common.config.AbstractConfig:370)"
+                    values.append((v.group(1), _CONFIG_LOGGER_RE.sub('', v.group(2))))
+                i += 1
+            if not values:
+                continue
+            connector, scope, cls = m.group(1), m.group(2), m.group(3)
+            keys = dict(values)
+            if kind != 'connect':
+                connector = None
+            elif not connector and cls.endswith('ConnectorConfig'):
+                connector = keys.get('name')
+            ts = _LOG_TS_RE.search(line[:80])
+            entry = {'title': cls + (f' ({scope})' if scope else ''), 'source': 'log', 'file': rel, 'line': header,
+                     'time': ts.group(0).replace(' ', 'T') if ts else None,
+                     'text': '\n'.join(f'{k}={v}' for k, v in values)}
+            if connector:
+                conn = self._connector_config(connector)
+                conn['dumps'][cls] = entry
+                if keys.get('connector.class'):
+                    conn['class'] = keys['connector.class']
+                if instance and not conn.get('cluster'):
+                    conn['cluster'] = instance
+            elif cls in own_classes:
+                config = self._component_config(kind, instance or kind)
+                # one per pod log
+                config['dumps'] = [d for d in config['dumps'] if d['file'] != rel] + [entry]
+
+    def _component_config(self, kind: str, name: str) -> Dict:
+        return self.configuration['components'][kind].setdefault(name, {'files': {}, 'overrides': {}, 'dumps': []})
+
+    def _connector_config(self, name: str) -> Dict:
+        return self.configuration['connectors'].setdefault(name, {'dumps': {}})
+
+    def _record_configmap(self, obj: Dict, file_path: str):
+        """kafka.properties / schemaregistry.properties / connect.properties, jvm.config… of the <cr>-shared-config
+        ConfigMap that CFK renders for a Kafka, ZooKeeper, Schema Registry, Connect or Control Center CR"""
+        data = obj.get('data')
+        if not isinstance(data, dict):
+            return
+        kind = next((c for c, (_, main, _) in _CONFIG_COMPONENTS.items() if main in data), None)
+        if kind is None:
+            return
+        cr_kind, main, _ = _CONFIG_COMPONENTS[kind]
+        metadata = obj.get('metadata') or {}
+        annotations = metadata.get('annotations') or {}
+        owner = next((o.get('name') for o in metadata.get('ownerReferences') or []
+                      if isinstance(o, dict) and o.get('kind') == cr_kind), None)
+        name = annotations.get('platform.confluent.io/cr-name') or owner or \
+            re.sub(r'-shared-config$', '', str(metadata.get('name') or '')) or file_path
+        config = self._component_config(kind, name)
+        config['source'] = file_path
+        config['files'] = {f: str(data[f]) for f in (main,) + _CONFIGMAP_FILES if data.get(f)}
+
+    def _record_config_cr(self, obj: Dict, kind: str, name: str, file_path: str):
+        """configOverrides of a Kafka, ZooKeeper, Schema Registry, Connect or Control Center CR, configs of a Connector CR"""
+        spec = obj.get('spec') or {}
+        if kind in _CONFIG_COMPONENTS:
+            overrides = spec.get('configOverrides') or {}
+            if isinstance(overrides, dict):
+                config = self._component_config(kind, name)
+                config['cr'] = file_path
+                config['overrides'] = {k: '\n'.join(str(v) for v in overrides[k]) for k in ('server', 'jvm', 'log4j')
+                                       if isinstance(overrides.get(k), list) and overrides[k]}
+        elif kind == 'connector':
+            conn = self._connector_config(spec.get('name') or name)
+            configs = spec.get('configs') if isinstance(spec.get('configs'), dict) else {}
+            head = [('connector.class', spec.get('class')), ('tasks.max', spec.get('taskMax'))]
+            conn['cr'] = {'title': 'Connector CR', 'source': 'cr', 'file': file_path, 'line': None, 'time': None,
+                          'text': '\n'.join(f'{k}={v}' for k, v in head + sorted(configs.items()) if v is not None)}
+            if spec.get('class'):
+                conn['class'] = spec['class']
+            cluster = (spec.get('connectClusterRef') or {}).get('name') if isinstance(spec.get('connectClusterRef'), dict) else None
+            if cluster:
+                conn['cluster'] = cluster
+            status = obj.get('status') or {}
+            state = status.get('connectorState') or status.get('state')
+            if state:
+                conn['state'] = str(state)
 
     def _handle_record(self, rel: str, lines: List[str], line_num: int, level: str,
                        head: str, caused_by: List[str]):
@@ -772,6 +898,10 @@ class CFKBundleAnalyzer:
                 self.timeline += environment.managed_field_changes(obj, kind, name)
                 self._record_component_images(obj, name)
                 self._record_jvm_truststore(obj, kind, name, relative_path)
+                if kind.lower() in _CONFIG_COMPONENTS or kind.lower() == 'connector':
+                    self._record_config_cr(obj, kind.lower(), name, relative_path)
+            elif kind == 'ConfigMap' or (not kind and isinstance(obj.get('data'), dict)):
+                self._record_configmap(obj, relative_path)
             elif kind == 'StatefulSet':
                 self.timeline += environment.managed_field_changes(obj, kind, name)
             elif kind == 'Deployment':

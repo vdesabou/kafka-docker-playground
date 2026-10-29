@@ -22,6 +22,16 @@ scheduling, …) with concrete remediation steps per category:
 - Recent changes, newest first: `metadata.managedFields` of the CRs (who changed which part of the spec, e.g.
   `Update by kubectl-edit: spec.image, spec.podTemplate`) and StatefulSets (operator rollouts), pod creation and
   container terminations. Pods and StatefulSets written without `kind` (`pods/pod-<name>.yaml`) are recognized.
+- Configuration (`.configuration` of `--json`, ⚙️ section of the HTML report, with a key / value filter): per Kafka,
+  ZooKeeper, Schema Registry, Connect and Control Center CR, the `kafka.properties` / `zookeeper.properties` /
+  `schemaregistry.properties` / `connect.properties` / `controlcenter.properties`, `jvm.config`, `log4j.properties`
+  (and `plugins.json`) that CFK renders in the `<cr>-shared-config` ConfigMap (`cm/configmaps.yaml`), the
+  `configOverrides` of the CR and the `KafkaConfig` / `SchemaRegistryConfig` / `DistributedConfig` /
+  `ControlCenterConfig values:` dump of each pod log (effective values, defaults included; ZooKeeper logs none); per connector, the
+  `spec.configs` of its `Connector` CR and the `…Config values:` dumps of the Connect logs (`SinkConnectorConfig`,
+  the config class of the plugin, the clients of a task), attributed with their `[connector|task-0]` context. A
+  connector created with the REST API and started before the logs begin has no config in the bundle. Sanitized
+  like the rest (secrets as `<REDACTED>`, `${file:…}` references kept).
 - JVM default truststore: a CR whose `configOverrides.jvm` (or `KAFKA_OPTS` / `JAVA_TOOL_OPTIONS`) sets
   `-Djavax.net.ssl.trustStore` without `-Djavax.net.ssl.trustStorePassword` (nor `trustStoreType=JKS`) is
   reported, high when its logs have `trustAnchors parameter must be non-empty`: a PKCS12 store read without its
@@ -90,7 +100,9 @@ bundle, `playground analyze logs -f <bundle> --logs-only` complements it.
 bytes on every run). It tells one story: kafka-2 crash-looping on an expired TLS certificate with a pending
 PersistentVolumeClaim, connect-0 OOMKilled with a FAILED connector task, Schema Registry failing to
 authenticate, and operator reconcile errors (19 issues, 4 critical). It also has a `cluster-details.txt` and a
-`kubectl edit` of the Kafka CR, for the Environment and Recent changes sections.
+`kubectl edit` of the Kafka CR, for the Environment and Recent changes sections, and the `<cr>-shared-config`
+ConfigMaps of Kafka, Schema Registry and Connect, `configOverrides`, `Connector` CR configs and config dumps in the
+logs, for the Configuration section.
 
 ```bash
 python3 -I cfk-analysis/samples/make_synthetic_bundle.py cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz

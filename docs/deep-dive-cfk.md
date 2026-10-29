@@ -198,7 +198,11 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
 - `analyze logs` detects a CFK support bundle (a folder with `cluster-details.txt`, or with `cluster-resources/` and
   `operator/`, alone or inside a folder or an archive: `--logs-only` to get the plain log digest instead) and works offline on any bundle made by `kubectl confluent support-bundle`: a customer's one, or
   yours. It prints the environment (Kubernetes and CFK versions, images, checked against the support matrix), the
-  recent changes, and the issues by category (pod failures, resources, TLS, auth, connect…) with the next steps. It
+  recent changes, and the issues by category (pod failures, resources, TLS, auth, connect…) with the next steps. Its
+  HTML report also shows the **configuration** of Kafka, ZooKeeper, Schema Registry, Connect and Control Center: the
+  properties CFK renders (`kafka.properties`, `connect.properties`… of the `<cr>-shared-config` ConfigMaps,
+  `configOverrides`, `jvm.config`, `log4j.properties`, the effective config logged at startup) and the config of each
+  connector (`Connector` CRs, `…ConnectorConfig values:` dumps of the Connect logs), with a key / value filter. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle.

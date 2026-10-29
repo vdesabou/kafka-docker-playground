@@ -25,7 +25,9 @@ from typing import Dict, Any, Tuple
 
 
 # Key names whose value is a secret. Keys ending with ref/name/file/path/location/type
-# (secretRef, jaas.config.file…) point to a secret but are not one, and are kept.
+# (secretRef, jaas.config.file…) point to a secret but are not one, and are kept, like the settings around a secret
+# (credentials.provider, credentials.source, token.auth.enable, *.callback.handler.class, cipher.algorithm,
+# token.max.lifetime.ms…).
 _SECRET_KEY = (
     r'[\w.-]*(?:password|passwd|pwd|secret|token|api[_.-]?key|apikey|credentials?|'
     r'user\.info|auth\.info|private[_.-]?key|client[_.-]?secret|access[_.-]?key)[\w.-]*'
@@ -35,15 +37,16 @@ _SECRET_KV_RE = re.compile(
     r'("(?:[^"\\]|\\.)*"|\'[^\']*\'|\[hidden\]|[^\s,;}\]\)]+)',
     re.IGNORECASE,
 )
-_SECRET_KEY_KEEP_RE = re.compile(r'(?:ref|refs|name|file|path|location|type|mechanism|enabled)$', re.IGNORECASE)
+_SECRET_KEY_KEEP_RE = re.compile(r'(?:ref|refs|name|file|path|location|type|mechanisms?|enabled?|algorithm|provider|source|'
+                                 r'class|\.ms|length|iterations)$', re.IGNORECASE)
 
 _SIMPLE_RULES = [
     # PEM blocks (keys and certificates)
     (re.compile(r'-----BEGIN [A-Z ]+-----.*?-----END [A-Z ]+-----', re.DOTALL), '<PEM-REDACTED>'),
     # JWT
     (re.compile(r'\beyJ[\w-]{5,}\.[\w-]{5,}\.[\w-]*'), '<JWT-REDACTED>'),
-    # HTTP auth headers
-    (re.compile(r'\b(Basic|Bearer)\s+[A-Za-z0-9+/=._~-]{8,}', re.IGNORECASE), r'\1 <REDACTED>'),
+    # HTTP auth headers, on the same line (BASIC at the end of a line is a value, like credentials.provider=BASIC)
+    (re.compile(r'\b(Basic|Bearer)[ \t]+[A-Za-z0-9+/=._~-]{8,}', re.IGNORECASE), r'\1 <REDACTED>'),
     # Credentials embedded in URLs: scheme://user:pass@host
     (re.compile(r'(\b[a-z][a-z0-9+.-]*://)[^\s/:@]+:[^\s/@]+@', re.IGNORECASE), r'\1<REDACTED>@'),
     # Cloud keys
@@ -117,6 +120,9 @@ class DataSanitizer:
 
         if sanitized.get('environment'):
             sanitized['environment'] = self.sanitize_dict(sanitized['environment'])
+
+        if sanitized.get('configuration'):
+            sanitized['configuration'] = self.sanitize_dict(sanitized['configuration'])
 
         if sanitized.get('timeline'):
             sanitized['timeline'] = [self.sanitize_dict(c) for c in sanitized['timeline']]

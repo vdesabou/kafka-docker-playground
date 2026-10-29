@@ -2586,7 +2586,10 @@ subcommands:
       custom resource (phase/state, ready replicas, False conditions, failed connector
       tasks), the environment checked against the CFK support matrix (Kubernetes,
       CFK operator, CP and init container versions), the recent changes (who edited
-      which CR and when, StatefulSet rollouts, pod restarts), a JVM default truststore
+      which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
+      zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties
+      rendered by CFK, configOverrides, config logged at startup, connector configs
+      from the Connector CRs and the config dumps of the logs), a JVM default truststore
       set without its password, and the ERROR/FATAL records of its logs, sorted into
       ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,
       storage, scheduling…) with remediation steps. Each issue is attributed to a
