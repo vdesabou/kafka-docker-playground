@@ -23,6 +23,16 @@ from typing import Dict, List, Any, Optional
 
 import environment
 
+# known causes shared with tools/log-analyzer/log_report.py: tools/report-common of the repository, mounted in
+# /tmp/report-common by playground analyze logs (CFK support bundle)
+for _path in (os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "report-common"), "/tmp/report-common"):
+    if os.path.isfile(os.path.join(_path, "known_causes.py")):
+        sys.path.insert(0, _path)
+        break
+import known_causes  # noqa: E402
+# patterns that sort a record into a category but explain nothing (any ConnectException, any Kafka exception)
+_CATCH_ALL = {c['name'] for c in known_causes.KNOWN_CAUSES if c.get('hint', True) is False}
+
 
 # Log files: foo.log, foo.txt, rotated foo.log.1 / foo.log.2026-10-12, and their .gz
 _TEXT_FILE_RE = re.compile(r'\.(?:log|txt|out)(?:\.[\w-]+)?(?:\.gz)?$|\.log\.gz$', re.IGNORECASE)
@@ -38,6 +48,11 @@ _LEVEL_RE = re.compile(
     r'|^([FEW])\d{4} \d{2}:\d{2}:\d{2}'
 )
 _KLOG_LEVEL = {'F': 'FATAL', 'E': 'ERROR', 'W': 'WARN'}
+
+# Cache key of _classify: digits replaced one for one by 0 (same length, so `.{0,N}` match the same), which folds
+# records that only differ by timestamps, offsets or ids. Texts with the only digits of the patterns are kept as is.
+_CLASSIFY_DIGITS = str.maketrans('123456789', '000000000')
+_PATTERN_DIGITS_RE = re.compile(r'40[13]|509')
 
 # Uncaught exception head: "org.foo.BarException: msg", "Exception in thread ...", "Caused by: ..."
 _EXCEPTION_HEAD_RE = re.compile(
@@ -68,6 +83,11 @@ _KIND_COMPONENT = {
     'schema': 'schemaregistry', 'schemaexporter': 'schemaregistry', 'ksqldb': 'ksqldb',
     'controlcenter': 'controlcenter', 'kafkarestproxy': 'kafkarestproxy',
 }
+# CRs of the applications of a cluster (a subject, a topic, a role binding…): their instance is the cluster they
+# belong to (spec.*ClusterRef), not their own name
+_APPLICATION_KINDS = {'kafkatopic', 'kafkarestclass', 'clusterlink', 'confluentrolebinding', 'connector', 'schema',
+                      'schemaexporter'}
+_CLUSTER_REFS = ('connectClusterRef', 'schemaRegistryClusterRef', 'kafkaClusterRef', 'kafkaRestClassRef')
 # Sub-folders of a component folder that are not the CR name
 _GENERIC_DIRS = {'logs', 'pods', 'cm', 'sts', 'svc', 'pv', 'pvc', 'pdb', 'deployment', 'secrets'}
 # Last resort for names that are not in the bundle: keywords, most specific first
@@ -85,6 +105,10 @@ _FAILURE_WORDS_RE = re.compile(r'fail|error|invalid|denied|unable|cannot|timeout
 
 # Connect task / client of a log record, to list the connectors one root cause affects
 _TASK_RE = re.compile(r'(?:Task|Worker\w*Task|task)\{id=([^}]+)\}|connector-(?:producer|consumer|dlq-producer|adminclient)-([\w.-]+?)(?:-\d+)?[\],\s]')
+# Connector of a log record, for the connector filter of the report (same as tools/log-analyzer/log_report.py): the
+# [connector|task-0] / [connector|worker] MDC context of Connect, with an optional scope ([connector|task-0|offsets]),
+# or the id of the task
+_CONNECTOR_RE = re.compile(r'\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}')
 
 # pod name suffixes: statefulset ordinal (kafka-0), deployment hash (confluent-operator-7d9c8b6f5-x2x7k)
 _POD_SUFFIX_RES = (re.compile(r'-\d+$'), re.compile(r'-[a-z0-9]{6,10}-[a-z0-9]{5}$'))
@@ -99,6 +123,7 @@ class CFKBundleAnalyzer:
         self.issues = []
         self.issue_index = {}  # signature -> issue, for deduplication with occurrence counts
         self.component_index = {}  # pod / CR name -> (component, instance), filled while walking the bundle
+        self.clusters = {}  # component -> names of its clusters (CRs, cluster-resources/<type>/<name>)
         self.environment = {'components': {}}  # versions and images, see environment.py
         self.timeline = []  # changes (managedFields, pod restarts), newest first after the walk
         self.jvm_truststores = {}  # CR name -> JVM default truststore flags of its configOverrides / envVars
@@ -127,136 +152,8 @@ class CFKBundleAnalyzer:
         # Patterns applied to log records that have an explicit ERROR/FATAL (or WARN) level,
         # or are an uncaught exception. The record text is the head line plus its
         # `Caused by:` chain, so the root cause is classified, not only the symptom.
-        self.error_patterns = {
-            'oom_killed': {
-                'pattern': r'OOMKilled|java\.lang\.OutOfMemoryError|Out of memory',
-                'severity': 'critical',
-                'category': 'Resource Issues'
-            },
-            'license_error': {
-                'pattern': r'license has expired|license is invalid|LicenseManagerException|license verification failed|License manager.{0,40}error',
-                'severity': 'critical',
-                'category': 'License Issues'
-            },
-            'storage_error': {
-                'pattern': r'no space left on device|disk.{0,20}full|KafkaStorageException|log director(?:y|ies).{0,60}offline|PersistentVolumeClaim.{0,80}pending',
-                'severity': 'critical',
-                'category': 'Storage Issues'
-            },
-            # the JVM default truststore (javax.net.ssl.trustStore) has no trusted certificate: a PKCS12 store
-            # read without javax.net.ssl.trustStorePassword, an empty or missing file. Before tls_handshake,
-            # it is also an SSLException.
-            'empty_truststore': {
-                'pattern': r'trustAnchors parameter must be non-empty|Keystore was tampered with, or password was incorrect|FileNotFoundException: \S*(?:truststore|keystore)\S*',
-                'severity': 'high',
-                'category': 'JVM Truststore Issues'
-            },
-            'tls_handshake': {
-                'pattern': r'SSLHandshakeException|SSLException|SSL handshake failed|PKIX path|unable to find valid certification path|certificate verify failed|x509:|tls: bad certificate|tls handshake (?:error|failure|timeout)|bad_certificate|certificate_unknown|handshake_failure|certificate (?:has )?expired',
-                'severity': 'high',
-                'category': 'Certificate/TLS Issues'
-            },
-            'authentication_failed': {
-                'pattern': r'SaslAuthenticationException|AuthenticationException|authentication failed|failed authentication|invalid credentials|\b401 unauthorized\b|\bunauthorized\b|http (?:status|code|error)[ :=]*401',
-                'severity': 'high',
-                'category': 'Authentication Issues'
-            },
-            'mds_error': {
-                'pattern': r'MDS.{0,40}failed|metadata service.{0,40}error|TokenBasedSecurityStore.{0,80}Exception|RBAC.{0,40}token|MdsException',
-                'severity': 'high',
-                'category': 'MDS/RBAC Issues'
-            },
-            'rbac_error': {
-                'pattern': r'forbidden: User .{0,80} cannot|is forbidden|(?:Topic|Group|Cluster|TransactionalId)?AuthorizationException|not authorized to access|\b403 forbidden\b|http (?:status|code|error)[ :=]*403',
-                'severity': 'high',
-                'category': 'RBAC Issues'
-            },
-            'replication_error': {
-                'pattern': r'InvalidReplicationFactorException|NotEnoughReplicas(?:AfterAppend)?Exception|replication factor.{0,60}(?:larger|greater) than|under.?min.?isr|replica fetcher.{0,60}(?:error|failed)|replication.{0,40}failed',
-                'severity': 'high',
-                'category': 'Replication Issues'
-            },
-            'kraft_error': {
-                'pattern': r'KRaft.{0,80}error|controller.{0,40}election.{0,40}failed|quorum.{0,40}(?:error|timeout|unavailable)|NotControllerException|RaftClient.{0,80}(?:error|exception)|metadata log.{0,40}(?:corrupt|failed|error)',
-                'severity': 'high',
-                'category': 'KRaft Issues'
-            },
-            'zookeeper_error': {
-                'pattern': r'zookeeper.{0,160}exception|SessionExpiredException|zookeeper.{0,80}session.{0,40}expired|KeeperException|ConnectionLoss',
-                'severity': 'high',
-                'category': 'Zookeeper Issues'
-            },
-            'dns_error': {
-                'pattern': r'no such host|DNS resolution failed|dial tcp: lookup|UnknownHostException|Couldn\'t resolve server',
-                'severity': 'high',
-                'category': 'Network Issues'
-            },
-            'connection_refused': {
-                'pattern': r'connection refused|Connection reset by peer|NoRouteToHostException|Broken pipe',
-                'severity': 'high',
-                'category': 'Network Issues'
-            },
-            'timeout': {
-                'pattern': r'\btimed out\b|deadline exceeded|i/o timeout|TimeoutException',
-                'severity': 'medium',
-                'category': 'Network Issues'
-            },
-            'volume_mount': {
-                'pattern': r'failed to mount|MountVolume\.SetUp failed|Unable to attach or mount volumes',
-                'severity': 'high',
-                'category': 'Volume Issues'
-            },
-            'operator_error': {
-                'pattern': r'reconcile error|Failed to reconcile|Reconciler error|operator error',
-                'severity': 'medium',
-                'category': 'Operator Issues'
-            },
-            'schema_registry_error': {
-                'pattern': r'SchemaRegistryException|RestClientException|Subject .{0,80}not found|Schema .{0,40}(?:not found|incompatible)',
-                'severity': 'medium',
-                'category': 'Schema Registry Issues'
-            },
-            'ksqldb_error': {
-                'pattern': r'\bKsqlException\b|KSQL_PARSING_EXCEPTION|KsqlStatementException',
-                'severity': 'medium',
-                'category': 'KsqlDB Issues'
-            },
-            'connect_error': {
-                'pattern': r'\bConnectException\b|\bRetriableException\b|connector .{0,40}is in FAILED state|Task threw an uncaught and unrecoverable exception|WorkerSinkTask|WorkerSourceTask',
-                'severity': 'medium',
-                'category': 'Connect Issues'
-            },
-            'controlcenter_error': {
-                'pattern': r'ControlCenter.{0,40}Exception|c3 .{0,40}failed to',
-                'severity': 'medium',
-                'category': 'Control Center Issues'
-            },
-            'rest_proxy_error': {
-                'pattern': r'kafka-rest.{0,80}exception|kafkarest.{0,80}exception|REST API.{0,40}failed',
-                'severity': 'medium',
-                'category': 'REST Proxy Issues'
-            },
-            'finalizer_stuck': {
-                'pattern': r'finalizer.{0,80}blocking|deletion.{0,40}blocked',
-                'severity': 'medium',
-                'category': 'Finalizer Issues'
-            },
-            'reconcile_blocked': {
-                'pattern': r'block-reconcile|reconciliation.{0,40}blocked',
-                'severity': 'low',
-                'category': 'Reconciliation Blocked'
-            },
-            'kafka_error': {
-                'pattern': r'org\.apache\.kafka\.\S+Exception|\bKafkaException\b',
-                'severity': 'medium',
-                'category': 'Kafka Issues'
-            },
-            'java_error': {
-                'pattern': r'java\.lang\.NullPointerException|java\.io\.IOException|java\.lang\.IllegalStateException|java\.lang\.IllegalArgumentException',
-                'severity': 'medium',
-                'category': 'Application Errors'
-            },
-        }
+        # Shared with the known causes of playground analyze logs (tools/report-common/known_causes.py).
+        self.error_patterns = known_causes.error_patterns()
 
         # Kubernetes symptoms. Applied to Warning events, pod describes and kubectl
         # text output, where there is no log level.
@@ -323,6 +220,7 @@ class CFKBundleAnalyzer:
 
         # Cheap literal screen for kubectl text output: a line with none of these
         # tokens cannot match a k8s pattern nor be a Warning event row.
+        self._classify_cache = {}  # see _classify
         self._k8s_screen = (
             'warning', 'backoff', 'oomkill', 'out of memory', 'evicted', 'low on resource',
             'imagepull', 'errimagepull', 'pull image', 'failedscheduling', 'insufficient',
@@ -346,9 +244,11 @@ class CFKBundleAnalyzer:
         parts = []
         for index, (name, info) in enumerate(patterns.items()):
             group = f"p_{name}"
-            parts.append(f"(?P<{group}>{info['pattern'].lower()})")
+            # lower case outside the escapes: \S (not a space) must not become \s (a space)
+            pattern = re.sub(r'\\.|[^\\]+', lambda m: m.group() if m.group().startswith('\\') else m.group().lower(), info['pattern'])
+            parts.append(f"(?P<{group}>{pattern})")
             meta[group] = (info['severity'], info['category'], name)
-            priority[group] = index
+            priority[group] = (index, re.compile(pattern))
         return re.compile('|'.join(parts)), meta, priority
 
     def analyze(self) -> Dict[str, Any]:
@@ -447,7 +347,7 @@ class CFKBundleAnalyzer:
                    file_path: str, line_number: int = None, context: str = None,
                    caused_by: List[str] = None, count: int = 1, timestamp: str = None,
                    dedupe_key: str = None, resource: str = None, resource_kind: str = None,
-                   affected: str = None):
+                   affected: str = None, connector: str = None):
         """Add an issue, or bump the occurrence count of an identical one.
 
         Identical means same category, same file (rotated logs of the same pod count
@@ -455,6 +355,7 @@ class CFKBundleAnalyzer:
         removed, `affected` lists them).
         `resource` / `resource_kind` name the pod or CR the issue is about, to find its
         component when the file is shared (events, pods.yaml).
+        `connector` is the Connect connector of the log record, `connectors` lists them.
         """
         file_key = re.sub(r'\.log(?:\.[\w-]+)?(?:\.gz)?$', '.log', file_path)
         signature = f"{category}:{file_key}:{dedupe_key or self._normalize_signature(message)}"
@@ -466,6 +367,8 @@ class CFKBundleAnalyzer:
                 existing['severity'] = severity
             if affected and affected not in existing.setdefault('affected', []):
                 existing['affected'].append(affected)
+            if connector and connector not in existing.setdefault('connectors', []):
+                existing['connectors'].append(connector)
             return
 
         issue = {
@@ -487,22 +390,27 @@ class CFKBundleAnalyzer:
             issue['_resource'] = (resource_kind or '', resource or '')
         if affected:
             issue['affected'] = [affected]
+        if connector:
+            issue['connectors'] = [connector]
 
         self.issue_index[signature] = issue
         self.issues.append(issue)
 
     # ── Component attribution ─────────────────────────────────────────────
 
-    def _index_component(self, name: str, component: str, instance: str = None):
+    def _index_component(self, name: str, component: str, instance: str = None, cluster: bool = False):
+        """cluster: name is a cluster of the component (Kafka, SchemaRegistry… CR, cluster-resources/<type>/<name>)"""
         if name and component in COMPONENTS:
             self.component_index.setdefault(name, (component, instance or name))
+            if cluster:
+                self.clusters.setdefault(component, set()).add(name)
 
     def _index_path(self, file_path: str):
         """cluster-resources/<type>/<name>/... names a CR of that type"""
         parts = file_path.replace('\\', '/').split('/')[:-1]
         for index, part in enumerate(parts[:-1]):
             if index > 0 and parts[index - 1] == 'cluster-resources' and part.lower() in COMPONENTS:
-                self._index_component(parts[index + 1], part.lower())
+                self._index_component(parts[index + 1], part.lower(), cluster=True)
 
     def _lookup_name(self, name: str, keywords: bool = True):
         """(component, instance) of a pod / CR name: bundle index first, then pod suffixes, then keywords"""
@@ -534,7 +442,18 @@ class CFKBundleAnalyzer:
             return dirs[index], following[0]
         return dirs[index], None
 
+    def _only_cluster(self, component: str):
+        """the cluster of a component when the bundle has one, else None"""
+        clusters = self.clusters.get(component) or set()
+        return next(iter(clusters)) if len(clusters) == 1 else None
+
     def _lookup_resource(self, kind: str, name: str):
+        if kind.lower() in _APPLICATION_KINDS:
+            component = _KIND_COMPONENT[kind.lower()]
+            found = self.component_index.get(name)
+            # "-": no cluster ref and several clusters, the component is known but not its instance
+            instance = found[1] if found and found[1] != '-' else self._only_cluster(component)
+            return component, instance
         if kind.lower() in _KIND_COMPONENT:
             return self.component_index.get(name) or (_KIND_COMPONENT[kind.lower()], name or None)
         return self._lookup_name(name)
@@ -551,6 +470,8 @@ class CFKBundleAnalyzer:
             found = self._lookup_resource(kind, name) if name else self._lookup_name(stem, keywords=False)
             if found and found[0] == component:
                 instance = found[1]
+        if instance == '-':
+            instance = self._only_cluster(component)
         issue['component'] = component
         if instance:
             issue['instance'] = instance
@@ -588,13 +509,29 @@ class CFKBundleAnalyzer:
         return level
 
     def _classify(self, compiled, text: str):
-        """Return (severity, category, name) of the first pattern, in declaration order, that matches"""
+        """Return (severity, category, name) of the first pattern, in declaration order, that matches.
+
+        Cached: a WARN storm repeats the same record millions of times with other timestamps and ids,
+        and the combined regex costs ~50µs per record.
+        """
         regex, meta, priority = compiled
+        key = (id(regex), text if _PATTERN_DIGITS_RE.search(text) else text.translate(_CLASSIFY_DIGITS))
+        if key in self._classify_cache:
+            return self._classify_cache[key]
         best = None
-        for m in regex.finditer(text.lower()):
-            if best is None or priority[m.lastgroup] < priority[best]:
-                best = m.lastgroup
-        return meta[best] if best else None
+        lowered = text.lower()
+        # the combined regex only tells whether a pattern matches: its matches do not overlap, so in
+        # "org.apache.kafka.common.errors.TopicAuthorizationException" the generic Kafka exception hides the
+        # authorization one. The patterns are then tried one by one, in declaration order
+        if regex.search(lowered):
+            for group, (_, single) in priority.items():
+                if single.search(lowered):
+                    best = group
+                    break
+        if len(self._classify_cache) >= 200000:
+            self._classify_cache.clear()
+        self._classify_cache[key] = meta[best] if best else None
+        return self._classify_cache[key]
 
     def _analyze_text_file(self, file_path: str):
         """Analyze a log or kubectl text file.
@@ -656,14 +593,17 @@ class CFKBundleAnalyzer:
     def _handle_record(self, rel: str, lines: List[str], line_num: int, level: str,
                        head: str, caused_by: List[str]):
         text = head + ' ' + ' '.join(caused_by)
-        # The root cause (last Caused by) wins over the symptom when both match.
+        # The root cause (last Caused by) wins over the symptom when both match. A WARN record counts only when it
+        # matches a known cause, not a catch-all (any Kafka exception…): WARN storms of retriable errors are noise.
         match = None
-        for candidate in reversed(caused_by):
+        for candidate in list(reversed(caused_by)) + [head]:
             match = self._classify(self._error_re, candidate)
+            if match and level == 'WARN' and match[2] in _CATCH_ALL:
+                match = None
             if match:
                 break
         if match is None:
-            match = self._classify(self._error_re, head) or self._classify(self._k8s_re, text)
+            match = self._classify(self._k8s_re, text)
 
         if match is not None:
             severity, category, name = match
@@ -685,11 +625,13 @@ class CFKBundleAnalyzer:
             label = level.title()
 
         task = _TASK_RE.search(head + ' ')
+        connector = _CONNECTOR_RE.search(head)
         context_lines = lines[max(0, line_num - 3):min(len(lines), line_num + 2)]
         self._add_issue(
             severity=severity,
             category=category,
             affected=(task.group(1) or task.group(2)) if task else None,
+            connector=(connector.group(1) or connector.group(2)) if connector else None,
             message=f"{label}: {head.strip()[:300]}",
             file_path=rel,
             line_number=line_num,
@@ -817,9 +759,15 @@ class CFKBundleAnalyzer:
                 self._process_event(obj, file_path)
             elif api_version.startswith('platform.confluent.io/'):
                 self.coverage['custom_resources'] += 1
-                # a Connector belongs to its Connect cluster
-                cluster = ((obj.get('spec') or {}).get('connectClusterRef') or {}).get('name')
-                self._index_component(name, _KIND_COMPONENT.get(kind.lower(), ''), cluster)
+                # a Connector belongs to its Connect cluster, a Schema to its Schema Registry…
+                spec = obj.get('spec') or {}
+                cluster = next((spec[ref].get('name') for ref in _CLUSTER_REFS
+                                if isinstance(spec.get(ref), dict) and spec[ref].get('name')), None)
+                if kind.lower() in _APPLICATION_KINDS:
+                    # "-": no cluster ref, resolved once every cluster of the bundle is known (_lookup_resource)
+                    self._index_component(name, _KIND_COMPONENT.get(kind.lower(), ''), cluster or '-')
+                else:
+                    self._index_component(name, _KIND_COMPONENT.get(kind.lower(), ''), cluster, cluster=True)
                 self._check_confluent_component_config(obj, relative_path)
                 self.timeline += environment.managed_field_changes(obj, kind, name)
                 self._record_component_images(obj, name)

@@ -135,8 +135,8 @@ CLI change that makes a page wrong shows up as a failing test.
 ### ☸️ Confluent for Kubernetes: the cfk environment, support bundles
 
 - 📖 [Read the deep dive](/deep-dive-cfk.md)
-- 🧠 Commands: `run --environment cfk`, `start-environment --environment cfk|cfk-rbac`, `debug cfk generate-bundle`, `analyze cfk-bundle`
-- 🎬 Bite size session: [☸️ What is wrong in this CFK cluster?](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster) (`analyze cfk-bundle`)
+- 🧠 Commands: `run --environment cfk`, `start-environment --environment cfk|cfk-rbac`, `debug cfk generate-bundle`, `analyze logs` (CFK bundle detected)
+- 🎬 Bite size session: [☸️ What is wrong in this CFK cluster?](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster) (`analyze logs` on a CFK bundle)
 
 ### 🐌 A slow or broken network, on purpose
 

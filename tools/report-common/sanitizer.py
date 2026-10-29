@@ -1,11 +1,25 @@
 """
-Data Sanitizer for CFK Bundle Analyzer
-Redacts sensitive information from analysis results.
+Data Sanitizer of the log analyzers: redacts secrets, IPs, hostnames, emails and LDAP DNs.
+
+- cfk-analysis/analyzer_cli.py sanitizes the results of a CFK support bundle (DataSanitizer.sanitize_results).
+- playground analyze logs pipes the digest of each file and the records file of tools/log-analyzer/log_report.py
+  through the command line below, with one --state file per run, so a value gets the same placeholder (<IP-1>,
+  <HOST-2>…) in the text digest, the HTML report and the JSON:
+
+    python3 -I sanitizer.py --state <file> < text > sanitized-text
+    python3 -I sanitizer.py --state <file> --summary        # what was redacted, as JSON
+    python3 -I sanitizer.py --state <file> --no-count < t   # same placeholders, secrets not counted twice
+
+  Lines starting with @@PG (the markers of the records file: counts, line numbers, timestamps) are kept as they are.
 
 Best effort: always review the output before sharing it outside Confluent.
 """
 
+import argparse
+import json
+import os
 import re
+import sys
 from collections import defaultdict
 from typing import Dict, Any, Tuple
 
@@ -56,6 +70,16 @@ _GENERIC_TLDS = {
 }
 
 
+# Last label of a file name, not a TLD: connect-distributed.properties:12 is a file and a line number
+_FILE_EXTENSIONS = {
+    'properties', 'java', 'scala', 'kt', 'py', 'sh', 'yaml', 'yml', 'json', 'xml', 'log', 'conf', 'cfg', 'txt', 'jar',
+    'html', 'md', 'sql', 'gz', 'zip', 'tar', 'tgz', 'jks', 'pem', 'crt', 'key', 'p12', 'keytab', 'jaas', 'avsc', 'proto',
+}
+# a name in a URL (https://host), with a port (host:9092) or with its IP (host/10.0.0.1:2888, a java InetSocketAddress,
+# the IP being already <IP-1>): a hostname whatever its TLD (.anz, .corp…)
+_HOST_AFTER_RE = re.compile(r':\d{2,5}\b|/(?:<IP-|\d{1,3}\.\d)')
+
+
 class DataSanitizer:
     """Sanitizes sensitive data from analysis results"""
 
@@ -65,6 +89,9 @@ class DataSanitizer:
         self.email_map = {}
         self.dn_map = {}
         self.secrets_redacted = 0
+        # domains of the hostnames seen in a URL / with a port (emh-irdc.test.anz -> test.anz): another name in
+        # them is a hostname too, whatever its TLD
+        self.learned_suffixes = set()
         # defaultdict so new prefixes (e.g. 'ipv6') don't KeyError on first use.
         self.counter = defaultdict(lambda: 1)
 
@@ -79,6 +106,8 @@ class DataSanitizer:
     def sanitize_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """Sanitize entire analysis results"""
         sanitized = results.copy()
+        # the domains of the bundle first, so that the first texts get them too
+        self.learn(json.dumps(results, default=str))
 
         if 'issues' in sanitized:
             sanitized['issues'] = [self.sanitize_issue(issue) for issue in sanitized['issues']]
@@ -131,6 +160,7 @@ class DataSanitizer:
         if not text:
             return text
 
+        self.learn(text)
         sanitized = self._redact_secret_values(text)
         for pattern, repl in _SIMPLE_RULES:
             sanitized, n = pattern.subn(repl, sanitized)
@@ -178,6 +208,9 @@ class DataSanitizer:
             quote, key, sep, value = match.group(1), match.group(2), match.group(3), match.group(4)
             if _SECRET_KEY_KEEP_RE.search(key) or value.startswith('<') or value.startswith('${'):
                 return match.group(0)
+            # already masked by the application (password=********, [hidden])
+            if re.fullmatch(r'["\']?(?:\*+|\[hidden\])["\']?', value):
+                return match.group(0)
             self.secrets_redacted += 1
             return f"{quote}{key}{quote}{sep}<REDACTED>"
 
@@ -208,6 +241,19 @@ class DataSanitizer:
 
         return self.patterns['ipv4'].sub(replacer, text)
 
+    def _confident_host(self, text: str, match) -> bool:
+        """a name in a URL, with a port or with its IP: a hostname whatever its TLD"""
+        return (text[max(0, match.start() - 3):match.start()] == '://'
+                or _HOST_AFTER_RE.match(text, match.end()) is not None)
+
+    def learn(self, text: str):
+        """Domains of the hostnames of the text that are sure to be hostnames (see learned_suffixes)"""
+        for match in self.patterns['hostname'].finditer(text):
+            labels = match.group(0).lower().split('.')
+            if (len(labels) >= 3 and labels[-1] not in _FILE_EXTENSIONS and labels[0] not in _JAVA_ROOTS
+                    and not match.group(0).lower().endswith(_KEEP_HOST_SUFFIXES) and self._confident_host(text, match)):
+                self.learned_suffixes.add('.'.join(labels[-2:]))
+
     def _redact_hostnames(self, text: str) -> str:
         """Redact hostnames while keeping Java classes / packages, Kubernetes identifiers and public domains"""
         def is_hostname(match) -> bool:
@@ -221,6 +267,12 @@ class DataSanitizer:
                 return False  # org.apache.kafka…, io.confluent…, java.lang…
             if after in ('.', '(', '$', '='):
                 return False  # dotted identifier (kafka.server.KafkaServer) or config key (basic.auth.user.info=)
+            if tld.lower() in _FILE_EXTENSIONS:
+                return False
+            if self._confident_host(text, match):
+                return True
+            if any(host.lower().endswith('.' + suffix) for suffix in self.learned_suffixes):
+                return True
             if any(c.isupper() for c in host):
                 return False  # hostnames are lower case in practice, Java classes are not
             if not (len(tld) == 2 or tld.lower() in _GENERIC_TLDS):
@@ -249,6 +301,66 @@ class DataSanitizer:
         }
 
 
+def _load_state(sanitizer: DataSanitizer, path: str):
+    try:
+        with open(path, encoding="utf-8") as f:
+            state = json.load(f)
+    except (OSError, ValueError):
+        return
+    sanitizer.ip_map = state.get("ip_map", {})
+    sanitizer.hostname_map = state.get("hostname_map", {})
+    sanitizer.email_map = state.get("email_map", {})
+    sanitizer.dn_map = state.get("dn_map", {})
+    sanitizer.secrets_redacted = state.get("secrets_redacted", 0)
+    sanitizer.counter.update(state.get("counter", {}))
+    sanitizer.learned_suffixes = set(state.get("learned_suffixes", []))
+
+
+def _save_state(sanitizer: DataSanitizer, path: str):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"ip_map": sanitizer.ip_map, "hostname_map": sanitizer.hostname_map, "email_map": sanitizer.email_map,
+                   "dn_map": sanitizer.dn_map, "secrets_redacted": sanitizer.secrets_redacted,
+                   "counter": dict(sanitizer.counter), "learned_suffixes": sorted(sanitizer.learned_suffixes)}, f)
+
+
+def sanitize_stream(sanitizer: DataSanitizer, text: str) -> str:
+    """Sanitizes text, keeping the @@PG marker lines of a records file as they are"""
+    out, block = [], []
+    for line in text.split("\n"):
+        if line.startswith("@@PG"):
+            if block:
+                out.append(sanitizer.sanitize_text("\n".join(block)))
+                block = []
+            out.append(line)
+        else:
+            block.append(line)
+    if block:
+        out.append(sanitizer.sanitize_text("\n".join(block)))
+    return "\n".join(out)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Redact secrets, IPs, hostnames, emails and LDAP DNs of the text on stdin")
+    ap.add_argument("--state", help="JSON file with the placeholders given so far, read and updated")
+    ap.add_argument("--summary", action="store_true", help="print what was redacted (JSON) instead of filtering stdin")
+    ap.add_argument("--no-count", action="store_true",
+                    help="do not count the secrets of this text (a digest of records sanitized again later)")
+    args = ap.parse_args()
+    sanitizer = DataSanitizer()
+    if args.state and os.path.exists(args.state):
+        _load_state(sanitizer, args.state)
+    if args.summary:
+        print(json.dumps(sanitizer.get_redaction_summary()))
+        return 0
+    secrets = sanitizer.secrets_redacted
+    sys.stdout.write(sanitize_stream(sanitizer, sys.stdin.read()))
+    if args.no_count:
+        sanitizer.secrets_redacted = secrets
+    if args.state:
+        _save_state(sanitizer, args.state)
+    return 0
+
+
 def sanitize_for_sharing(results: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """
     Convenience function to sanitize results for sharing
@@ -258,3 +370,7 @@ def sanitize_for_sharing(results: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[
     sanitized = sanitizer.sanitize_results(results)
     summary = sanitizer.get_redaction_summary()
     return sanitized, summary
+
+
+if __name__ == "__main__":
+    sys.exit(main())

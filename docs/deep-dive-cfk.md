@@ -9,7 +9,7 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 
 > [!TIP]
 > 🎬 The video session [☸️ What is wrong in this CFK cluster?](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster)
-> shows `playground analyze cfk-bundle` on a customer support bundle, in 5 minutes. This page goes further: how the
+> shows `playground analyze logs` on a customer support bundle, in 5 minutes. This page goes further: how the
 > environment is built, what every command does differently on Kubernetes, what is not supported, a hands-on lab and
 > recipes for support repros.
 
@@ -22,7 +22,7 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | the `Connector` resource the CLI would apply | `playground connector create-or-update -c <name> --dry-run << EOF … EOF` |
 | the status of a connector, CFK side and Connect side | `playground connector status -c <name>` |
 | a support bundle of the namespace | `playground debug cfk generate-bundle` |
-| what is wrong in a support bundle (yours or the customer's) | `playground analyze cfk-bundle --bundle <dir\|.tar.gz\|.zip>` |
+| what is wrong in a support bundle (yours or the customer's) | `playground analyze logs -f <dir\|.tar.gz\|.zip>` |
 | is this example red on CFK in CI? | `playground get-ci-result --test <dir> --environment cfk --logs` |
 
 ---
@@ -188,19 +188,21 @@ for the RBAC commands.
 
 ```bash
 playground debug cfk generate-bundle [--follow-logs-duration 60]
-playground analyze cfk-bundle --bundle /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir /tmp/cfk-reports
+playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir /tmp/cfk-reports
 ```
 
 - `generate-bundle` runs `kubectl confluent support-bundle --namespace confluent` in `/tmp/cfk-support-bundle`. The
   first time, it installs the `kubectl confluent` plugin: it downloads the CFK bundle of `CFK_VERSION` from
   `packages.confluent.io` and extracts the plugin of your OS and architecture into `/usr/local/bin` (with `sudo` if
   needed, `~/.local/bin` as a last resort). It only works on a running `cfk` / `cfk-rbac` environment.
-- `analyze cfk-bundle` works offline on any bundle made by `kubectl confluent support-bundle`: a customer's one, or
+- `analyze logs` detects a CFK support bundle (a folder with `cluster-details.txt`, or with `cluster-resources/` and
+  `operator/`, alone or inside a folder or an archive: `--logs-only` to get the plain log digest instead) and works offline on any bundle made by `kubectl confluent support-bundle`: a customer's one, or
   yours. It prints the environment (Kubernetes and CFK versions, images, checked against the support matrix), the
   recent changes, and the issues by category (pod failures, resources, TLS, auth, connect…) with the next steps. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
-  `./cfk-reports`: pass a `/tmp` folder). `--component connect`, `--severity high`, `--json`;
-  `--sample synthetic` to see a report without a bundle.
+  `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
+  `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle.
+  `analyze cfk-bundle --bundle <bundle>` still works, as a hidden alias.
 
 ---
 
@@ -388,7 +390,7 @@ playground debug cfk generate-bundle
 # ✅ Confluent kubectl plugin installed successfully!
 # ✅ Support bundle generated successfully!
 # 📦 Bundle: /tmp/cfk-support-bundle/support-bundle-ns-confluent-2026-10-28T12-57-53Z.tar.gz
-playground analyze cfk-bundle --bundle /tmp/cfk-support-bundle/support-bundle-ns-confluent-<date>.tar.gz --output-dir /tmp/lab-cfk-bundle
+playground analyze logs -f /tmp/cfk-support-bundle/support-bundle-ns-confluent-<date>.tar.gz --output-dir /tmp/lab-cfk-bundle
 # Files analyzed:   43  (4 pods, 7 CFK CRs, 83 events, 10 log/text files with 24546 lines, 0 skipped)
 # Total issues:     35
 # Kubernetes:       v1.35.5+k3s1
@@ -405,7 +407,7 @@ playground analyze cfk-bundle --bundle /tmp/cfk-support-bundle/support-bundle-ns
 # ## Compatibility  (4 issues, worst=high)
 #   [HIGH] [connect/connect] cluster-details.txt
 #          connect runs Confluent Platform 8.4.0, outside the range supported by CFK 3.3.0: 7.5 - 8.3 (8.4.0)
-playground analyze cfk-bundle --bundle /tmp/cfk-support-bundle/support-bundle-ns-confluent-<date>.tar.gz --component connect --output-dir /tmp/lab-cfk-bundle
+playground analyze logs -f /tmp/cfk-support-bundle/support-bundle-ns-confluent-<date>.tar.gz --component connect --output-dir /tmp/lab-cfk-bundle
 # Total issues:     6
 # By component:     connect 6
 # Filtered on:      --component connect
@@ -441,8 +443,8 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | "a plugin is missing / the wrong version on our Connect pods" | `--environment cfk --connector-tag <version>`: the plugin comes from `spec.build.onDemand` like on their cluster; `playground connector plugins` lists what the `Connect` CR reports |
 | "a connector restart / pause through annotations does nothing" | `playground connector pause` / `resume` / `restart` print the `kubectl annotate` they run: try the same on the lab connector |
 | "the Connect pod was restarted and the connector lost its state" | `playground container restart -c connect` (deletes connect-0), then `connector wait`, `container logs -c connect --previous` for the instance before |
-| "the customer sent a support bundle" | `playground analyze cfk-bundle --bundle <bundle> --output-dir /tmp/cfk-reports` (no environment needed), `--component connect` |
-| "what would a support bundle of my repro look like?" | `playground debug cfk generate-bundle`, then `analyze cfk-bundle` on it |
+| "the customer sent a support bundle" | `playground analyze logs -f <bundle> --output-dir /tmp/cfk-reports` (no environment needed), `--component connect` |
+| "what would a support bundle of my repro look like?" | `playground debug cfk generate-bundle`, then `analyze logs` on it |
 | "RBAC on CFK: `ConfluentRolebinding`, MDS, LDAP" | `--environment cfk-rbac`, `playground rbac role-binding list --principal User:connectorSA`, `kubectl -n confluent get confluentrolebinding` |
 | "another CFK version" | `CFK_VERSION=3.2.3 playground run -f <example> --environment cfk` (2.9.5 to 3.3.0) |
 | "is this example also red on CFK in CI?" | `playground get-ci-result --test <dir> --environment cfk --logs`; `playground start-ci --cfk --test-list "<dir>"` to run it there |
@@ -475,7 +477,7 @@ playground connector create-or-update -c <lower-case-name> [--dry-run] << EOF �
 playground connector status|show-config|pause|resume|restart|delete -c <c>
 playground container exec|logs|restart|kill -c connect|kafka|schemaregistry   # pods connect-0, kafka-0…
 playground debug cfk generate-bundle [--follow-logs-duration 60]
-playground analyze cfk-bundle --bundle <dir|.tar.gz|.zip> [--component connect] [--severity high] --output-dir /tmp/cfk-reports
+playground analyze logs -f <dir|.tar.gz|.zip> [--component connect] [--severity high] --output-dir /tmp/cfk-reports
 k3d cluster delete playground-cfk                      # playground stop keeps the cluster
 ```
 
@@ -504,6 +506,6 @@ k3d cluster delete playground-cfk                      # playground stop keeps t
   [a slow or broken network](/deep-dive-network-traffic.md)
 - 📖 [How it works: connector using non-plaintext environment](/how-it-works?id=🔏-connector-using-non-plaintext-environment)
 - 🧠 CLI reference: [playground debug cfk generate-bundle](/playground%20debug%20cfk%20generate-bundle),
-  [playground analyze cfk-bundle](/playground%20analyze%20cfk-bundle), [playground run](/playground%20run)
+  [playground analyze logs](/playground%20analyze%20logs), [playground run](/playground%20run)
 - 📚 [Confluent for Kubernetes documentation](https://docs.confluent.io/operator/current/overview.html),
   [support bundle](https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle)

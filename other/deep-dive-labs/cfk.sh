@@ -142,13 +142,13 @@ lab_expect_exit 0
 lab_expect_contains "✅ Support bundle generated successfully!"
 lab_expect_contains "📦 Bundle: /tmp/cfk-support-bundle/support-bundle-ns-confluent-"
 bundle=$(grep -oE '/tmp/cfk-support-bundle/support-bundle[^ ]*\.tar\.gz' <<< "$LAB_OUTPUT" | head -1)
-lab_run playground analyze cfk-bundle --bundle "$bundle" --output-dir /tmp/lab-cfk-bundle
+lab_run playground analyze logs -f "$bundle" --output-dir /tmp/lab-cfk-bundle
 lab_expect_exit 0
 lab_expect_contains "CFK operator: 3.3.0 (image tag 0.1718.10)"
 lab_expect_contains "Connector/filestream-broken has failed tasks"
 lab_expect_contains "Affects 1 task(s): filestream-broken-0"
 lab_expect_contains "outside the range supported by CFK 3.3.0: 7.5 - 8.3"
-lab_run playground analyze cfk-bundle --bundle "$bundle" --component connect --output-dir /tmp/lab-cfk-bundle
+lab_run playground analyze logs -f "$bundle" --component connect --output-dir /tmp/lab-cfk-bundle
 lab_expect_exit 0
 lab_expect_contains "Filtered on: --component connect"
 lab_expect_contains "By component: connect"

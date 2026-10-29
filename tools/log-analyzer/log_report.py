@@ -28,61 +28,19 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, svg_time_columns, time_bins, verdict_html)
+import known_causes  # noqa: E402
+from known_causes import KILLED_TASK_PATTERN  # noqa: E402
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
-KILLED_TASK_PATTERN = r"Task threw an uncaught and unrecoverable exception|Task is being killed and will not recover"
 
-# well-known causes: (regex on the record, severity, title, what to do)
-HINTS = [
-    (r"OutOfMemoryError", "CRITICAL", "💥 OutOfMemoryError",
-     "the JVM ran out of heap (or metaspace / direct memory): raise -Xmx (KAFKA_HEAP_OPTS) or lower the batch sizes, "
-     "and look at what fills the heap with playground debug heap-dump + playground analyze heap-dump"),
-    (KILLED_TASK_PATTERN,
-     "HIGH", "🧨 A connector task was killed",
-     "it stays FAILED until it is restarted: fix the cause (the exception chain of the record), then "
-     "playground connector restart --connector <connector>"),
-    (r"Failed to find any class that implements Connector|Failed to find any class that implements Converter",
-     "HIGH", "🧩 Plugin not found",
-     "the connector or converter class is not installed in the plugin.path of the worker (or has a typo)"),
-    (r"ClassNotFoundException|NoClassDefFoundError|NoSuchMethodError|NoSuchFieldError",
-     "HIGH", "📦 Class loading error",
-     "a jar is missing from the plugin, or two versions of a library clash in the plugin path"),
-    (r"SaslAuthenticationException|Authentication failed|[Ii]nvalid credentials|ORA-01017|password authentication failed"
-     r"|Access denied for user|Login failed for user|401 Unauthorized|Status code\s*:?\s*401",
-     "HIGH", "🔑 Authentication failure",
-     "check the credentials (user, password, API key, keytab) of the client or of the external system"),
-    (r"(Topic|Group|Cluster|TransactionalId)AuthorizationException|[Nn]ot authorized to access|403 Forbidden|Status code\s*:?\s*403",
-     "HIGH", "🚫 Authorization failure",
-     "an ACL or an RBAC role binding is missing for the principal of the client"),
-    (r"SSLHandshakeException|PKIX path building failed|unable to find valid certification path|No subject alternative names",
-     "HIGH", "🔐 TLS handshake failure",
-     "the truststore does not trust the server certificate, or the hostname does not match it"),
-    (r"Unknown magic byte", "HIGH", "🧲 Unknown magic byte",
-     "the records were not written with the Schema Registry serializer the converter expects: check key.converter / "
-     "value.converter against the producer (playground topic consume shows the real format)"),
-    (r"Converting byte\[\] to Kafka Connect data failed|SerializationException|DataException",
-     "MEDIUM", "🔀 Serialization or conversion error",
-     "the converter does not match the format of the records, or a record does not match the schema; "
-     "errors.tolerance=all + a dead letter queue keeps the task running (playground topic dlq inspect)"),
-    (r"Connection refused|UnknownHostException|No route to host|connect timed out"
-     r"|Connection to node -?\d+ .* could not be established|Communications link failure",
-     "HIGH", "🔌 Connection failure",
-     "the host is down, unreachable or the name does not resolve: check the host, port and network "
-     "(playground debug tcp-dump shows what goes over the wire)"),
-    (r"TimeoutException|timed out|Timed out", "MEDIUM", "⏱️ Timeouts",
-     "the other side is slow or unreachable: look at the first occurrence, and at what happened just before"),
-    (r"RecordTooLargeException|MESSAGE_TOO_LARGE|message.max.bytes", "MEDIUM", "📏 Record too large",
-     "raise max.request.size of the producer (producer.override.max.request.size for a source connector) and "
-     "message.max.bytes / max.message.bytes on the broker or topic"),
-    (r"UnknownTopicOrPartitionException|UNKNOWN_TOPIC_OR_PARTITION", "MEDIUM", "❓ Unknown topic or partition",
-     "the topic does not exist and is not auto-created: create it, or check its name"),
-    (r"OffsetOutOfRangeException|OFFSET_OUT_OF_RANGE", "MEDIUM", "⏮️ Offset out of range",
-     "the committed offset was deleted by retention: the consumer restarts from auto.offset.reset"),
-]
+# well-known causes: (regex on the record, severity, title, what to do), shared with the CFK analyzer
+# (tools/report-common/known_causes.py)
+HINTS = known_causes.hints()
 
 EXCEPTION_RE = re.compile(r"^(?:Caused by:\s*)?((?:[a-zA-Z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error|Throwable))(?::\s*(.*))?$")
-# connector of a record: the [connector|task-0] / [connector|worker] MDC context of Connect, or the id of the task
-CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
+# connector of a record: the [connector|task-0] / [connector|worker] MDC context of Connect, with an optional scope
+# ([connector|task-0|offsets], Oracle CDC [connector|task-0|redoLog]), or the id of the task
+CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
 
 
 def parse_records(path: str) -> List[dict]:
@@ -223,7 +181,9 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
 
 def short_message(message: str) -> str:
     """The message of a record without its timestamp, level, [connector|task] context and (logger:line)."""
-    m = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[ T][\d:,.]*\]?\s*", "", message)
+    # journalctl prefix: "Oct 06 07:35:50 host connect-distributed[1080]: "
+    m = re.sub(r"^[A-Z][a-z]{2} [ \d]\d \d\d:\d\d:\d\d \S+ [^\s:]+: ", "", message)
+    m = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[ T][\d:,.]*\]?\s*", "", m)
     m = re.sub(r"^(\[[^]]*\]\s*)?(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)\b:?\s*", "", m)
     m = re.sub(r"^\[[^]]*\|[^]]*\]\s*", "", m)
     return re.sub(r"\s*\([\w$.]+:\d+\)\s*$", "", m)
@@ -540,7 +500,8 @@ def main() -> int:
         # the timestamps of every occurrence are only for the timeline of the HTML report
         compact = dict(res, files=[dict(f, records=[{k: v for k, v in r.items() if k != "timestamps"} for r in f["records"]])
                                    for f in res["files"]])
-        print(json.dumps(compact, indent=2, ensure_ascii=False))
+        # type: playground analyze logs also emits the JSON of cfk-analysis ("cfk-bundle") for a CFK support bundle
+        print(json.dumps(dict({"type": "logs"}, **compact), indent=2, ensure_ascii=False))
     if args.html_out:
         with open(args.html_out, "w", encoding="utf-8") as fh:
             sections = []

@@ -1043,7 +1043,7 @@ real data.
 | [`playground analyze heap-dump`](/playground%20analyze%20heap-dump) | 🔬 heap dumps with Eclipse MAT: leak suspects, retained sizes, growth between two dumps, Kafka-aware hints (producer and fetch buffers, records held by the tasks…) | `--sample leak_growth` |
 | [`playground analyze logs`](/playground%20analyze%20logs) | 🔥 ERROR/FATAL digest of log files, folders, zip / tar bundles: known causes, timeline, root causes, every distinct record | `--sample support_bundle` |
 | [`playground analyze oracle-xstream-report`](/playground%20analyze%20oracle-xstream-report) | 🅾️ Oracle XStream CDC diagnostics reports (`orclcdc_diag.sql`) | `--sample synthetic_failures` |
-| [`playground analyze cfk-bundle`](/playground%20analyze%20cfk-bundle) | 📦 CFK support bundles: pods, events, custom resources, logs | `--sample synthetic` |
+| [`playground analyze logs`](/playground%20analyze%20logs) on a CFK bundle | 📦 CFK support bundles: pods, events, custom resources, logs | `--sample cfk_bundle` |
 | [`playground analyze flight-recorder`](/playground%20analyze%20flight-recorder) | 🛩️ Java Flight Recorder recordings: where the time of the connector tasks goes (network I/O by remote, Kafka client, locks, CPU by layer, hot methods) | `--sample jdbc_postgres_sink` |
 | [`playground analyze jscissors`](/playground%20analyze%20jscissors) | ✂️ traces of `playground debug jscissors`: methods by total time, exceptions with the arguments of the failing call, calls still running (hangs), slowest calls, call trees | `--sample filestream_sink_bad_json` |
 | [`playground analyze tcp-dump`](/playground%20analyze%20tcp-dump) | 🦈 network captures (`.pcap`, `.pcapng`): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times, with the bodies of the HTTP error responses | `--sample kafka_and_network_errors`, `--sample http_errors` |
@@ -1097,13 +1097,13 @@ playground analyze oracle-xstream-report --sample synthetic_failures
 
 ![playground analyze oracle-xstream-report report](./images/report-oracle-xstream-report.jpg)
 
-#### **📦 cfk-bundle**
+#### **📦 logs on a CFK support bundle**
 
 ```bash
-playground analyze cfk-bundle --sample synthetic
+playground analyze logs --sample cfk_bundle
 ```
 
-![playground analyze cfk-bundle report](./images/report-cfk-bundle.jpg)
+![playground analyze logs report of a CFK bundle](./images/report-cfk-bundle.jpg)
 
 #### **🛩️ flight-recorder**
 

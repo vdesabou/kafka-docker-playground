@@ -219,6 +219,22 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "Restart failed task: POST /connectors/<name>/tasks/<id>/restart (or rolling-restart the Connect cluster CR).",
         ],
     },
+    "Plugin Issues": {
+        "summary": "A connector, converter or SMT class is missing from the plugin path, or two versions of a library clash.",
+        "steps": [
+            "Check spec.build.plugins of the Connect CR (or the custom image): is the plugin of the connector.class there, at the expected version?",
+            "ClassNotFoundException / NoClassDefFoundError: a jar of the plugin is missing (JDBC driver, cloud SDK…).",
+            "NoSuchMethodError / NoSuchFieldError: two versions of a library in the plugin path; keep one per plugin folder.",
+        ],
+    },
+    "Serialization Issues": {
+        "summary": "The converter does not match the format of the records, or a record does not match the schema.",
+        "steps": [
+            "Unknown magic byte: the records were not written with the Schema Registry serializer the converter expects; compare key.converter / value.converter with the producer.",
+            "Read a few records of the topic to see their real format before changing the converter.",
+            "errors.tolerance=all with errors.deadletterqueue.topic.name keeps the task running and keeps the bad records for later.",
+        ],
+    },
     "Control Center Issues": {
         "summary": "Confluent Control Center failed to start or render a view.",
         "steps": [

@@ -1,6 +1,8 @@
 # cfk-analysis
 
-Python tool that powers `playground analyze cfk-bundle`.
+Python tool behind `playground analyze logs` when the input is (or contains) a CFK support bundle: a folder with
+`cluster-details.txt`, or with `cluster-resources/` and `operator/` (`--logs-only` skips it). `playground analyze
+cfk-bundle` is kept as a hidden alias.
 
 It scans a Confluent for Kubernetes (CFK) support bundle (`kubectl confluent support-bundle`, or
 `playground debug cfk generate-bundle`), as a directory or a `.tar/.tar.gz/.tgz/.zip` archive, and sorts what
@@ -29,7 +31,9 @@ scheduling, …) with concrete remediation steps per category:
   it matches a known category, or always with `--include-warnings`) and uncaught exceptions. Each record is
   classified on its `Caused by:` chain first, identical records are counted, and ERRORs matching no category
   are reported as "Other … (Unclassified)". Connector task / client ids are not part of the identity: one root
-  cause failing 27 tasks is one issue, with the tasks listed in `affected`.
+  cause failing 27 tasks is one issue, with the tasks listed in `affected` and their connectors (the
+  `[connector|task-0]` context of the log record) in `connectors`. Classifications are cached on the record text with
+  its digits folded, so a WARN storm of millions of records costs seconds, not minutes.
 - `False` conditions are reported only when `True` is the healthy value (`*-ready`, `*-available`…) or their
   reason says something failed: `garbage-collecting` / `config-revision-hash` `False` are normal.
 
@@ -38,17 +42,21 @@ Each issue is attributed to a `component` (`kafka`, `kraftcontroller`, `zookeepe
 known, to an `instance` (the CR name, e.g. `connect-peh`). They come from the bundle layout
 (`cluster-resources/<type>/<name>/`), the CFK custom resources (a `Connector` belongs to its `connectClusterRef`),
 the `platform.confluent.io/type` / `app` pod labels and, for events, the involved object. `--component connect`
-keeps only the Connect issues (text, JSON and HTML); the HTML report also has Component / Instance buttons, and its
-search filters single issues.
+keeps only the Connect issues (text, JSON and HTML); the HTML report also has Component / Instance buttons, a
+Connector picker when log records have a Connect connector context, and its search filters single issues.
 
 Sensitive values (secrets, IPs, hostnames, emails, LDAP DNs) are sanitized by default. This is best effort:
 review the output before sharing it.
 
 ## Files
 
-- `analyzer.py` — detection engine over logs / events / pods / CFK CRs, with coverage counters.
+- `analyzer.py` — detection engine over logs / events / pods / CFK CRs, with coverage counters. Its log patterns
+  come from `tools/report-common/known_causes.py` (shared with the known causes of `playground analyze logs`, mounted
+  in `/tmp/report-common`): the first one that matches, in declaration order, wins; a WARN record counts only when it
+  matches a known cause, not a catch-all (`hint: False`, any Kafka exception…).
 - `environment.py` — `cluster-details.txt` parser, CFK support matrix checks, change timeline.
-- `sanitizer.py` — redacts secrets first, then emails / LDAP DNs / IPs / hostnames.
+- `tools/report-common/sanitizer.py` (shared with the plain log digest of `playground analyze logs`) — redacts
+  secrets first, then emails / LDAP DNs / IPs / hostnames.
 - `recommendations.py` — category → concrete CFK remediation steps mapping.
 - `html_report.py` — self-contained offline HTML report (no CDN dependency).
 - `analyzer_cli.py` — CLI entrypoint: safe extraction → analyze → sanitize → render.
@@ -65,15 +73,15 @@ is a tool failure.
 Always go through the playground CLI:
 
 ```bash
-playground analyze cfk-bundle --sample synthetic          # try it on the sample below
-playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz
-playground analyze cfk-bundle --bundle ./bundle.tgz --output-dir ./reports      # + HTML report in ./reports
-playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json
-playground analyze cfk-bundle --bundle ./bundle.tar --component connect          # only the Connect issues
+playground analyze logs --sample cfk_bundle          # try it on the sample below
+playground analyze logs -f ./customer-bundle.tar.gz
+playground analyze logs -f ./bundle.tgz --output-dir ./reports      # + HTML report in ./reports
+playground analyze logs -f ./bundle.tar.gz --json > report.json
+playground analyze logs -f ./bundle.tar --component connect          # only the Connect issues
 ```
 
-See `playground analyze cfk-bundle --help` for all flags. For a raw ERROR digest of every log in the
-bundle, `playground analyze logs -f <bundle>` complements it.
+See `playground analyze logs --help` for all flags. For a raw ERROR digest of every log in the
+bundle, `playground analyze logs -f <bundle> --logs-only` complements it.
 
 ## Sample
 

@@ -152,6 +152,7 @@ playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
 # try it on the shipped samples
 playground analyze logs --sample connect_task_failure     # a Connect worker log (Oracle XStream task failure)
 playground analyze logs --sample support_bundle           # a .zip with that log and a gzipped broker log
+playground analyze logs --sample cfk_bundle               # a CFK support bundle (see below)
 ```
 
 What it does with what you give it:
@@ -161,7 +162,16 @@ What it does with what you give it:
 | a folder | scanned recursively, sorted, `__MACOSX/` and `.DS_Store` ignored |
 | `.zip`, `.tar`, `.tar.gz`, `.tgz` | extracted to a temporary folder (deleted at the end), nested archives too |
 | `.gz` | decompressed on the fly |
+| a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, sanitized, in its own HTML report. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
+
+🔒 The digest, the HTML report and the JSON are **sanitized by default**:
+- **What is replaced:** passwords and other secrets (`password=…`, JAAS configs, tokens, API keys, credentials in
+  URLs, PEM blocks), IPs, hostnames, emails and LDAP DNs.
+- **Placeholders:** `<REDACTED>`, `<IP-1>`, `<HOST-1>`… A value gets the same placeholder everywhere in one run.
+  Values the application already masked (`password=********`) are left as they are.
+- **Report:** the last log line says what was redacted (`redaction_summary` in the JSON).
+- **Best effort:** review before sharing. `--no-sanitize` keeps the values, for internal logs only.
 
 The output names each file with its path inside the archive, and only shows files with findings:
 
@@ -197,13 +207,14 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 
 A sticky bar above the root causes filters them and the records: FATAL / ERROR / WARN chips with several levels
 (`--include-warnings`), and a **Connector** picker when the records carry the connector context of the Connect log
-line (`ERROR [my-connector|task-0] …`, `[my-connector|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent
+line (`ERROR [my-connector|task-0] …`, `[my-connector|task-0|offsets]`, `[my-connector|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent
 first, with "no connector context" for the worker records. On a worker running dozens of connectors, pick one to see
 only its errors. `--json` gives the same in `.summary.by_connector`, `.root_causes[].connectors` and
 `.files[].records[].connector`.
 
-`--json` prints the same analysis on stdout (summary, findings, known causes, root causes, every record) and the text
-digest on stderr, without an HTML report:
+`--json` prints the same analysis on stdout (`"type": "logs"`: summary, findings, known causes, root causes, every
+record, and the analysis of each CFK bundle in `cfk_bundles`) and the text digest on stderr, without an HTML report.
+For a single CFK bundle, it's the JSON of the CFK analyzer (`"type": "cfk-bundle"`):
 
 ```bash
 playground analyze logs -f support-bundle.zip --json 2>/dev/null | jq '.findings[] | .severity + " " + .text'
@@ -378,6 +389,7 @@ playground container logs -c <container> [-c <c2>] \
   [--no-follow [--tail N|all] [--since 10m] [--grep <pattern>]] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
 playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--include-warnings] [--max-findings N] [--output-dir <dir>] [--json]
+                       [--no-sanitize] [--logs-only] [--component connect] [--severity high] # CFK support bundle
 playground analyze logs --sample connect_task_failure|support_bundle
 ```
 

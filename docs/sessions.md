@@ -736,15 +736,15 @@ states. The analyzer sorts it into issues by severity and component, with a time
 **Commands**
 
 ```bash
-playground analyze cfk-bundle --bundle support-bundle.tar.gz
-playground analyze cfk-bundle --bundle support-bundle.tar.gz --component connect --severity high
-playground analyze cfk-bundle --sample synthetic --output-dir /tmp/cfk-bundle
+playground analyze logs -f support-bundle.tar.gz
+playground analyze logs -f support-bundle.tar.gz --component connect --severity high
+playground analyze logs --sample cfk_bundle --output-dir /tmp/cfk-bundle
 ```
 
 **Links**
 
 - 🌐 <a href="reports/cfk-bundle.html" target="_blank" rel="noopener">The HTML report shown in the session</a> (the real report: click around)
-- 🧠 CLI reference: [playground analyze cfk-bundle](/playground%20analyze%20cfk-bundle)
+- 🧠 CLI reference: [playground analyze logs](/playground%20analyze%20logs) (the session shows `analyze cfk-bundle`, now a hidden alias of it)
 
 ## 📨 Produce realistic test data
 

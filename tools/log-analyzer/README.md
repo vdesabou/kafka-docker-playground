@@ -10,9 +10,10 @@ to their `Caused by:` chain.
 With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every distinct record to that file.
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
 (task killed, with one line per distinct exception chain of the killed tasks, authentication, TLS, unknown magic byte,
-`OutOfMemoryError`…, each pointing at its earliest occurrence), occurrences over time, root causes
+`OutOfMemoryError`…, each pointing at its earliest occurrence; the list is shared with the CFK analyzer, in
+`tools/report-common/known_causes.py`), occurrences over time, root causes
 (deepest exception of each record) and every record, with a level and connector filter (connector taken from the
-`[connector|task-0]` / `[connector|worker]` context of the line, or `WorkerSinkTask{id=connector-0}`). `tools/connector-diagnose/diagnose_report.py` imports it for the
+`[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`). `tools/connector-diagnose/diagnose_report.py` imports it for the
 errors section of the `playground connector diagnose` report. `get-ci-result --logs`, `container logs --errors --html`
 and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last
 lines of a failed CI script, `--link` for the issue and the job).
