@@ -16163,9 +16163,27 @@ function get_broker_container() {
 
 # CP version of the running environment, from the image tag of the connect container,
 # or of the broker when connect is disabled (other/filebeat-to-kafka, ...)
+# On cfk the CP components are pods in k3d, not docker containers: read the connect-0 pod (or kafka-0) instead
 function get_running_cp_tag() {
   local images
   local tag
+  local running_environment
+  running_environment=$(playground state get run.environment)
+  if [[ "$running_environment" == cfk* ]]
+  then
+    tag=$(kubectl -n confluent get pod connect-0 -o jsonpath='{.spec.containers[?(@.name=="connect")].image}' 2>/dev/null | awk -F':' '{print $NF}')
+    # a connect image rebuilt by 'playground container change-jdk' is tagged with a timestamp, not a CP version
+    if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+ ]]
+    then
+      tag=$(kubectl -n confluent get pod kafka-0 -o jsonpath='{.spec.containers[?(@.name=="kafka")].image}' 2>/dev/null | awk -F':' '{print $NF}')
+    fi
+    if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+ ]]
+    then
+      tag=""
+    fi
+    echo "$tag"
+    return
+  fi
   images=$(docker ps --format '{{.Image}}')
   tag=$(echo "$images" | grep -E 'confluentinc/cp-.*-connect.*:' | head -1 | awk -F':' '{print $2}')
   if [ -z "$tag" ]
