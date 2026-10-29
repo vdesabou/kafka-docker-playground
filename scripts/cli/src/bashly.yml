@@ -11376,7 +11376,8 @@ commands:
 
       The usual way to recover a connector whose tasks are FAILED after you
       fixed the cause. Use --task-id to restart a single failed task and leave
-      the healthy ones alone.
+      the healthy ones alone, or --only-failed to restart only what is FAILED,
+      in every connector when --connector is not set.
     flags:
     - *verbose
     - *connector
@@ -11385,8 +11386,93 @@ commands:
       arg: task_id
       validate: integer
       required: false
+      conflicts: [--only-failed]
       help: |-
         🔧 Restart specific task ID only (instead of restarting entire connector)
+    - long: --only-failed
+      required: false
+      conflicts: [--task-id]
+      help: |-
+        🩹 Restart only the connector instances and tasks that are FAILED, and leave the RUNNING ones alone
+
+        A connector with nothing FAILED is skipped. Uses the KIP-745 REST call
+        (restart?includeTasks=true&onlyFailed=true, CP 7.0+); with older CP
+        versions and fully managed connectors, restarts each FAILED task one by one.
+    examples:
+    - playground connector restart
+    - playground connector restart --connector filestream-sink --task-id 0
+    - playground connector restart --only-failed
+
+  - name: tasks
+    help: |-
+      🧵 Show the tasks of a connector: state, worker, config and partitions
+
+      Answers "why does task 0 get all the tables, partitions or files?" and
+      "which worker runs which task after a rebalance?":
+
+        state and worker    of each task (/status), with a per-worker summary
+                            when there are several connect workers
+        task config         the keys whose value differs between the tasks,
+                            or from the connector config: this is how a
+                            connector splits its work (tables of a JDBC
+                            source, task.id, files...). --all-keys for the
+                            whole config of each task
+        partitions          for a sink, the topic partitions assigned to each
+                            task, from its consumer group connect-<connector>
+
+      🎓 Tip: 'tasks.max' is a maximum, a source connector can create fewer
+      tasks (one JDBC task per table at most).
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting
+    flags:
+    - *verbose
+    - *connector
+    - long: --all-keys
+      required: false
+      help: |-
+        📜 Show the whole config of each task, not only the keys that differ
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON
+    examples:
+    - playground connector tasks
+    - playground connector tasks --connector jdbc-source --all-keys
+    - playground connector tasks --connector filestream-sink --json
+
+  - name: topics
+    help: |-
+      📚 Show the topics a connector is using, or reset that list
+
+      The active topics of each connector, as tracked by the worker (KIP-558):
+      the topics a source connector has written to, and the topics a sink
+      connector has consumed from (useful with topics.regex). The list only
+      grows while the connector runs: --reset empties it, and it fills again
+      with the topics used from then on.
+
+      🎓 Tip: feed the result to 'playground topic consume --topic <t>' or
+      'playground topic dlq inspect'.
+
+      ⚠️ Self-managed connectors only (CP 5.5+, topic.tracking.enable=true on
+      the worker, the default). --reset also needs
+      topic.tracking.allow.reset=true on the worker (the default).
+    flags:
+    - *verbose
+    - *connector
+    - long: --reset
+      required: false
+      conflicts: [--json]
+      help: |-
+        🧹 Empty the list of active topics of the connector (PUT /connectors/<connector>/topics/reset)
+    - long: --json
+      required: false
+      conflicts: [--reset]
+      help: |-
+        🤖 Print the result as JSON
+    examples:
+    - playground connector topics
+    - playground connector topics --connector s3-sink --json
+    - playground connector topics --connector s3-sink --reset
 
   - name: stop
     help: |-
