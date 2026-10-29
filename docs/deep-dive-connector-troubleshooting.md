@@ -327,6 +327,7 @@ playground stop
 | "`Unknown magic byte!` in the DLQ" | produce raw records to an Avro topic (`topic produce --value '{"id": %g}'`, see the [`topic produce` deep dive](/deep-dive-topic-produce.md)), sink with `AvroConverter` |
 | "schema registry was down for an hour" | `playground container kill -c schema-registry`, produce, restart it, `dlq replay` (the 🩺 video session) |
 | "an SMT drops records into the DLQ" | stage `TRANSFORMATION` in `dlq inspect`; test the chain with `playground connector smt test` |
+| "it failed last night", "it keeps restarting", "what changed before it broke?" | `connector history`: every state of the connector and of each task with the worker and the first line of the trace, each config change key by key, pause / resume / delete, then a summary (`--since 12h`, `--json`; deleted connectors too) |
 | "the DLQ has no error details" | `errors.deadletterqueue.context.headers.enable=true` (`playground connector snippets --dlq` prints the DLQ block), and `--to` for replay |
 | "replay only one kind of error" | `dlq replay --grep "<exception or root cause>" --dry-run`, then without `--dry-run` |
 | "fully managed connector, records missing" | `connector diagnose` (error recommendations + ACL check), `dlq inspect --connector <name>` (`dlq-<lcc id>`) |
@@ -345,6 +346,7 @@ nb=$(playground topic dlq inspect --topic dlq --json | jq '[.groups[] | select(.
 
 ```bash
 playground connector diagnose [--connector <c>] [--since 1h] [--max-findings 15] [--output-dir /tmp/playground-diagnose] [--no-open] [--verbose]
+playground connector history  [--connector <c>] [--since 12h] [--json]
 playground topic dlq inspect  [--connector <c> | --topic <dlq>] [--grep <java regex>] [--max-messages 10000] [--json] [--output-dir <dir>] [--no-open]
 playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [--grep <java regex>] [--keep-error-headers] [--dry-run]
 ```
@@ -383,4 +385,5 @@ playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [
 - 👉 Example: [`other/reprocess-dlq-messages-with-sink-connector`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector)
 - 🧠 CLI reference: [playground connector diagnose](/playground%20connector%20diagnose),
   [playground topic dlq inspect](/playground%20topic%20dlq%20inspect), [playground topic dlq replay](/playground%20topic%20dlq%20replay),
-  [playground connector show-lag](/playground%20connector%20show-lag), [playground connector snippets](/playground%20connector%20snippets)
+  [playground connector show-lag](/playground%20connector%20show-lag), [playground connector snippets](/playground%20connector%20snippets),
+  [playground connector history](/playground%20connector%20history)
