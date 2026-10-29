@@ -8840,6 +8840,144 @@ commands:
       - playground quota delete --connector filestream-sink
       - playground quota delete --all-users --request-percentage
 
+- name: broker
+  expose: always
+  group: Kafka
+  help: |-
+    🖥️ Broker commands
+  commands:
+
+  - name: config
+    expose: always
+    group: Kafka
+    filters:
+    - not_mdc_environment
+    - not_ccloud_environment
+    help: |-
+      ⚙️ Dynamic broker config commands
+
+      Read and change the configuration of the running brokers, without
+      restart (wraps kafka-configs --entity-type brokers). Works on plaintext,
+      secured environments and cfk (not on Confluent Cloud, where broker
+      configs can't be changed).
+
+        get      dynamic configs, or the value and source of one key
+        set      set a key, cluster-wide or on one broker
+        delete   remove a dynamic value (back to the static or default one)
+
+      Without --broker, set and delete apply to the cluster-wide default,
+      used by every broker without its own value. Only the configs marked
+      "dynamic" (per-broker or cluster-wide) in the broker configuration
+      reference can be changed: kafka-configs refuses the others.
+
+      🎓 Tip: changing a broker environment variable with 'playground
+      container set-environment-variables' also works for the read-only
+      configs, but recreates the container.
+    commands:
+
+      - name: get
+        group: Kafka
+        help: |-
+          🔎 Display dynamic broker configs
+
+          Without --key, displays the dynamic configs set cluster-wide and on
+          each broker (or on --broker only). With --key, displays the value used
+          by each broker and where it comes from (DYNAMIC_BROKER_CONFIG,
+          DYNAMIC_DEFAULT_BROKER_CONFIG, STATIC_BROKER_CONFIG or DEFAULT_CONFIG).
+          With --all, displays every config of the broker.
+        flags:
+        - &broker-config-broker
+          long: --broker
+          short: -b
+          required: false
+          arg: broker
+          validate: integer
+          help: |-
+            🖥️ Broker id (default: all brokers, plus the cluster-wide default for set and delete)
+        - &broker-config-key
+          long: --key
+          short: -k
+          required: false
+          arg: key
+          completions:
+            static:
+            - background.threads
+            - compression.type
+            - follower.replication.throttled.rate
+            - leader.replication.throttled.rate
+            - log.cleaner.io.max.bytes.per.second
+            - log.cleaner.threads
+            - log.message.timestamp.type
+            - log.retention.bytes
+            - log.retention.ms
+            - log.segment.bytes
+            - max.connection.creation.rate
+            - max.connections
+            - max.connections.per.ip
+            - message.max.bytes
+            - min.insync.replicas
+            - num.io.threads
+            - num.network.threads
+            - num.replica.fetchers
+            - unclean.leader.election.enable
+          help: |-
+            🔑 Config key (e.g. log.retention.ms)
+        - long: --all
+          required: false
+          conflicts: [--key]
+          help: |-
+            📜 Display every config of the broker (static and default ones too), not only the dynamic ones
+        - *verbose
+        examples:
+        - playground broker config get
+        - playground broker config get --key num.io.threads
+        - playground broker config get --broker 1 --all
+        x_example_outputs:
+        - command: playground broker config get --key log.retention.ms
+          output: |-
+            15:02:10 ℹ️ 🔎 Value of log.retention.ms on each broker
+            BROKER   VALUE                SOURCE
+            1        60000                DYNAMIC_DEFAULT_BROKER_CONFIG
+
+      - name: set
+        group: Kafka
+        help: |-
+          ⚙️ Set a dynamic broker config
+
+          Applied right away, without restart, cluster-wide or on --broker only.
+          A value with commas (a list) is sent as one value.
+        flags:
+        - *broker-config-broker
+        - <<: *broker-config-key
+          required: true
+        - long: --value
+          required: true
+          arg: value
+          help: |-
+            ✏️ New value
+        - *verbose
+        examples:
+        - playground broker config set --key log.retention.ms --value 60000
+        - playground broker config set --broker 1 --key num.io.threads --value 16
+        - playground broker config set --key leader.replication.throttled.rate --value 1048576
+
+      - name: delete
+        group: Kafka
+        help: |-
+          🗑️ Remove a dynamic broker config
+
+          The broker falls back to the next value: the cluster-wide default
+          (when removing it from --broker), the static one of server.properties,
+          or the Kafka default.
+        flags:
+        - *broker-config-broker
+        - <<: *broker-config-key
+          required: true
+        - *verbose
+        examples:
+        - playground broker config delete --key log.retention.ms
+        - playground broker config delete --broker 1 --key num.io.threads
+
 - name: consumer-group
   expose: always
   group: Topic
