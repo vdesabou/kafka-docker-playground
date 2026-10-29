@@ -347,6 +347,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git checkout -- other/secrets-management/secrets/my-config-file.properties
           git checkout -- scripts
+          # the branch of a targeted run can be merged and deleted before the run ends
+          if ! git ls-remote --exit-code --heads origin "${GITHUB_REF_NAME}" > /dev/null
+          then
+            echo "Branch ${GITHUB_REF_NAME} no longer exists on origin, nothing to commit"
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            exit 0
+          fi
           git pull
           git add .
           # Capture the diff before committing
@@ -660,6 +667,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git checkout -- other/secrets-management/secrets/my-config-file.properties
           git checkout -- scripts
+          # the branch of a targeted run can be merged and deleted before the run ends
+          if ! git ls-remote --exit-code --heads origin "${GITHUB_REF_NAME}" > /dev/null
+          then
+            echo "Branch ${GITHUB_REF_NAME} no longer exists on origin, nothing to commit"
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            exit 0
+          fi
           git pull
           git add .
           # Capture the diff before committing
