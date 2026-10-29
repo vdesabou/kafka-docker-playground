@@ -7398,6 +7398,57 @@ subcommands:
       - "--no-open"
       argument: ''
       description: "\U0001F648 Do not open the HTML report in the browser"
+  - name: history
+    description: "\U0001F570️ Show the history of a connector: state changes, failures,
+      restarts and config changes\n\nAnswers \"when did it fail? how many times was
+      it restarted? on which\nworker? what changed in the config just before?\", hours
+      after the\nfact, when 'playground connector status' only shows the current state.\n\nReads
+      the internal topics of the connect cluster, one timeline per\nconnector:\n\n
+      \ connect-status    every state of the connector and of each task\n                    (RUNNING,
+      FAILED with the first line of the trace,\n                    PAUSED, UNASSIGNED...),
+      the worker and generation,\n                    and the first time each topic
+      was used\n  connect-configs   creation, each config change (keys added, removed,\n
+      \                   changed), task configs committed, pause / stop /\n                    resume,
+      deletion\n\nEnds with a summary: failures per task, restarts, config changes
+      and\nthe current state with its age. Secrets in the configs are masked.\n\n\U0001F393
+      Tip: works for deleted connectors too (--connector <name>), and\n--since 1h
+      keeps the recent events.\n\n⚠️ These topics are compacted: on a long-running
+      cluster, old states\nare gone, only the last one of each connector and task
+      is kept for\nsure. Self-managed connectors only (the topic names are read from
+      the\nworker properties, --config-topic and --status-topic to override them).\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+    usage: playground connector history [OPTIONS]
+    options:
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector name, running or deleted\n\n\U0001F393 Tip:
+        If not specified, the command will apply to all connectors found in the internal
+        topics"
+    - names:
+      - "--since"
+      argument: SINCE
+      description: "⏱️ Only show the events of the last <since> (30s, 10m, 2h)"
+    - names:
+      - "--config-topic"
+      argument: CONFIG_TOPIC
+      description: "\U0001F5C2️ Config topic of the connect cluster (default: config.storage.topic
+        of the worker, connect-configs)"
+    - names:
+      - "--status-topic"
+      argument: STATUS_TOPIC
+      description: "\U0001F5C2️ Status topic of the connect cluster (default: status.storage.topic
+        of the worker, connect-status)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the events and the summary as JSON"
   - name: show-lag
     description: "\U0001F422 Show lag of sink connector\n\nThe consumer lag of the
       sink, refreshed every --interval seconds, so you\nsee whether it is catching
