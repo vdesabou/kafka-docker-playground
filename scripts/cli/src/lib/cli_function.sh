@@ -7743,3 +7743,102 @@ function run_quota_kafka_configs () {
   [[ -n "$output" ]] && echo "$output"
   return 0
 }
+
+# partitions of a topic, one per line: "<partition> <leader> <replicas> <isr>" (replicas and isr comma separated)
+function get_topic_partition_assignment () {
+  local topic="$1"
+  run_kafka_admin_tool kafka-topics --describe --topic "$topic" 2>/dev/null | awk '
+    /Partition:/ {
+      p=""; l=""; r=""; i=""
+      for (n = 1; n <= NF; n++) {
+        if ($n == "Partition:") p = $(n+1)
+        if ($n == "Leader:") l = $(n+1)
+        if ($n == "Replicas:") r = $(n+1)
+        if ($n == "Isr:") i = $(n+1)
+      }
+      print p, l, r, i
+    }'
+}
+
+# ids of the brokers of the cluster, one per line
+function get_broker_ids () {
+  run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq
+}
+
+# table of the partitions of a topic, with ⚠️ on the partitions whose leader is not the preferred (first) replica
+function print_topic_partition_assignment () {
+  local topic="$1" p l r i preferred
+  printf '%-10s %-8s %-12s %-12s\n' "PARTITION" "LEADER" "REPLICAS" "ISR"
+  while read -r p l r i
+  do
+    [[ -z "$p" ]] && continue
+    preferred="${r%%,*}"
+    if [ "$l" != "$preferred" ]
+    then
+      printf '%-10s %-8s %-12s %-12s %s\n' "$p" "$l" "$r" "$i" "⚠️ preferred leader is $preferred"
+    else
+      printf '%-10s %-8s %-12s %-12s\n' "$p" "$l" "$r" "$i"
+    fi
+  done <<< "$(get_topic_partition_assignment "$topic")"
+}
+
+# executes a kafka-reassign-partitions plan (json), then waits until it is completed, unless no_wait is set
+# usage: execute_partition_reassignment <plan> <throttle> <no_wait> <max_wait>
+function execute_partition_reassignment () {
+  local plan="$1" throttle="$2" no_wait="$3" max_wait="$4" output
+  local throttle_args=()
+  if [[ -n "$throttle" ]]
+  then
+    throttle_args=(--throttle "$throttle")
+  fi
+  output=$(echo "$plan" | run_kafka_admin_tool kafka-reassign-partitions --reassignment-json-file /dev/stdin --execute "${throttle_args[@]}" 2>&1)
+  if ! echo "$output" | grep -q "Successfully started partition reassignment"
+  then
+    logerror "❌ the reassignment could not be started:"
+    echo "$output" | grep -v -E "^$|SLF4J|^\{|Current partition replica assignment|Save this to use"
+    return 1
+  fi
+  log "🚀 reassignment started${throttle:+, replication throttled to $throttle bytes/s}"
+  if [[ -n "$no_wait" ]]
+  then
+    return 0
+  fi
+  wait_for_partition_reassignment "$plan" "$max_wait"
+}
+
+# runs kafka-reassign-partitions --verify every 5 seconds until the plan is completed (--verify also removes the throttle)
+# with max_wait 0, checks only once: returns 2 when the reassignment is still in progress
+function wait_for_partition_reassignment () {
+  local plan="$1" max_wait="${2:-300}" cur_wait=0 output in_progress
+  while true
+  do
+    output=$(echo "$plan" | run_kafka_admin_tool kafka-reassign-partitions --reassignment-json-file /dev/stdin --verify 2>&1)
+    in_progress=$(echo "$output" | grep -c "is still in progress" || true)
+    if echo "$output" | grep -q -E "^Error|Exception"
+    then
+      logerror "❌ kafka-reassign-partitions --verify failed:"
+      echo "$output" | grep -v -E "^$|SLF4J"
+      return 1
+    fi
+    if [ "$in_progress" == "0" ]
+    then
+      log "✅ reassignment completed"
+      return 0
+    fi
+    if [ "$max_wait" == "0" ]
+    then
+      log "⏳ $in_progress partition(s) still being reassigned"
+      echo "$output" | grep "is still in progress"
+      return 2
+    fi
+    if [ $cur_wait -ge $max_wait ]
+    then
+      logerror "❌ $in_progress partition(s) still being reassigned after $max_wait seconds"
+      echo "$output" | grep "is still in progress"
+      return 1
+    fi
+    log "⏳ $in_progress partition(s) still being reassigned"
+    sleep 5
+    cur_wait=$((cur_wait+5))
+  done
+}

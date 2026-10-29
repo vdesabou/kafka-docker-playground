@@ -314,6 +314,8 @@ playground stop
 | "our topic has an odd config" | `topic describe -t <t>`: `Configs:` shows only the overrides; compare with the customer's `kafka-configs --describe` |
 | "start the repro from scratch" | `topic delete -t 'repro-.*'` (subjects included), or `--skip-delete-schema` to keep the schema history |
 | "which topics fill the disk?" | `topic list --sort-by-size` |
+| "the client fails / pauses when a partition leader moves (`NOT_LEADER_OR_FOLLOWER`, metadata refresh)" | `playground run --enable-multiple-brokers`, `topic create -t <t> --nb-partitions 3 --replication-factor 3`, then while the client runs: `topic elect-leader -t <t> --partition 0 --leader 2` (a leader change without stopping a broker) |
+| "something goes wrong during a partition reassignment / a rebalance" | `topic reassign -t <t> --replicas 2,3 --throttle 100000 --no-wait` (slow move: under-replicated partitions while it runs), follow with `--verify-only`; `--brokers 1,2,3` spreads the partitions like a rebalance; then `topic elect-leader -t <t>` (preferred leaders). Example: `other/topic-reassign-and-leader-election` |
 
 In a repro model, create the topics the scenario depends on **before** the producers and connectors, so their
 partitions and configs are the ones of the case, not the broker's defaults:
@@ -337,6 +339,9 @@ playground topic get-number-records [-t <t>]
 playground topic get-offsets [-t <t>]
 playground topic wait-for-records -t <t> [--min-expected-messages 1] [--max-wait 120] [--interval 5]
 playground topic delete -t <t|regex> [--skip-delete-schema] [--verbose]
+playground topic reassign -t <t> --replicas 2,3 [--partition N] | --brokers 1,2,3 [--throttle <bytes/s>] [--dry-run] [--no-wait]
+playground topic reassign -t <t> --verify-only          # progress of a --no-wait reassignment
+playground topic elect-leader -t <t> [--partition N] [--leader <broker> | --unclean]
 playground topic display-consumer-offsets              # follows, ctrl-c
 playground topic tag list|create|delete|add|remove|show|search   # Confluent Cloud
 ```
@@ -346,6 +351,7 @@ playground topic tag list|create|delete|add|remove|show|search   # Confluent Clo
 - Internal = starts with `_` or `connect-`.
 - `delete` hard-deletes `<topic>-key` / `<topic>-value`; `--topic` is a regex when no exact match; no match = exit 0.
 - `create` fails on an existing topic; `alter` creates a missing one.
+- `reassign` / `elect-leader` need several brokers (`--enable-multiple-brokers`: ids 1, 2, 3), not on Confluent Cloud. A reassignment only moves the leader when the old one leaves the replicas: `elect-leader` moves the others.
 - Sources: [`commands/topic/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/topic),
   [`get-topic-list.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/get-topic-list.sh).
 
