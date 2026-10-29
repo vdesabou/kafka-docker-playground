@@ -127,10 +127,10 @@ report and click around: this is what you get on your own data.
   <div class="report-card">
     <a href="reports/cfk-bundle.html" target="_blank" rel="noopener"><img src="images/reports/cfk-bundle.png" alt="📦 CFK support bundle report" loading="lazy"></a>
     <div class="report-body">
-      <h3><a href="#/playground%20analyze%20cfk-bundle">📦 CFK support bundle</a></h3>
+      <h3><a href="#/playground%20analyze%20logs">📦 CFK support bundle</a></h3>
       <p>What is wrong in this Confluent for Kubernetes bundle? Crash-looping pods, expired certificates, pending volumes, OOMKilled containers, failed connector tasks, operator errors, with next steps.</p>
-      <p><code>playground analyze cfk-bundle --bundle support-bundle.tar.gz</code></p>
-      <p>Try it: <code>playground analyze cfk-bundle --sample synthetic</code></p>
+      <p><code>playground analyze logs -f support-bundle.tar.gz</code></p>
+      <p>Try it: <code>playground analyze logs --sample cfk_bundle</code></p>
     </div>
   </div>
   <div class="report-card">

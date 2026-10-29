@@ -190,7 +190,7 @@ playground_usage() {
   printf "  %s   🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n" "$(green "analyze logs")                              "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "analyze gc-logs")                           "
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "analyze oracle-xstream-report")             "
-  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "analyze cfk-bundle")                        "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze logs', which detects a CFK support bundle (kept as a hidden alias)\n" "$(green "analyze cfk-bundle")                        "
   printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "analyze flight-recorder")                   "
   printf "  %s   ✂️ Analyze a jscissors trace: what the traced methods did, call by call\n" "$(green "analyze jscissors")                         "
   printf "  %s   🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n" "$(green "analyze tcp-dump")                          "
@@ -6806,7 +6806,7 @@ playground_tools_redos_check_usage() {
 playground_analyze_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze\n\n"
-    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n    flight-recorder         JFR: where the time of the connector tasks goes\n    tcp-dump                network capture: resets, TLS alerts, Kafka errors\n    jscissors               traced method calls: arguments, durations,\n  exceptions\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  tcp-dump, jscissors,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
+    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips, CFK\n  support bundles\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    flight-recorder         JFR: where the time of the connector tasks goes\n    tcp-dump                network capture: resets, TLS alerts, Kafka errors\n    jscissors               traced method calls: arguments, durations,\n  exceptions\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  tcp-dump, jscissors,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
   else
     printf "playground analyze - 🔎 Analyze commands\n\n"
   fi
@@ -6822,7 +6822,7 @@ playground_analyze_usage() {
   printf "  %s   🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n" "$(green "logs")                 "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "gc-logs")              "
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "oracle-xstream-report")"
-  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk-bundle")           "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze logs', which detects a CFK support bundle (kept as a hidden alias)\n" "$(green "cfk-bundle")           "
   printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "flight-recorder")      "
   printf "  %s   ✂️ Analyze a jscissors trace: what the traced methods did, call by call\n" "$(green "jscissors")            "
   printf "  %s   🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n" "$(green "tcp-dump")             "
@@ -7015,7 +7015,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. Each issue is attributed to a\n  component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7038,8 +7038,8 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle"
     echo
 
     # :flag.usage
@@ -7061,7 +7061,29 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON on stdout: summary, findings, root causes and every distinct\n    record (text digest on stderr, no HTML report)\n"
+    printf "    🗂️  Output JSON on stdout: summary, findings, root causes and every distinct\n    record (text digest on stderr, no HTML report)\n    \n    \"type\": \"logs\", with the analysis of each CFK support bundle found in\n    \"cfk_bundles\"; \"type\": \"cfk-bundle\" (issues with their recommendation,\n    environment, timeline) when the input is one CFK bundle\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--logs-only")"
+    printf "    📜 Do not detect CFK support bundles: plain ERROR/FATAL digest of every log\n    file\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--component COMPONENT (repeatable)")"
+    printf "    🧩 CFK support bundle: only keep the issues of this component (repeat\n    --component for several). other = not a CFK component (nodes, volumes,\n    unknown pods)\n"
+    printf "    %s\n" "Allowed: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--severity LEVEL")"
+    printf "    🎚️  CFK support bundle: only keep the issues of this severity or above\n    (critical | high | medium | low)\n"
+    printf "    %s\n" "Allowed: critical, high, medium, low"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-sanitize")"
+    printf "    ⚠️  Do not sanitize passwords and other secrets, IPs, hostnames, emails and\n    LDAP DNs (digest, HTML report, JSON, CFK bundle analysis)\n    \n    🚫 NEVER use this for customer logs. Internal/test logs only.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -7078,10 +7100,13 @@ playground_analyze_logs_usage() {
     printf "  playground analyze logs -f ./logs -f broker.log.gz --max-findings 10\n"
     printf "  playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports\n"
     printf "  playground analyze logs -f connect.log --json\n"
+    printf "  playground analyze logs --sample cfk_bundle\n"
+    printf "  playground analyze logs -f ./support-bundle-ns-confluent.tar.gz --component\n  connect --severity high\n"
+    printf "  playground analyze logs -f ./support-bundle-ns-confluent/ --logs-only\n"
     echo
 
     # :command.footer
-    printf "Example output:\n  $ playground analyze logs -f connect.log\n  17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log\n  🔎 1 distinct record(s), 2 occurrence(s), in 12 lines\n\n  🔴 ERROR x2 (first seen line 2, last seen line 10)\n  [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n      org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.\n      Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500\n          at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)\n\n  17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)\n  17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html\n  17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html\n"
+    printf "Example output:\n  $ playground analyze logs -f connect.log\n  17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log\n  🔎 1 distinct record(s), 2 occurrence(s), in 12 lines\n\n  🔴 ERROR x2 (first seen line 2, last seen line 10)\n  [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n      org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.\n      Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500\n          at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)\n\n  17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)\n  17:23:19 ℹ️ 🔒 Sanitized (best effort, review before sharing): 0 secret(s), 0 IP(s), 0 hostname(s), 0 email(s), 0 LDAP DN(s), --no-sanitize to keep them\n  17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html\n  17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html\n"
     echo
 
   fi
@@ -7260,12 +7285,7 @@ playground_analyze_oracle_xstream_report_usage() {
 
 # :command.usage
 playground_analyze_cfk_bundle_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground analyze cfk-bundle\n\n"
-    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  🧭 Also prints the environment (Kubernetes version, CFK operator version,\n  application / init image of every component, from cluster-details.txt and the\n  CRs) and checks it against the CFK support matrix (Kubernetes, Confluent\n  Platform and Control Center ranges, init container on the operator version),\n  lists the recent changes (who edited which CR and when, from managedFields,\n  StatefulSet rollouts, pod (re)starts) and flags a JVM default truststore\n  (-Djavax.net.ssl.trustStore) set without its password, the cause of\n  \"trustAnchors parameter must be non-empty\". One issue per root cause: the\n  connector tasks it affects are listed with it.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🧩 Each issue is attributed to a component (kafka, kraftcontroller, connect,\n  schemaregistry, operator…) and to the instance (CR name, e.g. connect-peh) it\n  comes from. Use --component to keep only some of them, or the Component /\n  Instance buttons of the HTML report.\n  \n  🌐 Prints the text digest and also writes a self-contained HTML report in\n  --output-dir, opened in the browser in an interactive terminal.\n  \n  🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n  \n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%98%%B8%%EF%%B8%%8F-what-is-wrong-in-this-cfk-cluster\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk\n\n"
-  else
-    printf "playground analyze cfk-bundle - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
-  fi
+  printf "playground analyze cfk-bundle - Moved to 'playground analyze logs', which detects a CFK support bundle (kept as a hidden alias)\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground analyze cfk-bundle [OPTIONS]\n"
@@ -7338,18 +7358,6 @@ playground_analyze_cfk_bundle_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_examples
-    printf "%s\n" "$(bold "Examples")"
-    printf "  playground analyze cfk-bundle --sample synthetic\n"
-    printf "  playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz\n"
-    printf "  playground analyze cfk-bundle --bundle ./extracted-bundle/\n"
-    printf "  playground analyze cfk-bundle --bundle ./bundle.zip --severity high\n"
-    printf "  playground analyze cfk-bundle --bundle ./bundle.tar --component connect\n"
-    printf "  playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json\n"
-    printf "  playground analyze cfk-bundle -b ./bundle.tgz --output-dir ./reports\n"
-    printf "  playground analyze cfk-bundle -b ./bundle.tgz --include-warnings\n"
     echo
 
   fi
@@ -8091,8 +8099,8 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle"
     echo
 
     # :flag.usage
@@ -8114,7 +8122,29 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON on stdout: summary, findings, root causes and every distinct\n    record (text digest on stderr, no HTML report)\n"
+    printf "    🗂️  Output JSON on stdout: summary, findings, root causes and every distinct\n    record (text digest on stderr, no HTML report)\n    \n    \"type\": \"logs\", with the analysis of each CFK support bundle found in\n    \"cfk_bundles\"; \"type\": \"cfk-bundle\" (issues with their recommendation,\n    environment, timeline) when the input is one CFK bundle\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--logs-only")"
+    printf "    📜 Do not detect CFK support bundles: plain ERROR/FATAL digest of every log\n    file\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--component COMPONENT (repeatable)")"
+    printf "    🧩 CFK support bundle: only keep the issues of this component (repeat\n    --component for several). other = not a CFK component (nodes, volumes,\n    unknown pods)\n"
+    printf "    %s\n" "Allowed: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--severity LEVEL")"
+    printf "    🎚️  CFK support bundle: only keep the issues of this severity or above\n    (critical | high | medium | low)\n"
+    printf "    %s\n" "Allowed: critical, high, medium, low"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-sanitize")"
+    printf "    ⚠️  Do not sanitize passwords and other secrets, IPs, hostnames, emails and\n    LDAP DNs (digest, HTML report, JSON, CFK bundle analysis)\n    \n    🚫 NEVER use this for customer logs. Internal/test logs only.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -21029,6 +21059,121 @@ function write_cloud_costs_report() {
         return 1
     fi
     open_html_report "$report" "$no_open"
+}
+
+# Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
+# HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
+# Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
+# $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty for --no-sanitize, $4: minimal severity,
+# $5: max issues per category in text mode, $6: output dir, $7: non-empty for --include-warnings, then the components
+# Returns the exit code of the analyzer: 0 analysis completed, 64 invalid, unsafe or empty bundle
+function analyze_cfk_bundle() {
+    local bundle="$1"
+    local json_out="$2"
+    local no_sanitize="$3"
+    local severity="$4"
+    local top="$5"
+    local output_dir="$6"
+    local include_warnings="$7"
+    shift 7
+    local component
+    local analyzer_dir="$root_folder/cfk-analysis"
+    if [[ ! -f "$analyzer_dir/analyzer_cli.py" ]]
+    then
+        logerror "❌ CFK analyzer not found at: $analyzer_dir/analyzer_cli.py"
+        return 1
+    fi
+
+    # analyzer image: dependencies baked once, code mounted at run time. The tag changes when the Dockerfile or
+    # requirements change, so the image is rebuilt only then
+    local image_tag
+    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+    local image="cfk-bundle-analyzer:$image_tag"
+    if ! docker image inspect "$image" > /dev/null 2>&1
+    then
+        # stderr: stdout must stay valid JSON with --json
+        log "🏗️  Building $image (first run only)..." >&2
+        local build_log="/tmp/cfk-bundle-analyzer-build.log"
+        if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1
+        then
+            logerror "❌ Failed to build $image, see $build_log"
+            tail -20 "$build_log" >&2
+            return 1
+        fi
+    fi
+
+    local bundle_abs
+    bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
+    local bundle_container="/tmp/input/$(basename "$bundle")"
+    local cli_args=("$bundle_container")
+    if [[ -n "$json_out" ]]
+    then
+        cli_args+=(--json)
+    fi
+    if [[ -n "$no_sanitize" ]]
+    then
+        cli_args+=(--no-sanitize)
+        logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles." >&2
+    fi
+    if [[ -n "$severity" ]]
+    then
+        cli_args+=(--severity "$severity")
+    fi
+    if [[ -n "$top" ]]
+    then
+        cli_args+=(--top "$top")
+    fi
+    if [[ -n "$include_warnings" ]]
+    then
+        cli_args+=(--include-warnings)
+    fi
+    for component in "$@"
+    do
+        cli_args+=(--component "$component")
+    done
+
+    # run as the current user: it can read the bundle and write the HTML report
+    local docker_args=(
+        --rm
+        --user "$(id -u):$(id -g)"
+        -v "$analyzer_dir:/tmp/cfk-analysis:ro"
+        -v "$root_folder/tools/report-common:/tmp/report-common:ro"
+        -v "$bundle_abs:$bundle_container:ro"
+    )
+
+    # the HTML report is always written (not with --json: stdout must stay JSON)
+    local html_out=""
+    if [[ -z "$json_out" ]]
+    then
+        mkdir -p "$output_dir"
+        local output_dir_abs
+        output_dir_abs=$(cd "$output_dir" && pwd -P)
+        local bundle_basename
+        bundle_basename=$(basename "$bundle")
+        # strip common archive suffixes for a clean filename
+        bundle_basename="${bundle_basename%.tar.gz}"
+        bundle_basename="${bundle_basename%.tgz}"
+        bundle_basename="${bundle_basename%.tar}"
+        bundle_basename="${bundle_basename%.zip}"
+        html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
+        cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
+        docker_args+=(-v "$output_dir_abs:/tmp/output")
+    fi
+
+    docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
+    local exit_code=$?
+    case $exit_code in
+        0) ;;
+        64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
+        *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
+    esac
+
+    if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]
+    then
+        log ""
+        open_html_report "$html_out"
+    fi
+    return $exit_code
 }
 
 # HTML report of the records written by summarize_log_errors in PG_LOG_DIGEST_RECORDS_FILE (tools/log-analyzer/log_report.py)
@@ -43983,6 +44128,10 @@ playground_analyze_logs_command() {
   max_findings="${args[--max-findings]}"
   output_dir="${args[--output-dir]}"
   json_out="${args[--json]}"
+  logs_only="${args[--logs-only]}"
+  severity="${args[--severity]}"
+  no_sanitize="${args[--no-sanitize]}"
+  eval "component_array=(${args[--component]})"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -44007,6 +44156,7 @@ playground_analyze_logs_command() {
       case "$sample" in
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
+          cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
       esac
   done
 
@@ -44034,6 +44184,46 @@ playground_analyze_logs_command() {
   nb_files_with_findings=0
   nb_skipped=0
   nb_extracted=0
+  # secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
+  # the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
+  sanitizer="$root_folder/tools/report-common/sanitizer.py"
+  sanitize_state="$tmp_dir/sanitize-state.json"
+  sanitize=1
+  if [[ -n "$no_sanitize" ]]
+  then
+      sanitize=""
+      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer logs."
+  elif ! command -v python3 &>/dev/null
+  then
+      sanitize=""
+      logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+  fi
+  # $1: file, sanitized in place
+  function sanitize_file () {
+      if [[ -n "$sanitize" ]] && python3 -I "$sanitizer" --state "$sanitize_state" < "$1" > "$1.sanitized"
+      then
+          mv "$1.sanitized" "$1"
+      fi
+  }
+
+  # CFK support bundles found in the input (folder and label), analyzed by cfk-analysis instead of the log digest
+  cfk_bundles=()
+  cfk_labels=()
+
+  # a folder written by kubectl confluent support-bundle (or playground debug cfk generate-bundle): cluster-details.txt
+  # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout)
+  # $1: folder
+  function is_cfk_bundle () {
+      local d
+      [ -f "$1/cluster-details.txt" ] && return 0
+      [ -d "$1/operator" ] || return 1
+      [ -d "$1/cluster-resources" ] && return 0
+      for d in "$1"/*/cluster-details.txt
+      do
+          [ -f "$d" ] && return 0
+      done
+      return 1
+  }
 
   # prints the digest of one log, read on stdin, when it has findings
   # $1: label to display
@@ -44046,6 +44236,11 @@ playground_analyze_logs_command() {
           return
       fi
       nb_files_with_findings=$((nb_files_with_findings+1))
+      if [[ -n "$sanitize" ]]
+      then
+          # --no-count: the records file, sanitized at the end, has the same records
+          output=$(printf '%s\n' "$output" | python3 -I "$sanitizer" --state "$sanitize_state" --no-count)
+      fi
       log "🔥 ERROR/FATAL digest for $label"
       # there is no --since here
       echo "$output" | sed 's/ or narrow with --since$//'
@@ -44062,6 +44257,43 @@ playground_analyze_logs_command() {
 
       if [ -d "$path" ]
       then
+          if [[ -z "$logs_only" ]] && is_cfk_bundle "$path"
+          then
+              cfk_bundles+=("$path")
+              cfk_labels+=("${label%:}")
+              return
+          fi
+          # CFK bundles in sub folders: analyzed on their own, their files are left out of the log digest
+          local prune=()
+          local bundle_dir
+          if [[ -z "$logs_only" ]]
+          then
+              while IFS= read -r -d '' f
+              do
+                  bundle_dir=$(dirname "$f")
+                  # <bundle>/<namespace>/cluster-details.txt (older layout): the bundle is the folder above
+                  if [ "$(dirname "$bundle_dir")" != "$path" ] && is_cfk_bundle "$(dirname "$bundle_dir")"
+                  then
+                      bundle_dir=$(dirname "$bundle_dir")
+                  fi
+                  if is_cfk_bundle "$bundle_dir"
+                  then
+                      case " ${prune[*]} " in *" -path $bundle_dir "*) continue ;; esac
+                      [ ${#prune[@]} -gt 0 ] && prune+=(-o)
+                      prune+=(-path "$bundle_dir")
+                      if [[ "$label" == *":" ]]
+                      then
+                          analyze_logs_path "$bundle_dir" "${label}${bundle_dir#$path/}"
+                      else
+                          analyze_logs_path "$bundle_dir" "${label%/}/${bundle_dir#$path/}"
+                      fi
+                  fi
+              done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z)
+          fi
+          if [ ${#prune[@]} -gt 0 ]
+          then
+              prune=(\( "${prune[@]}" \) -prune -o)
+          fi
           while IFS= read -r -d '' f
           do
               if [[ "$label" == *":" ]]
@@ -44070,14 +44302,16 @@ playground_analyze_logs_command() {
               else
                   analyze_logs_path "$f" "${label%/}/${f#$path/}"
               fi
-          done < <(find "$path" -type f ! -path "*/__MACOSX/*" ! -name ".DS_Store" -print0 | sort -z)
+          done < <(find "$path" "${prune[@]}" -type f ! -path "*/__MACOSX/*" ! -name ".DS_Store" -print0 | sort -z)
           return
       fi
 
       case "$path" in
           *.zip|*.tar|*.tar.gz|*.tgz)
               nb_extracted=$((nb_extracted+1))
-              extract_dir="$tmp_dir/$nb_extracted"
+              # named after the archive: it names the report of a CFK bundle archived without a top folder
+              extract_dir=$(basename "$path")
+              extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
               mkdir -p "$extract_dir"
               case "$path" in
                   *.zip) unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1 ;;
@@ -44110,6 +44344,51 @@ playground_analyze_logs_command() {
   done
   set -e
 
+  if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 ]]
+  then
+      logwarn "⚠️ --component and --severity only apply to a CFK support bundle, and none was found"
+  fi
+
+  # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
+  cfk_exit=0
+  cfk_json_files=()
+  for i in "${!cfk_bundles[@]}"
+  do
+      if [[ -n "$json_out" ]]
+      then
+          log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
+          cfk_json="$tmp_dir/cfk-$i.json"
+          analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$cfk_json"
+          rc=$?
+          if [ $rc -eq 0 ]
+          then
+              jq --arg label "${cfk_labels[$i]}" '. + {label: $label}' "$cfk_json" > "$cfk_json.labelled" && cfk_json_files+=("$cfk_json.labelled")
+          fi
+      else
+          log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
+          analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
+          rc=$?
+      fi
+      if [ $rc -ne 0 ]
+      then
+          cfk_exit=$rc
+      fi
+  done
+  # only CFK bundles: their JSON (one bundle) and no log digest
+  if [ ${#cfk_bundles[@]} -gt 0 ] && [ $nb_files -eq 0 ]
+  then
+      if [[ -n "$json_out" ]]
+      then
+          if [ ${#cfk_json_files[@]} -eq 1 ] && [ ${#cfk_bundles[@]} -eq 1 ]
+          then
+              jq 'del(.label)' "${cfk_json_files[0]}" >&3
+          else
+              jq -s '{type: "cfk-bundles", cfk_bundles: .}' "${cfk_json_files[@]}" >&3
+          fi
+      fi
+      exit $cfk_exit
+  fi
+
   levels="ERROR/FATAL"
   if [[ -n "$include_warnings" ]]
   then
@@ -44127,6 +44406,13 @@ playground_analyze_logs_command() {
       logwarn "⚠️ python3 is not on PATH: no HTML report"
       exit 0
   fi
+  sanitize_file "$records_file"
+  redaction='{}'
+  if [[ -n "$sanitize" ]]
+  then
+      redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
+      log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction"), --no-sanitize to keep them"
+  fi
   title="${file_array[*]}"
   if [[ ${#sample_array[@]} -gt 0 ]]
   then
@@ -44135,8 +44421,16 @@ playground_analyze_logs_command() {
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
   if [[ -n "$json_out" ]]
   then
-      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json >&3
-      exit $?
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json > "$tmp_dir/logs.json" || exit $?
+      # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
+      jq --argjson redaction "$redaction" '. + {redaction_summary: $redaction}' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
+      if [ ${#cfk_json_files[@]} -eq 0 ]
+      then
+          cat "$tmp_dir/logs-redacted.json" >&3
+      else
+          jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") '. + {cfk_bundles: $cfk[0]}' "$tmp_dir/logs-redacted.json" >&3
+      fi
+      exit $cfk_exit
   fi
 
   mkdir -p "$output_dir"
@@ -44147,7 +44441,16 @@ playground_analyze_logs_command() {
   then
       stem="${sample_array[0]}"
   fi
+  if [[ -n "$sanitize" ]]
+  then
+      jq -r '"Secrets, IPs, hostnames, emails and LDAP DNs of the logs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…), best effort: review the report before sharing it. Redacted: \(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)."' <<< "$redaction" > "$tmp_dir/sanitization.txt"
+      report_args+=(--section "🔒 Sanitization" "$tmp_dir/sanitization.txt")
+  else
+      echo "Not sanitized (--no-sanitize): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
+      report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
+  fi
   write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
+  exit $cfk_exit
 
 }
 
@@ -44430,6 +44733,7 @@ playground_analyze_oracle_xstream_report_command() {
 playground_analyze_cfk_bundle_command() {
 
   # src/commands/analyze/cfk-bundle.sh
+  # hidden alias: playground analyze logs detects a CFK support bundle and runs the same analysis (analyze_cfk_bundle)
   bundle="${args[--bundle]}"
   sample="${args[--sample]}"
   json_out="${args[--json]}"
@@ -44465,121 +44769,11 @@ playground_analyze_cfk_bundle_command() {
       exit 1
   fi
 
-  analyzer_dir="$root_folder/cfk-analysis"
-  if [[ ! -f "$analyzer_dir/analyzer_cli.py" ]]; then
-      logerror "❌ CFK analyzer not found at: $analyzer_dir/analyzer_cli.py"
-      exit 1
-  fi
-
-  # ── Analyzer image (dependencies baked once, code mounted at run time) ─────
-  # The tag changes when the Dockerfile or requirements change, so the image is rebuilt only then
-  image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
-  image="cfk-bundle-analyzer:$image_tag"
-  if ! docker image inspect "$image" > /dev/null 2>&1; then
-      # stderr: stdout must stay valid JSON with --json
-      log "🏗️  Building $image (first run only)..." >&2
-      build_log="/tmp/cfk-bundle-analyzer-build.log"
-      if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1; then
-          logerror "❌ Failed to build $image, see $build_log"
-          tail -20 "$build_log" >&2
-          exit 1
-      fi
-  fi
-
-  bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
-  bundle_container="/tmp/input/$(basename "$bundle")"
-
-  # ── Build CLI args ─────────────────────────────────────────────────────────
-  cli_args=("$bundle_container")
-
-  if [[ -n "$json_out" ]]; then
-      cli_args+=(--json)
-  fi
-
-  if [[ -n "$no_sanitize" ]]; then
-      cli_args+=(--no-sanitize)
-      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles."
-  fi
-
-  if [[ -n "$severity" ]]; then
-      cli_args+=(--severity "$severity")
-  fi
-
-  if [[ -n "$top" ]]; then
-      cli_args+=(--top "$top")
-  fi
-
-  if [[ -n "$include_warnings" ]]; then
-      cli_args+=(--include-warnings)
-  fi
-
-  for component in "${component_array[@]}"; do
-      cli_args+=(--component "$component")
-  done
-
-  # run as the current user: it can read the bundle and write the HTML report
-  docker_args=(
-      --rm
-      --user "$(id -u):$(id -g)"
-      -v "$analyzer_dir:/tmp/cfk-analysis:ro"
-      -v "$root_folder/tools/report-common:/tmp/report-common:ro"
-      -v "$bundle_abs:$bundle_container:ro"
-  )
-
-  # ── HTML output target ─────────────────────────────────────────────────────
-  html_out=""
-  # the HTML report is always written (not with --json: stdout must stay JSON)
-  if [[ -z "$json_out" ]]; then
-      : "${output_dir:=./cfk-reports}"
-      mkdir -p "$output_dir"
-      output_dir_abs=$(cd "$output_dir" && pwd -P)
-
-      bundle_basename=$(basename "$bundle")
-      # strip common archive suffixes for a clean filename
-      bundle_basename="${bundle_basename%.tar.gz}"
-      bundle_basename="${bundle_basename%.tgz}"
-      bundle_basename="${bundle_basename%.tar}"
-      bundle_basename="${bundle_basename%.zip}"
-
-      html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
-      cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
-      docker_args+=( -v "$output_dir_abs:/tmp/output" )
-  fi
-
-  # ── Run the analyzer ───────────────────────────────────────────────────────
   if [[ -z "$json_out" ]]; then
       log "🔬 Analyzing CFK bundle: $bundle"
       log ""
   fi
-
-  docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
-  exit_code=$?
-
-  case $exit_code in
-      0) ;;
-      64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
-      *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
-  esac
-
-  # ── Open HTML report in browser ────────────────────────────────────────────
-  if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]; then
-      log ""
-      log "🌐 HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ ! -t 1 ]]; then
-          log "🔗 Open in browser: file://$html_out"
-      elif command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      elif command -v xdg-open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          xdg-open "$html_out" >/dev/null 2>&1 &
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
-  fi
-
-  exit $exit_code
+  analyze_cfk_bundle "$bundle" "$json_out" "$no_sanitize" "$severity" "$top" "${output_dir:-./cfk-reports}" "$include_warnings" "${component_array[@]}"
 
 }
 
@@ -45666,6 +45860,10 @@ playground_debug_analyze_logs_command() {
   max_findings="${args[--max-findings]}"
   output_dir="${args[--output-dir]}"
   json_out="${args[--json]}"
+  logs_only="${args[--logs-only]}"
+  severity="${args[--severity]}"
+  no_sanitize="${args[--no-sanitize]}"
+  eval "component_array=(${args[--component]})"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -45690,6 +45888,7 @@ playground_debug_analyze_logs_command() {
       case "$sample" in
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
+          cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
       esac
   done
 
@@ -45717,6 +45916,46 @@ playground_debug_analyze_logs_command() {
   nb_files_with_findings=0
   nb_skipped=0
   nb_extracted=0
+  # secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
+  # the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
+  sanitizer="$root_folder/tools/report-common/sanitizer.py"
+  sanitize_state="$tmp_dir/sanitize-state.json"
+  sanitize=1
+  if [[ -n "$no_sanitize" ]]
+  then
+      sanitize=""
+      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer logs."
+  elif ! command -v python3 &>/dev/null
+  then
+      sanitize=""
+      logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+  fi
+  # $1: file, sanitized in place
+  function sanitize_file () {
+      if [[ -n "$sanitize" ]] && python3 -I "$sanitizer" --state "$sanitize_state" < "$1" > "$1.sanitized"
+      then
+          mv "$1.sanitized" "$1"
+      fi
+  }
+
+  # CFK support bundles found in the input (folder and label), analyzed by cfk-analysis instead of the log digest
+  cfk_bundles=()
+  cfk_labels=()
+
+  # a folder written by kubectl confluent support-bundle (or playground debug cfk generate-bundle): cluster-details.txt
+  # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout)
+  # $1: folder
+  function is_cfk_bundle () {
+      local d
+      [ -f "$1/cluster-details.txt" ] && return 0
+      [ -d "$1/operator" ] || return 1
+      [ -d "$1/cluster-resources" ] && return 0
+      for d in "$1"/*/cluster-details.txt
+      do
+          [ -f "$d" ] && return 0
+      done
+      return 1
+  }
 
   # prints the digest of one log, read on stdin, when it has findings
   # $1: label to display
@@ -45729,6 +45968,11 @@ playground_debug_analyze_logs_command() {
           return
       fi
       nb_files_with_findings=$((nb_files_with_findings+1))
+      if [[ -n "$sanitize" ]]
+      then
+          # --no-count: the records file, sanitized at the end, has the same records
+          output=$(printf '%s\n' "$output" | python3 -I "$sanitizer" --state "$sanitize_state" --no-count)
+      fi
       log "🔥 ERROR/FATAL digest for $label"
       # there is no --since here
       echo "$output" | sed 's/ or narrow with --since$//'
@@ -45745,6 +45989,43 @@ playground_debug_analyze_logs_command() {
 
       if [ -d "$path" ]
       then
+          if [[ -z "$logs_only" ]] && is_cfk_bundle "$path"
+          then
+              cfk_bundles+=("$path")
+              cfk_labels+=("${label%:}")
+              return
+          fi
+          # CFK bundles in sub folders: analyzed on their own, their files are left out of the log digest
+          local prune=()
+          local bundle_dir
+          if [[ -z "$logs_only" ]]
+          then
+              while IFS= read -r -d '' f
+              do
+                  bundle_dir=$(dirname "$f")
+                  # <bundle>/<namespace>/cluster-details.txt (older layout): the bundle is the folder above
+                  if [ "$(dirname "$bundle_dir")" != "$path" ] && is_cfk_bundle "$(dirname "$bundle_dir")"
+                  then
+                      bundle_dir=$(dirname "$bundle_dir")
+                  fi
+                  if is_cfk_bundle "$bundle_dir"
+                  then
+                      case " ${prune[*]} " in *" -path $bundle_dir "*) continue ;; esac
+                      [ ${#prune[@]} -gt 0 ] && prune+=(-o)
+                      prune+=(-path "$bundle_dir")
+                      if [[ "$label" == *":" ]]
+                      then
+                          analyze_logs_path "$bundle_dir" "${label}${bundle_dir#$path/}"
+                      else
+                          analyze_logs_path "$bundle_dir" "${label%/}/${bundle_dir#$path/}"
+                      fi
+                  fi
+              done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z)
+          fi
+          if [ ${#prune[@]} -gt 0 ]
+          then
+              prune=(\( "${prune[@]}" \) -prune -o)
+          fi
           while IFS= read -r -d '' f
           do
               if [[ "$label" == *":" ]]
@@ -45753,14 +46034,16 @@ playground_debug_analyze_logs_command() {
               else
                   analyze_logs_path "$f" "${label%/}/${f#$path/}"
               fi
-          done < <(find "$path" -type f ! -path "*/__MACOSX/*" ! -name ".DS_Store" -print0 | sort -z)
+          done < <(find "$path" "${prune[@]}" -type f ! -path "*/__MACOSX/*" ! -name ".DS_Store" -print0 | sort -z)
           return
       fi
 
       case "$path" in
           *.zip|*.tar|*.tar.gz|*.tgz)
               nb_extracted=$((nb_extracted+1))
-              extract_dir="$tmp_dir/$nb_extracted"
+              # named after the archive: it names the report of a CFK bundle archived without a top folder
+              extract_dir=$(basename "$path")
+              extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
               mkdir -p "$extract_dir"
               case "$path" in
                   *.zip) unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1 ;;
@@ -45793,6 +46076,51 @@ playground_debug_analyze_logs_command() {
   done
   set -e
 
+  if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 ]]
+  then
+      logwarn "⚠️ --component and --severity only apply to a CFK support bundle, and none was found"
+  fi
+
+  # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
+  cfk_exit=0
+  cfk_json_files=()
+  for i in "${!cfk_bundles[@]}"
+  do
+      if [[ -n "$json_out" ]]
+      then
+          log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
+          cfk_json="$tmp_dir/cfk-$i.json"
+          analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$cfk_json"
+          rc=$?
+          if [ $rc -eq 0 ]
+          then
+              jq --arg label "${cfk_labels[$i]}" '. + {label: $label}' "$cfk_json" > "$cfk_json.labelled" && cfk_json_files+=("$cfk_json.labelled")
+          fi
+      else
+          log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
+          analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
+          rc=$?
+      fi
+      if [ $rc -ne 0 ]
+      then
+          cfk_exit=$rc
+      fi
+  done
+  # only CFK bundles: their JSON (one bundle) and no log digest
+  if [ ${#cfk_bundles[@]} -gt 0 ] && [ $nb_files -eq 0 ]
+  then
+      if [[ -n "$json_out" ]]
+      then
+          if [ ${#cfk_json_files[@]} -eq 1 ] && [ ${#cfk_bundles[@]} -eq 1 ]
+          then
+              jq 'del(.label)' "${cfk_json_files[0]}" >&3
+          else
+              jq -s '{type: "cfk-bundles", cfk_bundles: .}' "${cfk_json_files[@]}" >&3
+          fi
+      fi
+      exit $cfk_exit
+  fi
+
   levels="ERROR/FATAL"
   if [[ -n "$include_warnings" ]]
   then
@@ -45810,6 +46138,13 @@ playground_debug_analyze_logs_command() {
       logwarn "⚠️ python3 is not on PATH: no HTML report"
       exit 0
   fi
+  sanitize_file "$records_file"
+  redaction='{}'
+  if [[ -n "$sanitize" ]]
+  then
+      redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
+      log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction"), --no-sanitize to keep them"
+  fi
   title="${file_array[*]}"
   if [[ ${#sample_array[@]} -gt 0 ]]
   then
@@ -45818,8 +46153,16 @@ playground_debug_analyze_logs_command() {
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
   if [[ -n "$json_out" ]]
   then
-      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json >&3
-      exit $?
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json > "$tmp_dir/logs.json" || exit $?
+      # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
+      jq --argjson redaction "$redaction" '. + {redaction_summary: $redaction}' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
+      if [ ${#cfk_json_files[@]} -eq 0 ]
+      then
+          cat "$tmp_dir/logs-redacted.json" >&3
+      else
+          jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") '. + {cfk_bundles: $cfk[0]}' "$tmp_dir/logs-redacted.json" >&3
+      fi
+      exit $cfk_exit
   fi
 
   mkdir -p "$output_dir"
@@ -45830,7 +46173,16 @@ playground_debug_analyze_logs_command() {
   then
       stem="${sample_array[0]}"
   fi
+  if [[ -n "$sanitize" ]]
+  then
+      jq -r '"Secrets, IPs, hostnames, emails and LDAP DNs of the logs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…), best effort: review the report before sharing it. Redacted: \(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)."' <<< "$redaction" > "$tmp_dir/sanitization.txt"
+      report_args+=(--section "🔒 Sanitization" "$tmp_dir/sanitization.txt")
+  else
+      echo "Not sanitized (--no-sanitize): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
+      report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
+  fi
   write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
+  exit $cfk_exit
 
 }
 
@@ -47423,6 +47775,7 @@ playground_debug_log_level_set_command() {
 playground_debug_cfk_cfk_bundle_analyze_command() {
 
   # src/commands/analyze/cfk-bundle.sh
+  # hidden alias: playground analyze logs detects a CFK support bundle and runs the same analysis (analyze_cfk_bundle)
   bundle="${args[--bundle]}"
   sample="${args[--sample]}"
   json_out="${args[--json]}"
@@ -47458,121 +47811,11 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
       exit 1
   fi
 
-  analyzer_dir="$root_folder/cfk-analysis"
-  if [[ ! -f "$analyzer_dir/analyzer_cli.py" ]]; then
-      logerror "❌ CFK analyzer not found at: $analyzer_dir/analyzer_cli.py"
-      exit 1
-  fi
-
-  # ── Analyzer image (dependencies baked once, code mounted at run time) ─────
-  # The tag changes when the Dockerfile or requirements change, so the image is rebuilt only then
-  image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
-  image="cfk-bundle-analyzer:$image_tag"
-  if ! docker image inspect "$image" > /dev/null 2>&1; then
-      # stderr: stdout must stay valid JSON with --json
-      log "🏗️  Building $image (first run only)..." >&2
-      build_log="/tmp/cfk-bundle-analyzer-build.log"
-      if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1; then
-          logerror "❌ Failed to build $image, see $build_log"
-          tail -20 "$build_log" >&2
-          exit 1
-      fi
-  fi
-
-  bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
-  bundle_container="/tmp/input/$(basename "$bundle")"
-
-  # ── Build CLI args ─────────────────────────────────────────────────────────
-  cli_args=("$bundle_container")
-
-  if [[ -n "$json_out" ]]; then
-      cli_args+=(--json)
-  fi
-
-  if [[ -n "$no_sanitize" ]]; then
-      cli_args+=(--no-sanitize)
-      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles."
-  fi
-
-  if [[ -n "$severity" ]]; then
-      cli_args+=(--severity "$severity")
-  fi
-
-  if [[ -n "$top" ]]; then
-      cli_args+=(--top "$top")
-  fi
-
-  if [[ -n "$include_warnings" ]]; then
-      cli_args+=(--include-warnings)
-  fi
-
-  for component in "${component_array[@]}"; do
-      cli_args+=(--component "$component")
-  done
-
-  # run as the current user: it can read the bundle and write the HTML report
-  docker_args=(
-      --rm
-      --user "$(id -u):$(id -g)"
-      -v "$analyzer_dir:/tmp/cfk-analysis:ro"
-      -v "$root_folder/tools/report-common:/tmp/report-common:ro"
-      -v "$bundle_abs:$bundle_container:ro"
-  )
-
-  # ── HTML output target ─────────────────────────────────────────────────────
-  html_out=""
-  # the HTML report is always written (not with --json: stdout must stay JSON)
-  if [[ -z "$json_out" ]]; then
-      : "${output_dir:=./cfk-reports}"
-      mkdir -p "$output_dir"
-      output_dir_abs=$(cd "$output_dir" && pwd -P)
-
-      bundle_basename=$(basename "$bundle")
-      # strip common archive suffixes for a clean filename
-      bundle_basename="${bundle_basename%.tar.gz}"
-      bundle_basename="${bundle_basename%.tgz}"
-      bundle_basename="${bundle_basename%.tar}"
-      bundle_basename="${bundle_basename%.zip}"
-
-      html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
-      cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
-      docker_args+=( -v "$output_dir_abs:/tmp/output" )
-  fi
-
-  # ── Run the analyzer ───────────────────────────────────────────────────────
   if [[ -z "$json_out" ]]; then
       log "🔬 Analyzing CFK bundle: $bundle"
       log ""
   fi
-
-  docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
-  exit_code=$?
-
-  case $exit_code in
-      0) ;;
-      64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
-      *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
-  esac
-
-  # ── Open HTML report in browser ────────────────────────────────────────────
-  if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]; then
-      log ""
-      log "🌐 HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ ! -t 1 ]]; then
-          log "🔗 Open in browser: file://$html_out"
-      elif command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      elif command -v xdg-open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          xdg-open "$html_out" >/dev/null 2>&1 &
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
-  fi
-
-  exit $exit_code
+  analyze_cfk_bundle "$bundle" "$json_out" "$no_sanitize" "$severity" "$top" "${output_dir:-./cfk-reports}" "$include_warnings" "${component_array[@]}"
 
 }
 
@@ -47655,7 +47898,7 @@ playground_debug_cfk_generate_bundle_command() {
           log "📦 Bundle: $bundle_file"
           log ""
           log "📊 To analyze the bundle, run:"
-          log "   playground analyze cfk-bundle --bundle $bundle_file"
+          log "   playground analyze logs -f $bundle_file"
           log ""
           log "📈 To extract the bundle, run:"
           log "   tar -xzf $bundle_file"
@@ -80586,6 +80829,55 @@ playground_analyze_logs_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --logs-only)
+
+        # :flag.case_no_arg
+        args['--logs-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --component)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--component']+x} ]]; then
+            args['--component']="$escaped"
+          else
+            args['--component']="${args['--component']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--component requires an argument: --component COMPONENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --severity)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--severity']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--severity requires an argument: --severity LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-sanitize)
+
+        # :flag.case_no_arg
+        args['--no-sanitize']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -80633,11 +80925,23 @@ playground_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle" >&2
       exit 1
     fi
   done
+  input_array=''
+  eval "input_array=(${args[--component]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(kafka|kraftcontroller|zookeeper|connect|schemaregistry|ksqldb|controlcenter|kafkarestproxy|operator|other)$ ]]; then
+      printf "%s\n" "--component must be one of: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other" >&2
+      exit 1
+    fi
+  done
+  if [[ ${args['--severity']:-} ]] && [[ ! ${args['--severity']:-} =~ ^(critical|high|medium|low)$ ]]; then
+    printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
+    exit 1
+  fi
 
 }
 
@@ -83259,6 +83563,55 @@ playground_debug_analyze_logs_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --logs-only)
+
+        # :flag.case_no_arg
+        args['--logs-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --component)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--component']+x} ]]; then
+            args['--component']="$escaped"
+          else
+            args['--component']="${args['--component']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--component requires an argument: --component COMPONENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --severity)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--severity']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--severity requires an argument: --severity LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-sanitize)
+
+        # :flag.case_no_arg
+        args['--no-sanitize']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -83306,11 +83659,23 @@ playground_debug_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle" >&2
       exit 1
     fi
   done
+  input_array=''
+  eval "input_array=(${args[--component]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(kafka|kraftcontroller|zookeeper|connect|schemaregistry|ksqldb|controlcenter|kafkarestproxy|operator|other)$ ]]; then
+      printf "%s\n" "--component must be one of: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other" >&2
+      exit 1
+    fi
+  done
+  if [[ ${args['--severity']:-} ]] && [[ ! ${args['--severity']:-} =~ ^(critical|high|medium|low)$ ]]; then
+    printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
+    exit 1
+  fi
 
 }
 
@@ -108079,11 +108444,6 @@ playground_analyze_completion() {
         playground_analyze_oracle_xstream_report_completion "$completion_current" "$@"
         return
         ;;
-      cfk-bundle)
-        shift
-        playground_analyze_cfk_bundle_completion "$completion_current" "$@"
-        return
-        ;;
       flight-recorder)
         shift
         playground_analyze_flight_recorder_completion "$completion_current" "$@"
@@ -108108,7 +108468,7 @@ playground_analyze_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report cfk-bundle flight-recorder jscissors tcp-dump
+  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report flight-recorder jscissors tcp-dump
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -108371,6 +108731,7 @@ playground_analyze_logs_completion() {
           local -a completion_values=(
             "connect_task_failure"
             "support_bundle"
+            "cfk_bundle"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
@@ -108409,6 +108770,55 @@ playground_analyze_logs_completion() {
 
         shift
         ;;
+      --logs-only)
+        completion_blocked_flags["--logs-only"]=1
+
+        shift
+        ;;
+      --component)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "kafka"
+            "kraftcontroller"
+            "zookeeper"
+            "connect"
+            "schemaregistry"
+            "ksqldb"
+            "controlcenter"
+            "kafkarestproxy"
+            "operator"
+            "other"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+
+        ;;
+      --severity)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "critical"
+            "high"
+            "medium"
+            "low"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--severity"]=1
+
+        ;;
+      --no-sanitize)
+        completion_blocked_flags["--no-sanitize"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -108423,6 +108833,10 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --logs-only "$completion_current" --logs-only
+    completion_flag_candidates --component "$completion_current" --component
+    completion_flag_candidates --severity "$completion_current" --severity
+    completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
   fi
 
 }
@@ -109739,6 +110153,7 @@ playground_debug_analyze_logs_completion() {
           local -a completion_values=(
             "connect_task_failure"
             "support_bundle"
+            "cfk_bundle"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
@@ -109777,6 +110192,55 @@ playground_debug_analyze_logs_completion() {
 
         shift
         ;;
+      --logs-only)
+        completion_blocked_flags["--logs-only"]=1
+
+        shift
+        ;;
+      --component)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "kafka"
+            "kraftcontroller"
+            "zookeeper"
+            "connect"
+            "schemaregistry"
+            "ksqldb"
+            "controlcenter"
+            "kafkarestproxy"
+            "operator"
+            "other"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+
+        ;;
+      --severity)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "critical"
+            "high"
+            "medium"
+            "low"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--severity"]=1
+
+        ;;
+      --no-sanitize)
+        completion_blocked_flags["--no-sanitize"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -109791,6 +110255,10 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --logs-only "$completion_current" --logs-only
+    completion_flag_candidates --component "$completion_current" --component
+    completion_flag_candidates --severity "$completion_current" --severity
+    completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
   fi
 
 }

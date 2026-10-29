@@ -5542,6 +5542,121 @@ function write_cloud_costs_report() {
     open_html_report "$report" "$no_open"
 }
 
+# Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
+# HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
+# Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
+# $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty for --no-sanitize, $4: minimal severity,
+# $5: max issues per category in text mode, $6: output dir, $7: non-empty for --include-warnings, then the components
+# Returns the exit code of the analyzer: 0 analysis completed, 64 invalid, unsafe or empty bundle
+function analyze_cfk_bundle() {
+    local bundle="$1"
+    local json_out="$2"
+    local no_sanitize="$3"
+    local severity="$4"
+    local top="$5"
+    local output_dir="$6"
+    local include_warnings="$7"
+    shift 7
+    local component
+    local analyzer_dir="$root_folder/cfk-analysis"
+    if [[ ! -f "$analyzer_dir/analyzer_cli.py" ]]
+    then
+        logerror "❌ CFK analyzer not found at: $analyzer_dir/analyzer_cli.py"
+        return 1
+    fi
+
+    # analyzer image: dependencies baked once, code mounted at run time. The tag changes when the Dockerfile or
+    # requirements change, so the image is rebuilt only then
+    local image_tag
+    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+    local image="cfk-bundle-analyzer:$image_tag"
+    if ! docker image inspect "$image" > /dev/null 2>&1
+    then
+        # stderr: stdout must stay valid JSON with --json
+        log "🏗️  Building $image (first run only)..." >&2
+        local build_log="/tmp/cfk-bundle-analyzer-build.log"
+        if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1
+        then
+            logerror "❌ Failed to build $image, see $build_log"
+            tail -20 "$build_log" >&2
+            return 1
+        fi
+    fi
+
+    local bundle_abs
+    bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
+    local bundle_container="/tmp/input/$(basename "$bundle")"
+    local cli_args=("$bundle_container")
+    if [[ -n "$json_out" ]]
+    then
+        cli_args+=(--json)
+    fi
+    if [[ -n "$no_sanitize" ]]
+    then
+        cli_args+=(--no-sanitize)
+        logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles." >&2
+    fi
+    if [[ -n "$severity" ]]
+    then
+        cli_args+=(--severity "$severity")
+    fi
+    if [[ -n "$top" ]]
+    then
+        cli_args+=(--top "$top")
+    fi
+    if [[ -n "$include_warnings" ]]
+    then
+        cli_args+=(--include-warnings)
+    fi
+    for component in "$@"
+    do
+        cli_args+=(--component "$component")
+    done
+
+    # run as the current user: it can read the bundle and write the HTML report
+    local docker_args=(
+        --rm
+        --user "$(id -u):$(id -g)"
+        -v "$analyzer_dir:/tmp/cfk-analysis:ro"
+        -v "$root_folder/tools/report-common:/tmp/report-common:ro"
+        -v "$bundle_abs:$bundle_container:ro"
+    )
+
+    # the HTML report is always written (not with --json: stdout must stay JSON)
+    local html_out=""
+    if [[ -z "$json_out" ]]
+    then
+        mkdir -p "$output_dir"
+        local output_dir_abs
+        output_dir_abs=$(cd "$output_dir" && pwd -P)
+        local bundle_basename
+        bundle_basename=$(basename "$bundle")
+        # strip common archive suffixes for a clean filename
+        bundle_basename="${bundle_basename%.tar.gz}"
+        bundle_basename="${bundle_basename%.tgz}"
+        bundle_basename="${bundle_basename%.tar}"
+        bundle_basename="${bundle_basename%.zip}"
+        html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
+        cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
+        docker_args+=(-v "$output_dir_abs:/tmp/output")
+    fi
+
+    docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
+    local exit_code=$?
+    case $exit_code in
+        0) ;;
+        64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
+        *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
+    esac
+
+    if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]
+    then
+        log ""
+        open_html_report "$html_out"
+    fi
+    return $exit_code
+}
+
 # HTML report of the records written by summarize_log_errors in PG_LOG_DIGEST_RECORDS_FILE (tools/log-analyzer/log_report.py)
 # $1: records file, $2: report, $3: non-empty to never open it, then the options of log_report.py (--title, --heading...)
 function write_log_records_report() {

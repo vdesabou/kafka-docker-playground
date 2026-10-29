@@ -27,8 +27,8 @@ from collections import defaultdict
 from contextlib import contextmanager, redirect_stdout
 from typing import Optional, Tuple
 
-from analyzer import CFKBundleAnalyzer, COMPONENTS
-from sanitizer import DataSanitizer
+from analyzer import CFKBundleAnalyzer, COMPONENTS  # also puts tools/report-common on sys.path
+from sanitizer import DataSanitizer  # tools/report-common/sanitizer.py
 import environment
 import recommendations
 import html_report
@@ -316,7 +316,8 @@ def run(
     if as_json:
         for issue in results["issues"]:
             issue["recommendation"] = recommendations.for_category(issue["category"])
-        json.dump(results, sys.stdout, indent=2, default=str)
+        # type: playground analyze logs emits this JSON for a CFK support bundle, and its own ("logs") otherwise
+        json.dump(dict({"type": "cfk-bundle"}, **results), sys.stdout, indent=2, default=str)
         sys.stdout.write("\n")
     else:
         # the text digest is printed with the HTML report too: it is what a terminal / an agent reads
