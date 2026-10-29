@@ -5704,6 +5704,29 @@ function write_cloud_costs_report() {
     open_html_report "$report" "$no_open"
 }
 
+# HTML report of playground ccloud-costs: one range of dates
+# $1: raw response of confluent billing cost list, named <start date>_<end date>.json, $2: output dir, $3: non-empty for --no-open, $4: user
+function write_ccloud_costs_range_report() {
+    local range_file="$1"
+    local output_dir="$2"
+    local no_open="$3"
+    local user="$4"
+    if ! command -v python3 > /dev/null 2>&1
+    then
+        logwarn "⚠️ python3 is not on PATH: no HTML report"
+        return 0
+    fi
+    mkdir -p "$output_dir"
+    output_dir=$(cd "$output_dir" && pwd)
+    local report="$output_dir/ccloud-costs-$(basename "$range_file" .json)-$(date '+%Y%m%d-%H%M%S').html"
+    if ! python3 -I "$root_folder/tools/cloud-costs/costs_report.py" --cloud ccloud --range-file "$range_file" --user "$user" --html-out "$report"
+    then
+        logerror "❌ could not write the HTML report"
+        return 1
+    fi
+    open_html_report "$report" "$no_open"
+}
+
 # Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
 # HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.

@@ -775,7 +775,11 @@ subcommands:
     data can take up to 72 hours to become available.\n\nStart date can reach a maximum
     of one year into the past\n\nOne month is the maximum window between start and
     end dates\n\nFor accuracy, Confluent recommends using a start_date that is at
-    least 72 hours prior to the current date and time."
+    least 72 hours prior to the current date and time.\n\n\U0001F310 Also writes a
+    self-contained HTML report in --output-dir, opened in the browser in an interactive
+    terminal (--no-open to skip): cost per day, per product and environment, the resources
+    still billing, the top resources, the resources of each product, the product x
+    environment matrix and the cost per line type."
   usage: playground ccloud-costs [OPTIONS]
   options:
   - names:
@@ -788,6 +792,24 @@ subcommands:
     argument: END_DATE
     description: "\U0001F5D3️ end date in format yyyy-mm-dd\n\n  Default is 3 days
       ago"
+  - names:
+    - "--output-dir"
+    - "-o"
+    argument: OUTPUT_DIR
+    description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-cloud-costs)\n\nDefault
+      value: /tmp/playground-cloud-costs"
+  - names:
+    - "--no-open"
+    argument: ''
+    description: "\U0001F6AB Do not open the HTML report in the browser"
+  - names:
+    - "--sample"
+    - "-s"
+    argument: SAMPLE
+    description: "\U0001F9EA Sample of tools/cloud-costs/samples: writes the HTML
+      report from the last month of this dummy billing data, without calling Confluent
+      Cloud\n\nTo see what the report looks like before running it on your organization.\n\nAllowed
+      values: ccloud_dummy"
 - name: ccloud-costs-history
   description: "\U0001F45B  Retrieve ccloud costs for each month since last year\n\nAll
     you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nBy
