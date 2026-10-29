@@ -164,6 +164,7 @@ and how to contribute are in the plugin README, at `reproduction-models/claude-p
 |---|---|
 | is there an example that does X? | [`playground find-example "oracle cdc ssl"`](/playground%20find-example) |
 | what is running? | [`playground status`](/playground%20status) |
+| is the cluster healthy? a broker down, under-replicated or offline partitions? | [`playground broker health`](/playground%20broker%20health) |
 | why is this connector not working? | [`playground connector diagnose`](/playground%20connector%20diagnose) |
 | why did it fail? | [`playground container logs -c connect --errors`](/playground%20container%20logs) |
 | what is failing in these logs / this bundle? | [`playground analyze logs -f <file\|folder\|zip>`](/playground%20analyze%20logs) |

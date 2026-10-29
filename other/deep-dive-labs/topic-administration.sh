@@ -105,29 +105,4 @@ lab_run playground broker config delete --key log.retention.ms
 lab_expect_exit 0
 lab_expect_contains "(not set)"
 
-log "Step 8: the health and the shape of the cluster"
-lab_run playground broker health
-lab_expect_exit 0
-lab_expect_contains "🩺 Health of the cluster"
-lab_expect_contains "✅ all brokers are registered: 1"
-lab_expect_contains "✅ no under-replicated partition"
-lab_expect_contains "🗳️ KRaft quorum: leader is node"
-lab_expect_contains "✅ cluster is healthy"
-lab_run playground broker health --json
-lab_expect_exit 0
-lab_expect_equals "$(jq -r '.healthy' <<< "$LAB_OUTPUT")" "true" "healthy in the JSON of broker health"
-lab_run playground broker describe
-lab_expect_exit 0
-lab_expect_contains "ID  ENDPOINT     RACK  FENCED  CONTAINER"
-lab_expect_contains "1   broker:9092"
-lab_expect_contains "🗳️ KRaft"
-lab_expect_contains "🏷️ Features"
-lab_run playground broker transactions list --pattern 'lab-.*'
-lab_expect_exit 0
-lab_expect_contains "🤷 no transaction found matching the filters"
-lab_run playground broker metrics
-lab_expect_exit 0
-lab_expect_contains "📈 Broker metrics"
-lab_expect_equals "$(awk '$1 == "Under-replicated" {print $3}' <<< "$LAB_OUTPUT")" "0" "under-replicated partitions in broker metrics"
-
 log "✅ all the outputs of the page are as expected"

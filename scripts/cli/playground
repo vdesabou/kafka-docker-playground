@@ -11865,7 +11865,7 @@ playground_quota_delete_usage() {
 playground_broker_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground broker\n\n"
-    printf "  🖥️ Broker commands\n  \n    config            read and change dynamic broker configs\n    health            brokers down, partition problems, KRaft quorum\n    stop / start      stop (or kill) a broker, start it again\n    rolling-restart   restart the brokers one by one, safely\n    transactions      list transactions, find and abort hanging ones\n    describe          brokers, KRaft quorum, feature levels, API versions\n    metrics           key JMX metrics of each broker\n  \n  Not available on Confluent Cloud and multi data center environments.\n\n"
+    printf "  🖥️ Broker commands\n  \n    config            read and change dynamic broker configs\n    health            brokers down, partition problems, KRaft quorum\n    stop / start      stop (or kill) a broker, start it again\n    rolling-restart   restart the brokers one by one, safely\n    transactions      list transactions, find and abort hanging ones\n    describe          brokers, KRaft quorum, feature levels, API versions\n    metrics           key JMX metrics of each broker\n  \n  Not available on Confluent Cloud and multi data center environments.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker\n\n"
   else
     printf "playground broker - 🖥️ Broker commands\n\n"
   fi
