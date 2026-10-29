@@ -1014,7 +1014,10 @@ subcommands:
     description: |-
       3️⃣ Enable multiple brokers
 
-      By default, there is only one broker node enabled
+      By default, there is only one broker node enabled. With 3 brokers (ids
+      1, 2 and 3), the internal topics (consumer offsets, transactions,
+      connect, schemas, license...) have 3 replicas and a min ISR of 2, like
+      in production: a broker can stop without making them unavailable.
   - names:
     - "--enable-multiple-connect-workers"
     argument: ''

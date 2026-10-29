@@ -1300,6 +1300,16 @@ else
     fi
 fi
 
+# replication of the internal topics (see set_internal_topics_replication): from the flag of the last run as well, so
+# that a stored docker compose command replayed by playground container recreate, update... (it sources this file
+# first) gets the same values. A new run sets them again in set_profiles
+playground_kafka_nodes_flag=""
+if grep -q -E "^ENABLE_KAFKA_NODES *= *1" "${DIR_UTILS}/../playground.ini" 2>/dev/null
+then
+  playground_kafka_nodes_flag=1
+fi
+set_internal_topics_replication "$playground_kafka_nodes_flag"
+
 # Setting grafana agent based  
 if [ -z "$ENABLE_JMX_GRAFANA" ]
 then

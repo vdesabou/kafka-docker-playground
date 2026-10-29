@@ -1056,10 +1056,11 @@ function set_profiles() {
     profile_kafka_nodes_command=""
     playground state del flags.ENABLE_KAFKA_NODES
   else
-    log "3️⃣  Multi broker nodes enabled"
+    log "3️⃣  Multi broker nodes enabled, internal topics with replication factor 3 and min ISR 2"
     profile_kafka_nodes_command="--profile kafka_nodes"
     playground state set flags.ENABLE_KAFKA_NODES 1
   fi
+  set_internal_topics_replication
 
   # defined 3 Connect variable and when profile is included/excluded
   profile_connect_nodes_command=""
@@ -1340,6 +1341,20 @@ retrycmd() {
 # Build a java component, e.g. build_java_component_with_retry "${component}" docker run ... mvn ... package
 # Maven Central occasionally rate-limits (HTTP 429) dependency resolution,
 # so retry with backoff before treating it as a real failure.
+# replication factor and min ISR of the internal topics (offsets, transactions, connect, license, cluster link metadata...),
+# used by the docker compose files of the environments: 3 and 2 with the 3 brokers of --enable-multiple-brokers
+# (ENABLE_KAFKA_NODES, or $1 set), so that a broker can stop without making them unavailable, 1 and 1 otherwise
+function set_internal_topics_replication() {
+  if [ -n "$ENABLE_KAFKA_NODES" ] || [ -n "$1" ]
+  then
+    export PLAYGROUND_INTERNAL_TOPICS_REPLICATION_FACTOR=3
+    export PLAYGROUND_INTERNAL_TOPICS_MIN_ISR=2
+  else
+    export PLAYGROUND_INTERNAL_TOPICS_REPLICATION_FACTOR=1
+    export PLAYGROUND_INTERNAL_TOPICS_MIN_ISR=1
+  fi
+}
+
 function build_java_component_with_retry() {
   local component="$1"
   shift

@@ -227,8 +227,9 @@ Kafka tools next to the broker with the environment's credentials (plaintext, se
   `rolling-restart` refuses to start on an unhealthy cluster (`--force`), then restarts the brokers one by one and
   waits for a healthy cluster before the next one. They need several brokers (`playground run
   --enable-multiple-brokers`: ids 1, 2 and 3) to keep the cluster available, and are not available on CFK. With
-  `--enable-multiple-brokers`, the internal topics of the playground (`connect-offsets`, `__consumer_offsets`…) have one
-  replica: stopping a broker makes some of their partitions unavailable, `health` shows which.
+  `--enable-multiple-brokers`, the internal topics of the playground (`connect-offsets`, `__consumer_offsets`,
+  `_schemas`, `_confluent-link-metadata`…) have 3 replicas and a min ISR of 2, like in production: stopping a broker
+  leaves them available (only under-replicated), and connectors keep running. With one broker, they have 1 and 1.
 - **`transactions` wraps `kafka-transactions`.** An open transaction holds the last stable offset (LSO) of its
   partitions: `read_committed` consumers don't read past it until it commits, aborts or reaches `transaction.timeout.ms`.
   `describe-producers --topic <t>` shows the start offset of each open transaction (⚠️), `find-hanging` the
@@ -250,11 +251,11 @@ playground broker health; echo "exit=$?"
 # 🩺 Health of the cluster
 # 🖥️ registered brokers: 1,3
 # ❌ broker 2 (container broker2) is not registered: it is stopped (playground broker start --broker 2)
-# ❌ 61 under-replicated partitions
+# ❌ 151 under-replicated partitions
 # TOPIC     PARTITION  LEADER  REPLICAS  ISR
 # orders    0          1       1,2,3     1,3
 # …
-# ❌ cluster is not healthy: brokers down: 2, 61 under-replicated partitions, 57 unavailable
+# ❌ cluster is not healthy: brokers down: 2, 151 under-replicated partitions     <- none unavailable: 3 replicas
 # exit=1
 playground broker start --broker 2
 # ✅ broker 2 is registered, waiting for its replicas to be back in sync

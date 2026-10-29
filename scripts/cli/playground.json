@@ -928,7 +928,7 @@
             "--enable-multiple-brokers"
           ],
           "argument": "",
-          "description": "3️⃣ Enable multiple brokers\n\nBy default, there is only one broker node enabled"
+          "description": "3️⃣ Enable multiple brokers\n\nBy default, there is only one broker node enabled. With 3 brokers (ids\n1, 2 and 3), the internal topics (consumer offsets, transactions,\nconnect, schemas, license...) have 3 replicas and a min ISR of 2, like\nin production: a broker can stop without making them unavailable."
         },
         {
           "names": [
