@@ -236,7 +236,7 @@ playground stop
 | "garbage values, but the producer uses a schema" | `playground schema get` to list subjects, then `--value-subject <subject>` (name strategies other than `TopicNameStrategy`) |
 | "records arrived around 10:30" | `--from-timestamp "2026-10-22 10:25" --max-messages 50` |
 | "did the source connector write anything?" | `--min-expected-messages 1 --timeout 120` (waits for the topic, then the records) |
-| "transactional producer / read_committed sink sees fewer records" | compare `--count` with `--count --isolation-level read_committed`, and with `topic get-number-records` |
+| "transactional producer / read_committed sink sees fewer records" | compare `--count` with `--count --isolation-level read_committed`, and with `topic get-number-records`; an open transaction blocks `read_committed` readers at its start offset: `playground broker transactions describe-producers --topic <t>` |
 | "count per key / extract one field" | `--json --max-messages -1 \| jq -r '.key' \| sort \| uniq -c` |
 | "share the topic content" | `--open` (full dump, no truncation, in `/tmp/dump-<topic>-<date>.log`) |
 
