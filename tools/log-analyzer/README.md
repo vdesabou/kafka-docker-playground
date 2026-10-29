@@ -13,7 +13,9 @@ With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every
 `OutOfMemoryError`…, each pointing at its earliest occurrence; the list is shared with the CFK analyzer, in
 `tools/report-common/known_causes.py`), occurrences over time, root causes
 (deepest exception of each record) and every record (with a 📋 Show context block: the raw lines around its first
-occurrence, from the `@@PGCTX@@` lines of the records file), with a level and connector filter (connector taken from the
+occurrence, from the `@@PGCTX@@` lines of the records file) and the ⚙️ configuration (the `<Class>Config values:`
+dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, and the `.properties` / connector JSON files that
+`analyze logs` appends), with a level and connector filter (connector taken from the
 `[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`). `tools/connector-diagnose/diagnose_report.py` imports it for the
 errors section of the `playground connector diagnose` report. `get-ci-result --logs`, `container logs --errors --html`
 and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last

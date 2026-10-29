@@ -10,7 +10,8 @@ Data Sanitizer of the log analyzers: redacts secrets, IPs, hostnames, emails and
     python3 -I sanitizer.py --state <file> --summary        # what was redacted, as JSON
     python3 -I sanitizer.py --state <file> --no-count < t   # same placeholders, secrets not counted twice
 
-  Lines starting with @@PG (the markers of the records file: counts, line numbers, timestamps) are kept as they are.
+  Lines starting with @@PG (the markers of the records file: counts, line numbers, timestamps) are kept as they are,
+  except the log text of the @@PGCTX@@ (context of a record) and @@PGCFGL@@ (config) lines, sanitized.
 
 Best effort: always review the output before sharing it outside Confluent.
 """
@@ -329,19 +330,47 @@ def _save_state(sanitizer: DataSanitizer, path: str):
                    "counter": dict(sanitizer.counter), "learned_suffixes": sorted(sanitizer.learned_suffixes)}, f)
 
 
+# marker lines of a records file whose payload (after the first tab) is log text: the context of a record, the lines of
+# a config. The other markers (counts, line numbers, timestamps) are kept as they are.
+PAYLOAD_MARKERS = ("@@PGCTX@@", "@@PGCFGL@@")
+
+
 def sanitize_stream(sanitizer: DataSanitizer, text: str) -> str:
-    """Sanitizes text, keeping the @@PG marker lines of a records file as they are"""
-    out, block = [], []
+    """Sanitizes text, keeping the @@PG marker lines of a records file as they are, except the payload of
+    PAYLOAD_MARKERS lines, sanitized like the records (consecutive lines of a marker together, for multi-line secrets)"""
+    out, block, payload, payload_marker = [], [], [], None
+
+    def flush_block():
+        if block:
+            out.append(sanitizer.sanitize_text("\n".join(block)))
+            block.clear()
+
+    def flush_payload():
+        if payload:
+            sanitized = sanitizer.sanitize_text("\n".join(payload)).split("\n")
+            # a PEM block or a multi-line secret collapsed: line by line, so each line keeps its marker
+            if len(sanitized) != len(payload):
+                sanitized = [sanitizer.sanitize_text(p) for p in payload]
+            out.extend(f"{payload_marker}\t{p}" for p in sanitized)
+            payload.clear()
+
     for line in text.split("\n"):
-        if line.startswith("@@PG"):
-            if block:
-                out.append(sanitizer.sanitize_text("\n".join(block)))
-                block = []
+        marker = line.split("\t", 1)[0] if line.startswith("@@PG") else None
+        if marker in PAYLOAD_MARKERS and "\t" in line:
+            flush_block()
+            if marker != payload_marker:
+                flush_payload()
+                payload_marker = marker
+            payload.append(line.split("\t", 1)[1])
+        elif marker:
+            flush_block()
+            flush_payload()
             out.append(line)
         else:
+            flush_payload()
             block.append(line)
-    if block:
-        out.append(sanitizer.sanitize_text("\n".join(block)))
+    flush_block()
+    flush_payload()
     return "\n".join(out)
 
 

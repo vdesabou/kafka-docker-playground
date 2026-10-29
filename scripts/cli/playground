@@ -7015,7 +7015,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. Each issue is attributed to a\n  component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. Each issue is attributed to a\n  component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -20803,6 +20803,10 @@ function install_confluent_plugin() {
 #   <the record as printed in the digest, on one or more lines>
 #   @@PGTS@@<tab>timestamps of the occurrences, space separated (1000 per record at most)
 #   @@PGCTX@@<tab>raw lines around the first occurrence (2 before, the record (30 lines at most), 2 after), one per line
+# then the "<Class>Config values:" dumps of the log (KafkaConfig, DistributedConfig, the config of a connector with its
+# [connector|task-0] context, ProducerConfig of a client…), the last one of each class / context / client.id, 50 at most:
+#   @@PGCFG@@<tab>config class<tab>[connector|task-0] context<tab>line<tab>timestamp<tab>client.id or name
+#   @@PGCFGL@@<tab>key=value, one per line
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
@@ -20863,6 +20867,43 @@ function summarize_log_errors() {
     function capture_after() {
         ctx[ctx_key] = ctx[ctx_key] ctx_line(NR, $0, " ")
         ctx_after--
+    }
+    # a "<Class>Config values:" header: the "<tab>key = value" lines that follow are its config
+    function cfg_start(    h) {
+        cfg_end()
+        h = $0
+        if (!match(h, /[A-Za-z]+Config values:/)) return
+        cfg_on = 1
+        cfg_cls = substr(h, RSTART, RLENGTH - 8)
+        cfg_ctx = match(h, /\[[^] |]+\|(task-[0-9]+|worker)[^]]*\]/) ? substr(h, RSTART, RLENGTH) : ""
+        cfg_ln = NR
+        cfg_ts = timestamp_of(h)
+        cfg_buf = ""
+        cfg_id = ""
+    }
+    function cfg_add(line,    i, k, v) {
+        sub(/^\t/, "", line)
+        i = index(line, " = ")
+        if (i == 0) return
+        k = substr(line, 1, i - 1)
+        v = substr(line, i + 3)
+        # the logger of the record ends the last line: " (org.apache.kafka.common.config.AbstractConfig:370)"
+        sub(/ \([A-Za-z0-9_.$]*Config(:[0-9]+)?\)$/, "", v)
+        if (length(v) > 1000) v = substr(v, 1, 1000) "..."
+        if (k == "client.id" || (k == "name" && cfg_id == "")) cfg_id = v
+        cfg_buf = cfg_buf k "=" v "\n"
+    }
+    function cfg_end(    key) {
+        if (!cfg_on) return
+        cfg_on = 0
+        if (cfg_buf == "") return
+        key = cfg_cls "|" cfg_ctx "|" cfg_id
+        if (!(key in cfg_text)) {
+            if (ncfg >= 50) return
+            cfg_order[++ncfg] = key
+        }
+        cfg_text[key] = cfg_buf
+        cfg_head[key] = cfg_cls "\t" cfg_ctx "\t" cfg_ln "\t" cfg_ts "\t" cfg_id
     }
     function flush(    lvl, key, i, chain, frames, nframes, line, cause, nrec) {
         if (nlines == 0) return
@@ -20936,7 +20977,8 @@ function summarize_log_errors() {
         cur = $0
         # most lines of a big log have no level or exception word and do not continue a record: one regex (a
         # single pass over the line) sets them aside, as the start of a level-less record, without the work below
-        if ($0 !~ /ERROR|FATAL|SEVERE|PANIC|WARN|level|Exception|Error|Throwable|[EFW][0-9][0-9][0-9][0-9] [0-9][0-9]:|^[ \t]|^Caused by:|\033/) {
+        if ($0 !~ /ERROR|FATAL|SEVERE|PANIC|WARN|level|Exception|Error|Throwable|[EFW][0-9][0-9][0-9][0-9] [0-9][0-9]:|^[ \t]|^Caused by:|\033|Config values:/) {
+            if (cfg_on) cfg_end()
             flush()
             if (ctx_after > 0) capture_after()
             rec_line = NR
@@ -20945,6 +20987,13 @@ function summarize_log_errors() {
         }
         gsub(/\033\[[0-9;]*m/, "")
         sub(/\r$/, "")
+        if (records_file != "") {
+            if (cfg_on) {
+                if ($0 ~ /^\t[^ \t]+ = /) cfg_add($0)
+                else cfg_end()
+            }
+            if (index($0, "Config values:")) cfg_start()
+        }
         if (!is_continuation($0) || nlines == 0 || nlines >= 400) {
             flush()
             rec_line = NR
@@ -20964,6 +21013,13 @@ function summarize_log_errors() {
                 printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], text[k], substr(timestamps[k], 2) >> records_file
                 n = split(ctx[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCTX@@\t%s\n", cl[j] >> records_file
+            }
+            cfg_end()
+            for (i = 1; i <= ncfg; i++) {
+                k = cfg_order[i]
+                printf "@@PGCFG@@\t%s\n", cfg_head[k] >> records_file
+                n = split(cfg_text[k], cl, "\n")
+                for (j = 1; j < n; j++) printf "@@PGCFGL@@\t%s\n", cl[j] >> records_file
             }
             close(records_file)
         }
@@ -44330,6 +44386,35 @@ playground_analyze_logs_command() {
       echo ""
   }
 
+  # config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
+  # file, or a JSON file with connector configs (a connector config, {name, config}, the output of /connectors?expand=info)
+  # $1: path, $2: label
+  function append_config_file () {
+      local path="$1"
+      local label="$2"
+      case "$path" in
+          *.properties)
+              printf '@@PGCFG@@\t%s\tfile\t\t\t\n' "$(basename "$path")" >> "$records_file"
+              grep -v '^[[:space:]]*[#!]' "$path" 2>/dev/null | grep '=' | sed 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/; s/^/@@PGCFGL@@\t/' >> "$records_file"
+              ;;
+          *.json)
+              # a big JSON is data, not a config
+              [ "$(wc -c < "$path" | tr -d ' ')" -lt 5000000 ] || return 0
+              jq -r '
+                  def configs:
+                      if type == "array" then .[] | configs
+                      elif type != "object" then empty
+                      elif has("connector.class") then {name: (.name // ""), config: .}
+                      elif (.config | type) == "object" and (.config | has("connector.class")) then {name: (.name // .config.name // ""), config: .config}
+                      elif (.info.config | type) == "object" then {name: (.info.name // .info.config.name // ""), config: .info.config}
+                      else .[] | select(type == "object") | configs
+                      end;
+                  configs | "@@PGCFG@@\tconnector config\tfile\t\t\t\(.name)", (.config | to_entries[] | "@@PGCFGL@@\t\(.key)=\(.value | tostring)")
+              ' "$path" >> "$records_file" 2>/dev/null
+              ;;
+      esac
+  }
+
   # analyzes a file, a folder or an archive, recursively
   # $1: path, $2: label to display
   function analyze_logs_path () {
@@ -44421,6 +44506,7 @@ playground_analyze_logs_command() {
                   if ! is_duplicate_file "$path" "$label"
                   then
                       analyze_logs_digest "$label" < "$path"
+                      append_config_file "$path" "$label"
                   fi
               else
                   nb_skipped=$((nb_skipped+1))
@@ -46128,6 +46214,35 @@ playground_debug_analyze_logs_command() {
       echo ""
   }
 
+  # config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
+  # file, or a JSON file with connector configs (a connector config, {name, config}, the output of /connectors?expand=info)
+  # $1: path, $2: label
+  function append_config_file () {
+      local path="$1"
+      local label="$2"
+      case "$path" in
+          *.properties)
+              printf '@@PGCFG@@\t%s\tfile\t\t\t\n' "$(basename "$path")" >> "$records_file"
+              grep -v '^[[:space:]]*[#!]' "$path" 2>/dev/null | grep '=' | sed 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/; s/^/@@PGCFGL@@\t/' >> "$records_file"
+              ;;
+          *.json)
+              # a big JSON is data, not a config
+              [ "$(wc -c < "$path" | tr -d ' ')" -lt 5000000 ] || return 0
+              jq -r '
+                  def configs:
+                      if type == "array" then .[] | configs
+                      elif type != "object" then empty
+                      elif has("connector.class") then {name: (.name // ""), config: .}
+                      elif (.config | type) == "object" and (.config | has("connector.class")) then {name: (.name // .config.name // ""), config: .config}
+                      elif (.info.config | type) == "object" then {name: (.info.name // .info.config.name // ""), config: .info.config}
+                      else .[] | select(type == "object") | configs
+                      end;
+                  configs | "@@PGCFG@@\tconnector config\tfile\t\t\t\(.name)", (.config | to_entries[] | "@@PGCFGL@@\t\(.key)=\(.value | tostring)")
+              ' "$path" >> "$records_file" 2>/dev/null
+              ;;
+      esac
+  }
+
   # analyzes a file, a folder or an archive, recursively
   # $1: path, $2: label to display
   function analyze_logs_path () {
@@ -46219,6 +46334,7 @@ playground_debug_analyze_logs_command() {
                   if ! is_duplicate_file "$path" "$label"
                   then
                       analyze_logs_digest "$label" < "$path"
+                      append_config_file "$path" "$label"
                   fi
               else
                   nb_skipped=$((nb_skipped+1))

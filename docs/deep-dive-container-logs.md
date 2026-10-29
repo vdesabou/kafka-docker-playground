@@ -163,6 +163,7 @@ What it does with what you give it:
 | `.zip`, `.tar`, `.tar.gz`, `.tgz` | extracted to a temporary folder (deleted at the end), nested archives too |
 | `.gz` | decompressed on the fly |
 | a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, sanitized, in its own HTML report. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
+| a `.properties` file, a JSON file with connector configs | analyzed like a text file, and shown in the ⚙️ configuration section of the HTML report |
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
 | a copy of a file or of a CFK support bundle already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …` / `⏭️ … same CFK support bundle as …`, only one report), counted in the last line |
 
@@ -205,6 +206,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records |
 | 🌳 root causes | records grouped by their deepest exception (or by message when they have none), with occurrences, files and connectors |
 | 📄 one card per file | every distinct record, with its count, connector, first and last line and timestamp, and its exception chain; **📋 Show context** unfolds the raw lines around its first occurrence (2 before, the record with its full stack trace up to 30 lines, 2 after), with their line numbers (`▶` on the first line of the record), also in `.files[].records[].context` of `--json` |
+| ⚙️ configuration | the configs the components log when they start (`KafkaConfig values:`, `DistributedConfig`, `SchemaRegistryConfig`, the config of each connector and of its tasks with their `[connector|task-0]` context, `ProducerConfig` of a client app…, defaults included, the last one of each class / context / `client.id`, 50 per file), and the config files of the input (`.properties`, connector JSON: a connector config, `{"name", "config"}` or the output of `/connectors?expand=info`), grouped by config files, components, connector and clients, with a key / value filter, also in `.configuration` of `--json`. Sanitized like the records |
 
 A sticky bar above the root causes filters them and the records: FATAL / ERROR / WARN chips with several levels
 (`--include-warnings`), and a **Connector** picker when the records carry the connector context of the Connect log
@@ -399,7 +401,7 @@ playground analyze logs --sample connect_task_failure|support_bundle
 - `xN` + first / last seen line tell "once at startup" from "every minute until now".
 - `--errors` and `analyze logs` exit 0: not assertions. `--wait-for-log` matches old lines too, every 10 s.
 - Offline: one digest per file, archives extracted, `.gz` read on the fly, binaries skipped.
-- Offline also writes an HTML report (known causes, timeline, root causes, every record) in `--output-dir`; `--json` for scripts.
+- Offline also writes an HTML report (known causes, timeline, root causes, every record, configuration) in `--output-dir`; `--json` for scripts.
   With several levels (`--include-warnings`), chips FATAL / ERROR / WARN above the root causes hide or show the records of a level;
   a Connector picker keeps the records of one connector (`[my-connector|task-0]` context of the line).
 - Sources: [`container/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/container/logs.sh),

@@ -5284,6 +5284,10 @@ function install_confluent_plugin() {
 #   <the record as printed in the digest, on one or more lines>
 #   @@PGTS@@<tab>timestamps of the occurrences, space separated (1000 per record at most)
 #   @@PGCTX@@<tab>raw lines around the first occurrence (2 before, the record (30 lines at most), 2 after), one per line
+# then the "<Class>Config values:" dumps of the log (KafkaConfig, DistributedConfig, the config of a connector with its
+# [connector|task-0] context, ProducerConfig of a client…), the last one of each class / context / client.id, 50 at most:
+#   @@PGCFG@@<tab>config class<tab>[connector|task-0] context<tab>line<tab>timestamp<tab>client.id or name
+#   @@PGCFGL@@<tab>key=value, one per line
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
@@ -5344,6 +5348,43 @@ function summarize_log_errors() {
     function capture_after() {
         ctx[ctx_key] = ctx[ctx_key] ctx_line(NR, $0, " ")
         ctx_after--
+    }
+    # a "<Class>Config values:" header: the "<tab>key = value" lines that follow are its config
+    function cfg_start(    h) {
+        cfg_end()
+        h = $0
+        if (!match(h, /[A-Za-z]+Config values:/)) return
+        cfg_on = 1
+        cfg_cls = substr(h, RSTART, RLENGTH - 8)
+        cfg_ctx = match(h, /\[[^] |]+\|(task-[0-9]+|worker)[^]]*\]/) ? substr(h, RSTART, RLENGTH) : ""
+        cfg_ln = NR
+        cfg_ts = timestamp_of(h)
+        cfg_buf = ""
+        cfg_id = ""
+    }
+    function cfg_add(line,    i, k, v) {
+        sub(/^\t/, "", line)
+        i = index(line, " = ")
+        if (i == 0) return
+        k = substr(line, 1, i - 1)
+        v = substr(line, i + 3)
+        # the logger of the record ends the last line: " (org.apache.kafka.common.config.AbstractConfig:370)"
+        sub(/ \([A-Za-z0-9_.$]*Config(:[0-9]+)?\)$/, "", v)
+        if (length(v) > 1000) v = substr(v, 1, 1000) "..."
+        if (k == "client.id" || (k == "name" && cfg_id == "")) cfg_id = v
+        cfg_buf = cfg_buf k "=" v "\n"
+    }
+    function cfg_end(    key) {
+        if (!cfg_on) return
+        cfg_on = 0
+        if (cfg_buf == "") return
+        key = cfg_cls "|" cfg_ctx "|" cfg_id
+        if (!(key in cfg_text)) {
+            if (ncfg >= 50) return
+            cfg_order[++ncfg] = key
+        }
+        cfg_text[key] = cfg_buf
+        cfg_head[key] = cfg_cls "\t" cfg_ctx "\t" cfg_ln "\t" cfg_ts "\t" cfg_id
     }
     function flush(    lvl, key, i, chain, frames, nframes, line, cause, nrec) {
         if (nlines == 0) return
@@ -5417,7 +5458,8 @@ function summarize_log_errors() {
         cur = $0
         # most lines of a big log have no level or exception word and do not continue a record: one regex (a
         # single pass over the line) sets them aside, as the start of a level-less record, without the work below
-        if ($0 !~ /ERROR|FATAL|SEVERE|PANIC|WARN|level|Exception|Error|Throwable|[EFW][0-9][0-9][0-9][0-9] [0-9][0-9]:|^[ \t]|^Caused by:|\033/) {
+        if ($0 !~ /ERROR|FATAL|SEVERE|PANIC|WARN|level|Exception|Error|Throwable|[EFW][0-9][0-9][0-9][0-9] [0-9][0-9]:|^[ \t]|^Caused by:|\033|Config values:/) {
+            if (cfg_on) cfg_end()
             flush()
             if (ctx_after > 0) capture_after()
             rec_line = NR
@@ -5426,6 +5468,13 @@ function summarize_log_errors() {
         }
         gsub(/\033\[[0-9;]*m/, "")
         sub(/\r$/, "")
+        if (records_file != "") {
+            if (cfg_on) {
+                if ($0 ~ /^\t[^ \t]+ = /) cfg_add($0)
+                else cfg_end()
+            }
+            if (index($0, "Config values:")) cfg_start()
+        }
         if (!is_continuation($0) || nlines == 0 || nlines >= 400) {
             flush()
             rec_line = NR
@@ -5445,6 +5494,13 @@ function summarize_log_errors() {
                 printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], text[k], substr(timestamps[k], 2) >> records_file
                 n = split(ctx[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCTX@@\t%s\n", cl[j] >> records_file
+            }
+            cfg_end()
+            for (i = 1; i <= ncfg; i++) {
+                k = cfg_order[i]
+                printf "@@PGCFG@@\t%s\n", cfg_head[k] >> records_file
+                n = split(cfg_text[k], cl, "\n")
+                for (j = 1; j < n; j++) printf "@@PGCFGL@@\t%s\n", cl[j] >> records_file
             }
             close(records_file)
         }

@@ -175,6 +175,35 @@ function analyze_logs_digest () {
     echo ""
 }
 
+# config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
+# file, or a JSON file with connector configs (a connector config, {name, config}, the output of /connectors?expand=info)
+# $1: path, $2: label
+function append_config_file () {
+    local path="$1"
+    local label="$2"
+    case "$path" in
+        *.properties)
+            printf '@@PGCFG@@\t%s\tfile\t\t\t\n' "$(basename "$path")" >> "$records_file"
+            grep -v '^[[:space:]]*[#!]' "$path" 2>/dev/null | grep '=' | sed 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/; s/^/@@PGCFGL@@\t/' >> "$records_file"
+            ;;
+        *.json)
+            # a big JSON is data, not a config
+            [ "$(wc -c < "$path" | tr -d ' ')" -lt 5000000 ] || return 0
+            jq -r '
+                def configs:
+                    if type == "array" then .[] | configs
+                    elif type != "object" then empty
+                    elif has("connector.class") then {name: (.name // ""), config: .}
+                    elif (.config | type) == "object" and (.config | has("connector.class")) then {name: (.name // .config.name // ""), config: .config}
+                    elif (.info.config | type) == "object" then {name: (.info.name // .info.config.name // ""), config: .info.config}
+                    else .[] | select(type == "object") | configs
+                    end;
+                configs | "@@PGCFG@@\tconnector config\tfile\t\t\t\(.name)", (.config | to_entries[] | "@@PGCFGL@@\t\(.key)=\(.value | tostring)")
+            ' "$path" >> "$records_file" 2>/dev/null
+            ;;
+    esac
+}
+
 # analyzes a file, a folder or an archive, recursively
 # $1: path, $2: label to display
 function analyze_logs_path () {
@@ -266,6 +295,7 @@ function analyze_logs_path () {
                 if ! is_duplicate_file "$path" "$label"
                 then
                     analyze_logs_digest "$label" < "$path"
+                    append_config_file "$path" "$label"
                 fi
             else
                 nb_skipped=$((nb_skipped+1))

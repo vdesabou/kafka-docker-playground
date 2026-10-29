@@ -10,6 +10,8 @@ playground container logs --errors, run with PG_LOG_DIGEST_RECORDS_FILE set:
   <the record as printed in the digest, on one or more lines>
   @@PGTS@@<tab>timestamps of the occurrences, space separated
   @@PGCTX@@<tab>raw lines around the first occurrence (2 before, the record, 2 after), one per line
+  @@PGCFG@@<tab>config class<tab>[connector|task-0] context ("file" for a config file)<tab>line<tab>timestamp<tab>client.id or name
+  @@PGCFGL@@<tab>key=value, one per line
 
 Also used by playground get-ci-result --logs, container logs --errors --html and container display-error-all --html,
 and imported by tools/connector-diagnose/diagnose_report.py for the errors section of the connector report.
@@ -61,7 +63,7 @@ def parse_records(path: str) -> List[dict]:
             if line.startswith("@@PGFILE@@\t"):
                 parts = line.split("\t")
                 current = {"label": parts[1], "lines": int(parts[2]), "distinct": int(parts[3]),
-                           "occurrences": int(parts[4]), "records": []}
+                           "occurrences": int(parts[4]), "records": [], "configs": []}
                 files.append(current)
                 rec = done = None
             elif line.startswith("@@PGREC@@\t") and current is not None:
@@ -74,6 +76,15 @@ def parse_records(path: str) -> List[dict]:
                 rec["timestamps"] = line.split("\t", 1)[1].split()
                 finish_record(rec)
                 done, rec = rec, None
+            elif line.startswith("@@PGCFG@@\t") and current is not None:
+                parts = (line.split("\t") + [""] * 6)[1:6]
+                current["configs"].append({"title": parts[0], "context": "" if parts[1] == "file" else parts[1],
+                                           "source": "file" if parts[1] == "file" else "log",
+                                           "line": int(parts[2]) if parts[2].isdigit() else None, "time": parts[3] or None,
+                                           "id": parts[4] or None, "lines": []})
+                rec = done = None
+            elif line.startswith("@@PGCFGL@@\t") and current is not None and current["configs"]:
+                current["configs"][-1]["lines"].append(line.split("\t", 1)[1])
             elif line.startswith("@@PGCTX@@\t") and done is not None:
                 done["context"] = (done["context"] + "\n" if done.get("context") else "") + line.split("\t", 1)[1]
             elif rec is not None:
@@ -280,9 +291,15 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     shorten_labels(files)
     hints = match_hints(files, unit)
     causes = root_causes(files)
+    # the "<Class>Config values:" dumps of the logs and the config files of the input (.properties, connector JSON)
+    configuration = [dict({k: v for k, v in c.items() if k != "lines"}, file=f["label"], text="\n".join(c["lines"]))
+                     for f in files for c in f.get("configs", []) if c["lines"]]
+    for f in files:
+        f.pop("configs", None)
     return {"summary": summary(files), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
             "root_causes": causes, "files": [f for f in files if f["records"]],
-            "files_without_findings": [f["label"] for f in files if not f["records"]]}
+            "files_without_findings": [f["label"] for f in files if not f["records"]],
+            "configuration": configuration}
 
 
 # ── HTML ──────────────────────────────────────────────────────────────────────
@@ -379,6 +396,76 @@ document.addEventListener("click", function (ev) {
 });
 document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
 </script>"""
+
+
+CONFIG_CSS = ("<style>.cfg-search{font-family:inherit;font-size:.8rem;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;"
+              "width:100%;max-width:420px;margin:4px 0 10px}table.cfg td:first-child{width:36%}table.cfg td{word-break:break-all}"
+              "html[data-theme=dark] .cfg-search{background:#0f172a;color:#cbd5e1;border-color:#334155}</style>")
+CONFIG_SCRIPT = """<script>
+document.querySelectorAll(".cfg-search").forEach(function (input) {
+  input.addEventListener("input", function () {
+    const q = input.value.toLowerCase().trim();
+    const card = input.closest(".table-card");
+    card.querySelectorAll("tr.cfg-row").forEach(tr => { tr.hidden = q !== "" && !tr.textContent.toLowerCase().includes(q); });
+    card.querySelectorAll("details.cfg").forEach(d => {
+      if (q) d.open = !!d.querySelector("tr.cfg-row:not([hidden])") || d.querySelector("summary").textContent.toLowerCase().includes(q);
+    });
+  });
+});
+</script>"""
+
+
+CLIENT_CONFIGS = ("ProducerConfig", "ConsumerConfig", "AdminClientConfig")
+
+
+def config_group(c: dict) -> Tuple[int, str]:
+    """(order, title) of the group of a config: config files, components, one group per connector, clients"""
+    m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
+    connector = m.group(1) if m else (c.get("id") if c["title"].endswith("ConnectorConfig") or c["title"] == "connector config" else None)
+    if connector:
+        return 2, f"🧩 {connector}"
+    if c["source"] == "file":
+        return 0, "📄 Config files"
+    if c["title"] in CLIENT_CONFIGS:
+        return 3, "📡 Clients"
+    return 1, "🧱 Components"
+
+
+def config_html(configs: List[dict]) -> str:
+    """⚙️ Configuration: one collapsible key / value table per config dump of the logs or config file of the input,
+    grouped by config files, components, connector and clients"""
+    if not configs:
+        return ""
+    groups: Dict[Tuple[int, str], List[dict]] = {}
+    for c in configs:
+        groups.setdefault(config_group(c), []).append(c)
+    blocks = []
+    for group in sorted(groups):
+        blocks.append(f"<h3 style='font-size:.9rem;margin:14px 0 4px'>{e(group[1])} ({len(groups[group])})</h3>")
+        # the connector configs first, then by line
+        for c in sorted(groups[group], key=lambda c: (not c["title"].endswith("ConnectorConfig"), c["file"], c.get("line") or 0)):
+            blocks.append(config_block_html(c))
+    return (f"{CONFIG_CSS}<div class='table-card'><h2>⚙️ Configuration ({len(configs)})</h2>"
+            "<p class='legend'>🪵 the configs the components log when they start (<span class='mono'>KafkaConfig values:</span>, "
+            "<span class='mono'>DistributedConfig</span>, the config of a connector with its <span class='mono'>[connector|task-0]</span> "
+            "context, <span class='mono'>ProducerConfig</span> of a client…, defaults included, the last one of each), "
+            "📄 the config files of the input (.properties, connector JSON)</p>"
+            "<input class='cfg-search' type='search' placeholder='Filter keys and values…'>"
+            f"{''.join(blocks)}</div>{CONFIG_SCRIPT}")
+
+
+def config_block_html(c: dict) -> str:
+    """one config: its key / value table, collapsed"""
+    rows = []
+    for line in c["text"].splitlines():
+        key, _, value = line.partition("=")
+        rows.append(f"<tr class='cfg-row'><td class='mono'>{e(key)}</td><td class='mono'>{e(value)}</td></tr>")
+    where = c["file"] + (f":{c['line']}" if c.get("line") else "") + (f" ({c['time'].replace('T', ' ')})" if c.get("time") else "")
+    what = " ".join(x for x in (c.get("context"), c.get("id")) if x)
+    icon = "📄" if c["source"] == "file" else "🪵"
+    return (f"<details class='cfg'><summary>{icon} <strong>{e(c['title'])}</strong> <span class='mono'>{e(what)}</span> "
+            f"<span class='legend'>· {len(rows)} keys · {e(where)}</span></summary>"
+            f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{''.join(rows)}</table></details>")
 
 
 def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_connector: int) -> str:
@@ -478,6 +565,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                     + "</div>")
         for f in res["files"]:
             body.append(f"<div class='table-card file-records'><h2>📄 {e(f['label'])}</h2>{records_html(f['records'])}</div>")
+    body.append(config_html(res.get("configuration") or []))
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
     meta += [f"<a href='{e(url)}' style='color:#fff'>{e(label)}</a>" for label, url in links]
     return page(f"{heading[2:].strip()} report — {title}", e(heading), meta, "".join(body),
