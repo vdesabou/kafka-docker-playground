@@ -8154,3 +8154,218 @@ function wait_for_partition_reassignment () {
     cur_wait=$((cur_wait+5))
   done
 }
+
+# connector config in one of the formats customers send, normalized to a flat json object of strings, for
+# playground connector create-or-update / validate / diff / convert:
+#   - json: a plain config, the REST API format {"name": ..., "config": {...}}, a dump of GET /connectors?expand=info
+#   - a 'playground connector create-or-update' heredoc, as printed by show-config
+#   - a CFK Connector or a Strimzi KafkaConnector custom resource (yaml, several documents allowed)
+#   - a terraform confluent_connector resource (config_nonsensitive + config_sensitive)
+#   - a connect-standalone .properties file
+# $1 the content, $2 the connector to pick when the content has several (can be empty), $3 the format (json, heredoc,
+# cfk, strimzi, terraform, properties; detected when empty or auto). Sets NORMALIZED_CONFIG,
+# NORMALIZED_FORMAT (what was detected, for a log line) and NORMALIZED_NAME (the name in the source, can be empty).
+# Returns 1 with NORMALIZED_ERROR set when the content is not a connector config, or holds several and $2 is not one.
+function normalize_connector_config () {
+  local content="$1" wanted="$2" format="${3:-auto}" candidates names count from=""
+  NORMALIZED_CONFIG=""
+  NORMALIZED_FORMAT=""
+  NORMALIZED_NAME=""
+  NORMALIZED_ERROR=""
+
+  if [ "$format" == "heredoc" ] || { [ "$format" == "auto" ] && echo "$content" | grep -qE "<< *['\"]?EOF"; }
+  then
+    content=$(echo "$content" | sed -n '/<< *.\{0,1\}EOF/,/^EOF/p' | sed '1d;$d' | sed 's/\\\$/$/g')
+    from=", from a create-or-update heredoc"
+    format="json"
+  fi
+  if [ "$format" == "auto" ]
+  then
+    if echo "$content" | jq -e 'type == "object"' > /dev/null 2>&1
+    then
+      format="json"
+    elif echo "$content" | grep -qE '^[[:space:]]*kind:[[:space:]]*["'"'"']?(Connector|KafkaConnector)["'"'"']?[[:space:]]*$'
+    then
+      format="cfk"
+    elif echo "$content" | grep -qE 'resource[[:space:]]+"confluent_connector"'
+    then
+      format="terraform"
+    elif echo "$content" | grep -qE '^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*[=:]'
+    then
+      format="properties"
+    fi
+  fi
+
+  # candidates: one json per line, {"name": <name or null>, "config": {...}, "format": "..."}
+  if [ "$format" == "json" ]
+  then
+    candidates=$(echo "$content" | jq -c '
+      if has("config") and (.config | type == "object") then
+        {name: (.name // .config.name), config: .config, format: "REST API format ({\"name\": ..., \"config\": {...}})"}
+      elif length > 0 and all(.[]; type == "object" and (.info.config | type) == "object") then
+        to_entries[] | {name: .key, config: .value.info.config, format: "dump of GET /connectors?expand=info"}
+      else
+        {name: .name, config: ., format: "JSON"}
+      end')
+  elif [ "$format" == "cfk" ] || [ "$format" == "strimzi" ]
+  then
+    # both kinds, whatever --from says: a file can hold the two
+    candidates=$(echo "$content" | yq -o json -I0 'select(.kind == "Connector" or .kind == "KafkaConnector")' 2> /dev/null | jq -c '
+      if .kind == "Connector" then
+        {name: .metadata.name, format: "CFK Connector custom resource (spec.class, spec.taskMax, spec.configs)",
+         config: ({name: .metadata.name, "connector.class": .spec.class, "tasks.max": .spec.taskMax} + (.spec.configs // {}))}
+      else
+        {name: .metadata.name, format: "Strimzi KafkaConnector custom resource (spec.class, spec.tasksMax, spec.config)",
+         config: ({name: .metadata.name, "connector.class": .spec.class, "tasks.max": .spec.tasksMax} + (.spec.config // {}))}
+      end
+      | .config |= with_entries(select(.value != null))')
+  elif [ "$format" == "terraform" ]
+  then
+    candidates=$(echo "$content" | yq -p hcl -o json -I0 '.resource.confluent_connector | to_entries | .[]' 2> /dev/null | jq -c '
+      ((.value.config_nonsensitive // {}) + (.value.config_sensitive // {})) as $config
+      | {name: ($config.name // .key), config: $config, format: "terraform confluent_connector resource \"\(.key)\" (config_nonsensitive + config_sensitive)"}')
+  elif [ "$format" == "properties" ]
+  then
+    candidates=$(echo "$content" | python3 -I "$root_folder/tools/connector-config/properties_to_json.py" 2> /dev/null | jq -c '{name: .name, config: ., format: "connect-standalone .properties file"}')
+  fi
+
+  if [ -z "$candidates" ]
+  then
+    NORMALIZED_ERROR="not a connector config: expected json (a config, the REST API format or a dump of GET /connectors?expand=info), a create-or-update heredoc, a CFK Connector or Strimzi KafkaConnector custom resource, a terraform confluent_connector resource, or a connect-standalone .properties file"
+    return 1
+  fi
+
+  count=$(echo "$candidates" | grep -c .)
+  if [ "$count" -gt 1 ]
+  then
+    names=$(echo "$candidates" | jq -r '.name // "?"' | paste -sd ' ' -)
+    if [ -z "$wanted" ] || ! echo "$candidates" | jq -e --arg w "$wanted" 'select(.name == $w)' > /dev/null 2>&1
+    then
+      NORMALIZED_ERROR="$count connectors in the config ($names), pick one with --connector"
+      return 1
+    fi
+    candidates=$(echo "$candidates" | jq -c --arg w "$wanted" 'select(.name == $w)' | head -1)
+  fi
+
+  # connect configs are maps of strings: yaml and hcl numbers and booleans, json numbers
+  NORMALIZED_CONFIG=$(echo "$candidates" | jq '.config | with_entries(.value |= (if type == "string" then . elif type == "null" then "" else tostring end))')
+  NORMALIZED_NAME=$(echo "$candidates" | jq -r '.name // empty')
+  NORMALIZED_FORMAT="$(echo "$candidates" | jq -r '.format')$from"
+  if ! echo "$NORMALIZED_CONFIG" | jq -e 'all(.[]; type == "string")' > /dev/null 2>&1
+  then
+    NORMALIZED_ERROR="the config of the $NORMALIZED_FORMAT has nested objects, a connector config is a flat map of strings"
+    return 1
+  fi
+  return 0
+}
+
+# the values of a normalized connector config ($1) that cannot run as they are, one "<key>|<reason>" line each: masked
+# secrets, config providers of the customer environment, terraform references
+function connector_config_placeholders () {
+  echo "$1" | jq -r '
+    to_entries[]
+    | .key as $k | .value as $v
+    | if ($v | test("^\\*{3,}$|^\\[hidden\\]$")) then "\($k)|masked secret"
+      # ${file:/data:...} is how the examples pass their secrets
+      elif ($v | test("\\$\\{(file|directory|vault|env|aws|azure|gcp|secret|keyvault|ssm|k8s|kubernetes)[a-zA-Z]*:")) and ($v | test("\\$\\{file:/data:") | not) then "\($k)|config provider of the customer environment (\($v))"
+      elif ($v | test("^(var|local|data|module|confluent_[a-z_]+)\\.[A-Za-z0-9_.\\[\\]-]+$")) or ($v | test("\\$\\{(var|local|data|module)\\.")) then "\($k)|terraform reference (\($v))"
+      else empty end'
+}
+
+# logs what a normalized connector config ($1) needs before it can run: placeholders, and a fully managed config
+# deployed as a self-managed one ($2 = fully_managed when the connector is a fully managed one)
+function connector_config_findings () {
+  local config="$1" context="$2" placeholders class
+  class=$(echo "$config" | jq -r '."connector.class" // empty')
+  if [ -z "$class" ]
+  then
+    logwarn "⚠️ the config has no connector.class"
+  elif [[ "$class" != *.* ]] && [ "$context" != "fully_managed" ]
+  then
+    logwarn "☁️ connector.class $class is a fully managed connector: run it as a fully managed example (ccloud/fm-*), the self-managed plugin has another class and other keys"
+  fi
+  placeholders=$(connector_config_placeholders "$config")
+  if [ -n "$placeholders" ]
+  then
+    logwarn "⚠️ $(echo "$placeholders" | grep -c .) value(s) to fill in, they cannot work as they are:"
+    echo "$placeholders" | awk -F'|' '{ printf "   %s: %s\n", $1, $2 }'
+  fi
+}
+
+# the values of a normalized self-managed connector config ($1) that point to the customer environment, rewritten for
+# the playground. Only values whose hosts are not containers of the playground (nor localhost, nor confluent cloud) are
+# touched, so the configs of the examples (broker-us, schema-registry, a confluent cloud cluster...) stay as they are:
+#   - bootstrap servers -> broker:9092, schema registry urls -> http://schema-registry:8081
+#   - the credentials of a schema registry that was rewritten (basic / bearer auth, ssl)
+#   - on plaintext, the security of the clients whose bootstrap servers were rewritten (confluent.topic.*, *.override.*)
+#   - a confluent.license that is set, replication factors above the number of brokers
+# Sets ADAPTED_CONFIG and ADAPTED_CHANGES (number of keys changed or removed), and logs them. With $2 = report, also
+# logs the keys left as they are that point to external systems (hosts, files of the customer)
+function connector_config_adapt () {
+  local config="$1" report="$2" brokers=1 plaintext=false changes others local_hosts
+  ADAPTED_CONFIG="$config"
+  ADAPTED_CHANGES=0
+  if [[ "$(echo "$config" | jq -r '."connector.class" // ""')" != *.* ]]
+  then
+    # fully managed: the keys are not the ones of a self-managed connector
+    return 0
+  fi
+  get_environment_used
+  if [[ "$environment" == "ccloud" ]]
+  then
+    # self-managed connect on a confluent cloud cluster: the bootstrap servers and schema registry are the cloud ones
+    return 0
+  fi
+  [ -n "$(playground state get flags.ENABLE_KAFKA_NODES 2> /dev/null)" ] && brokers=3
+  [[ "$environment" == *plaintext ]] && plaintext=true
+  # hosts of the playground: its containers (cfk: the services of the confluent namespace)
+  local_hosts=$( { docker ps --format '{{.Names}}' 2> /dev/null; echo "localhost kafka schemaregistry connect broker schema-registry"; } | tr ' ' '\n' | jq -R -s 'split("\n") | map(select(length > 0))')
+
+  ADAPTED_CONFIG=$(echo "$config" | jq --argjson brokers "$brokers" --argjson plaintext "$plaintext" --argjson local "$local_hosts" '
+    def is_local_host: . as $h | ($local | index($h)) or ($h | test("\\.confluent\\.cloud$|^127\\.0\\.0\\.1$"));
+    def bootstrap_hosts: split(",") | map(gsub("^\\s+|\\s+$"; "") | sub("^[A-Za-z_]+://"; "") | sub(":[0-9]+$"; "")) | map(select(length > 0));
+    def url_host: (capture("://(?<h>[^/:@]+)(:[0-9]+)?(/|$)") | .h) // "";
+    . as $config
+    | ([to_entries[] | select((.key | test("(^|\\.)bootstrap\\.servers$")) and ((.value | bootstrap_hosts) | any(is_local_host | not))) | .key]) as $bootstrap_keys
+    | ([to_entries[] | select((.key | test("(^|\\.)schema\\.registry\\.url$")) and (.value | split(",") | any(url_host | is_local_host | not))) | .key]) as $sr_keys
+    # the clients whose bootstrap servers are rewritten: their security settings are the ones of the customer cluster
+    | ($bootstrap_keys | map(sub("\\.?bootstrap\\.servers$"; ""))) as $clients
+    | with_entries(
+        .key as $k
+        | if ($bootstrap_keys | index($k)) then .value = "broker:9092"
+          elif ($sr_keys | index($k)) then .value = "http://schema-registry:8081"
+          elif ($sr_keys | length) > 0 and ($k | test("(^|\\.)(basic\\.auth\\.(credentials\\.source|user\\.info)|bearer\\.auth\\..+|schema\\.registry\\.ssl\\..+)$")) then empty
+          elif $k == "confluent.license" and .value != "" then empty
+          elif $plaintext and ($clients | any(. as $c | $c != "" and ($k | startswith($c + "."))))
+               and ($k | test("\\.(security\\.protocol|sasl\\..+|ssl\\..+)$")) then empty
+          elif ($k | test("replication\\.factor$")) and ((.value | tonumber? // 0) > $brokers) then .value = ($brokers | tostring)
+          else . end)')
+
+  changes=$(jq -n -r --argjson old "$config" --argjson new "$ADAPTED_CONFIG" '
+    ($old | keys[] | select($new[.] == null) | "   - \(.)"),
+    ($old | keys[] | select($new[.] != null and $new[.] != $old[.]) | "   \(.): \($old[.] | if test("password|secret|user\\.info"; "i") then "********" else . end) → \($new[.])")')
+  if [ -n "$changes" ]
+  then
+    ADAPTED_CHANGES=$(echo "$changes" | grep -c .)
+    log "🔧 adapted to the playground (--no-adapt to keep the config as is):"
+    echo "$changes"
+  fi
+  if [ "$report" != "report" ]
+  then
+    return 0
+  fi
+  others=$(echo "$ADAPTED_CONFIG" | jq -r --argjson local "$local_hosts" '
+    def is_local_host: . as $h | ($local | index($h)) or ($h | test("\\.confluent\\.cloud$|^127\\.0\\.0\\.1$"));
+    def url_host: (capture("://(?<h>[^/:@]+)(:[0-9]+)?(/|$)") | .h) // "";
+    to_entries[]
+    | select(
+        ((.key | test("ssl\\.(keystore|truststore)\\.location$|keytab|\\.file$|\\.path$|credentials\\.path$")) and (.value | test("^/")))
+        or ((.value | test("^[a-z][a-z0-9+.:-]*://[^/]+")) and (.value | url_host | is_local_host | not))
+        or ((.key | test("(^|\\.)(hostname|host|endpoint|server\\.name)$")) and .value != "" and (.value | is_local_host | not)))
+    | "   \(.key)=\(.value | gsub("(?<k>(password|pwd)=)[^&;]*"; "\(.k)********"; "i") | gsub("(?<s>://[^/:@]+:)[^/@]+@"; "\(.s)********@"))"')
+  if [ -n "$others" ]
+  then
+    log "🌍 still pointing to the customer environment (external systems, files): use the ones of the example"
+    echo "$others"
+  fi
+}

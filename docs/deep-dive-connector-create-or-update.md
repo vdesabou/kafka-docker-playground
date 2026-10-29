@@ -17,6 +17,8 @@ deploy it (`validate`), compare it with a customer's (`diff`), wait for any stat
 | --- | --- |
 | create or update a connector, and fail if it doesn't run | `playground connector create-or-update -c <name> << EOF … EOF` |
 | the same, from a customer's file (REST API format accepted) | `playground connector create-or-update -c <name> customer.json` |
+| the same, from a CFK / Strimzi custom resource, terraform, a `.properties` file, a `?expand=info` dump | `playground connector create-or-update -c <name> customer.yaml` (detected, adapted to the playground) |
+| convert a config to another format (heredoc for a repro, CFK CR or terraform to answer the customer) | `playground connector convert customer.yaml [--to heredoc\|json\|cfk\|strimzi\|terraform\|properties]` |
 | check a config without deploying it | `playground connector validate << EOF … EOF`, or `create-or-update --validate` |
 | see what would be sent | `create-or-update --dry-run` |
 | a connector that is expected to fail | `create-or-update --no-wait`, then `playground connector wait -c <name> --state FAILED` |
@@ -45,6 +47,19 @@ deploy it (`validate`), compare it with a customer's (`diff`), wait for any stat
    A `PAUSED` or `STOPPED` connector **stays** paused or stopped after an update. The config can be a plain JSON object
    or the REST API format (`{"name": …, "config": {…}}`, what `GET /connectors/<name>` returns): the outer `name` is
    ignored, and a `name` key inside the config that differs from `--connector` is replaced, with a warning.
+
+   It also reads the other formats customers send, detected from the content: a dump of
+   `GET /connectors?expand=info` (the entry named `--connector`), a CFK `Connector` or Strimzi `KafkaConnector` custom
+   resource (`spec.class`, `spec.taskMax` / `spec.tasksMax`, `spec.configs` / `spec.config`, several documents
+   allowed), a terraform `confluent_connector` resource (`config_nonsensitive` + `config_sensitive`), a
+   `connect-standalone` `.properties` file. A config that comes from elsewhere (a file, or one of these formats) is
+   **adapted to the playground**: bootstrap servers and schema registry urls whose hosts are not containers of the
+   playground, the credentials of that schema registry, a license, replication factors above the number of brokers, and
+   on plaintext the security of the clients whose bootstrap servers were rewritten (`--no-adapt` to keep it as is,
+   `--adapt` for a plain json heredoc too). Masked secrets (`****`, `[hidden]`), config providers of the customer
+   environment (`${file:/mnt/...}`), terraform references (`var.x`) and the keys still pointing to external systems are
+   listed. The heredocs of the examples are never changed. `playground connector convert` writes any of these formats
+   in another one.
 
 2. **It waits, and how strict it is depends on what runs.** After the update, a self-managed connector is polled
    (`playground connector wait`, every 5 s, up to `--max-wait`, default 120 s) until the connector **and all its
@@ -95,7 +110,8 @@ playground connector create-or-update -c filestream-sink << EOF
 }
 EOF
 
-# a file (path or @path): a customer's config, plain or REST API format
+# a file (path or @path): a customer's config, plain or REST API format, or a CFK / Strimzi custom resource, terraform,
+# a .properties file, a dump of GET /connectors?expand=info (adapted to the playground, --no-adapt to keep it as is)
 playground connector create-or-update -c filestream-sink customer-connector.json
 
 # check it first: every invalid property at once, nothing deployed if one is invalid
@@ -215,7 +231,9 @@ Gotchas:
 - **`show-config` shows what you sent, not what runs.** It reads `/tmp/config-<name>` when it exists, so it shows the
   config as written by your last `create-or-update` from this machine (passwords in clear). `--force-rest-endpoint`
   asks the worker instead: passwords are masked there, and the keys the worker adds show up.
-- `diff --file` accepts a plain config, the REST API format, or a heredoc as printed by `show-config`. Passwords masked
+- `diff --file` accepts a plain config, the REST API format, a heredoc as printed by `show-config`, and the other
+  formats of `create-or-update` (CFK / Strimzi custom resource, terraform, `.properties`, `?expand=info` dump: the entry
+  named like the connector). It compares the file as it is, without adapting it. Passwords masked
   by the REST API (`****`, `[hidden]`) are listed as not compared, never as different.
 - `diff --defaults` lists the keys set to a non-default value, the keys set to their default (they could be removed),
   and the keys that are not plugin parameters (converters, transforms, worker overrides). Not on CFK.
@@ -371,7 +389,7 @@ playground connector diff -c filestream-sink --defaults
 ```bash
 playground connector create-or-update -c filestream-sink --dry-run /tmp/customer-connector.json
 # 📄 reading the connector config from /tmp/customer-connector.json
-# 📦 the config is in the REST API format ({"name": ..., "config": {...}}): using its "config"
+# 📦 detected: REST API format ({"name": ..., "config": {...}})
 # 🔍 changes compared to the running config:
 #    - key.converter
 #    - value.converter
@@ -404,6 +422,9 @@ playground stop
 | Customer symptom | Command |
 | --- | --- |
 | "here is our connector config" (JSON from the UI / REST API) | `create-or-update -c <name> customer.json --validate`: REST API format accepted, every invalid key at once |
+| "here is our CFK Connector resource" (or Strimzi, terraform, `connect-standalone` `.properties`) | `create-or-update -c <name> connector.yaml --validate`: detected and adapted to the playground; `connector convert connector.yaml` prints the heredoc for the repro model, with the values to fill in as variables |
+| "here is the output of `curl /connectors?expand=info`" | `create-or-update -c <one of them> dump.json`, or `connector convert dump.json -c <name>` |
+| "answer the customer in their format" | `connector convert repro.json --to cfk` (or `--to terraform`, `--to strimzi`, `--to properties`) |
 | "it works for us with this config, not for you" | `diff -c <name> --file customer.json`, then `diff --defaults` to drop the noise |
 | "the connector fails right after it starts" | default wait: the stack trace of the failed task, the script stops there |
 | "reproduce a connector that must fail" | `--no-wait`, then `connector wait --state FAILED --max-wait 120` (no `sleep`) |
@@ -426,12 +447,15 @@ playground connector create-or-update -c <name> [<file>|@<file>] [<< EOF … EOF
   [--initial-state RUNNING|PAUSED|STOPPED] [--level TRACE [--package <pkg>]] \
   [--skip-automatic-connector-config] [--offsets '<json>' (fully managed)] [--terraform (fully managed)] [--verbose]
 playground connector validate [-c <name>] [<< EOF … EOF]
+playground connector convert [<file>] [-c <name>] [--to heredoc|json|cfk|strimzi|terraform|properties] [--from <format>] [--no-adapt] [--json]
 playground connector wait -c <name> [--state RUNNING|PAUSED|STOPPED|FAILED] [--max-wait 120] [--interval 5]
 playground connector diff -c <name> --file <cfg> | --with-connector <other> | --defaults [--json] [--output-dir <dir>] [--no-open]
 playground connector status | show-config [--force-rest-endpoint] | update   [-c <name>]
 ```
 
 - Create = update: re-run freely. An update prints the changed keys, and keeps PAUSED / STOPPED.
+- A file or another format (CFK / Strimzi CR, terraform, `.properties`, `?expand=info` dump) is detected and adapted
+  to the playground (`--no-adapt`); the heredocs of the examples are never changed. `convert` writes any format.
 - Waits for the connector **and its tasks** RUNNING: strict in examples, warning in repro models, `--wait` strict
   everywhere, `--no-wait` none. Fully managed: only with `--wait`.
 - The environment's settings are added for you: `--dry-run` shows them, `--skip-automatic-connector-config` removes

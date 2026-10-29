@@ -57,12 +57,18 @@ then
     # the running config already has what create-or-update added for the environment
     skip_automatic_connector_config=running
 else
-    if ! echo "$json_content" | jq -e 'type == "object"' > /dev/null 2>&1
+    # json, or one of the formats customers send (CFK / Strimzi custom resource, terraform, .properties, REST API dump...)
+    if ! normalize_connector_config "$json_content" "$connector"
     then
-        logerror "❌ the config is not a valid JSON object"
+        logerror "❌ $NORMALIZED_ERROR"
         exit 1
     fi
-    connector="${connector:-playground-validate}"
+    if [ "$NORMALIZED_FORMAT" != "JSON" ]
+    then
+        log "📦 detected: $NORMALIZED_FORMAT"
+    fi
+    json_content="$NORMALIZED_CONFIG"
+    connector="${connector:-${NORMALIZED_NAME:-playground-validate}}"
     log "🔎 Validating $connector_type connector config (nothing is created)"
 fi
 

@@ -122,7 +122,7 @@ log "Step 6: the REST API format, and --dry-run"
 lab_run playground connector create-or-update -c filestream-sink --dry-run "$customer_config"
 lab_expect_exit 0
 lab_expect_contains "📄 reading the connector config from $customer_config"
-lab_expect_contains '📦 the config is in the REST API format ({"name": ..., "config": {...}}): using its "config"'
+lab_expect_contains '📦 detected: REST API format ({"name": ..., "config": {...}})'
 lab_expect_contains "- key.converter"
 lab_expect_contains "~ tasks.max: 1 → 4"
 lab_expect_contains "🌵 --dry-run: connector filestream-sink would be updated with this config"
