@@ -323,6 +323,7 @@ playground_usage() {
   printf "  %s   🏎️ Benchmark the throughput of a connector\n" "$(green "connector benchmark")                       "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "connector show-config")                     "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")          "
+  printf "  %s   📈 Show the metrics of a connector: throughput, time, errors, and the metrics of the connector itself\n" "$(green "connector metrics")                         "
   printf "  %s   〽️ Display metrics api for fully managed connector\n" "$(green "connector display-metrics-api")             "
   printf "  %s   📊 Display metrics api for fully managed connector in Grafana dashboard\n" "$(green "connector display-metrics-api-with-grafana")"
   printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "connector select-config")                   "
@@ -14254,6 +14255,7 @@ playground_connector_usage() {
   printf "  %s   🏎️ Benchmark the throughput of a connector\n" "$(green "benchmark")                       "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "show-config")                     "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")          "
+  printf "  %s   📈 Show the metrics of a connector: throughput, time, errors, and the metrics of the connector itself\n" "$(green "metrics")                         "
   printf "  %s   〽️ Display metrics api for fully managed connector\n" "$(green "display-metrics-api")             "
   printf "  %s   📊 Display metrics api for fully managed connector in Grafana dashboard\n" "$(green "display-metrics-api-with-grafana")"
   printf "  %s   🗜️ Easily select config from all possible configuration parameters of connector\n" "$(green "select-config")                   "
@@ -15987,6 +15989,62 @@ playground_connector_show_config_parameters_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_metrics_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector metrics\n\n"
+    printf "  📈 Show the metrics of a connector: throughput, time, errors, and the metrics\n  of the connector itself\n  \n  Answers \"is it making progress?\", \"how many records were tolerated,\n  skipped, retried or sent to the dead letter queue?\" and \"where does\n  the time go, poll or put?\", one column per task:\n  \n    throughput   records polled / written per second (source), read /\n                 sent per second (sink), and the totals since the task\n                 started\n    time         average time of a poll (source) or a put (sink) batch,\n                 offset commit time and failures, running / pause ratio\n    errors       records that failed, were skipped (errors.tolerance=all),\n                 retried or sent to the DLQ, last error time\n  \n    connector    the other MBeans of the connector: Debezium\n                 (debezium.<plugin>:server=<topic.prefix>, also Oracle\n                 XStream), MongoDB, Oracle CDC... any MBean with a\n                 connector=<connector> key\n  \n  Ends with what stands out (errors, skipped records, a slow put, a task\n  that never got a record, a Debezium connector lagging, disconnected,\n  with a full queue or snapshotting) and the command to run next. Rates\n  are the averages Kafka Connect computes over its last samples (about 1\n  minute).\n  \n  Read over JMX from the connect worker(s) running the tasks, with the\n  kafka-jmx tool of the connect image: no restart, nothing to install.\n  For a fully managed connector, the metrics come from the Confluent\n  Cloud Telemetry API ('playground connector display-metrics-api').\n  \n  🎓 Tip: use --watch 10s while a load runs, or 'playground connector\n  benchmark' to measure the throughput.\n  \n  ⚠️ Not on cfk environments: use 'playground get-jmx-metrics -c connect-0\n  --domain kafka.connect'.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n"
+  else
+    printf "playground connector metrics - 📈 Show the metrics of a connector: throughput, time, errors, and the metrics of the connector itself\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector metrics [OPTIONS]\n"
+  printf "  playground connector metrics --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--watch, -w INTERVAL")"
+    printf "    🔁 Refresh every <interval> (30, 30s, 5m) until ctrl-c\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    printf "    %s\n" "Conflicts: --watch"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector metrics\n"
+    printf "  playground connector metrics --connector jdbc-sink --watch 10s\n"
+    printf "  playground connector metrics --connector jdbc-sink --json\n"
     echo
 
   fi
@@ -65764,6 +65822,324 @@ playground_connector_show_config_parameters_command() {
 }
 
 # :command.function
+playground_connector_metrics_command() {
+
+  # src/commands/connector/metrics.sh
+  connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+  watch="${args[--watch]}"
+  json="${args[--json]}"
+
+  connector_type=$(playground state get run.connector_type)
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      # no jmx for a fully managed connector: its metrics come from the Confluent Cloud Telemetry API
+      if [[ -n "$json" ]] || [[ -n "$watch" ]]
+      then
+          logerror "❌ --json and --watch are not supported with $connector_type connector"
+          exit 1
+      fi
+      log "〽️ $connector_type connector: metrics from the Confluent Cloud Telemetry API (playground connector display-metrics-api)"
+      if [[ -n "$connector" ]]
+      then
+          playground connector display-metrics-api --connector "$connector" ${verbose:+--verbose}
+      else
+          playground connector display-metrics-api ${verbose:+--verbose}
+      fi
+      exit $?
+  fi
+
+  get_environment_used
+  if [[ "$environment" == cfk* ]]
+  then
+      logerror "❌ connector metrics is not supported on $environment environment, use playground get-jmx-metrics -c connect-0 --domain kafka.connect"
+      exit 1
+  fi
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No $connector_type connector is running !"
+          exit 1
+      fi
+  fi
+
+  get_connect_url_and_security
+
+  # <label>|<mbean type>|<attribute>|<format>, per connector type (rate, total, ms, pct, ratio, ts, str)
+  source_spec="state|connector-task-metrics|status|str
+  records polled/s|source-task-metrics|source-record-poll-rate|rate
+  records written/s|source-task-metrics|source-record-write-rate|rate
+  polled (total)|source-task-metrics|source-record-poll-total|total
+  written (total)|source-task-metrics|source-record-write-total|total
+  in flight|source-task-metrics|source-record-active-count|total
+  poll batch avg|source-task-metrics|poll-batch-avg-time-ms|ms
+  batch size avg|connector-task-metrics|batch-size-avg|total"
+  sink_spec="state|connector-task-metrics|status|str
+  partitions|sink-task-metrics|partition-count|total
+  records read/s|sink-task-metrics|sink-record-read-rate|rate
+  records sent/s|sink-task-metrics|sink-record-send-rate|rate
+  read (total)|sink-task-metrics|sink-record-read-total|total
+  sent (total)|sink-task-metrics|sink-record-send-total|total
+  in flight|sink-task-metrics|sink-record-active-count|total
+  put batch avg|sink-task-metrics|put-batch-avg-time-ms|ms
+  put batch max|sink-task-metrics|put-batch-max-time-ms|ms
+  batch size avg|connector-task-metrics|batch-size-avg|total"
+  common_spec="offset commit avg|connector-task-metrics|offset-commit-avg-time-ms|ms
+  offset commit failed|connector-task-metrics|offset-commit-failure-percentage|pct
+  running ratio|connector-task-metrics|running-ratio|pct
+  pause ratio|connector-task-metrics|pause-ratio|pct
+  record errors|task-error-metrics|total-record-errors|total
+  record failures|task-error-metrics|total-record-failures|total
+  records skipped|task-error-metrics|total-records-skipped|total
+  retries|task-error-metrics|total-retries|total
+  errors logged|task-error-metrics|total-errors-logged|total
+  sent to DLQ|task-error-metrics|deadletterqueue-produce-requests|total
+  DLQ produce failed|task-error-metrics|deadletterqueue-produce-failures|total
+  last error|task-error-metrics|last-error-timestamp|ts"
+
+  # the generated CLI indents the lines of these strings
+  source_spec=$(echo "$source_spec" | sed 's/^[[:space:]]*//')
+  sink_spec=$(echo "$sink_spec" | sed 's/^[[:space:]]*//')
+  common_spec=$(echo "$common_spec" | sed 's/^[[:space:]]*//')
+
+  # prints the MBeans of connector $1 on the worker container $2, $3 being its topic prefix (Debezium server name, can be
+  # empty): "<type>|<task>|<attribute>|<value>" lines for the task metrics of kafka connect, and
+  # "extra|<object name>|<attribute>|<value>" lines for the other MBeans of the connector (Debezium, MongoDB, Oracle CDC...)
+  function read_task_mbeans() {
+      local connector="$1" container="$2" prefix="$3" port output
+      port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
+      if [[ -z "$port" ]]
+      then
+          logwarn "⚠️ JMX is not enabled on $container (no KAFKA_JMX_PORT), skipped"
+          return 0
+      fi
+      # the jvm of the tool must not inherit the debug agent, jmx port or java agents of the worker (bind errors)
+      local jmx_command=(docker exec "$container" env -u KAFKA_DEBUG -u JAVA_DEBUG_OPTS -u KAFKA_JMX_PORT -u KAFKA_JMX_OPTS -u KAFKA_OPTS -u KAFKA_HEAP_OPTS)
+      if docker exec "$container" bash -c "command -v kafka-jmx" > /dev/null 2>&1
+      then
+          jmx_command+=(kafka-jmx)
+      else
+          # before Kafka 3.5
+          jmx_command+=(kafka-run-class kafka.tools.JmxTool)
+      fi
+      # every MBean with a connector=<connector> key (kafka connect task metrics, MongoDB, Oracle CDC...), and the Debezium
+      # ones, named after the topic prefix: debezium.<plugin>:type=connector-metrics,context=streaming,server=<prefix>...
+      local object_args=(--object-name "*:connector=$connector,*")
+      if [ -n "$prefix" ]
+      then
+          object_args+=(--object-name "debezium.*:server=$prefix,*")
+      fi
+      [[ -n "$verbose" ]] && log "🐞 ${jmx_command[*]} --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv"
+      output=$("${jmx_command[@]}" --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv 2>&1) || true
+      if ! echo "$output" | grep -q -E "^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_-]+="
+      then
+          if ! echo "$output" | grep -q -E "^(time|Trying to connect|Expected attribute counts)"
+          then
+              logwarn "⚠️ could not read the JMX metrics of $container:"
+              echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3
+          fi
+          return 0
+      fi
+      # <object name>:<attribute>\t<value>
+      echo "$output" | awk -F'\t' '/^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_-]+=/ && NF >= 2 {
+          key = $1; value = $2
+          attribute = key; sub(/.*:/, "", attribute)
+          object = substr(key, 1, length(key) - length(attribute) - 1)
+          if (object ~ /^kafka\.connect:type=(connector-task|source-task|sink-task|task-error)-metrics,connector=[^,]+,task=[0-9]+$/) {
+              type = object; sub(/^kafka\.connect:type=/, "", type); sub(/,.*/, "", type)
+              task = object; sub(/.*,task=/, "", task)
+              print type "|" task "|" attribute "|" value
+          } else if (object !~ /^kafka\.connect:type=(connector-metrics|connect-worker-metrics),/) {
+              print "extra|" object "|" attribute "|" value
+          }
+      }'
+  }
+
+  function collect_metrics() {
+      local connector="$1" status_json worker_ids container port prefix lines=""
+      handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" || return 1
+      status_json="$curl_output"
+      handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/config\"" || return 1
+      prefix=$(echo "$curl_output" | jq -r '."topic.prefix" // ."database.server.name" // empty')
+      worker_ids=$(echo "$status_json" | jq -r '[.tasks[]?.worker_id] | unique | .[]')
+      while read -r worker_id
+      do
+          [ -z "$worker_id" ] && continue
+          read -r container port <<< "$(benchmark_worker_container_and_port "$worker_id")"
+          if ! is_container_running "$container"
+          then
+              logwarn "⚠️ worker $worker_id (container $container) is not running, skipped"
+              continue
+          fi
+          lines+="$(read_task_mbeans "$connector" "$container" "$prefix")"$'\n'
+      done <<< "$worker_ids"
+
+      echo -n "$lines" | jq -R -s --arg connector "$connector" --argjson status "$status_json" '
+          split("\n") | map(select(length > 0) | split("|") | {type: .[0], task: .[1], attribute: .[2], value: (.[3:] | join("|"))})
+          | map(select(.type != "extra")) as $mbeans
+          | (map(select(.type == "extra")) | group_by(.task) | map({mbean: .[0].task, attributes: (map({key: .attribute, value: (.value | tonumber? // .)}) | from_entries)})) as $extra
+          | {
+              connector: $connector,
+              type: $status.type,
+              state: $status.connector.state,
+              tasks: ($status.tasks // [] | sort_by(.id) | map(
+                  (.id | tostring) as $id
+                  | {
+                      id: .id,
+                      state: .state,
+                      worker_id: (.worker_id // null),
+                      metrics: ($mbeans | map(select(.task == $id)) | map({key: "\(.type):\(.attribute)", value: (.value | tonumber? // .)}) | from_entries)
+                    })),
+              connector_metrics: $extra
+            }'
+  }
+
+  function print_metrics() {
+      local result="$1" spec ids label type attribute format
+      if [ "$(echo "$result" | jq -r '.type')" == "sink" ]
+      then
+          spec="$sink_spec"$'\n'"$common_spec"
+      else
+          spec="$source_spec"$'\n'"$common_spec"
+      fi
+      ids=$(echo "$result" | jq -r '.tasks[].id')
+      if [ -z "$ids" ]
+      then
+          logwarn "⚠️ $connector_type connector $(echo "$result" | jq -r '.connector') has no task"
+          return
+      fi
+      log "📈 Task metrics of $connector_type connector $(echo "$result" | jq -r '"\(.connector) (\(.type), connector \(.state))"')"
+      {
+          printf 'METRIC'
+          for id in $ids
+          do
+              printf '\tTASK %s' "$id"
+          done
+          printf '\n'
+          while IFS='|' read -r label type attribute format
+          do
+              [ -z "$label" ] && continue
+              printf '%s' "$label"
+              for id in $ids
+              do
+                  printf '\t%s' "$(echo "$result" | jq -r --argjson id "$id" --arg key "$type:$attribute" --arg format "$format" '
+                      (.tasks[] | select(.id == $id) | .metrics[$key]) as $v
+                      | if $v == null then "-"
+                        elif ($v | type) != "number" then
+                          (if $format == "str" then ($v | ascii_upcase) else ($v | tostring) end)
+                        elif ($v | isnan) then "-"
+                        elif $format == "rate" then ($v * 10 | round / 10 | tostring) + "/s"
+                        elif $format == "ms" then ($v | round | tostring) + " ms"
+                        elif $format == "pct" then ($v * 100 | round | tostring) + "%"
+                        elif $format == "ts" then (if $v <= 0 then "-" else ($v / 1000 | floor | strftime("%Y-%m-%d %H:%M:%S UTC")) end)
+                        else ($v | if . == floor then (floor | tostring) else (. * 10 | round / 10 | tostring) end)
+                        end')"
+              done
+              printf '\n'
+          done <<< "$spec"
+      } | column -t -s $'\t'
+  }
+
+  # the other MBeans of the connector (Debezium, MongoDB, Oracle CDC...), one block per MBean
+  function print_connector_metrics() {
+      local result="$1"
+      [ "$(echo "$result" | jq '.connector_metrics | length')" == "0" ] && return
+      log "🧩 Metrics of the connector itself"
+      echo "$result" | jq -r '
+          .connector_metrics[]
+          | "  \(.mbean)",
+            (.attributes | to_entries | sort_by(.key)[]
+              # null values, and arrays printed with their java toString ([Ljava.lang.String;@27f3b6d6), say nothing
+              | select(.value != null and .value != "null" and (.value | tostring | test("^\\[L[a-zA-Z.]+;@") | not) and (.value | tostring | length) <= 120)
+              | "    \(.key)\t\(.value | if type == "number" and . == floor then (floor | tostring) elif type == "number" then (. * 100 | round / 100 | tostring) else tostring end)")' \
+          | awk -F'\t' 'NF == 1 { print; next } { printf "%-48s %s\n", $1, $2 }'
+  }
+
+  # what stands out, and what to run next
+  function print_findings() {
+      local result="$1" findings
+      findings=$(echo "$result" | jq -r '
+          .connector as $c | .type as $type
+          | [ .tasks[] | .id as $id | .metrics as $m
+              | ($m["task-error-metrics:total-record-errors"] // 0) as $errors
+              | ($m["task-error-metrics:total-records-skipped"] // 0) as $skipped
+              | ($m["task-error-metrics:deadletterqueue-produce-requests"] // 0) as $dlq
+              | ($m["task-error-metrics:total-retries"] // 0) as $retries
+              | ($m["connector-task-metrics:offset-commit-failure-percentage"] // 0) as $commit_failed
+              | (if ($m | length) == 0 then "❓ task \($id): no metric found (task not running on a reachable worker?)" else empty end),
+                (if .state != "RUNNING" then "🛑 task \($id) is \(.state): playground connector diagnose --connector \($c)" else empty end),
+                (if $errors > 0 then "⚠️ task \($id): \($errors | floor) record error(s), \($skipped | floor) skipped, \($dlq | floor) sent to the DLQ" else empty end),
+                (if $dlq > 0 then "   ↳ playground topic dlq inspect --connector \($c)" else empty end),
+                (if $skipped > 0 and $dlq == 0 then "   ↳ records are dropped (errors.tolerance=all) without a DLQ: set errors.deadletterqueue.topic.name, or errors.log.enable=true to see them" else empty end),
+                (if $retries > 0 then "🔁 task \($id): \($retries | floor) retried operation(s) (errors.retry.timeout)" else empty end),
+                (if ($m["task-error-metrics:deadletterqueue-produce-failures"] // 0) > 0 then "🔥 task \($id): records could not be written to the DLQ" else empty end),
+                (if ($commit_failed | type) == "number" and $commit_failed > 0 then "⚠️ task \($id): \($commit_failed * 100 | round)% of the offset commits failed" else empty end),
+                (if ($m["connector-task-metrics:pause-ratio"] // 0) > 0.5 then "⏸️ task \($id) was paused most of the time" else empty end),
+                (if $type == "source" and ($m | length) > 0 and ($m["source-task-metrics:source-record-poll-total"] // 0) == 0 then "💤 task \($id) has not polled any record since it started" else empty end),
+                (if $type == "sink" and ($m | length) > 0 and ($m["sink-task-metrics:partition-count"] // 0) == 0 then "💤 task \($id) has no partition assigned: playground connector tasks --connector \($c)" else empty end),
+                (if $type == "sink" and ($m["sink-task-metrics:partition-count"] // 0) > 0 and ($m["sink-task-metrics:sink-record-read-total"] // 0) == 0 then "💤 task \($id) has not read any record since it started: playground connector show-lag --connector \($c)" else empty end),
+                (if $type == "sink" and (($m["sink-task-metrics:put-batch-avg-time-ms"] // 0) | type) == "number" and ($m["sink-task-metrics:put-batch-avg-time-ms"] // 0) > 1000 then "🐢 task \($id): a put takes \($m["sink-task-metrics:put-batch-avg-time-ms"] | round) ms on average, the target system is slow: playground analyze flight-recorder -c connect --connector \($c)" else empty end)
+            ]
+          # Debezium (and the connectors built on it, Oracle XStream...): connection, lag, queue, snapshot
+          + [ .connector_metrics[] | .mbean as $b | .attributes as $a
+              | select($b | startswith("debezium."))
+              | (if $a.Connected == false or $a.Connected == "false" then "🔌 \($b): not connected to the database" else empty end),
+                (if ($a.MilliSecondsBehindSource | type) == "number" and $a.MilliSecondsBehindSource > 60000 then "🐢 \($b): \($a.MilliSecondsBehindSource / 1000 | floor) s behind the source database" else empty end),
+                (if ($a.QueueRemainingCapacity | type) == "number" and $a.QueueRemainingCapacity == 0 then "🚧 \($b): the queue is full, the task cannot write to Kafka as fast as it reads the database (max.queue.size, producer throughput)" else empty end),
+                (if $a.SnapshotRunning == true or $a.SnapshotRunning == "true" then "📸 \($b): snapshot in progress, \($a.RemainingTableCount // "?") of \($a.TotalTableCount // "?") table(s) remaining" else empty end),
+                (if $a.SnapshotAborted == true or $a.SnapshotAborted == "true" then "🛑 \($b): the snapshot was aborted" else empty end)
+            ] | .[]')
+      if [ -n "$findings" ]
+      then
+          log "🔎 What stands out:"
+          echo "$findings"
+      else
+          log "✅ Nothing stands out: no error, no skipped record, all tasks made progress"
+      fi
+  }
+
+  items=($connector)
+  length=${#items[@]}
+  if ((length > 1)) && [[ -z "$json" ]]
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
+
+  interval=""
+  [[ -n "$watch" ]] && interval=$(duration_to_seconds "$watch")
+
+  while true
+  do
+      results="[]"
+      for connector in "${items[@]}"
+      do
+          result=$(collect_metrics "$connector") || { logerror "❌ Could not get the status of $connector_type connector $connector"; exit 1; }
+          if [[ -n "$json" ]]
+          then
+              results=$(echo "$results" | jq --argjson r "$result" '. + [$r]')
+              continue
+          fi
+          print_metrics "$result"
+          print_connector_metrics "$result"
+          print_findings "$result"
+      done
+      if [[ -n "$json" ]]
+      then
+          echo "$results" | jq .
+          break
+      fi
+      [[ -z "$interval" ]] && break
+      log "🔁 next refresh in ${interval}s (ctrl-c to stop)"
+      sleep "$interval"
+  done
+
+}
+
+# :command.function
 playground_connector_display_metrics_api_command() {
 
   # src/commands/connector/display-metrics-api.sh
@@ -103347,6 +103723,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    metrics)
+      action="metrics"
+      shift
+      playground_connector_metrics_parse_requirements "$@"
+      shift $#
+      ;;
+
     display-metrics-api)
       action="display-metrics-api"
       shift
@@ -107175,6 +107558,124 @@ playground_connector_show_config_parameters_parse_requirements() {
 
     esac
   done
+
+}
+
+# :command.parse_requirements
+playground_connector_metrics_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_metrics_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector metrics"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --watch | -w)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--watch']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--watch requires an argument: --watch, -w INTERVAL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+        # :flag.conflicts
+        if [[ -n "${args['--watch']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--watch" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--watch'] ]]; then
+    validation_output="$(validate_duration "${args['--watch']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--watch, -w INTERVAL" "$validation_output" >&2
+      exit 1
+    fi
+  fi
 
 }
 
@@ -126784,6 +127285,11 @@ playground_connector_completion() {
         playground_connector_show_config_parameters_completion "$completion_current" "$@"
         return
         ;;
+      metrics)
+        shift
+        playground_connector_metrics_completion "$completion_current" "$@"
+        return
+        ;;
       display-metrics-api)
         shift
         playground_connector_display_metrics_api_completion "$completion_current" "$@"
@@ -126858,7 +127364,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait validate diff error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics stop resume unpause delete diagnose show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait validate diff error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics stop resume unpause delete diagnose show-lag benchmark show-config show-config-parameters metrics display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -128692,6 +129198,67 @@ playground_connector_show_config_parameters_completion() {
 }
 
 # :command.completion_function
+playground_connector_metrics_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --watch | -w)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--watch"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--watch"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --watch "$completion_current" --watch -w
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
 playground_connector_display_metrics_api_completion() {
   local completion_current="$1"
   shift
@@ -130405,6 +130972,7 @@ run() {
     "connector benchmark") playground_connector_benchmark_command ;;
     "connector show-config") playground_connector_show_config_command ;;
     "connector show-config-parameters") playground_connector_show_config_parameters_command ;;
+    "connector metrics") playground_connector_metrics_command ;;
     "connector display-metrics-api") playground_connector_display_metrics_api_command ;;
     "connector display-metrics-api-with-grafana") playground_connector_display_metrics_api_with_grafana_command ;;
     "connector select-config") playground_connector_select_config_command ;;
