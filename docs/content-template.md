@@ -430,6 +430,9 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - [Why tombstone is not propagated to table derived from CTAS in ksqlDB](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/tombstone-propagated-table) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to use Protobuf without Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/protobuf-without-schema-registry) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
+## 🐿️ Flink
+- [Flink SQL with Kafka](https://github.com/vdesabou/kafka-docker-playground/tree/master/flink/flink-sql-kafka): streaming and batch Flink SQL on Kafka topics with `playground flink sql|list-jobs|cancel` :flink/flink-sql-kafka:
+
 ## 🔰 Schema Registry
 - [How to use Data Contracts](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/data-contracts) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to produce Avro records via kafka-avro-console-producer with Union](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/kafka-avro-console-producer-union) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)

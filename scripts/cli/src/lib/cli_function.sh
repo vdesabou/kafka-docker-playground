@@ -3185,6 +3185,24 @@ function filter_connect_running() {
   fi
 }
 
+function filter_flink_running() {
+  local flink_ok=0
+  # only wait for a jobmanager that is starting, not when there is none
+  if get_flink_rest_url; then
+    for i in {1..10}; do
+      if curl -s -f "${flink_rest_url}/overview" > /dev/null 2>&1; then
+        flink_ok=1
+        break
+      fi
+      sleep 1
+    done
+  fi
+
+  if [ $flink_ok == 0 ]; then
+    logerror "flink jobmanager rest api should be running to run this command: start an example with playground run --enable-flink"
+  fi
+}
+
 function filter_docker_running() {
   # doctor is precisely the command you run when the engine is down (and the switch
   # commands are how you leave an engine that is down), and a bare
@@ -7597,4 +7615,17 @@ function salesforce_setup_var_name () {
     name="${name}_ACCOUNT2"
   fi
   echo "$name"
+}
+
+# url from the host of the rest api of the flink jobmanager started by --enable-flink (port 18081)
+function get_flink_rest_url () {
+  flink_rest_url=""
+  flink_jobmanager_container="jobmanager"
+  local mapped
+  mapped=$(docker port "$flink_jobmanager_container" "18081/tcp" 2>/dev/null | head -1)
+  if [ -z "$mapped" ]
+  then
+    return 1
+  fi
+  flink_rest_url="http://localhost:${mapped##*:}"
 }

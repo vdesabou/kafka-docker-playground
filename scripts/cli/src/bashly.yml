@@ -264,6 +264,10 @@ commands:
   help: Return some completion for consumer group list
   private: true
 
+- name: get-flink-job-list
+  help: Return some completion for running flink job list
+  private: true
+
 - name: get-catalog-tag-list
   help: Return some completion for stream catalog tag list
   private: true
@@ -2066,7 +2070,11 @@ commands:
 
       Once enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink maven repository.
 
-      Flink UI is reacheable using http://127.0.0.1:8081 within the flink child directory. If you enable Flink by starting connector deployment, http://127.0.0.1:18081 will be used.
+      To skip the question (in a script or CI), set FLINK_URL to the jar(s) to download, e.g. the Kafka SQL connector.
+
+      Flink UI and REST API: http://127.0.0.1:18081
+
+      🎓 Tip: run Flink SQL and manage the jobs with 'playground flink sql|list-jobs|cancel', see the flink/flink-sql-kafka example.
   - &enable-conduktor
     long: --enable-conduktor
     required: false
@@ -8699,6 +8707,161 @@ commands:
       examples:
       - playground consumer-group delete --group my-app
       - playground consumer-group delete --group my-app --topic orders
+
+- name: flink
+  expose: always
+  group: Flink
+  filters:
+  - flink_running
+  help: |-
+    🐿️ Flink commands
+
+    Run Flink SQL and manage the jobs of the Flink cluster started with
+    'playground run --enable-flink' (jobmanager REST API on port 18081).
+
+      sql         run Flink SQL statements (stdin or --file) with the SQL client
+      list-jobs   jobs of the cluster with their state, start time and duration
+      cancel      cancel a job, or all running jobs
+
+    🎓 Tip: the Flink UI is served on the same port as the REST API:
+    http://localhost:18081. See the flink/flink-sql-kafka example.
+  commands:
+
+    - name: sql
+      group: Flink
+      help: |-
+        🐿️ Run Flink SQL statements with the SQL client
+
+        The statements are read from stdin (heredoc) or --file, and run in
+        one SQL client session (bin/sql-client.sh -f) in the sql-client
+        container, or in the jobmanager container when sql-client is stopped. So
+        CREATE TABLE and the INSERT INTO that uses it must be sent in the
+        same call.
+
+        Results are printed as tables (tableau result mode). An INSERT INTO
+        submits a job to the cluster and returns right away: its job id is
+        printed, follow it with 'playground flink list-jobs'.
+
+        The client stops at the first failing statement, and the command
+        then exits with code 1.
+
+        🎓 Tip: a SELECT on an unbounded table (Kafka, datagen) never ends in
+        streaming mode: add a LIMIT, or SET 'execution.runtime-mode' = 'batch'
+        on a bounded source. Otherwise the client is stopped after
+        --max-wait seconds.
+      flags:
+      - long: --file
+        short: -f
+        required: false
+        arg: file
+        validate: file_exists
+        completions:
+          dynamic:
+          - playground get-specific-file-extension "$completion_current" --extension "sql"
+        help: |-
+          📄 File with the SQL statements, separated by ;
+
+          ℹ️ If not set, the statements are read from stdin
+      - long: --max-wait
+        short: -w
+        required: false
+        arg: max_wait
+        validate: integer
+        default: "120"
+        help: |-
+          ⏳ Stop the SQL client after this number of seconds (default 120)
+      - *verbose
+      examples:
+      - |-
+        playground flink sql << 'EOF'
+        CREATE TABLE orders (id INT, product STRING) WITH (
+          'connector' = 'datagen', 'rows-per-second' = '1'
+        );
+        CREATE TABLE sink (id INT, product STRING) WITH ('connector' = 'print');
+        INSERT INTO sink SELECT * FROM orders;
+        EOF
+      - playground flink sql --file ./queries.sql
+      x_example_outputs:
+      - command: playground flink sql --file ./queries.sql
+        output: |-
+          13:20:47 ℹ️ 🐿️ Running Flink SQL statements in sql-client container (Flink 2.3.0, http://localhost:18081)
+          Flink SQL> CREATE TABLE src (id INT) WITH ('connector'='datagen','rows-per-second'='1')[INFO] Execute statement succeeded.
+          Flink SQL> CREATE TABLE snk (id INT) WITH ('connector'='blackhole')[INFO] Execute statement succeeded.
+          Flink SQL> [INFO] Submitting SQL update statement to the cluster...
+          [INFO] SQL update statement has been successfully submitted to the cluster:
+          Job ID: 972185f42739cba34766e6dea6d80a50
+          13:20:49 ℹ️ 🚀 Job 972185f42739cba34766e6dea6d80a50 submitted, follow it with: playground flink list-jobs
+
+    - name: list-jobs
+      group: Flink
+      help: |-
+        📋 List the jobs of the Flink cluster
+
+        Job id, state, name, start time and duration of every job, most
+        recent first. For a FAILED job, the root exception is also printed.
+      flags:
+      - long: --state
+        required: false
+        arg: state
+        allowed:
+        - INITIALIZING
+        - CREATED
+        - RUNNING
+        - FAILING
+        - FAILED
+        - CANCELLING
+        - CANCELED
+        - FINISHED
+        - RESTARTING
+        - SUSPENDED
+        - RECONCILING
+        help: |-
+          🚦 Only list the jobs in this state
+      - long: --json
+        required: false
+        help: |-
+          📗 Print the jobs as a JSON array (the /jobs/overview REST API response) and nothing else
+      - *verbose
+      examples:
+      - playground flink list-jobs
+      - playground flink list-jobs --state RUNNING
+      - playground flink list-jobs --json | jq -r '.[].jid'
+      x_example_outputs:
+      - command: playground flink list-jobs
+        output: |-
+          13:22:10 ℹ️ 📋 Jobs of the Flink cluster (Flink 2.3.0, http://localhost:18081)
+          JOB ID                            STATE     NAME                                              START                DURATION
+          972185f42739cba34766e6dea6d80a50  RUNNING   insert-into_default_catalog.default_database.snk  2026-10-29 14:20:48  1m22s
+
+    - name: cancel
+      group: Flink
+      help: |-
+        🛑 Cancel a Flink job
+
+        Cancels --job, or every running job with --all, and waits until the
+        job is CANCELED (30 seconds at most). Without --job and --all, the
+        running job is cancelled when there is only one.
+      flags:
+      - long: --job
+        short: -j
+        required: false
+        arg: job
+        conflicts: [--all]
+        completions:
+          dynamic:
+          - playground get-flink-job-list
+        help: |-
+          🆔 Id of the job to cancel (see playground flink list-jobs)
+      - long: --all
+        required: false
+        conflicts: [--job]
+        help: |-
+          💥 Cancel all running jobs
+      - *verbose
+      examples:
+      - playground flink cancel
+      - playground flink cancel --job 972185f42739cba34766e6dea6d80a50
+      - playground flink cancel --all
 
 - name: rbac
   expose: always
