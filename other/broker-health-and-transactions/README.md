@@ -4,6 +4,8 @@
 
 Showcase the [`playground broker`](https://kafka-docker-playground.io/#/playground%20broker) commands on 3 brokers: check the health of the cluster, crash and restart a broker, restart all the brokers like a rolling upgrade, read the broker metrics, and find and abort an open transaction that blocks `read_committed` consumers.
 
+🍪 Deep dive: [brokers and transactions](https://kafka-docker-playground.io/#/deep-dive-broker)
+
 ## How to run
 
 ```bash

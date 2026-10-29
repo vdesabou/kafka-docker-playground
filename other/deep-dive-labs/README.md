@@ -28,6 +28,7 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `cfk.sh` | [Confluent for Kubernetes](https://kafka-docker-playground.io/#/deep-dive-cfk) (runs in the cfk CI job only, exits 111 with any other environment) |
 | `fully-managed.sh` | [Fully managed connectors (Confluent Cloud)](https://kafka-docker-playground.io/#/deep-dive-fully-managed) — skipped without Confluent Cloud credentials |
 | `topic-administration.sh` | [Topic administration](https://kafka-docker-playground.io/#/deep-dive-topic-administration) |
+| `broker.sh` | [Brokers and transactions](https://kafka-docker-playground.io/#/deep-dive-broker) (3 brokers: a crash, a rolling restart, an open transaction) |
 | `connector-benchmark.sh` | [`connector benchmark`](https://kafka-docker-playground.io/#/deep-dive-connector-benchmark) |
 | `oracle-cdc.sh` | [Oracle CDC: LogMiner and XStream](https://kafka-docker-playground.io/#/deep-dive-oracle-cdc) (runs the Oracle XStream example itself, about 10 minutes; the LogMiner connector is not replayed) |
 | `secrets.sh` | [Credentials and the 1Password setup](https://kafka-docker-playground.io/#/deep-dive-secrets) (no container, a throwaway store with the `file` backend; the 1Password steps are not replayed) |

@@ -111,7 +111,8 @@ behave like this" question, read the matching page first:
 | thread dumps, heap, GC, flight recorder | `docs/deep-dive-jvm-diagnostics.md` |
 | running examples, versions, update-version | `docs/deep-dive-run-and-versions.md` |
 | slow or broken network | `docs/deep-dive-network-traffic.md` |
-| topics: create, configs, counts; brokers: health, stop / start, transactions | `docs/deep-dive-topic-administration.md` |
+| topics: create, configs, counts, reassignments, dynamic broker configs | `docs/deep-dive-topic-administration.md` |
+| brokers: health, stop / start, rolling restart, transactions (`read_committed` stuck), broker metrics | `docs/deep-dive-broker.md` |
 | SASL / SSL / Kerberos / RBAC environments | `docs/deep-dive-secured-environments.md` |
 | two clusters (`mdc-*`), Replicator, MirrorMaker 2, Cluster Linking, offset translation | `docs/deep-dive-replication.md` |
 | Confluent for Kubernetes (`cfk`, `cfk-rbac`), k3d, support bundles | `docs/deep-dive-cfk.md` |

@@ -5261,7 +5261,7 @@
     },
     {
       "name": "broker",
-      "description": "🖥️ Broker commands\n\n  config            read and change dynamic broker configs\n  health            brokers down, partition problems, KRaft quorum\n  stop / start      stop (or kill) a broker, start it again\n  rolling-restart   restart the brokers one by one, safely\n  transactions      list transactions, find and abort hanging ones\n  describe          brokers, KRaft quorum, feature levels, API versions\n  metrics           key JMX metrics of each broker\n\nNot available on Confluent Cloud and multi data center environments.",
+      "description": "🖥️ Broker commands\n\n  config            read and change dynamic broker configs\n  health            brokers down, partition problems, KRaft quorum\n  stop / start      stop (or kill) a broker, start it again\n  rolling-restart   restart the brokers one by one, safely\n  transactions      list transactions, find and abort hanging ones\n  describe          brokers, KRaft quorum, feature levels, API versions\n  metrics           key JMX metrics of each broker\n\nNot available on Confluent Cloud and multi data center environments.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker",
       "usage": "playground broker COMMAND",
       "options": [],
       "subcommands": [

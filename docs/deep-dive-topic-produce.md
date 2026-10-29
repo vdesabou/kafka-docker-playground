@@ -143,7 +143,7 @@ the subjects of the topic (same schema id). The staging topic and its subjects a
   `--transaction-timeout` (default 60000 ms, at most `transaction.max.timeout.ms` of the brokers, 15 minutes). Until
   then `read_committed` consumers don't read past its first record, even records produced after it without
   transaction. See it with `playground broker transactions describe-producers --topic <t>`, end it with
-  `playground broker transactions abort` (see the [topic administration deep dive](/deep-dive-topic-administration.md)).
+  `playground broker transactions abort` (see the [brokers and transactions deep dive](/deep-dive-broker.md)).
 - Not on Confluent Cloud, and not with `--nb-messages -1`. `--producer-property` applies to the staging write, not
   to the transactional producer.
 

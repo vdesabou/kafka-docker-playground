@@ -8900,6 +8900,8 @@ commands:
       metrics           key JMX metrics of each broker
 
     Not available on Confluent Cloud and multi data center environments.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker
   commands:
 
   - name: config
