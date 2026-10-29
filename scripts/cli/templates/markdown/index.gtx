@@ -97,7 +97,9 @@ if commands.any?
     > ### {{ group.gsub(/:$/, '').gsub(/\A=+\s*|\s*=+\z/, '') }}
     >
     commands.each do |subcommand|
-      > - [{{ subcommand.name }}]({{ subcommand.full_name.gsub(' ', '%20') }}) - {{ subcommand.summary.for_kdp_inline }}
+      # subcommands of an exposed command (expose: true) are listed in its group by bashly: nest them under it
+      indent = "  " * (subcommand.full_name.split.size - full_name.split.size - 1)
+      > {{ indent }}- [{{ subcommand.name }}]({{ subcommand.full_name.gsub(' ', '%20') }}) - {{ subcommand.summary.for_kdp_inline }}
     end
     >
   end
