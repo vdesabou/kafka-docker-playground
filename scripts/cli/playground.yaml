@@ -2804,25 +2804,28 @@ subcommands:
       or pods run (operator did not apply it, roll not complete) is one finding, the
       exceeded quota events become one finding per ResourceQuota, each Warning event
       is counted once (event.txt and event.yaml) and a copy of the bundle inside the
-      bundle is analyzed once. \U0001F69A A ZooKeeper to KRaft migration gets its
-      own finding: phase / sub-phase of the KRaftMigrationJob, how long it has been
-      there (events, operator requeues), its last error and the next steps of that
-      sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe failures
-      and back-offs of a pod that is Running and Ready in the bundle are low and marked
-      transient. Each issue is attributed to a component and an instance (CR name),
-      and to its connector: --component keeps some of them, the HTML report has Component
-      / Instance / Connector filters. \U0001F512 Secrets, IPs, hostnames, emails and
-      LDAP DNs are sanitized by default (best effort: review before sharing), --no-sanitize
-      for internal bundles only. --logs-only gives the plain log digest instead.\n\n\U0001F512
-      Passwords and other secrets (password=…, JAAS configs, tokens, keys, credentials
-      in URLs), IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>,
-      <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON) by default.
-      It is best effort: review the output before sharing it. --no-sanitize keeps
-      them, for internal logs only.\n\n\U0001F9ED After the digest of each file, a
-      short summary: time range, occurrences by connector, known causes with what
-      to do, root causes no known cause explains, and the configuration logged at
-      startup (connectors, components, clients) with the keys changed between restarts.
-      --connector keeps one connector, --show-config prints a configuration.\n\n\U0001F310
+      bundle is analyzed once. \U0001F570️ The time range of each log is listed, with
+      a finding when a log starts long after its pod or after the last change of the
+      CRs, and CRs that keep the \"Reconcile is blocked\" condition after the annotation
+      was removed are one finding. \U0001F69A A ZooKeeper to KRaft migration gets
+      its own finding: phase / sub-phase of the KRaftMigrationJob, how long it has
+      been there (events, operator requeues), its last error and the next steps of
+      that sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe
+      failures and back-offs of a pod that is Running and Ready in the bundle are
+      low and marked transient. Each issue is attributed to a component and an instance
+      (CR name), and to its connector: --component keeps some of them, the HTML report
+      has Component / Instance / Connector filters. \U0001F512 Secrets, IPs, hostnames,
+      emails and LDAP DNs are sanitized by default (best effort: review before sharing),
+      --no-sanitize for internal bundles only. --logs-only gives the plain log digest
+      instead.\n\n\U0001F512 Passwords and other secrets (password=…, JAAS configs,
+      tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are
+      replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest,
+      the report and the JSON) by default. It is best effort: review the output before
+      sharing it. --no-sanitize keeps them, for internal logs only.\n\n\U0001F9ED
+      After the digest of each file, a short summary: time range, occurrences by connector,
+      known causes with what to do, root causes no known cause explains, and the configuration
+      logged at startup (connectors, components, clients) with the keys changed between
+      restarts. --connector keeps one connector, --show-config prints a configuration.\n\n\U0001F310
       Also writes a self-contained HTML report in --output-dir, opened in the browser
       in an interactive terminal: verdict, known causes (task killed, authentication,
       TLS, unknown magic byte, OutOfMemoryError...), occurrences over time, root causes
@@ -2851,8 +2854,13 @@ subcommands:
         Registry authentication\n                         failure, operator reconcile
         errors\n  cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration
         (KRaftMigrationJob) stuck for 3\n                         days in SETUP, the
-        KRaftController missing inter replication credentials\n\nRepeatable: ✓ Yes\nAllowed
-        values: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration"
+        KRaftController missing inter replication credentials\n  cfk_rollout            CFK
+        support bundle: CP upgrade half done (KRaftController still blocked, Kafka
+        roll\n                         stuck at 2/3), operator pod refused by the
+        ResourceQuota, stale \"Reconcile is\n                         blocked\" conditions,
+        operator log that starts after the last change\n\nRepeatable: ✓ Yes\nAllowed
+        values: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration,
+        cfk_rollout"
     - names:
       - "--include-warnings"
       argument: ''

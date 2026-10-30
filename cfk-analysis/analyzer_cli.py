@@ -214,6 +214,10 @@ def print_text_report(results, top: int):
           f"with {coverage.get('log_lines', 0)} lines, {coverage.get('skipped_files', 0)} skipped)")
     if coverage.get("skipped_copies"):
         print(f"Skipped copies:   {', '.join(coverage['skipped_copies'])} (a copy of the bundle inside the bundle, analyzed once)")
+    if coverage.get("log_windows"):
+        windows = coverage["log_windows"]
+        print(f"Logs cover:       {min(w['first'] for w in windows)} to {max(w['last'] for w in windows)} "
+              f"({len(windows)} log files, each one in the HTML report and in --json .coverage.log_windows)")
     if coverage.get("duplicate_events"):
         print(f"Duplicate events: {coverage['duplicate_events']} rows of kubectl get events also in the YAML events, counted once")
     if coverage.get("unparsable_files"):

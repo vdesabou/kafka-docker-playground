@@ -225,10 +225,13 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   `Kafka version: …-ce` they log at startup) is one finding, with the roll of the StatefulSet and the next steps. The
   `exceeded quota` events become one finding per ResourceQuota and controller (requested / used / allowed), each Warning
   event is counted once when the bundle has both `event.txt` and `event.yaml`, and a copy of the bundle inside the
-  bundle is analyzed once. It
+  bundle is analyzed once. **🕰️ Log coverage**: the time range of each log (HTML panel, `.coverage.log_windows`), and
+  one `Bundle Coverage` finding when a log starts long after its pod started or after the last change of the CRs
+  (the bundle keeps the end of each log: ask for `kubectl logs --since=…`). CRs that keep the "Reconcile is blocked."
+  condition after the `block-reconcile` annotation was removed are one low finding: the condition is not cleared. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
-  `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration).
+  `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration, `--sample cfk_rollout` for a half-done upgrade).
   `analyze cfk-bundle --bundle <bundle>` still works, as a hidden alias.
 
 ---

@@ -55,6 +55,7 @@ CATEGORY_EMOJI = {
     "KRaft Issues": "🗳️",
     "KRaft Migration": "🚚",
     "Rollout Issues": "🔄",
+    "Bundle Coverage": "🕰️",
     "Zookeeper Issues": "🦓",
     "Schema Registry Issues": "🧬",
     "Connect Issues": "🔌",
@@ -682,6 +683,23 @@ def _runbooks_html(results: Dict) -> str:
         </details>"""
 
 
+def _log_coverage_html(results: Dict) -> str:
+    """Time range of each log of the bundle, with the start of its pod when the bundle has its manifest"""
+    windows = (results.get("coverage") or {}).get("log_windows") or []
+    if not windows:
+        return ""
+    rows = "".join(
+        f"<tr><td><code>{_esc(w['file'])}</code></td><td class=\"nowrap\">{_esc(w['first'])}</td>"
+        f"<td class=\"nowrap\">{_esc(w['last'])}</td><td class=\"nowrap\">{_esc(w.get('span') or '')}</td>"
+        f"<td class=\"nowrap\">{_esc(w.get('pod_started') or '')}</td></tr>"
+        for w in windows)
+    return f"""
+        <details class="panel">
+          <summary>🕰️ Log coverage <span class="label">{len(windows)} log files, from {_esc(min(w['first'] for w in windows))} to {_esc(max(w['last'] for w in windows))}: what happened outside these ranges is not in the bundle</span></summary>
+          <table class="env"><tr><th>Log</th><th>From</th><th>To</th><th>Covers</th><th>Pod started</th></tr>{rows}</table>
+        </details>"""
+
+
 def _properties_table(text: str) -> Tuple[str, int]:
     """key=value lines as a table (comments and blank lines left out), with the number of keys"""
     rows = []
@@ -929,6 +947,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
     {summary_html}
     {_runbooks_html(results)}
     {_environment_html(results)}
+    {_log_coverage_html(results)}
     {_configuration_html(results)}
     {controls_html}
     {body_html}
