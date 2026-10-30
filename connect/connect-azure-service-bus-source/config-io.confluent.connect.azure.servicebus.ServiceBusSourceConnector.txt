@@ -111,12 +111,12 @@ Azure Service Bus messaging entity name. Should be either the name of the queue 
 
 🔘 azure.servicebus.subscription
 
+The Azure Service Bus Subscription Name for the configured topic from which messages have to be polled. This should only be configured when message entity is of type topic.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Azure Service Bus Subscription Name for the configured topic from which messages have to be polled. This should only be configured when message entity is of type topic.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 azure.servicebus.connection.string
 
@@ -174,4 +174,5 @@ The prefetch count for the Service Bus receiver. Prefetching messages increases 
 	 - Default: 0
 	 - Importance: LOW
 	 - Required: false
+
 

@@ -8,7 +8,7 @@
     "azure.servicebus.prefetch.count": "0",
     "azure.servicebus.sas.key": "",
     "azure.servicebus.sas.keyname": "",
-    "azure.servicebus.subscription": "STRING",
+    "azure.servicebus.subscription": "",
     "exactly.once.support": "requested",
     "kafka.topic": "",
     "task.parallel.transform.chunk.size": "10000",
