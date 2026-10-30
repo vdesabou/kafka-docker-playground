@@ -23,7 +23,8 @@ version where a behaviour changed. Takes about 15 minutes to read and run.
 | the same example on SASL, SSL, Kerberos, RBAC, CFK, Confluent Cloud | `--environment sasl-ssl` (connector examples only) |
 | Control Center, ksqlDB, Grafana, kcat… next to it | `--enable-control-center`, `--enable-ksqldb`, `--enable-jmx-grafana`, `--enable-kcat`… |
 | DEBUG / TRACE before the connector is created | `--connect-log-level "io.confluent.connect.jdbc=TRACE"` |
-| the last run again, same flags | `playground re-run` (menu), or the last line of `playground-run-history` (scripts) |
+| the last run again, same flags | `playground re-run` (menu), or `playground history --run` (scripts) |
+| what did I run, with which flags, did it pass? | `playground history --list` (`<words>` to filter, `--json`, `--last`, `--stats`) |
 | another version, keeping the example running | `playground update-version --tag 8.2.0` / `--connect-tag` / `--connector-tag` / `--connector-zip` |
 | what changed in Confluent Platform since the customer's version | `playground cp-changelog --from 8.1.4 [--component schema-registry] [--grep <symptom> \| --security]` |
 | stop everything, volumes included | `playground stop` |
@@ -147,22 +148,35 @@ Gotchas:
 
 ```bash
 playground re-run                      # menu with the last example and its flags preselected, 🚀 to run
-playground history                     # picker over playground-run-history, the line is editable before it runs
-tail -1 playground-run-history         # the last run line, for a script
+playground history [s3 sink]           # picker over playground-run-history (✅ ❌ + date, preview), the line is editable before it runs
+playground history --list [s3 sink]    # the same, printed: command, then result · date · duration · branch · number of runs
+playground history 369368 --last       # the most recent command matching the words, for a script (the last run without words)
+playground history 369368 --run        # run it, without picker nor edit prompt
+playground history --json --limit 5    # command, script, path, exists, date, result, duration_seconds, branch, runs
+playground history --stats             # most run examples, --tag / --connector-tag / --environment, results
+playground history --prune             # one line per command, runs of deleted scripts removed (.bak kept)
 playground state get run.test_file     # the example of the last run
 ```
 
 Gotchas:
 
-- **`re-run` and `history` are interactive** (fzf menu, editable prompt): they need a terminal. In a script or an agent,
-  run the line from `playground-run-history` with `playground run -f …`.
+- In the editable line of `history`, tab completes the flags and their values like your shell does (it asks
+  `playground __complete`), and file names.
+- **`re-run` and the `history` picker are interactive** (fzf menu, editable prompt): they need a terminal. In a script
+  or an agent, use `playground history --list` / `--json` / `--last` / `--run`.
+- Each line of `playground-run-history` ends with a comment that `eval` ignores:
+  `# date=2026-10-30T15:20:05 branch=master result=SUCCESS duration=192` (`result` and `duration`, in seconds, are added
+  when the run ends: `SUCCESS`, `FAILURE`, `SKIPPED` for exit 111, `INTERRUPTED` for ctrl-c; a run that was cut before
+  the example started has none). Lines written by older versions have no comment: ▫️ in the picker, `null` in `--json`.
 - **`re-run` replays the flags, not the versions resolved by the last run**: without `--connector-tag`, it installs
   the latest connector of today again, not the one installed last time. Pin the version with a flag to replay exactly.
 - The history keeps every run as a shell-quoted line (`eval` replays it, paths with spaces included), without the
   credentials: `--cluster-creds` and `--cluster-schema-registry-creds` are written as `'<masked>'`. `history` puts them
   back from `playground.ini` when the run used the cluster saved there, otherwise replace `'<masked>'` in the editable
   line. Lines written before that may still hold them: it's a local file, don't share it as is.
-- `history` hides the runs whose script no longer exists (renamed repro model, removed worktree) and prints how many.
+- `history` hides the runs whose script no longer exists (renamed repro model, removed worktree) and prints how many
+  (`--all` shows them with 🗑️). `--prune` rewrites the file without them, one line per command: the number of runs and
+  the `--stats` of the older runs are lost, the previous file is kept as `playground-run-history.bak`.
 - `run.test_file` is only updated once the run really starts: cancelling the menu or a bad combination keeps the
   previous example as the current one.
 
@@ -217,7 +231,8 @@ playground status
 
 ```bash
 tail -1 playground-run-history
-# playground run -f /…/connect/connect-filestream-sink/filestream-sink.sh --tag=8.2.0   <- absolute path, flags as --flag=value
+# playground run -f /…/connect/connect-filestream-sink/filestream-sink.sh --tag=8.2.0 # date=2026-10-23T12:59:36 branch=master result=SUCCESS duration=40
+#                                                                                       ^ absolute path, flags as --flag=value, then a comment eval ignores
 playground state get run.test_file
 # …/connect/connect-filestream-sink/filestream-sink.sh
 ```
@@ -259,7 +274,8 @@ playground container logs -c connect --grep "Writing line to" --no-follow --tail
 **Step 6: replay the last run from a script**
 
 ```bash
-eval "$(tail -1 playground-run-history)"
+playground history --run                 # or: eval "$(tail -1 playground-run-history)"
+# 🏰 playground run -f /…/connect/connect-filestream-sink/filestream-sink.sh --connect-log-level=org.apache.kafka.connect.file=TRACE
 # ⛳ Flags used are --connect-log-level=org.apache.kafka.connect.file=TRACE        <- the same run, flags included
 ```
 
@@ -297,7 +313,7 @@ playground run -f <example.sh> [--tag X] [--connect-tag X] [--connector-tag A[,B
   [--environment sasl-ssl|2way-ssl|kerberos|rbac-sasl-plain|cfk|ccloud|…] [--enable-control-center] [--enable-jmx-grafana] [--enable-kcat] \
   [--connect-log-level "<pkg>=TRACE,…"] [-o]
 playground re-run                    # menu, last example and flags
-playground history                   # picker over playground-run-history
+playground history [words]           # picker over playground-run-history (--list, --json, --last, --run, --stats, --prune)
 playground update-version [--tag X | --connect-tag X | --connector-tag A[,B] | --connector-zip zip | --connector-jar jar]
 playground stop                      # down -v: containers and volumes
 playground cp-changelog --from X [--to Y] [--component kafka|schema-registry|ksqldb|rest-proxy|common] [--grep re | --security] [--json]

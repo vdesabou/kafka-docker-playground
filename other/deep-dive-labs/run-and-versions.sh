@@ -4,8 +4,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
-# the page's steps that call 'playground run' itself (two runs, history, re-run, a bad flag combination) can't run
-# inside this script, which is already started by 'playground run': this lab covers the update-version steps
+# the page's steps that call 'playground run' itself (two runs, history picker, re-run, a bad flag combination) can't run
+# inside this script, which is already started by 'playground run': this lab covers the update-version, cp-changelog and history (non-interactive) steps
 
 lab_require_plaintext
 
@@ -76,5 +76,20 @@ lab_run playground cp-changelog --from 8.1.4 --to 8.3.2 --component schema-regis
 lab_expect_exit 0
 lab_expect_contains "Handle anyOf/allOf in JSON transforms (560bf4ca)"
 lab_expect_not_contains "🧩 ksqlDB"
+
+log "Step 6: the history of the runs"
+# this lab is itself a 'playground run': its line is in the history, with a date and no result yet
+lab_run playground history deep-dive-labs/run-and-versions --last
+lab_expect_exit 0
+lab_expect_contains "playground run -f "
+lab_expect_contains "/other/deep-dive-labs/run-and-versions.sh"
+lab_expect_not_contains " # date=" "the trailing comment is not printed"
+lab_run playground history deep-dive-labs/run-and-versions --json --limit 1
+lab_expect_exit 0
+lab_expect_contains '"path": "other/deep-dive-labs/run-and-versions.sh"'
+lab_expect_contains '"exists": true'
+lab_run playground history zzz-no-such-run --json
+lab_expect_exit 1
+lab_expect_equals "$LAB_OUTPUT" "[]" "no run: an empty array"
 
 log "✅ all the outputs of the page are as expected"

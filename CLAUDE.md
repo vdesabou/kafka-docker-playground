@@ -23,6 +23,7 @@ out of context.
 | Question | Command | Instead of |
 | --- | --- | --- |
 | "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`, `--json`) | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
+| "what did I run, with which flags, did it pass? replay it" | `playground history --list [<words>]` (result, date, duration, branch, number of runs; `--json`, `--last`, `--run`, `--stats`) | `tail playground-run-history` |
 | "what is running right now?" | `playground status` (lists containers, flags exited/restarting ones) | `docker ps`, reading `playground.ini` |
 | "what is the state of the connectors?" | `playground connector status` | curl on the Connect REST API |
 | "is the cluster healthy? (a broker down, under-replicated / under min ISR / offline partitions, KRaft quorum)" | `playground broker health` (exit 1 when not healthy, `--wait-healthy --max-wait 120`, `--json`); `playground broker describe` for brokers, controller, `metadata.version` | `kafka-topics --under-replicated-partitions`, `kafka-metadata-quorum` |
