@@ -20,9 +20,10 @@ fi
 model="${model_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
 override="${model_dir}/docker-compose.plaintext.repro-000000-deep-dive-lab-ci.yml"
 imported="${model_dir}/filestream-sink-repro-000000-deep-dive-lab-ci-imported-$(date +%Y%m%d).sh"
+report="${model_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.REPRO.md"
 config_model="${model_dir}/filestream-sink-repro-000000-deep-dive-lab-ci-config.sh"
 config_override="${model_dir}/docker-compose.plaintext.repro-000000-deep-dive-lab-ci-config.yml"
-for f in "$model" "$override" "$imported" "$config_model" "$config_override"
+for f in "$model" "$override" "$imported" "$report" "$config_model" "$config_override"
 do
     if [ -e "$f" ]
     then
@@ -34,7 +35,7 @@ prev_test_file=$(playground state get run.test_file 2> /dev/null | tail -1)
 prev_clipboard=$(playground config get clipboard 2> /dev/null | tail -1)
 export_dir=$(mktemp -d)
 function cleanup_lab () {
-    rm -f "$model" "$override" "$imported" "$config_model" "$config_override"
+    rm -f "$model" "$override" "$imported" "$report" "$config_model" "$config_override"
     rm -rf "$export_dir"
     # the verdicts of the lab models
     if [ -f "${root_dir}/playground-repro-verdicts" ]
@@ -136,6 +137,7 @@ lab_expect_contains "no 'playground run' found in playground-run-history, the bu
 lab_expect_contains "👷‍♂️ 1 reproduction model(s)"
 lab_expect_contains "▶️  playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
 lab_expect_contains "connect-connect-filestream-sink/README.md  (symlink to connect/connect-filestream-sink/README.md, stored as content)"
+lab_expect_contains "📄 connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.REPRO.md"
 lab_expect_contains "✅ no secret nor customer data found"
 lab_expect_contains "🔍 dry run: no bundle written"
 lab_run playground repro export -f "$model" --output "$export_dir" --no-clipboard
@@ -146,6 +148,15 @@ lab_run tar tzf "$bundle"
 lab_expect_contains "repro-manifest.json"
 lab_expect_contains "connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
 lab_expect_contains "connect-connect-filestream-sink/docker-compose.plaintext.repro-000000-deep-dive-lab-ci.yml"
+lab_expect_contains "connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.REPRO.md" "the hand-off report"
+lab_run bash -c "playground repro export -f '$model' --report-only 2> /dev/null"
+lab_expect_exit 0
+lab_expect_contains "# 🐞 000000 deep dive lab ci"
+lab_expect_contains "| 🩹 status | lab only |"
+lab_expect_contains "| 🧪 last verdict | 🐞 reproduced on"
+lab_expect_contains "## ▶️ How to run it"
+lab_expect_contains "## 🔀 What it changes compared with \`connect/connect-filestream-sink/filestream-sink.sh\`"
+lab_expect_not_contains "📤 Exported bundle" "--report-only writes no bundle"
 lab_run bash -c "tar xzOf '$bundle' repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, verdict: .last_verdict.verdict, run_command}'"
 lab_expect_contains '{"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","verdict":"reproduced","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"}'
 
@@ -155,8 +166,8 @@ lab_expect_exit 0
 lab_expect_contains "🧬 based on connect/connect-filestream-sink"
 lab_expect_contains "🩹 status: lab only"
 lab_expect_contains "🧪 last verdict of the exporter: 🐞 reproduced on"
-lab_expect_contains "📋 0 new, "
-lab_expect_contains " identical, 0 conflicting file(s)" "your own model: every file identical"
+lab_expect_contains "📋 1 new, "
+lab_expect_contains " identical, 0 conflicting file(s)" "your own model: every file identical, plus its new hand-off report"
 lab_expect_contains "🔍 dry run: nothing imported"
 echo "# a local change" >> "$model"
 lab_run playground repro import -f "$bundle"
@@ -167,6 +178,7 @@ lab_run playground repro import -f "$bundle" --on-conflict rename
 lab_expect_exit 0
 lab_expect_contains "imported as connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci-imported-$(date +%Y%m%d).sh"
 lab_expect_contains "▶️  playground run -f ${imported}"
+lab_expect_contains "📖 hand-off report: ${report}"
 if [ ! -f "$imported" ]
 then
     logerror "❌ $imported was not written"

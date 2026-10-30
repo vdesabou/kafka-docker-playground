@@ -294,9 +294,10 @@ The website is published from [`vdesabou/kafka-docker-playground-docs`](https://
 ```bash
 playground repro bootstrap              # scaffold a new model in reproduction-models/
 playground repro list [--mine] [--case <n>] [--status <text>] [--verdict reproduced|not-reproduced|none] [--grep <regex>] [--json]   # find models again
-playground repro export [-f <repro script>] [--dry-run]   # self-contained bundle (+ repro-manifest.json), committed or not, blocked if it holds a secret (--force)
+playground repro export [-f <repro script>] [--dry-run]   # self-contained bundle (+ repro-manifest.json, <model>.REPRO.md), committed or not, blocked if it holds a secret (--force)
 playground repro export --all-uncommitted                 # every new or modified model
 playground repro export --include-artifacts               # also pack connector zip/jar and files referenced by absolute path
+playground repro export --report-only                     # the hand-off report (<model>.REPRO.md, also in every bundle) on stdout, for a Jira
 playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
 playground repro check [--staged | -f <repro script> | --all] [--json]   # same secret / customer data scan, before a commit
 ```

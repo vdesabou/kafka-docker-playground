@@ -26,6 +26,7 @@ ends it with its verdict, `repro bisect` runs it on several versions, `repro sta
 | to know whether a model holds a secret | `playground repro check -f <model>` (`--json`) |
 | what a commit would push | `playground repro check --staged` (what the pre-commit hook runs) |
 | to send a model to a colleague | `playground repro export -f <model>` (`--dry-run` first, `--include-artifacts`) |
+| a hand-off report for engineering (a Jira, a Slack message) | `playground repro export -f <model> --report-only \| pbcopy` (also in every bundle, `<model>.REPRO.md`) |
 | every model you changed, in one bundle | `playground repro export --all-uncommitted` |
 | to run a model someone sent you | `playground repro import -f <bundle.tgz>` (`--dry-run`, `--on-conflict rename`) |
 
@@ -336,6 +337,7 @@ playground repro export -f <model> --dry-run          # what goes in, what the s
 playground repro export -f <model> --output /tmp      # /tmp/playground_repro_<model name>_<date>.tgz
 playground repro export --all-uncommitted             # playground_repro_all-uncommitted_<date>.tgz
 playground repro export -f <model> --include-artifacts
+playground repro export -f <model> --report-only      # the hand-off report (Markdown) on stdout, no bundle
 
 playground repro import -f bundle.tgz --dry-run       # manifest, files, conflicts
 playground repro import -f bundle.tgz --on-conflict rename
@@ -347,6 +349,7 @@ What goes in a bundle:
 | --- | --- |
 | the script, its support files (`README.md`, `stop.sh`, `config-*`, `benchmark-load.bash`, `.gitignore`), and every entry of its folder whose **name appears** in the script or in a compose file it mentions | git-ignored files, `target/`, dumps (`*.hprof`, `*.jfr`), logs, archives, credential files, files over 50 MB |
 | symlinks, **stored as their content** (the bundle doesn't depend on the version of the public example) | files outside the repository (connector zip, `~/Downloads/config.json`): listed only, packed under `<folder>/artifacts/` with `--include-artifacts` |
+| `<model>.REPRO.md`, the **hand-off report** of each model: case, jira, status, author, base example, last verdict, 🎯 expected, 💥 actual, the free comments of the header, the commands to import and run it with the credentials it needs, and the `diff` of its scenario (no header, no cheat sheet) and of its compose override with the ones of the base example. Listed in the manifest like the other files, so an older playground imports it too (`--no-report` to leave it out) | |
 | `repro-manifest.json`: per model the last `playground run` line (from `playground-run-history`, without `--cluster-creds`), case number, author, base example, the header fields (`expected`, `actual`, `jira`, `status`), credential **names**, external files; the playground commit; the sha256 of every file | credential values |
 
 What import does:
@@ -459,20 +462,32 @@ sed -i '' '/AKIAABCDEFGHIJKLMNOP/d' "$m"                           # remove it (
 ```bash
 playground repro export -f "$PWD/$m" --dry-run
 # 🤷 …: no 'playground run' found in playground-run-history, the bundle will not say which flags to use
-# 👷‍♂️ 1 reproduction model(s), 7 file(s):
+# 👷‍♂️ 1 reproduction model(s), 8 file(s):
 #    🔖 connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh
 #       ▶️  playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab.sh
 #    📄 connect-connect-filestream-sink/.gitignore
 #    📄 connect-connect-filestream-sink/config-org.apache.kafka.connect.file.FileStreamSinkConnector.json  (symlink to …, stored as content)
 #    📄 connect-connect-filestream-sink/README.md  (symlink to connect/connect-filestream-sink/README.md, stored as content)
+#    📄 connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.REPRO.md      <- the hand-off report
 #    …
 # ✅ no secret nor customer data found
 # 🔍 dry run: no bundle written
+playground repro export -f "$PWD/$m" --report-only 2> /dev/null | head -12      # the report alone, on stdout
+# # 🐞 000000 deep dive lab
+#
+# | | |
+# | --- | --- |
+# | 🔮 case | [000000](https://confluent.zendesk.com/agent/tickets/000000) |
+# | 🎫 jira | https://confluentinc.atlassian.net/browse/CC-1234 |
+# | 🩹 status | lab only |
+# | 👤 author | you |
+# | 🧬 based on | [`connect/connect-filestream-sink`](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-filestream-sink) |
+# | 🧪 last verdict | 🐞 reproduced on 2026-10-30 (CP default): the command succeeded: test -f '…' |
 playground repro export -f "$PWD/$m" --output /tmp/deep-dive-repro --no-clipboard
 # 📤 Exported bundle is available: /tmp/deep-dive-repro/playground_repro_filestream-sink-repro-000000-deep-dive-lab_2026-10-23.tgz (8.0K)
 # 📥 To import it: playground repro import -f <path>/playground_repro_filestream-sink-repro-000000-deep-dive-lab_2026-10-23.tgz
 tar tzf /tmp/deep-dive-repro/playground_repro_*.tgz
-# repro-manifest.json and the 7 files under connect-connect-filestream-sink/
+# repro-manifest.json and the 8 files under connect-connect-filestream-sink/ (the report included)
 tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, verdict: .last_verdict.verdict, run_command}'
 # {"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","verdict":"reproduced","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab.sh"}
 ```
@@ -483,7 +498,7 @@ tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz repro-manifest.json | jq -c
 playground repro import -f /tmp/deep-dive-repro/playground_repro_*.tgz --dry-run
 # 📦 bundle exported on 2026-10-23T11:14:12Z by vsaboulin from playground commit cf90238a7
 # 🔖 …lab.sh   💡 000000 deep dive lab   🔮 https://confluent.zendesk.com/agent/tickets/000000   🧬 based on connect/connect-filestream-sink
-# 📋 0 new, 7 identical, 0 conflicting file(s)                     <- it's your own model
+# 📋 1 new, 7 identical, 0 conflicting file(s)                     <- your own model, plus its new hand-off report
 # 🔍 dry run: nothing imported
 echo "# a local change" >> "$m"
 playground repro import -f /tmp/deep-dive-repro/playground_repro_*.tgz; echo "exit=$?"
@@ -534,7 +549,7 @@ The license and the schema registry password of the customer are not in the mode
 
 ```bash
 d=reproduction-models/connect-connect-filestream-sink
-rm -f "$d/filestream-sink-repro-000000-deep-dive-lab.sh" \
+rm -f "$d/filestream-sink-repro-000000-deep-dive-lab.sh" "$d/filestream-sink-repro-000000-deep-dive-lab.REPRO.md" \
       "$d/filestream-sink-repro-000000-deep-dive-lab-imported-$(date +%Y%m%d).sh" \
       "$d/docker-compose.plaintext.repro-000000-deep-dive-lab.yml" \
       "$d/filestream-sink-repro-000000-deep-dive-lab-config.sh" \
@@ -559,7 +574,7 @@ current one: run an example (or `playground state set run.test_file <script>`) b
 | the bug is fixed, or it turned out not to be one | `playground repro status -f <model> --set "fixed in <version>"` (`--jira CC-…`), or `--set "not a bug"` / `--set "customer config"` |
 | say whether it reproduces | end the scenario with `playground repro assert --reproduced-if-…`: 🐞 / ✅ with the versions, kept for `repro status` and the bundle |
 | the model must fail when the bug is fixed | assert at the end: `playground topic consume --min-expected-messages N --grep …`, or `connector create-or-update --wait` (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)); `repro assert` reports instead of failing |
-| hand it to engineering / a colleague | run it once (for the run line), `repro export --dry-run`, then `repro export` (`--include-artifacts` for a custom jar) and attach the bundle |
+| hand it to engineering / a colleague | fill in `🎯 expected` / `💥 actual`, end it with `repro assert` and run it once (run line and verdict), `repro export --dry-run`, then `repro export` (`--include-artifacts` for a custom jar) and attach the bundle; paste `repro export --report-only` in the Jira |
 | a colleague sent you a bundle | `repro import --dry-run`, then `repro import`, then the printed `playground run` line |
 | test the fix on another version | `playground run -f <model> --connector-tag <fixed version>`, or `playground update-version` on the running model |
 | since when is it broken, which version fixed it | `repro bisect --from <version> --to <version>` (binary search, changelog of the version where the verdict changes) |
@@ -582,7 +597,7 @@ playground repro assert --reproduced-if-log "<pattern>" [--container connect] | 
 playground repro list [--mine] [--case <n>] [--status <text>] [--verdict reproduced|not-reproduced|none] [--base <example>] [--since 90d|<date>] [--grep <regex>] [--uncommitted] [--limit 30] [--json]
 playground repro bisect [-f <model>] --from <v> --to <v> [--all] | --connector-tag A --connector-tag B … | --tag A --tag B …   [--tag <cp>] [--run-flags "…"] [--json]
 playground repro check [-f <model> | --staged | --all] [--json] [--skip-secrets-store]
-playground repro export [-f <model> … | --all-uncommitted] [--output <dir>] [--dry-run] [--include-artifacts] [--force] [--no-clipboard]
+playground repro export [-f <model> … | --all-uncommitted] [--output <dir>] [--dry-run | --report-only] [--include-artifacts] [--force] [--no-clipboard] [--no-report]
 playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
 ```
 
@@ -594,7 +609,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 - `repro list`: newest first, from the headers, the verdicts and `git status`; filters combine.
 - `repro bisect`: one `playground run` per version (stops the environment), binary search with `--from` / `--to`, changelog where the verdict changes.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.
-- Bundle = files + symlinks as content + manifest (run line, credential names, sha256). Run the model once first.
+- Bundle = files + symlinks as content + manifest (run line, credential names, sha256) + `<model>.REPRO.md` hand-off report. Run the model once first.
 - Import: identical skipped, conflicts abort unless `rename` / `overwrite`, first model becomes current.
 - In a model, `create-or-update` warns instead of failing: `--wait` to make it strict.
 - Sources: [`repro/bootstrap.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bootstrap.sh),
