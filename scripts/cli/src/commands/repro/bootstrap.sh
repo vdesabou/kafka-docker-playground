@@ -610,7 +610,12 @@ then
   # the keys that point to systems (hosts, urls, credentials, cloud locations, topics) keep the value of the example,
   # that the rest of the scenario uses; the others (the behaviour) come from the customer. The name is left out: the
   # connector keeps the name of the example
-  system_keys='(^|\.)(connection\.(url|uri|user|username|password|host|hostname|port|database|dbname)|url|urls|uri|host|hosts|hostname|port|endpoint|server|servers|user|username|password|database|db|bucket|bucket\.name|region|account\.name|container\.name|project|dataset|keyfile|credentials|credentials\.json|instance|file|sid|pdb\.name|service\.name|database\.(hostname|port|user|password|dbname|names|server\.name)|topics|topics\.regex|topic|topic\.prefix|topic\.name\.prefix|kafka\.topic|access\.key\.id|secret\.access\.key|secret|api\.key|api\.secret|kafka\.auth\.mode|kafka\.service\.account\.id)$|replication\.factor$|(password|secret|jaas|token|credential|api[._]key|private[._]key|access[._]key|user\.info)'
+  system_keys='(^|\.)(connection\.(url|uri|user|username|password|host|hostname|port|database|dbname)|url|urls|uri|host|hosts|hostname|port|endpoint|server|servers|user|username|password|database|db|bucket|bucket\.name|region|account\.name|container\.name|project|dataset|keyfile|credentials|credentials\.json|instance|file|sid|pdb\.name|service\.name|database\.(hostname|port|user|password|dbname|names|server\.name)|topics|topics\.regex|topic|topic\.prefix|topic\.name\.prefix|kafka\.topic|access\.key\.id|secret\.access\.key|secret|api\.key|api\.secret|kafka\.auth\.mode|kafka\.service\.account\.id)$|^(table\.topic\.name\.template|lob\.topic\.name\.template|redo\.log\.topic\.name|topic\.creation\.redo\.include)$|replication\.factor$|(password|secret|jaas|token|credential|api[._]key|private[._]key|access[._]key|user\.info)'
+  # the tables (collections, schemas) captured are the ones of the customer database: the scenario creates its own and
+  # inserts into them, so the selection of the example is kept, and the one of the customer is left out when the example
+  # captures everything
+  selection_keys='^((table|database|schema|collection)\.(include|exclude)\.list|table\.(inclusion|exclusion)\.regex|(table|database|schema|collection)\.(whitelist|blacklist))$'
+  system_keys="$system_keys|$selection_keys"
   kept=$(jq -r --slurpfile example $tmp_dir/example.json --arg system_keys "$system_keys" '
     [$example[0] | keys_unsorted[] | select(test($system_keys; "i"))] | join(" ")' $config_tmp_dir/converted.json)
   # the customer keys that point to systems the example does not use (connection.user when the example puts the user
