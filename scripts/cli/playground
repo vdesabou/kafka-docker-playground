@@ -397,7 +397,7 @@ playground_usage() {
     fi
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "PLAYGROUND_CLUSTER")"
-    printf "    🌍 Cluster used by the topic, consumer-group, connector and schema commands\n    in an mdc-* environment (us or europe) when --cluster is not set\n"
+    printf "    🌍 Cluster used by the topic, consumer-group, connector, schema, broker and\n    quota commands in an mdc-* environment (us or europe) when --cluster is not\n    set\n"
     echo
 
   fi
@@ -12422,6 +12422,12 @@ playground_quota_get_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12512,6 +12518,12 @@ playground_quota_set_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12600,6 +12612,12 @@ playground_quota_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -12736,6 +12754,12 @@ playground_broker_config_get_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12791,6 +12815,12 @@ playground_broker_config_set_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12839,6 +12869,12 @@ playground_broker_config_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -12896,6 +12932,12 @@ playground_broker_health_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12944,6 +12986,12 @@ playground_broker_stop_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13001,6 +13049,12 @@ playground_broker_start_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -13054,6 +13108,12 @@ playground_broker_rolling_restart_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13136,6 +13196,12 @@ playground_broker_transactions_list_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -13179,6 +13245,12 @@ playground_broker_transactions_describe_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13227,6 +13299,12 @@ playground_broker_transactions_describe_producers_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13289,6 +13367,12 @@ playground_broker_transactions_find_hanging_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -13344,6 +13428,12 @@ playground_broker_transactions_abort_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -13390,6 +13480,12 @@ playground_broker_describe_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13444,6 +13540,12 @@ playground_broker_metrics_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -18439,6 +18541,15 @@ function get_mdc_client() {
   esac
 }
 
+# " --cluster <cluster>" in an mdc-* environment (empty otherwise): for the commands printed as next steps
+function mdc_cluster_flag() {
+  if is_mdc_environment
+  then
+    get_mdc_cluster
+    echo " --cluster $mdc_cluster"
+  fi
+}
+
 function is_mdc_environment() {
   if [[ -z "$environment" ]]
   then
@@ -20922,15 +21033,6 @@ function choose_connector_tag() {
   fi
 
   cat $filename | grep -v "documentation"| sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔢" --header="select connector version for $owner/$name" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer "${fzf_option_preview[@]}"
-}
-
-function filter_not_mdc_environment() {
-  get_environment_used
-
-  if [[ "$environment" == "mdc"* ]]
-  then
-    logerror "$environment is not supported with this command !"
-  fi
 }
 
 function filter_ccloud_environment() {
@@ -26841,8 +26943,14 @@ function get_broker_id_of_container () {
 
 # docker containers of the brokers (running or stopped), one "<id> <container>" per line, sorted by id
 function get_broker_containers () {
-  local c id
-  for c in broker broker2 broker3
+  local c id candidates="broker broker2 broker3"
+  if is_mdc_environment
+  then
+    # one broker per cluster of an mdc-* environment
+    get_mdc_cluster
+    candidates="broker-$mdc_cluster"
+  fi
+  for c in $candidates
   do
     id=$(get_broker_id_of_container "$c")
     if [[ -n "$id" ]]
@@ -61221,9 +61329,9 @@ playground_broker_health_command() {
               logerror "❌ broker $id (container $container) is not registered: still starting? (playground container logs -c $container --errors)"
           elif echo "$health_registered" | grep -q -x "$id"
           then
-              logerror "❌ broker $id (container $container) is stopped, still registered until its session times out (playground broker start --broker $id)"
+              logerror "❌ broker $id (container $container) is stopped, still registered until its session times out (playground broker start --broker $id$(mdc_cluster_flag))"
           else
-              logerror "❌ broker $id (container $container) is not registered: it is stopped (playground broker start --broker $id)"
+              logerror "❌ broker $id (container $container) is not registered: it is stopped (playground broker start --broker $id$(mdc_cluster_flag))"
           fi
       done <<< "$health_not_registered"
       for id in $health_fenced
@@ -61325,7 +61433,7 @@ playground_broker_stop_command() {
       log "🛑 Stopping broker $broker (container $container): controlled shutdown, its leaders move to the other replicas first"
       docker stop -t 60 "$container" > /dev/null || exit 1
   fi
-  log "🎓 see the impact with 'playground broker health', start it again with 'playground broker start --broker $broker'"
+  log "🎓 see the impact with 'playground broker health$(mdc_cluster_flag)', start it again with 'playground broker start --broker $broker$(mdc_cluster_flag)'"
 
 }
 
@@ -61613,7 +61721,7 @@ playground_broker_transactions_find_hanging_command() {
       echo "$rows"
   } | column -t -s $'\t'
   log "🧹 to abort them (requires administrative privileges):"
-  echo "$rows" | awk -F'\t' '{ printf "playground broker transactions abort --topic %s --partition %s --start-offset %s\n", $1, $2, $6 }'
+  echo "$rows" | awk -F'\t' -v cluster_flag="$(mdc_cluster_flag)" '{ printf "playground broker transactions abort --topic %s --partition %s --start-offset %s%s\n", $1, $2, $6, cluster_flag }'
   exit 1
 
 }
@@ -103330,12 +103438,6 @@ playground_quota_parse_requirements() {
   done
 
   # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -103469,6 +103571,20 @@ playground_quota_get_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -103497,6 +103613,12 @@ playground_quota_get_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -103681,6 +103803,20 @@ playground_quota_set_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -103736,6 +103872,12 @@ playground_quota_set_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--controller-mutation-rate RATE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -103897,6 +104039,20 @@ playground_quota_delete_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -103925,6 +104081,12 @@ playground_quota_delete_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -104156,12 +104318,6 @@ playground_broker_config_parse_requirements() {
   done
 
   # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -104247,6 +104403,20 @@ playground_broker_config_get_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -104284,6 +104454,12 @@ playground_broker_config_get_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -104366,6 +104542,20 @@ playground_broker_config_set_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -104413,6 +104603,12 @@ playground_broker_config_set_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -104481,6 +104677,20 @@ playground_broker_config_delete_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -104524,6 +104734,12 @@ playground_broker_config_delete_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -104594,6 +104810,20 @@ playground_broker_health_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -104636,13 +104866,13 @@ playground_broker_health_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -104709,6 +104939,20 @@ playground_broker_stop_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -104754,13 +104998,13 @@ playground_broker_stop_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -104847,6 +105091,20 @@ playground_broker_start_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -104904,13 +105162,13 @@ playground_broker_start_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -104997,6 +105255,20 @@ playground_broker_rolling_restart_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105039,13 +105311,13 @@ playground_broker_rolling_restart_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -105170,12 +105442,6 @@ playground_broker_transactions_parse_requirements() {
   done
 
   # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -105248,6 +105514,20 @@ playground_broker_transactions_list_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105280,6 +105560,10 @@ playground_broker_transactions_list_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--state']:-} ]] && [[ ! ${args['--state']:-} =~ ^(Empty|Ongoing|PrepareCommit|PrepareAbort|CompleteCommit|CompleteAbort|Dead|PrepareEpochFence)$ ]]; then
     printf "%s\n" "--state must be one of: Empty, Ongoing, PrepareCommit, PrepareAbort, CompleteCommit, CompleteAbort, Dead, PrepareEpochFence" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -105335,6 +105619,20 @@ playground_broker_transactions_describe_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105367,6 +105665,12 @@ playground_broker_transactions_describe_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--transactional-id']+x} ]]; then
     printf "missing required flag: --transactional-id, -i TRANSACTIONAL-ID\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -105436,6 +105740,20 @@ playground_broker_transactions_describe_producers_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105479,6 +105797,12 @@ playground_broker_transactions_describe_producers_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--partition, -p PARTITION" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -105575,6 +105899,20 @@ playground_broker_transactions_find_hanging_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105633,6 +105971,12 @@ playground_broker_transactions_find_hanging_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-transaction-timeout MINUTES" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -105715,6 +106059,20 @@ playground_broker_transactions_abort_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105777,6 +106135,12 @@ playground_broker_transactions_abort_parse_requirements() {
     fi
   fi
 
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -105837,6 +106201,20 @@ playground_broker_describe_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105876,13 +106254,13 @@ playground_broker_describe_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -105963,6 +106341,20 @@ playground_broker_metrics_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -106002,13 +106394,13 @@ playground_broker_metrics_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -132276,6 +132668,21 @@ playground_quota_get_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132290,6 +132697,7 @@ playground_quota_get_completion() {
     completion_flag_candidates --all-users "$completion_current" --all-users
     completion_flag_candidates --all-client-ids "$completion_current" --all-client-ids
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132401,6 +132809,21 @@ playground_quota_set_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132419,6 +132842,7 @@ playground_quota_set_completion() {
     completion_flag_candidates --request-percentage "$completion_current" --request-percentage
     completion_flag_candidates --controller-mutation-rate "$completion_current" --controller-mutation-rate
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132510,6 +132934,21 @@ playground_quota_delete_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132528,6 +132967,7 @@ playground_quota_delete_completion() {
     completion_flag_candidates --request-percentage "$completion_current" --request-percentage
     completion_flag_candidates --controller-mutation-rate "$completion_current" --controller-mutation-rate
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132678,6 +133118,21 @@ playground_broker_config_get_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132690,6 +133145,7 @@ playground_broker_config_get_completion() {
     completion_flag_candidates --key "$completion_current" --key -k
     completion_flag_candidates --all "$completion_current" --all
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132741,6 +133197,21 @@ playground_broker_config_set_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132753,6 +133224,7 @@ playground_broker_config_set_completion() {
     completion_flag_candidates --key "$completion_current" --key -k
     completion_flag_candidates --value "$completion_current" --value
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132794,6 +133266,21 @@ playground_broker_config_delete_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132805,6 +133292,7 @@ playground_broker_config_delete_completion() {
     completion_flag_candidates --broker "$completion_current" --broker -b
     completion_flag_candidates --key "$completion_current" --key -k
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132845,6 +133333,21 @@ playground_broker_health_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132857,6 +133360,7 @@ playground_broker_health_completion() {
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132893,6 +133397,21 @@ playground_broker_stop_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132904,6 +133423,7 @@ playground_broker_stop_completion() {
     completion_flag_candidates --broker "$completion_current" --broker -b
     completion_flag_candidates --kill "$completion_current" --kill
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -132950,6 +133470,21 @@ playground_broker_start_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -132962,6 +133497,7 @@ playground_broker_start_completion() {
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --no-wait "$completion_current" --no-wait
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133007,6 +133543,21 @@ playground_broker_rolling_restart_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133019,6 +133570,7 @@ playground_broker_rolling_restart_completion() {
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --force "$completion_current" --force
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133119,6 +133671,21 @@ playground_broker_transactions_list_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133130,6 +133697,7 @@ playground_broker_transactions_list_completion() {
     completion_flag_candidates --state "$completion_current" --state
     completion_flag_candidates --pattern "$completion_current" --pattern
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133160,6 +133728,21 @@ playground_broker_transactions_describe_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133170,6 +133753,7 @@ playground_broker_transactions_describe_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --transactional-id "$completion_current" --transactional-id -i
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133213,6 +133797,21 @@ playground_broker_transactions_describe_producers_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133224,6 +133823,7 @@ playground_broker_transactions_describe_producers_completion() {
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --partition "$completion_current" --partition -p
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133287,6 +133887,21 @@ playground_broker_transactions_find_hanging_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133300,6 +133915,7 @@ playground_broker_transactions_find_hanging_completion() {
     completion_flag_candidates --partition "$completion_current" --partition -p
     completion_flag_candidates --max-transaction-timeout "$completion_current" --max-transaction-timeout
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133353,6 +133969,21 @@ playground_broker_transactions_abort_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133365,6 +133996,7 @@ playground_broker_transactions_abort_completion() {
     completion_flag_candidates --partition "$completion_current" --partition -p
     completion_flag_candidates --start-offset "$completion_current" --start-offset
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133400,6 +134032,21 @@ playground_broker_describe_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133411,6 +134058,7 @@ playground_broker_describe_completion() {
     completion_flag_candidates --api-versions "$completion_current" --api-versions
     completion_flag_candidates --broker "$completion_current" --broker -b
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133459,6 +134107,21 @@ playground_broker_metrics_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133471,6 +134134,7 @@ playground_broker_metrics_completion() {
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -139491,6 +140155,14 @@ before_hook() {
   if [[ -n "${args[--cluster]}" ]]
   then
       export PLAYGROUND_CLUSTER="${args[--cluster]}"
+  elif [[ -z "$PLAYGROUND_CLUSTER" ]] && declare -f "playground_$(echo "$action" | tr ' -' '__')_usage" | grep -q -- "--cluster CLUSTER"
+  then
+      # a command that takes --cluster: in an mdc-* environment, stop now when no cluster is selected (later, the
+      # error of get_mdc_cluster can end up in the output of a tool captured by the command, like 'broker health')
+      if is_mdc_environment
+      then
+          get_mdc_cluster
+      fi
   fi
 
 }

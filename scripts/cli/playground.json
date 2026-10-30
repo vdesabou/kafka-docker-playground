@@ -5712,6 +5712,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -5792,6 +5799,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -5872,6 +5886,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         }
@@ -5924,6 +5945,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             },
@@ -5962,6 +5990,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             },
@@ -5993,6 +6028,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             }
@@ -6031,6 +6073,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6061,6 +6110,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6098,6 +6154,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6134,6 +6197,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6169,6 +6239,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             },
@@ -6192,6 +6269,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             },
@@ -6223,6 +6307,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             },
@@ -6269,6 +6360,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             },
@@ -6307,6 +6405,13 @@
                   ],
                   "argument": "",
                   "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
                 }
               ]
             }
@@ -6339,6 +6444,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6377,6 +6489,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         }

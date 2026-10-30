@@ -32,4 +32,4 @@ else
     log "🛑 Stopping broker $broker (container $container): controlled shutdown, its leaders move to the other replicas first"
     docker stop -t 60 "$container" > /dev/null || exit 1
 fi
-log "🎓 see the impact with 'playground broker health', start it again with 'playground broker start --broker $broker'"
+log "🎓 see the impact with 'playground broker health$(mdc_cluster_flag)', start it again with 'playground broker start --broker $broker$(mdc_cluster_flag)'"

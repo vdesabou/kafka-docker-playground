@@ -58,5 +58,5 @@ logerror "❌ $(echo "$rows" | wc -l | tr -d ' ') hanging transaction(s): they h
     echo "$rows"
 } | column -t -s $'\t'
 log "🧹 to abort them (requires administrative privileges):"
-echo "$rows" | awk -F'\t' '{ printf "playground broker transactions abort --topic %s --partition %s --start-offset %s\n", $1, $2, $6 }'
+echo "$rows" | awk -F'\t' -v cluster_flag="$(mdc_cluster_flag)" '{ printf "playground broker transactions abort --topic %s --partition %s --start-offset %s%s\n", $1, $2, $6, cluster_flag }'
 exit 1

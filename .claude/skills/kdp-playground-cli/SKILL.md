@@ -138,7 +138,7 @@ here (anchors, validators, filters, groups, completions). The essentials:
 - **Completions** call those private commands (bashly 2.x hash format):
   `completions: { dynamic: [playground get-connector-list] }`.
 - **`filters:`** declare preconditions (`docker_running`,
-  `connect_running`, `not_mdc_environment`, `ccloud_environment`, …).
+  `connect_running`, `not_ccloud_environment`, `ccloud_environment`, …).
 - **`validate:`** attaches a validator to an arg/flag (`validate_not_empty`,
   `validate_file_exists`, `validate_json`, `validate_minimal_cp_version`, …).
 

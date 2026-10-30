@@ -31,8 +31,9 @@ run.
    `kafka-topics`, `kafka-metadata-quorum`, `kafka-features`, `kafka-broker-api-versions` and `kafka-transactions` in
    the broker container (the `client` container on kerberos, `connect-0` on CFK), like the topic commands, so they work
    on plaintext, the secured environments and CFK. `stop`, `start`, `rolling-restart` and `metrics` drive the broker
-   **containers** (`broker`, `broker2`, `broker3` for ids 1, 2, 3): not on CFK. None of them on Confluent Cloud and
-   the `mdc-*` environments. `--verbose` prints the exact command.
+   **containers** (`broker`, `broker2`, `broker3` for ids 1, 2, 3): not on CFK. None of them on Confluent Cloud. In
+   the `mdc-*` environments they work on one cluster, picked with `--cluster us|europe` (broker 1 is `broker-us` or
+   `broker-europe`, see the [replication deep dive](/deep-dive-replication.md)). `--verbose` prints the exact command.
 
 2. **Three brokers make the failures realistic.** `playground run --enable-multiple-brokers` starts brokers 1, 2 and 3,
    and creates the internal topics (`__consumer_offsets`, `__transaction_state`, `connect-offsets`, `connect-status`,
@@ -340,7 +341,7 @@ playground broker config get|set|delete …                              # see t
 ```
 
 - `--enable-multiple-brokers` = brokers 1, 2, 3 and internal topics with 3 replicas, min ISR 2.
-- `stop` / `start` / `rolling-restart` / `metrics` drive the containers: not on CFK. Nothing on Confluent Cloud, `mdc-*`.
+- `stop` / `start` / `rolling-restart` / `metrics` drive the containers: not on CFK. Nothing on Confluent Cloud. `mdc-*`: add `--cluster us|europe`.
 - `health` and `find-hanging` exit 1 when they find a problem.
 - `read_committed` counts: `topic consume --isolation-level read_committed --count`.
 - Sources: [`commands/broker/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/broker),

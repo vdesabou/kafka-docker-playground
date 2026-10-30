@@ -110,8 +110,8 @@ Gotchas:
 ## 3. Pick a cluster: `--cluster us|europe`
 
 The CLI reads `run.environment` (`playground state get run.environment`). An `mdc-*` environment has two clusters, so
-the `topic`, `consumer-group`, `connector` and `schema` commands need to know which one you mean. **It is never
-guessed**:
+the `topic`, `consumer-group`, `connector`, `schema`, `broker` and `quota` commands need to know which one you mean.
+**It is never guessed**:
 
 | Set it with | Scope |
 | --- | --- |
@@ -130,7 +130,7 @@ What the cluster selects:
 
 | | `us` | `europe` |
 | --- | --- | --- |
-| broker (`topic`, `consumer-group`, `connector show-lag`, `offsets`) | `broker-us:9092` | `broker-europe:9092` |
+| broker (`topic`, `consumer-group`, `broker`, `quota`, `connector show-lag`, `offsets`) | `broker-us:9092`, broker id 1 | `broker-europe:9092`, broker id 1 |
 | Connect REST API (`connector …`) | `connect-us`, `localhost:8083` | `connect-europe`, `localhost:8283` |
 | Schema Registry (`schema …`, Avro / Protobuf / JSON Schema in `topic produce` / `consume`) | `schema-registry-us`, `localhost:28081` | `schema-registry-europe`, `localhost:18081` |
 | `topic produce` / `consume` run in | `connect-us` | `connect-europe` |
@@ -155,8 +155,10 @@ playground consumer-group describe --cluster us --group my-app
 
 - `playground status` shows the connectors and the topics of each cluster (`🌍 Cluster us`, `🌍 Cluster europe`),
   unless one is selected.
-- **Still blocked in `mdc-*`**: `broker …` (`health`, `describe`, `metrics`, `config`, `transactions`, `stop`, `start`,
-  `rolling-restart`) and `quota …` print `🔥 mdc-plaintext is not supported with this command !` and exit 1.
+- **A data center goes down**: `playground broker stop --cluster europe --broker 1 --kill` (a crash, `docker kill`) or
+  without `--kill` (controlled shutdown), `playground broker health --cluster europe` (exit 1), then `playground broker
+  start --cluster europe --broker 1` (waits for a healthy cluster). Each cluster has one broker: id 1. `broker metrics
+  --cluster us` reads the JMX metrics of `broker-us`.
 - **The commands that take a container name never needed a cluster**: `container exec|logs|get-properties|cp|restart|recreate
   -c connect-us` (or `broker-europe`, `replicator-us`…), `debug thread-dump|heap-dump -c connect-europe`…
   `playground stop` and `playground container recreate` replay `run.docker_command`, recorded by the `mdc-*` `start.sh`.
@@ -283,6 +285,14 @@ playground connector status --cluster us
 # 💤 No … connector is running !
 playground consumer-group list --cluster europe         # exit 0
 playground topic delete --topic lab_cluster_selector --cluster europe
+playground broker health --cluster europe
+# ✅ cluster is healthy
+playground broker stop --cluster europe --broker 1 --kill
+# 🔫 Killing broker 1 (container broker-europe): no controlled shutdown, like a crash
+# 🎓 see the impact with 'playground broker health --cluster europe', start it again with 'playground broker start --broker 1 --cluster europe'
+playground broker health --cluster us                   # the other data center doesn't notice
+playground broker start --cluster europe --broker 1
+# ✅ cluster is healthy, broker 1 started in …s
 ```
 
 The next steps keep the `kafka-*` tools through `playground container exec`, with an explicit `--bootstrap-server`: what
@@ -466,6 +476,7 @@ playground stop
 | "Replicator to Confluent Cloud" | `ccloud/replicator/connect-onprem-to-cloud.sh` (CP 7.x only, exits 111 with 8+): `dest.kafka.*` with `SASL_SSL`, `topic.auto.create=false` and the topic created first |
 | "migrate schemas to Confluent Cloud" | `ccloud/migrate-schemas-to-confluent-cloud/start.sh`: destination registry in `IMPORT` mode, `_schemas` replicated with `schema.registry.topic`, source registry `READONLY` |
 | "move a sink connector to the DR cluster without rewriting everything" | `multi-data-center/cluster-linking/start-plaintext-migrate-sink-connector.sh`: the group `connect-<connector>` follows through the link |
+| "the source data center goes down: what happens to the replication, the consumers?" | `playground broker stop --cluster europe --broker 1 --kill`, look at the Replicator / MirrorMaker 2 tasks (`playground connector status --cluster us`) and the groups on the other side, then `playground broker start --cluster europe --broker 1` |
 | "a mirror topic refuses writes" | expected until `kafka-mirrors --promote --topics <t>` (lab step 5) |
 | "SASL or Kerberos between the clusters" | `replicator-connect/connect-sasl-plain.sh`, `connect-kerberos.sh`, `replicator-executable/executable-sasl-plain.sh`, `executable-kerberos.sh` |
 
@@ -485,7 +496,7 @@ playground container exec -c broker-us --command "kafka-consumer-groups --bootst
 playground container exec -c connect-us --command "curl -s http://localhost:8083/connectors/<c>/status"     # connect-europe: same, from inside
 playground container logs -c connect-us --errors      playground debug thread-dump -c connect-europe
 playground topic|consumer-group|connector|schema … --cluster us|europe     # or: export PLAYGROUND_CLUSTER=us, playground state set run.cluster us
-# still blocked in mdc-*: playground broker …, quota … (exit 1)
+playground broker health|describe|metrics --cluster europe        playground broker stop --cluster europe --broker 1 --kill   # a data center goes down
 # Cluster Linking, on the destination broker:
 kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link <l> --config bootstrap.servers=broker-us:9092,consumer.offset.sync.enable=true [--consumer-group-filters-json-file <f>]
 kafka-mirrors --create --mirror-topic <t> --link <l> --bootstrap-server broker-europe:9092

@@ -33,7 +33,7 @@ commands:
   expose: always          # show subcommands in the parent's help
   group: Connector        # heading in `playground --help`
   filters:
-  - not_mdc_environment
+  - not_ccloud_environment
   help: |-
     🔗 Connector commands
 
@@ -120,7 +120,7 @@ Preconditions checked before a command runs. Implemented as `filter_<name>()`
 in `src/lib/cli_function.sh`, referenced without the `filter_` prefix:
 
 `docker_running` · `connect_running` · `schema_registry_running` ·
-`oracle_running` · `not_mdc_environment` · `ccloud_environment` ·
+`oracle_running` · `not_ccloud_environment` · `ccloud_environment` ·
 `cfk_environment` · `plaintext_or_ccloud_environment` · `aws_ec2_permissions`
 
 ## Completion-provider commands

@@ -33,4 +33,12 @@ fi
 if [[ -n "${args[--cluster]}" ]]
 then
     export PLAYGROUND_CLUSTER="${args[--cluster]}"
+elif [[ -z "$PLAYGROUND_CLUSTER" ]] && declare -f "playground_$(echo "$action" | tr ' -' '__')_usage" | grep -q -- "--cluster CLUSTER"
+then
+    # a command that takes --cluster: in an mdc-* environment, stop now when no cluster is selected (later, the
+    # error of get_mdc_cluster can end up in the output of a tool captured by the command, like 'broker health')
+    if is_mdc_environment
+    then
+        get_mdc_cluster
+    fi
 fi
