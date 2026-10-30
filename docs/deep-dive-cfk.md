@@ -228,7 +228,12 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   bundle is analyzed once. **🕰️ Log coverage**: the time range of each log (HTML panel, `.coverage.log_windows`), and
   one `Bundle Coverage` finding when a log starts long after its pod started or after the last change of the CRs
   (the bundle keeps the end of each log: ask for `kubectl logs --since=…`). CRs that keep the "Reconcile is blocked."
-  condition after the `block-reconcile` annotation was removed are one low finding: the condition is not cleared. It
+  condition after the `block-reconcile` annotation was removed are one low finding: the condition is not cleared.
+  **🕒 Changes before the failure**: the changes of the CRs and StatefulSet rollouts in the hour before the first
+  critical / high issue are marked ⚠️ in the Recent changes and listed in one finding. **🧩 Connect plugins**: a Connect
+  whose `spec.build.onDemand` plugins cannot be installed (its `config-init-container` fails, an install error in its
+  log, or an init of 5 minutes or more, typical of an air-gapped cluster) is one finding with the next steps, and so
+  is a Connector CR whose class is not among the installed plugins of its Connect (`status.connectorPlugins`). It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration, `--sample cfk_rollout` for a half-done upgrade).
@@ -472,6 +477,7 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | "the ZooKeeper to KRaft migration is stuck" (support bundle) | `playground analyze logs -f <bundle>`: the 🚚 `KRaft Migration` finding gives the sub-phase, since when, the last error and the next steps; `--sample cfk_kraft_migration` to see one |
 | "the connector works with Docker, not on our CFK cluster" | the same example with `--environment cfk`, then `connector create-or-update --dry-run` to compare the `Connector` CR with theirs |
 | "the customer deploys connectors with a `Connector` CR" | the example under `cfk`, `connector status` shows the CR state next to the Connect state; `kubectl -n confluent get connector <c> -o yaml` for the whole resource |
+| "the Connect pods do not start / the plugins do not install" (support bundle) | `playground analyze logs -f <bundle>`: the 🧩 `Plugin Issues` finding gives the plugins of `spec.build.onDemand`, the state of the `config-init-container`, the install error and the next steps (air-gapped: `plugins.url` on an internal server or a custom image) |
 | "a plugin is missing / the wrong version on our Connect pods" | `--environment cfk --connector-tag <version>`: the plugin comes from `spec.build.onDemand` like on their cluster; `playground connector plugins` lists what the `Connect` CR reports |
 | "a connector restart / pause through annotations does nothing" | `playground connector pause` / `resume` / `restart` print the `kubectl annotate` they run: try the same on the lab connector |
 | "the Connect pod was restarted and the connector lost its state" | `playground container restart -c connect` (deletes connect-0), then `connector wait`, `container logs -c connect --previous` for the instance before |

@@ -79,6 +79,15 @@ scheduling, …) with concrete remediation steps per category:
   not cleared when the annotation is removed): one low finding for all of them.
 - Sample of the rollout, quota, coverage and stale condition findings: `samples/cfk-support-bundle-rollout.tar.gz`
   (`make_rollout_bundle.py`, `playground analyze logs --sample cfk_rollout`).
+- Changes before the failure (`Recent Changes` category): the changes of the CRs and StatefulSet rollouts of the
+  timeline in the hour before the first critical / high issue get `before_failure` (⚠️ in the 🕒 Recent changes of the
+  text digest and of the HTML report), and one finding lists them. The time of an issue is the first timestamp of
+  its event, or the timestamp of its log record (as written in the log).
+- Connect plugins (`Plugin Issues` category): for a Connect CR with `spec.build.onDemand` plugins, installed by the
+  `config-init-container` of each pod at its start, one finding when that init container fails or crash-loops, when
+  its log has an install error (host not resolved / unreachable, checksum mismatch, no space left under
+  `storageLimit`, plugin not on Confluent Hub), or when it took 5 minutes or more; and one finding per Connector CR
+  whose `spec.class` is not among the installed plugins of its Connect (`status.connectorPlugins`).
 - Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
   container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
   while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC

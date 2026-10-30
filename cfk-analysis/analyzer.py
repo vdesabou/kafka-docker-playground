@@ -151,6 +151,23 @@ _EVENT_ROW_RE = re.compile(r'\bWarning\s+(\S+)\s+([A-Za-z]+/[\w.-]+)\s+(.*)$')
 _EVENT_ISSUE_RE = re.compile(r'^(\S+): (.*) \(([A-Za-z]+/[\w.-]+)\)$', re.DOTALL)
 
 
+# errors of the plugin installation of the config-init-container (confluent connect plugin install, wget / curl,
+# sha512sum --check): cause -> pattern
+_PLUGIN_INSTALL_ERRORS = (
+    ('the download failed: the host does not resolve or cannot be reached (no egress, air-gapped cluster, proxy)',
+     re.compile(r'Could not resolve host|unable to resolve host|no such host|Failed to connect to|Connection timed out'
+                r'|connection refused|context deadline exceeded|i/o timeout|Temporary failure in name resolution'
+                r'|wget: (?:download timed out|bad address|server returned error)', re.IGNORECASE)),
+    ('the checksum of the archive does not match spec.build.onDemand.plugins.url[].checksum',
+     re.compile(r'computed checksum did NOT match|\.zip: FAILED')),
+    ('no space left for the plugins: spec.build.onDemand.storageLimit (default 4G) is too small',
+     re.compile(r'No space left on device', re.IGNORECASE)),
+    ('the plugin or its version does not exist on Confluent Hub',
+     re.compile(r'(?:plugin|component|version) .{0,60}not found|404 Not Found|Error: .{0,80}(?:plugin|hub)', re.IGNORECASE)),
+)
+_PLUGIN_NAME_RE = re.compile(r"(?:Attempting to download|to download|plugin install) (\S+)")
+
+
 def _log_stem(rel: str) -> str:
     """pod of a log file: cluster-resources/kafka/logs/kafka-0.log -> kafka-0"""
     return re.sub(r'\.(?:log|txt|out)(?:\..*)?$', '', os.path.basename(rel), flags=re.IGNORECASE)
@@ -203,6 +220,11 @@ class CFKBundleAnalyzer:
         self.pod_started = {}
         # CRs with the block-reconcile condition True but without the annotation: (ref, since, file, name, kind)
         self.stale_block_conditions = []
+        # Connect plugins (_check_connect_plugins): Connect CR -> {plugins, storage_limit, installed, file}, pod ->
+        # config-init-container state, init container logs -> plugin install errors
+        self.connect_builds = {}
+        self.pod_init = {}
+        self.plugin_install_errors = {}  # log file -> {pod, plugin, cause, line, line_number}
         # ZooKeeper to KRaft migration (kraft_migration.py): KRaftMigrationJob CRs (name -> status, file), their Warning
         # events, the "Migration current status <phase>/<sub-phase>" lines of the operator log
         self.kraft_migrations = {}
@@ -376,10 +398,12 @@ class CFKBundleAnalyzer:
         self._check_rollouts()
         self._check_stale_block_conditions()
         self._check_log_coverage()
+        self._check_connect_plugins()
         for issue in self.issues:
             self._assign_component(issue)
         self._mark_transient()
         self._check_kraft_migrations()
+        self._check_changes_before_failure()
         for issue in self.issues:
             names = self.runbooks.match(issue['message'] + ' ' + ' '.join(issue.get('caused_by') or []))
             if names:
@@ -691,6 +715,9 @@ class CFKBundleAnalyzer:
                 self._handle_record(rel, lines, *record)
 
         k8s_screen = self._k8s_screen
+        # log of the config-init-container of a Connect pod (plugins of spec.build.onDemand)
+        plugin_log = {'plugin': None} if any('Installing connector plugins' in l or 'connect plugin install' in l
+                                             for l in lines[:5000]) else None
         # states of known CFK issues that the operator logs at INFO (runbooks.py operator_info)
         operator_info_re = self.runbooks.operator_info_re if rel.split(os.sep)[0] == 'operator' or \
             '/operator/' in f'/{rel}' else None
@@ -718,6 +745,8 @@ class CFKBundleAnalyzer:
             if line[0] == '\t' and _CONFIG_VALUE_RE.match(line):
                 continue
 
+            if plugin_log is not None:
+                self._record_plugin_install_line(rel, line, line_num, plugin_log)
             if 'Kafka version: ' in line:
                 found = _KAFKA_VERSION_RE.search(line)
                 if found:
@@ -834,6 +863,18 @@ class CFKBundleAnalyzer:
                 config['cr'] = file_path
                 config['overrides'] = {k: '\n'.join(str(v) for v in overrides[k]) for k in ('server', 'jvm', 'log4j')
                                        if isinstance(overrides.get(k), list) and overrides[k]}
+        if kind == 'connect':
+            build = spec.get('build') or {}
+            plugins = ((build.get('onDemand') or {}).get('plugins') or {}) if isinstance(build, dict) else {}
+            requested = [f"{p.get('owner', '?')}/{p.get('name', '?')}:{p.get('version', '?')}"
+                         for p in plugins.get('confluentHub') or [] if isinstance(p, dict)]
+            requested += [f"{p.get('name', '?')} ({p.get('archivePath', '?')})" for p in plugins.get('url') or []
+                          if isinstance(p, dict)]
+            installed = [p.get('class') for p in (obj.get('status') or {}).get('connectorPlugins') or []
+                         if isinstance(p, dict) and p.get('class')]
+            self.connect_builds[name] = {
+                'plugins': requested, 'storage_limit': (build.get('onDemand') or {}).get('storageLimit') if requested else None,
+                'installed': installed, 'file': file_path}
         elif kind == 'connector':
             conn = self._connector_config(spec.get('name') or name)
             configs = spec.get('configs') if isinstance(spec.get('configs'), dict) else {}
@@ -1172,6 +1213,128 @@ class CFKBundleAnalyzer:
                 resource=name, resource_kind=truststore['kind'],
             )
 
+    def _record_plugin_install_line(self, rel: str, line: str, line_num: int, state: Dict):
+        """A line of the log of a config-init-container: the plugin being installed, the first error"""
+        name = _PLUGIN_NAME_RE.search(line)
+        if name:
+            state['plugin'] = name.group(1).strip("'\"")
+        if rel in self.plugin_install_errors:
+            return
+        for cause, pattern in _PLUGIN_INSTALL_ERRORS:
+            if pattern.search(line):
+                self.plugin_install_errors[rel] = {'file': rel, 'pod': _log_stem(rel), 'plugin': state['plugin'], 'cause': cause,
+                                                   'line': line.strip()[:300], 'line_number': line_num}
+                return
+
+    def _check_connect_plugins(self):
+        """Connect plugins of spec.build.onDemand, installed by the config-init-container of each pod at its start: one
+        finding per Connect whose init container fails, logged an install error or took long; one finding per Connector
+        CR whose class is not among the installed plugins of its Connect (status.connectorPlugins)"""
+        for name, build in sorted(self.connect_builds.items()):
+            if not build['plugins']:
+                continue
+            pods = {p: i for p, i in self.pod_init.items() if _POD_SUFFIX_RES[0].sub('', p) == name}
+            failing = [f"{p} ({i['waiting'] or ('exit code ' + str(i['exit_code']))}, {i['restarts']} restart(s))"
+                       for p, i in sorted(pods.items()) if i['waiting'] or i['failed']]
+            slow = [f"{p} ({i['duration']})" for p, i in sorted(pods.items()) if (i.get('seconds') or 0) >= 5 * 60]
+            errors = [e for e in self.plugin_install_errors.values() if _POD_SUFFIX_RES[0].sub('', e['pod']) == name] \
+                or ([e for e in self.plugin_install_errors.values()] if len(self.connect_builds) == 1 else [])
+            if not failing and not slow and not errors:
+                continue
+            parts = [f"Connect/{name} installs {len(build['plugins'])} plugin(s) at each pod start "
+                     f"(spec.build.onDemand: {', '.join(build['plugins'][:6])}"
+                     + (f", +{len(build['plugins']) - 6} more" if len(build['plugins']) > 6 else '') + ")"]
+            if failing:
+                parts.append(f"its config-init-container fails: {', '.join(failing)}")
+            if errors:
+                e = errors[0]
+                parts.append(f"{e['cause']}" + (f" (plugin {e['plugin']})" if e['plugin'] else '') + f": {e['line']}")
+            if slow:
+                parts.append(f"its config-init-container took long: {', '.join(slow)}")
+            steps = [f"kubectl logs <{name}-pod> -c config-init-container -n <namespace>: the plugin and the error of the "
+                     "install (confluent connect plugin install for Confluent Hub, wget then curl for a URL, then sha512sum)"]
+            causes = ' '.join(e['cause'] for e in errors)
+            if 'download' in causes or slow or (failing and not errors):
+                steps.append("no access to Confluent Hub or to the URLs (air-gapped cluster, proxy, egress rules): each download "
+                             "waits for its timeout. Host the plugin archives on an internal server and use "
+                             "spec.build.onDemand.plugins.url with their sha512 checksum, or build a Connect image with the "
+                             "plugins (spec.image.application)")
+            if 'checksum' in causes:
+                steps.append("recompute the checksum of the archive (sha512sum <plugin>.zip) and update "
+                             "spec.build.onDemand.plugins.url[].checksum: the archive behind the URL changed")
+            if 'storageLimit' in causes:
+                steps.append(f"raise spec.build.onDemand.storageLimit (now {build['storage_limit'] or 'the default 4G'})")
+            if 'Confluent Hub' in causes:
+                steps.append("check owner / name / version of the plugin on Confluent Hub (version: a released version or latest)")
+            self._add_issue(
+                severity='high' if failing or errors else 'medium', category='Plugin Issues', message="; ".join(parts),
+                file_path=errors[0]['file'] if errors else build['file'],
+                resource=name, resource_kind='Connect', dedupe_key=f"connect-plugins:{name}",
+            )
+            self.issues[-1]['next_steps'] = steps
+
+        for connector, conn in sorted((self.configuration.get('connectors') or {}).items()):
+            cluster, cls = conn.get('cluster'), conn.get('class')
+            build = self.connect_builds.get(cluster or '') or (next(iter(self.connect_builds.values()))
+                                                               if len(self.connect_builds) == 1 and not cluster else None)
+            if not cls or not conn.get('cr') or not build or not build['installed'] or cls in build['installed']:
+                continue
+            self._add_issue(
+                severity='high', category='Plugin Issues',
+                message=(f"Connector/{connector} uses {cls}, which is not among the {len(build['installed'])} plugin(s) "
+                         f"installed on Connect/{cluster or '?'} (status.connectorPlugins)"),
+                file_path=conn['cr'].get('file') or build['file'], resource=connector, resource_kind='Connector',
+                dedupe_key=f"connector-class:{connector}",
+            )
+            self.issues[-1]['next_steps'] = [
+                "check the class name of the Connector CR (spec.class), and the plugin that provides it",
+                "add the plugin to spec.build.onDemand.plugins of the Connect CR (or to its image): the pods install it at "
+                "their next start",
+            ]
+
+    def _check_changes_before_failure(self):
+        """The changes of the CRs (managedFields) and StatefulSet rollouts in the hour before the first critical / high
+        issue of the bundle: marked in the timeline, and one finding"""
+        def issue_time(issue):
+            for value in (issue.get('first_seen'), issue.get('timestamp')):
+                ts = kraft_migration._parse_ts(value)
+                if ts:
+                    return ts
+            return kraft_migration._parse_ts(issue['message'][:200]) if issue.get('line_number') else None
+        failures = [(issue_time(i), i) for i in self.issues if i['severity'] in ('critical', 'high')
+                    and not i.get('transient') and i['category'] not in ('Compatibility', 'Bundle Coverage')]
+        failures = [(t, i) for t, i in failures if t]
+        if not failures:
+            return
+        first_time, first = min(failures, key=lambda f: f[0])
+        before = []
+        for change in self.timeline:
+            if change.get('kind') == 'Pod':
+                continue
+            t = kraft_migration._parse_ts(change.get('time'))
+            if t and 0 <= (first_time - t).total_seconds() <= 3600:
+                minutes = int((first_time - t).total_seconds() // 60)
+                change['before_failure'] = f"{minutes} minute(s) before the first {first['severity']} issue"
+                before.append((t, change, minutes))
+        if not before:
+            return
+        before.sort(key=lambda b: b[0], reverse=True)
+        listed = "; ".join(f"{c['kind']}/{c['name']} at {t:%Y-%m-%d %H:%M}, {m} minute(s) before ({c['what']})"
+                           for t, c, m in before[:3]) + (f"; +{len(before) - 3} more" if len(before) > 3 else '')
+        self._add_issue(
+            severity='medium', category='Recent Changes',
+            message=(f"{len(before)} change(s) in the hour before the first {first['severity']} issue ({first_time:%Y-%m-%d %H:%M}, "
+                     f"{first['category']}: {first['message'][:200]}): {listed}"),
+            file_path=first['file'], dedupe_key="changes-before-failure",
+        )
+        issue = self.issues[-1]
+        issue['next_steps'] = [
+            "compare each change with the first issue: kubectl get <kind> <name> -n <namespace> -o yaml (managedFields), "
+            "and the history of the GitOps repository when a tool applies the CRs",
+            "times of the logs are as written in them (UTC for the Confluent images by default), Kubernetes times are UTC",
+        ]
+        self._assign_component(issue)
+
     def _check_stale_block_conditions(self):
         """CRs that still have the "Reconcile is blocked." condition after their block-reconcile annotation was removed:
         one finding for all of them. The condition is not cleared when the annotation is removed, so it says nothing
@@ -1466,6 +1629,19 @@ class CFKBundleAnalyzer:
         containers = status.get('containerStatuses') or []
         if status.get('startTime'):
             self.pod_started[name] = status['startTime']
+        for init in status.get('initContainerStatuses') or []:
+            if isinstance(init, dict) and init.get('name') == 'config-init-container':
+                state = init.get('state') or {}
+                done = state.get('terminated') or (init.get('lastState') or {}).get('terminated') or {}
+                started = kraft_migration._parse_ts(done.get('startedAt'))
+                finished = kraft_migration._parse_ts(done.get('finishedAt'))
+                self.pod_init[name] = {
+                    'waiting': (state.get('waiting') or {}).get('reason'),
+                    'failed': bool(done) and done.get('exitCode', 0) != 0,
+                    'exit_code': done.get('exitCode'), 'restarts': init.get('restartCount', 0) or 0,
+                    'duration': kraft_migration._duration(started, finished),
+                    'seconds': (finished - started).total_seconds() if started and finished else None,
+                }
         spec_images = [str(c.get('image', '')) for c in (pod.get('spec') or {}).get('containers') or [] if isinstance(c, dict)]
         if spec_images:
             # the image of the spec has the tag; the status one is sometimes only a digest

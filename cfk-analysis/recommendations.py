@@ -222,7 +222,8 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
     "Plugin Issues": {
         "summary": "A connector, converter or SMT class is missing from the plugin path, or two versions of a library clash.",
         "steps": [
-            "Check spec.build.plugins of the Connect CR (or the custom image): is the plugin of the connector.class there, at the expected version?",
+            "Check spec.build.onDemand.plugins of the Connect CR (or the custom image): is the plugin of the connector.class there, at the expected version?",
+            "The plugins of spec.build.onDemand are installed by the config-init-container of each pod at its start: kubectl logs <pod> -c config-init-container.",
             "ClassNotFoundException / NoClassDefFoundError: a jar of the plugin is missing (JDBC driver, cloud SDK…).",
             "NoSuchMethodError / NoSuchFieldError: two versions of a library in the plugin path; keep one per plugin folder.",
         ],
@@ -265,6 +266,14 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "Check ZK ensemble forms a quorum: 'echo stat | nc' on each node, look for one Leader + N Followers.",
             "Long GC pauses on brokers cause session timeouts — run 'playground analyze gc-logs' on broker JVM.",
             "If on a KRaft-supported CFK version, plan migration off Zookeeper.",
+        ],
+    },
+    "Recent Changes": {
+        "summary": "A CR or a StatefulSet changed in the hour before the first critical / high issue: the change may be the cause.",
+        "steps": [
+            "Compare the change (managedFields of the CR, who and which part of the spec) with the first issue.",
+            "When a GitOps tool applies the CRs, its history has the exact diff.",
+            "Revert the change on a test cluster to confirm before reverting it in production.",
         ],
     },
     "Bundle Coverage": {

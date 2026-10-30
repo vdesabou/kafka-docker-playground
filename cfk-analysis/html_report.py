@@ -56,6 +56,8 @@ CATEGORY_EMOJI = {
     "KRaft Migration": "🚚",
     "Rollout Issues": "🔄",
     "Bundle Coverage": "🕰️",
+    "Recent Changes": "🕒",
+    "Plugin Issues": "🧩",
     "Zookeeper Issues": "🦓",
     "Schema Registry Issues": "🧬",
     "Connect Issues": "🔌",
@@ -647,7 +649,8 @@ def _environment_html(results: Dict, timeline_limit: int = 40) -> str:
     if timeline:
         rows = "".join(
             f"<tr><td class=\"nowrap\">{_esc(c['time'])}</td><td>{_esc(c['kind'])}/{_esc(c['name'])}</td>"
-            f"<td>{_esc(c['what'])}</td></tr>"
+            f"<td>{_esc(c['what'])}" + (f" <strong>⚠️ {_esc(c['before_failure'])}</strong>" if c.get('before_failure') else "")
+            + "</td></tr>"
             for c in timeline[:timeline_limit]
         )
         blocks.append(f"""
