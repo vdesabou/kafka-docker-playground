@@ -12,6 +12,7 @@ Imported, after adding this folder to sys.path, by:
     gc-analysis, tools/xstream-analyzer, tools/tcp-dump
   - the CFK bundle report (cfk-analysis/html_report.py), which keeps its own rules and adds dark() rules, THEME_TOGGLE_CSS
     and THEME_SCRIPT (playground analyze cfk-bundle mounts this folder in its container, in /tmp/report-common)
+  - log_viewer.py: the pages of the files of the analyze logs and CFK reports, linked from their locations
 The benchmark, flight recorder and SMT test reports have their own layout (charts drawn by a script, filters) and their
 own "Toggle theme" button, with the same blue header and the same light / dark palette (slate) as these.
 """

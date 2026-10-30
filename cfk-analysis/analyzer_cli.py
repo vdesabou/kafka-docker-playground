@@ -32,6 +32,7 @@ from sanitizer import DataSanitizer  # tools/report-common/sanitizer.py
 import environment
 import recommendations
 import html_report
+import log_viewer  # tools/report-common/log_viewer.py
 
 
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -337,12 +338,54 @@ def run(
     json_out: Optional[str] = None,
     label: Optional[str] = None,
 ) -> int:
+    # the bundle stays extracted until the HTML report is written: it copies the files of the issues next to it
     with extracted_bundle(bundle_path) as bundle_dir:
-        analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings)
-        # analyzer.analyze() prints decode/parse warnings via print() to stdout.
-        # Send those to stderr so --json mode produces clean JSON on stdout.
-        with redirect_stdout(sys.stderr):
-            results = analyzer.analyze()
+        return analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, html_out, include_warnings,
+                              components, json_out, label)
+
+
+def write_viewers(html_out: str, bundle_dir: str, raw_issues: list, issues: list, sanitizer) -> None:
+    """copies the files of the issues next to the report (log_viewer, sanitized with the placeholders of the report) and
+    sets the link of each issue to its file and line (viewer); raw_issues: the issues before sanitization (their paths
+    are the ones of the bundle), in the same order as issues"""
+    lines = {}
+    names = {}
+    for issue in raw_issues:
+        line = issue.get("line_number") or yaml_line(bundle_dir, issue.get("file") or "", issue.get("_viewer_name"), names)
+        issue["_viewer_line"] = line
+        lines.setdefault(issue.get("file") or "", []).append(line)
+    files = [(f, os.path.join(bundle_dir, f), hits) for f, hits in lines.items() if f]
+    hrefs = log_viewer.write_pages(html_out, files, sanitizer.sanitize_text if sanitizer else None)
+    for raw, issue in zip(raw_issues, issues):
+        href = hrefs.get(raw.get("file") or "")
+        if href:
+            issue["viewer"] = href + (f"#L{raw['_viewer_line']}" if raw.get("_viewer_line") else "")
+
+
+def yaml_line(bundle_dir: str, rel: str, name: Optional[str], cache: dict) -> Optional[int]:
+    """line of the "name: <name>" of the pod or CR of an issue in a YAML file, None when not found"""
+    if not name or not rel.lower().endswith((".yaml", ".yml")):
+        return None
+    if rel not in cache:
+        cache[rel] = {}
+        try:
+            with open(os.path.join(bundle_dir, rel), encoding="utf-8", errors="replace") as f:
+                for n, text in enumerate(f, start=1):
+                    m = re.match(r'\s*(?:- )?name:\s*["\']?([^"\'\s]+)["\']?\s*$', text)
+                    if m:
+                        cache[rel].setdefault(m.group(1), n)
+        except OSError:
+            pass
+    return cache[rel].get(name)
+
+
+def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, html_out, include_warnings, components,
+                   json_out, label) -> int:
+    analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings)
+    # analyzer.analyze() prints decode/parse warnings via print() to stdout.
+    # Send those to stderr so --json mode produces clean JSON on stdout.
+    with redirect_stdout(sys.stderr):
+        results = analyzer.analyze()
 
     coverage = results["coverage"]
     if results["summary"]["files_analyzed"] == 0:
@@ -355,8 +398,13 @@ def run(
               "this does not look like a CFK support bundle (kubectl confluent support-bundle), "
               "only log patterns were checked.", file=sys.stderr)
 
+    raw_issues = results["issues"]
+    sanitizer = None
     if sanitize:
-        results = DataSanitizer().sanitize_results(results)
+        sanitizer = DataSanitizer()
+        results = sanitizer.sanitize_results(results)
+    if html_out:
+        write_viewers(html_out, bundle_dir, raw_issues, results["issues"], sanitizer)
 
     if severity or components:
         results["issues"] = filter_by_component(filter_by_severity(results["issues"], severity), components)
@@ -374,6 +422,10 @@ def run(
         os.makedirs(os.path.dirname(os.path.abspath(html_out)), exist_ok=True)
         with open(html_out, "w", encoding="utf-8") as f:
             f.write(rendered)
+    # the links of the HTML report are not part of the analysis
+    for issue in results["issues"]:
+        for key in ("viewer", "_viewer_name", "_viewer_line"):
+            issue.pop(key, None)
 
     if as_json or json_out:
         for issue in results["issues"]:

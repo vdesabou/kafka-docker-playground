@@ -7,6 +7,10 @@ to their `Caused by:` chain.
 
 ## HTML report and JSON
 
+With `--sources <label<tab>path file>` (written by `analyze logs`) and `--html-out`, the files with findings are copied
+next to the report in `<report>-files/` by `tools/report-common/log_viewer.py` (shared with the CFK report), sanitized
+with the state of `--sanitize-state`; the file names and line numbers of the report link to them (`#L33`).
+
 With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every distinct record to that file.
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
 (task killed, with one line per distinct exception chain of the killed tasks, authentication, TLS, unknown magic byte,

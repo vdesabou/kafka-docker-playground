@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, svg_time_columns, time_bins, verdict_html)
 import known_causes  # noqa: E402
+import log_viewer  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
@@ -541,19 +542,24 @@ def connectors_attr(names: List[str], none: bool = False) -> str:
     return " data-connectors='" + e(" ".join(list(names) + ([NO_CONNECTOR] if none or not names else []))) + "'"
 
 
-def records_html(records: List[dict], open_first: int = 3, highlight: Optional[str] = None) -> str:
-    """One collapsible block per distinct record; highlight: name that marks the records mentioning it."""
+def records_html(records: List[dict], open_first: int = 3, highlight: Optional[str] = None,
+                 viewers: Optional[Dict[str, str]] = None, label: str = "") -> str:
+    """One collapsible block per distinct record; highlight: name that marks the records mentioning it; viewers: label ->
+    page of the file (log_viewer), its line numbers link to it."""
+    viewers = viewers or {}
     out = []
     for i, r in enumerate(records):
-        when = f"line {r['first_line']}" + (f" ({r['first_ts'].replace('T', ' ')})" if r["first_ts"] else "")
+        when = (log_viewer.link(viewers, label, f"line {r['first_line']}", r["first_line"])
+                + e(f" ({r['first_ts'].replace('T', ' ')})" if r["first_ts"] else ""))
         if r["count"] > 1:
-            when += f" → line {r['last_line']}" + (f" ({r['last_ts'].replace('T', ' ')})" if r["last_ts"] else "")
+            when += (" → " + log_viewer.link(viewers, label, f"line {r['last_line']}", r["last_line"])
+                     + e(f" ({r['last_ts'].replace('T', ' ')})" if r["last_ts"] else ""))
         mine = " <span class='st mine'>this connector</span>" if highlight and highlight in r["text"] else ""
         msg = short_message(r["message"])
         conn = f"<span class='legend mono'>[{e(r['connector'])}]</span> " if r.get("connector") else ""
         out.append(f"<details data-level='{e(r['level'])}'{connectors_attr([r['connector']] if r.get('connector') else [])}"
                    f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} ×{r['count']}{mine} "
-                   f"{conn}<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {e(when)}</span></summary>"
+                   f"{conn}<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {when}</span></summary>"
                    f"<pre>{log_html(r['text'])}</pre>"
                    + (f"<details><summary>📋 Show context</summary><pre>{log_html(r['context'])}</pre></details>" if r.get("context") else "")
                    + "</details>")
@@ -624,7 +630,7 @@ def config_group(c: dict) -> Tuple[int, str]:
     return 1, "🧱 Components"
 
 
-def config_html(configs: List[dict]) -> str:
+def config_html(configs: List[dict], viewers: Optional[Dict[str, str]] = None) -> str:
     """⚙️ Configuration: one collapsible key / value table per config dump of the logs or config file of the input,
     grouped by config files, components, connector and clients"""
     if not configs:
@@ -637,7 +643,7 @@ def config_html(configs: List[dict]) -> str:
         blocks.append(f"<h3 style='font-size:.9rem;margin:14px 0 4px'>{e(group[1])} ({len(groups[group])})</h3>")
         # the connector configs first, then by line
         for c in sorted(groups[group], key=lambda c: (not c["title"].endswith("ConnectorConfig"), c["file"], c.get("line") or 0)):
-            blocks.append(config_block_html(c))
+            blocks.append(config_block_html(c, viewers))
     return (f"{CONFIG_CSS}<div class='table-card'><h2>⚙️ Configuration ({len(configs)})</h2>"
             "<p class='legend'>🪵 the configs the components log when they start (<span class='mono'>KafkaConfig values:</span>, "
             "<span class='mono'>DistributedConfig</span>, the config of a connector with its <span class='mono'>[connector|task-0]</span> "
@@ -647,13 +653,14 @@ def config_html(configs: List[dict]) -> str:
             f"{''.join(blocks)}</div>{CONFIG_SCRIPT}")
 
 
-def config_block_html(c: dict) -> str:
-    """one config: its key / value table, collapsed"""
+def config_block_html(c: dict, viewers: Optional[Dict[str, str]] = None) -> str:
+    """one config: its key / value table, collapsed; viewers: label -> page of the file (log_viewer)"""
     rows = []
     for line in c["text"].splitlines():
         key, _, value = line.partition("=")
         rows.append(f"<tr class='cfg-row'><td class='mono'>{e(key)}</td><td class='mono'>{e(value)}</td></tr>")
-    where = c["file"] + (f":{c['line']}" if c.get("line") else "") + (f" ({c['time'].replace('T', ' ')})" if c.get("time") else "")
+    where = (log_viewer.link(viewers or {}, c["file"], e(c["file"] + (f":{c['line']}" if c.get("line") else "")), c.get("line"))
+             + e(f" ({c['time'].replace('T', ' ')})" if c.get("time") else ""))
     what = " ".join(x for x in (c.get("context"), c.get("id")) if x)
     icon = "📄" if c["source"] == "file" else "🪵"
     changes = "".join(f"<li class='mono'>{e(ch['key'])}: {e(ch['previous'])} → {e(ch['value'])}"
@@ -661,7 +668,7 @@ def config_block_html(c: dict) -> str:
                       for ch in c.get("changes", []))
     changed = f" <span class='st warn'>🔁 {len(c['changes'])} key(s) changed between restarts</span>" if c.get("changes") else ""
     return (f"<details class='cfg'><summary>{icon} <strong>{e(c['title'])}</strong> <span class='mono'>{e(what)}</span> "
-            f"<span class='legend'>· {len(rows)} keys · {e(where)}</span>{changed}</summary>"
+            f"<span class='legend'>· {len(rows)} keys · {where}</span>{changed}</summary>"
             + (f"<p class='legend'>🔁 changed between two dumps of this config (a restart with another config):</p><ul>{changes}</ul>" if changes else "")
             + f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{''.join(rows)}</table></details>")
 
@@ -712,9 +719,12 @@ def first_names(names: List[str], top: int = 3) -> str:
 
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
-                sections: List[Tuple[str, str]] = ()) -> str:
+                sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
+                viewers_sanitized: bool = False) -> str:
     """unit: what a label is (file, container, script); links: (label, url) in the header; sections: (title, text)
-    shown as is after the findings (the last lines of a failed CI script...)"""
+    shown as is after the findings (the last lines of a failed CI script...); viewers: label -> page of the file
+    (log_viewer), the labels and line numbers link to it"""
+    viewers = viewers or {}
     s = res["summary"]
     Unit = unit[0].upper() + unit[1:]
     errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
@@ -742,7 +752,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     if res["root_causes"]:
         rows = "".join(f"<tr data-level='{e(c['level'])}'{connectors_attr(c['connectors'], c.get('no_connector', False))}><td>{level_badge(c['level'])}</td><td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
                        f"<td class='mono'>{e(c['example'][:300])}</td><td class='num'>{c['occurrences']}</td>"
-                       f"<td class='num'>{c['records']}</td><td class='mono'>{e(', '.join(c['files'][:5]))}"
+                       f"<td class='num'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x)) for x in c['files'][:5])}"
                        f"{e(' …' if len(c['files']) > 5 else '')}</td>"
                        + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
                        + "</tr>" for c in res["root_causes"])
@@ -751,7 +761,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                     f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}</tr>"
                     f"{rows}</table></div>")
     if res["files"]:
-        rows = "".join(f"<tr><td class='mono'>{e(f['label'])}</td><td class='num'>{f['lines']}</td><td class='num'>{f['distinct']}</td>"
+        rows = "".join(f"<tr><td class='mono'>{log_viewer.link(viewers, f['label'], e(f['label']))}</td><td class='num'>{f['lines']}</td><td class='num'>{f['distinct']}</td>"
                        f"<td class='num'>{f['occurrences']}</td>"
                        + "".join(f"<td class='num'>{sum(r['count'] for r in f['records'] if r['level'] == lvl) or ''}</td>" for lvl in ("FATAL", "ERROR", "WARN"))
                        + "</tr>" for f in res["files"])
@@ -762,8 +772,10 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        + e(", ".join(res["files_without_findings"][:500])) + "</p></details>" if res["files_without_findings"] else "")
                     + "</div>")
         for f in res["files"]:
-            body.append(f"<div class='table-card file-records'><h2>📄 {e(f['label'])}</h2>{records_html(f['records'])}</div>")
-    body.append(config_html(res.get("configuration") or []))
+            title = log_viewer.link(viewers, f["label"], e(f["label"]))
+            body.append(f"<div class='table-card file-records'><h2>📄 {title}</h2>"
+                        f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
+    body.append(config_html(res.get("configuration") or [], viewers))
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
     if res.get("filter"):
         meta.append(f"🔌 --connector {e(' '.join(res['filter']['connectors']))}" + (" --with-worker" if res["filter"]["with_worker"] else ""))
@@ -771,7 +783,35 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     return page(f"{heading[2:].strip()} report — {title}", e(heading), meta, "".join(body),
                 f"🛠️ Generated by {e(command)} (self-contained, no external resource). Records are cut to 300 "
                 "characters per line and to 3 frames of the deepest cause, like the terminal digest; 📋 Show context has the raw "
-                "lines around their first occurrence.")
+                "lines around their first occurrence."
+                + (f" The file names and line numbers open a copy of the file{' (sanitized)' if viewers_sanitized else ''} "
+                   f"in {e(next(iter(viewers.values())).split('/')[0])}/: keep that folder with the report." if viewers else ""))
+
+
+def write_viewers(report: str, files: List[dict], res: dict, sources_file: str, sanitize_state: Optional[str]) -> Dict[str, str]:
+    """the pages of the files with findings or a configuration (log_viewer), with the lines of their records and
+    configs highlighted: label -> href"""
+    sources: Dict[str, str] = {}
+    try:
+        with open(sources_file, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                label, _, path = line.rstrip("\n").partition("\t")
+                sources.setdefault(label, path)
+    except OSError:
+        return {}
+    hits: Dict[str, List[int]] = OrderedDict()
+    for f in res["files"]:
+        hits[f["label"]] = [n for r in f["records"] for n in (r["first_line"], r["last_line"])]
+    for c in res.get("configuration") or []:
+        hits.setdefault(c["file"], []).extend([c["line"]] if c.get("line") else [])
+    path_of = {f["label"]: sources.get(f.get("path", f["label"])) for f in files}
+    sanitize = None
+    if sanitize_state:
+        import sanitizer
+        s = sanitizer.DataSanitizer()
+        sanitizer._load_state(s, sanitize_state)
+        sanitize = s.sanitize_text
+    return log_viewer.write_pages(report, [(label, path_of.get(label), lines) for label, lines in hits.items()], sanitize)
 
 
 def main() -> int:
@@ -788,6 +828,11 @@ def main() -> int:
     ap.add_argument("--link", nargs=2, action="append", default=[], metavar=("LABEL", "URL"), help="link in the header")
     ap.add_argument("--section", nargs=2, action="append", default=[], metavar=("TITLE", "FILE"),
                     help="text file shown as is after the findings")
+    ap.add_argument("--sources", metavar="FILE",
+                    help="label<tab>path of each file analyzed: with --html-out, the files with findings are copied next to "
+                         "the report (<report>-files/) and its locations link to them")
+    ap.add_argument("--sanitize-state", metavar="FILE",
+                    help="state of tools/report-common/sanitizer.py: the copies of --sources get the same placeholders")
     ap.add_argument("--connector", action="append", default=[], help="keep only the records and configs of this connector")
     ap.add_argument("--with-worker", action="store_true", help="with --connector, also keep what has no connector context")
     ap.add_argument("--text-summary", action="store_true", help="print the bounded text summary of the terminal digest")
@@ -826,8 +871,9 @@ def main() -> int:
             for title, path in args.section:
                 with open(path, encoding="utf-8", errors="replace") as sf:
                     sections.append((title, sf.read()))
+            viewers = write_viewers(args.html_out, files, res, args.sources, args.sanitize_state) if args.sources else {}
             fh.write(html_report(res, args.title, args.levels, args.skipped, args.heading, args.command, args.unit,
-                                 [tuple(l) for l in args.link], sections))
+                                 [tuple(l) for l in args.link], sections, viewers, bool(args.sanitize_state)))
     return 0
 
 

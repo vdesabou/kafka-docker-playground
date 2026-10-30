@@ -252,6 +252,15 @@ first, with "no connector context" for the worker records. On a worker running d
 only its errors. `--json` gives the same in `.summary.by_connector`, `.root_causes[].connectors` and
 `.files[].records[].connector`.
 
+🔗 The file names and line numbers of the report (`line 33` of a record, a file of the root causes, the `file:line` of a
+config) are **links**: they open a copy of the file at that line, with line numbers, the lines of the findings
+highlighted and ▲ Previous / ▼ Next buttons (`p` / `n` keys) between them. The copies are written next to the report,
+in `<report>-files/` (one page per file with findings), because the input is often an archive extracted to a temporary
+folder deleted at the end of the command. They are sanitized with the same placeholders as the report (`<HOST-1>` is the
+same host in both, `--no-sanitize` keeps the raw files), and a file over 2 MB keeps only the 250 lines before and after
+each finding. Send the folder with the report when you share it. The CFK bundle report does the same for the location
+of each issue (a YAML file without line number opens at the `name:` of its pod or custom resource).
+
 `--json` prints the same analysis on stdout (`"type": "logs"`: summary, findings, known causes, root causes, every
 record, and the analysis of each CFK bundle in `cfk_bundles`) and the text digest on stderr, without an HTML report.
 For a single CFK bundle, it's the JSON of the CFK analyzer (`"type": "cfk-bundle"`):

@@ -72,6 +72,10 @@ fi
 # every distinct record, for the HTML report and --json (see summarize_log_errors)
 records_file="$tmp_dir/records"
 : > "$records_file"
+# label<tab>path on disk of each file analyzed (extracted ones included, in $tmp_dir until the end): the HTML report
+# copies the files with findings next to it, its locations (connect.log:33) link to them
+sources_file="$tmp_dir/sources"
+: > "$sources_file"
 nb_files=0
 nb_files_with_findings=0
 nb_skipped=0
@@ -170,9 +174,10 @@ function is_cfk_bundle () {
 }
 
 # prints the digest of one log, read on stdin, when it has findings
-# $1: label to display
+# $1: label to display, $2: path of the file
 function analyze_logs_digest () {
     label="$1"
+    printf '%s\t%s\n' "$label" "$2" >> "$sources_file"
     output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
     nb_files=$((nb_files+1))
     if [[ "$output" == "✅"* ]]
@@ -302,7 +307,7 @@ function analyze_logs_path () {
         *.gz)
             if ! is_duplicate_file "$path" "$label"
             then
-                analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+                analyze_logs_digest "$label" "$path" < <(gzip -dc "$path" 2>/dev/null)
             fi
             ;;
         *)
@@ -310,7 +315,7 @@ function analyze_logs_path () {
             then
                 if ! is_duplicate_file "$path" "$label"
                 then
-                    analyze_logs_digest "$label" < "$path"
+                    analyze_logs_digest "$label" "$path" < "$path"
                     append_config_file "$path" "$label"
                 fi
             else
@@ -484,6 +489,12 @@ then
 else
     echo "Not sanitized (--no-sanitize): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
     report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
+fi
+# a copy of each file with findings in <report>-files/, sanitized with the same placeholders as the report
+report_args+=(--sources "$sources_file")
+if [[ -n "$sanitize" ]]
+then
+    report_args+=(--sanitize-state "$sanitize_state")
 fi
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
 exit $cfk_exit

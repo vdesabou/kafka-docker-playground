@@ -123,7 +123,9 @@ review the output before sharing it.
 - `tools/report-common/sanitizer.py` (shared with the plain log digest of `playground analyze logs`) — redacts
   secrets first, then emails / LDAP DNs / IPs / hostnames.
 - `recommendations.py` — category → concrete CFK remediation steps mapping.
-- `html_report.py` — self-contained offline HTML report (no CDN dependency).
+- `html_report.py` — self-contained offline HTML report (no CDN dependency). The location of each issue links to a
+  sanitized copy of its file in `<report>-files/` (`tools/report-common/log_viewer.py`, written by `analyzer_cli.py`
+  while the bundle is still extracted; a YAML file without line number opens at the `name:` of the pod or CR).
 - `analyzer_cli.py` — CLI entrypoint: safe extraction → analyze → sanitize → render.
 - `Dockerfile` / `requirements.txt` — runtime image (`python:3.12-slim` + `PyYAML`). The playground builds it
   once (tag derived from these two files) and mounts the code at run time.
