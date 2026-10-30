@@ -7561,7 +7561,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails\n  and LDAP DNs are sanitized by default (best effort: review before sharing),\n  --no-sanitize for internal bundles only. --logs-only gives the plain log\n  digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails\n  and LDAP DNs are sanitized by default (best effort: review before sharing),\n  --no-sanitize for internal bundles only. --logs-only gives the plain log\n  digest instead. 🎯 --problem \"<component, symptom, since when>\" matches the\n  bundle against what the customer reports: the issues that explain it first, a\n  verdict (explained, not explained, not covered by the logs), the changes\n  before the date. 📥 A Data to request section says what to ask the customer for\n  next, with why and the command: from the gaps of the bundle (logs that start\n  too late, previous logs of restarted containers, no events, no operator log),\n  from its findings (OOMKilled, Pending pods, TLS, failed connectors) and from\n  the symptoms of --problem.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7648,6 +7648,11 @@ playground_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--problem, -p PROBLEM")"
+    printf "    🎯 CFK support bundle: the problem the customer reports, in your own words:\n    component, symptom and since when (example: \"connect-0 keeps restarting\n    since 14 Oct 08:30, orders-sink failed\")\n    \n    Matched against the bundle (keywords and dates, no AI): the components and\n    CR / pod names (connect, kafka, kraft, schema registry, operator,\n    connect-0…), the symptoms (roll / upgrade stuck, crash / restarts, pending,\n    memory / OOM, TLS, auth / RBAC, KRaft migration, connector failed, slow /\n    lag / hang, disk, network) and the dates it recognizes (2026-10-14 08:30, 14\n    Oct, Oct 14, yesterday, 3 hours ago). The issues that match come first,\n    marked 🎯, with a verdict: explained, partly explained, not explained, or not\n    covered (the logs of the bundle do not cover the date), the changes of the\n    CRs before the date and the logs that start after it. Terminal, HTML report\n    and \"problem\" in --json. It also adds what to request for these symptoms to\n    the 📥 Data to request section\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--no-sanitize")"
     printf "    ⚠️  Do not sanitize passwords and other secrets, IPs, hostnames, emails and\n    LDAP DNs (digest, HTML report, JSON, CFK bundle analysis)\n    \n    🚫 NEVER use this for customer logs. Internal/test logs only.\n"
     echo
@@ -7678,6 +7683,8 @@ playground_analyze_logs_usage() {
     printf "  playground analyze logs --sample cfk_kraft_migration\n"
     printf "  playground analyze logs --sample cfk_rollout\n"
     printf "  playground analyze logs --sample cfk_rollout --sample cfk_rollout_after\n"
+    printf "  playground analyze logs --sample cfk_bundle --problem \"connect-0 keeps\n  restarting since 14 Oct 08:30, orders-sink failed\"\n"
+    printf "  playground analyze logs -f ./support-bundle-ns-confluent.tar.gz -p \"kafka roll\n  stuck after the upgrade yesterday\"\n"
     printf "  playground analyze logs -f bundle-monday.tar.gz -f bundle-tuesday.tar.gz\n"
     printf "  playground analyze logs -f connect-logs.zip --connector my-jdbc-sink\n  --show-config my-jdbc-sink\n"
     printf "  playground analyze logs -f connect.log --json --json-sections\n  summary,findings,root_causes\n"
@@ -8741,6 +8748,11 @@ playground_debug_analyze_logs_usage() {
     printf "  %s\n" "$(magenta "--severity LEVEL")"
     printf "    🎚️  CFK support bundle: only keep the issues of this severity or above\n    (critical | high | medium | low)\n"
     printf "    %s\n" "Allowed: critical, high, medium, low"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--problem, -p PROBLEM")"
+    printf "    🎯 CFK support bundle: the problem the customer reports, in your own words:\n    component, symptom and since when (example: \"connect-0 keeps restarting\n    since 14 Oct 08:30, orders-sink failed\")\n    \n    Matched against the bundle (keywords and dates, no AI): the components and\n    CR / pod names (connect, kafka, kraft, schema registry, operator,\n    connect-0…), the symptoms (roll / upgrade stuck, crash / restarts, pending,\n    memory / OOM, TLS, auth / RBAC, KRaft migration, connector failed, slow /\n    lag / hang, disk, network) and the dates it recognizes (2026-10-14 08:30, 14\n    Oct, Oct 14, yesterday, 3 hours ago). The issues that match come first,\n    marked 🎯, with a verdict: explained, partly explained, not explained, or not\n    covered (the logs of the bundle do not cover the date), the changes of the\n    CRs before the date and the logs that start after it. Terminal, HTML report\n    and \"problem\" in --json. It also adds what to request for these symptoms to\n    the 📥 Data to request section\n"
     echo
 
     # :flag.usage
@@ -24225,6 +24237,11 @@ function analyze_cfk_bundle() {
     if [[ -n "${CFK_ANALYSIS_LABEL:-}" ]]
     then
         cli_args+=(--label "$CFK_ANALYSIS_LABEL")
+    fi
+    # playground analyze logs --problem: the problem statement, matched against the bundle (cfk-analysis/problem.py)
+    if [[ -n "${CFK_ANALYSIS_PROBLEM:-}" ]]
+    then
+        cli_args+=(--problem "$CFK_ANALYSIS_PROBLEM")
     fi
 
     docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
@@ -49394,6 +49411,7 @@ playground_analyze_logs_command() {
   with_worker="${args[--with-worker]}"
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
+  problem="${args[--problem]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -49715,10 +49733,12 @@ playground_analyze_logs_command() {
   done
   set -e
 
-  if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 ]]
+  if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 || -n "$problem" ]]
   then
-      logwarn "⚠️ --component and --severity only apply to a CFK support bundle, and none was found"
+      logwarn "⚠️ --component, --severity and --problem only apply to a CFK support bundle, and none was found"
   fi
+  # --problem: matched against each CFK support bundle (cfk-analysis/problem.py)
+  CFK_ANALYSIS_PROBLEM="$problem"
 
   # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
   cfk_exit=0
@@ -51301,6 +51321,7 @@ playground_debug_analyze_logs_command() {
   with_worker="${args[--with-worker]}"
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
+  problem="${args[--problem]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -51622,10 +51643,12 @@ playground_debug_analyze_logs_command() {
   done
   set -e
 
-  if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 ]]
+  if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 || -n "$problem" ]]
   then
-      logwarn "⚠️ --component and --severity only apply to a CFK support bundle, and none was found"
+      logwarn "⚠️ --component, --severity and --problem only apply to a CFK support bundle, and none was found"
   fi
+  # --problem: matched against each CFK support bundle (cfk-analysis/problem.py)
+  CFK_ANALYSIS_PROBLEM="$problem"
 
   # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
   cfk_exit=0
@@ -90777,6 +90800,20 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --problem | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--problem']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--problem requires an argument: --problem, -p PROBLEM" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --no-sanitize)
 
         # :flag.case_no_arg
@@ -93561,6 +93598,20 @@ playground_debug_analyze_logs_parse_requirements() {
           shift
         else
           printf "%s\n" "--severity requires an argument: --severity LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --problem | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--problem']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--problem requires an argument: --problem, -p PROBLEM" >&2
           exit 1
         fi
         ;;
@@ -124082,6 +124133,16 @@ playground_analyze_logs_completion() {
         completion_blocked_flags["--severity"]=1
 
         ;;
+      --problem | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--problem"]=1
+
+        ;;
       --no-sanitize)
         completion_blocked_flags["--no-sanitize"]=1
 
@@ -124108,6 +124169,7 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --json-sections "$completion_current" --json-sections
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --severity "$completion_current" --severity
+    completion_flag_candidates --problem "$completion_current" --problem -p
     completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
   fi
 
@@ -125545,6 +125607,16 @@ playground_debug_analyze_logs_completion() {
         completion_blocked_flags["--severity"]=1
 
         ;;
+      --problem | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--problem"]=1
+
+        ;;
       --no-sanitize)
         completion_blocked_flags["--no-sanitize"]=1
 
@@ -125571,6 +125643,7 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --json-sections "$completion_current" --json-sections
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --severity "$completion_current" --severity
+    completion_flag_candidates --problem "$completion_current" --problem -p
     completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
   fi
 

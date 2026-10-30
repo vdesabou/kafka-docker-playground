@@ -153,6 +153,13 @@ lab_run playground analyze logs -f "$bundle" --component connect --output-dir /t
 lab_expect_exit 0
 lab_expect_contains "Filtered on: --component connect"
 lab_expect_contains "By component: connect"
+lab_run playground analyze logs -f "$bundle" --problem "the filestream-broken connector failed" --output-dir /tmp/lab-cfk-bundle
+lab_expect_exit 0
+lab_expect_contains "symptoms: connector failed"
+lab_expect_contains "Verdict: 🎯"
+lab_expect_contains "🎯 matches the problem"
+lab_expect_contains "📥 Data to request from the customer"
+lab_expect_contains "the status and config of the failed connectors"
 
 log "Step 5: stop"
 lab_run playground stop

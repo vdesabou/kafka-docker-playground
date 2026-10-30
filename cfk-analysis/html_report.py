@@ -278,6 +278,9 @@ table.cfg td:first-child { width: 34%; }
 .recommendation ol { margin: 0 0 12px 20px; padding: 0; }
 .next-steps { margin-top: 8px; padding: 8px 12px; border-left: 3px solid #2563eb; background: #eff6ff; border-radius: 4px; font-size: 13px; }
 .next-steps ol { margin: 4px 0 6px 20px; padding: 0; }
+.component-tag.problem-match { background: #fef3c7; color: #92400e; font-weight: 600; }
+.panel.problem .verdict { margin: 8px 0; }
+.panel.problem ul { margin: 6px 0 6px 20px; padding: 0; font-size: 13px; }
 .recommendation ol li { margin-bottom: 4px; font-size: 13.5px; color: #1f2937; }
 .recommendation .docs {
   font-size: 12px;
@@ -379,6 +382,7 @@ table.env td{border-bottom-color:#273449}
 .recommendation{background:#172033;border-bottom-color:#334155}
 .recommendation ol li,.issue .message{color:#e2e8f0}
 .next-steps{background:#172554;border-left-color:#60a5fa}
+.component-tag.problem-match{background:#451a03;color:#fcd34d}
 .recommendation .docs,.issue details summary,a{color:#93c5fd}
 .issue{border-top-color:#273449}
 .issue pre{background:#0b1220}
@@ -442,7 +446,8 @@ function applyFilters() {
         (!currentSearch || title.includes(currentSearch) || issue.textContent.toLowerCase().includes(currentSearch));
       if (inContext) connectors.forEach(c => { byConnector[c] = (byConnector[c] || 0) + 1; });
       const inScope = inContext && (currentConnector === 'all' || connectors.includes(currentConnector));
-      const show = inScope && (currentFilter === 'all' || issue.dataset.severity === currentFilter);
+      const show = inScope && (currentFilter === 'all' || issue.dataset.severity === currentFilter ||
+                               (currentFilter === 'problem' && issue.dataset.problem === '1'));
       issue.style.display = show ? '' : 'none';
       if (show) visible++;
       // the summary cards count every severity of the selected component / instance / search
@@ -698,6 +703,56 @@ def _runbooks_html(results: Dict) -> str:
         </details>"""
 
 
+def _problem_html(results: Dict) -> str:
+    """🎯 the problem statement of --problem matched against the bundle: what was understood, verdict, facts on its dates,
+    issues that explain it (marked 🎯 in the list, 🎯 Matches the problem filter)"""
+    pb = results.get("problem")
+    if not pb:
+        return ""
+    understood = [f"🧩 components <strong>{_esc(', '.join(pb['components']))}</strong>" if pb["components"] else "",
+                  f"📦 CRs / pods <strong>{_esc(', '.join(pb['instances']))}</strong>" if pb["instances"] else "",
+                  f"🩺 symptoms <strong>{_esc(', '.join(pb['symptoms']))}</strong>" if pb["symptoms"] else "",
+                  f"📅 dates <strong>{_esc(', '.join(pb['dates']))}</strong>" if pb["dates"] else ""]
+    understood = " &nbsp;·&nbsp; ".join(u for u in understood if u) or \
+        "nothing recognized: describe the component, the symptom and since when"
+    css = {"explained": "critical", "partly explained": "warning"}.get(pb["verdict"], "")
+    facts = "".join(f"<li>{_esc(f)}</li>" for f in pb["facts"])
+    rows = "".join(
+        f"<tr><td class=\"nowrap\"><span class=\"severity-pill {_esc(i['severity'])}\">{SEVERITY_EMOJI.get(i['severity'], '')} "
+        f"{_esc(i['severity'])}</span></td><td>{_esc(i['category'])}<br><span class=\"label\">"
+        f"{_esc(COMPONENT_LABEL.get(i.get('component') or 'other', i.get('component') or 'other'))}"
+        f"{' · ' + _esc(i['instance']) if i.get('instance') else ''}</span></td>"
+        f"<td>{_log(i['message'][:300])}</td><td>{_esc(i['problem_match'])}</td></tr>"
+        for i in pb["matching_issues"])
+    table = (f'<table class="env"><tr><th>Severity</th><th>Category</th><th>Issue</th><th>Matches</th></tr>{rows}</table>'
+             if rows else "")
+    return f"""
+        <details class="panel problem" open>
+          <summary>🎯 Problem <span class="label">{_esc(pb['text'])}</span></summary>
+          <div class="verdict {css}">{_esc(pb['verdict_text'])}</div>
+          <div class="facts">Understood: {understood}</div>
+          {"<ul>" + facts + "</ul>" if facts else ""}
+          {table}
+        </details>"""
+
+
+def _data_to_request_html(results: Dict) -> str:
+    """📥 what to ask the customer for next, with why and the command to send"""
+    items = results.get("data_to_request") or []
+    if not items:
+        return ""
+    source = {"bundle": "🕳️ gap of the bundle", "finding": "🔎 finding", "problem": "🎯 symptom of the problem"}
+    rows = "".join(
+        f"<tr><td class=\"nowrap\">{n}</td><td><strong>{_esc(i['what'])}</strong><br>{_esc(i['why'])}</td>"
+        f"<td><code>{_esc(i['command'])}</code></td><td class=\"nowrap\">{_esc(source.get(i['source'], i['source']))}</td></tr>"
+        for n, i in enumerate(items, start=1))
+    return f"""
+        <details class="panel" open>
+          <summary>📥 Data to request <span class="label">{len(items)} item(s) to ask the customer for: from the gaps of the bundle, its findings{" and the symptoms of the problem" if results.get("problem") else " (--problem adds the ones of its symptoms)"}</span></summary>
+          <table class="env"><tr><th>#</th><th>What and why</th><th>Command</th><th>From</th></tr>{rows}</table>
+        </details>"""
+
+
 def _log_coverage_html(results: Dict) -> str:
     """Time range of each log of the bundle, with the start of its pod when the bundle has its manifest"""
     windows = (results.get("coverage") or {}).get("log_windows") or []
@@ -818,10 +873,14 @@ def render(results: Dict, bundle_label: str = "") -> str:
     for i in issues:
         grouped[i.get("category", "Uncategorized")].append(i)
 
+    # with --problem, the categories of the issues that match it come first, and those issues first in them
     categories_sorted = sorted(
         grouped.keys(),
-        key=lambda c: SEVERITY_ORDER.get(_severity_worst(grouped[c]), 99),
+        key=lambda c: (not any(i.get("problem_match") for i in grouped[c]),
+                       SEVERITY_ORDER.get(_severity_worst(grouped[c]), 99)),
     )
+    for cat in grouped:
+        grouped[cat].sort(key=lambda i: not i.get("problem_match"))
 
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z").strip()
 
@@ -842,6 +901,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
       <button class="filter-btn" data-filter="high">{SEVERITY_EMOJI['high']} High</button>
       <button class="filter-btn" data-filter="medium">{SEVERITY_EMOJI['medium']} Medium</button>
       <button class="filter-btn" data-filter="low">{SEVERITY_EMOJI['low']} Low</button>
+      {'<button class="filter-btn" data-filter="problem" title="the issues that match --problem">🎯 Matches the problem</button>' if results.get("problem") else ""}
       <input id="search" class="search" type="search" placeholder="Search messages, files, categories, pods…" />
     </div>
     {_component_controls(issues, summary)}
@@ -897,11 +957,12 @@ def render(results: Dict, bundle_label: str = "") -> str:
                         f'<pre>{_log(context)}</pre></details>'
                     )
                 issue_rows.append(f"""
-                <div class="issue" data-severity="{_esc(sev)}" data-component="{_esc(component)}" data-instance="{_esc(instance)}" data-connectors="{_esc(" ".join(issue.get("connectors") or [NO_CONNECTOR]))}">
+                <div class="issue" data-severity="{_esc(sev)}" data-component="{_esc(component)}" data-instance="{_esc(instance)}" data-connectors="{_esc(" ".join(issue.get("connectors") or [NO_CONNECTOR]))}" data-problem="{1 if issue.get("problem_match") else 0}">
                   <div class="head">
                     <span class="severity-pill {_esc(sev)}">{SEVERITY_EMOJI.get(sev, "")} {_esc(sev)}</span>
                     <span class="component-tag">{_esc(tag)}</span>
                     <span class="location">{loc}</span>
+                    {f'<span class="component-tag problem-match" title="matches the problem: {_esc(issue["problem_match"])}">🎯 matches the problem</span>' if issue.get("problem_match") else ""}
                   </div>
                   <div class="message">{msg}</div>
                   {context_block}
@@ -967,8 +1028,10 @@ def render(results: Dict, bundle_label: str = "") -> str:
   </header>
   <main>
     {verdict_html}
+    {_problem_html(results)}
     {summary_html}
     {_runbooks_html(results)}
+    {_data_to_request_html(results)}
     {_environment_html(results)}
     {_log_coverage_html(results)}
     {_configuration_html(results)}

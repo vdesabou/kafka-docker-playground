@@ -248,6 +248,23 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   CR for a YAML file) in a page written in `<report>-files/` next to the report, and its ✏️ opens it in the editor of
   `playground config editor`: the file of the bundle folder, or a copy next to the page for an archive. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration, `--sample cfk_rollout` for a half-done upgrade).
+  **🎯 The problem of the customer** (`--problem "<component, symptom, since when>"`, `-p`): the bundle is matched
+  against it, like `analyze oracle-xstream-report --problem`, with keywords and dates (no AI, same output every time). It
+  recognizes the components and the CR / pod names of the bundle (`connect`, `kafka`, `kraft`, `schema registry`,
+  `operator`, `connect-0`…), the symptoms (roll / upgrade stuck, crash / restarts, pending / scheduling, memory / OOM,
+  TLS / certificate, auth / RBAC, KRaft migration, connector failed, slow / lag / hang, disk / storage, network) and the
+  dates (`2026-10-14 08:30`, `14 Oct`, `Oct 14`, `yesterday`, `3 hours ago`). The issues of these components with a
+  category of these symptoms are marked `🎯 matches the problem` and come first (their categories too, and a 🎯 filter in
+  the HTML report), and a `🎯 Problem` section on top gives what it understood, a verdict (`explained`,
+  `partly explained`: only low issues match, `not explained`, `not covered`: no log of the bundle covers the date), the
+  logs that start after the date and the changes of the CRs in the 24 hours before it (`"problem"` in `--json`). A
+  Zendesk ticket stays out of the CLI: write the problem statement from the ticket.
+  **📥 Data to request**: always, a section (terminal, HTML report, `"data_to_request"` in `--json`) lists what to ask the
+  customer for next, each item with why and the command to send: from the gaps of the bundle (logs that start after the
+  date of the problem or too late, the log before the last restart of a container, no events or events younger than the
+  problem, no operator log), from its findings (OOMKilled: resources and a heap dump; Pending: nodes and volumes; TLS:
+  the certificate chain; failed connectors: their status) and from the symptoms of `--problem` (thread dumps for a hang,
+  the `KRaftMigrationJob` and quorum for a migration, a second bundle for a stuck roll…), each data listed once.
   `analyze cfk-bundle --bundle <bundle>` still works, as a hidden alias.
 - `debug cfk sourcecode` (Confluent only: the source of the operator is the private repository
   `confluentinc/confluent-operator`, `gh auth login` and VPN) answers "which code logs this error?" at the exact
@@ -466,6 +483,15 @@ playground analyze logs -f /tmp/cfk-support-bundle/support-bundle-ns-confluent-<
 # Total issues:     6
 # By component:     connect 6
 # Filtered on:      --component connect
+playground analyze logs -f /tmp/cfk-support-bundle/support-bundle-ns-confluent-<date>.tar.gz --problem "the filestream-broken connector failed" --output-dir /tmp/lab-cfk-bundle
+# 🎯 Problem: the filestream-broken connector failed
+# Understood:       components: connect; CRs / pods: filestream-broken; symptoms: connector failed
+# Verdict:          🎯 … issue(s) of the bundle match the problem: start with Connect Issues (connect)
+#   [HIGH] [connect/connect] application-resources/connector/filestream-broken.yaml  🎯 matches the problem (component connect, symptom (Connect Issues))
+# 📥 Data to request from the customer (…)
+#   1. the status and config of the failed connectors  (finding)
+#      why: the trace of the failed task and the keys involved
+#      $ kubectl exec connect-0 -n <namespace> -- curl -s localhost:8083/connectors/<connector>/status
 ```
 
 Read the full report with a critical eye, as you would a customer's: on this healthy cluster the `BackOff` of
@@ -503,6 +529,7 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | "a connector restart / pause through annotations does nothing" | `playground connector pause` / `resume` / `restart` print the `kubectl annotate` they run: try the same on the lab connector |
 | "the Connect pod was restarted and the connector lost its state" | `playground container restart -c connect` (deletes connect-0), then `connector wait`, `container logs -c connect --previous` for the instance before |
 | "the customer sent a support bundle" | `playground analyze logs -f <bundle> --output-dir /tmp/cfk-reports` (no environment needed), `--component connect` |
+| "here is the bundle, the customer says connect-0 keeps restarting since yesterday 10:00" | `playground analyze logs -f <bundle> --problem "connect-0 keeps restarting since yesterday 10:00"`: the 🎯 verdict says whether the bundle explains it (or doesn't cover that time), the 📥 section what to ask the customer for next; `--sample cfk_bundle -p "…"` to try it |
 | "which operator code logs this error? is it fixed after version X?" | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>" [--compare-with <version>]` (private repository, Confluent only) |
 | "what would a support bundle of my repro look like?" | `playground debug cfk generate-bundle`, then `analyze logs` on it |
 | "RBAC on CFK: `ConfluentRolebinding`, MDS, LDAP" | `--environment cfk-rbac`, `playground rbac role-binding list --principal User:connectorSA`, `kubectl -n confluent get confluentrolebinding` |
@@ -537,7 +564,7 @@ playground connector create-or-update -c <lower-case-name> [--dry-run] << EOF �
 playground connector status|show-config|pause|resume|restart|delete -c <c>
 playground container exec|logs|restart|kill -c connect|kafka|schemaregistry   # pods connect-0, kafka-0…
 playground debug cfk generate-bundle [--follow-logs-duration 60]
-playground analyze logs -f <dir|.tar.gz|.zip> [--component connect] [--severity high] --output-dir /tmp/cfk-reports
+playground analyze logs -f <dir|.tar.gz|.zip> [--component connect] [--severity high] [--problem "<symptom, since when>"] --output-dir /tmp/cfk-reports
 k3d cluster delete playground-cfk                      # playground stop keeps the cluster
 ```
 

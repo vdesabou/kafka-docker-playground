@@ -5,7 +5,7 @@ Wraps CFKBundleAnalyzer + DataSanitizer + recommendations for shell use.
 
 Usage:
   analyzer_cli.py <bundle-path> [--json] [--no-sanitize] [--severity LEVEL] [--top N]
-                  [--component NAME ...] [--include-warnings] [--html-out FILE]
+                  [--component NAME ...] [--include-warnings] [--html-out FILE] [--problem TEXT]
 
 <bundle-path> may be a directory or a .tar / .tar.gz / .tgz / .zip archive.
 Archives are extracted to a temp directory that is cleaned up on exit.
@@ -32,6 +32,7 @@ from sanitizer import DataSanitizer  # tools/report-common/sanitizer.py
 import environment
 import recommendations
 import html_report
+import problem as problem_statement
 import log_viewer  # tools/report-common/log_viewer.py
 
 
@@ -201,6 +202,52 @@ def print_runbooks(results):
     print()
 
 
+def print_problem(results):
+    """🎯 the problem statement of --problem matched against the bundle: verdict, dates, issues that explain it"""
+    pb = results.get("problem")
+    if not pb:
+        return
+    print("-" * 72)
+    print(f"🎯 Problem: {pb['text']}")
+    print("-" * 72)
+    understood = [f"components: {', '.join(pb['components'])}" if pb["components"] else "",
+                  f"CRs / pods: {', '.join(pb['instances'])}" if pb["instances"] else "",
+                  f"symptoms: {', '.join(pb['symptoms'])}" if pb["symptoms"] else "",
+                  f"dates: {', '.join(pb['dates'])}" if pb["dates"] else ""]
+    print("Understood:       " + ("; ".join(u for u in understood if u) or
+                                  "nothing (no component, symptom or date recognized: describe the symptom and since when)"))
+    print(f"Verdict:          {pb['verdict_text']}")
+    for fact in pb["facts"]:
+        print(f"  {fact}")
+    if pb["matching_issues"]:
+        print(f"Matching issues ({len(pb['matching_issues'])} of {pb['nb_matching_issues']}, also marked 🎯 below):")
+        for issue in pb["matching_issues"]:
+            loc = f"[{issue.get('component') or 'other'}" + (f"/{issue['instance']}" if issue.get("instance") else "") + "]"
+            msg = issue["message"] if len(issue["message"]) <= 150 else issue["message"][:147] + "..."
+            print(f"  {SEVERITY_GLYPH.get(issue['severity'], '[?   ]')} {issue['category']} {loc} {msg}")
+            print(f"         matches: {issue['problem_match']}")
+    print()
+
+
+def print_data_to_request(results):
+    """📥 what to ask the customer for, with why and the command"""
+    items = results.get("data_to_request") or []
+    if not items:
+        if not results.get("problem"):
+            print("📥 Data to request: no gap in the bundle; describe the problem with --problem to get the data its symptoms need")
+            print()
+        return
+    print("-" * 72)
+    print(f"📥 Data to request from the customer ({len(items)})")
+    print("-" * 72)
+    source = {"bundle": "gap of the bundle", "finding": "finding", "problem": "symptom of --problem"}
+    for n, item in enumerate(items, start=1):
+        print(f"  {n}. {item['what']}  ({source.get(item['source'], item['source'])})")
+        print(f"     why: {item['why']}")
+        print(f"     $ {item['command']}")
+    print()
+
+
 def print_text_report(results, top: int):
     summary = results["summary"]
     issues = results["issues"]
@@ -249,6 +296,7 @@ def print_text_report(results, top: int):
               f"{len(config.get('connectors') or {})} connector config(s) (in the HTML report and --json .configuration)")
         print()
 
+    print_problem(results)
     print_runbooks(results)
 
     if not issues:
@@ -258,10 +306,14 @@ def print_text_report(results, top: int):
 
     runbooks_by_name = {h["name"]: h["title"] for h in results.get("runbooks") or []}
     grouped = group_by_category(issues)
+    # with --problem, the categories of the issues that match it come first, and those issues first in them
     categories_sorted = sorted(
         grouped.keys(),
-        key=lambda c: min(SEVERITY_ORDER.get(i["severity"], 99) for i in grouped[c]),
+        key=lambda c: (not any(i.get("problem_match") for i in grouped[c]),
+                       min(SEVERITY_ORDER.get(i["severity"], 99) for i in grouped[c])),
     )
+    for cat in grouped:
+        grouped[cat].sort(key=lambda i: not i.get("problem_match"))
 
     print("-" * 72)
     print("Issues by category")
@@ -287,7 +339,7 @@ def print_text_report(results, top: int):
             limit = 180 if issue.get("line_number") else 500
             if len(msg) > limit:
                 msg = msg[:limit - 3] + "..."
-            print(f"  {glyph} {loc}")
+            print(f"  {glyph} {loc}" + (f"  🎯 matches the problem ({issue['problem_match']})" if issue.get("problem_match") else ""))
             print(f"         {msg}")
             affected = issue.get("affected") or []
             if len(affected) > 1 or (affected and issue.get("count", 1) > 1):
@@ -337,11 +389,12 @@ def run(
     components: Optional[list] = None,
     json_out: Optional[str] = None,
     label: Optional[str] = None,
+    problem: Optional[str] = None,
 ) -> int:
     # the bundle stays extracted until the HTML report is written: it copies the files of the issues next to it
     with extracted_bundle(bundle_path) as bundle_dir:
         return analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, html_out, include_warnings,
-                              components, json_out, label)
+                              components, json_out, label, problem)
 
 
 def write_viewers(html_out: str, bundle_dir: str, raw_issues: list, issues: list) -> None:
@@ -384,7 +437,7 @@ def yaml_line(bundle_dir: str, rel: str, name: Optional[str], cache: dict) -> Op
 
 
 def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, html_out, include_warnings, components,
-                   json_out, label) -> int:
+                   json_out, label, problem=None) -> int:
     analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings)
     # analyzer.analyze() prints decode/parse warnings via print() to stdout.
     # Send those to stderr so --json mode produces clean JSON on stdout.
@@ -416,6 +469,11 @@ def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, ht
     # after the sanitizer: it would redact the hostnames of the links
     results["runbooks"] = analyzer.runbooks.summarize(results["issues"])
     results["collected"] = collected_at(results)
+    # --problem: matched against the issues kept by the filters, and the data to ask the customer for
+    parsed = problem_statement.parse(problem, results) if problem and problem.strip() else None
+    if parsed:
+        results["problem"] = problem_statement.correlate(results, parsed)
+    results["data_to_request"] = problem_statement.data_to_request(results, parsed)
     if label:
         results["label"] = label
 
@@ -443,6 +501,7 @@ def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, ht
     else:
         # the text digest is printed with the HTML report too: it is what a terminal / an agent reads
         print_text_report(results, top=top)
+        print_data_to_request(results)
         print_verdict(results)
 
     return 0
@@ -459,6 +518,8 @@ def collected_at(results) -> Optional[str]:
 
 def print_verdict(results):
     s = results["summary"]
+    if results.get("problem"):
+        print(f"Problem:          {results['problem']['verdict_text']}")
     if s.get("components"):
         print(f"Component filter: {', '.join(s['components'])}")
     if s["critical"]:
@@ -487,6 +548,7 @@ def main() -> int:
     p.add_argument("--include-warnings", action="store_true", help="Also report WARN log records that match no known category")
     p.add_argument("--json-out", help="Also write the JSON of --json to this file (with the text report)")
     p.add_argument("--label", help="Name of the bundle in the JSON (label), for the comparison of several bundles")
+    p.add_argument("--problem", metavar="TEXT", help="Problem statement (symptom, component, since when): matched against the bundle")
     args = p.parse_args()
 
     try:
@@ -501,6 +563,7 @@ def main() -> int:
             components=args.component,
             json_out=args.json_out,
             label=args.label,
+            problem=args.problem,
         )
     except (FileNotFoundError, ValueError, BundleError) as e:
         print(f"Error: {e}", file=sys.stderr)
