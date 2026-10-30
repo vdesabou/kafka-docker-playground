@@ -2,6 +2,76 @@ function get_environment_used() {
   environment=$(playground state get run.environment)
 }
 
+# mdc-* environments run two clusters, us and europe: the commands work on the one set with --cluster, else
+# $PLAYGROUND_CLUSTER, else 'playground state set run.cluster <cluster>'. Never guessed: exits when none is set.
+# Sets $mdc_cluster and exports PLAYGROUND_CLUSTER so that the nested playground calls use the same cluster.
+function get_mdc_cluster() {
+  mdc_cluster="${args[--cluster]}"
+  if [[ -z "$mdc_cluster" ]]
+  then
+    mdc_cluster="$PLAYGROUND_CLUSTER"
+  fi
+  if [[ -z "$mdc_cluster" ]]
+  then
+    mdc_cluster=$(playground state get run.cluster 2> /dev/null)
+  fi
+  if [[ -z "$mdc_cluster" ]]
+  then
+    # on stderr: also visible when the command runs in $(...), like the nested 'playground get-connector-list'
+    logerror "❌ $environment runs two clusters: pass --cluster us|europe, or set it for the session with 'export PLAYGROUND_CLUSTER=us' or 'playground state set run.cluster us'" >&2
+    exit 1
+  fi
+  if [[ "$mdc_cluster" != "us" ]] && [[ "$mdc_cluster" != "europe" ]]
+  then
+    logerror "❌ cluster should be us or europe (it is $mdc_cluster)" >&2
+    exit 1
+  fi
+  export PLAYGROUND_CLUSTER="$mdc_cluster"
+}
+
+# Kafka client of the selected cluster of an mdc-* environment: sets $container (where to run the kafka-* tool),
+# $bootstrap_server, $security ("<config option> <client properties file>", empty in mdc-plaintext) and $sr_url_cli.
+# Usage: get_mdc_client <config option, e.g. --command-config> <command|producer|consumer>
+# producer and consumer run in the connect worker (or the kerberos client), which has the avro/protobuf/json schema tools.
+function get_mdc_client() {
+  local config_option="$1"
+  local role="${2:-command}"
+
+  get_mdc_cluster
+  bootstrap_server="broker-$mdc_cluster:9092"
+  sr_url_cli="http://schema-registry-$mdc_cluster:8081"
+  broker_container="broker-$mdc_cluster"
+  connect_container="connect-$mdc_cluster"
+  container="broker-$mdc_cluster"
+  if [[ "$role" != "command" ]]
+  then
+    container="connect-$mdc_cluster"
+  fi
+  security=""
+
+  case "$environment" in
+    mdc-sasl-plain)
+      # environment/mdc-sasl-plain/client/client.properties, user client
+      security="$config_option /tmp/client.properties"
+      ;;
+    mdc-kerberos)
+      # the GSSAPI client builds the broker principal from the bootstrap host: use the FQDN
+      container="client"
+      bootstrap_server="broker-$mdc_cluster.kerberos-demo.local:9092"
+      security="$config_option /etc/kafka/$role-$mdc_cluster.properties"
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+      ;;
+  esac
+}
+
+function is_mdc_environment() {
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+  [[ "$environment" == mdc* ]]
+}
+
 function resolve_container_name_for_environment() {
   local requested_name="$1"
   local mapped_name=""
@@ -206,7 +276,13 @@ function is_container_running() {
 }
 
 function get_connect_container() {
-  for worker in connect connect2 connect3 connect-us connect-europe
+  if is_mdc_environment
+  then
+    get_mdc_cluster
+    connect_container="connect-$mdc_cluster"
+    return
+  fi
+  for worker in connect connect2 connect3
   do
     if is_container_running $worker
     then
@@ -302,9 +378,22 @@ function get_connect_url_and_security() {
 
   connect_port="8083"
 
-  if ! is_container_running "connect" && ! is_container_running "connect-us"
+  if [[ "$environment" == mdc* ]]
   then
-    if is_container_running "connect2" || is_container_running "connect-europe"
+    # connect-us publishes its REST API on 8083, connect-europe on 8283
+    get_mdc_cluster
+    if [[ "$mdc_cluster" == "europe" ]]
+    then
+      connect_port="8283"
+    fi
+    connect_url="http://localhost:$connect_port"
+    security=""
+    return
+  fi
+
+  if ! is_container_running "connect"
+  then
+    if is_container_running "connect2"
     then
       connect_port="8283"
       # log "💫 using connect rest api for connect2 as connect rest api on port 8083 is not available"
@@ -656,7 +745,16 @@ function get_sr_url_and_security() {
   sr_url="http://localhost:8081"
   sr_security=""
 
-  if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
+  if [[ "$environment" == mdc* ]]
+  then
+      # schema-registry-us is published on 28081, schema-registry-europe on 18081
+      get_mdc_cluster
+      sr_url="http://localhost:28081"
+      if [[ "$mdc_cluster" == "europe" ]]
+      then
+        sr_url="http://localhost:18081"
+      fi
+  elif [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
       sr_url="https://localhost:8081"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -695,7 +793,13 @@ function get_sr_url_and_security() {
 }
 
 function get_broker_container() {
-  for broker in broker broker2 broker3 broker-us broker-europe
+  if is_mdc_environment
+  then
+    get_mdc_cluster
+    broker_container="broker-$mdc_cluster"
+    return
+  fi
+  for broker in broker broker2 broker3
   do
     if is_container_running $broker
     then
@@ -754,6 +858,12 @@ function get_security_broker() {
       then
           security="$config_file_name $cfk_rbac_client_properties"
       fi
+      return
+  fi
+
+  if [[ "$environment" == mdc* ]]
+  then
+      get_mdc_client "$config_file_name" command
       return
   fi
 
@@ -3503,6 +3613,17 @@ function filter_schema_registry_running() {
   # bashly runs filters in $(...) under set -e: without this trap, an exit 1 in get_sr_url_and_security ends the cli
   # before bashly prints the error message
   trap 'exit 0' EXIT
+  if is_mdc_environment
+  then
+    # get_mdc_cluster prints its error on stderr: make it the error of the filter
+    local mdc_error
+    mdc_error=$( (get_mdc_cluster) 2>&1 > /dev/null )
+    if [[ -n "$mdc_error" ]]
+    then
+      echo "$mdc_error"
+      return
+    fi
+  fi
   get_sr_url_and_security
 
   local sr_ok=0
@@ -8708,7 +8829,8 @@ function connector_config_findings () {
 # the values of a normalized self-managed connector config ($1) that point to the customer environment, rewritten for
 # the playground. Only values whose hosts are not containers of the playground (nor localhost, nor confluent cloud) are
 # touched, so the configs of the examples (broker-us, schema-registry, a confluent cloud cluster...) stay as they are:
-#   - bootstrap servers -> broker:9092, schema registry urls -> http://schema-registry:8081
+#   - bootstrap servers -> broker:9092, schema registry urls -> http://schema-registry:8081 (broker-us:9092 and
+#     http://schema-registry-us:8081 with --cluster us in an mdc environment)
 #   - the credentials of a schema registry that was rewritten (basic / bearer auth, ssl)
 #   - on plaintext, the security of the clients whose bootstrap servers were rewritten (confluent.topic.*, *.override.*)
 #   - a confluent.license that is set, replication factors above the number of brokers
@@ -8731,10 +8853,17 @@ function connector_config_adapt () {
   fi
   [ -n "$(playground state get flags.ENABLE_KAFKA_NODES 2> /dev/null)" ] && brokers=3
   [[ "$environment" == *plaintext ]] && plaintext=true
+  local playground_bootstrap="broker:9092" playground_sr_url="http://schema-registry:8081"
+  if [[ "$environment" == mdc* ]]
+  then
+    get_mdc_cluster
+    playground_bootstrap="broker-$mdc_cluster:9092"
+    playground_sr_url="http://schema-registry-$mdc_cluster:8081"
+  fi
   # hosts of the playground: its containers (cfk: the services of the confluent namespace)
   local_hosts=$( { docker ps --format '{{.Names}}' 2> /dev/null; echo "localhost kafka schemaregistry connect broker schema-registry"; } | tr ' ' '\n' | jq -R -s 'split("\n") | map(select(length > 0))')
 
-  ADAPTED_CONFIG=$(echo "$config" | jq --argjson brokers "$brokers" --argjson plaintext "$plaintext" --argjson local "$local_hosts" '
+  ADAPTED_CONFIG=$(echo "$config" | jq --argjson brokers "$brokers" --argjson plaintext "$plaintext" --argjson local "$local_hosts" --arg playground_bootstrap "$playground_bootstrap" --arg playground_sr_url "$playground_sr_url" '
     def is_local_host: . as $h | ($local | index($h)) or ($h | test("\\.confluent\\.cloud$|^127\\.0\\.0\\.1$"));
     def bootstrap_hosts: split(",") | map(gsub("^\\s+|\\s+$"; "") | sub("^[A-Za-z_]+://"; "") | sub(":[0-9]+$"; "")) | map(select(length > 0));
     def url_host: (capture("://(?<h>[^/:@]+)(:[0-9]+)?(/|$)") | .h) // "";
@@ -8745,8 +8874,8 @@ function connector_config_adapt () {
     | ($bootstrap_keys | map(sub("\\.?bootstrap\\.servers$"; ""))) as $clients
     | with_entries(
         .key as $k
-        | if ($bootstrap_keys | index($k)) then .value = "broker:9092"
-          elif ($sr_keys | index($k)) then .value = "http://schema-registry:8081"
+        | if ($bootstrap_keys | index($k)) then .value = $playground_bootstrap
+          elif ($sr_keys | index($k)) then .value = $playground_sr_url
           elif ($sr_keys | length) > 0 and ($k | test("(^|\\.)(basic\\.auth\\.(credentials\\.source|user\\.info)|bearer\\.auth\\..+|schema\\.registry\\.ssl\\..+)$")) then empty
           elif $k == "confluent.license" and .value != "" then empty
           elif $plaintext and ($clients | any(. as $c | $c != "" and ($k | startswith($c + "."))))

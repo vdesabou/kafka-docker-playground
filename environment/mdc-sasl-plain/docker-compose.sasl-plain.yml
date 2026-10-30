@@ -28,6 +28,7 @@ services:
   broker-us:
       volumes:
         - ../../environment/mdc-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+        - ../../environment/mdc-sasl-plain/client/client.properties:/tmp/client.properties
       environment:
         KAFKA_LISTENERS: BROKER://:9092
         KAFKA_ADVERTISED_LISTENERS: BROKER://broker-us:9092
@@ -62,6 +63,7 @@ services:
   broker-europe:
       volumes:
         - ../../environment/mdc-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+        - ../../environment/mdc-sasl-plain/client/client.properties:/tmp/client.properties
       environment:
         KAFKA_LISTENERS: BROKER://:9092
         KAFKA_ADVERTISED_LISTENERS: BROKER://broker-europe:9092
@@ -94,6 +96,8 @@ services:
         KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
 
   connect-us:
+      volumes:
+          - ../../environment/mdc-sasl-plain/client/client.properties:/tmp/client.properties
       environment:
           # Configure the Connect workers to use SASL/PLAIN.
           CONNECT_SASL_MECHANISM: PLAIN
@@ -124,6 +128,8 @@ services:
               password=\"connect-secret\";"
 
   connect-europe:
+      volumes:
+          - ../../environment/mdc-sasl-plain/client/client.properties:/tmp/client.properties
       environment:
           # Configure the Connect workers to use SASL/PLAIN.
           CONNECT_SASL_MECHANISM: PLAIN

@@ -103,13 +103,18 @@ then
         fi
     done
 else
+    connect_container="connect"
+    if is_mdc_environment
+    then
+        get_connect_container
+    fi
     if [[ -n "$open" ]]
     then
-        playground container logs --open --container connect
+        playground container logs --open --container "$connect_container"
     elif [[ -n "$log" ]]
     then
-        playground container logs --container connect --wait-for-log "$log"
+        playground container logs --container "$connect_container" --wait-for-log "$log"
     else 
-        playground container logs --container connect
+        playground container logs --container "$connect_container"
     fi
 fi

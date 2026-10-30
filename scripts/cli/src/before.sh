@@ -28,3 +28,9 @@ then
     export PG_LOG_LEVEL="$level"
     log "🔖 --output-level is set with $level"
 fi
+
+# mdc-* environments: the cluster selected with --cluster is used by the nested playground calls too
+if [[ -n "${args[--cluster]}" ]]
+then
+    export PLAYGROUND_CLUSTER="${args[--cluster]}"
+fi

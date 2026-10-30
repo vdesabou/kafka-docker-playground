@@ -20,6 +20,7 @@ if [[ -z "$config_topic" ]] || [[ -z "$status_topic" ]]
 then
     connect_container="connect"
     [[ "$environment" == cfk* ]] && connect_container="connect-0"
+    [[ "$environment" == mdc* ]] && get_connect_container
     worker_properties=$(playground container get-properties -c "$connect_container" 2> /dev/null || true)
     [[ -z "$config_topic" ]] && config_topic=$(echo "$worker_properties" | grep -E "^config\.storage\.topic=" | cut -d= -f2 | tr -d '\r')
     [[ -z "$status_topic" ]] && status_topic=$(echo "$worker_properties" | grep -E "^status\.storage\.topic=" | cut -d= -f2 | tr -d '\r')

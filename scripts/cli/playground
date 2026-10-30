@@ -386,9 +386,7 @@ playground_usage() {
     echo
 
     # :command.usage_environment_variables
-    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
-      printf "%s\n" "$(bold "Environment Variables:")"
-    fi
+    printf "%s\n" "$(bold "Environment Variables:")"
 
     if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
       # :environment_variable.usage
@@ -397,6 +395,10 @@ playground_usage() {
       echo
 
     fi
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "PLAYGROUND_CLUSTER")"
+    printf "    🌍 Cluster used by the topic, consumer-group, connector and schema commands\n    in an mdc-* environment (us or europe) when --cluster is not set\n"
+    echo
 
   fi
 }
@@ -6167,6 +6169,11 @@ playground_schema_get_usage() {
       echo
 
     fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -6234,6 +6241,12 @@ playground_schema_register_usage() {
     printf "    🫧 Add ?normalize=true at the end of the request to normalize the schema. The\n    default is false.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6275,6 +6288,12 @@ playground_schema_get_compatibility_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -6321,6 +6340,12 @@ playground_schema_set_compatibility_usage() {
     printf "    %s\n" "Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6357,6 +6382,12 @@ playground_schema_get_mode_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -6403,6 +6434,12 @@ playground_schema_set_mode_usage() {
     printf "    %s\n" "Allowed: IMPORT, READONLY, READWRITE"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6442,6 +6479,12 @@ playground_schema_set_normalize_usage() {
     printf "    %s\n" "Allowed: true, false"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6479,6 +6522,12 @@ playground_schema_validate_new_schemas_usage() {
     printf "  %s\n" "$(magenta "--value VALUE (required)")"
     printf "    true or false\n"
     printf "    %s\n" "Allowed: true, false"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -6527,6 +6576,12 @@ playground_schema_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -6618,6 +6673,12 @@ playground_schema_set_alias_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6654,6 +6715,12 @@ playground_schema_get_alias_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -10663,6 +10730,11 @@ playground_topic_get_number_records_usage() {
       echo
 
     fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -10721,6 +10793,12 @@ playground_topic_wait_for_records_usage() {
     printf "    %s\n" "Default: 5"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -10765,6 +10843,12 @@ playground_topic_get_offsets_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -10803,6 +10887,12 @@ playground_topic_display_consumer_offsets_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -10839,6 +10929,12 @@ playground_topic_list_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--sort-by-size")"
     printf "    📏 Display size and number of partitions of each topic, largest first\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -10885,6 +10981,12 @@ playground_topic_get_size_usage() {
     printf "    🫥 Include internal topics (when --topic is not set)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -10928,6 +11030,12 @@ playground_topic_describe_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -11129,6 +11237,12 @@ playground_topic_set_schema_compatibility_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11271,6 +11385,12 @@ playground_topic_consume_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--print-schema")"
     printf "    📜 Also print the key and value schemas registered for the topic\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -11516,6 +11636,12 @@ playground_topic_produce_usage() {
     printf "    %s\n" "Default: 60000"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11563,6 +11689,12 @@ playground_topic_create_usage() {
     printf "  %s\n" "$(magenta "--nb-partitions NB-PARTITIONS")"
     printf "    Number of partitions for the topic. (default is 1)\n"
     printf "    %s\n" "Default: 1"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -11620,6 +11752,12 @@ playground_topic_delete_usage() {
     printf "    🔰 Do not delete subject/schema\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11656,6 +11794,12 @@ playground_topic_alter_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -11772,6 +11916,12 @@ playground_topic_dlq_inspect_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11847,6 +11997,12 @@ playground_topic_dlq_replay_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13364,6 +13520,12 @@ playground_consumer_group_list_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -13416,6 +13578,12 @@ playground_consumer_group_describe_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13503,6 +13671,12 @@ playground_consumer_group_reset_offsets_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -13551,6 +13725,12 @@ playground_consumer_group_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -14923,6 +15103,12 @@ playground_connector_status_usage() {
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15005,6 +15191,12 @@ playground_connector_wait_usage() {
     printf "    %s\n" "Default: 5"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15060,6 +15252,12 @@ playground_connector_validate_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--skip-automatic-connector-config")"
     printf "    🤖 Do not add the automatic configuration of the environment (security\n    settings on sasl-ssl...) before validating\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -15144,6 +15342,12 @@ playground_connector_diff_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--no-open")"
     printf "    🙈 Do not open the HTML report in the browser\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -15500,6 +15704,12 @@ playground_connector_smt_test_usage() {
     printf "    🚫 Do not open the html report in the browser (it is still written, and its\n    path printed)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15581,6 +15791,12 @@ playground_connector_offsets_get_usage() {
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15624,6 +15840,12 @@ playground_connector_offsets_reset_usage() {
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15660,6 +15882,12 @@ playground_connector_offsets_alter_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -15738,6 +15966,12 @@ playground_connector_plugins_usage() {
     printf "    🌕 Show also transforms, converters, predicates available\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15774,6 +16008,12 @@ playground_connector_pause_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -15986,6 +16226,12 @@ playground_connector_restart_usage() {
     printf "    %s\n" "Conflicts: --task-id"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -16039,6 +16285,12 @@ playground_connector_tasks_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🤖 Print the result as JSON\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -16098,6 +16350,12 @@ playground_connector_topics_usage() {
     printf "    %s\n" "Conflicts: --reset"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -16143,6 +16401,12 @@ playground_connector_stop_usage() {
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -16181,6 +16445,12 @@ playground_connector_resume_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -16224,6 +16494,12 @@ playground_connector_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--keep-related-topics")"
     printf "    🔰 Do not delete the dlq, success and error topics of a fully managed or\n    custom connector\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -16285,6 +16561,12 @@ playground_connector_diagnose_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--no-open")"
     printf "    🙈 Do not open the HTML report in the browser\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -16357,6 +16639,12 @@ playground_connector_history_usage() {
     printf "    🤖 Print the events and the summary as JSON\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -16412,6 +16700,12 @@ playground_connector_show_lag_usage() {
     printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
     printf "    ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it\n    will run until all lag becomes 0.\n"
     printf "    %s\n" "Default: 0"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -16671,6 +16965,12 @@ playground_connector_show_config_usage() {
     printf "    ☢️ Force using REST API /config endpoint\n    (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -16738,6 +17038,11 @@ playground_connector_show_config_parameters_usage() {
       echo
 
     fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -17020,6 +17325,12 @@ playground_connector_log_level_usage() {
     printf "    %s\n" "Allowed: INFO, WARN, DEBUG, TRACE"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -17068,6 +17379,12 @@ playground_connector_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -17126,7 +17443,7 @@ playground_connector_display_leader_name_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector display-leader-name\n"
+  printf "  playground connector display-leader-name [OPTIONS]\n"
   printf "  playground connector display-leader-name --help | -h\n"
   echo
 
@@ -17134,6 +17451,13 @@ playground_connector_display_leader_name_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -17418,6 +17742,12 @@ playground_connector_create_or_update_usage() {
     printf "    🏗️ Deploy connector using Terraform instead of REST API\n    \n    Dynamically converts JSON connector config to Terraform HCL and deploys\n    using terraform apply\n    \n    The values of config_sensitive are masked in the output. The Terraform\n    folder of a connector\n    (.terraform-playground/<connector>-*) is reused: running the command again\n    updates the connector, and a\n    connector created with the REST API is imported first. playground connector\n    delete runs terraform destroy.\n    \n    ⚠️ Only available for Confluent Cloud connectors\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -17488,6 +17818,12 @@ playground_connector_update_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -18041,6 +18377,76 @@ function get_environment_used() {
   environment=$(playground state get run.environment)
 }
 
+# mdc-* environments run two clusters, us and europe: the commands work on the one set with --cluster, else
+# $PLAYGROUND_CLUSTER, else 'playground state set run.cluster <cluster>'. Never guessed: exits when none is set.
+# Sets $mdc_cluster and exports PLAYGROUND_CLUSTER so that the nested playground calls use the same cluster.
+function get_mdc_cluster() {
+  mdc_cluster="${args[--cluster]}"
+  if [[ -z "$mdc_cluster" ]]
+  then
+    mdc_cluster="$PLAYGROUND_CLUSTER"
+  fi
+  if [[ -z "$mdc_cluster" ]]
+  then
+    mdc_cluster=$(playground state get run.cluster 2> /dev/null)
+  fi
+  if [[ -z "$mdc_cluster" ]]
+  then
+    # on stderr: also visible when the command runs in $(...), like the nested 'playground get-connector-list'
+    logerror "❌ $environment runs two clusters: pass --cluster us|europe, or set it for the session with 'export PLAYGROUND_CLUSTER=us' or 'playground state set run.cluster us'" >&2
+    exit 1
+  fi
+  if [[ "$mdc_cluster" != "us" ]] && [[ "$mdc_cluster" != "europe" ]]
+  then
+    logerror "❌ cluster should be us or europe (it is $mdc_cluster)" >&2
+    exit 1
+  fi
+  export PLAYGROUND_CLUSTER="$mdc_cluster"
+}
+
+# Kafka client of the selected cluster of an mdc-* environment: sets $container (where to run the kafka-* tool),
+# $bootstrap_server, $security ("<config option> <client properties file>", empty in mdc-plaintext) and $sr_url_cli.
+# Usage: get_mdc_client <config option, e.g. --command-config> <command|producer|consumer>
+# producer and consumer run in the connect worker (or the kerberos client), which has the avro/protobuf/json schema tools.
+function get_mdc_client() {
+  local config_option="$1"
+  local role="${2:-command}"
+
+  get_mdc_cluster
+  bootstrap_server="broker-$mdc_cluster:9092"
+  sr_url_cli="http://schema-registry-$mdc_cluster:8081"
+  broker_container="broker-$mdc_cluster"
+  connect_container="connect-$mdc_cluster"
+  container="broker-$mdc_cluster"
+  if [[ "$role" != "command" ]]
+  then
+    container="connect-$mdc_cluster"
+  fi
+  security=""
+
+  case "$environment" in
+    mdc-sasl-plain)
+      # environment/mdc-sasl-plain/client/client.properties, user client
+      security="$config_option /tmp/client.properties"
+      ;;
+    mdc-kerberos)
+      # the GSSAPI client builds the broker principal from the bootstrap host: use the FQDN
+      container="client"
+      bootstrap_server="broker-$mdc_cluster.kerberos-demo.local:9092"
+      security="$config_option /etc/kafka/$role-$mdc_cluster.properties"
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+      ;;
+  esac
+}
+
+function is_mdc_environment() {
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+  [[ "$environment" == mdc* ]]
+}
+
 function resolve_container_name_for_environment() {
   local requested_name="$1"
   local mapped_name=""
@@ -18245,7 +18651,13 @@ function is_container_running() {
 }
 
 function get_connect_container() {
-  for worker in connect connect2 connect3 connect-us connect-europe
+  if is_mdc_environment
+  then
+    get_mdc_cluster
+    connect_container="connect-$mdc_cluster"
+    return
+  fi
+  for worker in connect connect2 connect3
   do
     if is_container_running $worker
     then
@@ -18341,9 +18753,22 @@ function get_connect_url_and_security() {
 
   connect_port="8083"
 
-  if ! is_container_running "connect" && ! is_container_running "connect-us"
+  if [[ "$environment" == mdc* ]]
   then
-    if is_container_running "connect2" || is_container_running "connect-europe"
+    # connect-us publishes its REST API on 8083, connect-europe on 8283
+    get_mdc_cluster
+    if [[ "$mdc_cluster" == "europe" ]]
+    then
+      connect_port="8283"
+    fi
+    connect_url="http://localhost:$connect_port"
+    security=""
+    return
+  fi
+
+  if ! is_container_running "connect"
+  then
+    if is_container_running "connect2"
     then
       connect_port="8283"
       # log "💫 using connect rest api for connect2 as connect rest api on port 8083 is not available"
@@ -18693,7 +19118,16 @@ function get_sr_url_and_security() {
   sr_url="http://localhost:8081"
   sr_security=""
 
-  if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
+  if [[ "$environment" == mdc* ]]
+  then
+      # schema-registry-us is published on 28081, schema-registry-europe on 18081
+      get_mdc_cluster
+      sr_url="http://localhost:28081"
+      if [[ "$mdc_cluster" == "europe" ]]
+      then
+        sr_url="http://localhost:18081"
+      fi
+  elif [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
       sr_url="https://localhost:8081"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -18732,7 +19166,13 @@ function get_sr_url_and_security() {
 }
 
 function get_broker_container() {
-  for broker in broker broker2 broker3 broker-us broker-europe
+  if is_mdc_environment
+  then
+    get_mdc_cluster
+    broker_container="broker-$mdc_cluster"
+    return
+  fi
+  for broker in broker broker2 broker3
   do
     if is_container_running $broker
     then
@@ -18791,6 +19231,12 @@ function get_security_broker() {
       then
           security="$config_file_name $cfk_rbac_client_properties"
       fi
+      return
+  fi
+
+  if [[ "$environment" == mdc* ]]
+  then
+      get_mdc_client "$config_file_name" command
       return
   fi
 
@@ -21538,6 +21984,17 @@ function filter_schema_registry_running() {
   # bashly runs filters in $(...) under set -e: without this trap, an exit 1 in get_sr_url_and_security ends the cli
   # before bashly prints the error message
   trap 'exit 0' EXIT
+  if is_mdc_environment
+  then
+    # get_mdc_cluster prints its error on stderr: make it the error of the filter
+    local mdc_error
+    mdc_error=$( (get_mdc_cluster) 2>&1 > /dev/null )
+    if [[ -n "$mdc_error" ]]
+    then
+      echo "$mdc_error"
+      return
+    fi
+  fi
   get_sr_url_and_security
 
   local sr_ok=0
@@ -26776,7 +27233,8 @@ function connector_config_findings () {
 # the values of a normalized self-managed connector config ($1) that point to the customer environment, rewritten for
 # the playground. Only values whose hosts are not containers of the playground (nor localhost, nor confluent cloud) are
 # touched, so the configs of the examples (broker-us, schema-registry, a confluent cloud cluster...) stay as they are:
-#   - bootstrap servers -> broker:9092, schema registry urls -> http://schema-registry:8081
+#   - bootstrap servers -> broker:9092, schema registry urls -> http://schema-registry:8081 (broker-us:9092 and
+#     http://schema-registry-us:8081 with --cluster us in an mdc environment)
 #   - the credentials of a schema registry that was rewritten (basic / bearer auth, ssl)
 #   - on plaintext, the security of the clients whose bootstrap servers were rewritten (confluent.topic.*, *.override.*)
 #   - a confluent.license that is set, replication factors above the number of brokers
@@ -26799,10 +27257,17 @@ function connector_config_adapt () {
   fi
   [ -n "$(playground state get flags.ENABLE_KAFKA_NODES 2> /dev/null)" ] && brokers=3
   [[ "$environment" == *plaintext ]] && plaintext=true
+  local playground_bootstrap="broker:9092" playground_sr_url="http://schema-registry:8081"
+  if [[ "$environment" == mdc* ]]
+  then
+    get_mdc_cluster
+    playground_bootstrap="broker-$mdc_cluster:9092"
+    playground_sr_url="http://schema-registry-$mdc_cluster:8081"
+  fi
   # hosts of the playground: its containers (cfk: the services of the confluent namespace)
   local_hosts=$( { docker ps --format '{{.Names}}' 2> /dev/null; echo "localhost kafka schemaregistry connect broker schema-registry"; } | tr ' ' '\n' | jq -R -s 'split("\n") | map(select(length > 0))')
 
-  ADAPTED_CONFIG=$(echo "$config" | jq --argjson brokers "$brokers" --argjson plaintext "$plaintext" --argjson local "$local_hosts" '
+  ADAPTED_CONFIG=$(echo "$config" | jq --argjson brokers "$brokers" --argjson plaintext "$plaintext" --argjson local "$local_hosts" --arg playground_bootstrap "$playground_bootstrap" --arg playground_sr_url "$playground_sr_url" '
     def is_local_host: . as $h | ($local | index($h)) or ($h | test("\\.confluent\\.cloud$|^127\\.0\\.0\\.1$"));
     def bootstrap_hosts: split(",") | map(gsub("^\\s+|\\s+$"; "") | sub("^[A-Za-z_]+://"; "") | sub(":[0-9]+$"; "")) | map(select(length > 0));
     def url_host: (capture("://(?<h>[^/:@]+)(:[0-9]+)?(/|$)") | .h) // "";
@@ -26813,8 +27278,8 @@ function connector_config_adapt () {
     | ($bootstrap_keys | map(sub("\\.?bootstrap\\.servers$"; ""))) as $clients
     | with_entries(
         .key as $k
-        | if ($bootstrap_keys | index($k)) then .value = "broker:9092"
-          elif ($sr_keys | index($k)) then .value = "http://schema-registry:8081"
+        | if ($bootstrap_keys | index($k)) then .value = $playground_bootstrap
+          elif ($sr_keys | index($k)) then .value = $playground_sr_url
           elif ($sr_keys | length) > 0 and ($k | test("(^|\\.)(basic\\.auth\\.(credentials\\.source|user\\.info)|bearer\\.auth\\..+|schema\\.registry\\.ssl\\..+)$")) then empty
           elif $k == "confluent.license" and .value != "" then empty
           elif $plaintext and ($clients | any(. as $c | $c != "" and ($k | startswith($c + "."))))
@@ -34506,11 +34971,29 @@ playground_status_command() {
       playground connector open-docs --only-show-url
   fi
 
-  playground connector status | grep -v "applying command to all connectors"
-  playground connector show-config | grep -v "applying command to all connectors"
-  playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
+  # mdc-* environments: the connectors and topics of each cluster, unless one is selected with PLAYGROUND_CLUSTER
+  clusters="current"
+  if [[ "$environment" == mdc* ]] && [[ -z "$PLAYGROUND_CLUSTER" ]] && [[ -z "$(playground state get run.cluster)" ]]
+  then
+      clusters="us europe"
+  fi
+  for cluster in $clusters
+  do
+      if [[ "$cluster" != "current" ]]
+      then
+          log "🌍 Cluster $cluster"
+          export PLAYGROUND_CLUSTER="$cluster"
+      fi
+      playground connector status | grep -v "applying command to all connectors"
+      playground connector show-config | grep -v "applying command to all connectors"
+      playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 
-  playground topic list
+      playground topic list
+  done
+  if [[ "$clusters" != "current" ]]
+  then
+      unset PLAYGROUND_CLUSTER
+  fi
 
   if [[ "$environment" == "ccloud" ]]
   then
@@ -57123,6 +57606,9 @@ playground_topic_consume_command() {
     then
       security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $consumer_config_name $cfk_rbac_client_properties"
     fi
+  elif [[ "$environment" == mdc* ]]
+  then
+    get_mdc_client "$consumer_config_name" consumer
   elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
     get_broker_container
@@ -58342,6 +58828,9 @@ playground_topic_produce_command() {
       then
           security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $producer_config_name $cfk_rbac_client_properties"
       fi
+  elif [[ "$environment" == mdc* ]]
+  then
+      get_mdc_client "$producer_config_name" producer
   elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
       get_broker_container
@@ -64830,7 +65319,13 @@ playground_connector_smt_test_command() {
   trap 'rm -rf "$work"' EXIT
 
   connect_running=0
-  if docker inspect -f '{{.State.Running}}' connect 2> /dev/null | grep -q true
+  smt_connect_container="connect"
+  if is_mdc_environment
+  then
+      get_connect_container
+      smt_connect_container="$connect_container"
+  fi
+  if docker inspect -f '{{.State.Running}}' "$smt_connect_container" 2> /dev/null | grep -q true
   then
       connect_running=1
   fi
@@ -64912,7 +65407,7 @@ playground_connector_smt_test_command() {
   hub_image="confluentinc/cp-server-connect:${cp_versions[0]:-8.3.2}"
   if [ $connect_running -eq 1 ]
   then
-      hub_image=$(docker inspect -f '{{.Config.Image}}' connect)
+      hub_image=$(docker inspect -f '{{.Config.Image}}' "$smt_connect_container")
   fi
   for spec in "${smt_plugins[@]}"
   do
@@ -64942,31 +65437,31 @@ playground_connector_smt_test_command() {
   # ---- run in the connect worker
   function run_in_worker () {
       local jar_dir java_version release classes classpath worker_config plugin_path container_plugins=""
-      jar_dir=$(smt_tester_jars_from_container connect)
-      java_version=$(playground --output-level ERROR container exec --container connect --command "java -version 2>&1 | head -1" 2> /dev/null)
+      jar_dir=$(smt_tester_jars_from_container "$smt_connect_container")
+      java_version=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "java -version 2>&1 | head -1" 2> /dev/null)
       release=$(smt_tester_java_release "$java_version")
       classes=$(smt_tester_classes "$jar_dir" "$release") || return 1
       # the classpath and the properties file of the running worker jvm
-      classpath=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
-      worker_config=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
-      plugin_path=$(playground --output-level ERROR container exec --container connect --command "grep -E '^plugin.path=' '$worker_config' | cut -d= -f2-" 2> /dev/null)
-      playground --output-level ERROR container exec --container connect --command "rm -rf /tmp/smt-tester && mkdir -p /tmp/smt-tester/plugins" > /dev/null 2>&1
-      playground --output-level ERROR container cp --source "$classes/SmtTester.class" --destination connect:/tmp/smt-tester/SmtTester.class > /dev/null 2>&1
-      playground --output-level ERROR container cp --source "$work/config.json" --destination connect:/tmp/smt-tester/config.json > /dev/null 2>&1
-      playground --output-level ERROR container cp --source "$work/record.json" --destination connect:/tmp/smt-tester/record.json > /dev/null 2>&1
+      classpath=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
+      worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+      plugin_path=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "grep -E '^plugin.path=' '$worker_config' | cut -d= -f2-" 2> /dev/null)
+      playground --output-level ERROR container exec --container "$smt_connect_container" --command "rm -rf /tmp/smt-tester && mkdir -p /tmp/smt-tester/plugins" > /dev/null 2>&1
+      playground --output-level ERROR container cp --source "$classes/SmtTester.class" --destination "$smt_connect_container":/tmp/smt-tester/SmtTester.class > /dev/null 2>&1
+      playground --output-level ERROR container cp --source "$work/config.json" --destination "$smt_connect_container":/tmp/smt-tester/config.json > /dev/null 2>&1
+      playground --output-level ERROR container cp --source "$work/record.json" --destination "$smt_connect_container":/tmp/smt-tester/record.json > /dev/null 2>&1
       local dir
       for dir in "${plugin_dirs[@]}"
       do
-          playground --output-level ERROR container cp --source "$dir" --destination "connect:/tmp/smt-tester/plugins/$(basename "$dir")" > /dev/null 2>&1
+          playground --output-level ERROR container cp --source "$dir" --destination "$smt_connect_container:/tmp/smt-tester/plugins/$(basename "$dir")" > /dev/null 2>&1
           container_plugins="$container_plugins,/tmp/smt-tester/plugins/$(basename "$dir")"
       done
       # the test plugins are given apart: their classes win over the worker plugins
       local priority="${container_plugins#,}"
       local stderr_target="/dev/null"
       [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
-      playground --output-level ERROR container exec --container connect --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' connect)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target"
+      playground --output-level ERROR container exec --container "$smt_connect_container" --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' $smt_connect_container)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target"
       local ret=$?
-      playground --output-level ERROR container cp --source connect:/tmp/smt-tester/result.json --destination "$work/result-worker.json" > /dev/null 2>&1
+      playground --output-level ERROR container cp --source "$smt_connect_container":/tmp/smt-tester/result.json --destination "$work/result-worker.json" > /dev/null 2>&1
       return $ret
   }
 
@@ -64981,9 +65476,9 @@ playground_connector_smt_test_command() {
       if [ $connect_running -eq 1 ]
       then
           # same network and worker settings as the running example, for --from-topic and schema registry
-          network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' connect | awk '{print $1}')
-          worker_config=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
-          playground --output-level ERROR container cp --source "connect:$worker_config" --destination "$work/worker.properties" > /dev/null 2>&1
+          network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$smt_connect_container" | awk '{print $1}')
+          worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+          playground --output-level ERROR container cp --source "$smt_connect_container:$worker_config" --destination "$work/worker.properties" > /dev/null 2>&1
       fi
       [ -f "$work/worker.properties" ] || echo "bootstrap.servers=broker:9092" > "$work/worker.properties"
       for dir in "${plugin_dirs[@]}"
@@ -66746,6 +67241,13 @@ playground_connector_diagnose_command() {
       is_cloud=1
   fi
 
+  diagnose_connect_container="connect"
+  if is_mdc_environment
+  then
+      get_connect_container
+      diagnose_connect_container="$connect_container"
+  fi
+
   # each step also lands in a folder per connector, for the HTML report (tools/connector-diagnose/diagnose_report.py)
   report_tmp=$(mktemp -d -t pg-diagnose-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
@@ -66801,7 +67303,7 @@ playground_connector_diagnose_command() {
           display_ccloud_connector_service_account_acl_check "$connector"
       else
           log "🔥 2/4 errors: digest of connect ERROR/FATAL records since $since (whole worker, not only this connector)"
-          PG_LOG_DIGEST_RECORDS_FILE="$cdir/errors.records" PG_LOG_DIGEST_LABEL="connect" playground container logs --container connect --errors --since "$since" --max-findings "$max_findings"
+          PG_LOG_DIGEST_RECORDS_FILE="$cdir/errors.records" PG_LOG_DIGEST_LABEL="$diagnose_connect_container" playground container logs --container "$diagnose_connect_container" --errors --since "$since" --max-findings "$max_findings"
       fi
 
       echo ""
@@ -66842,9 +67344,9 @@ playground_connector_diagnose_command() {
       then
           next_steps+=("playground connector logs --connector $connector")
       else
-          next_steps+=("playground container logs -c connect --grep \"$connector\" --no-follow --tail 200")
+          next_steps+=("playground container logs -c $diagnose_connect_container --grep \"$connector\" --no-follow --tail 200")
           next_steps+=("playground debug log-level set --package <connector package> --level TRACE")
-          next_steps+=("playground debug thread-dump --container connect")
+          next_steps+=("playground debug thread-dump --container $diagnose_connect_container")
       fi
       for step in "${next_steps[@]}"
       do
@@ -66907,6 +67409,7 @@ playground_connector_history_command() {
   then
       connect_container="connect"
       [[ "$environment" == cfk* ]] && connect_container="connect-0"
+      [[ "$environment" == mdc* ]] && get_connect_container
       worker_properties=$(playground container get-properties -c "$connect_container" 2> /dev/null || true)
       [[ -z "$config_topic" ]] && config_topic=$(echo "$worker_properties" | grep -E "^config\.storage\.topic=" | cut -d= -f2 | tr -d '\r')
       [[ -z "$status_topic" ]] && status_topic=$(echo "$worker_properties" | grep -E "^status\.storage\.topic=" | cut -d= -f2 | tr -d '\r')
@@ -70853,15 +71356,20 @@ playground_connector_logs_command() {
           fi
       done
   else
+      connect_container="connect"
+      if is_mdc_environment
+      then
+          get_connect_container
+      fi
       if [[ -n "$open" ]]
       then
-          playground container logs --open --container connect
+          playground container logs --open --container "$connect_container"
       elif [[ -n "$log" ]]
       then
-          playground container logs --container connect --wait-for-log "$log"
+          playground container logs --container "$connect_container" --wait-for-log "$log"
       else
 
-          playground container logs --container connect
+          playground container logs --container "$connect_container"
       fi
   fi
 }
@@ -72956,6 +73464,7 @@ parse_requirements() {
   # :command.environment_variables_filter
 
   env_var_names+=("PG_VERBOSE_MODE")
+  env_var_names+=("PLAYGROUND_CLUSTER")
 
   # :command.dependencies_filter
   missing_deps=
@@ -87038,6 +87547,20 @@ playground_schema_get_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87077,13 +87600,13 @@ playground_schema_get_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87197,6 +87720,20 @@ playground_schema_register_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87245,13 +87782,13 @@ playground_schema_register_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87310,6 +87847,20 @@ playground_schema_get_compatibility_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87345,13 +87896,13 @@ playground_schema_get_compatibility_parse_requirements() {
     exit 1
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87424,6 +87975,20 @@ playground_schema_set_compatibility_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87468,14 +88033,12 @@ playground_schema_set_compatibility_parse_requirements() {
     printf "%s\n" "--compatibility must be one of: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE" >&2
     exit 1
   fi
-
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87534,6 +88097,20 @@ playground_schema_get_mode_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87569,13 +88146,13 @@ playground_schema_get_mode_parse_requirements() {
     exit 1
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87648,6 +88225,20 @@ playground_schema_set_mode_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87692,14 +88283,12 @@ playground_schema_set_mode_parse_requirements() {
     printf "%s\n" "--mode must be one of: IMPORT, READONLY, READWRITE" >&2
     exit 1
   fi
-
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87758,6 +88347,20 @@ playground_schema_set_normalize_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87798,14 +88401,12 @@ playground_schema_set_normalize_parse_requirements() {
     printf "%s\n" "--value must be one of: true, false" >&2
     exit 1
   fi
-
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87864,6 +88465,20 @@ playground_schema_validate_new_schemas_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -87904,14 +88519,12 @@ playground_schema_validate_new_schemas_parse_requirements() {
     printf "%s\n" "--value must be one of: true, false" >&2
     exit 1
   fi
-
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -87992,6 +88605,20 @@ playground_schema_delete_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -88031,13 +88658,13 @@ playground_schema_delete_parse_requirements() {
     fi
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -88207,6 +88834,20 @@ playground_schema_set_alias_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -88246,13 +88887,13 @@ playground_schema_set_alias_parse_requirements() {
     exit 1
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -88311,6 +88952,20 @@ playground_schema_get_alias_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -88346,13 +89001,13 @@ playground_schema_get_alias_parse_requirements() {
     exit 1
   fi
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
+  # :command.user_filter
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
@@ -98543,13 +99198,6 @@ playground_topic_parse_requirements() {
     esac
   done
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -98608,6 +99256,20 @@ playground_topic_get_number_records_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -98643,6 +99305,10 @@ playground_topic_get_number_records_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--isolation-level']:-} ]] && [[ ! ${args['--isolation-level']:-} =~ ^(read_uncommitted|read_committed)$ ]]; then
     printf "%s\n" "--isolation-level must be one of: read_uncommitted, read_committed" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -98732,6 +99398,20 @@ playground_topic_wait_for_records_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -98800,6 +99480,12 @@ playground_topic_wait_for_records_parse_requirements() {
     fi
   fi
 
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -98852,6 +99538,20 @@ playground_topic_get_offsets_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -98880,6 +99580,12 @@ playground_topic_get_offsets_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -98919,6 +99625,20 @@ playground_topic_display_consumer_offsets_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -98947,6 +99667,12 @@ playground_topic_display_consumer_offsets_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -98994,6 +99720,20 @@ playground_topic_list_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -99022,6 +99762,12 @@ playground_topic_list_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -99075,6 +99821,20 @@ playground_topic_get_size_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -99103,6 +99863,12 @@ playground_topic_get_size_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -99156,6 +99922,20 @@ playground_topic_describe_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -99184,6 +99964,12 @@ playground_topic_describe_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -99641,6 +100427,20 @@ playground_topic_set_schema_compatibility_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -99679,6 +100479,10 @@ playground_topic_set_schema_compatibility_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--compatibility']:-} ]] && [[ ! ${args['--compatibility']:-} =~ ^(BACKWARD|BACKWARD_TRANSITIVE|FORWARD|FORWARD_TRANSITIVE|FULL|FULL_TRANSITIVE|NONE)$ ]]; then
     printf "%s\n" "--compatibility must be one of: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -100011,6 +100815,20 @@ playground_topic_consume_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -100113,6 +100931,10 @@ playground_topic_consume_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--isolation-level']:-} ]] && [[ ! ${args['--isolation-level']:-} =~ ^(read_uncommitted|read_committed)$ ]]; then
     printf "%s\n" "--isolation-level must be one of: read_uncommitted, read_committed" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -100632,6 +101454,20 @@ playground_topic_produce_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -100805,6 +101641,10 @@ playground_topic_produce_parse_requirements() {
     printf "%s\n" "--transaction must be one of: commit, abort, open" >&2
     exit 1
   fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
   # :command.user_filter
   filter_error=$(filter_schema_registry_running)
@@ -100879,6 +101719,20 @@ playground_topic_create_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         other_args+=("$@")
@@ -100918,6 +101772,12 @@ playground_topic_create_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--nb-partitions NB-PARTITIONS" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -100980,6 +101840,20 @@ playground_topic_delete_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -101012,6 +101886,12 @@ playground_topic_delete_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -101067,6 +101947,20 @@ playground_topic_alter_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         other_args+=("$@")
@@ -101092,6 +101986,12 @@ playground_topic_alter_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -101309,6 +102209,20 @@ playground_topic_dlq_inspect_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -101350,6 +102264,12 @@ playground_topic_dlq_inspect_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -101476,6 +102396,20 @@ playground_topic_dlq_replay_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -101516,6 +102450,12 @@ playground_topic_dlq_replay_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -105185,13 +106125,6 @@ playground_consumer_group_parse_requirements() {
     esac
   done
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -105238,6 +106171,20 @@ playground_consumer_group_list_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105266,6 +106213,12 @@ playground_consumer_group_list_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -105335,6 +106288,20 @@ playground_consumer_group_describe_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105363,6 +106330,12 @@ playground_consumer_group_describe_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -105510,6 +106483,20 @@ playground_consumer_group_reset_offsets_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105553,6 +106540,12 @@ playground_consumer_group_reset_offsets_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--to-offset OFFSET" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -105621,6 +106614,20 @@ playground_consumer_group_delete_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -105653,6 +106660,12 @@ playground_consumer_group_delete_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--group']+x} ]]; then
     printf "missing required flag: --group, -g GROUP\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -108969,13 +109982,6 @@ playground_connector_parse_requirements() {
     esac
   done
 
-  # :command.user_filter
-  filter_error=$(filter_not_mdc_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -109033,6 +110039,20 @@ playground_connector_status_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -109061,6 +110081,12 @@ playground_connector_status_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -109160,6 +110186,20 @@ playground_connector_wait_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -109216,6 +110256,10 @@ playground_connector_wait_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--state']:-} ]] && [[ ! ${args['--state']:-} =~ ^(RUNNING|PAUSED|STOPPED|FAILED)$ ]]; then
     printf "%s\n" "--state must be one of: RUNNING, PAUSED, STOPPED, FAILED" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -109279,6 +110323,20 @@ playground_connector_validate_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -109322,6 +110380,12 @@ playground_connector_validate_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['json']:-} ]] || args['json']="-"
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -109441,6 +110505,20 @@ playground_connector_diff_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -109481,6 +110559,12 @@ playground_connector_diff_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -110254,6 +111338,20 @@ playground_connector_smt_test_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -110322,6 +111420,10 @@ playground_connector_smt_test_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--type']:-} ]] && [[ ! ${args['--type']:-} =~ ^(sink|source)$ ]]; then
     printf "%s\n" "--type must be one of: sink, source" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -110488,6 +111590,20 @@ playground_connector_offsets_get_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -110516,6 +111632,12 @@ playground_connector_offsets_get_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -110569,6 +111691,20 @@ playground_connector_offsets_reset_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -110597,6 +111733,12 @@ playground_connector_offsets_reset_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -110650,6 +111792,20 @@ playground_connector_offsets_alter_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -110678,6 +111834,12 @@ playground_connector_offsets_alter_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -110806,6 +111968,20 @@ playground_connector_plugins_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -110834,6 +112010,12 @@ playground_connector_plugins_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -110887,6 +112069,20 @@ playground_connector_pause_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -110915,6 +112111,12 @@ playground_connector_pause_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -111358,6 +112560,20 @@ playground_connector_restart_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111395,6 +112611,12 @@ playground_connector_restart_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--task-id, -t TASK_ID" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -111465,6 +112687,20 @@ playground_connector_tasks_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111493,6 +112729,12 @@ playground_connector_tasks_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -111572,6 +112814,20 @@ playground_connector_topics_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111600,6 +112856,12 @@ playground_connector_topics_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -111653,6 +112915,20 @@ playground_connector_stop_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111681,6 +112957,12 @@ playground_connector_stop_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -111734,6 +113016,20 @@ playground_connector_resume_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111762,6 +113058,12 @@ playground_connector_resume_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -111823,6 +113125,20 @@ playground_connector_delete_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111851,6 +113167,12 @@ playground_connector_delete_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -111954,6 +113276,20 @@ playground_connector_diagnose_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -111996,6 +113332,12 @@ playground_connector_diagnose_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-findings MAX_FINDINGS" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -112100,6 +113442,20 @@ playground_connector_history_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112137,6 +113493,12 @@ playground_connector_history_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--since SINCE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -112219,6 +113581,20 @@ playground_connector_show_lag_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112269,6 +113645,12 @@ playground_connector_show_lag_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -112825,6 +114207,20 @@ playground_connector_show_config_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112853,6 +114249,12 @@ playground_connector_show_config_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -112946,6 +114348,20 @@ playground_connector_show_config_parameters_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112974,6 +114390,12 @@ playground_connector_show_config_parameters_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -113555,6 +114977,20 @@ playground_connector_log_level_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -113593,6 +115029,10 @@ playground_connector_log_level_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--level']:-} ]] && [[ ! ${args['--level']:-} =~ ^(INFO|WARN|DEBUG|TRACE)$ ]]; then
     printf "%s\n" "--level must be one of: INFO, WARN, DEBUG, TRACE" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -113680,6 +115120,20 @@ playground_connector_logs_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -113717,6 +115171,12 @@ playground_connector_logs_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--wait-for-log, -w LOG" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
 }
@@ -113836,6 +115296,19 @@ playground_connector_display_leader_name_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
 
       --)
         shift
@@ -113865,6 +115338,12 @@ playground_connector_display_leader_name_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -114513,6 +115992,20 @@ playground_connector_create_or_update_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -114607,6 +116100,10 @@ playground_connector_create_or_update_parse_requirements() {
     printf "%s\n" "--initial-state must be one of: RUNNING, PAUSED, STOPPED" >&2
     exit 1
   fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -114652,6 +116149,20 @@ playground_connector_update_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -114680,6 +116191,12 @@ playground_connector_update_parse_requirements() {
 
     esac
   done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
 
 }
 
@@ -122506,6 +124023,21 @@ playground_schema_get_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122518,6 +124050,7 @@ playground_schema_get_completion() {
     completion_flag_candidates --id "$completion_current" --id
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --deleted "$completion_current" --deleted
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122588,6 +124121,21 @@ playground_schema_register_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122602,6 +124150,7 @@ playground_schema_register_completion() {
     completion_flag_candidates --id "$completion_current" --id
     completion_flag_candidates --metadata-property "$completion_current" --metadata-property
     completion_flag_candidates --normalize "$completion_current" --normalize
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122635,6 +124184,21 @@ playground_schema_get_compatibility_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122645,6 +124209,7 @@ playground_schema_get_compatibility_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122698,6 +124263,21 @@ playground_schema_set_compatibility_completion() {
         completion_blocked_flags["--compatibility"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122709,6 +124289,7 @@ playground_schema_set_compatibility_completion() {
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --compatibility "$completion_current" --compatibility
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122742,6 +124323,21 @@ playground_schema_get_mode_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122752,6 +124348,7 @@ playground_schema_get_mode_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122801,6 +124398,21 @@ playground_schema_set_mode_completion() {
         completion_blocked_flags["--mode"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122812,6 +124424,7 @@ playground_schema_set_mode_completion() {
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --mode "$completion_current" --mode
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122847,6 +124460,21 @@ playground_schema_set_normalize_completion() {
         completion_blocked_flags["--value"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122857,6 +124485,7 @@ playground_schema_set_normalize_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --value "$completion_current" --value
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122892,6 +124521,21 @@ playground_schema_validate_new_schemas_completion() {
         completion_blocked_flags["--value"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122902,6 +124546,7 @@ playground_schema_validate_new_schemas_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --value "$completion_current" --value
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -122950,6 +124595,21 @@ playground_schema_delete_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -122962,6 +124622,7 @@ playground_schema_delete_completion() {
     completion_flag_candidates --version "$completion_current" --version
     completion_flag_candidates --permanent "$completion_current" --permanent
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -123056,6 +124717,21 @@ playground_schema_set_alias_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -123067,6 +124743,7 @@ playground_schema_set_alias_completion() {
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --alias "$completion_current" --alias
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -123100,6 +124777,21 @@ playground_schema_get_alias_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -123110,6 +124802,7 @@ playground_schema_get_alias_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --alias "$completion_current" --alias
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128242,6 +129935,21 @@ playground_topic_get_number_records_completion() {
         completion_blocked_flags["--topic"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128251,6 +129959,7 @@ playground_topic_get_number_records_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128309,6 +130018,21 @@ playground_topic_wait_for_records_completion() {
         completion_blocked_flags["--interval"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128321,6 +130045,7 @@ playground_topic_wait_for_records_completion() {
     completion_flag_candidates --min-expected-messages "$completion_current" --min-expected-messages
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --interval "$completion_current" --interval
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128354,6 +130079,21 @@ playground_topic_get_offsets_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128364,6 +130104,7 @@ playground_topic_get_offsets_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128384,6 +130125,21 @@ playground_topic_display_consumer_offsets_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128393,6 +130149,7 @@ playground_topic_display_consumer_offsets_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128418,6 +130175,21 @@ playground_topic_list_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128428,6 +130200,7 @@ playground_topic_list_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --show-internal "$completion_current" --show-internal
     completion_flag_candidates --sort-by-size "$completion_current" --sort-by-size
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128461,6 +130234,21 @@ playground_topic_get_size_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128471,6 +130259,7 @@ playground_topic_get_size_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --show-internal "$completion_current" --show-internal
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128504,6 +130293,21 @@ playground_topic_describe_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128514,6 +130318,7 @@ playground_topic_describe_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128759,6 +130564,21 @@ playground_topic_set_schema_compatibility_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -128770,6 +130590,7 @@ playground_topic_set_schema_compatibility_completion() {
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --compatibility "$completion_current" --compatibility
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -128991,6 +130812,21 @@ playground_topic_consume_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -129019,6 +130855,7 @@ playground_topic_consume_completion() {
     completion_flag_candidates --count "$completion_current" --count
     completion_flag_candidates --no-decode "$completion_current" --no-decode
     completion_flag_candidates --print-schema "$completion_current" --print-schema
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -129425,6 +131262,21 @@ playground_topic_produce_completion() {
         completion_blocked_flags["--transaction-timeout"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -129467,6 +131319,7 @@ playground_topic_produce_completion() {
     completion_flag_candidates --transactional-id "$completion_current" --transactional-id
     completion_flag_candidates --transaction "$completion_current" --transaction
     completion_flag_candidates --transaction-timeout "$completion_current" --transaction-timeout
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -129507,6 +131360,21 @@ playground_topic_create_completion() {
         completion_blocked_flags["--nb-partitions"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -129518,6 +131386,7 @@ playground_topic_create_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --nb-partitions "$completion_current" --nb-partitions
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -129556,6 +131425,21 @@ playground_topic_delete_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -129567,6 +131451,7 @@ playground_topic_delete_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --skip-delete-schema "$completion_current" --skip-delete-schema
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -129600,6 +131485,21 @@ playground_topic_alter_completion() {
         completion_blocked_flags["--topic"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -129610,6 +131510,7 @@ playground_topic_alter_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -129730,6 +131631,21 @@ playground_topic_dlq_inspect_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -129746,6 +131662,7 @@ playground_topic_dlq_inspect_completion() {
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-open "$completion_current" --no-open
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -129835,6 +131752,21 @@ playground_topic_dlq_replay_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -129851,6 +131783,7 @@ playground_topic_dlq_replay_completion() {
     completion_flag_candidates --keep-error-headers "$completion_current" --keep-error-headers
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -131607,6 +133540,21 @@ playground_consumer_group_list_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -131617,6 +133565,7 @@ playground_consumer_group_list_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --state "$completion_current" --state
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -131660,6 +133609,21 @@ playground_consumer_group_describe_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -131672,6 +133636,7 @@ playground_consumer_group_describe_completion() {
     completion_flag_candidates --state "$completion_current" --state
     completion_flag_candidates --members "$completion_current" --members
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -131773,6 +133738,21 @@ playground_consumer_group_reset_offsets_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -131791,6 +133771,7 @@ playground_consumer_group_reset_offsets_completion() {
     completion_flag_candidates --by-duration "$completion_current" --by-duration
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -131837,6 +133818,21 @@ playground_consumer_group_delete_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -131848,6 +133844,7 @@ playground_consumer_group_delete_completion() {
     completion_flag_candidates --group "$completion_current" --group -g
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133631,6 +135628,21 @@ playground_connector_status_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133641,6 +135653,7 @@ playground_connector_status_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133711,6 +135724,21 @@ playground_connector_wait_completion() {
         completion_blocked_flags["--interval"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133724,6 +135752,7 @@ playground_connector_wait_completion() {
     completion_flag_candidates --state "$completion_current" --state
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --interval "$completion_current" --interval
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133763,6 +135792,21 @@ playground_connector_validate_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         if [[ $completion_arg_index -ge 1 ]]; then
           return
@@ -133779,6 +135823,7 @@ playground_connector_validate_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --skip-automatic-connector-config "$completion_current" --skip-automatic-connector-config
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -133863,6 +135908,21 @@ playground_connector_diff_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133879,6 +135939,7 @@ playground_connector_diff_completion() {
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134285,6 +136346,21 @@ playground_connector_smt_test_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134306,6 +136382,7 @@ playground_connector_smt_test_completion() {
     completion_flag_candidates --smt-jar "$completion_current" --smt-jar
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134383,6 +136460,21 @@ playground_connector_offsets_get_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134393,6 +136485,7 @@ playground_connector_offsets_get_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134426,6 +136519,21 @@ playground_connector_offsets_reset_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134436,6 +136544,7 @@ playground_connector_offsets_reset_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134469,6 +136578,21 @@ playground_connector_offsets_alter_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134479,6 +136603,7 @@ playground_connector_offsets_alter_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134547,6 +136672,21 @@ playground_connector_plugins_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134557,6 +136697,7 @@ playground_connector_plugins_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --all "$completion_current" --all
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134590,6 +136731,21 @@ playground_connector_pause_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134600,6 +136756,7 @@ playground_connector_pause_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134758,6 +136915,21 @@ playground_connector_restart_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134770,6 +136942,7 @@ playground_connector_restart_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --task-id "$completion_current" --task-id -t
     completion_flag_candidates --only-failed "$completion_current" --only-failed
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134813,6 +136986,21 @@ playground_connector_tasks_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134825,6 +137013,7 @@ playground_connector_tasks_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --all-keys "$completion_current" --all-keys
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134870,6 +137059,21 @@ playground_connector_topics_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134882,6 +137086,7 @@ playground_connector_topics_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --reset "$completion_current" --reset
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134915,6 +137120,21 @@ playground_connector_stop_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134925,6 +137145,7 @@ playground_connector_stop_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -134958,6 +137179,21 @@ playground_connector_resume_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -134968,6 +137204,7 @@ playground_connector_resume_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135006,6 +137243,21 @@ playground_connector_delete_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -135017,6 +137269,7 @@ playground_connector_delete_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --keep-related-topics "$completion_current" --keep-related-topics
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135085,6 +137338,21 @@ playground_connector_diagnose_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -135099,6 +137367,7 @@ playground_connector_diagnose_completion() {
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135167,6 +137436,21 @@ playground_connector_history_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -135181,6 +137465,7 @@ playground_connector_history_completion() {
     completion_flag_candidates --config-topic "$completion_current" --config-topic
     completion_flag_candidates --status-topic "$completion_current" --status-topic
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135234,6 +137519,21 @@ playground_connector_show_lag_completion() {
         completion_blocked_flags["--max-wait"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -135246,6 +137546,7 @@ playground_connector_show_lag_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --interval "$completion_current" --interval
     completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135549,6 +137850,21 @@ playground_connector_show_config_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -135560,6 +137876,7 @@ playground_connector_show_config_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --force-rest-endpoint "$completion_current" --force-rest-endpoint
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135608,6 +137925,21 @@ playground_connector_show_config_parameters_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -135621,6 +137953,7 @@ playground_connector_show_config_parameters_completion() {
     completion_flag_candidates --open "$completion_current" --open -o
     completion_flag_candidates --force-refresh "$completion_current" --force-refresh
     completion_flag_candidates --only-show-json "$completion_current" --only-show-json
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135929,6 +138262,21 @@ playground_connector_log_level_completion() {
         completion_blocked_flags["--level"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -135939,6 +138287,7 @@ playground_connector_log_level_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --level "$completion_current" --level -l
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -135989,6 +138338,21 @@ playground_connector_logs_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -136001,6 +138365,7 @@ playground_connector_logs_completion() {
     completion_flag_candidates --open "$completion_current" --open -o
     completion_flag_candidates --wait-for-log "$completion_current" --wait-for-log -w
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -136064,6 +138429,21 @@ playground_connector_display_leader_name_completion() {
         completion_blocked_flags["--help"]=1
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -136072,6 +138452,7 @@ playground_connector_display_leader_name_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -136400,6 +138781,21 @@ playground_connector_create_or_update_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         if [[ $completion_arg_index -ge 1 ]]; then
           return
@@ -136429,6 +138825,7 @@ playground_connector_create_or_update_completion() {
     completion_flag_candidates --initial-state "$completion_current" --initial-state
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --terraform "$completion_current" --terraform
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -136457,6 +138854,21 @@ playground_connector_update_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -136466,6 +138878,7 @@ playground_connector_update_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -137073,6 +139486,13 @@ before_hook() {
       export PG_LOG_LEVEL="$level"
       log "🔖 --output-level is set with $level"
   fi
+
+  # mdc-* environments: the cluster selected with --cluster is used by the nested playground calls too
+  if [[ -n "${args[--cluster]}" ]]
+  then
+      export PLAYGROUND_CLUSTER="${args[--cluster]}"
+  fi
+
 }
 
 # :command.initialize

@@ -18,7 +18,13 @@ work=$(mktemp -d "$SMT_TESTER_CACHE/run-XXXXXX")
 trap 'rm -rf "$work"' EXIT
 
 connect_running=0
-if docker inspect -f '{{.State.Running}}' connect 2> /dev/null | grep -q true
+smt_connect_container="connect"
+if is_mdc_environment
+then
+    get_connect_container
+    smt_connect_container="$connect_container"
+fi
+if docker inspect -f '{{.State.Running}}' "$smt_connect_container" 2> /dev/null | grep -q true
 then
     connect_running=1
 fi
@@ -100,7 +106,7 @@ plugin_dirs=()
 hub_image="confluentinc/cp-server-connect:${cp_versions[0]:-8.3.2}"
 if [ $connect_running -eq 1 ]
 then
-    hub_image=$(docker inspect -f '{{.Config.Image}}' connect)
+    hub_image=$(docker inspect -f '{{.Config.Image}}' "$smt_connect_container")
 fi
 for spec in "${smt_plugins[@]}"
 do
@@ -130,31 +136,31 @@ chmod a+w "$work"
 # ---- run in the connect worker
 function run_in_worker () {
     local jar_dir java_version release classes classpath worker_config plugin_path container_plugins=""
-    jar_dir=$(smt_tester_jars_from_container connect)
-    java_version=$(playground --output-level ERROR container exec --container connect --command "java -version 2>&1 | head -1" 2> /dev/null)
+    jar_dir=$(smt_tester_jars_from_container "$smt_connect_container")
+    java_version=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "java -version 2>&1 | head -1" 2> /dev/null)
     release=$(smt_tester_java_release "$java_version")
     classes=$(smt_tester_classes "$jar_dir" "$release") || return 1
     # the classpath and the properties file of the running worker jvm
-    classpath=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
-    worker_config=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
-    plugin_path=$(playground --output-level ERROR container exec --container connect --command "grep -E '^plugin.path=' '$worker_config' | cut -d= -f2-" 2> /dev/null)
-    playground --output-level ERROR container exec --container connect --command "rm -rf /tmp/smt-tester && mkdir -p /tmp/smt-tester/plugins" > /dev/null 2>&1
-    playground --output-level ERROR container cp --source "$classes/SmtTester.class" --destination connect:/tmp/smt-tester/SmtTester.class > /dev/null 2>&1
-    playground --output-level ERROR container cp --source "$work/config.json" --destination connect:/tmp/smt-tester/config.json > /dev/null 2>&1
-    playground --output-level ERROR container cp --source "$work/record.json" --destination connect:/tmp/smt-tester/record.json > /dev/null 2>&1
+    classpath=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
+    worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+    plugin_path=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "grep -E '^plugin.path=' '$worker_config' | cut -d= -f2-" 2> /dev/null)
+    playground --output-level ERROR container exec --container "$smt_connect_container" --command "rm -rf /tmp/smt-tester && mkdir -p /tmp/smt-tester/plugins" > /dev/null 2>&1
+    playground --output-level ERROR container cp --source "$classes/SmtTester.class" --destination "$smt_connect_container":/tmp/smt-tester/SmtTester.class > /dev/null 2>&1
+    playground --output-level ERROR container cp --source "$work/config.json" --destination "$smt_connect_container":/tmp/smt-tester/config.json > /dev/null 2>&1
+    playground --output-level ERROR container cp --source "$work/record.json" --destination "$smt_connect_container":/tmp/smt-tester/record.json > /dev/null 2>&1
     local dir
     for dir in "${plugin_dirs[@]}"
     do
-        playground --output-level ERROR container cp --source "$dir" --destination "connect:/tmp/smt-tester/plugins/$(basename "$dir")" > /dev/null 2>&1
+        playground --output-level ERROR container cp --source "$dir" --destination "$smt_connect_container:/tmp/smt-tester/plugins/$(basename "$dir")" > /dev/null 2>&1
         container_plugins="$container_plugins,/tmp/smt-tester/plugins/$(basename "$dir")"
     done
     # the test plugins are given apart: their classes win over the worker plugins
     local priority="${container_plugins#,}"
     local stderr_target="/dev/null"
     [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
-    playground --output-level ERROR container exec --container connect --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' connect)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target"
+    playground --output-level ERROR container exec --container "$smt_connect_container" --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' $smt_connect_container)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target"
     local ret=$?
-    playground --output-level ERROR container cp --source connect:/tmp/smt-tester/result.json --destination "$work/result-worker.json" > /dev/null 2>&1
+    playground --output-level ERROR container cp --source "$smt_connect_container":/tmp/smt-tester/result.json --destination "$work/result-worker.json" > /dev/null 2>&1
     return $ret
 }
 
@@ -169,9 +175,9 @@ function run_in_image () {
     if [ $connect_running -eq 1 ]
     then
         # same network and worker settings as the running example, for --from-topic and schema registry
-        network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' connect | awk '{print $1}')
-        worker_config=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
-        playground --output-level ERROR container cp --source "connect:$worker_config" --destination "$work/worker.properties" > /dev/null 2>&1
+        network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$smt_connect_container" | awk '{print $1}')
+        worker_config=$(playground --output-level ERROR container exec --container "$smt_connect_container" --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+        playground --output-level ERROR container cp --source "$smt_connect_container:$worker_config" --destination "$work/worker.properties" > /dev/null 2>&1
     fi
     [ -f "$work/worker.properties" ] || echo "bootstrap.servers=broker:9092" > "$work/worker.properties"
     for dir in "${plugin_dirs[@]}"

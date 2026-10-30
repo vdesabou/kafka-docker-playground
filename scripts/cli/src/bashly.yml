@@ -15,6 +15,8 @@ environment_variables:
 - name: PG_VERBOSE_MODE
   private: true
   help: "Set by --vvv, propagated to the nested playground calls (internal)"
+- name: PLAYGROUND_CLUSTER
+  help: "🌍 Cluster used by the topic, consumer-group, connector and schema commands in an mdc-* environment (us or europe) when --cluster is not set"
 
 # Use bash code here directly or a function name that references code elsewhere.
 help_header_override: |
@@ -4077,7 +4079,6 @@ commands:
   - name: get
     group: Schema
     filters:
-    - not_mdc_environment
     - schema_registry_running
     help: |-
       🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)
@@ -4120,6 +4121,15 @@ commands:
         help: store in /tmp folder
         arg: folder
         private: true
+      - &cluster
+        long: --cluster
+        arg: cluster
+        allowed: [us, europe]
+        required: false
+        help: |-
+          🌍 Cluster to use in an mdc-* environment (us or europe)
+      
+          Default: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.
     examples:
     - playground schema get
     - playground schema get --subject <SUBJECT>
@@ -4128,7 +4138,6 @@ commands:
   - name: register
     group: Schema
     filters:
-    - not_mdc_environment
     - schema_registry_running
     help: |-
       ⏺️ Register a schema in specified subject
@@ -4195,6 +4204,7 @@ commands:
       - long: --normalize
         help: |-
           🫧 Add ?normalize=true at the end of the request to normalize the schema. The default is false.
+      - *cluster
 
     examples: |
       playground schema register --subject test-protobuf << 'EOF'
@@ -4242,7 +4252,6 @@ commands:
 
   - name: get-compatibility
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4254,10 +4263,10 @@ commands:
     flags:
     - *subject_required
     - *verbose
+    - *cluster
 
   - name: set-compatibility
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4290,10 +4299,10 @@ commands:
       required: true
       help: |-
         Schema Registry compatibility rule
+    - *cluster
 
   - name: get-mode
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4304,10 +4313,10 @@ commands:
     flags:
     - *subject_required
     - *verbose
+    - *cluster
 
   - name: set-mode
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4333,10 +4342,10 @@ commands:
       required: true
       help: |-
         Schema Registry mode
+    - *cluster
 
   - name: set-normalize
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4361,11 +4370,11 @@ commands:
       required: true
       help: |-
         true or false
+    - *cluster
 
 
   - name: validate-new-schemas
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4390,11 +4399,11 @@ commands:
       required: true
       help: |-
         true or false
+    - *cluster
 
 
   - name: delete
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4434,6 +4443,7 @@ commands:
       help: |-
         💀 Hard delete (default is soft delete)
     - *verbose
+    - *cluster
 
   - name: derive-schema
     group: Schema
@@ -4479,7 +4489,6 @@ commands:
 
   - name: set-alias
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4508,10 +4517,10 @@ commands:
       help: |-
         🔯 Alias name
     - *verbose
+    - *cluster
 
   - name: get-alias
     filters:
-    - not_mdc_environment
     - schema_registry_running
     group: Schema
     help: |-
@@ -4532,6 +4541,7 @@ commands:
       help: |-
         🔯 Alias name
     - *verbose
+    - *cluster
 
 - name: tcp-proxy
   expose: always
@@ -7362,8 +7372,6 @@ commands:
 - name: topic
   expose: always
   group: Topic
-  filters:
-  - not_mdc_environment
   help: |-
     🗳 Topic commands
 
@@ -7431,6 +7439,7 @@ commands:
         help: |-
           🫥 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
           If not set, default is read_uncommitted
+      - *cluster
       examples:
       - playground topic get-number-records --topic a-topic
       - playground topic get-number-records -t a-topic
@@ -7485,6 +7494,7 @@ commands:
         default: "5"
         help: |-
           🔁 Interval in seconds between checks (default is 5)
+      - *cluster
       examples:
       - playground topic wait-for-records --topic filestream
       - playground topic wait-for-records --topic filestream --min-expected-messages 10 --max-wait 300
@@ -7509,6 +7519,7 @@ commands:
       flags:
       - *topic
       - *verbose
+      - *cluster
       examples:
       - playground topic get-offsets --topic a-topic
       x_example_outputs:
@@ -7529,6 +7540,7 @@ commands:
         has committed and when.
       flags:
       - *verbose
+      - *cluster
 
     - name: list
       group: Topic
@@ -7553,6 +7565,7 @@ commands:
         help: |-
           📏 Display size and number of partitions of each topic, largest first
         required: false
+      - *cluster
       examples:
       - playground topic list
       - playground topic list --sort-by-size
@@ -7583,6 +7596,7 @@ commands:
         help: |-
           🫥 Include internal topics (when --topic is not set)
         required: false
+      - *cluster
       examples:
       - playground topic get-size
       - playground topic get-size --topic filestream
@@ -7602,6 +7616,7 @@ commands:
       flags:
       - *topic
       - *verbose
+      - *cluster
       examples:
       - playground topic describe --topic filestream
       x_example_outputs:
@@ -7765,6 +7780,7 @@ commands:
       - *topic
       - *compatibility-required
       - *verbose
+      - *cluster
 
     - name: consume
       filters:
@@ -7956,6 +7972,7 @@ commands:
         required: false
         help: |-
           📜 Also print the key and value schemas registered for the topic
+      - *cluster
       examples:
       - playground topic consume --topic filestream --min-expected-messages 2 --timeout 30
       x_example_outputs:
@@ -8431,6 +8448,7 @@ commands:
           (default 60000): an open transaction is aborted by the coordinator
           after it. At most transaction.max.timeout.ms of the brokers (15
           minutes by default)
+      - *cluster
 
       examples: |
 
@@ -8914,6 +8932,7 @@ commands:
         default: "1"
         help: |-
           Number of partitions for the topic. (default is 1)
+      - *cluster
       catch_all:
         label: arguments
         help: |-
@@ -8956,6 +8975,7 @@ commands:
         required: false
         help: |-
           🔰 Do not delete subject/schema
+      - *cluster
 
     - name: alter
       group: Topic
@@ -8980,6 +9000,7 @@ commands:
           - playground get-topic-list
         help: |-
           🗳 Topic name
+      - *cluster
       catch_all:
         label: arguments
         help: |-
@@ -9089,6 +9110,7 @@ commands:
             help: |-
               🙈 Do not open the HTML report in the browser
           - *verbose
+          - *cluster
           examples:
           - playground topic dlq inspect --topic dlq
           - playground topic dlq inspect --connector http-sink
@@ -9156,6 +9178,7 @@ commands:
             help: |-
               🧪 Only display how many records would be replayed, and to which topics
           - *verbose
+          - *cluster
           examples:
           - playground topic dlq replay --topic dlq --dry-run
           - playground topic dlq replay --topic dlq
@@ -10072,8 +10095,6 @@ commands:
 - name: consumer-group
   expose: always
   group: Topic
-  filters:
-  - not_mdc_environment
   help: |-
     👥 Consumer group commands
 
@@ -10104,6 +10125,7 @@ commands:
         help: |-
           🚦 Also display the state of each group (Stable, Empty, PreparingRebalance...)
       - *verbose
+      - *cluster
       examples:
       - playground consumer-group list
       - playground consumer-group list --state
@@ -10143,6 +10165,7 @@ commands:
         help: |-
           🧑‍🤝‍🧑 Display members of the group and their assigned partitions
       - *verbose
+      - *cluster
       examples:
       - playground consumer-group describe --group connect-http-sink
       - playground consumer-group describe --group my-app --members
@@ -10228,6 +10251,7 @@ commands:
         help: |-
           🧪 Only display the new offsets, do not change them
       - *verbose
+      - *cluster
       examples:
       - playground consumer-group reset-offsets --group my-app --to-earliest
       - playground consumer-group reset-offsets --group my-app --topic orders --shift-by -100 --dry-run
@@ -10271,6 +10295,7 @@ commands:
         help: |-
           🗳 Only delete the committed offsets of this topic
       - *verbose
+      - *cluster
       examples:
       - playground consumer-group delete --group my-app
       - playground consumer-group delete --group my-app --topic orders
@@ -11202,8 +11227,6 @@ commands:
 - name: connector
   expose: always
   group: Connector
-  filters:
-  - not_mdc_environment
   help: |-
     🔗 Connector commands
 
@@ -11275,6 +11298,7 @@ commands:
         🔗 Connector name
 
         🎓 Tip: If not specified, the command will apply to all connectors
+    - *cluster
     examples:
     - playground connector status
     x_example_outputs:
@@ -11348,6 +11372,7 @@ commands:
       default: "5"
       help: |-
         🔁 Interval in seconds between status checks (default is 5)
+    - *cluster
     examples:
     - playground connector wait --connector filestream-sink
     - playground connector wait --connector filestream-sink --state PAUSED --max-wait 60
@@ -11405,6 +11430,7 @@ commands:
       required: false
       help: |-
         🤖 Do not add the automatic configuration of the environment (security settings on sasl-ssl...) before validating
+    - *cluster
     examples:
     - |-
       playground connector validate << EOF
@@ -11490,6 +11516,7 @@ commands:
       required: false
       help: |-
         🙈 Do not open the HTML report in the browser
+    - *cluster
     examples:
     - playground connector diff --connector filestream-sink --file customer-config.json
     - playground connector diff --connector filestream-sink --with-connector filestream-sink2
@@ -11777,6 +11804,7 @@ commands:
         required: false
         help: |-
           🚫 Do not open the html report in the browser (it is still written, and its path printed)
+      - *cluster
       examples:
       - playground connector smt test --connector filestream-sink
       - playground connector smt test --connector filestream-sink --record '{"topic":"filestream","key":"k1","value":{"id":1,"name":"foo"}}'
@@ -11825,6 +11853,7 @@ commands:
       flags:
       - *verbose
       - *connector
+      - *cluster
       examples:
       - playground connector offsets get
       x_example_outputs:
@@ -11861,6 +11890,7 @@ commands:
       flags:
       - *verbose
       - *connector
+      - *cluster
     - name: alter
       help: |
         ⛏️ Alter offsets for source and sink connectors
@@ -11878,6 +11908,7 @@ commands:
       flags:
       - *verbose
       - *connector
+      - *cluster
     - name: get-offsets-request-status
       help: |
         👁️‍🗨️ Get the status of the previous offset request
@@ -11908,6 +11939,7 @@ commands:
       required: false
       help: |-
         🌕 Show also transforms, converters, predicates available
+    - *cluster
 
   - name: pause
     help: |-
@@ -11919,6 +11951,7 @@ commands:
     flags:
     - *verbose
     - *connector
+    - *cluster
 
   - name: versions
     help:  |
@@ -12065,6 +12098,7 @@ commands:
         A connector with nothing FAILED is skipped. Uses the KIP-745 REST call
         (restart?includeTasks=true&onlyFailed=true, CP 7.0+); with older CP
         versions and fully managed connectors, restarts each FAILED task one by one.
+    - *cluster
     examples:
     - playground connector restart
     - playground connector restart --connector filestream-sink --task-id 0
@@ -12102,6 +12136,7 @@ commands:
       required: false
       help: |-
         🤖 Print the result as JSON
+    - *cluster
     examples:
     - playground connector tasks
     - playground connector tasks --connector jdbc-source --all-keys
@@ -12136,6 +12171,7 @@ commands:
       conflicts: [--reset]
       help: |-
         🤖 Print the result as JSON
+    - *cluster
     examples:
     - playground connector topics
     - playground connector topics --connector s3-sink --json
@@ -12151,6 +12187,7 @@ commands:
     flags:
     - *verbose
     - *connector
+    - *cluster
 
   - name: resume
     alias: unpause
@@ -12162,6 +12199,7 @@ commands:
     flags:
     - *verbose
     - *connector
+    - *cluster
 
   - name: delete
     help: |-
@@ -12183,6 +12221,7 @@ commands:
     - long: --keep-related-topics
       help: |-
         🔰 Do not delete the dlq, success and error topics of a fully managed or custom connector
+    - *cluster
 
   - name: diagnose
     help: |-
@@ -12232,6 +12271,7 @@ commands:
       required: false
       help: |-
         🙈 Do not open the HTML report in the browser
+    - *cluster
     examples:
     - playground connector diagnose
     - playground connector diagnose --connector http-sink
@@ -12356,6 +12396,7 @@ commands:
       required: false
       help: |-
         🤖 Print the events and the summary as JSON
+    - *cluster
     examples:
     - playground connector history
     - playground connector history --connector jdbc-sink --since 1h
@@ -12390,6 +12431,7 @@ commands:
       default: "0"
       help: |- 
         ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.
+    - *cluster
     examples:
     - playground connector show-lag
     x_example_outputs:
@@ -12772,6 +12814,7 @@ commands:
       required: false
       help: |-
         ☢️ Force using REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)
+    - *cluster
 
   - name: show-config-parameters
     help: |-
@@ -12809,6 +12852,7 @@ commands:
       private: true
       help: |-
         📂 Only show the path of the json file containing the configuration parameters
+    - *cluster
 
   - name: metrics
     help: |-
@@ -12983,6 +13027,7 @@ commands:
     flags:
     - *connector
     - *level
+    - *cluster
 
   - name: logs
     group: Connect
@@ -13012,6 +13057,7 @@ commands:
       help: |-
         😴 Wait until log appears
     - *verbose
+    - *cluster
 
   - name: open-ccloud-connector-in-browser
     group: Connect
@@ -13041,6 +13087,8 @@ commands:
       For onprem connectors, this is basically a shortcut for "playground container exec -c connect -- bash -c 'export JMX_PORT=9404; jmxterm -l localhost:9404 -n -v silent -u admin -p admin123 -e \"get -b kafka.connect:type=connect-worker-rebalance-metrics name=leader-name\"'", --connector flag is not relevant
 
       For Fully Managed connectors, this is not available as JMX is not accessible.
+    flags:
+    - *cluster
 
   - name: translate
     help: |
@@ -13332,6 +13380,7 @@ commands:
         connector created with the REST API is imported first. playground connector delete runs terraform destroy.
 
         ⚠️ Only available for Confluent Cloud connectors
+    - *cluster
 
     examples: |
       playground connector create-or-update -c filestream-sink << EOF
@@ -13367,6 +13416,7 @@ commands:
       without saving.
     flags:
     - *connector
+    - *cluster
     examples: |
       playground connector update -c filestream-sink
     alias:
