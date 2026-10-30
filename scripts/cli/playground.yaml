@@ -6740,13 +6740,15 @@ subcommands:
       the config to the validate endpoint of the plugin\n(PUT /connector-plugins/<class>/config/validate)
       and prints every\ninvalid property with its error message. Nothing is created
       or\nchanged, so it is the dry run of 'create-or-update' for a customer\nconfig.
-      Exits with 1 if the config is invalid.\n\nThe config is read from stdin. Without
-      stdin, --connector validates\nthe config of that running connector, for example
-      after switching\nto another connector version.\n\nThe same automatic config
-      as 'create-or-update' is added for the\nenvironment of the example (security
-      settings on sasl-ssl...),\nunless --skip-automatic-connector-config is set.\n\n\U0001F393
-      Tip: works for fully managed connectors too, with the validate\nendpoint of
-      Confluent Cloud.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      Exits with 1 if the config is invalid.\n\nThe config is read from stdin: json,
+      or a format customers send (CFK /\nStrimzi custom resource, terraform, .properties,
+      a dump of GET\n/connectors?expand=info with --connector to pick one, see 'playground\nconnector
+      convert'). Without stdin, --connector validates the config\nof that running
+      connector, for example after switching to another\nconnector version.\n\nThe
+      same automatic config as 'create-or-update' is added for the\nenvironment of
+      the example (security settings on sasl-ssl...),\nunless --skip-automatic-connector-config
+      is set.\n\n\U0001F393 Tip: works for fully managed connectors too, with the
+      validate\nendpoint of Confluent Cloud.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed"
     usage: playground connector validate [JSON] [OPTIONS]
     options:
@@ -6770,20 +6772,22 @@ subcommands:
   - name: diff
     description: "\U0001F500 Diff the config of a running connector with another config\n\nCompares
       the config of a running connector, key by key, with:\n\n  stdin              a
-      config (plain json, or the heredoc printed by\n                     'show-config')\n
-      \ --file             the same, from a file, e.g. the config of a\n                     customer\n
-      \ --with-connector   another running connector\n  --defaults         the default
-      value of each parameter of the plugin:\n                     shows only what
-      the connector changes, and the\n                     keys set to their default
-      that could be removed\n\nKeys only on one side, and keys with different values,
-      are listed.\nPasswords masked by the REST API are not compared.\n\n\U0001F393
-      Tip: run it with the config of a customer and the config of the\nexample to
-      see right away what differs.\n\n\U0001F310 Also writes a self-contained HTML
-      report in --output-dir, opened in the browser in an interactive terminal (--no-open
-      to skip): the keys side by side with the documentation, type and default of
-      each one (from the configuration reference of the plugin), what the important
-      differences mean (converters, error handling, transforms...), and the secrets
-      masked.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
+      config (plain json, the heredoc printed by\n                     'show-config',
+      or a format customers send: CFK /\n                     Strimzi custom resource,
+      terraform, .properties,\n                     a dump of GET /connectors?expand=info,
+      see\n                     'playground connector convert')\n  --file             the
+      same, from a file, e.g. the config of a\n                     customer\n  --with-connector
+      \  another running connector\n  --defaults         the default value of each
+      parameter of the plugin:\n                     shows only what the connector
+      changes, and the\n                     keys set to their default that could
+      be removed\n\nKeys only on one side, and keys with different values, are listed.\nPasswords
+      masked by the REST API are not compared.\n\n\U0001F393 Tip: run it with the
+      config of a customer and the config of the\nexample to see right away what differs.\n\n\U0001F310
+      Also writes a self-contained HTML report in --output-dir, opened in the browser
+      in an interactive terminal (--no-open to skip): the keys side by side with the
+      documentation, type and default of each one (from the configuration reference
+      of the plugin), what the important differences mean (converters, error handling,
+      transforms...), and the secrets masked.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
     usage: playground connector diff [OPTIONS]
     options:
     - names:
@@ -6801,8 +6805,9 @@ subcommands:
       - "--file"
       - "-f"
       argument: FILE
-      description: "\U0001F4C4 File with the config to compare with (json, or a create-or-update
-        heredoc)"
+      description: "\U0001F4C4 File with the config to compare with (json, a create-or-update
+        heredoc, a CFK / Strimzi custom resource, terraform, .properties, a dump of
+        GET /connectors?expand=info)"
     - names:
       - "--with-connector"
       argument: WITH_CONNECTOR
@@ -6826,6 +6831,68 @@ subcommands:
       - "--no-open"
       argument: ''
       description: "\U0001F648 Do not open the HTML report in the browser"
+  - name: convert
+    description: "\U0001F504 Convert a connector config from the format a customer
+      sent to another one\n\nReads the config in any of these formats (detected, --from
+      to force\none), and writes it in the format of --to:\n\n  json          a plain
+      config, the REST API format {\"name\": ...,\n                \"config\": {...}},
+      a dump of GET /connectors?expand=info\n  heredoc       a 'playground connector
+      create-or-update' heredoc, as\n                printed by show-config\n  cfk
+      \          a CFK Connector custom resource (spec.class,\n                spec.taskMax,
+      spec.configs)\n  strimzi       a Strimzi KafkaConnector custom resource\n  terraform
+      \    a confluent_connector resource (config_nonsensitive +\n                config_sensitive)\n
+      \ properties    a connect-standalone .properties file\n\nThe default, --to heredoc,
+      is ready to paste in an example or a\nreproduction model. For heredoc and json,
+      the config is adapted to the\nplayground like 'playground connector create-or-update'
+      does\n(--no-adapt to keep it as is). Masked secrets, config providers\n(${file:...})
+      and terraform references are listed; in a heredoc they\nbecome variables to
+      export.\n\nThe converted config is printed on stdout, the findings on stderr:
+      the\noutput can be redirected to a file.\n\n\U0001F393 Tip: answer a customer
+      in their own format, --to cfk or --to\nterraform, or compare their config with
+      the running one with\n'playground connector diff --connector <c> --file <their
+      file>' (any\nof these formats).\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
+    usage: playground connector convert [FILE] [OPTIONS]
+    options:
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector to pick when the file holds several (a dump
+        of GET /connectors?expand=info, several custom resources or terraform resources)"
+    - names:
+      - "--to"
+      - "-t"
+      argument: FORMAT
+      description: "\U0001F3AF Output format (default: heredoc)\n\nDefault value:
+        heredoc\nAllowed values: heredoc, json, cfk, strimzi, terraform, properties"
+    - names:
+      - "--from"
+      argument: FORMAT
+      description: "\U0001F50D Input format (default: auto, detected from the content)\n\nDefault
+        value: auto\nAllowed values: auto, json, heredoc, cfk, strimzi, terraform,
+        properties"
+    - names:
+      - "--name"
+      - "-n"
+      argument: NAME
+      description: "\U0001F3F7️ Name of the connector in the output (default: the
+        name in the config)"
+    - names:
+      - "--no-adapt"
+      argument: ''
+      description: "\U0001F9F7 With --to heredoc or json, keep the config as it is
+        (no rewrite of the bootstrap servers, schema registry, license, replication
+        factors, client security)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the detected format, the name, the config and
+        the values to fill in as JSON"
   - name: error-recommendations
     description: "\U0001F4A1 Show error recommendations for fully managed connectors\n\nConfluent
       Cloud analyses the failure stack trace of a failed fully\nmanaged or custom
@@ -8143,9 +8210,21 @@ subcommands:
       to skip the wait.\n\nFully managed connectors are only waited for with --wait.\n\n\U0001F393
       Tip: add --validate to have the config checked by the plugin before\nit is deployed,
       which reports every invalid property at once.\n\nAn update shows the keys added,
-      removed and changed compared to the\nrunning config (secrets masked). The config
-      can also be given in the\nREST API format ({\"name\": ..., \"config\": {...}},
-      as returned by\nGET /connectors/<name>), or as the path of a json file.\n\n\U0001F36A
+      removed and changed compared to the\nrunning config (secrets masked).\n\nThe
+      config can also be given as the path of a file, and in the\nformats customers
+      send (detected, see 'playground connector\nconvert'): the REST API format ({\"name\":
+      ..., \"config\": {...}}), a\ndump of GET /connectors?expand=info, a CFK Connector
+      or Strimzi\nKafkaConnector custom resource, a terraform confluent_connector\nresource,
+      or a connect-standalone .properties file. When the file\nholds several connectors,
+      the one named --connector is used.\n\nA config that comes from elsewhere (a
+      file, or one of these formats)\nis adapted to the playground (--no-adapt to
+      keep it as is, --adapt\nto adapt a plain json heredoc too): bootstrap servers
+      and schema\nregistry urls whose hosts are not containers of the playground,\nthe
+      credentials of that schema registry, a license, replication\nfactors above the
+      number of brokers, and on plaintext the security of\nthe clients whose bootstrap
+      servers were rewritten. Masked secrets,\nconfig providers of the customer environment
+      (${file:...}),\nterraform references and the keys still pointing to external
+      systems\nare listed. The heredocs of the examples are never changed.\n\n\U0001F36A
       Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8F%97%EF%B8%8F-deploy-a-fully-managed-connector-with-terraform"
@@ -8161,6 +8240,18 @@ subcommands:
       - "-c"
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\nRequired: ✓ Yes"
+    - names:
+      - "--no-adapt"
+      argument: ''
+      description: "\U0001F9F7 Deploy a config that comes from elsewhere (a file,
+        another format) as it is: do not rewrite its bootstrap servers, schema registry,
+        license, replication factors and client security\n\nConflicts with: --adapt"
+    - names:
+      - "--adapt"
+      argument: ''
+      description: "\U0001F527 Adapt a plain json config too (a customer config pasted
+        in a heredoc): by default, only a file or another format is adapted, never
+        the heredocs of the examples\n\nConflicts with: --no-adapt"
     - names:
       - "--level"
       - "-l"

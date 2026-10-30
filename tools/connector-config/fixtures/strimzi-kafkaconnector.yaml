@@ -1,0 +1,19 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: debezium-postgres
+  labels:
+    strimzi.io/cluster: my-connect-cluster
+spec:
+  class: io.debezium.connector.postgresql.PostgresConnector
+  tasksMax: 1
+  state: running
+  config:
+    database.hostname: postgres.prod.example.com
+    database.port: 5432
+    database.user: debezium
+    database.password: "********"
+    database.dbname: inventory
+    topic.prefix: inventory
+    snapshot.mode: initial
+    include.schema.changes: false

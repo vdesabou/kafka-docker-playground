@@ -60,21 +60,20 @@ fi
 echo "$curl_output" > $tmp_dir/a.json
 label_a="$connector"
 
-# a file or stdin can be a plain config, or a 'playground connector create-or-update' heredoc as printed by show-config
+# a file or stdin: json, a 'playground connector create-or-update' heredoc as printed by show-config, or one of the
+# formats customers send (CFK / Strimzi custom resource, terraform, .properties, a dump of GET /connectors?expand=info:
+# the entry named like the running connector)
 function read_config () {
-    local content
-    content=$(cat)
-    if ! echo "$content" | jq -e 'type == "object"' > /dev/null 2>&1
+    if ! normalize_connector_config "$(cat)" "$connector"
     then
-        content=$(echo "$content" | sed -n '/<< *.\{0,1\}EOF/,/^EOF/p' | sed '1d;$d' | sed 's/\\\$/$/g')
-    fi
-    if ! echo "$content" | jq -e 'type == "object"' > /dev/null 2>&1
-    then
-        logerror "❌ $1 is not a JSON connector config"
+        logerror "❌ $1: $NORMALIZED_ERROR" >&2
         exit 1
     fi
-    # a full connector (REST API GET /connectors/<name>) has the config in .config
-    echo "$content" | jq 'if (.config | type) == "object" and has("name") then .config else . end'
+    if [ "$NORMALIZED_FORMAT" != "JSON" ]
+    then
+        log "📦 $1: $NORMALIZED_FORMAT" >&2
+    fi
+    echo "$NORMALIZED_CONFIG"
 }
 
 if [[ -n "$with_connector" ]]
@@ -114,7 +113,7 @@ then
     fi
     label_b="defaults"
 else
-    echo "$stdin_content" | read_config "stdin" > $tmp_dir/b.json
+    read_config "stdin" <<< "$stdin_content" > $tmp_dir/b.json
     label_b="stdin"
 fi
 

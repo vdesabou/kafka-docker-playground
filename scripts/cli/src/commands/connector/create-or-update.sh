@@ -1,5 +1,7 @@
 connector="${args[--connector]}"
 json=${args[json]}
+adapt=${args[--adapt]}
+no_adapt=${args[--no-adapt]}
 level=${args[--level]}
 package=${args[--package]}
 validate=${args[--validate]}
@@ -226,6 +228,27 @@ else
     json_content=$json
 fi
 
+# a config that comes from elsewhere: a file, or another format than a plain json config (the REST API format, a dump
+# of GET /connectors?expand=info, a CFK / Strimzi custom resource, terraform, a .properties file). It is adapted to the
+# playground, unlike the heredocs of the examples and reproduction models (unless --adapt)
+foreign_config=""
+if [ "$json" != "-" ] && [ -f "${json#@}" ]
+then
+    foreign_config="file"
+fi
+first_char=$(printf '%s' "$json_content" | tr -d '[:space:]' | cut -c1)
+if [ "$first_char" != "{" ] || echo "$json_content" | jq -e '(has("config") and (.config | type == "object")) or (length > 0 and all(.[]; type == "object" and (.info.config | type) == "object"))' > /dev/null 2>&1
+then
+    if ! normalize_connector_config "$json_content" "$connector"
+    then
+        logerror "❌ $NORMALIZED_ERROR"
+        exit 1
+    fi
+    log "📦 detected: $NORMALIZED_FORMAT"
+    json_content="$NORMALIZED_CONFIG"
+    foreign_config="format"
+fi
+
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
 then
@@ -270,18 +293,25 @@ then
     fi
 fi
 
-# the REST API format, as returned by GET /connectors/<name> or found in a support case: {"name": ..., "config": {...}}
-# (connector config values are strings: an object under "config" can only be that format)
-if echo "$json_content" | jq -e 'has("config") and (.config | type == "object")' > /dev/null 2>&1
-then
-    log "📦 the config is in the REST API format ({\"name\": ..., \"config\": {...}}): using its \"config\""
-    json_content=$(echo "$json_content" | jq '.config')
-fi
 config_name=$(echo "$json_content" | jq -r 'if (.name | type) == "string" then .name else empty end')
 if [ -n "$config_name" ] && [ "$config_name" != "$connector" ]
 then
     logwarn "⚠️ the config has \"name\": \"$config_name\", it is replaced by the connector name $connector"
     json_content=$(echo "$json_content" | jq --arg name "$connector" '.name = $name')
+fi
+if [[ -z "$no_adapt" ]] && { [ -n "$foreign_config" ] || [ -n "$adapt" ]; }
+then
+    connector_config_adapt "$json_content" report
+    json_content="$ADAPTED_CONFIG"
+fi
+if [ -n "$foreign_config" ] || [ -n "$adapt" ]
+then
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+        connector_config_findings "$json_content" fully_managed
+    else
+        connector_config_findings "$json_content"
+    fi
 fi
 printf '%s\n' "$json_content" > $json_file
 

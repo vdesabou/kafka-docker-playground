@@ -122,7 +122,7 @@ log "Step 6: the REST API format, and --dry-run"
 lab_run playground connector create-or-update -c filestream-sink --dry-run "$customer_config"
 lab_expect_exit 0
 lab_expect_contains "📄 reading the connector config from $customer_config"
-lab_expect_contains '📦 the config is in the REST API format ({"name": ..., "config": {...}}): using its "config"'
+lab_expect_contains '📦 detected: REST API format ({"name": ..., "config": {...}})'
 lab_expect_contains "- key.converter"
 lab_expect_contains "~ tasks.max: 1 → 4"
 lab_expect_contains "🌵 --dry-run: connector filestream-sink would be updated with this config"
@@ -156,5 +156,67 @@ do
 done
 lab_expect_contains "0:🟢 RUNNING,1:🟢 RUNNING,2:🟢 RUNNING,3:🟢 RUNNING"
 rm -f "$customer_config"
+
+log "Step 8: the formats customers send (CFK, terraform, .properties, REST dumps)"
+fixtures="${DIR}/../../tools/connector-config/fixtures"
+lab_run playground connector create-or-update -c filestream-cfk "$fixtures/cfk-filestream-sink.yaml"
+lab_expect_exit 0
+lab_expect_contains "📦 detected: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs)"
+lab_expect_contains "🔧 adapted to the playground (--no-adapt to keep the config as is):"
+lab_expect_contains "- confluent.license"
+lab_expect_contains "- value.converter.basic.auth.user.info"
+lab_expect_contains "errors.deadletterqueue.topic.replication.factor: 3 → 1"
+lab_expect_contains "value.converter.schema.registry.url: https://sr.prod.example.com:8081 → http://schema-registry:8081"
+lab_expect_contains "connector filestream-cfk is RUNNING (1 task(s)) after"
+
+lab_run playground connector diff -c filestream-cfk --file "$fixtures/cfk-filestream-sink.yaml" --no-open
+lab_expect_exit 0
+lab_expect_contains "cfk-filestream-sink.yaml: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs)"
+lab_expect_contains "➕ https://sr.prod.example.com:8081"
+lab_expect_contains "➕ value.converter.basic.auth.user.info = sr-user:sr-password   (only in cfk-filestream-sink.yaml)"
+lab_expect_contains "📊 5 key(s) differ, 9 identical"
+playground connector delete -c filestream-cfk
+
+lab_run playground connector convert "$fixtures/cfk-connectors.yaml"
+lab_expect_exit 1
+lab_expect_contains "❌ 2 connectors in the config (jdbc-sink s3-sink), pick one with --connector"
+lab_run playground connector convert "$fixtures/cfk-connectors.yaml" --connector jdbc-sink
+lab_expect_exit 0
+lab_expect_contains "confluent.topic.bootstrap.servers: kafka.prod.example.com:9092 → broker:9092"
+lab_expect_contains "- confluent.topic.security.protocol"
+lab_expect_contains "connection.url=jdbc:postgresql://db.prod.example.com:5432/orders"
+lab_expect_contains "connection.password: config provider of the customer environment (\${file:/mnt/secrets/jdbc-credentials/creds.properties:password})"
+lab_expect_contains "#   export CONNECTION_PASSWORD=..."
+lab_expect_contains '"connection.password": "${CONNECTION_PASSWORD}",'
+lab_expect_contains '"transforms.route.replacement": "prod_\$1",'
+lab_expect_contains "playground connector create-or-update --connector jdbc-sink << EOF"
+
+lab_run playground connector convert "$fixtures/terraform-confluent-connector.tf"
+lab_expect_exit 0
+lab_expect_contains '📦 detected: terraform confluent_connector resource "sink" (config_nonsensitive + config_sensitive)'
+lab_expect_contains "☁️ connector.class S3_SINK is a fully managed connector"
+lab_expect_contains "⚠️ 4 value(s) to fill in, they cannot work as they are:"
+lab_expect_contains "aws.secret.access.key: terraform reference (var.aws_secret)"
+lab_expect_contains '"topics": "${TOPICS}",'
+lab_expect_contains '"flush.size": "1000",'
+
+lab_run playground connector convert "$fixtures/connect-standalone.properties" --to cfk
+lab_expect_exit 0
+lab_expect_contains "📦 detected: connect-standalone .properties file"
+lab_expect_contains "taskMax: 2"
+lab_expect_contains "transforms.route.type: org.apache.kafka.connect.transforms.RegexRouter"
+lab_expect_contains 'transforms.route.regex: (.*)\.public\.(.*)'
+lab_expect_contains "s3.bucket.name: my-bucket"
+lab_expect_contains "key.converter.basic.auth.user.info: user:pass"
+
+lab_run bash -c "playground connector validate < '$fixtures/filestream-sink.properties'"
+lab_expect_exit 1
+lab_expect_contains "📦 detected: connect-standalone .properties file"
+lab_expect_contains "tasks.max ->> Invalid value abc for configuration tasks.max: Not a number of type INT"
+
+lab_run playground connector create-or-update -c filestream-source --dry-run "$fixtures/rest-expand-info.json"
+lab_expect_exit 0
+lab_expect_contains "📦 detected: dump of GET /connectors?expand=info"
+lab_expect_contains "connector filestream-source would be created with this config"
 
 log "✅ all the outputs of the page are as expected"

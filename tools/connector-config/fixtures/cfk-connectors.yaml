@@ -1,0 +1,45 @@
+# two CFK Connector custom resources in one file
+apiVersion: platform.confluent.io/v1beta1
+kind: Connector
+metadata:
+  name: jdbc-sink
+  namespace: confluent
+spec:
+  class: "io.confluent.connect.jdbc.JdbcSinkConnector"
+  taskMax: 4
+  connectClusterRef:
+    name: connect
+  restartPolicy:
+    type: OnFailure
+    maxRetry: 10
+  configs:
+    topics: "orders"
+    connection.url: "jdbc:postgresql://db.prod.example.com:5432/orders"
+    connection.user: "app"
+    connection.password: "${file:/mnt/secrets/jdbc-credentials/creds.properties:password}"
+    auto.create: "true"
+    transforms: "route"
+    transforms.route.type: "org.apache.kafka.connect.transforms.RegexRouter"
+    transforms.route.regex: "(.*)"
+    transforms.route.replacement: "prod_$1"
+    value.converter: "io.confluent.connect.avro.AvroConverter"
+    value.converter.schema.registry.url: "https://schemaregistry.prod.example.com:8081"
+    value.converter.basic.auth.credentials.source: "USER_INFO"
+    value.converter.basic.auth.user.info: "sr-user:sr-password"
+    confluent.topic.bootstrap.servers: "kafka.prod.example.com:9092"
+    confluent.topic.replication.factor: "3"
+    confluent.topic.security.protocol: "SASL_SSL"
+    errors.deadletterqueue.topic.replication.factor: 3
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Connector
+metadata:
+  name: s3-sink
+  namespace: confluent
+spec:
+  class: "io.confluent.connect.s3.S3SinkConnector"
+  taskMax: 1
+  configs:
+    topics: "orders"
+    s3.bucket.name: "orders-archive"
+    flush.size: 1000

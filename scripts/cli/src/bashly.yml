@@ -10796,9 +10796,12 @@ commands:
       changed, so it is the dry run of 'create-or-update' for a customer
       config. Exits with 1 if the config is invalid.
 
-      The config is read from stdin. Without stdin, --connector validates
-      the config of that running connector, for example after switching
-      to another connector version.
+      The config is read from stdin: json, or a format customers send (CFK /
+      Strimzi custom resource, terraform, .properties, a dump of GET
+      /connectors?expand=info with --connector to pick one, see 'playground
+      connector convert'). Without stdin, --connector validates the config
+      of that running connector, for example after switching to another
+      connector version.
 
       The same automatic config as 'create-or-update' is added for the
       environment of the example (security settings on sasl-ssl...),
@@ -10855,8 +10858,11 @@ commands:
 
       Compares the config of a running connector, key by key, with:
 
-        stdin              a config (plain json, or the heredoc printed by
-                           'show-config')
+        stdin              a config (plain json, the heredoc printed by
+                           'show-config', or a format customers send: CFK /
+                           Strimzi custom resource, terraform, .properties,
+                           a dump of GET /connectors?expand=info, see
+                           'playground connector convert')
         --file             the same, from a file, e.g. the config of a
                            customer
         --with-connector   another running connector
@@ -10885,7 +10891,7 @@ commands:
         dynamic:
         - playground get-specific-file-extension "$completion_current" --extension "json"
       help: |-
-        📄 File with the config to compare with (json, or a create-or-update heredoc)
+        📄 File with the config to compare with (json, a create-or-update heredoc, a CFK / Strimzi custom resource, terraform, .properties, a dump of GET /connectors?expand=info)
     - long: --with-connector
       required: false
       arg: with_connector
@@ -10936,6 +10942,88 @@ commands:
         17:22:05 ℹ️ 📊 2 key(s) differ, 6 identical
         17:22:05 ℹ️ ✅ HTML report saved: /tmp/playground-connector-diff/diff-filestream-sink-customer-config.json-20261013-172205.html
         17:22:05 ℹ️ 🔗 Open in browser: file:///tmp/playground-connector-diff/diff-filestream-sink-customer-config.json-20261013-172205.html
+
+  - name: convert
+    help: |-
+      🔄 Convert a connector config from the format a customer sent to another one
+
+      Reads the config in any of these formats (detected, --from to force
+      one), and writes it in the format of --to:
+
+        json          a plain config, the REST API format {"name": ...,
+                      "config": {...}}, a dump of GET /connectors?expand=info
+        heredoc       a 'playground connector create-or-update' heredoc, as
+                      printed by show-config
+        cfk           a CFK Connector custom resource (spec.class,
+                      spec.taskMax, spec.configs)
+        strimzi       a Strimzi KafkaConnector custom resource
+        terraform     a confluent_connector resource (config_nonsensitive +
+                      config_sensitive)
+        properties    a connect-standalone .properties file
+
+      The default, --to heredoc, is ready to paste in an example or a
+      reproduction model. For heredoc and json, the config is adapted to the
+      playground like 'playground connector create-or-update' does
+      (--no-adapt to keep it as is). Masked secrets, config providers
+      (${file:...}) and terraform references are listed; in a heredoc they
+      become variables to export.
+
+      The converted config is printed on stdout, the findings on stderr: the
+      output can be redirected to a file.
+
+      🎓 Tip: answer a customer in their own format, --to cfk or --to
+      terraform, or compare their config with the running one with
+      'playground connector diff --connector <c> --file <their file>' (any
+      of these formats).
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
+    args:
+    - name: file
+      required: false
+      default: "-"
+      help: path of the file with the config (@file works too); reads from stdin if empty
+    flags:
+    - *verbose
+    - long: --connector
+      short: -c
+      required: false
+      arg: connector
+      help: |-
+        🔗 Connector to pick when the file holds several (a dump of GET /connectors?expand=info, several custom resources or terraform resources)
+    - long: --to
+      short: -t
+      required: false
+      arg: format
+      default: "heredoc"
+      allowed: [heredoc, json, cfk, strimzi, terraform, properties]
+      help: |-
+        🎯 Output format (default: heredoc)
+    - long: --from
+      required: false
+      arg: format
+      default: "auto"
+      allowed: [auto, json, heredoc, cfk, strimzi, terraform, properties]
+      help: |-
+        🔍 Input format (default: auto, detected from the content)
+    - long: --name
+      short: -n
+      required: false
+      arg: name
+      help: |-
+        🏷️ Name of the connector in the output (default: the name in the config)
+    - long: --no-adapt
+      required: false
+      help: |-
+        🧷 With --to heredoc or json, keep the config as it is (no rewrite of the bootstrap servers, schema registry, license, replication factors, client security)
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the detected format, the name, the config and the values to fill in as JSON
+    examples:
+    - playground connector convert customer-connector.yaml
+    - playground connector convert connectors.json --connector s3-sink --to json
+    - playground connector convert connector.properties --to cfk
+    - playground connector convert main.tf --to heredoc --no-adapt
 
   - name: error-recommendations
     filters:
@@ -12502,9 +12590,26 @@ commands:
       it is deployed, which reports every invalid property at once.
 
       An update shows the keys added, removed and changed compared to the
-      running config (secrets masked). The config can also be given in the
-      REST API format ({"name": ..., "config": {...}}, as returned by
-      GET /connectors/<name>), or as the path of a json file.
+      running config (secrets masked).
+
+      The config can also be given as the path of a file, and in the
+      formats customers send (detected, see 'playground connector
+      convert'): the REST API format ({"name": ..., "config": {...}}), a
+      dump of GET /connectors?expand=info, a CFK Connector or Strimzi
+      KafkaConnector custom resource, a terraform confluent_connector
+      resource, or a connect-standalone .properties file. When the file
+      holds several connectors, the one named --connector is used.
+
+      A config that comes from elsewhere (a file, or one of these formats)
+      is adapted to the playground (--no-adapt to keep it as is, --adapt
+      to adapt a plain json heredoc too): bootstrap servers and schema
+      registry urls whose hosts are not containers of the playground,
+      the credentials of that schema registry, a license, replication
+      factors above the number of brokers, and on plaintext the security of
+      the clients whose bootstrap servers were rewritten. Masked secrets,
+      config providers of the customer environment (${file:...}),
+      terraform references and the keys still pointing to external systems
+      are listed. The heredocs of the examples are never changed.
 
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed
@@ -12523,7 +12628,7 @@ commands:
       
       # Set the default path value to -, which is the standard operator for stdin.
       default: "-"
-      help: json, or the path of a json file (@file.json works too); reads from stdin if empty
+      help: json (or another supported format), or the path of a file (@file works too); reads from stdin if empty
 
     flags:
     - *verbose
@@ -12537,6 +12642,16 @@ commands:
         - playground get-connector-list
       help: |-
         🔗 Connector name
+    - long: --no-adapt
+      required: false
+      conflicts: [--adapt]
+      help: |-
+        🧷 Deploy a config that comes from elsewhere (a file, another format) as it is: do not rewrite its bootstrap servers, schema registry, license, replication factors and client security
+    - long: --adapt
+      required: false
+      conflicts: [--no-adapt]
+      help: |-
+        🔧 Adapt a plain json config too (a customer config pasted in a heredoc): by default, only a file or another format is adapted, never the heredocs of the examples
     - long: --level
       short: -l
       arg: level

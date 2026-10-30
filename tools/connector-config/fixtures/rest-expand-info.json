@@ -1,0 +1,18 @@
+{
+  "filestream-source": {
+    "info": {
+      "name": "filestream-source",
+      "config": {"connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector", "tasks.max": "1", "file": "/tmp/input.txt", "topic": "lines", "name": "filestream-source"},
+      "tasks": [{"connector": "filestream-source", "task": 0}],
+      "type": "source"
+    }
+  },
+  "http-sink": {
+    "info": {
+      "name": "http-sink",
+      "config": {"connector.class": "io.confluent.connect.http.HttpSinkConnector", "tasks.max": "2", "topics": "events", "http.api.url": "https://api.example.com/events", "confluent.license": "", "name": "http-sink"},
+      "tasks": [{"connector": "http-sink", "task": 0}, {"connector": "http-sink", "task": 1}],
+      "type": "sink"
+    }
+  }
+}
