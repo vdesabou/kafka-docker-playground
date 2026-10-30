@@ -1,6 +1,8 @@
 key="${args[--key]}"
 connector_class_filter="${args[--connector-class]}"
 max_examples="${args[--max-examples]}"
+since_version="${args[--since-version]}"
+since_plugin="${args[--connector-plugin]}"
 
 # prints the entry of $1 (a config-<class>.txt reference) for key $2: group, documentation, type, default...
 function config_key_entry () {
@@ -18,6 +20,77 @@ function config_key_class () {
     local name
     name=$(basename "$1" .txt)
     echo "${name#config-}"
+}
+
+# --since-version: the first version of the plugin of class $1 (reference file $2) having the key, by binary search over
+# the versions of Confluent Hub; each probed version is downloaded and its configuration read (get_connector_plugin_configs)
+function config_key_since_version () {
+    local class="$1" file="$2" plugin="$since_plugin" lo hi mid
+    if [[ "$class" != *.* ]]
+    then
+        echo "   📅 --since-version: $class is a fully managed connector, it has no versions on Confluent Hub"
+        return
+    fi
+    if [[ -z "$plugin" ]]
+    then
+        # the plugin mounted by the examples that recorded this class (the ones using a single plugin)
+        plugin=$(for f in $(git ls-files -- "*/config-$class.txt")
+        do
+            plugins=$(grep -ohE "confluent-hub-components/[A-Za-z0-9_.-]+" "$(dirname "$f")"/docker-compose*.yml 2>/dev/null | sort -u)
+            [ "$(echo "$plugins" | grep -c .)" == "1" ] && echo "$plugins"
+        done | sort | uniq -c | sort -rn | head -1 | awk '{print $2}' | sed 's#confluent-hub-components/##; s#-#/#')
+    fi
+    if [[ -z "$plugin" ]]
+    then
+        echo "   📅 --since-version: could not find the plugin of $class in the examples, set --connector-plugin <owner/name>"
+        return
+    fi
+    local versions=()
+    while IFS= read -r v
+    do
+        versions+=("$v")
+    done < <(playground connector-plugin versions --connector-plugin "$plugin" --json 2>/dev/null | jq -r '.versions[].version' | grep -viE "preview|alpha|beta|rc|snapshot" | sort -V)
+    if [ ${#versions[@]} -eq 0 ]
+    then
+        echo "   📅 --since-version: no version of $plugin on Confluent Hub"
+        return
+    fi
+    # true when version $1 of the plugin has the key
+    function config_key_has_key () {
+        get_connector_plugin_configs "$plugin" "$1" "$class" > /dev/null 2>&1 || return 2
+        if jq -e --arg k "$key" 'any(.configs[].definition; .name == $k)' "$plugin_configs_dir/config-$class.json" > /dev/null
+        then
+            log "   🔍 $plugin $1: ✅ $key" >&2
+            return 0
+        fi
+        log "   🔍 $plugin $1: ❌ no $key" >&2
+        return 1
+    }
+    log "📅 Looking for the first version of $plugin having $key, among ${#versions[@]} version(s) (binary search, each version downloaded once)"
+    lo=0
+    hi=$((${#versions[@]} - 1))
+    if ! config_key_has_key "${versions[$hi]}"
+    then
+        echo "   📅 $key is not in the latest version of $plugin (${versions[$hi]}): removed, or not a key of this plugin"
+        return
+    fi
+    if config_key_has_key "${versions[0]}"
+    then
+        echo "   📅 $key is already in the oldest version of $plugin on Confluent Hub (${versions[0]})"
+        return
+    fi
+    while [ $((hi - lo)) -gt 1 ]
+    do
+        mid=$(( (lo + hi) / 2 ))
+        if config_key_has_key "${versions[$mid]}"
+        then
+            hi=$mid
+        else
+            lo=$mid
+        fi
+    done
+    echo "   📅 $key was added in $plugin ${versions[$hi]} (absent in ${versions[$lo]})"
+    echo "      🎓 versions of several minor lines are interleaved: the first version in version order, check the line of the customer"
 }
 
 cd "$root_folder" > /dev/null
@@ -195,6 +268,10 @@ do
         then
             echo "   🗂️  versions run locally (default):$versions"
         fi
+    fi
+    if [[ -n "$since_version" ]]
+    then
+        config_key_since_version "$class" "$file"
     fi
     echo ""
     shown=$((shown+1))

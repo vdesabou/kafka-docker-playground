@@ -302,6 +302,7 @@ playground_usage() {
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "connector-plugin info")                     "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "connector-plugin changelog")                "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin display-last-updated")     "
+  printf "  %s   🔧 Configuration keys added, removed or changed between two versions of a plugin\n" "$(green "connector-plugin config-diff")              "
   printf "  %s   🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it\n" "$(green "connector-plugin config-key")               "
   printf "  %s   🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n" "$(green "connector-plugin sourcecode")               "
   echo
@@ -14857,7 +14858,7 @@ playground_rbac_acl_list_usage() {
 playground_connector_plugin_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin\n\n"
-    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    config-key            what a config key does, its default, since when, who\n  sets it\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
+    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    config-key            what a config key does, its default, since when, who\n  sets it\n    config-diff           config keys added, removed or changed between two\n  versions\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
   else
     printf "playground connector-plugin - 🔌 Connector-plugin commands\n\n"
   fi
@@ -14874,6 +14875,7 @@ playground_connector_plugin_usage() {
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "info")                "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "changelog")           "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "display-last-updated")"
+  printf "  %s   🔧 Configuration keys added, removed or changed between two versions of a plugin\n" "$(green "config-diff")         "
   printf "  %s   🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it\n" "$(green "config-key")          "
   printf "  %s   🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n" "$(green "sourcecode")          "
   echo
@@ -15289,6 +15291,74 @@ playground_connector_plugin_display_last_updated_usage() {
 }
 
 # :command.usage
+playground_connector_plugin_config_diff_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector-plugin config-diff\n\n"
+    printf "  🔧 Configuration keys added, removed or changed between two versions of a\n  plugin\n  \n  \"What changes in the configuration when the customer upgrades from 10.7.4\n  to the latest?\": keys added ➕, removed ➖, default changed ✏️, type,\n  importance, valid values or required changed 🔀 (📝 documentation with\n  --with-docs), for every connector class of the plugin.\n  \n  With --file (the customer's connector config: JSON, CFK, Strimzi,\n  terraform, properties), only the keys it sets are compared, and a key it\n  sets that the new version doesn't know is flagged ❗.\n  \n  No environment needed: each version is downloaded (same cache as\n  search-jar), and its configuration read by loading the connector class\n  with the java of the connect image (a small reader compiled once in a JDK\n  container). The result is also kept in .connector_config, like\n  playground connector show-config-parameters: connector-plugin config-key\n  then lists those versions under \"versions run locally\".\n\n"
+  else
+    printf "playground connector-plugin config-diff - 🔧 Configuration keys added, removed or changed between two versions of a plugin\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector-plugin config-diff [OPTIONS]\n"
+  printf "  playground connector-plugin config-diff --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
+    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from FROM (required)")"
+    printf "    🔢 Version in use (the customer's)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to TO")"
+    printf "    🔢 Version to compare with, default is the latest on Confluent Hub\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-class CONNECTOR-CLASS")"
+    printf "    🔌 Only this connector class (default: every connector of the plugin, or the\n    connector.class of --file)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file FILE")"
+    printf "    📄 Connector configuration of the customer: only the keys it sets are\n    compared\n    \n    JSON ({\"name\":…, \"config\":{…}} or the bare config), or a CFK / Strimzi /\n    terraform / properties file.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--with-docs")"
+    printf "    📝 Also report the keys whose documentation changed\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector-plugin config-diff --connector-plugin\n  confluentinc/kafka-connect-jdbc --from 10.7.4\n  playground connector-plugin config-diff --connector-plugin\n  confluentinc/kafka-connect-jdbc --from 10.7.4 --to 10.9.9 --connector-class\n  io.confluent.connect.jdbc.JdbcSinkConnector\n  playground connector-plugin config-diff --connector-plugin\n  confluentinc/kafka-connect-s3 --from 10.5.0 --file\n  /path/to/customer-connector.json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_connector_plugin_config_key_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin config-key\n\n"
@@ -15324,6 +15394,17 @@ playground_connector_plugin_config_key_usage() {
     printf "    %s\n" "Default: 10"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--since-version")"
+    printf "    📅 Find the first version of the plugin having the key (self-managed\n    connectors)\n    \n    A binary search over the versions of Confluent Hub: each probed version is\n    downloaded and its configuration\n    read without a worker, like playground connector-plugin config-diff (about 5\n    s per version, 6 or 7 versions).\n    Needs one connector (--connector-class). The plugin is found from the\n    examples, or set with --connector-plugin.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin CONNECTOR-PLUGIN")"
+    printf "    🔌 Plugin of the connector for --since-version (owner/name), when the\n    examples don't tell it\n"
+    printf "    %s\n" "Needs: --since-version"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15335,6 +15416,7 @@ playground_connector_plugin_config_key_usage() {
     printf "  playground connector-plugin config-key --key behavior.on.null.values\n  --connector-class S3SinkConnector\n"
     printf "  playground connector-plugin config-key -k s3.part.size -c S3_SINK\n"
     printf "  playground connector-plugin config-key -k errors.tolerance -c jdbc\n  --max-examples 3\n"
+    printf "  playground connector-plugin config-key -k batch.max.rows -c\n  io.confluent.connect.jdbc.JdbcSourceConnector --since-version\n"
     echo
 
     # :command.footer
@@ -27942,6 +28024,116 @@ function connector_plugin_cache_complete () {
   do
     [ -f "$lib_dir/$jar" ] || return 1
   done < "$plugin_dir/.jars"
+}
+
+# writes the configuration reference of a connector (the config-<class>.txt format read by connector-plugin config-key,
+# and the "key": "default" json used by connector diff --defaults) from the answer of config/validate in file $1
+# write_connector_config_reference <validate json file> <txt file> <json file>
+function write_connector_config_reference () {
+  local validate_file="$1" filename="$2" json_filename="$3"
+  # one jq for all the parameters: splitting the fields with bash dropped the empty ones (an empty default
+  # value shifted the type, importance... of the parameter by one)
+  local excluded_groups='["Common","Transforms","Error Handling","Topic Creation","offsets.topic","Predicates","Confluent Licensing"]'
+  jq -r --argjson excluded "$excluded_groups" '
+      [.configs[].definition | select(.group as $g | $excluded | index($g) | not)]
+      | reduce .[] as $d ({out: "", group: []};
+          (if $d.group != .group then .out += "==========================\n\($d.group)\n==========================\n" | .group = $d.group else . end)
+          | .out += "🔘 \($d.name)\n\n\($d.documentation)\n\n\t - Type: \($d.type)\n\t - Default: \($d.default_value)\n\t - Importance: \($d.importance)\n\t - Required: \($d.required)\n\n")
+      | .out' "$validate_file" > "$filename"
+  # fix unwanted commits like this one #7231
+  jq -r --argjson excluded "$excluded_groups" '
+      .configs[].definition | select(.group as $g | $excluded | index($g) | not)
+      | "    \"\(.name)\": \"\(if .default_value == null then "" else .default_value end)\","' "$validate_file" | sort \
+    | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > "$json_filename"
+  if [ ! -s "$filename" ]
+  then
+    rm -f "$filename" "$json_filename"
+  fi
+}
+
+# configuration of the connectors of a plugin version, without a worker: tools/connector-plugin-jars/ConfigDump.java
+# (compiled once in a JDK container) loads the plugin jars with the java of the connect image and prints its ConfigDef
+# as the answer of config/validate. Also cached in .connector_config like playground connector show-config-parameters.
+# get_connector_plugin_configs <owner/name> <version> [<connector class>]
+# sets plugin_configs_dir (one config-<class>.json per connector class) and plugin_config_classes; returns 1 on failure
+function get_connector_plugin_configs () {
+  local connector_plugin="$1" version="$2" wanted_class="$3"
+  local src="$root_folder/tools/connector-plugin-jars/ConfigDump.java"
+  local dump_dir cp_script class out
+
+  get_connector_plugin_lib_dir "$connector_plugin" "$version" "" "" || return 1
+  # compiled once per version of the source (Docker Desktop shares /tmp), and the results kept per version of it
+  dump_dir="/tmp/connector-plugin-jars/configdump-$(shasum "$src" | cut -c1-12)"
+  plugin_configs_dir="$(dirname "$plugin_lib_dir")/.configs-$(basename "$dump_dir")"
+  mkdir -p "$plugin_configs_dir"
+
+  if [ ! -f "$dump_dir/ConfigDump.class" ]
+  then
+    log "☕ Compiling the configuration reader (once)" >&2
+    mkdir -p "$dump_dir"
+    cp "$src" "$dump_dir/"
+    if ! docker run --rm -v "$dump_dir:/src" -w /src ${PG_JAVAP_IMAGE:-eclipse-temurin:21-jdk} javac --release 8 -Xlint:-options ConfigDump.java > "$dump_dir/javac.log" 2>&1
+    then
+      logerror "❌ could not compile $src:"
+      cat "$dump_dir/javac.log" >&2
+      rm -f "$dump_dir/ConfigDump.class"
+      return 1
+    fi
+  fi
+
+  get_connect_image
+  # the Kafka API jars only (the plugin brings the rest, like in a worker); all the jars of the worker when that fails
+  cp_script='cp=/dump; for j in /usr/share/java/kafka/connect_api*.jar /usr/share/java/kafka/connect-api*.jar /usr/share/java/kafka/clients_*.jar /usr/share/java/kafka/kafka-clients*.jar /usr/share/java/kafka/slf4j-api*.jar; do [ -f "$j" ] && cp="$cp:$j"; done; java -cp "$cp" ConfigDump "$@" 2>/dev/null || java -cp "/dump:/usr/share/java/kafka/*" ConfigDump "$@"'
+
+  if [[ -n "$wanted_class" ]]
+  then
+    plugin_config_classes="$wanted_class"
+  elif [ -s "$plugin_configs_dir/classes" ]
+  then
+    plugin_config_classes=$(cat "$plugin_configs_dir/classes")
+  else
+    plugin_config_classes=$(docker run --rm -v "$dump_dir:/dump:ro" -v "$plugin_lib_dir:/plugin:ro" --entrypoint bash ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} -c "$cp_script" _ /plugin --discover 2>/dev/null)
+    if [[ -z "$plugin_config_classes" ]]
+    then
+      logerror "❌ no connector class found in $plugin_label: set --connector-class"
+      return 1
+    fi
+    echo "$plugin_config_classes" > "$plugin_configs_dir/classes"
+  fi
+
+  for class in $plugin_config_classes
+  do
+    out="$plugin_configs_dir/config-$class.json"
+    if [ ! -s "$out" ]
+    then
+      log "🔩 Reading the configuration of $class $version" >&2
+      if ! docker run --rm -v "$dump_dir:/dump:ro" -v "$plugin_lib_dir:/plugin:ro" --entrypoint bash ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} -c "$cp_script" _ /plugin "$class" > "$out.tmp" 2> "$out.err" || ! jq -e '.configs' "$out.tmp" > /dev/null 2>&1
+      then
+        logerror "❌ could not read the configuration of $class in $plugin_label:"
+        grep -m3 -E "Exception|Error" "$out.err" >&2
+        rm -f "$out.tmp"
+        return 1
+      fi
+      mv "$out.tmp" "$out"
+      rm -f "$out.err"
+    fi
+    # same cache as playground connector show-config-parameters: config-key lists it in "versions run locally"
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      mkdir -p "$root_folder/.connector_config"
+      if [ "$(cat "$root_folder/.connector_config/.format" 2>/dev/null)" != "2" ]
+      then
+        rm -f "$root_folder"/.connector_config/config-*
+        echo "2" > "$root_folder/.connector_config/.format"
+      fi
+      if [ ! -f "$root_folder/.connector_config/config-$class-$version.txt" ]
+      then
+        write_connector_config_reference "$out" "$root_folder/.connector_config/config-$class-$version.txt" "$root_folder/.connector_config/config-$class-$version.json"
+        # dated in the past: connector diff takes the newest file as the reference of the running version
+        touch -t 200001010000 "$root_folder/.connector_config/config-$class-$version.txt" "$root_folder/.connector_config/config-$class-$version.json" 2>/dev/null || true
+      fi
+    fi
+  done
 }
 
 # src/lib/colors.sh
@@ -64943,12 +65135,161 @@ playground_connector_plugin_display_last_updated_command() {
 }
 
 # :command.function
+playground_connector_plugin_config_diff_command() {
+
+  # src/commands/connector-plugin/config-diff.sh
+  connector_plugin="${args[--connector-plugin]}"
+  from="${args[--from]}"
+  to="${args[--to]}"
+  connector_class="${args[--connector-class]}"
+  file="${args[--file]}"
+  with_docs="${args[--with-docs]}"
+  json="${args[--json]}"
+
+  if [[ $connector_plugin == *"@"* ]]
+  then
+    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+  if [[ $file == *"@"* ]]
+  then
+    file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required"
+      exit 1
+  fi
+
+  if [[ -z "$to" ]] || [ "$to" == "latest" ]
+  then
+      to=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
+      if [[ -z "$to" ]]
+      then
+          logerror "❌ could not find the latest version of $connector_plugin on Confluent Hub: set --to"
+          exit 1
+      fi
+  fi
+  if [ "$from" == "$to" ]
+  then
+      logerror "❌ --from and --to are the same version ($from)"
+      exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  # with --file, the connector class of the customer config, when --connector-class is not set
+  config_file=""
+  if [[ -n "$file" ]]
+  then
+      if ! jq -e 'type == "object"' "$file" > /dev/null 2>&1
+      then
+          # CFK / Strimzi / terraform / properties: the formats connector validate and diff accept
+          if ! playground connector convert "$file" --to json > $tmp_dir/config.json 2> /dev/null || ! jq -e 'type == "object"' $tmp_dir/config.json > /dev/null 2>&1
+          then
+              logerror "❌ --file $file is not a connector configuration this command can read (JSON, or a format of playground connector convert)"
+              exit 1
+          fi
+          config_file=$tmp_dir/config.json
+      else
+          config_file="$file"
+      fi
+      if [[ -z "$connector_class" ]]
+      then
+          connector_class=$(jq -r '(.config // .)["connector.class"] // empty' "$config_file")
+      fi
+  fi
+
+  for version in "$from" "$to"
+  do
+      if ! get_connector_plugin_configs "$connector_plugin" "$version" "$connector_class"
+      then
+          exit 1
+      fi
+      echo "$plugin_config_classes" > "$tmp_dir/classes-$version"
+      echo "$plugin_configs_dir" > "$tmp_dir/dir-$version"
+  done
+
+  old_dir=$(cat "$tmp_dir/dir-$from")
+  new_dir=$(cat "$tmp_dir/dir-$to")
+  classes=$(sort -u "$tmp_dir/classes-$from" "$tmp_dir/classes-$to")
+
+  echo "[]" > $tmp_dir/result.json
+  for class in $classes
+  do
+      old_file="$old_dir/config-$class.json"
+      new_file="$new_dir/config-$class.json"
+      if [ ! -s "$old_file" ] || [ ! -s "$new_file" ]
+      then
+          jq --arg c "$class" --arg in "$( [ -s "$old_file" ] && echo "$from" || echo "$to")" '. + [{connector_class: $c, only_in: $in}]' $tmp_dir/result.json > $tmp_dir/r.tmp && mv $tmp_dir/r.tmp $tmp_dir/result.json
+          continue
+      fi
+      diff_args=(--old "$old_file" --new "$new_file")
+      [[ -n "$config_file" ]] && diff_args+=(--config "$config_file")
+      [[ -n "$with_docs" ]] && diff_args+=(--with-docs)
+      if ! python3 -I "$root_folder/tools/connector-plugin-jars/config_diff.py" "${diff_args[@]}" > $tmp_dir/one.json 2> $tmp_dir/stderr
+      then
+          logerror "$(cat $tmp_dir/stderr)"
+          exit 1
+      fi
+      jq --arg c "$class" --slurpfile one $tmp_dir/one.json '. + [{connector_class: $c} + $one[0]]' $tmp_dir/result.json > $tmp_dir/r.tmp && mv $tmp_dir/r.tmp $tmp_dir/result.json
+  done
+
+  if [[ -n "$json" ]]
+  then
+      jq --arg p "$connector_plugin" --arg from "$from" --arg to "$to" '{connector_plugin: $p, from: $from, to: $to, connectors: .}' $tmp_dir/result.json
+      exit 0
+  fi
+
+  r=$tmp_dir/result.json
+  for i in $(seq 0 $(( $(jq length $r) - 1 )))
+  do
+      class=$(jq -r ".[$i].connector_class" $r)
+      only_in=$(jq -r ".[$i].only_in // empty" $r)
+      if [[ -n "$only_in" ]]
+      then
+          log "🔌 $class only exists in $only_in"
+          continue
+      fi
+      if [ "$(jq ".[$i].nb_keys_old + .[$i].nb_keys_new" $r)" == "0" ]
+      then
+          # a helper class of the plugin without configuration (S3's SchemaSourceConnector)
+          continue
+      fi
+      nb_changes=$(jq ".[$i] | (.added | length) + (.removed | length) + (.changed | length)" $r)
+      scope=""
+      [[ -n "$config_file" ]] && scope=", among the $(jq ".[$i].config_keys" $r) keys of $(basename "$file")"
+      log "🔧 $class $from → $to: $(jq ".[$i].nb_keys_old" $r) → $(jq ".[$i].nb_keys_new" $r) keys, $nb_changes change(s)$scope"
+      jq -r ".[$i] |
+          (.added[] | \"   ➕ \(.key) (\(.type), default \(.default_value // \"none\"), \(.importance)): \(.documentation | gsub(\"\\n\"; \" \") | if length > 160 then .[0:160] + \"…\" else . end)\"),
+          (.removed[] | \"   ➖ \(.key) (\(.type), default was \(.default_value // \"none\"))\"),
+          (.changed[] | .key as \$k | .changes | to_entries[] |
+              if .key == \"documentation\" then \"   📝 \(\$k): documentation changed\"
+              elif .key == \"default_value\" then \"   ✏️ \(\$k): default \(.value.from // \"none\") → \(.value.to // \"none\")\"
+              else \"   🔀 \(\$k): \(.key) \(.value.from // \"none\") → \(.value.to // \"none\")\" end)" $r
+      if [[ -n "$config_file" ]]
+      then
+          jq -r ".[$i].unknown_in_new[]? | \"   ❗ \(.) is set in $(basename "$file") but $class $to doesn't know it (removed, renamed, or a typo)\"" $r
+      fi
+      if [ "$nb_changes" == "0" ] && [[ -z "$config_file" ]]
+      then
+          log "✅ no configuration change for $class between $from and $to"
+      fi
+  done
+  log "💡 the release notes of the versions in between: playground connector-plugin changelog --connector-plugin $connector_plugin --from $from --to $to"
+
+}
+
+# :command.function
 playground_connector_plugin_config_key_command() {
 
   # src/commands/connector-plugin/config-key.sh
   key="${args[--key]}"
   connector_class_filter="${args[--connector-class]}"
   max_examples="${args[--max-examples]}"
+  since_version="${args[--since-version]}"
+  since_plugin="${args[--connector-plugin]}"
 
   # prints the entry of $1 (a config-<class>.txt reference) for key $2: group, documentation, type, default...
   function config_key_entry () {
@@ -64966,6 +65307,77 @@ playground_connector_plugin_config_key_command() {
       local name
       name=$(basename "$1" .txt)
       echo "${name#config-}"
+  }
+
+  # --since-version: the first version of the plugin of class $1 (reference file $2) having the key, by binary search over
+  # the versions of Confluent Hub; each probed version is downloaded and its configuration read (get_connector_plugin_configs)
+  function config_key_since_version () {
+      local class="$1" file="$2" plugin="$since_plugin" lo hi mid
+      if [[ "$class" != *.* ]]
+      then
+          echo "   📅 --since-version: $class is a fully managed connector, it has no versions on Confluent Hub"
+          return
+      fi
+      if [[ -z "$plugin" ]]
+      then
+          # the plugin mounted by the examples that recorded this class (the ones using a single plugin)
+          plugin=$(for f in $(git ls-files -- "*/config-$class.txt")
+          do
+              plugins=$(grep -ohE "confluent-hub-components/[A-Za-z0-9_.-]+" "$(dirname "$f")"/docker-compose*.yml 2>/dev/null | sort -u)
+              [ "$(echo "$plugins" | grep -c .)" == "1" ] && echo "$plugins"
+          done | sort | uniq -c | sort -rn | head -1 | awk '{print $2}' | sed 's#confluent-hub-components/##; s#-#/#')
+      fi
+      if [[ -z "$plugin" ]]
+      then
+          echo "   📅 --since-version: could not find the plugin of $class in the examples, set --connector-plugin <owner/name>"
+          return
+      fi
+      local versions=()
+      while IFS= read -r v
+      do
+          versions+=("$v")
+      done < <(playground connector-plugin versions --connector-plugin "$plugin" --json 2>/dev/null | jq -r '.versions[].version' | grep -viE "preview|alpha|beta|rc|snapshot" | sort -V)
+      if [ ${#versions[@]} -eq 0 ]
+      then
+          echo "   📅 --since-version: no version of $plugin on Confluent Hub"
+          return
+      fi
+      # true when version $1 of the plugin has the key
+      function config_key_has_key () {
+          get_connector_plugin_configs "$plugin" "$1" "$class" > /dev/null 2>&1 || return 2
+          if jq -e --arg k "$key" 'any(.configs[].definition; .name == $k)' "$plugin_configs_dir/config-$class.json" > /dev/null
+          then
+              log "   🔍 $plugin $1: ✅ $key" >&2
+              return 0
+          fi
+          log "   🔍 $plugin $1: ❌ no $key" >&2
+          return 1
+      }
+      log "📅 Looking for the first version of $plugin having $key, among ${#versions[@]} version(s) (binary search, each version downloaded once)"
+      lo=0
+      hi=$((${#versions[@]} - 1))
+      if ! config_key_has_key "${versions[$hi]}"
+      then
+          echo "   📅 $key is not in the latest version of $plugin (${versions[$hi]}): removed, or not a key of this plugin"
+          return
+      fi
+      if config_key_has_key "${versions[0]}"
+      then
+          echo "   📅 $key is already in the oldest version of $plugin on Confluent Hub (${versions[0]})"
+          return
+      fi
+      while [ $((hi - lo)) -gt 1 ]
+      do
+          mid=$(( (lo + hi) / 2 ))
+          if config_key_has_key "${versions[$mid]}"
+          then
+              hi=$mid
+          else
+              lo=$mid
+          fi
+      done
+      echo "   📅 $key was added in $plugin ${versions[$hi]} (absent in ${versions[$lo]})"
+      echo "      🎓 versions of several minor lines are interleaved: the first version in version order, check the line of the customer"
   }
 
   cd "$root_folder" > /dev/null
@@ -65143,6 +65555,10 @@ playground_connector_plugin_config_key_command() {
           then
               echo "   🗂️  versions run locally (default):$versions"
           fi
+      fi
+      if [[ -n "$since_version" ]]
+      then
+          config_key_since_version "$class" "$file"
       fi
       echo ""
       shown=$((shown+1))
@@ -72008,24 +72424,9 @@ playground_connector_show_config_parameters_command() {
               exit 1
           fi
 
-          # one jq for all the parameters: splitting the fields with bash dropped the empty ones (an empty default
-          # value shifted the type, importance... of the parameter by one)
-          excluded_groups='["Common","Transforms","Error Handling","Topic Creation","offsets.topic","Predicates","Confluent Licensing"]'
-          echo "$curl_output" | jq -r --argjson excluded "$excluded_groups" '
-              [.configs[].definition | select(.group as $g | $excluded | index($g) | not)]
-              | reduce .[] as $d ({out: "", group: []};
-                  (if $d.group != .group then .out += "==========================\n\($d.group)\n==========================\n" | .group = $d.group else . end)
-                  | .out += "🔘 \($d.name)\n\n\($d.documentation)\n\n\t - Type: \($d.type)\n\t - Default: \($d.default_value)\n\t - Importance: \($d.importance)\n\t - Required: \($d.required)\n\n")
-              | .out' > "$filename"
-          echo "$curl_output" | jq -r --argjson excluded "$excluded_groups" '
-              .configs[].definition | select(.group as $g | $excluded | index($g) | not)
-              | "    \"\(.name)\": \"\(if .default_value == null then "" else .default_value end)\","' | sort > /tmp/tmp
-          # fix unwanted commits like this one #7231
-          cat /tmp/tmp | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > "$json_filename"
-          if [ ! -s "$filename" ]
-          then
-              rm -f "$filename" "$json_filename"
-          fi
+          echo "$curl_output" > /tmp/tmp-validate.json
+          write_connector_config_reference /tmp/tmp-validate.json "$filename" "$json_filename"
+          rm -f /tmp/tmp-validate.json
       fi
 
       if [ ! -f $filename ]
@@ -111353,6 +111754,13 @@ playground_connector_plugin_parse_requirements() {
       shift $#
       ;;
 
+    config-diff)
+      action="config-diff"
+      shift
+      playground_connector_plugin_config_diff_parse_requirements "$@"
+      shift $#
+      ;;
+
     config-key)
       action="config-key"
       shift
@@ -112408,6 +112816,213 @@ playground_connector_plugin_display_last_updated_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_plugin_config_diff_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_plugin_config_diff_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="connector-plugin config-diff"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector-plugin | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --from)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from requires an argument: --from FROM" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to TO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-class)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-class']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-class requires an argument: --connector-class CONNECTOR-CLASS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --with-docs)
+
+        # :flag.case_no_arg
+        args['--with-docs']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector-plugin']+x} ]]; then
+    printf "missing required flag: --connector-plugin, -c CONNECTOR-PLUGIN\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--from']+x} ]]; then
+    printf "missing required flag: --from FROM\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--from'] ]]; then
+    validation_output="$(validate_not_empty "${args['--from']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--from FROM" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--to'] ]]; then
+    validation_output="$(validate_not_empty "${args['--to']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--to TO" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--connector-class'] ]]; then
+    validation_output="$(validate_not_empty "${args['--connector-class']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--connector-class CONNECTOR-CLASS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
 playground_connector_plugin_config_key_parse_requirements() {
   local key
 
@@ -112477,6 +113092,28 @@ playground_connector_plugin_config_key_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --since-version)
+
+        # :flag.case_no_arg
+        args['--since-version']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector-plugin)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112509,6 +113146,13 @@ playground_connector_plugin_config_key_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--key']+x} ]]; then
     printf "missing required flag: --key, -k KEY\n" >&2
+    exit 1
+  fi
+
+  # :command.needy_flags_filter
+  # :flag.needs
+  if [[ -n ${args['--connector-plugin']+x} ]] && [[ -z "${args[--since-version]:-}" ]]; then
+    printf "%s\n" "--connector-plugin needs --since-version" >&2
     exit 1
   fi
 
@@ -138621,6 +139265,11 @@ playground_connector_plugin_completion() {
         playground_connector_plugin_display_last_updated_completion "$completion_current" "$@"
         return
         ;;
+      config-diff)
+        shift
+        playground_connector_plugin_config_diff_completion "$completion_current" "$@"
+        return
+        ;;
       config-key)
         shift
         playground_connector_plugin_config_key_completion "$completion_current" "$@"
@@ -138640,7 +139289,7 @@ playground_connector_plugin_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" search-jar dependencies deps versions info changelog display-last-updated config-key sourcecode
+  completion_candidates "$completion_current" search-jar dependencies deps versions info changelog display-last-updated config-diff config-key sourcecode
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -139138,6 +139787,99 @@ playground_connector_plugin_display_last_updated_completion() {
 }
 
 # :command.completion_function
+playground_connector_plugin_config_diff_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --connector-plugin | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-plugin "$completion_current" "onprem"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-plugin"]=1
+
+        ;;
+      --from)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --connector-class)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-class"]=1
+
+        ;;
+      --file)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --with-docs)
+        completion_blocked_flags["--with-docs"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin -c
+    completion_flag_candidates --from "$completion_current" --from
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --connector-class "$completion_current" --connector-class
+    completion_flag_candidates --file "$completion_current" --file
+    completion_flag_candidates --with-docs "$completion_current" --with-docs
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
 playground_connector_plugin_config_key_completion() {
   local completion_current="$1"
   shift
@@ -139178,6 +139920,21 @@ playground_connector_plugin_config_key_completion() {
         completion_blocked_flags["--max-examples"]=1
 
         ;;
+      --since-version)
+        completion_blocked_flags["--since-version"]=1
+
+        shift
+        ;;
+      --connector-plugin)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-plugin"]=1
+
+        ;;
       *)
         return
         ;;
@@ -139189,6 +139946,8 @@ playground_connector_plugin_config_key_completion() {
     completion_flag_candidates --key "$completion_current" --key -k
     completion_flag_candidates --connector-class "$completion_current" --connector-class -c
     completion_flag_candidates --max-examples "$completion_current" --max-examples
+    completion_flag_candidates --since-version "$completion_current" --since-version
+    completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin
   fi
 
 }
@@ -143786,6 +144545,7 @@ run() {
     "connector-plugin info") playground_connector_plugin_info_command ;;
     "connector-plugin changelog") playground_connector_plugin_changelog_command ;;
     "connector-plugin display-last-updated") playground_connector_plugin_display_last_updated_command ;;
+    "connector-plugin config-diff") playground_connector_plugin_config_diff_command ;;
     "connector-plugin config-key") playground_connector_plugin_config_key_command ;;
     "connector-plugin sourcecode") playground_connector_plugin_sourcecode_command ;;
     "connector") playground_connector_command ;;

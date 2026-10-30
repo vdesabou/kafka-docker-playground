@@ -7357,7 +7357,7 @@
     },
     {
       "name": "connector-plugin",
-      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  info                  one page on a plugin: license, versions, examples, CI, fully managed\n  versions              every released version of a plugin\n  changelog             what changed between two versions (release notes)\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  dependencies          which libraries (and versions) it bundles, what changed between two versions\n  config-key            what a config key does, its default, since when, who sets it\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
+      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  info                  one page on a plugin: license, versions, examples, CI, fully managed\n  versions              every released version of a plugin\n  changelog             what changed between two versions (release notes)\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  dependencies          which libraries (and versions) it bundles, what changed between two versions\n  config-key            what a config key does, its default, since when, who sets it\n  config-diff           config keys added, removed or changed between two versions\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
       "usage": "playground connector-plugin COMMAND",
       "options": [],
       "subcommands": [
@@ -7664,6 +7664,63 @@
           ]
         },
         {
+          "name": "config-diff",
+          "description": "🔧 Configuration keys added, removed or changed between two versions of a plugin\n\n\"What changes in the configuration when the customer upgrades from 10.7.4\nto the latest?\": keys added ➕, removed ➖, default changed ✏️, type,\nimportance, valid values or required changed 🔀 (📝 documentation with\n--with-docs), for every connector class of the plugin.\n\nWith --file (the customer's connector config: JSON, CFK, Strimzi,\nterraform, properties), only the keys it sets are compared, and a key it\nsets that the new version doesn't know is flagged ❗.\n\nNo environment needed: each version is downloaded (same cache as\nsearch-jar), and its configuration read by loading the connector class\nwith the java of the connect image (a small reader compiled once in a JDK\ncontainer). The result is also kept in .connector_config, like\nplayground connector show-config-parameters: connector-plugin config-key\nthen lists those versions under \"versions run locally\".",
+          "usage": "playground connector-plugin config-diff [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-plugin",
+                "-c"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--from"
+              ],
+              "argument": "FROM",
+              "description": "🔢 Version in use (the customer's)\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--to"
+              ],
+              "argument": "TO",
+              "description": "🔢 Version to compare with, default is the latest on Confluent Hub"
+            },
+            {
+              "names": [
+                "--connector-class"
+              ],
+              "argument": "CONNECTOR-CLASS",
+              "description": "🔌 Only this connector class (default: every connector of the plugin, or the connector.class of --file)"
+            },
+            {
+              "names": [
+                "--file"
+              ],
+              "argument": "FILE",
+              "description": "📄 Connector configuration of the customer: only the keys it sets are compared\n\nJSON ({\"name\":…, \"config\":{…}} or the bare config), or a CFK / Strimzi / terraform / properties file."
+            },
+            {
+              "names": [
+                "--with-docs"
+              ],
+              "argument": "",
+              "description": "📝 Also report the keys whose documentation changed"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON"
+            }
+          ]
+        },
+        {
           "name": "config-key",
           "description": "🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it\n\nAnswers \"what does this key do, what is its default, since which\nversion does it exist, and how is it used\" in one call, without a\nrunning environment.\n\n📗 Documentation, type, default, importance and group come from the\nconfiguration reference that CI records for every tested connector,\nself-managed and fully managed (the config-<class>.txt files next to\nthe examples, refreshed with the latest connector version).\n\n📅 The git history of that file tells when CI first saw the key, which\nis when a new connector version introduced it. Versions you ran\nlocally (playground connector show-config-parameters cache) are also\nchecked one by one.\n\n🧪 Examples that set the key are listed with the value they use.\n\nWithout --connector-class, every connector having the key is listed.\nWhen the key is not found, similar keys are suggested.",
           "usage": "playground connector-plugin config-key [OPTIONS]",
@@ -7690,6 +7747,20 @@
               ],
               "argument": "MAX_EXAMPLES",
               "description": "🧪 Maximum number of examples to show (default 10)\n\nDefault value: 10"
+            },
+            {
+              "names": [
+                "--since-version"
+              ],
+              "argument": "",
+              "description": "📅 Find the first version of the plugin having the key (self-managed connectors)\n\nA binary search over the versions of Confluent Hub: each probed version is downloaded and its configuration\nread without a worker, like playground connector-plugin config-diff (about 5 s per version, 6 or 7 versions).\nNeeds one connector (--connector-class). The plugin is found from the examples, or set with --connector-plugin."
+            },
+            {
+              "names": [
+                "--connector-plugin"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Plugin of the connector for --since-version (owner/name), when the examples don't tell it"
             }
           ]
         },

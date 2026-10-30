@@ -10994,6 +10994,7 @@ commands:
       search-jar            which jars ship in it, and which class is where
       dependencies          which libraries (and versions) it bundles, what changed between two versions
       config-key            what a config key does, its default, since when, who sets it
+      config-diff           config keys added, removed or changed between two versions
       sourcecode            open the source on GitHub
 
     🎓 Tip: search-jar answers "is this class really in the plugin, and with
@@ -11384,6 +11385,68 @@ commands:
       playground connector-plugin display-last-updated --days 7
       playground connector-plugin display-last-updated --days 7 --vendor confluentinc --with-changelog
       playground connector-plugin display-last-updated --days 30 --json
+  - name: config-diff
+    help: |-
+      🔧 Configuration keys added, removed or changed between two versions of a plugin
+
+      "What changes in the configuration when the customer upgrades from 10.7.4
+      to the latest?": keys added ➕, removed ➖, default changed ✏️, type,
+      importance, valid values or required changed 🔀 (📝 documentation with
+      --with-docs), for every connector class of the plugin.
+
+      With --file (the customer's connector config: JSON, CFK, Strimzi,
+      terraform, properties), only the keys it sets are compared, and a key it
+      sets that the new version doesn't know is flagged ❗.
+
+      No environment needed: each version is downloaded (same cache as
+      search-jar), and its configuration read by loading the connector class
+      with the java of the connect image (a small reader compiled once in a JDK
+      container). The result is also kept in .connector_config, like
+      playground connector show-config-parameters: connector-plugin config-key
+      then lists those versions under "versions run locally".
+    dependencies:
+      python3: visit https://www.python.org/downloads/ to install
+    flags:
+    - *connector-plugin
+    - long: --from
+      arg: from
+      required: true
+      validate: not_empty
+      help: |-
+        🔢 Version in use (the customer's)
+    - long: --to
+      arg: to
+      required: false
+      validate: not_empty
+      help: |-
+        🔢 Version to compare with, default is the latest on Confluent Hub
+    - long: --connector-class
+      arg: connector-class
+      required: false
+      validate: not_empty
+      help: |-
+        🔌 Only this connector class (default: every connector of the plugin, or the connector.class of --file)
+    - long: --file
+      arg: file
+      required: false
+      validate: file_exists_with_trick
+      help: |-
+        📄 Connector configuration of the customer: only the keys it sets are compared
+
+        JSON ({"name":…, "config":{…}} or the bare config), or a CFK / Strimzi / terraform / properties file.
+    - long: --with-docs
+      required: false
+      help: |-
+        📝 Also report the keys whose documentation changed
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON
+    examples: |
+      playground connector-plugin config-diff --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4
+      playground connector-plugin config-diff --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4 --to 10.9.9 --connector-class io.confluent.connect.jdbc.JdbcSinkConnector
+      playground connector-plugin config-diff --connector-plugin confluentinc/kafka-connect-s3 --from 10.5.0 --file /path/to/customer-connector.json
+
   - name: config-key
     help: |-
       🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it
@@ -11429,11 +11492,26 @@ commands:
         default: "10"
         help: |-
           🧪 Maximum number of examples to show (default 10)
+      - long: --since-version
+        required: false
+        help: |-
+          📅 Find the first version of the plugin having the key (self-managed connectors)
+
+          A binary search over the versions of Confluent Hub: each probed version is downloaded and its configuration
+          read without a worker, like playground connector-plugin config-diff (about 5 s per version, 6 or 7 versions).
+          Needs one connector (--connector-class). The plugin is found from the examples, or set with --connector-plugin.
+      - long: --connector-plugin
+        required: false
+        arg: connector-plugin
+        needs: [--since-version]
+        help: |-
+          🔌 Plugin of the connector for --since-version (owner/name), when the examples don't tell it
     examples:
     - playground connector-plugin config-key --key behavior.on.null.values
     - playground connector-plugin config-key --key behavior.on.null.values --connector-class S3SinkConnector
     - playground connector-plugin config-key -k s3.part.size -c S3_SINK
     - playground connector-plugin config-key -k errors.tolerance -c jdbc --max-examples 3
+    - playground connector-plugin config-key -k batch.max.rows -c io.confluent.connect.jdbc.JdbcSourceConnector --since-version
     x_example_outputs:
     - command: playground connector-plugin config-key --key flush.size
       output: |-
