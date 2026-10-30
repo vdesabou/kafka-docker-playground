@@ -19505,7 +19505,8 @@ function repro_bundle_scan () {
       done
     done < <(grep -InE "${token_grep_args[@]}" -- "$path" 2>/dev/null || true)
 
-    # possible customer data: warnings only
+    # possible customer data: warnings only. An address also in the public base example (the sample rows of its
+    # tables…) is not customer data
     while IFS=: read -r line_number match
     do
       domain="${match#*@}"
@@ -19513,6 +19514,10 @@ function repro_bundle_scan () {
       case "$domain" in
         example.com|example.org|example.net|*.example.com|confluent.io|*.confluent.io|confluent.cloud|*.local|*.noreply.github.com|anthropic.com|*.svc|*.internal) continue ;;
       esac
+      if repro_value_in_public_example "$match" "${public_folders[@]}"
+      then
+        continue
+      fi
       printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "email address at @$domain" >> "$findings"
     done < <(grep -InoE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' "$path" 2>/dev/null || true)
 
@@ -19537,6 +19542,10 @@ function repro_bundle_scan () {
         0|10|127|255) continue ;;
       esac
       if [ "$o1" -ge 224 ] || { [ "$o1" -eq 172 ] && [ "$o2" -ge 16 ] && [ "$o2" -le 31 ]; } || { [ "$o1" -eq 192 ] && [ "$o2" -eq 168 ]; } || { [ "$o1" -eq 169 ] && [ "$o2" -eq 254 ]; }
+      then
+        continue
+      fi
+      if repro_value_in_public_example "$ip" "${public_folders[@]}"
       then
         continue
       fi
