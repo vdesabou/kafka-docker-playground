@@ -14940,7 +14940,7 @@ playground_connector_plugin_search_jar_usage() {
 playground_connector_plugin_versions_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin versions\n\n"
-    printf "  💯 List versions for a connector plugin from confluent hub\n  https://www.confluent.io/hub/\n  \n  What to feed to --connector-tag when you want to test another version,\n  and the way to find out which release you are behind on. The list is\n  cached; use --force-refresh after a brand new release.\n\n"
+    printf "  💯 List versions for a connector plugin from confluent hub\n  https://www.confluent.io/hub/\n  \n  What to feed to --connector-tag when you want to test another version,\n  and the way to find out which release you are behind on (--from).\n  \n  The answer of Confluent Hub is cached for one day in\n  /tmp/version_<owner>_<name>.json and the age of each version is\n  computed on every call; use --force-refresh right after a release.\n\n"
   else
     printf "playground connector-plugin versions - 💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n\n"
   fi
@@ -14969,12 +14969,31 @@ playground_connector_plugin_versions_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--last LAST")"
     printf "    🆕 Number of last versions to show\n"
-    printf "    %s\n" "Conflicts: --all"
+    printf "    %s\n" "Conflicts: --latest"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from FROM")"
+    printf "    📌 Version in use: show how many versions it is behind, and only the newer\n    ones\n    \n    Combine with --with-changelog to read what changed since, or use playground\n    connector-plugin changelog --from.\n"
+    printf "    %s\n" "Conflicts: --latest"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--latest")"
+    printf "    🔝 Only print the latest version number, nothing else\n    \n    🎓 Tip: use it in scripts and from AI agents, the output is just the version\n    (for example 10.9.9)\n"
+    printf "    %s\n" "Conflicts: --last, --from, --with-changelog, --json"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--with-changelog")"
     printf "    📜 Show the release notes of each version under it\n    \n    From the changelog feeds of docs.confluent.io, like playground\n    connector-plugin changelog: Confluent self-managed plugins only.\n"
+    printf "    %s\n" "Conflicts: --latest"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n    \n    latest, versions (version, release_date, days_ago, and changes with\n    --with-changelog), documentation_url, versions_behind with --from.\n"
+    printf "    %s\n" "Conflicts: --latest"
     echo
 
     # :command.usage_fixed_flags
@@ -14984,7 +15003,7 @@ playground_connector_plugin_versions_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-s3\n  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-jdbc --last 3 --with-changelog\n"
+    printf "  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-s3\n  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-jdbc --last 3 --with-changelog\n  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-jdbc --from 10.7.4\n  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-jdbc --latest\n  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-jdbc --last 3 --json\n"
     echo
 
   fi
@@ -21154,10 +21173,8 @@ function choose_connector_tag() {
 
   filename="/tmp/version_${owner}_${name}"
 
-  if [ ! -f $filename ]
-  then
-    playground connector-plugin versions --connector-plugin $owner/$name > /dev/null 2>&1
-  fi
+  # renders $filename again from the cached Hub answer, so the age of each version is up to date
+  playground connector-plugin versions --connector-plugin $owner/$name > /dev/null 2>&1
 
   if [ ! -f $filename ]
   then
@@ -63704,6 +63721,9 @@ playground_connector_plugin_versions_command() {
   # src/commands/connector-plugin/versions.sh
   connector_plugin="${args[--connector-plugin]}"
   last="${args[--last]}"
+  from="${args[--from]}"
+  latest="${args[--latest]}"
+  json="${args[--json]}"
   force_refresh="${args[--force-refresh]}"
   with_changelog="${args[--with-changelog]}"
 
@@ -63715,157 +63735,168 @@ playground_connector_plugin_versions_command() {
   owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
   name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
+  # raw answer of the Hub API, kept one day: the text below is rendered from it on every call, so "days ago" is never stale
+  json_cache="/tmp/version_${owner}_${name}.json"
+  # text rendering, read by the --connector-tag picker and repro bisect
   filename="/tmp/version_${owner}_${name}"
+
   if [[ -n "$force_refresh" ]]
   then
-      if [ -f $filename ]
+      rm -f "$json_cache"
+  fi
+
+  if [[ -z "$latest" ]] && [[ -z "$json" ]]
+  then
+      if [[ -n "$from" ]]
       then
-          rm -f $filename
+          log "💯 Listing versions after $from for connector plugin $connector_plugin"
+      elif [[ -n "$last" ]]
+      then
+          if [ "$last" != "1" ]
+          then
+              log "💯 Listing last $last versions for connector plugin $connector_plugin"
+          fi
+      else
+          log "💯 Listing all versions for connector plugin $connector_plugin"
       fi
   fi
 
-  if [[ -n "$last" ]]
+  if [ ! -f "$json_cache" ] || [ -z "$(find "$json_cache" -mmin -1440 2>/dev/null)" ]
   then
-      if [ "$last" != "1" ]
-      then
-          log "💯 Listing last $last versions for connector plugin $connector_plugin"
-      fi
-  else
-      log "💯 Listing all versions for connector plugin $connector_plugin"
-  fi
-
-  if [ ! -f $filename ]
-  then
-      curl_output=$(curl -s https://api.hub.confluent.io/api/plugins/$owner/$name/versions)
+      set +e
+      curl_output=$(curl -s --max-time 30 "https://api.hub.confluent.io/api/plugins/$owner/$name/versions")
       ret=$?
       set -e
-      if [ $ret -eq 0 ]
+      if [ $ret -ne 0 ] || ! echo "$curl_output" | jq -e 'type == "array"' > /dev/null 2>&1
       then
-          if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
+          if [ -f "$json_cache" ]
           then
-              set +e
-              json_file=/tmp/json
-              echo "$curl_output" > $json_file
-              jq_output=$(jq . "$json_file" 2>&1)
-              error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
-
-              if [[ -n "$error_line" ]]; then
-                  logerror "❌ Invalid JSON at line $error_line"
-              fi
-              set -e
-
-              if [ -z "$GITHUB_RUN_NUMBER" ]
-              then
-                  if [[ $(type -f bat 2>&1) =~ "not found" ]]
-                  then
-                      cat -n $json_file
-                  else
-                      bat $json_file --highlight-line $error_line
-                  fi
-              fi
+              logwarn "⚠️ could not refresh the versions of $connector_plugin from Confluent Hub, using the cache of $(date -r "$json_cache" "+%Y-%m-%d")"
+          elif [ $ret -ne 0 ]
+          then
+              logerror "❌ curl request to Confluent Hub failed with error code $ret!"
+              exit 1
+          else
+              logerror "❌ invalid answer from Confluent Hub for $connector_plugin:"
+              echo "$curl_output" | head -20
               exit 1
           fi
-
+      else
           if [ "$curl_output" == "[]" ]
           then
               logwarn "❌ could not get versions for connector plugin $connector_plugin"
               exit 0
           fi
-
-          if [[ "$(uname)" == "Darwin" ]]; then
-              # macOS
-              current_date=$(date -j -f "%Y-%m-%d" "$(date "+%Y-%m-%d")" "+%s")
-          else
-              # Linux
-              current_date=$(date +%s)
-          fi
-          while IFS= read -r row; do
-              IFS=$'\n'
-              arr=($(echo "$row" | jq -r '.version, .manifest_url, .release_date'))
-              version="${arr[0]}"
-              manifest_url="${arr[1]}"
-              release_date="${arr[2]}"
-              if [ "$release_date" != "null" ]
-              then
-                  if [[ "$(uname)" == "Darwin" ]]; then
-                      # macOS
-                      release_date_sec=$(date -j -f "%Y-%m-%d" "$release_date" "+%s")
-                  else
-                      # Linux
-                      release_date_sec=$(date -d "$release_date" "+%s")
-                  fi
-
-                  # Calculate the difference in days
-                  diff=$(( (current_date - release_date_sec) / 60 / 60 / 24 ))
-                  echo "🔢 v$version - 📅 release date: $release_date ($diff days ago)" >> $filename
-              else
-                  echo "🔢 v$version - 📅 release date: <unknown>" >> $filename
-              fi
-          done <<< "$(echo "$curl_output" | jq -c '.[]')"
-
-          # documentation_url
+          # documentation_url is in the manifest of the latest version
           set +e
-          curl_output=$(curl -s $manifest_url)
-          ret=$?
-          if [ $ret -eq 0 ]
-          then
-              documentation_url=$(echo "$curl_output" | jq -r '.documentation_url')
-          fi
+          manifest_url=$(echo "$curl_output" | jq -r '.[-1].manifest_url')
+          documentation_url=$(curl -s --max-time 30 "$manifest_url" | jq -r '.documentation_url // empty' 2>/dev/null)
           set -e
-          if [[ -n "$documentation_url" && "$documentation_url" != "null" ]]
-          then
-              echo "🌐 documentation: $documentation_url" >> $filename
-          else
-              echo "🌐 documentation: <not available>" >> $filename
-          fi
-      else
-          logerror "❌ curl request failed with error code $ret!"
-          exit 1
-      fi
-
-      if [ ! -f $filename ]
-      then
-          logerror "❌ could not get versions for connector plugin $connector_plugin"
-          exit 1
+          echo "$curl_output" | jq --arg doc "$documentation_url" '{versions: ., documentation_url: (if $doc == "" then null else $doc end)}' > "$json_cache"
       fi
   fi
 
+  # versions with their age in days, oldest first (the order of the Hub)
+  all_json=$(jq '{
+      documentation_url,
+      versions: [.versions[] | {
+          version,
+          release_date,
+          days_ago: (if .release_date then ((now - (.release_date | strptime("%Y-%m-%d") | mktime)) / 86400 | floor) else null end)
+      }]
+  }' "$json_cache")
+
+  # text rendering of every version, for the readers of $filename
+  render_text='(.versions[] | if .release_date then "🔢 v\(.version) - 📅 release date: \(.release_date) (\(.days_ago) days ago)" else "🔢 v\(.version) - 📅 release date: <unknown>" end),
+      "🌐 documentation: \(.documentation_url // "<not available>")"'
+  echo "$all_json" | jq -r "$render_text" > "$filename"
+
+  latest_version=$(echo "$all_json" | jq -r '.versions[-1].version')
+
+  if [[ -n "$latest" ]]
+  then
+      echo "$latest_version"
+      exit 0
+  fi
+
+  selected_json="$all_json"
+  if [[ -n "$from" ]]
+  then
+      if ! echo "$all_json" | jq -e --arg v "$from" '.versions | any(.version == $v)' > /dev/null
+      then
+          logwarn "⚠️ $from is not a version of $connector_plugin on Confluent Hub"
+      fi
+      # the versions sorted after $from
+      newer_json=$({ echo "$from"; echo "$all_json" | jq -r '.versions[].version'; } | sort -V -u | awk -v from="$from" 'found { print } $0 == from { found = 1 }' | jq -R . | jq -s .)
+      selected_json=$(echo "$all_json" | jq --argjson newer "$newer_json" '.versions |= map(select(.version as $v | $newer | index($v)))')
+      nb_behind=$(echo "$selected_json" | jq '.versions | length')
+  fi
   if [[ -n "$last" ]]
   then
-      last=$((last + 1))
-      versions_output=$(tail -${last} $filename)
-  else
-      versions_output=$(cat $filename)
+      selected_json=$(echo "$selected_json" | jq --argjson n "$last" '.versions |= .[-$n:]')
   fi
 
-  if [[ -z "$with_changelog" ]]
+  # release notes, from the docs.confluent.io changelog feeds (see connector-plugin changelog)
+  changelog_json=""
+  if [[ -n "$with_changelog" ]] && [ "$(echo "$selected_json" | jq '.versions | length')" != "0" ]
   then
-      echo "$versions_output"
+      first_version=$(echo "$selected_json" | jq -r '.versions[0].version')
+      changelog_json=$(mktemp -t pg-XXXXXXXXXX)
+      trap 'rm -f $changelog_json' EXIT
+      changelog_args=(--connector-plugin "$owner/$name" --from "$first_version" --include-from)
+      [[ -n "$force_refresh" ]] && changelog_args+=(--force-refresh)
+      if ! command -v python3 > /dev/null 2>&1 || ! python3 -I "$root_folder/tools/connector-changelog/changelog.py" "${changelog_args[@]}" > $changelog_json 2> /dev/null || [ "$(jq '.feeds | length' $changelog_json)" == "0" ]
+      then
+          if [[ -z "$json" ]]
+          then
+              logwarn "📜 no changelog feed for connector plugin $owner/$name, release notes are not shown"
+          fi
+          changelog_json=""
+      fi
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      if [[ -n "$changelog_json" ]]
+      then
+          selected_json=$(echo "$selected_json" | jq --slurpfile cl "$changelog_json" '
+              .versions |= map(. as $v | . + {changes: [$cl[0].versions[] | select(.version == $v.version) | .changes[]]})
+              | .changelog = [$cl[0].feeds[] | sub("\\.xml$"; ".html")]')
+      fi
+      echo "$selected_json" | jq --arg plugin "$owner/$name" --arg latest "$latest_version" --arg from "$from" --arg nb_behind "${nb_behind:-0}" \
+          '{connector_plugin: $plugin, latest: $latest} + (if $from != "" then {from: $from, versions_behind: ($nb_behind | tonumber)} else {} end) + .'
       exit 0
   fi
 
-  # release notes under each version, from the docs.confluent.io changelog feeds (see connector-plugin changelog)
-  first_version=$(echo "$versions_output" | grep "🔢 v" | head -1 | sed -E 's/^🔢 v([^ ]+) .*/\1/')
-  changelog_json=$(mktemp -t pg-XXXXXXXXXX)
-  trap 'rm -f $changelog_json' EXIT
-  changelog_args=(--connector-plugin "$owner/$name" --from "$first_version" --include-from)
-  [[ -n "$force_refresh" ]] && changelog_args+=(--force-refresh)
-  if ! command -v python3 > /dev/null 2>&1 || ! python3 -I "$root_folder/tools/connector-changelog/changelog.py" "${changelog_args[@]}" > $changelog_json 2> /dev/null || [ "$(jq '.feeds | length' $changelog_json)" == "0" ]
+  if [[ -n "$from" ]]
   then
-      logwarn "📜 no changelog feed for connector plugin $owner/$name, release notes are not shown"
-      echo "$versions_output"
-      exit 0
+      if [ "$nb_behind" == "0" ] && [ "$from" != "$latest_version" ]
+      then
+          logwarn "⚠️ $from is newer than the latest version of $connector_plugin on Confluent Hub ($latest_version)"
+      elif [ "$nb_behind" == "0" ]
+      then
+          log "✅ $from is the latest version of $connector_plugin on Confluent Hub ($latest_version)"
+      else
+          latest_line=$(echo "$all_json" | jq -r '.versions[-1] | if .release_date then "released \(.release_date), \(.days_ago) days ago" else "release date unknown" end')
+          log "📌 $from is $nb_behind version(s) behind the latest $latest_version ($latest_line)"
+      fi
   fi
+
   while IFS= read -r line
   do
       echo "$line"
-      if [[ "$line" == "🔢 v"* ]]
+      if [[ -n "$changelog_json" ]] && [[ "$line" == "🔢 v"* ]]
       then
           version=$(echo "$line" | sed -E 's/^🔢 v([^ ]+) .*/\1/')
           jq -r --arg v "$version" '.versions[] | select(.version == $v) | .changes[] | "   • \(.)"' $changelog_json
       fi
-  done <<< "$versions_output"
-  jq -r '.feeds[] | "📜 changelog: \(sub("\\.xml$"; ".html"))"' $changelog_json
+  done < <(echo "$selected_json" | jq -r "$render_text")
+
+  if [[ -n "$changelog_json" ]]
+  then
+      jq -r '.feeds[] | "📜 changelog: \(sub("\\.xml$"; ".html"))"' $changelog_json
+  fi
+
 }
 
 # :command.function
@@ -64344,14 +64375,13 @@ playground_connector_plugin_sourcecode_command() {
   }
 
   function get_latest_version_from_confluent_hub () {
-      output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-      last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
+      last_version=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
       if [[ -n "$last_version" ]]
       then
           log "✨ --connector-tag was not set, using latest version on hub $last_version"
           connector_tag="$last_version"
       else
-          logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>"
+          logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --latest>"
           logerror "❌ --connector-tag flag is set 2 times, but one of them is set to latest. Comparison between version can only works when providing versions"
           exit 1
       fi
@@ -64929,14 +64959,13 @@ playground_connector_plugin_sourcecode_command() {
       then
           if [ $is_fully_managed -eq 0 ]
           then
-              output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-              last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
+              last_version=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
               if [[ -n "$last_version" ]]
               then
                   log "✨ --connector-tag was not set, using latest version on hub $last_version"
                   connector_tag="$last_version"
               else
-                  logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>, using latest"
+                  logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --latest>, using latest"
                   connector_tag="latest"
               fi
           else
@@ -110466,8 +110495,8 @@ playground_connector_plugin_versions_parse_requirements() {
       # :flag.case
       --last)
         # :flag.conflicts
-        if [[ -n "${args['--all']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--all" >&2
+        if [[ -n "${args['--latest']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--latest" >&2
           exit 1
         fi
 
@@ -110483,10 +110512,62 @@ playground_connector_plugin_versions_parse_requirements() {
         ;;
 
       # :flag.case
+      --from)
+        # :flag.conflicts
+        if [[ -n "${args['--latest']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--latest" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from requires an argument: --from FROM" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --latest)
+        # :flag.conflicts
+        for conflict in --last --from --with-changelog --json; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--latest']=1
+        shift
+        ;;
+
+      # :flag.case
       --with-changelog)
+        # :flag.conflicts
+        if [[ -n "${args['--latest']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--latest" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--with-changelog']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+        # :flag.conflicts
+        if [[ -n "${args['--latest']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--latest" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--json']=1
         shift
         ;;
 
@@ -110531,6 +110612,15 @@ playground_connector_plugin_versions_parse_requirements() {
     validation_output="$(validate_integer "${args['--last']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--last LAST" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--from'] ]]; then
+    validation_output="$(validate_not_empty "${args['--from']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--from FROM" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -137048,11 +137138,38 @@ playground_connector_plugin_versions_completion() {
         fi
         shift
         completion_blocked_flags["--last"]=1
-        completion_blocked_flags["--all"]=1
+        completion_blocked_flags["--latest"]=1
 
+        ;;
+      --from)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from"]=1
+        completion_blocked_flags["--latest"]=1
+
+        ;;
+      --latest)
+        completion_blocked_flags["--latest"]=1
+        completion_blocked_flags["--last"]=1
+        completion_blocked_flags["--from"]=1
+        completion_blocked_flags["--with-changelog"]=1
+        completion_blocked_flags["--json"]=1
+
+        shift
         ;;
       --with-changelog)
         completion_blocked_flags["--with-changelog"]=1
+        completion_blocked_flags["--latest"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--latest"]=1
 
         shift
         ;;
@@ -137067,7 +137184,10 @@ playground_connector_plugin_versions_completion() {
     completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin -c
     completion_flag_candidates --force-refresh "$completion_current" --force-refresh
     completion_flag_candidates --last "$completion_current" --last
+    completion_flag_candidates --from "$completion_current" --from
+    completion_flag_candidates --latest "$completion_current" --latest
     completion_flag_candidates --with-changelog "$completion_current" --with-changelog
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }

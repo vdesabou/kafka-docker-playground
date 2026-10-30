@@ -2527,10 +2527,8 @@ function choose_connector_tag() {
 
   filename="/tmp/version_${owner}_${name}"
 
-  if [ ! -f $filename ]
-  then
-    playground connector-plugin versions --connector-plugin $owner/$name > /dev/null 2>&1
-  fi
+  # renders $filename again from the cached Hub answer, so the age of each version is up to date
+  playground connector-plugin versions --connector-plugin $owner/$name > /dev/null 2>&1
 
   if [ ! -f $filename ]
   then
