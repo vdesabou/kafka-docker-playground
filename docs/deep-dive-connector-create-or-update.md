@@ -59,7 +59,9 @@ deploy it (`validate`), compare it with a customer's (`diff`), wait for any stat
    `--adapt` for a plain json heredoc too). Masked secrets (`****`, `[hidden]`), config providers of the customer
    environment (`${file:/mnt/...}`), terraform references (`var.x`) and the keys still pointing to external systems are
    listed. The heredocs of the examples are never changed. `playground connector convert` writes any of these formats
-   in another one. Step 8 of the [hands-on lab](/deep-dive-connector-create-or-update?id=_5-hands-on-lab-≈10-min) shows each format with its output.
+   in another one (`--secrets-as-variables` also turns the plaintext passwords, keys and tokens into variables, for a
+   heredoc that goes in a committed script; `playground repro bootstrap --config` builds a whole reproduction model
+   from the file). Step 8 of the [hands-on lab](/deep-dive-connector-create-or-update?id=_5-hands-on-lab-≈10-min) shows each format with its output.
 
 2. **It waits, and how strict it is depends on what runs.** After the update, a self-managed connector is polled
    (`playground connector wait`, every 5 s, up to `--max-wait`, default 120 s) until the connector **and all its

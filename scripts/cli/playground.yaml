@@ -1745,8 +1745,9 @@ subcommands:
       - "-f"
       argument: FILE
       description: "\U0001F516 Example file to use as basis, if not set, currently
-        running example is used\n\n❕ It must be absolute full path\n\n\U0001F393 Tip:
-        use <tab> completion to trigger fzf completion"
+        running example is used\n\n❕ It must be absolute full path\n\nWith --config
+        and without --file, the example is picked from the\nconnector.class of the
+        config.\n\n\U0001F393 Tip: use <tab> completion to trigger fzf completion"
     - names:
       - "--description"
       - "-d"
@@ -1770,6 +1771,30 @@ subcommands:
       description: "\U0001F3AB Jira of the problem, written in the '# \U0001F3AB jira:'
         line of the header\n\nA key (CC-1234) becomes its https://confluentinc.atlassian.net/browse/
         link."
+    - names:
+      - "--config"
+      argument: CONFIG-FILE
+      description: "\U0001F4C4 Connector config the customer sent, put in the model
+        in place of the one of the example\n\nAny format of 'playground connector
+        convert': a JSON config, a REST\nAPI dump, a CFK Connector or Strimzi KafkaConnector
+        resource, a\nterraform confluent_connector, a connect-standalone .properties.\n\n-
+        without --file, the example to start from is the one that deploys\n  the same
+        connector.class, ranked with the words of the class and\n  of the config (the
+        database of a jdbc url, the auth type…): the\n  best one with --no-run, a
+        list to pick from otherwise\n- the connector heredoc of the example that deploys
+        the same class\n  (else the first one) is replaced with the config, adapted
+        to the\n  playground like 'playground connector create-or-update' does\n  (bootstrap
+        servers, schema registry, license, replication\n  factors); the connector
+        keeps the name of the example\n- its secrets, masked values, config providers
+        and terraform\n  references become variables, checked at the top of the model
+        so\n  that 'playground run' loads them from 'playground secrets'\n\n\U0001F393
+        Tip: then compare the running connector with the customer file:\nplayground
+        connector diff --connector <c> --file <file>"
+    - names:
+      - "--config-connector"
+      argument: CONNECTOR
+      description: "\U0001F517 With --config, the connector to pick when the file
+        holds several (REST dump, several resources)"
     - names:
       - "--custom-smt"
       argument: ''
@@ -6949,6 +6974,14 @@ subcommands:
       description: "\U0001F9F7 With --to heredoc or json, keep the config as it is
         (no rewrite of the bootstrap servers, schema registry, license, replication
         factors, client security)"
+    - names:
+      - "--secrets-as-variables"
+      argument: ''
+      description: "\U0001F510 Also turn the secret values written as they are (passwords,
+        keys, tokens, JAAS configs) into variables to export, like the masked ones\n\nFor
+        --to heredoc (and the values to fill in of --json): the heredoc can then go
+        in a script that is committed,\nlike a reproduction model ('playground repro
+        bootstrap --config' uses it)."
     - names:
       - "--json"
       argument: ''
