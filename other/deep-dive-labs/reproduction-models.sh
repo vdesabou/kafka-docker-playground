@@ -108,6 +108,11 @@ lab_run playground repro assert -f "$model" --reproduced-if-command "test -f '$m
 lab_expect_contains '"verdict": "reproduced"'
 lab_run playground repro status -f "$model"
 lab_expect_contains "🧪 last verdict: 🐞 reproduced on $(date -u +%Y-%m-%d)"
+lab_run bash -c "playground repro list --grep '000000-deep-dive-lab-ci' --json 2> /dev/null | jq -c '.[0] | {path, case, status, jira, verdict: .last_verdict.verdict, base_example}'"
+lab_expect_contains '{"path":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh","case":"000000","status":"lab only","jira":"https://confluentinc.atlassian.net/browse/CC-1234","verdict":"reproduced","base_example":"connect/connect-filestream-sink"}'
+lab_run playground repro list --case 000000 --status "lab only"
+lab_expect_contains "000000 deep dive lab ci"
+lab_expect_contains "↳ connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
 
 log "Step 3: check it, with and without a secret"
 lab_run playground repro check -f "$model"

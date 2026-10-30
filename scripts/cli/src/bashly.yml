@@ -3184,6 +3184,7 @@ commands:
     problem, so that anyone can reproduce it with a single command.
 
       bootstrap   scaffold one from an existing example, then edit it
+      list        find models by case, status, verdict, base example, author, date
       status      show or update what a model proves: expected, actual, jira, status
       assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced
       bisect      run a model on several versions: which one introduced or fixed it
@@ -3699,6 +3700,76 @@ commands:
     - playground repro status
     - playground repro status -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --set "fixed in 10.8.3" --jira CC-1234
     - playground repro status --actual "the task fails with Unknown magic byte" --json
+
+  - name: list
+    help: |-
+      📋 List the reproduction models, newest first, with their case, status and last verdict
+
+      Reads the header of every model of reproduction-models (date, author,
+      description, 🎯 expected, 💥 actual, 🎫 jira, 🩹 status), its base
+      example, whether it is committed, and the last verdict recorded by
+      'playground repro assert'. A model without a date in its header gets
+      the date of the commit that added it; one without a description, the
+      end of its file name.
+
+      Filters can be combined. Models with uncommitted changes are marked ✏️.
+    flags:
+      - long: --mine
+        required: false
+        help: |-
+          👤 Only the models whose author is you (whoami)
+      - long: --case
+        arg: case
+        required: false
+        help: |-
+          🔮 Only the models of this case (6 digits at the start of the description, or in the file name)
+      - long: --status
+        arg: status
+        required: false
+        help: |-
+          🩹 Only the models whose 🩹 status contains this text (open, fixed, not a bug…)
+      - long: --verdict
+        arg: verdict
+        required: false
+        allowed: [reproduced, not-reproduced, none]
+        help: |-
+          🧪 Only the models with this last verdict (none: never ended with 'playground repro assert' here)
+      - long: --base
+        arg: example
+        required: false
+        help: |-
+          🧬 Only the models whose base example contains this text, for example connect-jdbc-sink
+      - long: --since
+        arg: since
+        required: false
+        help: |-
+          📅 Only the models created since this number of days (90d) or this date (2026-01-31)
+      - long: --grep
+        arg: regex
+        required: false
+        help: |-
+          🔍 Only the models whose description, expected, actual, jira or path matches this regex (case insensitive)
+      - long: --uncommitted
+        required: false
+        help: |-
+          ✏️ Only the models with uncommitted changes
+      - long: --limit
+        arg: number
+        required: false
+        default: "30"
+        validate: integer
+        help: |-
+          🔢 Number of models shown (default: 30, 0 for all)
+      - long: --json
+        required: false
+        help: |-
+          🤖 Print the models as JSON (every field, with the last verdict and its versions)
+    examples:
+    - playground repro list --mine --since 90d
+    - playground repro list --case 123456
+    - playground repro list --status open --base connect-cdc-oracle
+    - playground repro list --grep "magic byte" --limit 0
+    - playground repro list --verdict reproduced --json
 
   - name: assert
     help: |-
