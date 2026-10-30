@@ -1788,9 +1788,14 @@ subcommands:
         servers, schema registry, license, replication\n  factors); the connector
         keeps the name of the example\n- its secrets, masked values, config providers
         and terraform\n  references become variables, checked at the top of the model
-        so\n  that 'playground run' loads them from 'playground secrets'\n\n\U0001F393
-        Tip: then compare the running connector with the customer file:\nplayground
-        connector diff --connector <c> --file <file>"
+        so\n  that 'playground run' loads them from 'playground secrets'\n\nIn interactive
+        mode (no --file, no --config), the first menu asks\nwhether to start from
+        an example or from a connector config: the\nfiles of the folders of 'playground
+        config folder_zip_or_jar' and of\nthe current folder that hold a connector
+        config are listed, newest\nfirst.\n\n\U0001F393 Tip: use <tab> completion
+        to trigger fzf completion\n\n\U0001F393 Tip: then compare the running connector
+        with the customer file:\nplayground connector diff --connector <c> --file
+        <file>"
     - names:
       - "--config-connector"
       argument: CONNECTOR
