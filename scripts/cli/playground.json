@@ -3696,6 +3696,63 @@
                   "description": "Max duration to follow logs\n\nDefault value: 0"
                 }
               ]
+            },
+            {
+              "name": "sourcecode",
+              "description": "🧑‍💻 Source code of the CFK operator at the version of a cluster or of a support bundle\n\nThe helm chart version of CFK (0.1718.10 for CFK 3.3.0) is also the image tag of the operator and the git tag\n(v0.1718.10) of its source, in the private repository confluentinc/confluent-operator (Confluent only: gh auth\nlogin, VPN). The tag is cloned once, shallow, in /tmp/cfk-operator-sourcecode/confluent-operator-v<tag>, and the\nfolder is printed as the last line, for an agent or an engineer to read the code that logs an error.\n\n--grep \"<message>\" searches a literal part of an operator message in the code (tests and vendor left out), with\nthe GitHub link of each match. With --compare-with <version>, it also says whether the message is still there in\nanother version, and which of its files changed (is it fixed after X?).\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk",
+              "usage": "playground debug cfk sourcecode [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--cfk-version"
+                  ],
+                  "argument": "VERSION",
+                  "description": "🔢 CFK version (3.3.0), mapped to its operator tag"
+                },
+                {
+                  "names": [
+                    "--operator-tag"
+                  ],
+                  "argument": "TAG",
+                  "description": "🏷️ Operator tag, the helm chart version (0.1718.10)"
+                },
+                {
+                  "names": [
+                    "--bundle",
+                    "-f"
+                  ],
+                  "argument": "BUNDLE",
+                  "description": "📦 CFK support bundle (folder, .tar.gz, .tgz, .zip): its operator version (cluster-details.txt, operator Deployment)"
+                },
+                {
+                  "names": [
+                    "--grep"
+                  ],
+                  "argument": "MESSAGE",
+                  "description": "🔎 Literal text to search in the code, a part of an operator log message (\"cluster not rollable from roll pre checks\")"
+                },
+                {
+                  "names": [
+                    "--compare-with"
+                  ],
+                  "argument": "VERSION",
+                  "description": "🆚 Another CFK version or operator tag: whether the --grep text is still there, which files changed, the GitHub compare link"
+                },
+                {
+                  "names": [
+                    "--only-show-url"
+                  ],
+                  "argument": "",
+                  "description": "🔗 Only print the GitHub URL of the tag (and of the comparison with --compare-with), no clone"
+                },
+                {
+                  "names": [
+                    "--checkout-only"
+                  ],
+                  "argument": "",
+                  "description": "📂 Clone the tag and print its folder as the last line (also what the command does without --grep / --compare-with)"
+                }
+              ]
             }
           ]
         }
