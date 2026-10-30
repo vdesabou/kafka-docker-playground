@@ -235,3 +235,4 @@ Assignment list for one destination table when singlestore.onDuplicateKeyUpdate 
 	 - Importance: MEDIUM
 	 - Required: false
 
+
