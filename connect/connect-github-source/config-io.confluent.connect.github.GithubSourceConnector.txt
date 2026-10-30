@@ -108,12 +108,12 @@ The resources that are to be extracted and written to Kafka.
 
 🔘 entity.names
 
+The entities that are to be extracted and written to Kafka.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The entities that are to be extracted and written to Kafka.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Authorization
@@ -138,12 +138,12 @@ Authentication type of the endpoint. Valid values are ``none``, ``basic``, ``oau
 
 🔘 connection.user
 
+The username to be used with an endpoint requiring authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connection.password
 
@@ -165,21 +165,21 @@ The bearer authentication token to be used when ``auth.type=bearer``. The suppli
 
 🔘 oauth2.token.url
 
+The URL to be used for fetching OAUTH2 token. Client Credentials is the only supported grant type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching OAUTH2 token. Client Credentials is the only supported grant type.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.id
 
+The client id used when fetching OAuth2 token
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client id used when fetching OAuth2 token
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.secret
 
@@ -209,16 +209,16 @@ Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 author
 	 - Required: false
 
 ==========================
-oauth2.client.scope
+
 ==========================
-🔘 any
+🔘 oauth2.client.scope
 
+The scope parameter sent to the service when fetching OAuth2 token.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The scope parameter sent to the service when fetching OAuth2 token.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: any
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Topics
@@ -297,12 +297,12 @@ Proxy
 ==========================
 🔘 http.proxy.host
 
+The host or ip of the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The host or ip of the http proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 http.proxy.port
 
@@ -315,12 +315,12 @@ The port number of the http proxy.
 
 🔘 http.proxy.user
 
+The username to be used when authenticating with the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used when authenticating with the http proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 http.proxy.password
 
@@ -402,12 +402,12 @@ The name of the security provider used for SSL connections. Default value is the
 
 🔘 https.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 https.ssl.enabled.protocols
 
@@ -585,19 +585,20 @@ Disallow Class E IP addresses after DNS resolution.
 
 🔘 connection.disallow.cidr.ranges
 
+Disallow IP addresses from the configured CIDR ranges after DNS resolution.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Disallow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.allow.cidr.ranges
 
+Allow IP addresses from the configured CIDR ranges after DNS resolution.
 
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Allow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: MEDIUM
 
