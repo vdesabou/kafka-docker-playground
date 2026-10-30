@@ -71,6 +71,7 @@ github_ssh_key_file
 confluent-hub
 *.jfr
 playground-run-history
+playground-run-history.bak
 playground-repro-verdicts
 benchmark-history
 playground-ccloud-created-topics
