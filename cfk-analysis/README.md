@@ -88,6 +88,13 @@ scheduling, …) with concrete remediation steps per category:
   its log has an install error (host not resolved / unreachable, checksum mismatch, no space left under
   `storageLimit`, plugin not on Confluent Hub), or when it took 5 minutes or more; and one finding per Connector CR
   whose `spec.class` is not among the installed plugins of its Connect (`status.connectorPlugins`).
+- Several bundles (`compare.py`): `playground analyze logs -f a -f b` writes the JSON of each analysis next to its HTML
+  report (`analyzer_cli.py --json-out`, with `collected`, the newest timestamp of the bundle, and `label`) and
+  compares them, sorted by collection time, each one with the previous one: same cluster (CRs in common), versions,
+  changes of the CRs between the two collections, issues fixed / new / still there (matched on category, component,
+  instance and message, digits / timestamps / numbered placeholders folded), known CFK issues, KRaft migration phase,
+  verdict. Text, `cfk-bundles-comparison-*.html`, `"comparison"` in `--json`. Samples:
+  `--sample cfk_rollout --sample cfk_rollout_after` (`make_rollout_bundle.py --after`).
 - Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
   container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
   while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC

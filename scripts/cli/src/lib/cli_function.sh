@@ -6069,7 +6069,14 @@ function analyze_cfk_bundle() {
         bundle_basename="${bundle_basename%.zip}"
         html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
         cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
+        # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
+        CFK_ANALYSIS_JSON="${html_out%.html}.json"
+        cli_args+=(--json-out "/tmp/output/$(basename "$CFK_ANALYSIS_JSON")")
         docker_args+=(-v "$output_dir_abs:/tmp/output")
+    fi
+    if [[ -n "${CFK_ANALYSIS_LABEL:-}" ]]
+    then
+        cli_args+=(--label "$CFK_ANALYSIS_LABEL")
     fi
 
     docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
@@ -6084,6 +6091,49 @@ function analyze_cfk_bundle() {
     then
         log ""
         open_html_report "$html_out"
+    fi
+    return $exit_code
+}
+
+# Comparison of several CFK support bundles (cfk-analysis/compare.py), from the JSON of their analysis: sorted by the
+# time they were collected, each one compared with the previous one (same cluster?, versions, changes between them,
+# issues fixed / new / still there).
+# $1: non-empty for JSON on stdout (no HTML report), $2: output directory of the HTML report, then the JSON files
+function compare_cfk_bundles() {
+    local json_out="$1"
+    local output_dir="$2"
+    shift 2
+    local analyzer_dir="$root_folder/cfk-analysis"
+    local image_tag
+    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+    local image="cfk-bundle-analyzer:$image_tag"
+    local docker_args=(--rm --user "$(id -u):$(id -g)" --entrypoint python
+        -v "$analyzer_dir:/tmp/cfk-analysis:ro" -v "$root_folder/tools/report-common:/tmp/report-common:ro")
+    local args=()
+    local i=0
+    local file
+    for file in "$@"
+    do
+        docker_args+=(-v "$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file"):/tmp/input/analysis-$i.json:ro")
+        args+=("/tmp/input/analysis-$i.json")
+        i=$((i + 1))
+    done
+    if [[ -n "$json_out" ]]
+    then
+        docker run "${docker_args[@]}" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" --json
+        return $?
+    fi
+    mkdir -p "$output_dir"
+    local output_dir_abs
+    output_dir_abs=$(cd "$output_dir" && pwd -P)
+    local html_out="cfk-bundles-comparison-$(date '+%Y%m%d-%H%M%S').html"
+    docker run "${docker_args[@]}" -v "$output_dir_abs:/tmp/output" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" \
+        --html-out "/tmp/output/$html_out"
+    local exit_code=$?
+    if [[ $exit_code -eq 0 && -f "$output_dir_abs/$html_out" ]]
+    then
+        log ""
+        open_html_report "$output_dir_abs/$html_out"
     fi
     return $exit_code
 }

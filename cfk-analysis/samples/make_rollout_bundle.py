@@ -16,9 +16,17 @@ A synthetic bundle in the layout of `kubectl confluent support-bundle` that tell
   before the start of that log
 - the events are in event.yaml and, as kubectl text, in event.txt
 
-The tarball is deterministic (sorted entries, fixed mtimes, gzip without timestamp): regenerating it gives the same bytes.
+With --after, it builds samples/cfk-support-bundle-rollout-after.tar.gz (`--sample cfk_rollout_after`), the same cluster
+the next day, to compare the two (`playground analyze logs --sample cfk_rollout --sample cfk_rollout_after`): the quota
+was raised and the new operator pod runs, block-reconcile was removed from the KRaftController (which rolled to
+7.9.10), the Kafka roll is complete; the stale "Reconcile is blocked." conditions are still there, Connect still runs
+7.4.1, and connect-1 restarted twice while the brokers rolled.
+
+The tarballs are deterministic (sorted entries, fixed mtimes, gzip without timestamp): regenerating them gives the same
+bytes.
 
 Usage: python3 make_rollout_bundle.py cfk-support-bundle-rollout.tar.gz
+       python3 make_rollout_bundle.py --after cfk-support-bundle-rollout-after.tar.gz
 """
 
 import gzip
@@ -182,7 +190,7 @@ EVENTS = [
     ("Unhealthy", "Pod", "kafka-1", "Readiness probe failed: dial tcp 10.128.4.17:9071: connect: connection refused", 251,
      "2026-10-16T05:41:10Z", "2026-10-16T09:44:50Z"),
 ]
-FILES[f"{NS}/event.yaml"] = "apiVersion: v1\nkind: List\nitems:\n" + "".join(
+_EVENTS_YAML = "apiVersion: v1\nkind: List\nitems:\n" + "".join(
     f"""- apiVersion: v1
   kind: Event
   type: Warning
@@ -193,9 +201,12 @@ FILES[f"{NS}/event.yaml"] = "apiVersion: v1\nkind: List\nitems:\n" + "".join(
   firstTimestamp: "{first}"
   lastTimestamp: "{last}"
 """ for reason, kind, name, message, count, first, last in EVENTS)
-FILES[f"{NS}/event.txt"] = "LAST SEEN   TYPE      REASON         OBJECT                                     MESSAGE\n" + "".join(
+_EVENTS_TXT = "LAST SEEN   TYPE      REASON         OBJECT                                     MESSAGE\n" + "".join(
     f"{age:<11} Warning   {reason:<14} {kind}/{name:<35} {message}\n"
     for age, (reason, kind, name, message, _, _, _) in zip(("20s", "10s"), EVENTS))
+
+FILES[f"{NS}/event.yaml"] = _EVENTS_YAML
+FILES[f"{NS}/event.txt"] = _EVENTS_TXT
 
 FILES[f"{NS}/cluster-resources/kafka/logs/kafka-1.log"] = f"""[2026-10-16 05:40:12,004] INFO Kafka version: {NEW}-ce (org.apache.kafka.common.utils.AppInfoParser)
 [2026-10-16 05:40:31,551] WARN [RaftManager id=1] Connection to node 9991 (kraftcontroller-0.kraftcontroller.{NS}.svc.cluster.local/10.128.2.11:9074) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
@@ -211,12 +222,78 @@ FILES["operator/confluent-operator-6b7f54d485-gs6hj.log"] = "".join(
     for h in ("07", "08", "09") for m in ("00", "15", "30", "45"))
 
 
-def main(out_path: str) -> int:
+def events_files(events):
+    return {
+        f"{NS}/event.yaml": "apiVersion: v1\nkind: List\nitems:\n" + "".join(
+            f"""- apiVersion: v1
+  kind: Event
+  type: Warning
+  reason: {reason}
+  message: '{message}'
+  count: {count}
+  involvedObject: {{kind: {kind}, name: {name}, namespace: {NS}}}
+  firstTimestamp: "{first}"
+  lastTimestamp: "{last}"
+""" for reason, kind, name, message, count, first, last in events),
+        f"{NS}/event.txt": "LAST SEEN   TYPE      REASON         OBJECT                                     MESSAGE\n" + "".join(
+            f"{age:<11} Warning   {reason:<14} {kind}/{name:<35} {message}\n"
+            for age, (reason, kind, name, message, _, _, _) in zip(("20s", "10s", "5s"), events)),
+    }
+
+
+def after_files():
+    """The same cluster the next day (see the docstring)"""
+    files = dict(FILES)
+    del files["operator/confluent-operator-6b7f54d485-gs6hj.log"]
+    files[f"{NS}/cluster-resources/kraftcontroller/kraftcontroller.yaml"] = cr(
+        "KRaftController", "kraftcontroller", f"{REG}/cp-server:{NEW}", INIT_NEW, conditions=BLOCKED_CONDITION,
+        managed="""  managedFields:
+  - manager: kubectl-annotate
+    operation: Update
+    time: "2026-10-16T14:02:30Z"
+    fieldsV1:
+      f:metadata:
+        f:annotations: {}
+""")
+    files[f"{NS}/cluster-resources/kraftcontroller/statefulset.yaml"] = statefulset(
+        "kraftcontroller", f"{REG}/cp-server:{NEW}", 3, 3, "kraftcontroller-8e1f", "kraftcontroller-8e1f")
+    files[f"{NS}/cluster-resources/kafka/statefulset.yaml"] = statefulset(
+        "kafka", f"{REG}/cp-server:{NEW}", 3, 3, "kafka-5ccfbb6954", "kafka-5ccfbb6954")
+    files[f"{NS}/cluster-resources/pods.yaml"] = "apiVersion: v1\nkind: List\nitems:\n" + "".join([
+        pod("kraftcontroller-0", "kraftcontroller", f"{REG}/cp-server:{NEW}", True, "2026-10-16T14:12:00Z"),
+        pod("kraftcontroller-1", "kraftcontroller", f"{REG}/cp-server:{NEW}", True, "2026-10-16T14:09:00Z"),
+        pod("kraftcontroller-2", "kraftcontroller", f"{REG}/cp-server:{NEW}", True, "2026-10-16T14:06:00Z"),
+        pod("kafka-0", "kafka", f"{REG}/cp-server:{NEW}", True, "2026-10-16T14:31:00Z"),
+        pod("kafka-1", "kafka", f"{REG}/cp-server:{NEW}", True, "2026-10-16T14:20:00Z", restarts=1),
+        pod("kafka-2", "kafka", f"{REG}/cp-server:{NEW}", True, "2026-10-16T05:35:00Z"),
+        pod("connect-0", "connect", f"{REG}/cp-server-connect:{OLD}", True, "2026-10-13T16:20:00Z"),
+        pod("connect-1", "connect", f"{REG}/cp-server-connect:{OLD}", True, "2026-10-16T14:40:00Z", restarts=2),
+        pod("confluent-operator-78f46f99dc-k2lpq", "confluent-operator", f"{REG}/confluent-operator:0.1718.10", True,
+            "2026-10-16T13:55:00Z"),
+    ])
+    files.update(events_files([
+        ("BackOff", "Pod", "connect-1", "Back-off restarting failed container connect in pod connect-1", 4,
+         "2026-10-16T14:33:00Z", "2026-10-16T14:39:00Z"),
+    ]))
+    files[f"{NS}/cluster-resources/kafka/logs/kafka-1.log"] = f"""[2026-10-16 14:20:12,004] INFO Kafka version: {NEW}-ce (org.apache.kafka.common.utils.AppInfoParser)
+[2026-10-16 14:21:02,551] INFO [BrokerServer id=1] Transition from STARTING to STARTED (kafka.server.BrokerServer)
+[2026-10-17 09:44:48,120] INFO [GroupCoordinator 1]: Preparing to rebalance group connect-cluster (kafka.coordinator.group.GroupCoordinator)
+"""
+    files["operator/confluent-operator-78f46f99dc-k2lpq.log"] = "".join(
+        f'{{"level":"INFO","time":"2026-10-17T{h}:{m}:00.000Z","name":"kafka","caller":"roll/roll_handler.go:88",'
+        f'"msg":"cluster is healthy","namespace":"{NS}"}}\n'
+        for h in ("07", "08", "09") for m in ("00", "15", "30", "45"))
+    return files
+
+
+def main(out_path: str, after: bool = False) -> int:
+    files = after_files() if after else FILES
+    folder = "cfk-support-bundle-rollout-after" if after else "cfk-support-bundle-rollout"
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w", format=tarfile.PAX_FORMAT) as tar:
-        for name in sorted(FILES):
-            data = FILES[name].encode("utf-8")
-            info = tarfile.TarInfo(f"cfk-support-bundle-rollout/{name}")
+        for name in sorted(files):
+            data = files[name].encode("utf-8")
+            info = tarfile.TarInfo(f"{folder}/{name}")
             info.size, info.mtime, info.mode, info.uid, info.gid, info.uname, info.gname = len(data), 1791964800, 0o644, 0, 0, "", ""
             tar.addfile(info, io.BytesIO(data))
     with open(out_path, "wb") as f:
@@ -226,7 +303,10 @@ def main(out_path: str) -> int:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    args = sys.argv[1:]
+    after = "--after" in args
+    args = [a for a in args if a != "--after"]
+    if len(args) != 1:
         print(__doc__, file=sys.stderr)
         sys.exit(1)
-    sys.exit(main(sys.argv[1]))
+    sys.exit(main(args[0], after))

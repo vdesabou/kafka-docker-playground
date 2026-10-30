@@ -233,7 +233,13 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   critical / high issue are marked ⚠️ in the Recent changes and listed in one finding. **🧩 Connect plugins**: a Connect
   whose `spec.build.onDemand` plugins cannot be installed (its `config-init-container` fails, an install error in its
   log, or an init of 5 minutes or more, typical of an air-gapped cluster) is one finding with the next steps, and so
-  is a Connector CR whose class is not among the installed plugins of its Connect (`status.connectorPlugins`). It
+  is a Connector CR whose class is not among the installed plugins of its Connect (`status.connectorPlugins`).
+  **🔁 Several bundles** (`-f before.tar.gz -f after.tar.gz`): after the analysis of each one, they are compared, sorted
+  by collection time (their newest timestamp), each one with the previous one: same cluster or not (CRs in common),
+  versions, changes of the CRs between the two collections, issues fixed / new / still there (with their
+  occurrences), known CFK issues, KRaft migration phase, and a verdict (`better`, `worse`, `changed`, `no change`,
+  `different clusters`), in the terminal, a `cfk-bundles-comparison-*.html` report and `"comparison"` in `--json`.
+  `--sample cfk_rollout --sample cfk_rollout_after` shows one. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration, `--sample cfk_rollout` for a half-done upgrade).
@@ -474,6 +480,7 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | Customer setup or symptom | Command |
 | --- | --- |
 | "we upgraded the CR but the pods still run the old version" (support bundle) | `playground analyze logs -f <bundle>`: the 🔄 `Rollout Issues` finding says what each pod runs, how far the roll got, and why (`block-reconcile`, operator not applying, roll blocked) |
+| "here is a new bundle, what changed since the last one?" | `playground analyze logs -f <older bundle> -f <newer bundle>`: the 🔁 comparison gives the verdict, the changes of the CRs between the two, and the issues fixed / new / still there |
 | "the ZooKeeper to KRaft migration is stuck" (support bundle) | `playground analyze logs -f <bundle>`: the 🚚 `KRaft Migration` finding gives the sub-phase, since when, the last error and the next steps; `--sample cfk_kraft_migration` to see one |
 | "the connector works with Docker, not on our CFK cluster" | the same example with `--environment cfk`, then `connector create-or-update --dry-run` to compare the `Connector` CR with theirs |
 | "the customer deploys connectors with a `Connector` CR" | the example under `cfk`, `connector status` shows the CR state next to the Connect state; `kubectl -n confluent get connector <c> -o yaml` for the whole resource |
