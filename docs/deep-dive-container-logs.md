@@ -258,7 +258,11 @@ highlighted and ▲ Previous / ▼ Next buttons (`p` / `n` keys) between them. T
 in `<report>-files/` (one page per file with findings), because the input is often an archive extracted to a temporary
 folder deleted at the end of the command. They are sanitized with the same placeholders as the report (`<HOST-1>` is the
 same host in both, `--no-sanitize` keeps the raw files), and a file over 2 MB keeps only the 250 lines before and after
-each finding. Send the folder with the report when you share it. The CFK bundle report does the same for the location
+each finding. Next to each page, a plain text copy of the file (`003-connect-0.log`, the lines not copied left empty
+so that the line numbers match) is what the ✏️ links open in your editor, at the line: the one of
+`playground config editor` through its URL scheme (`code` → `vscode://file/<path>:33`, also `cursor`, `windsurf`, `zed`,
+`subl`, `idea`, `pycharm`), VS Code for an editor without one (`vi`, `nano`…). Send the folder with the report when you
+share it. The CFK bundle report does the same for the location
 of each issue (a YAML file without line number opens at the `name:` of its pod or custom resource).
 
 `--json` prints the same analysis on stdout (`"type": "logs"`: summary, findings, known causes, root causes, every

@@ -785,7 +785,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                 "characters per line and to 3 frames of the deepest cause, like the terminal digest; 📋 Show context has the raw "
                 "lines around their first occurrence."
                 + (f" The file names and line numbers open a copy of the file{' (sanitized)' if viewers_sanitized else ''} "
-                   f"in {e(next(iter(viewers.values())).split('/')[0])}/: keep that folder with the report." if viewers else ""))
+                   f"in {e(next(iter(viewers.values())).split('/')[0])}/ (✏️ in {e(log_viewer.editor()[0])}, playground config "
+                   "editor): keep that folder with the report." if viewers else ""))
 
 
 def write_viewers(report: str, files: List[dict], res: dict, sources_file: str, sanitize_state: Optional[str]) -> Dict[str, str]:

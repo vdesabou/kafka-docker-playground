@@ -6072,7 +6072,9 @@ function analyze_cfk_bundle() {
         # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
         CFK_ANALYSIS_JSON="${html_out%.html}.json"
         cli_args+=(--json-out "/tmp/output/$(basename "$CFK_ANALYSIS_JSON")")
-        docker_args+=(-v "$output_dir_abs:/tmp/output")
+        # the ✏️ links of the report open the copies of the files in the editor, at their path on the host
+        docker_args+=(-v "$output_dir_abs:/tmp/output" -e PLAYGROUND_REPORT_HOST_DIR="$output_dir_abs"
+                      -e PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)")
     fi
     if [[ -n "${CFK_ANALYSIS_LABEL:-}" ]]
     then

@@ -8,12 +8,19 @@ report cfk-analysis/html_report.py): one page per file with findings, written ne
 The input files are often extracted from an archive to a temporary folder deleted at the end of the command, and the
 report is sanitized: so the pages are a copy of the files, sanitized with the same placeholders as the report.
 A big file keeps only the lines around the findings.
+
+Next to each page, a plain text copy of the file (same name without .html, same sanitization, the lines not copied left
+empty so that the line numbers match) is what the ✏️ links open in the editor: the editor of
+`playground config editor` (PLAYGROUND_EDITOR, code by default) through its URL scheme (vscode://file/<path>:<line>…),
+VS Code for an editor without one (vi, nano…). PLAYGROUND_REPORT_HOST_DIR: the folder of the report on the host, when
+it is written in a container (the CFK analyzer).
 """
 
 import gzip
 import os
 import re
 import shutil
+from urllib.parse import quote
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 from report_html import e, log_html, style
@@ -31,6 +38,7 @@ VIEWER_CSS = """
 .page{max-width:none}
 .lv-bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;margin-bottom:12px;
 border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);font-size:.8rem;color:#475569}
+a.lv-edit{text-decoration:none;margin-left:4px;opacity:.75}a.lv-edit:hover{opacity:1}
 .lv-bar button,.lv-bar a.lv-btn{font-family:inherit;font-size:.78rem;padding:3px 10px;border-radius:6px;border:1px solid #cbd5e1;
 background:#f8fafc;color:#1e293b;cursor:pointer;text-decoration:none}
 .lv-bar button:hover,.lv-bar a.lv-btn:hover{background:#e2e8f0}
@@ -53,7 +61,8 @@ html[data-theme=dark] .lv .l:target,html[data-theme=dark] .lv .l.cur{background:
 html[data-theme=dark] .lv .gap{background:#0f172a;border-color:#334155}
 """
 
-# previous / next finding (buttons, n / p keys), from the line of the URL (#L33) or the current one
+# previous / next finding (buttons, n / p keys), from the line of the URL (#L33) or the current one; the ✏️ button opens
+# the text copy at that line
 VIEWER_SCRIPT = """<script>
 (function () {
   const hits = [...document.querySelectorAll(".lv .l.hit")];
@@ -66,8 +75,15 @@ VIEWER_SCRIPT = """<script>
     hits[cur].scrollIntoView({block: "center"});
     history.replaceState(null, "", "#" + hits[cur].id);
     document.getElementById("lv-pos").textContent = (cur + 1) + " / " + hits.length;
+    editAt();
+  }
+  function editAt() {
+    const edit = document.getElementById("lv-edit");
+    const line = location.hash.startsWith("#L") ? location.hash.slice(2) : "1";
+    if (edit) edit.href = edit.dataset.url.replace("{line}", line);
   }
   function fromHash() {
+    editAt();
     const line = document.getElementById(location.hash.slice(1));
     if (!line) return;
     const n = +line.id.slice(1);
@@ -150,10 +166,35 @@ def page_name(index: int, label: str) -> str:
     return f"{index:03d}-{base}.html"
 
 
+# editor of playground config editor -> (name shown, URL with {path} and {line}); the others open in VS Code
+EDITORS = {
+    "code": ("VS Code", "vscode://file{path}:{line}"),
+    "code-insiders": ("VS Code Insiders", "vscode-insiders://file{path}:{line}"),
+    "cursor": ("Cursor", "cursor://file{path}:{line}"),
+    "windsurf": ("Windsurf", "windsurf://file{path}:{line}"),
+    "zed": ("Zed", "zed://file{path}:{line}"),
+    "subl": ("Sublime Text", "subl://open?url=file://{path}&line={line}"),
+    "idea": ("IntelliJ IDEA", "idea://open?file={path}&line={line}"),
+    "pycharm": ("PyCharm", "pycharm://open?file={path}&line={line}"),
+}
+
+
+def editor() -> Tuple[str, str]:
+    """(name, URL template) of the editor of playground config editor (PLAYGROUND_EDITOR), VS Code by default"""
+    name = os.path.basename((os.environ.get("PLAYGROUND_EDITOR") or "code").split()[0])
+    return EDITORS.get(name, EDITORS["code"])
+
+
+def editor_url(path: str, line="{line}") -> str:
+    """URL opening a file of the host at a line in the editor; line "{line}" is left for the script of the page"""
+    return editor()[1].replace("{path}", quote(path)).replace("{line}", str(line))
+
+
 def write_page(path: str, out_path: str, label: str, hits: Iterable[int], sanitize: Optional[Callable[[str], str]],
-               report_name: str, note: str = "") -> bool:
-    """writes the viewer page of one file; hits: line numbers of its findings (highlighted); report_name: file name of
-    the report, for the link back. False when the file cannot be read."""
+               report_name: str, note: str = "", host_copy: str = "") -> bool:
+    """writes the viewer page of one file and its text copy (out_path without .html); hits: line numbers of its findings
+    (highlighted); report_name: file name of the report, for the link back; host_copy: path of the text copy on the
+    host, for the ✏️ button. False when the file cannot be read."""
     lines = read_lines(path)
     if lines is None:
         return False
@@ -162,12 +203,15 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], saniti
     ranges = kept_ranges(len(lines), hits, whole)
     hit_set = set(hits)
     body: List[str] = []
+    # the text copy, the lines not copied left empty
+    copy: List[str] = [""] * len(lines)
     previous_end = 0
     for lo, hi in ranges:
         if lo > previous_end + 1:
             body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{lo - 1} not copied (file over "
                         f"{MAX_FULL_BYTES // (1024 * 1024)} MB: {WINDOW} lines around each finding)</div>")
         for n, text in enumerate(sanitized_lines(lines[lo - 1:hi], sanitize), start=lo):
+            copy[n - 1] = text
             body.append(f"<div class='l{' hit' if n in hit_set else ''}' id='L{n}'><a class='n' href='#L{n}'>{n}</a>"
                         f"<span>{log_html(text)}</span></div>")
         previous_end = hi
@@ -179,6 +223,9 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], saniti
            f"<button type='button' id='lv-prev' title='previous finding (p)'>▲ Previous</button>"
            f"<button type='button' id='lv-next' title='next finding (n)'>▼ Next</button>"
            f"<span>finding <span id='lv-pos'>– / {len(hits)}</span></span>"
+           + (f"<a class='lv-btn' id='lv-edit' href='#' data-url='{e(editor_url(host_copy))}' "
+              f"title='open the copy of the file at this line in {e(editor()[0])} (playground config editor)'>✏️ {e(editor()[0])}</a>"
+              if host_copy else "") +
            f"<span class='mono'>· {e(label)} · {len(lines)} lines · {copied}</span>"
            + (f"<span>· {e(note)}</span>" if note else "") + "</div>")
     html = ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
@@ -187,11 +234,18 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], saniti
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as fh:
         fh.write(html)
+    with open(out_path[:-len(".html")], "w", encoding="utf-8") as fh:
+        fh.write("\n".join(copy) + "\n")
     return True
 
 
+class Viewers(dict):
+    """label -> href of the page of the file, relative to the report; host_dir: folder of the report on the host"""
+    host_dir = ""
+
+
 def write_pages(report_path: str, files: List[Tuple[str, str, Iterable[int]]], sanitize: Optional[Callable[[str], str]],
-                note: str = "") -> Dict[str, str]:
+                note: str = "") -> Viewers:
     """writes the viewer pages of the files of a report, in <report stem>-files/ next to it.
     files: (label, path on disk, line numbers of the findings). Returns label -> href relative to the report."""
     report_dir = os.path.dirname(os.path.abspath(report_path))
@@ -199,20 +253,41 @@ def write_pages(report_path: str, files: List[Tuple[str, str, Iterable[int]]], s
     folder = os.path.splitext(report_name)[0] + "-files"
     # the pages of a previous report with the same name
     shutil.rmtree(os.path.join(report_dir, folder), ignore_errors=True)
-    hrefs: Dict[str, str] = {}
+    hrefs = Viewers()
+    hrefs.host_dir = os.environ.get("PLAYGROUND_REPORT_HOST_DIR") or report_dir
     for i, (label, path, hits) in enumerate(files, start=1):
         if label in hrefs or not path or not os.path.isfile(path):
             continue
         name = page_name(i, label)
-        if write_page(path, os.path.join(report_dir, folder, name), label, hits, sanitize, report_name, note):
+        host_copy = os.path.join(hrefs.host_dir, folder, name[:-len(".html")])
+        if write_page(path, os.path.join(report_dir, folder, name), label, hits, sanitize, report_name, note, host_copy):
             hrefs[label] = f"{folder}/{name}"
     return hrefs
 
 
+def edit_url(hrefs: Dict[str, str], label: str, line: Optional[int] = None) -> str:
+    """URL opening the text copy of a file at a line in the editor, "" when the file has no page"""
+    href = hrefs.get(label, "").split("#")[0]
+    host_dir = getattr(hrefs, "host_dir", "")
+    if not href or not host_dir:
+        return ""
+    return editor_url(os.path.join(host_dir, href[:-len(".html")]), line or 1)
+
+
+def edit_link(hrefs: Dict[str, str], label: str, line: Optional[int] = None) -> str:
+    """✏️ link opening the text copy of a file at a line in the editor, "" when the file has no page"""
+    url = edit_url(hrefs, label, line)
+    if not url:
+        return ""
+    return (f"<a class='lv-edit' style='text-decoration:none;margin-left:5px' href='{e(url)}' title='open the copy of {e(label)}{f' at line {line}' if line else ''} "
+            f"in {e(editor()[0])} (playground config editor)'>✏️</a>")
+
+
 def link(hrefs: Dict[str, str], label: str, text: str, line: Optional[int] = None) -> str:
-    """text (already escaped) as a link to the page of a file at a line, unchanged when the file has no page"""
+    """text (already escaped) as a link to the page of a file at a line, then a ✏️ link opening it in the editor;
+    unchanged when the file has no page"""
     href = hrefs.get(label)
     if not href:
         return text
     return (f"<a class='lv-link' href='{e(href)}{f'#L{line}' if line else ''}' target='_blank' rel='noopener' "
-            f"title='open {e(label)}{f' at line {line}' if line else ''}'>{text}</a>")
+            f"title='open {e(label)}{f' at line {line}' if line else ''}'>{text}</a>{edit_link(hrefs, label, line)}")

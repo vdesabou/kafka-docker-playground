@@ -492,6 +492,8 @@ else
 fi
 # a copy of each file with findings in <report>-files/, sanitized with the same placeholders as the report
 report_args+=(--sources "$sources_file")
+# the ✏️ links open these copies in the editor of playground config editor
+export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
 if [[ -n "$sanitize" ]]
 then
     report_args+=(--sanitize-state "$sanitize_state")

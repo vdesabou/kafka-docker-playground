@@ -360,6 +360,7 @@ def write_viewers(html_out: str, bundle_dir: str, raw_issues: list, issues: list
         href = hrefs.get(raw.get("file") or "")
         if href:
             issue["viewer"] = href + (f"#L{raw['_viewer_line']}" if raw.get("_viewer_line") else "")
+            issue["editor"] = log_viewer.edit_url(hrefs, raw.get("file") or "", raw.get("_viewer_line"))
 
 
 def yaml_line(bundle_dir: str, rel: str, name: Optional[str], cache: dict) -> Optional[int]:
@@ -424,7 +425,7 @@ def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, ht
             f.write(rendered)
     # the links of the HTML report are not part of the analysis
     for issue in results["issues"]:
-        for key in ("viewer", "_viewer_name", "_viewer_line"):
+        for key in ("viewer", "editor", "_viewer_name", "_viewer_line"):
             issue.pop(key, None)
 
     if as_json or json_out:
