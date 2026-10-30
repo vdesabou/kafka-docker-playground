@@ -14,8 +14,8 @@ reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json), path in
                     "links": [{"title": "...", "url": "..."}]}]
     }
 
-"links" adds internal links to the entries below (by name), "runbooks" adds entries. Internal links are printed in
-the text digest and in --json, never in the HTML report, which is shared with customers.
+"links" adds internal links to the entries below (by name), "runbooks" adds entries. Internal links are shown with
+a 🔒 in the text digest, the HTML report and --json.
 
 Patterns follow tools/report-common/known_causes.py: unbounded `.*` are written `.{0,N}`. "operator_info": True also
 matches the lines of the operator logs without an ERROR / WARN level: the operator logs some of these states at INFO

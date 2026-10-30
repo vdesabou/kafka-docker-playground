@@ -195,7 +195,7 @@ def print_runbooks(results):
         for line in _link_lines(hit):
             print(f"         -> {line}")
     if any(h.get("internal_links") for h in hits):
-        print("  🔒 internal links: for Confluent support only, never in a reply to the customer (not in the HTML report)")
+        print("  🔒 internal links: for Confluent support only, never in a reply to the customer")
     print()
 
 
@@ -350,9 +350,7 @@ def run(
     results["runbooks"] = analyzer.runbooks.summarize(results["issues"])
 
     if html_out:
-        # the HTML report is shared with customers: no internal link in it
-        shared = dict(results, runbooks=[dict(h, internal_links=[]) for h in results["runbooks"]])
-        rendered = html_report.render(shared, bundle_label=os.path.basename(bundle_path))
+        rendered = html_report.render(results, bundle_label=os.path.basename(bundle_path))
         os.makedirs(os.path.dirname(os.path.abspath(html_out)), exist_ok=True)
         with open(html_out, "w", encoding="utf-8") as f:
             f.write(rendered)

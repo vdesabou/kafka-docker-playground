@@ -52,7 +52,7 @@ scheduling, …) with concrete remediation steps per category:
   links of Confluent support come from an optional private JSON file, in `$CFK_RUNBOOKS_PRIVATE` (mounted by
   `playground analyze logs` from `PLAYGROUND_CFK_RUNBOOKS_FILE`, default
   `reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json`, format in the docstring of `runbooks.py`):
-  they are printed in the text digest and in `--json`, never in the HTML report, which is shared with customers.
+  they are shown with a 🔒 in the text digest, the HTML report and `--json`.
 - Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
   container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
   while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC
