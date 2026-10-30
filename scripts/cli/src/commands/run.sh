@@ -2309,6 +2309,12 @@ trap 'exit 143' TERM
 # background jobs must not inherit stdout/stderr: 'playground run | tee' (run-tests.sh) would wait for them to exit
 playground generate-fzf-find-files > /dev/null 2>&1 &
 generate_connector_versions > /dev/null 2>&1 &
+# first run of a clone or worktree: the source code link at the end needs it, and the refresh started after the example
+# would not be over by then
+if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
+then
+  playground generate-connector-plugin-list > /dev/null 2>&1 &
+fi
 
 if [[ $test_file == *"aws"* ]]
 then
