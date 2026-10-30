@@ -13,10 +13,10 @@ fi
 playground start-environment --environment mdc-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.mdc-sasl-plain.replicator.yml"
 
 log "Sending sales in Europe cluster"
-seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE --producer.config /etc/kafka/client.properties
+playground topic produce --cluster europe --topic sales_EUROPE --nb-messages 10 --value "european_sale_%g ${RANDOM}"
 
 log "Sending sales in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server broker-us:9092 --topic sales_US --producer.config /etc/kafka/client.properties
+playground topic produce --cluster us --topic sales_US --nb-messages 10 --value "us_sale_%g ${RANDOM}"
 
 playground container restart -c replicator-europe
 playground container restart -c replicator-us
@@ -24,10 +24,10 @@ playground container restart -c replicator-us
 wait_container_ready replicator-us
 wait_container_ready replicator-europe
 
-sleep 120
+log "Verify we have received the US sales in EUROPE"
+playground topic wait-for-records --cluster europe --topic sales_US --min-expected-messages 10 --max-wait 240
+playground topic consume --cluster europe --topic sales_US --min-expected-messages 10 --timeout 60
 
-log "Verify we have received the data in all the sales_ topics in EUROPE"
-docker container exec broker-europe timeout 120 kafka-console-consumer --bootstrap-server broker-europe:9092 --include "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/client.properties
-
-log "Verify we have received the data in all the sales_ topics in the US"
-docker container exec broker-us timeout 120 kafka-console-consumer --bootstrap-server broker-us:9092 --include "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/client.properties
+log "Verify we have received the European sales in the US"
+playground topic wait-for-records --cluster us --topic sales_EUROPE --min-expected-messages 10 --max-wait 240
+playground topic consume --cluster us --topic sales_EUROPE --min-expected-messages 10 --timeout 60

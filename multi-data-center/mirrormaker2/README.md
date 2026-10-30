@@ -19,13 +19,13 @@ $ just use <playground run> command and search for mirrormaker2-plaintext.sh in 
 Sending sales in Europe cluster
 
 ```bash
-$ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server localhost:9092 --topic sales_EUROPE
+playground topic produce --cluster europe --topic sales_EUROPE --nb-messages 10 --value "european_sale_%g ${RANDOM}"
 ```
 
 Sending sales in US cluster
 
 ```bash
-$ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server localhost:9092 --topic sales_US
+playground topic produce --cluster us --topic sales_US --nb-messages 10 --value "us_sale_%g ${RANDOM}"
 ```
 
 Consolidating all sales (logs are in /tmp/mirrormaker.log):
@@ -38,6 +38,7 @@ $ docker exec -d connect-us bash -c '/usr/bin/connect-mirror-maker /etc/kafka/co
 Verify we have received the data in topic `US.sales_US` in EUROPE
 
 ```bash
+playground topic wait-for-records --cluster europe --topic "US.sales_US" --min-expected-messages 10 --max-wait 180
 playground topic consume --cluster europe --topic "US.sales_US" --min-expected-messages 10 --timeout 60
 ```
 
@@ -58,6 +59,7 @@ Processed a total of 10 messages
 Verify we have received the data in topic `EUROPE.sales_EUROPE` topics in the US
 
 ```bash
+playground topic wait-for-records --cluster us --topic "EUROPE.sales_EUROPE" --min-expected-messages 10 --max-wait 180
 playground topic consume --cluster us --topic "EUROPE.sales_EUROPE" --min-expected-messages 10 --timeout 60
 ```
 

@@ -91,17 +91,21 @@ minutes to read and run.
 
 Gotchas:
 
-- **The `mdc-*` examples start their environment themselves**, some with `playground start-environment --environment
-  mdc-plaintext` (`replicator-executable`, `cluster-linking`), some by calling `environment/mdc-plaintext/start.sh`
-  directly (`replicator-connect`, `mirrormaker2`). Both record `run.environment=mdc-plaintext`. They don't read
-  `PLAYGROUND_ENVIRONMENT`: `playground run --environment sasl-ssl` doesn't turn them into another type, pick the
-  `-sasl-plain` / `-kerberos` variant.
+- **The `mdc-*` examples start their environment themselves** with `playground start-environment --environment
+  mdc-plaintext|mdc-sasl-plain|mdc-kerberos`. They don't read `PLAYGROUND_ENVIRONMENT`: `playground run --environment
+  sasl-ssl` doesn't turn them into another type, pick the `-sasl-plain` / `-kerberos` variant.
+- **They use the CLI with `--cluster`** (§3): `topic produce|consume`, `topic wait-for-records` for the replicated
+  topics (a replicated topic may not exist yet when the check starts), `connector create-or-update`, `consumer-group
+  describe`. What has no CLI equivalent stays a `kafka-*` tool: `kafka-cluster-links`, `kafka-mirrors`,
+  `kafka-replica-status`, the console consumers that commit with a `group.id` to show the offset sync, the producer
+  that a read-only mirror topic refuses, and the Schema Registry calls with basic auth of
+  `connect-plaintext-avro-with-sr-basic-auth.sh`.
 - **The Replicator connector runs on the destination side** in `replicator-connect` (`replicate-europe-to-us` on
   `connect-us`): Replicator is a *source* connector, it reads remotely with `src.kafka.*` and its worker writes
   locally. The executable does the same: `replicator-us` consumes from `broker-europe` and produces to `broker-us`.
-- `one-to-many-with-offsets-translation` and `kafka-offsets-migrator` run `docker container exec connect-europe
-  playground connector create-or-update …` (the CLI inside the container, without `-i`): they are not in CI, read
-  them as notes rather than as working scripts.
+- `one-to-many-with-offsets-translation` (source `broker-metrics`, which `--cluster` can't select: it is produced to
+  with `kafka-console-producer`) and `kafka-offsets-migrator` (a third party script downloaded at run time) are not in
+  CI.
 - Cluster Linking needs CP 7.0+ (the examples exit 111 before), and `cp-server` brokers: the default
   `CP_KAFKA_IMAGE`, not `cp-kafka`.
 
@@ -170,8 +174,8 @@ Gotchas:
   url that are not playground hosts to `broker-<cluster>:9092` and `http://schema-registry-<cluster>:8081`. A
   Replicator config keeps its `src.kafka.bootstrap.servers` / `dest.kafka.bootstrap.servers` when they name
   `broker-us` / `broker-europe`: they are containers of the playground.
-- Most `multi-data-center/` examples still use `kafka-*` tools and `curl` through `playground container exec`, with an
-  explicit `--bootstrap-server broker-us:9092` or `broker-europe:9092`: both ways work.
+- The `kafka-*` tools through `playground container exec`, with an explicit `--bootstrap-server broker-us:9092` or
+  `broker-europe:9092`, keep working: the cluster linking examples use them for `kafka-cluster-links` and `kafka-mirrors`.
 - **In the `ccloud` examples, `playground topic …` targets Confluent Cloud** (the `ccloud` environment is not
   filtered): `migrate-schemas-to-confluent-cloud` produces to the local cluster with `playground container exec -c
   connect --command "kafka-avro-console-producer --bootstrap-server broker:9092 …"` for that reason.

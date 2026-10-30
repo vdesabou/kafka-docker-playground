@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Sending 20 records in Metrics cluster"
 seq -f "sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --bootstrap-server broker-metrics:9092 --topic sales"
@@ -40,8 +40,7 @@ docker container exec -i connect-europe bash -c "kafka-console-consumer \
 # This feature is meaningful when doing an active-active setup or when you need to failback.
 # - "offset.translator.batch.period.ms": 5000 (Defaut 60000ms/1m). For demo purpose, set this value to 5s.
 log "Replicate from Metrics to Europe"
-docker container exec connect-europe \
-playground connector create-or-update --connector replicate-metrics-to-europe  << EOF
+playground connector create-or-update --cluster europe --connector replicate-metrics-to-europe  << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -59,8 +58,7 @@ playground connector create-or-update --connector replicate-metrics-to-europe  <
 EOF
 
 log "Replicate from Metrics to US"
-docker container exec connect-us \
-playground connector create-or-update --connector replicate-metrics-to-us  << EOF
+playground connector create-or-update --cluster us --connector replicate-metrics-to-us  << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",

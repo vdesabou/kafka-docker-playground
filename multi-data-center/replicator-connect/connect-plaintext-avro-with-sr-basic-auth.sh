@@ -9,7 +9,9 @@ if version_gt $TAG_BASE "7.9.99"; then
   export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
 fi
 
-${DIR}/../../environment/mdc-plaintext/start.sh "docker-compose.plaintext.avro-with-sr-basic-auth.yml"
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.avro-with-sr-basic-auth.yml"
+
+# the schema registries require basic auth here: the kafka-avro-console-* tools get the credentials directly
 
 log "Sending products in Europe cluster"
 docker exec -i connect-europe bash -c "kafka-avro-console-producer --bootstrap-server broker-europe:9092 --property schema.registry.url=http://schema-registry-europe:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info='admin:admin' --topic products_EUROPE --property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},

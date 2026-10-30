@@ -12,10 +12,10 @@ fi
 playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Create topic demo"
-docker exec broker-europe kafka-topics --create --topic demo --bootstrap-server broker-us:9092 --replication-factor 1 --partitions 1
+playground topic create --cluster us --topic demo --nb-partitions 1
 
 log "Sending 20 messages in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-us:9092 --topic demo"
+playground topic produce --cluster us --topic demo --nb-messages 20 --value "us_sale_%g ${RANDOM}"
 
 log "Verify we have received the data in source cluster using consumer group id my-consumer-group, we read only 5 messages"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 5 --consumer-property group.id=my-consumer-group"
@@ -35,20 +35,20 @@ sleep 6
 
 log "Verify that current offset is consistent in source and destination"
 log "Describe consumer group my-consumer-group at Source cluster"
-docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-us:9092 --describe --group my-consumer-group
+playground consumer-group describe --cluster us --group my-consumer-group
 
 log "Describe consumer group my-consumer-group at Destination cluster"
-docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
+playground consumer-group describe --cluster europe --group my-consumer-group
 
 log "Consume from the mirror topic on the destination cluster and verify consumer offset is working, it should start at 6"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"
 
 log "Describe consumer group my-consumer-group at Destination cluster."
-docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
+playground consumer-group describe --cluster europe --group my-consumer-group
 log "sleep 6 seconds"
 sleep 6
 log "Describe consumer group my-consumer-group at Destination cluster. Note: the current-offset has been overwritten due to the consumer offset sync"
-docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
+playground consumer-group describe --cluster europe --group my-consumer-group
 
 log "Stop consumer offset sync for consumer group my-consumer-group"
 echo "consumer.offset.group.filters={\"groupFilters\": [ \
@@ -78,7 +78,7 @@ log "Verify that the topic mirror is read-only"
 seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic demo"
 
 log "Modify the source topic config, set retention.ms"
-docker container exec -i connect-us kafka-configs --alter --topic demo --add-config retention.ms=123456890 --bootstrap-server broker-us:9092
+playground topic alter --cluster us --topic demo --add-config retention.ms=123456890
 
 log "Check the Source Topic Configuration"
 docker container exec -i connect-us kafka-configs --describe --topic demo --bootstrap-server broker-us:9092
@@ -93,13 +93,13 @@ log "Alter the number of partitions on the source topic"
 docker container exec -i connect-us kafka-topics --alter --topic demo --partitions 8 --bootstrap-server broker-us:9092
 
 log "Verify the change on the source topic"
-docker container exec -i connect-us kafka-topics --describe --topic demo --bootstrap-server broker-us:9092
+playground topic describe --cluster us --topic demo
 
 log "Wait 6 seconds (default is 5 minutes metadata.max.age.ms, but we modified it to 5 seconds)"
 sleep 6
 
 log "Verify the change on the destination topic"
-docker container exec -i connect-us kafka-topics --describe --topic demo --bootstrap-server broker-europe:9092
+playground topic describe --cluster europe --topic demo
 
 log "List mirror topics"
 docker container exec -i connect-us kafka-cluster-links --list --link demo-link --include-topics --bootstrap-server broker-europe:9092
@@ -110,10 +110,10 @@ docker container exec -i connect-us kafka-mirrors --promote --topics demo --boot
 log "Produce to both topics to verify divergence"
 
 log "Sending data again in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-us:9092 --topic demo"
+playground topic produce --cluster us --topic demo --nb-messages 10 --value "us_sale_%g ${RANDOM}"
 
 log "Sending data in EUROPE cluster"
-seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic demo"
+playground topic produce --cluster europe --topic demo --nb-messages 10 --value "europe_sale_%g ${RANDOM}"
 
 set +e
 log "Delete the cluster link"

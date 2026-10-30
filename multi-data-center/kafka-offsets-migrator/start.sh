@@ -10,7 +10,7 @@ then
      wget -q https://raw.githubusercontent.com/bb01100100/kafka-offsets-migrator/master/offset_translator.py
 fi
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Sending 20 records in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 20 | docker container exec -i connect-europe bash -c "kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE"
@@ -19,8 +19,7 @@ log "Consumer with group my-consumer-group reads 10 messages in Europe cluster"
 docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --include 'sales_EUROPE' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
 
 log "Replicate from Europe to US"
-docker container exec connect-us \
-playground connector create-or-update --connector replicate-europe-to-us  << EOF
+playground connector create-or-update --cluster us --connector replicate-europe-to-us  << EOF
 {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
