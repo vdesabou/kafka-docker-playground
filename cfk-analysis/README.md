@@ -61,6 +61,17 @@ scheduling, …) with concrete remediation steps per category:
   finalize or rollback annotation), nothing once `COMPLETE`. Built from the operator log alone when the bundle has no
   KMJ CR. Sample: `samples/cfk-support-bundle-kraft-migration.tar.gz` (`make_kraft_migration_bundle.py`,
   `playground analyze logs --sample cfk_kraft_migration`).
+- What runs vs what the CRs ask for (`Rollout Issues` category): a CR whose image version is not the one of its
+  StatefulSet (the operator did not apply the CR: `block-reconcile`, operator down) or of some of its pods (roll not
+  complete), with the StatefulSet roll (updated / ready replicas, current and update revisions) and the
+  `block-reconcile` annotation. What a pod runs comes from its manifest, else from the CP version it logs at startup
+  (`Kafka version: 7.4.1-ce`, Kafka, KRaftController, Connect and Schema Registry). `next_steps` per cause.
+- ResourceQuota: the `FailedCreate … exceeded quota` events (one per pod a controller tried to create) become one
+  finding per quota and controller, with requested / used / allowed for the exceeded resources, and a note when the
+  controller is the CFK operator (its new pod cannot start).
+- Each Warning event once: the rows of `kubectl get events` (`event.txt`) also in the YAML events (`event.yaml`) are
+  dropped (`coverage.duplicate_events`), and a copy of the bundle inside the bundle (an archive extracted next to its
+  content) is analyzed once (`coverage.skipped_copies`).
 - Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
   container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
   while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC

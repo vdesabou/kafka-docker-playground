@@ -136,6 +136,41 @@ _TASK_RE = re.compile(r'(?:Task|Worker\w*Task|task)\{id=([^}]+)\}|connector-(?:p
 # or the id of the task
 _CONNECTOR_RE = re.compile(r'\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}')
 
+# "Kafka version: 7.4.1-ce" of the AppInfoParser at startup: the CP version a pod runs (the last one of its log). Only
+# the -ce / -ccs builds of CP: a plugin with its own kafka-clients logs an Apache Kafka version
+_KAFKA_VERSION_RE = re.compile(r'Kafka version: (\d+\.\d+\.\d+)-(?:ce|ccs)\b')
+# components whose pods log the CP version of their image (Control Center next gen, ksqlDB have their own numbering)
+_VERSION_LOGGING_KINDS = {'Kafka', 'KRaftController', 'Connect', 'SchemaRegistry'}
+
+# FailedCreate of a ReplicaSet / StatefulSet / Job refused by a ResourceQuota (Kubernetes event)
+_QUOTA_RE = re.compile(r'exceeded quota: ([\w.-]+), requested: (\S+), used: (\S+), limited: (\S+)')
+_QUOTA_OWNER_RE = re.compile(r'\b(ReplicaSet|StatefulSet|Job|Deployment|DaemonSet)/([\w.-]+)')
+# a Warning row of kubectl get events: "83s Warning Unhealthy Pod/kafka-1 Readiness probe failed: …"
+_EVENT_ROW_RE = re.compile(r'\bWarning\s+(\S+)\s+([A-Za-z]+/[\w.-]+)\s+(.*)$')
+# the message of a Warning event of a YAML file: "Unhealthy: Readiness probe failed: … (Pod/kafka-1)"
+_EVENT_ISSUE_RE = re.compile(r'^(\S+): (.*) \(([A-Za-z]+/[\w.-]+)\)$', re.DOTALL)
+
+
+def _log_stem(rel: str) -> str:
+    """pod of a log file: cluster-resources/kafka/logs/kafka-0.log -> kafka-0"""
+    return re.sub(r'\.(?:log|txt|out)(?:\..*)?$', '', os.path.basename(rel), flags=re.IGNORECASE)
+
+
+def _event_key(reason: str, obj: str, message: str) -> tuple:
+    message = re.sub(r'^\(combined from similar events\):\s*', '', message.strip())
+    return reason, obj.lower(), re.sub(r'\s+', ' ', message)[:80]
+
+
+def _quantity(value: str) -> Optional[float]:
+    """Kubernetes quantity: 4, 500m, 16Gi, 2G -> number (bytes for memory)"""
+    m = re.match(r'^(\d+(?:\.\d+)?)(m|k|Ki|M|Mi|G|Gi|T|Ti)?$', value or '')
+    if not m:
+        return None
+    factor = {None: 1, 'm': 0.001, 'k': 1e3, 'Ki': 1024, 'M': 1e6, 'Mi': 1024 ** 2, 'G': 1e9, 'Gi': 1024 ** 3,
+              'T': 1e12, 'Ti': 1024 ** 4}[m.group(2)]
+    return float(m.group(1)) * factor
+
+
 # pod name suffixes: statefulset ordinal (kafka-0), deployment hash (confluent-operator-7d9c8b6f5-x2x7k)
 _POD_SUFFIX_RES = (re.compile(r'-\d+$'), re.compile(r'-[a-z0-9]{6,10}-[a-z0-9]{5}$'))
 
@@ -155,6 +190,14 @@ class CFKBundleAnalyzer:
         self.jvm_truststores = {}  # CR name -> JVM default truststore flags of its configOverrides / envVars
         self.pod_health = {}  # pod name -> (Running and every container ready, highest restart count)
         self.statefulset_ready = {}  # StatefulSet name -> every replica ready and updated, for bundles without pod manifests
+        # what the CRs ask for and what runs (_check_rollouts): CR name -> {kind, image, file}, StatefulSet name ->
+        # {images, replicas, ready, updated, revisions, file}, pod -> image of its main container, log file stem ->
+        # (CP version logged at startup, file, line), CRs with platform.confluent.io/block-reconcile
+        self.cr_images = {}
+        self.statefulsets = {}
+        self.pod_images = {}
+        self.log_versions = {}
+        self.blocked_crs = set()
         # ZooKeeper to KRaft migration (kraft_migration.py): KRaftMigrationJob CRs (name -> status, file), their Warning
         # events, the "Migration current status <phase>/<sub-phase>" lines of the operator log
         self.kraft_migrations = {}
@@ -297,8 +340,11 @@ class CFKBundleAnalyzer:
             if os.path.isdir(os.path.join(self.bundle_path, name)):
                 self.coverage['layout'].append(name)
 
+        copies = self._bundle_copies()
         for root, dirs, files in os.walk(self.bundle_path):
             dirs.sort()
+            if root == self.bundle_path and copies:
+                dirs[:] = [d for d in dirs if d not in copies]
             for file in sorted(files):
                 file_path = os.path.join(root, file)
                 if os.path.islink(file_path):
@@ -320,6 +366,9 @@ class CFKBundleAnalyzer:
         # after the walk: events and shared pods.yaml may come before the CRs they refer to
         self._check_environment()
         self._check_jvm_truststores()
+        self._drop_duplicate_text_events()
+        self._merge_quota_events()
+        self._check_rollouts()
         for issue in self.issues:
             self._assign_component(issue)
         self._mark_transient()
@@ -352,6 +401,37 @@ class CFKBundleAnalyzer:
                 key=lambda x: (_SEVERITY_ORDER.get(x['severity'], 4), -x.get('count', 1)),
             ),
         }
+
+    def _bundle_copies(self) -> List[str]:
+        """Folders of the bundle root that hold a copy of the bundle itself (an archive extracted next to its content,
+        support-bundle-ns-x/support-bundle-ns-x/): same files with the same sizes for 90% of them. Analyzed once."""
+        def files_of(folder, skip=()):
+            out = {}
+            for root, dirs, files in os.walk(folder):
+                if root == folder:
+                    dirs[:] = [d for d in dirs if d not in skip]
+                for f in files:
+                    path = os.path.join(root, f)
+                    if not os.path.islink(path):
+                        out[os.path.relpath(path, folder)] = os.path.getsize(path)
+            return out
+        markers = ('cluster-resources', 'operator')
+        if not any(os.path.isdir(os.path.join(self.bundle_path, m)) for m in markers):
+            return []
+        candidates = [d for d in sorted(os.listdir(self.bundle_path))
+                      if os.path.isdir(os.path.join(self.bundle_path, d))
+                      and any(os.path.isdir(os.path.join(self.bundle_path, d, m)) for m in markers)]
+        if not candidates:
+            return []
+        top = files_of(self.bundle_path, skip=candidates)
+        copies = []
+        for d in candidates:
+            inner = files_of(os.path.join(self.bundle_path, d))
+            same = sum(1 for path, size in inner.items() if top.get(path) == size)
+            if inner and same >= 0.9 * len(inner):
+                copies.append(d)
+                self.coverage.setdefault('skipped_copies', []).append(d)
+        return copies
 
     def _severity_order(self, severity: str) -> int:
         """Return numeric order for severity sorting"""
@@ -629,6 +709,10 @@ class CFKBundleAnalyzer:
             if line[0] == '\t' and _CONFIG_VALUE_RE.match(line):
                 continue
 
+            if 'Kafka version: ' in line:
+                found = _KAFKA_VERSION_RE.search(line)
+                if found:
+                    self.log_versions[_log_stem(rel)] = (found.group(1), rel, line_num)
             level = self._detect_level(line)
             if level is None and _EXCEPTION_HEAD_RE.match(line):
                 level = 'ERROR'
@@ -948,6 +1032,8 @@ class CFKBundleAnalyzer:
                 self._check_confluent_component_config(obj, relative_path)
                 self.timeline += environment.managed_field_changes(obj, kind, name)
                 self._record_component_images(obj, name)
+                if name in self.cr_images and not self.cr_images[name].get('file'):
+                    self.cr_images[name]['file'] = relative_path
                 self._record_jvm_truststore(obj, kind, name, relative_path)
                 if kind.lower() in _CONFIG_COMPONENTS or kind.lower() == 'connector':
                     self._record_config_cr(obj, kind.lower(), name, relative_path)
@@ -959,6 +1045,12 @@ class CFKBundleAnalyzer:
                 self.timeline += environment.managed_field_changes(obj, kind, name)
                 replicas = (obj.get('spec') or {}).get('replicas')
                 status = obj.get('status') or {}
+                containers = (((obj.get('spec') or {}).get('template') or {}).get('spec') or {}).get('containers') or []
+                self.statefulsets[name] = {
+                    'images': [str(c.get('image', '')) for c in containers if isinstance(c, dict)],
+                    'replicas': replicas, 'ready': status.get('readyReplicas', 0), 'updated': status.get('updatedReplicas'),
+                    'current': status.get('currentRevision'), 'update': status.get('updateRevision'), 'file': relative_path,
+                }
                 self.statefulset_ready[name] = bool(replicas) and status.get('readyReplicas') == replicas and \
                     status.get('updatedReplicas', replicas) == replicas and \
                     status.get('currentRevision') == status.get('updateRevision')
@@ -1002,6 +1094,7 @@ class CFKBundleAnalyzer:
         entry.setdefault('kind', obj.get('kind'))
         if image.get('application'):
             entry.setdefault('image', image['application'])
+            self.cr_images.setdefault(name, {'kind': obj.get('kind'), 'image': image['application']})
         if image.get('init'):
             entry.setdefault('init_image', image['init'])
 
@@ -1067,6 +1160,129 @@ class CFKBundleAnalyzer:
                 file_path=truststore['file'],
                 resource=name, resource_kind=truststore['kind'],
             )
+
+    def _drop_duplicate_text_events(self):
+        """The Warning rows of kubectl get events (event.txt) that are also in the YAML events of the bundle (event.yaml):
+        counted once, from the YAML (which has the count and the timestamps)"""
+        yaml_keys = set()
+        for issue in self.issues:
+            if 'event' in issue['file'].lower() and not issue.get('line_number'):
+                m = _EVENT_ISSUE_RE.match(issue['message'])
+                if m:
+                    yaml_keys.add(_event_key(m.group(1), m.group(3), m.group(2)))
+        if not yaml_keys:
+            return
+        kept = []
+        for issue in self.issues:
+            m = _EVENT_ROW_RE.search(issue['message']) if issue.get('line_number') and 'event' in issue['file'].lower() else None
+            if m and _event_key(m.group(1), m.group(2), m.group(3)) in yaml_keys:
+                self.coverage['duplicate_events'] = self.coverage.get('duplicate_events', 0) + 1
+                continue
+            kept.append(issue)
+        self.issues = kept
+
+    def _merge_quota_events(self):
+        """The FailedCreate events refused by a ResourceQuota (one per pod the controller tried to create): one finding per
+        quota and controller, with what is requested, used and allowed for the resources that are exceeded"""
+        groups, kept = {}, []
+        for issue in self.issues:
+            quota = _QUOTA_RE.search(issue['message'])
+            owner = _QUOTA_OWNER_RE.search(issue['message']) if quota else None
+            if not owner:
+                kept.append(issue)
+                continue
+            group = groups.setdefault((quota.group(1), owner.group(1), owner.group(2)), {
+                'count': 0, 'first': None, 'last': None, 'file': issue['file'], 'quota': quota})
+            group['count'] += issue.get('count', 1)
+            ts = issue.get('timestamp')
+            if ts:
+                group['first'] = min(filter(None, [group['first'], ts]))
+                group['last'] = max(filter(None, [group['last'], ts]))
+        self.issues = kept
+        for (name, kind, owner), group in sorted(groups.items()):
+            parse = lambda text: dict(kv.split('=', 1) for kv in text.strip(',').split(',') if '=' in kv)
+            requested, used, limited = (parse(group['quota'].group(i)) for i in (2, 3, 4))
+            exceeded = []
+            for key, value in requested.items():
+                r, u, l = _quantity(value), _quantity(used.get(key)), _quantity(limited.get(key))
+                if None not in (r, u, l) and r + u > l:
+                    exceeded.append(f"{key}: requested {value}, used {used[key]} of {limited[key]}")
+            message = (f"{kind}/{owner} cannot create its pods: ResourceQuota {name} exceeded"
+                       + (f" ({'; '.join(exceeded)})" if exceeded else '')
+                       + f", {group['count']} refusal(s)"
+                       + (f" from {group['first']} to {group['last']}" if group['first'] else ''))
+            steps = [f"kubectl describe resourcequota {name} -n <namespace>: what each pod of the namespace requests",
+                     "lower the requests / limits of a component (spec.podTemplate.resources), or raise the quota"]
+            if owner.startswith('confluent-operator'):
+                message += (". It is the CFK operator: while the quota is full, this ReplicaSet cannot (re)create its operator "
+                            "pod, and nothing is reconciled when no operator pod runs")
+                steps.insert(0, "kubectl get pods -l app=confluent-operator -n <namespace>: which operator pod runs, if any")
+            self._add_issue(severity='high', category='Resource Issues', message=message, file_path=group['file'],
+                            resource=owner, resource_kind=kind, count=group['count'], dedupe_key=f"quota:{name}:{owner}")
+            self.issues[-1]['next_steps'] = steps
+
+    def _check_rollouts(self):
+        """A CR whose image is not what runs: its StatefulSet still has another image (the operator did not apply the
+        CR: block-reconcile, operator down), or some of its pods run another CP version (roll not complete). What runs
+        comes from the pod manifests, else from the CP version each pod logs at startup."""
+        for name, cr in sorted(self.cr_images.items()):
+            wanted = environment.image_version(cr['image'])
+            if not wanted:
+                continue
+            kind = cr.get('kind') or ''
+            repo = cr['image'].split('@')[0].rsplit(':', 1)[0]
+            sts = self.statefulsets.get(name) or {}
+            stale_sts = [i for i in sts.get('images', []) if i.split('@')[0].rsplit(':', 1)[0] == repo
+                         and environment.image_version(i) not in (None, wanted)]
+            pods = sorted({p for p in list(self.pod_images) + list(self.log_versions)
+                           if _POD_SUFFIX_RES[0].sub('', p) == name and _POD_SUFFIX_RES[0].search(p)})
+            behind = {}  # (version, source) -> pods
+            for pod in pods:
+                if pod in self.pod_images:
+                    running, source = environment.image_version(self.pod_images[pod]), 'image of the pod'
+                elif kind in _VERSION_LOGGING_KINDS:
+                    running, source = self.log_versions[pod][0], 'logged at startup'
+                else:
+                    continue
+                if running and running != wanted:
+                    behind.setdefault((running, source), []).append(pod)
+            if not stale_sts and not behind:
+                continue
+            blocked = name in self.blocked_crs
+            parts = [f"{kind}/{name} asks for {wanted} (image tag {environment.image_tag(cr['image'])})"]
+            if stale_sts:
+                parts.append(f"its StatefulSet still has {environment.image_tag(stale_sts[0])}: the operator did not "
+                             "apply the CR")
+            if behind:
+                parts.append(", ".join(f"{', '.join(names)} {'runs' if len(names) == 1 else 'run'} {version} ({source})"
+                                       for (version, source), names in sorted(behind.items())))
+            if sts.get('replicas'):
+                roll = f"StatefulSet {name}: {sts.get('updated', '?')}/{sts['replicas']} replicas updated, " \
+                       f"{sts.get('ready', 0)}/{sts['replicas']} ready"
+                if sts.get('current') and sts.get('update') and sts['current'] != sts['update']:
+                    roll += f", roll from revision {sts['current']} to {sts['update']} not complete"
+                parts.append(roll)
+            if blocked:
+                parts.append(f"{kind}/{name} has platform.confluent.io/block-reconcile=true")
+            steps = []
+            if blocked:
+                steps.append(f"remove platform.confluent.io/block-reconcile from {kind}/{name}: the operator then rolls "
+                             "the pods itself. A pod deleted by hand while it is blocked comes back with the old spec")
+            if stale_sts and not blocked:
+                steps.append("the operator did not apply the CR: look at its log for this CR (apply failed, reconcile "
+                             "errors) and check that an operator pod runs (quota, crash loop)")
+            if behind and not stale_sts:
+                steps.append("CFK rolls one pod at a time, once the cluster is healthy (pods Ready, no under-replicated "
+                             "partition): look at the pod that is not Ready and at the roll lines of the operator log")
+            steps.append(f"kubectl get statefulset {name} -n <namespace> -o jsonpath='{{.status.updatedReplicas}}/"
+                         "{.status.replicas} {.status.currentRevision} {.status.updateRevision}'")
+            self._add_issue(
+                severity='high' if blocked or stale_sts or (sts.get('updated') or 0) < (sts.get('replicas') or 0) else 'medium',
+                category='Rollout Issues', message="; ".join(parts),
+                file_path=cr.get('file') or sts.get('file') or 'cluster-resources',
+                resource=name, resource_kind=kind, dedupe_key=f"rollout:{kind}:{name}",
+            )
+            self.issues[-1]['next_steps'] = steps
 
     def _record_kraft_migration_log(self, line: str, rel: str):
         """"Migration current status SETUP/SubPhaseSetupKRaftControllerHealthy: …, requeuing" of the operator log"""
@@ -1165,6 +1381,11 @@ class CFKBundleAnalyzer:
         statuses = [(c, True) for c in status.get('initContainerStatuses') or []] + \
                    [(c, False) for c in status.get('containerStatuses') or []]
         containers = status.get('containerStatuses') or []
+        spec_images = [str(c.get('image', '')) for c in (pod.get('spec') or {}).get('containers') or [] if isinstance(c, dict)]
+        if spec_images:
+            # the image of the spec has the tag; the status one is sometimes only a digest
+            status_image = str(containers[0].get('image', '')) if containers else ''
+            self.pod_images[name] = status_image if environment.image_version(status_image) else spec_images[0]
         self.pod_health[name] = (
             phase == 'Running' and bool(containers) and all(c.get('ready') for c in containers),
             max([c.get('restartCount', 0) or 0 for c, _ in statuses] or [0]),
@@ -1237,6 +1458,7 @@ class CFKBundleAnalyzer:
 
         annotations = metadata.get('annotations') or {}
         if str(annotations.get('platform.confluent.io/block-reconcile', '')).lower() == 'true':
+            self.blocked_crs.add(metadata.get('name'))
             self._add_issue(
                 severity='low',
                 category='Reconciliation Blocked',

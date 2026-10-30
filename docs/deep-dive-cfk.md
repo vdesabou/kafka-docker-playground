@@ -219,7 +219,13 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   lines of the operator log), its last error and the next steps of that sub-phase (Kafka roll not complete,
   KRaftController not Ready, ZooKeeper authentication, znodes to remove for a rollback…), from the operator log alone
   when the bundle has no `KRaftMigrationJob` CR. `high` when stuck (`InputError` events, or 30 minutes in the same
-  sub-phase), `low` in `DUAL-WRITE`, the expected pause before the finalize or rollback annotation. It
+  sub-phase), `low` in `DUAL-WRITE`, the expected pause before the finalize or rollback annotation.
+  **🔄 What runs vs what the CRs ask for**: a CR whose image version is not the one of its StatefulSet (the operator
+  did not apply it: `block-reconcile`, operator down) or of some of its pods (from their manifest, else from the
+  `Kafka version: …-ce` they log at startup) is one finding, with the roll of the StatefulSet and the next steps. The
+  `exceeded quota` events become one finding per ResourceQuota and controller (requested / used / allowed), each Warning
+  event is counted once when the bundle has both `event.txt` and `event.yaml`, and a copy of the bundle inside the
+  bundle is analyzed once. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration).
@@ -459,6 +465,7 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 
 | Customer setup or symptom | Command |
 | --- | --- |
+| "we upgraded the CR but the pods still run the old version" (support bundle) | `playground analyze logs -f <bundle>`: the 🔄 `Rollout Issues` finding says what each pod runs, how far the roll got, and why (`block-reconcile`, operator not applying, roll blocked) |
 | "the ZooKeeper to KRaft migration is stuck" (support bundle) | `playground analyze logs -f <bundle>`: the 🚚 `KRaft Migration` finding gives the sub-phase, since when, the last error and the next steps; `--sample cfk_kraft_migration` to see one |
 | "the connector works with Docker, not on our CFK cluster" | the same example with `--environment cfk`, then `connector create-or-update --dry-run` to compare the `Connector` CR with theirs |
 | "the customer deploys connectors with a `Connector` CR" | the example under `cfk`, `connector status` shows the CR state next to the Connect state; `kubectl -n confluent get connector <c> -o yaml` for the whole resource |

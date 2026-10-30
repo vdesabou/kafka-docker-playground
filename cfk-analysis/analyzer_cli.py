@@ -212,6 +212,10 @@ def print_text_report(results, top: int):
           f"({coverage.get('pods', 0)} pods, {coverage.get('custom_resources', 0)} CFK CRs, "
           f"{coverage.get('events', 0)} events, {coverage.get('log_files', 0)} log/text files "
           f"with {coverage.get('log_lines', 0)} lines, {coverage.get('skipped_files', 0)} skipped)")
+    if coverage.get("skipped_copies"):
+        print(f"Skipped copies:   {', '.join(coverage['skipped_copies'])} (a copy of the bundle inside the bundle, analyzed once)")
+    if coverage.get("duplicate_events"):
+        print(f"Duplicate events: {coverage['duplicate_events']} rows of kubectl get events also in the YAML events, counted once")
     if coverage.get("unparsable_files"):
         print(f"Unparsable files: {len(coverage['unparsable_files'])} "
               f"(e.g. {', '.join(coverage['unparsable_files'][:3])})")
