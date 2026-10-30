@@ -44113,6 +44113,19 @@ playground_repro_bootstrap_command() {
     fi
     config_class=$(echo "$NORMALIZED_CONFIG" | jq -r '."connector.class" // empty')
     log "📄 --config: $NORMALIZED_FORMAT, connector ${NORMALIZED_NAME:-without name}, connector.class ${config_class:-not set}"
+    # converted before any file of the model is written: a config that can't be converted leaves nothing behind
+    config_tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+    trap 'rm -rf $config_tmp_dir' EXIT
+    if ! playground connector convert "$config_file" --json --secrets-as-variables ${config_connector:+--connector "$config_connector"} > $config_tmp_dir/converted.json 2> $config_tmp_dir/convert.log || ! jq -e '.config | type == "object"' $config_tmp_dir/converted.json > /dev/null 2>&1
+    then
+      # convert prints its errors on stdout
+      cat $config_tmp_dir/convert.log
+      grep -v '^[{}" ]' $config_tmp_dir/converted.json || true
+      logerror "❌ could not convert $config_file with 'playground connector convert $config_file --json --secrets-as-variables${config_connector:+ --connector $config_connector}'"
+      exit 1
+    fi
+    # the same without the rewrites for the playground, to know which values point to the playground already
+    playground connector convert "$config_file" --json --no-adapt ${config_connector:+--connector "$config_connector"} > $config_tmp_dir/raw.json 2> /dev/null || echo '{"config": {}}' > $config_tmp_dir/raw.json
     if [ -z "$test_file" ]
     then
       if [ -z "$config_class" ]
@@ -44445,7 +44458,7 @@ playground_repro_bootstrap_command() {
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
   then
-      trap 'rm -rf $tmp_dir' EXIT
+      trap 'rm -rf $tmp_dir $config_tmp_dir' EXIT
   else
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
@@ -44589,12 +44602,6 @@ playground_repro_bootstrap_command() {
   then
     # the customer config, adapted to the playground (as 'playground connector convert' does), its secrets, masked
     # values and config providers as variables to fill in
-    if ! playground connector convert "$config_file" --json --secrets-as-variables ${config_connector:+--connector "$config_connector"} > $tmp_dir/converted.json 2> $tmp_dir/convert.log
-    then
-      cat $tmp_dir/convert.log
-      logerror "❌ could not convert $config_file"
-      exit 1
-    fi
     # what convert says about the rewrites for the playground; the values still pointing to the customer and the secrets
     # are handled below
     hide='🌍|🔐|📦 detected|value[(]s[)] to fill in'
@@ -44603,9 +44610,7 @@ playground_repro_bootstrap_command() {
       # the fully managed config goes in a fully managed example, as it should
       hide="$hide|☁️"
     fi
-    awk -v hide="$hide" '$0 ~ hide { skip = 1; next } /^[^ ]/ { skip = 0 } !skip' $tmp_dir/convert.log
-    # the same without the rewrites for the playground, to know which values point to the playground already
-    playground connector convert "$config_file" --json --no-adapt ${config_connector:+--connector "$config_connector"} > $tmp_dir/raw.json 2> /dev/null || echo '{"config": {}}' > $tmp_dir/raw.json
+    awk -v hide="$hide" '$0 ~ hide { skip = 1; next } /^[^ ]/ { skip = 0 } !skip' $config_tmp_dir/convert.log
 
     # the connector heredoc of the example that deploys the same connector.class (else the first one): first and last line
     location=$(REPRO_CLASS="$config_class" awk '
@@ -44640,18 +44645,18 @@ playground_repro_bootstrap_command() {
     # connector keeps the name of the example
     system_keys='(^|\.)(connection\.(url|uri|user|username|password|host|hostname|port|database|dbname)|url|urls|uri|host|hosts|hostname|port|endpoint|server|servers|user|username|password|database|db|bucket|bucket\.name|region|account\.name|container\.name|project|dataset|keyfile|credentials|credentials\.json|instance|file|sid|pdb\.name|service\.name|database\.(hostname|port|user|password|dbname|names|server\.name)|topics|topics\.regex|topic|topic\.prefix|topic\.name\.prefix|kafka\.topic|access\.key\.id|secret\.access\.key|secret|api\.key|api\.secret|kafka\.auth\.mode|kafka\.service\.account\.id)$|replication\.factor$|(password|secret|jaas|token|credential|api[._]key|private[._]key|access[._]key|user\.info)'
     kept=$(jq -r --slurpfile example $tmp_dir/example.json --arg system_keys "$system_keys" '
-      [$example[0] | keys_unsorted[] | select(test($system_keys; "i"))] | join(" ")' $tmp_dir/converted.json)
+      [$example[0] | keys_unsorted[] | select(test($system_keys; "i"))] | join(" ")' $config_tmp_dir/converted.json)
     # the customer keys that point to systems the example does not use (connection.user when the example puts the user
     # in the url…) are left out, and so is the topic selection when the example has one (topics and topics.regex can't
     # be both set); the values rewritten for the playground (schema registry url…) stay
-    dropped=$(jq -r --slurpfile example $tmp_dir/example.json --slurpfile raw $tmp_dir/raw.json --arg system_keys "$system_keys" '
+    dropped=$(jq -r --slurpfile example $tmp_dir/example.json --slurpfile raw $config_tmp_dir/raw.json --arg system_keys "$system_keys" '
       .config as $config
       | ($example[0] | has("topics") or has("topics.regex")) as $example_topics
       | [$config | keys_unsorted[]
           | select(test($system_keys; "i"))
           | select((test("^topics(\\.regex)?$") | not) or $example_topics)
           | select(. as $k | $example[0] | has($k) | not)
-          | select(. as $k | $raw[0].config[$k] == $config[$k])] | join(" ")' $tmp_dir/converted.json)
+          | select(. as $k | $raw[0].config[$k] == $config[$k])] | join(" ")' $config_tmp_dir/converted.json)
     jq -r --slurpfile example $tmp_dir/example.json --arg system_keys "$system_keys" --arg dropped " $dropped " '
       def system_key: test($system_keys; "i");
       $example[0] as $example
@@ -44666,12 +44671,12 @@ playground_repro_bootstrap_command() {
              else ($config[$k] | tostring | tojson | gsub("\\\\"; "\\\\") | gsub("\\$"; "\\$") | gsub("`"; "\\`")) end) as $v
           | "  " + ($k | tojson) + ": " + $v ]
       | ((.[:-1] | map(. + ",")) + .[-1:]) as $lines
-      | "{", $lines[], "}"' $tmp_dir/converted.json > $tmp_dir/config_lines
+      | "{", $lines[], "}"' $config_tmp_dir/converted.json > $tmp_dir/config_lines
     # the values to fill in that the example does not provide
-    jq -r --arg skip " $kept $dropped " '.to_fill_in[] | .key as $k | select($skip | contains(" " + $k + " ") | not) | "\(.key)|\(.reason)"' $tmp_dir/converted.json > $tmp_dir/to_fill
+    jq -r --arg skip " $kept $dropped " '.to_fill_in[] | .key as $k | select($skip | contains(" " + $k + " ") | not) | "\(.key)|\(.reason)"' $config_tmp_dir/converted.json > $tmp_dir/to_fill
 
     {
-      echo "# 📄 connector config from $(basename "$config_file") ($(jq -r '.detected_format' $tmp_dir/converted.json)), put in by 'playground repro bootstrap --config'"
+      echo "# 📄 connector config from $(basename "$config_file") ($(jq -r '.detected_format' $config_tmp_dir/converted.json)), put in by 'playground repro bootstrap --config'"
       if [ -n "$kept" ]
       then
         echo "#    values of the example kept, they point to its systems: $kept"
@@ -44690,7 +44695,7 @@ playground_repro_bootstrap_command() {
         prefix=$(sed -n "${start}p" $repro_test_file | sed -E 's/[[:space:]]*<<.*//')
         echo "$prefix << EOF"
     else
-      echo "playground connector create-or-update --connector $(jq -r '.name // "my-connector"' $tmp_dir/converted.json) << EOF"
+      echo "playground connector create-or-update --connector $(jq -r '.name // "my-connector"' $config_tmp_dir/converted.json) << EOF"
     fi
     cat $tmp_dir/config_lines
     echo "EOF"
