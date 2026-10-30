@@ -84,7 +84,12 @@ lab_expect_contains "private static final int BATCH_SIZE_DEFAULT = 3000;"
 log "Step 5: which jar has a class (Docker)"
 lab_run playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --class PostgreSqlDatabaseDialect
 lab_expect_contains "kafka-connect-jdbc-10.8.4.jar"
-lab_expect_contains "👉 method signatures from ./kafka-connect-jdbc-10.8.4.jar jar for class io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect"
+lab_expect_contains "🔎 1 class(es) named PostgreSqlDatabaseDialect in the jars of confluentinc/kafka-connect-jdbc:10.8.4"
+lab_expect_contains "👉 io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect in kafka-connect-jdbc-10.8.4.jar"
+lab_expect_contains "public class io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect extends io.confluent.connect.jdbc.dialect.GenericDatabaseDialect"
+lab_run playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --with-worker
+lab_expect_exit 0
+lab_expect_contains "slf4j-api-1.7.36.jar"
 
 # step 6 (fully managed connector) needs GH_TOKEN and the Confluent VPN: not replayed
 

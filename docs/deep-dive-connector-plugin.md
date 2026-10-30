@@ -21,7 +21,8 @@ run.
 | the GitHub tree of the code at version X | `playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --only-show-url` |
 | what changed between X and Y | the same with `--connector-tag 10.8.4 --connector-tag 10.9.9` |
 | a local checkout of version X, to grep it | `… sourcecode … --connector-tag 10.8.4 --checkout-only` (the folder is the last line) |
-| the jars of the plugin, and which one has a class | `playground connector-plugin search-jar -c confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider` |
+| the jars of the plugin, and which one has a class | `playground connector-plugin search-jar -c confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider` (`--connector-zip`, `--json`) |
+| the classes of the plugin that Connect loads from the worker instead | `playground connector-plugin search-jar -c confluentinc/kafka-connect-replicator --with-worker` |
 
 ---
 
@@ -236,19 +237,60 @@ Gotchas:
 ```bash
 playground connector-plugin search-jar -c confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
 playground connector-plugin search-jar -c confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --class WebIdentityTokenCredentialsProvider
+
+# the classes Connect loads from the worker instead of the plugin
+playground connector-plugin search-jar -c confluentinc/kafka-connect-replicator --with-worker
+
+# a customer's zip, a class on both sides with the signatures of each copy
+playground connector-plugin search-jar --connector-zip /path/to/plugin.zip --class org.apache.kafka.clients.producer.KafkaProducer --with-worker
 ```
 
-It installs the plugin (`latest`, or `--connector-tag`) in a throw-away container of the connect image, lists the jars
-of its `lib/`, and with `--class` prints the method signatures (`javap`) of every class whose name contains it, with
-the jar it's in. Run it on two versions to see when a dependency changed.
+It installs the plugin (the latest version on the Hub, or `--connector-tag`) in a throw-away container of the connect
+image, or extracts `--connector-zip`, keeps it in `/tmp/connector-plugin-jars/<owner>-<name>-<version>/` (reused on
+the next call, `--force-refresh`), and lists the jars of its `lib/`. With `--class`, it prints the classes with that
+name, the jar they're in, and their method signatures (`javap`).
+
+```text
+🤎 18 jar(s), 5509 classes in /tmp/connector-plugin-jars/confluentinc-kafka-connect-jdbc-10.8.4/confluentinc-kafka-connect-jdbc/lib
+…
+🔎 1 class(es) named PostgreSqlDatabaseDialect in the jars of confluentinc/kafka-connect-jdbc:10.8.4
+   👉 io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect in kafka-connect-jdbc-10.8.4.jar
+
+☕ io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect (kafka-connect-jdbc-10.8.4.jar):
+public class io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect extends io.confluent.connect.jdbc.dialect.GenericDatabaseDialect { …
+```
+
+**`--with-worker`** compares the plugin with the worker classpath of the connect image (the running `connect`
+container, else the default image), indexed once per image in `/tmp/connector-plugin-jars/worker-<image>-<tag>.tsv`:
+
+```text
+⚠️ 3517 class(es) of the plugin are ignored: Connect loads them from the worker (org.apache.kafka.*, org.slf4j.*, java*…) in another version, …
+   ⚠️ kafka-streams-8.4.0-ccs.jar ↔ worker kafka-streams-8.4.0-ce.jar: 1158 class(es), e.g. org.apache.kafka.streams.AutoOffsetReset
+   …
+ℹ️ 123483 other class(es) are on both sides: the plugin uses its own copy (plugin isolation), top jars:
+   • scala-library-2.13.11.jar ↔ worker scala-library-2.13.18.jar: 2885 class(es)
+```
+
+| Line | Meaning |
+| --- | --- |
+| `⚠️ … ignored: Connect loads them from the worker` | classes matching the parent-first rules of the worker's plugin isolation (`org.apache.kafka.*` except the transforms, converters…, `org.slf4j.*`, `java*`): the plugin's copy is never used. When the plugin was built against another version, that's a `NoSuchMethodError` / `NoClassDefFoundError` / `LinkageError` |
+| `✅ … loaded from the same jar of the worker` | same jar on both sides (often `slf4j-api`): harmless |
+| `ℹ️ … other class(es) are on both sides` | the plugin uses its own copy, isolated from the worker's: no conflict, listed for information |
+
+The rules are read from `PluginUtils` in the image itself, so they follow the CP version. With `--class`, the worker's
+copies of the class are listed too, with their signatures: compare them with the plugin's.
 
 Gotchas:
 
-- `--class` is a **case-insensitive substring**: `CredentialsProvider` matches dozens of classes. Give the simple name.
-- Needs Docker (not a running environment) and a local `javap` (a JDK).
-- It's the plugin's own `lib/`: classes that come from the worker (Kafka, Connect API, the converters of the image) are
-  not there. A `NoSuchMethodError` between the plugin and the worker needs both sides: the plugin jar here, the worker
-  jar with `playground container exec -c connect --command "ls /usr/share/java/kafka"`.
+- `--class` is **exact first**: a simple name (`PostgreSqlDatabaseDialect`, or the inner class name) or a fully qualified
+  name. When no class has that name, the classes containing it (case insensitive) are listed:
+  `🔎 no class named exactly Dialect: 33 class(es) contain it`. Signatures are printed for 5 classes at most.
+- Needs Docker (not a running environment) and `python3`. Without a local JDK, `javap` runs in an
+  `eclipse-temurin:21-jdk` container (`PG_JAVAP_IMAGE` to change it).
+- Without `--with-worker`, it's the plugin's own `lib/` only: classes that come from the worker (Kafka, Connect API,
+  the converters of the image) are not there.
+- `--json` gives `jars`, `matches` (`class`, `jar`, `signatures`, `loaded_from_worker`), `worker_matches` and
+  `worker` (`shadowed`, `isolated_duplicates`, with `same_jar`).
 
 ---
 
@@ -328,10 +370,15 @@ grep -rn "BATCH_SIZE_DEFAULT" /tmp/connector-plugin-sourcecode/kafka-connect-jdb
 
 ```bash
 playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --class PostgreSqlDatabaseDialect
-# 🔌 Downloading connector plugin confluentinc/kafka-connect-jdbc:10.8.4
-# 🤎 Listing jar files: … kafka-connect-jdbc-10.8.4.jar, mssql-jdbc-8.4.1.jre8.jar, ojdbc8-19.7.0.0.jar, postgresql-42.4.4.jar …
-# 👉 method signatures from ./kafka-connect-jdbc-10.8.4.jar jar for class io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect
+# 🔌 Downloading connector plugin confluentinc/kafka-connect-jdbc:10.8.4          <- only the first time
+# 🤎 18 jar(s), 5509 classes in /tmp/connector-plugin-jars/confluentinc-kafka-connect-jdbc-10.8.4/confluentinc-kafka-connect-jdbc/lib
+# … kafka-connect-jdbc-10.8.4.jar, mssql-jdbc-8.4.1.jre8.jar, ojdbc8-19.7.0.0.jar, postgresql-42.4.4.jar …
+# 🔎 1 class(es) named PostgreSqlDatabaseDialect in the jars of confluentinc/kafka-connect-jdbc:10.8.4
+#    👉 io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect in kafka-connect-jdbc-10.8.4.jar
 # public class io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect extends io.confluent.connect.jdbc.dialect.GenericDatabaseDialect { …
+playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --with-worker
+# ✅ no class of the plugin is replaced by a different version from the worker confluentinc/cp-server-connect:8.4.0
+#    ✅ slf4j-api-1.7.36.jar: 34 class(es) loaded from the same jar of the worker
 ```
 
 **Step 6 (optional, Confluent employees): a fully managed connector** (not run for this page: the output below is
@@ -354,7 +401,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | "what does this key do, and what's its default in our version?" | `config-key --key <k> -c <class>`; for their exact version, `playground connector show-config-parameters` with `--connector-tag` (adds it to `🗂️ versions run locally`) |
 | "this key doesn't work for us" | `config-key`: not in their version (❌ in `versions run locally`), a framework key, or a typo (`💡 similar keys`) |
 | "what value do people use?" | the `🧪 values used` part of `config-key`, with one example file per value |
-| "NoSuchMethodError / ClassNotFoundException" | `search-jar --class <Class> --connector-tag <theirs>`: is the class shipped, with which signature; then the worker side with `container exec` |
+| "NoSuchMethodError / ClassNotFoundException" | `search-jar --class <Class> --connector-tag <theirs> --with-worker`: is the class shipped, with which signature, is the worker's copy used instead (and its signature) |
 | "read the code of the version that fails" | `sourcecode --connector-tag <theirs> --checkout-only`, then grep the folder it prints |
 | "fully managed connector behaves differently" | `sourcecode -c confluentinc/<Type> --connector-tag <cc-connect version of the cluster>` (`GH_TOKEN` + VPN) |
 | "is our bug fixed in a later version? which one?" / "which CVEs are fixed after our version?" | `changelog --from <theirs> --grep "<symptom>\|CVE"`, then the `CC-xxxxx` Jira and the code at that tag |
@@ -370,7 +417,7 @@ playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--gre
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>] [--with-changelog] [--json]
 playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
-playground connector-plugin search-jar -c <owner/name> [--connector-tag X] [--class <Class>]
+playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --connector-zip <zip> [--class <Class>] [--with-worker] [--json]
 ```
 
 - `versions` = Hub API, cached one day in `/tmp/version_<owner>_<name>.json` (`--force-refresh` after a release); `--from` = how far behind.
@@ -379,7 +426,7 @@ playground connector-plugin search-jar -c <owner/name> [--connector-tag X] [--cl
 - `sourcecode`: always pass the customer's `--connector-tag`. Scripts: `--only-show-url` / `--checkout-only`, never
   `--open` / `--compile`.
 - Fully managed: no `-` in the name, `--connector-tag` = cc-connect image version, `GH_TOKEN` + VPN.
-- `search-jar` = the plugin's `lib/` only, needs Docker and `javap`.
+- `search-jar` = the plugin's `lib/`, cached in `/tmp/connector-plugin-jars`; `--with-worker` flags the classes the worker loads instead. Needs Docker and `python3`.
 - Sources: [`connector-plugin/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/connector-plugin),
   [`generate-connector-plugin-list.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/generate-connector-plugin-list.sh).
 
