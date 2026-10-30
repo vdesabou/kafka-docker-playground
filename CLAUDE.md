@@ -47,7 +47,7 @@ out of context.
 | "is this example red in CI too, and why?" | `playground get-ci-result --test <dir> --logs` (`--environment cfk`, `--podman`, HTML report in `/tmp/playground-ci-result`) | reading the 🔥 issue, `gh run view --log` (it truncates long jobs) |
 | "how fast is this connector? is version Y slower?" | `playground connector benchmark [--connector <c>]` (`--mode steady`, `--connector-tag A --connector-tag B`, `--json`); skill `kdp-benchmark` for load scripts, shapes, fully managed | `sleep` + counting records by hand |
 | "what does this transform chain (SMT) do to a record? why does it fail?" | `playground connector smt test --connector <c> [--record <json> \| --from-topic <t> --offset N]` (or the transforms on stdin; `--cp-version A --cp-version B` to compare CP versions, `--smt-plugin owner/name:version` / `--smt-jar` for SMTs not in the worker, `--json`; HTML report in `/tmp/playground-smt-test/`) | a FileStream sink + TRACE logs of `TransformationChain` |
-| "is this bug fixed after version X? what changed between X and Y? which CVEs?" | `playground connector-plugin changelog --connector-plugin confluentinc/<name> --from X [--to Y] [--grep "symptom\|CVE"]` (release notes from the docs.confluent.io changelog feeds, self-managed Confluent plugins only, `--json`) | opening the docs changelog page, Glean for "fixed in" |
+| "is this bug fixed after version X? what changed between X and Y? which CVEs?" | `playground connector-plugin changelog --connector-plugin confluentinc/<name> --from X [--to Y] [--grep "symptom\|CVE"]` (release notes from the docs.confluent.io changelog feeds, self-managed Confluent plugins only, `--json`); with a repro model ending with `playground repro assert`, **`playground repro bisect --from X --to Y`** runs it on the versions in between (binary search, one `playground run` per version: stops the running environment) and prints the changelog where the verdict changes | opening the docs changelog page, Glean for "fixed in" |
 | "is this Kafka / Schema Registry / ksqlDB / REST Proxy bug fixed after CP X? which patch bumped Netty?" | `playground cp-changelog --from X [--to Y] [--component schema-registry] [--grep "symptom" \| --security]` (commit titles from the docs.confluent.io CP changelog feeds, 7.4+, community components only: no Confluent Server / Control Center, no CVE ids; `--json`) | Glean for "fixed in", reading the CP release notes page |
 | "where is the source code of connector X (version Y)?" | `playground connector-plugin sourcecode --connector-plugin confluentinc/<name> [--connector-tag Y] --only-show-url` | guessing repo / branch, GitHub code search |
 
@@ -334,7 +334,8 @@ Keep them minimal and focused on one issue, fill in expected vs actual in the he
 bootstrap, or `playground repro status -f <model> --expected … --actual …`), set the outcome with
 `playground repro status --set "fixed in <version>"` (`--jira CC-…`), end the scenario with its verdict
 (`playground repro assert --reproduced-if-log "<error>"`, `--reproduced-if-connector-state FAILED`,
-`--reproduced-if-records-less-than N --topic <t>`, `--reproduced-if-command …`: 🐞 / ✅ with the versions, exit 0 both),
+`--reproduced-if-records-less-than N --topic <t>`, `--reproduced-if-command …`: 🐞 / ✅ with the versions, exit 0 both;
+then `playground repro bisect --from <version> --to <version>` finds the version where the verdict changes),
 and never include customer-sensitive data.
 
 ## Conventions

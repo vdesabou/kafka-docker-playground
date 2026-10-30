@@ -92,6 +92,9 @@ lab_run grep -c "^# 🩹 status: lab only$" "$model"
 lab_expect_equals "$LAB_OUTPUT" "1" "status lines (replaced, not added)"
 lab_run grep -c "^# playground repro assert --reproduced-if-log" "$model"
 lab_expect_equals "$LAB_OUTPUT" "1" "commented repro assert lines at the end of the scenario"
+lab_run playground repro bisect -f "$model" --connector-tag 1.0.0 --connector-tag 2.0.0
+lab_expect_exit 1 "bisect needs a model that calls repro assert (nothing is run)"
+lab_expect_contains "does not call 'playground repro assert'"
 lab_run playground repro assert -f "$model" --reproduced-if-command "test -f '$model'" --message "the model exists"
 lab_expect_exit 0
 lab_expect_contains "🐞 REPRODUCED: the model exists (the command succeeded: test -f"

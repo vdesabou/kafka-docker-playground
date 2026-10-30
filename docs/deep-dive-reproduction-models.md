@@ -1,8 +1,8 @@
 # 🍪 Deep dive: reproduction models (`playground repro`)
 
 A reproduction model is an example rewritten to show **one** problem, so that anyone can reproduce it with a single
-`playground run`. Six commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro assert`
-ends it with its verdict, `repro status` records what it proves and what came out of it, `repro check` scans it for secrets and customer data before a commit,
+`playground run`. Seven commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro assert`
+ends it with its verdict, `repro bisect` runs it on several versions, `repro status` records what it proves and what came out of it, `repro check` scans it for secrets and customer data before a commit,
 `repro export` packs it as a self-contained bundle for a colleague, and `repro import` unpacks one. Takes about 15 minutes to read and run.
 
 > [!TIP]
@@ -19,6 +19,7 @@ ends it with its verdict, `repro status` records what it proves and what came ou
 | a new model from the connector config the customer sent (CFK, Strimzi, terraform, `.properties`, REST dump, JSON) | `playground repro bootstrap --config <file> -d "<case> <symptom>" --no-run` |
 | the same, without menus (scripts, AI agents) | `playground repro bootstrap -f "<absolute path of the example>" -d "<case number> <symptom>" --no-run` |
 | to end the scenario with its verdict, 🐞 reproduced or ✅ not reproduced | `playground repro assert --reproduced-if-log "<error>"` (or `--reproduced-if-connector-state FAILED`, `--reproduced-if-records-less-than N --topic <t>`, `--reproduced-if-command "…"`) |
+| which version introduced or fixed it | `playground repro bisect --from <version> --to <version>` (binary search over the Confluent Hub versions), `--connector-tag A --connector-tag B`, or `--tag A --tag B` for CP |
 | to say what it proves, and what came out of it | `playground repro status --expected "…" --actual "…" --jira CC-1234 --set "fixed in 10.8.3"` |
 | to know whether a model holds a secret | `playground repro check -f <model>` (`--json`) |
 | what a commit would push | `playground repro check --staged` (what the pre-commit hook runs) |
@@ -214,6 +215,53 @@ playground repro assert --reproduced-if-command "<shell test>" --message "rows m
   `repro export` writes it in `repro-manifest.json` (`last_verdict`) and `repro import` prints it, so the colleague who
   runs the bundle knows what to expect. The CP and connector versions are the ones of the run (`TAG`, `CONNECTOR_TAG`,
   or the `--connector-zip` / `--connector-jar` file): run it with `playground run -f <model>`.
+
+### Which version: `repro bisect`
+
+"Is it fixed in 2.14.5? Since when is it broken?" With a verdict at the end of the model, the question answers itself:
+`repro bisect` runs the model once per version and reads the verdict of each run.
+
+```bash
+playground repro bisect --from 2.10.0 --to 2.14.10                       # Confluent Hub versions of the connector of the model
+# 🔎 bisect over 51 confluentinc/kafka-connect-oracle-cdc version(s) of cdc-oracle19-cdb-table-repro-123456-raw-columns.sh: 2.10.0 2.10.1 2.10.2 … 2.14.9 2.14.10
+#    binary search: the first and the last version, then the middle until the verdict changes (assumes it changes once)
+# ▶️  --connector-tag 2.10.0: playground run -f …/cdc-oracle19-cdb-table-repro-123456-raw-columns.sh --connector-tag 2.10.0
+#    📜 tail -f /tmp/playground-repro-bisect/cdc-oracle19-cdb-table-repro-123456-raw-columns-2.10.0.log
+#    🐞 2.10.0: reproduced (9m12s): 2 line(s) of the connect logs match "RAW"
+# …
+# 📊 verdicts of cdc-oracle19-cdb-table-repro-123456-raw-columns.sh:
+#    2.10.0         🐞 reproduced      9m12s    …
+#    2.11.4         🐞 reproduced      9m40s    …
+#    2.12.1         🐞 reproduced      9m05s    …
+#    2.12.2         🐞 reproduced      9m21s    …
+#    2.12.3         ✅ not reproduced   8m58s    …
+#    2.12.4         ✅ not reproduced   9m10s    …
+#    2.12.11        ✅ not reproduced   9m02s    …
+#    2.14.10        ✅ not reproduced   9m33s    …
+# 🔀 the verdict changes between 2.12.2 (reproduced) → 2.12.3 (not reproduced)
+# 📰 what changed between 2.12.2 and 2.12.3:
+#    🔢 v2.12.3 - 📅 release date: 2024-06-21
+#       • CC-27216: Fixed the handling of RAW data type (up to 2000 bytes).
+#       …
+
+playground repro bisect --connector-tag 2.14.0 --connector-tag 2.14.5 --connector-tag 3.0.0   # these versions only
+playground repro bisect --tag 7.9.0 --tag 8.2.0 --tag 8.4.0                                    # CP versions
+playground repro bisect --from 2.12.0 --to 2.13.0 --all --tag 8.2.0                            # every version, on one CP version
+```
+
+- The model must end with `playground repro assert` (bisect refuses a model without it). Without `--file`, the current
+  model is used.
+- `--from` / `--to` read the versions of the connector of the model on Confluent Hub (`playground connector-plugin
+  versions`) and do a **binary search**: 8 runs for 51 versions. It assumes the verdict changes once in the range:
+  with the same verdict at both ends, it stops after 2 runs. `--all` runs every version of the range.
+- A run that stops before `repro assert` (container that doesn't start, connector version that doesn't install) is
+  `❓ no verdict`, with its exit code and log: a binary search stops there, narrow the range around it.
+- For a Confluent plugin, the changelog between the two versions where the verdict changes is printed
+  ([`connector-plugin changelog`](/deep-dive-connector-plugin.md)): the fix (or the regression) is usually in it.
+- ⚠️ Each run is a `playground run` of the model: it stops the running environment, and takes the time of the model.
+  The log of each run is in `/tmp/playground-repro-bisect/<model>-<version>.log` (the `tail -f` line is printed when
+  it starts), the summary in `/tmp/playground-repro-bisect/<model>-<date>.json` (`--json` prints it). `--run-flags`
+  passes other flags to every run (`--run-flags "--environment sasl-ssl"`).
 
 ---
 
@@ -487,6 +535,7 @@ current one: run an example (or `playground state set run.test_file <script>`) b
 | hand it to engineering / a colleague | run it once (for the run line), `repro export --dry-run`, then `repro export` (`--include-artifacts` for a custom jar) and attach the bundle |
 | a colleague sent you a bundle | `repro import --dry-run`, then `repro import`, then the printed `playground run` line |
 | test the fix on another version | `playground run -f <model> --connector-tag <fixed version>`, or `playground update-version` on the running model |
+| since when is it broken, which version fixed it | `repro bisect --from <version> --to <version>` (binary search, changelog of the version where the verdict changes) |
 | a secret slipped in | replace it with `${VAR}` and `playground secrets set VAR …`; `repro check -f <model>` until it's clean |
 | the commit is refused for a fake token | check the line it points to, then `git commit --no-verify` (only if it's not a real secret) |
 
@@ -503,6 +552,7 @@ playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symp
 playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
 playground repro assert --reproduced-if-log "<pattern>" [--container connect] | --reproduced-if-connector-state FAILED [--connector <c>] \
   | --reproduced-if-records-less-than|more-than <n> --topic <t> | --reproduced-if-command "<cmd>"   [--message "…"] [--json]
+playground repro bisect [-f <model>] --from <v> --to <v> [--all] | --connector-tag A --connector-tag B … | --tag A --tag B …   [--tag <cp>] [--run-flags "…"] [--json]
 playground repro check [-f <model> | --staged | --all] [--json] [--skip-secrets-store]
 playground repro export [-f <model> … | --all-uncommitted] [--output <dir>] [--dry-run] [--include-artifacts] [--force] [--no-clipboard]
 playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
@@ -513,6 +563,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 - `<script>-repro-<kebab description>.sh`; 6 leading digits = ticket link.
 - Header fields `🎯 expected`, `💥 actual`, `🎫 jira`, `🩹 status`: set at bootstrap, read and updated by `repro status`, carried by the bundle.
 - `repro assert`: 🐞 / ✅ verdict with the versions, exit 0 both, kept in `playground-repro-verdicts`, shown by `repro status`, carried by the bundle.
+- `repro bisect`: one `playground run` per version (stops the environment), binary search with `--from` / `--to`, changelog where the verdict changes.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.
 - Bundle = files + symlinks as content + manifest (run line, credential names, sha256). Run the model once first.
 - Import: identical skipped, conflicts abort unless `rename` / `overwrite`, first model becomes current.
@@ -520,6 +571,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 - Sources: [`repro/bootstrap.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bootstrap.sh),
   [`repro/status.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/status.sh),
   [`repro/assert.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/assert.sh),
+  [`repro/bisect.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bisect.sh),
   [`repro/check.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/check.sh),
   [`repro/export.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/export.sh),
   [`repro/import.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/import.sh),
@@ -536,5 +588,5 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
   [Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) in the Reproduction toolkit
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the warn-only wait of models),
   [`topic produce`](/deep-dive-topic-produce.md) and [`topic consume`](/deep-dive-topic-consume.md) (data in, assertions out)
-- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro check](/playground%20repro%20check),
+- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro bisect](/playground%20repro%20bisect), [playground repro check](/playground%20repro%20check),
   [playground repro export](/playground%20repro%20export), [playground repro import](/playground%20repro%20import)

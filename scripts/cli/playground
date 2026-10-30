@@ -144,6 +144,7 @@ playground_usage() {
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "repro status")                              "
   printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "repro assert")                              "
+  printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "repro bisect")                              "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                        "
@@ -5280,7 +5281,7 @@ playground_cleanup_cloud_resources_usage() {
 playground_repro_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro\n\n"
-    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
+    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    bisect      run a model on several versions: which one introduced or fixed\n  it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
   else
     printf "playground repro - 👷‍♂️ Reproduction model commands\n\n"
   fi
@@ -5297,6 +5298,7 @@ playground_repro_usage() {
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")"
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "status")   "
   printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "assert")   "
+  printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "bisect")   "
   echo
 
   # :command.long_usage
@@ -5801,6 +5803,82 @@ playground_repro_assert_usage() {
     printf "  playground repro assert --reproduced-if-connector-state FAILED --connector\n  http-sink\n"
     printf "  playground repro assert --reproduced-if-records-less-than 10 --topic orders\n  --message \"records lost\"\n"
     printf "  playground repro assert --reproduced-if-command \"playground topic\n  get-number-records --topic dlq | tail -1 | grep -qv '^0$'\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_repro_bisect_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground repro bisect\n\n"
+    printf "  🔀 Run a reproduction model on several versions: which one introduced or fixed\n  the problem\n  \n  Runs the model once per version ('playground run -f <model>\n  --connector-tag <version>', or --tag for CP versions) and reads the\n  verdict that 'playground repro assert' records at the end of each run.\n  The model must end with 'playground repro assert'.\n  \n    --connector-tag A --connector-tag B …   these connector versions\n    --from A --to B                         the Confluent Hub versions of\n                                            the connector of the model\n                                            between A and B: a binary\n                                            search (first, last, then the\n                                            middle until the verdict\n                                            changes), --all for every one\n    --tag A --tag B …                       these CP versions\n  \n  Prints the verdict of each version (🐞 reproduced, ✅ not reproduced,\n  ❓ no verdict when the run stopped before 'repro assert'), the versions\n  where it changes and, for a Confluent connector, the changelog between\n  them ('playground connector-plugin changelog'). The log of each run is\n  in /tmp/playground-repro-bisect/<model>-<version>.log, the summary in\n  /tmp/playground-repro-bisect/<model>-<date>.json.\n  \n  ⚠️ Each run stops the running environment, like 'playground run', and a\n  run takes the time of the model: a binary search over 30 versions is\n  about 6 runs.\n\n"
+  else
+    printf "playground repro bisect - 🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground repro bisect [OPTIONS]\n"
+  printf "  playground repro bisect --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    🔖 Reproduction model to run (default: current one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR-TAG (repeatable)")"
+    printf "    🔗 Connector version to run, repeat it for each version\n"
+    printf "    %s\n" "Conflicts: --from, --to"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from VERSION")"
+    printf "    ⏮️ First Confluent Hub version of the connector of the model (default: the\n    oldest one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to VERSION")"
+    printf "    ⏭️ Last Confluent Hub version of the connector of the model (default: the\n    latest one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all")"
+    printf "    📚 With --from / --to, run every version of the range instead of a binary\n    search\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG (repeatable)")"
+    printf "    🎯 CP version: repeat it to compare CP versions, or give one to run every\n    connector version on it\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--run-flags FLAGS")"
+    printf "    ⛳ Other flags of 'playground run' for every run, for example \"--environment\n    sasl-ssl\"\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the summary as JSON\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro bisect --connector-tag 2.14.0 --connector-tag 2.14.5\n  --connector-tag 3.0.0\n"
+    printf "  playground repro bisect --from 2.10.0 --to 3.0.0\n"
+    printf "  playground repro bisect -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --tag 7.9.0 --tag 8.2.0 --tag 8.4.0\n"
     echo
 
   fi
@@ -46211,6 +46289,278 @@ playground_repro_assert_command() {
 }
 
 # :command.function
+playground_repro_bisect_command() {
+
+  # src/commands/repro/bisect.sh
+  file="${args[--file]}"
+  eval "connector_tags=(${args[--connector-tag]:-})"
+  eval "cp_tags=(${args[--tag]:-})"
+  from="${args[--from]}"
+  to="${args[--to]}"
+  all="${args[--all]}"
+  run_flags="${args[--run-flags]}"
+  json="${args[--json]}"
+
+  # with --json, only the summary goes to stdout
+  if [[ -n "$json" ]]
+  then
+      exec 3>&1 1>&2
+  fi
+
+  if [ -z "$file" ]
+  then
+      file=$(playground state get run.test_file)
+  fi
+  if [[ $file == *"@"* ]]
+  then
+      file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+  if [ -z "$file" ] || [ ! -f "$file" ]
+  then
+      logerror "❌ no reproduction model (run.test_file is <$file>), use --file"
+      exit 1
+  fi
+  file=$(repro_model_path "$file")
+  if ! grep -q "playground repro assert" <(grep -v "^#" "$file")
+  then
+      logerror "❌ $file does not call 'playground repro assert': bisect reads the verdict of each run, end the scenario with it (playground repro assert --help)"
+      exit 1
+  fi
+
+  # the connector plugin of the model (the first one from Confluent Hub), for the versions and the changelog
+  test_file="$file"
+  connector_plugin=""
+  get_connector_paths
+  for connector_path in ${connector_paths//,/ }
+  do
+      full_connector_name=$(basename "$connector_path")
+      owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+      name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+      if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
+      then
+          continue
+      fi
+      connector_plugin="$owner/$name"
+      break
+  done
+
+  # 1. what varies: the connector versions (listed, or a range of the Hub versions) or the CP versions
+  dimension="connector"
+  declare -a versions=()
+  if [ -n "$from" ] || [ -n "$to" ]
+  then
+      if [ ${#connector_tags[@]} -gt 0 ] || [ ${#cp_tags[@]} -gt 1 ]
+      then
+          logerror "❌ --from / --to take the versions of Confluent Hub: don't combine them with --connector-tag, nor with several --tag"
+          exit 1
+      fi
+      if [ -z "$connector_plugin" ]
+      then
+          logerror "❌ no connector plugin from Confluent Hub in $file: list the versions with --connector-tag"
+          exit 1
+      fi
+      owner=${connector_plugin%%/*}
+      name=${connector_plugin#*/}
+      playground connector-plugin versions --connector-plugin "$connector_plugin" > /dev/null 2>&1 || true
+      if [ ! -f "/tmp/version_${owner}_${name}" ]
+      then
+          logerror "❌ could not get the versions of $connector_plugin"
+          exit 1
+      fi
+      while IFS= read -r version
+      do
+          if [ -n "$from" ] && version_gt "$from" "$version"
+          then
+              continue
+          fi
+          if [ -n "$to" ] && version_gt "$version" "$to"
+          then
+              continue
+          fi
+          versions+=("$version")
+      done < <(grep -oE 'v[0-9][0-9A-Za-z.-]*' "/tmp/version_${owner}_${name}" | sed 's/^v//' | sort -V -u)
+      if [ ${#versions[@]} -lt 2 ]
+      then
+          logerror "❌ less than 2 versions of $connector_plugin between ${from:-the first one} and ${to:-the last one}: $(echo ${versions[*]})"
+          exit 1
+      fi
+  elif [ ${#connector_tags[@]} -gt 0 ]
+  then
+      if [ ${#cp_tags[@]} -gt 1 ]
+      then
+          logerror "❌ give several --connector-tag or several --tag, not both (one --tag with several --connector-tag is fine)"
+          exit 1
+      fi
+      versions=("${connector_tags[@]}")
+  elif [ ${#cp_tags[@]} -gt 1 ]
+  then
+      dimension="cp"
+      versions=("${cp_tags[@]}")
+  else
+      logerror "❌ give the versions to try: several --connector-tag, --from / --to (Confluent Hub versions of the connector), or several --tag (CP versions)"
+      exit 1
+  fi
+  fixed_flags=""
+  if [ "$dimension" == "connector" ] && [ ${#cp_tags[@]} -eq 1 ]
+  then
+      fixed_flags="--tag ${cp_tags[0]}"
+  fi
+
+  if [ -n "$from$to" ] && [ -z "$all" ]
+  then
+      mode="bisect"
+  else
+      mode="all"
+  fi
+
+  output_dir="/tmp/playground-repro-bisect"
+  mkdir -p "$output_dir"
+  model_name=$(basename "$file" .sh)
+  started_at=$(date +%Y-%m-%d-%H-%M-%S)
+  results_file="$output_dir/${model_name}-${started_at}.jsonl"
+  : > "$results_file"
+
+  if [ ${#versions[@]} -gt 8 ]
+  then
+      version_list="${versions[0]} ${versions[1]} ${versions[2]} … ${versions[$((${#versions[@]} - 2))]} ${versions[$((${#versions[@]} - 1))]}"
+  else
+      version_list="${versions[*]}"
+  fi
+  log "🔎 $mode over ${#versions[@]} $( [ "$dimension" == "cp" ] && echo "CP" || echo "${connector_plugin:-connector}") version(s) of $(basename "$file"): $version_list"
+  if [ "$mode" == "bisect" ]
+  then
+      log "   binary search: the first and the last version, then the middle until the verdict changes (assumes it changes once)"
+  fi
+  log "   ⚠️ each run is a 'playground run' of the model: it stops the running environment"
+
+  # 2. one run: the verdict recorded by 'playground repro assert' during it
+  declare -A verdict_of=()
+  function run_version () {
+      local version="$1"
+      local log_file="$output_dir/${model_name}-${version}.log"
+      local start_epoch nb_before rc verdict_json verdict reason duration
+      local version_flag="--connector-tag"
+      if [ "$dimension" == "cp" ]
+      then
+          version_flag="--tag"
+      fi
+      log "▶️  $version_flag $version: playground run -f $file $version_flag $version $fixed_flags $run_flags"
+      log "   📜 tail -f $log_file"
+      start_epoch=$(date +%s)
+      # the verdicts recorded during this run are the lines added to the file
+      nb_before=0
+      if [ -f "$root_folder/playground-repro-verdicts" ]
+      then
+          nb_before=$(wc -l < "$root_folder/playground-repro-verdicts" | tr -d ' ')
+      fi
+      set +e
+      # shellcheck disable=SC2086
+      playground run -f "$file" $version_flag "$version" $fixed_flags $run_flags < /dev/null > "$log_file" 2>&1
+      rc=$?
+      set -e
+      duration=$(( $(date +%s) - start_epoch ))
+      verdict_json=""
+      if [ -f "$root_folder/playground-repro-verdicts" ]
+      then
+          verdict_json=$(tail -n +$((nb_before + 1)) "$root_folder/playground-repro-verdicts" | jq -c --arg script "$file" 'select(.script == $script)' 2>/dev/null | tail -1)
+      fi
+      if [ -n "$verdict_json" ]
+      then
+          verdict=$(echo "$verdict_json" | jq -r '.verdict')
+          reason=$(echo "$verdict_json" | jq -r '.reason')
+      else
+          verdict="no verdict"
+          reason="the run ended with exit code $rc before 'playground repro assert' (see $log_file)"
+      fi
+      verdict_of[$version]="$verdict"
+      jq -cn --arg version "$version" --arg verdict "$verdict" --arg reason "$reason" --argjson duration "$duration" --argjson exit_code "$rc" --arg log "$log_file" \
+          '{version: $version, verdict: $verdict, reason: $reason, duration_seconds: $duration, exit_code: $exit_code, log: $log}' >> "$results_file"
+      case "$verdict" in
+          reproduced) log "   🐞 $version: reproduced ($((duration / 60))m$((duration % 60))s): $reason" ;;
+          "not reproduced") log "   ✅ $version: not reproduced ($((duration / 60))m$((duration % 60))s): $reason" ;;
+          *) logwarn "   ❓ $version: no verdict ($((duration / 60))m$((duration % 60))s): $reason" ;;
+      esac
+  }
+
+  # 3. the runs
+  if [ "$mode" == "all" ]
+  then
+      for version in "${versions[@]}"
+      do
+          run_version "$version"
+      done
+  else
+      lo=0
+      hi=$((${#versions[@]} - 1))
+      run_version "${versions[$lo]}"
+      run_version "${versions[$hi]}"
+      if [ "${verdict_of[${versions[$lo]}]}" == "no verdict" ] || [ "${verdict_of[${versions[$hi]}]}" == "no verdict" ]
+      then
+          logerror "❌ no verdict at one end of the range: fix the model (or the range) first"
+      elif [ "${verdict_of[${versions[$lo]}]}" == "${verdict_of[${versions[$hi]}]}" ]
+      then
+          log "🟰 same verdict for ${versions[$lo]} and ${versions[$hi]} (${verdict_of[${versions[$lo]}]}): nothing to bisect in this range"
+      else
+          while [ $((hi - lo)) -gt 1 ]
+          do
+              mid=$(( (lo + hi) / 2 ))
+              run_version "${versions[$mid]}"
+              if [ "${verdict_of[${versions[$mid]}]}" == "no verdict" ]
+              then
+                  logerror "❌ no verdict for ${versions[$mid]}: stopping, run it again or narrow the range with --from / --to"
+                  break
+              fi
+              if [ "${verdict_of[${versions[$mid]}]}" == "${verdict_of[${versions[$lo]}]}" ]
+              then
+                  lo=$mid
+              else
+                  hi=$mid
+              fi
+          done
+      fi
+  fi
+
+  # 4. summary, in the order of the versions
+  summary=$(jq -s --arg model "$file" --arg plugin "$connector_plugin" --arg dimension "$dimension" --arg mode "$mode" '
+      {model: $model, connector_plugin: $plugin, dimension: $dimension, mode: $mode,
+       runs: sort_by(.version | split(".") | map(tonumber? // 0))}' "$results_file")
+  # the versions where the verdict changes, between two consecutive versions that were run
+  changes=$(echo "$summary" | jq -c '[.runs | map(select(.verdict != "no verdict")) | . as $r | range(1; length) | select($r[.].verdict != $r[. - 1].verdict) | {from: $r[. - 1].version, from_verdict: $r[. - 1].verdict, to: $r[.].version, to_verdict: $r[.].verdict}]')
+  summary=$(echo "$summary" | jq --argjson changes "$changes" '. + {changes: $changes}')
+  summary_file="$output_dir/${model_name}-${started_at}.json"
+  echo "$summary" > "$summary_file"
+
+  if [[ -n "$json" ]]
+  then
+      echo "$summary" >&3
+      exit 0
+  fi
+
+  log "📊 verdicts of $(basename "$file"):"
+  echo "$summary" | jq -r '.runs[] | [.version, (if .verdict == "reproduced" then "🐞 reproduced" elif .verdict == "not reproduced" then "✅ not reproduced" else "❓ no verdict" end), "\(.duration_seconds / 60 | floor)m\(.duration_seconds % 60)s", .reason] | @tsv' \
+      | awk -F'\t' '{ printf "   %-14s %-20s %-8s %s\n", $1, $2, $3, $4 }'
+  if [ "$(echo "$changes" | jq 'length')" -eq 0 ]
+  then
+      log "🟰 the verdict does not change between the versions that ran"
+  else
+      echo "$changes" | jq -r '.[] | "\(.from) (\(.from_verdict)) → \(.to) (\(.to_verdict))"' | while IFS= read -r change
+      do
+          log "🔀 the verdict changes between $change"
+      done
+      if [ "$dimension" == "connector" ] && [[ "$connector_plugin" == confluentinc/* ]]
+      then
+          echo "$changes" | jq -r '.[] | "\(.from) \(.to)"' | while read -r change_from change_to
+          do
+              log "📰 what changed between $change_from and $change_to:"
+              playground connector-plugin changelog --connector-plugin "$connector_plugin" --from "$change_from" --to "$change_to" 2>&1 | sed 's/^/   /' || true
+          done
+      fi
+  fi
+  log "💾 $summary_file"
+
+}
+
+# :command.function
 playground_get_docker_compose_command() {
 
   # src/commands/get-docker-compose.sh
@@ -83115,6 +83465,13 @@ playground_repro_parse_requirements() {
       shift $#
       ;;
 
+    bisect)
+      action="bisect"
+      shift
+      playground_repro_bisect_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_repro_usage >&2
@@ -84340,6 +84697,192 @@ playground_repro_assert_parse_requirements() {
   if [[ ${args['--reproduced-if-connector-state']:-} ]] && [[ ! ${args['--reproduced-if-connector-state']:-} =~ ^(FAILED|RUNNING|PAUSED|STOPPED|UNASSIGNED|RESTARTING)$ ]]; then
     printf "%s\n" "--reproduced-if-connector-state must be one of: FAILED, RUNNING, PAUSED, STOPPED, UNASSIGNED, RESTARTING" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_repro_bisect_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_repro_bisect_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="repro bisect"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-tag)
+        # :flag.conflicts
+        for conflict in --from --to; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--connector-tag']+x} ]]; then
+            args['--connector-tag']="$escaped"
+          else
+            args['--connector-tag']="${args['--connector-tag']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-tag requires an argument: --connector-tag CONNECTOR-TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --from)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from requires an argument: --from VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--tag']+x} ]]; then
+            args['--tag']="$escaped"
+          else
+            args['--tag']="${args['--tag']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --run-flags)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--run-flags']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--run-flags requires an argument: --run-flags FLAGS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -118830,6 +119373,11 @@ playground_repro_completion() {
         playground_repro_assert_completion "$completion_current" "$@"
         return
         ;;
+      bisect)
+        shift
+        playground_repro_bisect_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -118839,7 +119387,7 @@ playground_repro_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" export check import bootstrap status assert
+  completion_candidates "$completion_current" export check import bootstrap status assert bisect
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -119428,6 +119976,110 @@ playground_repro_assert_completion() {
     completion_flag_candidates --reproduced-if-command "$completion_current" --reproduced-if-command
     completion_flag_candidates --message "$completion_current" --message -m
     completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
+playground_repro_bisect_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-examples-list-with-fzf --repro-only "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --connector-tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from"]=1
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --from)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --all)
+        completion_blocked_flags["--all"]=1
+
+        shift
+        ;;
+      --tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --run-flags)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--run-flags"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --connector-tag "$completion_current" --connector-tag
+    completion_flag_candidates --from "$completion_current" --from
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --all "$completion_current" --all
+    completion_flag_candidates --tag "$completion_current" --tag
+    completion_flag_candidates --run-flags "$completion_current" --run-flags
     completion_flag_candidates --json "$completion_current" --json
   fi
 
@@ -134182,6 +134834,7 @@ run() {
     "repro bootstrap") playground_repro_bootstrap_command ;;
     "repro status") playground_repro_status_command ;;
     "repro assert") playground_repro_assert_command ;;
+    "repro bisect") playground_repro_bisect_command ;;
     "get-docker-compose") playground_get_docker_compose_command ;;
     "schema") playground_schema_command ;;
     "schema get") playground_schema_get_command ;;
