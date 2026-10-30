@@ -2143,8 +2143,19 @@ then
   export PG_CCLOUD_RUN_ID="$(date +%s)"
   playground state set run.ccloud_run_id "$PG_CCLOUD_RUN_ID"
 fi
-echo "" >> "$root_folder/playground-run-history"
-echo "playground run -f $test_file $flag_list" >> "$root_folder/playground-run-history"
+# shell-quoted, so that 'playground history' and eval replay it as is; credentials are not written
+history_line="playground run -f $(printf '%q' "$test_file")"
+for flag in "${array_flag_list[@]}"
+do
+  case "$flag" in
+    "") ;;
+    "--cluster-creds "*|"--cluster-schema-registry-creds "*) history_line+=" ${flag%% *} '<masked>'" ;;
+    --*=*) history_line+=" ${flag%%=*}=$(printf '%q' "${flag#*=}")" ;;
+    "--"*" "*) history_line+=" ${flag%% *} $(printf '%q' "${flag#* }")" ;;
+    *) history_line+=" $(printf '%q' "$flag")" ;;
+  esac
+done
+echo "$history_line" >> "$root_folder/playground-run-history"
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then

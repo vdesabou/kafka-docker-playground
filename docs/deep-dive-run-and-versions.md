@@ -158,7 +158,11 @@ Gotchas:
   run the line from `playground-run-history` with `playground run -f …`.
 - **`re-run` replays the flags, not the versions resolved by the last run**: without `--connector-tag`, it installs
   the latest connector of today again, not the one installed last time. Pin the version with a flag to replay exactly.
-- The history keeps every run, a repro model's `--cluster-creds` included: it's a local file, don't share it as is.
+- The history keeps every run as a shell-quoted line (`eval` replays it, paths with spaces included), without the
+  credentials: `--cluster-creds` and `--cluster-schema-registry-creds` are written as `'<masked>'`. `history` puts them
+  back from `playground.ini` when the run used the cluster saved there, otherwise replace `'<masked>'` in the editable
+  line. Lines written before that may still hold them: it's a local file, don't share it as is.
+- `history` hides the runs whose script no longer exists (renamed repro model, removed worktree) and prints how many.
 - `run.test_file` is only updated once the run really starts: cancelling the menu or a bad combination keeps the
   previous example as the current one.
 

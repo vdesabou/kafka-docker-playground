@@ -1253,7 +1253,12 @@ subcommands:
     command and run it again\n\nOpens a picker over every 'playground run' command
     you have executed,\nmost recent first and de-duplicated. The command you select
     is shown for\nediting before it runs, so you can change a --tag or add a flag
-    on the way.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    on the way.\n\nThe runs are kept in playground-run-history (repository root),
+    one\nshell-quoted line each: eval the last line to replay it from a script.\nRuns
+    whose script no longer exists are not shown. --cluster-creds and --cluster-schema-registry-creds
+    are written as\n'<masked>': they are taken from playground.ini when the run used
+    the\ncluster saved there, otherwise replace '<masked>' when editing the line.\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
     Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground history
   options: []
