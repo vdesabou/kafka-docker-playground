@@ -110,9 +110,9 @@ def group_html(i: int, g: dict, topic: str) -> str:
         rows.append(("Failing class", f"<span class='mono'>{rh.e(g['class'])}</span>"))
     if g.get("exception"):
         rows.append(("Exception", f"<span class='mono'>{rh.e(g['exception'])}</span>"))
-        rows.append(("Message", f"<pre>{rh.e(g.get('message') or '')}</pre>"))
+        rows.append(("Message", f"<pre>{rh.log_html(g.get('message') or '')}</pre>"))
     if g.get("root_cause") and g["root_cause"] != f"{g.get('exception') or ''}: {g.get('message') or ''}":
-        rows.append(("Root cause", f"<pre>{rh.e(g['root_cause'])}</pre>"))
+        rows.append(("Root cause", f"<pre>{rh.log_html(g['root_cause'])}</pre>"))
     if g.get("original_topics"):
         rows.append(("Original records", "<br>".join(
             f"<span class='mono'>{rh.e(o['topic'])}</span> partition {o['partition']} offsets {o['first_offset']}..{o['last_offset']} ({o['count']})"

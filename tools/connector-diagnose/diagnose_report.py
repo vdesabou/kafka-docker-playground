@@ -193,7 +193,7 @@ def trace_html(trace: str) -> str:
     if not trace:
         return "<span class='legend'>-</span>"
     # the summary is the deepest cause, the full trace is one click away
-    return f"<details><summary class='mono'>{rh.e(trace_summary(trace)[:240])}</summary><pre>{rh.e(trace)}</pre></details>"
+    return f"<details><summary class='mono'>{rh.e(trace_summary(trace)[:240])}</summary><pre>{rh.log_html(trace)}</pre></details>"
 
 
 def errors_html(c: dict) -> str:

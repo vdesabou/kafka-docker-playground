@@ -156,10 +156,73 @@ THEME_SCRIPT = """<script>
 </script>"""
 
 
+# colors of the log lines written with log_html(): timestamp, level, exception class, Caused by, [connector|task-0]
+# context, logger, stack frames, placeholders of the sanitizer
+LOG_CSS = """
+.lh-ts{color:#0f766e}
+.lh-lvl{font-weight:700;border-radius:3px;padding:0 3px}
+.lh-fatal,.lh-error{color:#fff;background:#dc2626}.lh-warn{color:#78350f;background:#fde68a}
+.lh-info{color:#1d4ed8}.lh-debug,.lh-trace{color:#64748b}
+.lh-exc{color:#b91c1c;font-weight:600}
+.lh-cause{color:#b91c1c;font-weight:700}
+.lh-mdc{color:#7c3aed}
+.lh-logger,.lh-frame{color:#94a3b8}
+.lh-ph{color:#64748b;font-style:italic}
+""" + dark("""
+.lh-ts{color:#5eead4}
+.lh-fatal,.lh-error{color:#fff;background:#b91c1c}.lh-warn{color:#451a03;background:#fcd34d}
+.lh-info{color:#93c5fd}.lh-debug,.lh-trace{color:#94a3b8}
+.lh-exc,.lh-cause{color:#fca5a5}
+.lh-mdc{color:#c4b5fd}
+.lh-logger,.lh-frame{color:#64748b}
+.lh-ph{color:#94a3b8}
+""")
+
+_LOG_LEVEL_CLASS = {"fatal": "fatal", "severe": "fatal", "error": "error", "warn": "warn", "warning": "warn",
+                    "info": "info", "debug": "debug", "trace": "trace"}
+_LOG_TOKEN_RE = re.compile(
+    r"(?P<ts>\b\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:[.,]\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?(?!\d))"
+    r'|(?P<jlvl>"level"\s*:\s*"(?P<jv>(?i:fatal|error|warn|warning|info|debug|trace))")'
+    r"|(?P<lvl>(?<![\w.-])(?:FATAL|SEVERE|ERROR|WARN|WARNING|INFO|DEBUG|TRACE)(?![\w-]))"
+    r"|(?P<cause>Caused by:)"
+    r"|(?P<mdc>\[[\w.-]+\|(?:task-\d+|worker)(?:\|[\w.-]+)?\])"
+    r"|(?P<exc>\b(?:[a-z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error)\b)"
+    r"|(?P<ph><(?:[A-Z0-9]+-)*(?:REDACTED|IP-\d+|HOST-\d+|EMAIL-\d+|DN-\d+)>)"
+    r"|(?P<logger>\((?:[a-z_$][\w$]*\.)+[A-Za-z_$][\w$]*(?::\d+)?\)\s*$)"
+)
+_LOG_FRAME_RE = re.compile(r"^\s+(?:at |\.\.\. \d+ (?:more|common frames omitted))")
+
+
+def log_html(text) -> str:
+    """Escaped log text with colors (LOG_CSS): timestamp, level (FATAL / ERROR / WARN / INFO / DEBUG / TRACE and JSON
+    "level":"error"), exception class, Caused by, [connector|task-0] context, (logger) at the end of a line, stack
+    frames, <IP-1> / <REDACTED> placeholders of the sanitizer"""
+    out = []
+    for line in str(text).split("\n"):
+        if _LOG_FRAME_RE.match(line):
+            out.append(f'<span class="lh-frame">{e(line)}</span>')
+            continue
+        parts, pos = [], 0
+        for m in _LOG_TOKEN_RE.finditer(line):
+            parts.append(e(line[pos:m.start()]))
+            token, kind = m.group(0), m.lastgroup
+            if kind == "jv":
+                kind = "jlvl"
+            if kind in ("lvl", "jlvl"):
+                level = _LOG_LEVEL_CLASS[(m.group("jv") or token).lower()]
+                parts.append(f'<span class="lh-lvl lh-{level}">{e(token)}</span>')
+            else:
+                parts.append(f'<span class="lh-{kind}">{e(token)}</span>')
+            pos = m.end()
+        parts.append(e(line[pos:]))
+        out.append("".join(parts))
+    return "\n".join(out)
+
+
 def style(extra: str = "") -> str:
     """<style> element: the shared look, then the rules of one report (they win over the shared ones), then the dark theme
     (a report adds its own dark rules to extra with dark()); followed by the script of the "Toggle theme" button"""
-    return f"<style>{BASE_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}"
+    return f"<style>{BASE_CSS}{LOG_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}"
 
 
 HTML_CSS = style(NEWER_REPORTS_CSS)

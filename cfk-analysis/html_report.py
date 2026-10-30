@@ -372,7 +372,8 @@ def _theme() -> str:
     """the dark rules, the "Toggle theme" button and its script, when the shared report module is there"""
     if report_html is None:
         return f"<style>{CSS}</style>"
-    return f"<style>{CSS}{report_html.dark(DARK_CSS)}{report_html.THEME_TOGGLE_CSS}</style>{report_html.THEME_SCRIPT}"
+    return (f"<style>{CSS}{report_html.LOG_CSS}{report_html.dark(DARK_CSS)}{report_html.THEME_TOGGLE_CSS}</style>"
+            f"{report_html.THEME_SCRIPT}")
 
 
 JS = """
@@ -518,6 +519,11 @@ def _esc(s) -> str:
     if s is None:
         return ""
     return html.escape(str(s), quote=True)
+
+
+def _log(s) -> str:
+    """Log text with the colors of the other playground reports (timestamp, level, exception…), plain without them"""
+    return report_html.log_html(s) if report_html is not None else _esc(s)
 
 
 def _severity_worst(issues: List[Dict]) -> str:
@@ -824,9 +830,9 @@ def render(results: Dict, bundle_label: str = "") -> str:
                     loc += f":{issue['line_number']}"
                 if issue.get("count", 1) > 1:
                     loc += f" &nbsp;×{_esc(issue['count'])}"
-                msg = _esc(issue.get("message", ""))
+                msg = _log(issue.get("message", ""))
                 for cause in issue.get("caused_by") or []:
-                    msg += f"<br>&nbsp;&nbsp;↳ Caused by: {_esc(cause)}"
+                    msg += f"<br>&nbsp;&nbsp;↳ {_log('Caused by: ' + cause)}"
                 for name in issue.get("runbooks") or []:
                     msg += f"<br>&nbsp;&nbsp;📕 Known CFK issue: <strong>{_esc(runbook_titles.get(name, name))}</strong>"
                 affected = issue.get("affected") or []
@@ -838,7 +844,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
                 if context:
                     context_block = (
                         f'<details><summary>📋 Show context</summary>'
-                        f'<pre>{_esc(context)}</pre></details>'
+                        f'<pre>{_log(context)}</pre></details>'
                     )
                 issue_rows.append(f"""
                 <div class="issue" data-severity="{_esc(sev)}" data-component="{_esc(component)}" data-instance="{_esc(instance)}" data-connectors="{_esc(" ".join(issue.get("connectors") or [NO_CONNECTOR]))}">
