@@ -5190,9 +5190,9 @@ commands:
       DistributedConfig, connector and client configs…) and the .properties
       and connector JSON files of the input.
 
-      ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt, or with cluster-resources/ and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log or the YAML of a platform.confluent.io custom resource at its top), alone or inside a folder or an archive, is detected and analyzed as a whole, in a Docker image built on first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks), the environment checked against the CFK support matrix (Kubernetes, CFK operator, CP and init container versions), the recent changes (who edited which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties, zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties rendered by CFK, configOverrides, config logged at startup, connector configs from the Connector CRs and the config dumps of the logs), a JVM default truststore set without its password, and the ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation steps. 📕 The log messages and events of known CFK problems (CFK triage table of Confluent support: roll blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed first, with what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run (operator did not apply it, roll not complete) is one finding, the exceeded quota events become one finding per ResourceQuota, each Warning event is counted once (event.txt and event.yaml) and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range of each log is listed, with a finding when a log starts long after its pod or after the last change of the CRs, and CRs that keep the "Reconcile is blocked" condition after the annotation was removed are one finding. 🕒 The changes of the CRs in the hour before the first critical / high issue are marked and listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be installed (config-init-container failing, install error, slow init) and a Connector CR whose class is not installed are findings with next steps. 🔁 With several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time: same cluster or not, versions, changes of the CRs between them, issues fixed / new / still there, known CFK issues, with a verdict (HTML report, "comparison" in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase / sub-phase of the KRaftMigrationJob, how long it has been there (events, operator requeues), its last error and the next steps of that sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and back-offs of a pod that is Running and Ready in the bundle are low and marked transient. Each issue is attributed to a component and an instance (CR name), and to its connector: --component keeps some of them, the HTML report has Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best effort: review before sharing), --no-sanitize for internal bundles only. --logs-only gives the plain log digest instead. 🎯 --problem "<component, symptom, since when>" matches the bundle against what the customer reports: the issues that explain it first, a verdict (explained, not explained, not covered by the logs), the changes before the date. 📥 A Data to request section says what to ask the customer for next, with why and the command: from the gaps of the bundle (logs that start too late, previous logs of restarted containers, no events, no operator log), from its findings (OOMKilled, Pending pods, TLS, failed connectors) and from the symptoms of --problem.
+      ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt, or with cluster-resources/ and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log or the YAML of a platform.confluent.io custom resource at its top), alone or inside a folder or an archive, is detected and analyzed as a whole, in a Docker image built on first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks), the environment checked against the CFK support matrix (Kubernetes, CFK operator, CP and init container versions), the recent changes (who edited which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties, zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties rendered by CFK, configOverrides, config logged at startup, connector configs from the Connector CRs and the config dumps of the logs), a JVM default truststore set without its password, and the ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation steps. 📕 The log messages and events of known CFK problems (CFK triage table of Confluent support: roll blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed first, with what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run (operator did not apply it, roll not complete) is one finding, the exceeded quota events become one finding per ResourceQuota, each Warning event is counted once (event.txt and event.yaml) and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range of each log is listed, with a finding when a log starts long after its pod or after the last change of the CRs, and CRs that keep the "Reconcile is blocked" condition after the annotation was removed are one finding. 🕒 The changes of the CRs in the hour before the first critical / high issue are marked and listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be installed (config-init-container failing, install error, slow init) and a Connector CR whose class is not installed are findings with next steps. 🔁 With several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time: same cluster or not, versions, changes of the CRs between them, issues fixed / new / still there, known CFK issues, with a verdict (HTML report, "comparison" in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase / sub-phase of the KRaftMigrationJob, how long it has been there (events, operator requeues), its last error and the next steps of that sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and back-offs of a pod that is Running and Ready in the bundle are low and marked transient. Each issue is attributed to a component and an instance (CR name), and to its connector: --component keeps some of them, the HTML report has Component / Instance / Connector filters. 🔒 --sanitize replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best effort: review before sharing). --logs-only gives the plain log digest instead. 🎯 --problem "<component, symptom, since when>" matches the bundle against what the customer reports: the issues that explain it first, a verdict (explained, not explained, not covered by the logs), the changes before the date. 📥 A Data to request section says what to ask the customer for next, with why and the command: from the gaps of the bundle (logs that start too late, previous logs of restarted containers, no events, no operator log), from its findings (OOMKilled, Pending pods, TLS, failed connectors) and from the symptoms of --problem.
 
-      🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON) by default. It is best effort: review the output before sharing it. --no-sanitize keeps them, for internal logs only.
+      🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs, tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON). Off by default: use it before sharing the output outside Confluent, and review it anyway (best effort).
 
       🧭 After the digest of each file, a short summary: time range, occurrences by connector, known causes with what to do, root causes no known cause explains, and the configuration logged at startup (connectors, components, clients) with the keys changed between restarts. --connector keeps one connector, --show-config prints a configuration.
 
@@ -5307,12 +5307,17 @@ commands:
           🎯 CFK support bundle: the problem the customer reports, in your own words: component, symptom and since when (example: "connect-0 keeps restarting since 14 Oct 08:30, orders-sink failed")
 
           Matched against the bundle (keywords and dates, no AI): the components and CR / pod names (connect, kafka, kraft, schema registry, operator, connect-0…), the symptoms (roll / upgrade stuck, crash / restarts, pending, memory / OOM, TLS, auth / RBAC, KRaft migration, connector failed, slow / lag / hang, disk, network) and the dates it recognizes (2026-10-14 08:30, 14 Oct, Oct 14, yesterday, 3 hours ago). The issues that match come first, marked 🎯, with a verdict: explained, partly explained, not explained, or not covered (the logs of the bundle do not cover the date), the changes of the CRs before the date and the logs that start after it. Terminal, HTML report and "problem" in --json. It also adds what to request for these symptoms to the 📥 Data to request section
-      - long: --no-sanitize
+      - long: --sanitize
         required: false
         help: |-
-          ⚠️  Do not sanitize passwords and other secrets, IPs, hostnames, emails and LDAP DNs (digest, HTML report, JSON, CFK bundle analysis)
+          🔒 Replace passwords and other secrets, IPs, hostnames, emails and LDAP DNs by placeholders (<REDACTED>, <IP-1>, <HOST-1>…) in the digest, the HTML report, the JSON and the CFK bundle analysis
 
-          🚫 NEVER use this for customer logs. Internal/test logs only.
+          ⚠️ Use it before sharing the output outside Confluent (best effort: review it anyway). Off by default: it can hide evidence (a dump of bytes taken for a secret, the IP of the broker) and doubles the time on large bundles
+      - long: --no-sanitize
+        required: false
+        private: true
+        help: |-
+          Kept for compatibility: the output is not sanitized by default, see --sanitize
     examples:
     - playground analyze logs --sample connect_task_failure
     - playground analyze logs --sample support_bundle --include-warnings
@@ -5335,6 +5340,7 @@ commands:
     x_example_outputs:
     - command: playground analyze logs -f connect.log
       output: |-
+        17:23:19 ℹ️ 🔓 Not sanitized: --sanitize replaces secrets, IPs and hostnames by placeholders before sharing the output outside Confluent
         17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log
         🔎 1 distinct record(s), 2 occurrence(s), in 12 lines
 
@@ -5345,12 +5351,12 @@ commands:
                 at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)
 
         17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)
-        17:23:19 ℹ️ 🔒 Sanitized (best effort, review before sharing): 0 secret(s), 0 IP(s), 0 hostname(s), 0 email(s), 0 LDAP DN(s), --no-sanitize to keep them
         17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html
         17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html
     footer: |-
       Example output:
         $ playground analyze logs -f connect.log
+        17:23:19 ℹ️ 🔓 Not sanitized: --sanitize replaces secrets, IPs and hostnames by placeholders before sharing the output outside Confluent
         17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log
         🔎 1 distinct record(s), 2 occurrence(s), in 12 lines
 
@@ -5361,7 +5367,6 @@ commands:
                 at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)
 
         17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)
-        17:23:19 ℹ️ 🔒 Sanitized (best effort, review before sharing): 0 secret(s), 0 IP(s), 0 hostname(s), 0 email(s), 0 LDAP DN(s), --no-sanitize to keep them
         17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html
         17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html
 
@@ -5594,12 +5599,15 @@ commands:
         required: false
         help: |-
           📄 Emit machine-readable JSON (includes per-issue recommendation) instead of the text report
-      - long: --no-sanitize
+      - long: --sanitize
         required: false
         help: |-
-          ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.
-
-          🚫 NEVER use this for customer bundles. Internal/test bundles only.
+          🔒 Replace IPs, hostnames, emails and credentials by placeholders (off by default)
+      - long: --no-sanitize
+        required: false
+        private: true
+        help: |-
+          Kept for compatibility: the output is not sanitized by default, see --sanitize
       - long: --severity
         required: false
         arg: level

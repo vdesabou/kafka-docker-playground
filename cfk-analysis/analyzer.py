@@ -50,6 +50,14 @@ _LEVEL_RE = re.compile(
     r'|^([FEW])\d{4} \d{2}:\d{2}:\d{2}'
 )
 _KLOG_LEVEL = {'F': 'FATAL', 'E': 'ERROR', 'W': 'WARN'}
+# a record of a lower level: the exception printed on the lines after it ("INFO … Error sending fetch request" then
+# "org.apache.kafka.common.errors.DisconnectException") belongs to it, it is not an uncaught exception
+_LOW_LEVEL_RE = re.compile(
+    r'(?:^|[\s\[|])(?:INFO|DEBUG|TRACE)(?:[\s\]|:]|$)'
+    r'|(?i:level=(?:info|debug|trace)\b)'
+    r'|(?i:"level"\s*:\s*"(?:info|debug|trace)")'
+    r'|^[ID]\d{4} \d{2}:\d{2}:\d{2}'
+)
 
 # Cache key of _classify: digits replaced one for one by 0 (same length, so `.{0,N}` match the same), which folds
 # records that only differ by timestamps, offsets or ids. Texts with the only digits of the patterns are kept as is.
@@ -723,7 +731,8 @@ class CFKBundleAnalyzer:
         record = None  # (line_number, level, head, caused_by)
 
         def flush():
-            if record is not None:
+            # INFO / DEBUG / TRACE records are only followed, to keep the exception printed after them
+            if record is not None and record[1] != 'INFO':
                 self._handle_record(rel, lines, *record)
 
         k8s_screen = self._k8s_screen
@@ -742,7 +751,8 @@ class CFKBundleAnalyzer:
                 if _STACK_FRAME_RE.match(line):
                     continue
                 if (_EXCEPTION_HEAD_RE.match(line) and not record[3]
-                        and not _RECORD_START_RE.match(line)):
+                        and not _RECORD_START_RE.match(line)
+                        and not (record[1] == 'INFO' and line.startswith('Exception in thread'))):
                     # exception printed on the line after "ERROR something failed"
                     record[3].append(line.strip()[:300])
                     continue
@@ -782,6 +792,8 @@ class CFKBundleAnalyzer:
             line_lower = line.lower()
             if any(t in line_lower for t in k8s_screen):
                 self._handle_k8s_line(rel, lines, line_num, line)
+            if _LOW_LEVEL_RE.search(line[:400]):
+                record = (line_num, 'INFO', line, [])
 
         flush()
         self._record_log_window(rel, lines)

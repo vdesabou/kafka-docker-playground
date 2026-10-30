@@ -6,7 +6,7 @@ output_dir="${args[--output-dir]}"
 json_out="${args[--json]}"
 logs_only="${args[--logs-only]}"
 severity="${args[--severity]}"
-no_sanitize="${args[--no-sanitize]}"
+want_sanitize="${args[--sanitize]}"
 eval "component_array=(${args[--component]})"
 eval "connector_array=(${args[--connector]})"
 with_worker="${args[--with-worker]}"
@@ -116,19 +116,23 @@ function is_duplicate_file () {
     return 1
 }
 nb_extracted=0
-# secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
-# the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
+# --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
+# effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
 sanitizer="$root_folder/tools/report-common/sanitizer.py"
 sanitize_state="$tmp_dir/sanitize-state.json"
-sanitize=1
-if [[ -n "$no_sanitize" ]]
+sanitize=""
+no_sanitize=1
+if [[ -n "$want_sanitize" ]]
 then
-    sanitize=""
-    logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer logs."
-elif ! command -v python3 &>/dev/null
-then
-    sanitize=""
-    logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+    if command -v python3 &>/dev/null
+    then
+        sanitize=1
+        no_sanitize=""
+    else
+        logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+    fi
+else
+    log "🔓 Not sanitized: --sanitize replaces secrets, IPs and hostnames by placeholders before sharing the output outside Confluent"
 fi
 # $1: file, sanitized in place
 function sanitize_file () {
@@ -498,7 +502,7 @@ redaction='{}'
 if [[ -n "$sanitize" ]]
 then
     redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
-    log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction"), --no-sanitize to keep them"
+    log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction") (--sanitize)"
 fi
 title="${file_array[*]}"
 if [[ ${#sample_array[@]} -gt 0 ]]
@@ -561,7 +565,7 @@ then
     jq -r '"Secrets, IPs, hostnames, emails and LDAP DNs of the logs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…), best effort: review the report before sharing it. Redacted: \(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)."' <<< "$redaction" > "$tmp_dir/sanitization.txt"
     report_args+=(--section "🔒 Sanitization" "$tmp_dir/sanitization.txt")
 else
-    echo "Not sanitized (--no-sanitize): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
+    echo "Not sanitized (--sanitize to redact them): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
     report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
 fi
 # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor

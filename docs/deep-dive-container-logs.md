@@ -165,18 +165,20 @@ What it does with what you give it:
 | a folder | scanned recursively, sorted, `__MACOSX/` and `.DS_Store` ignored |
 | `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z` | extracted to a temporary folder (deleted at the end), nested archives too. `.7z` needs `bsdtar` (the `tar` of macOS) or 7-Zip; `.rar`, `.xz`, `.zst`… are skipped with a warning: extract them first |
 | `.gz` | decompressed on the fly |
-| a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`; or a flat collection of `kubectl` outputs with a `confluent-operator-*.log` or the YAML of a `platform.confluent.io` custom resource at its top), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, sanitized, in its own HTML report. `--problem "<component, symptom, since when>"` matches it against the problem of the customer (🎯 verdict, issues that explain it first), and a 📥 Data to request section says what to ask the customer for next. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
+| a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`; or a flat collection of `kubectl` outputs with a `confluent-operator-*.log` or the YAML of a `platform.confluent.io` custom resource at its top), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, in its own HTML report. `--problem "<component, symptom, since when>"` matches it against the problem of the customer (🎯 verdict, issues that explain it first), and a 📥 Data to request section says what to ask the customer for next. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
 | a `.properties` file, a JSON file with connector configs | analyzed like a text file, and shown in the ⚙️ configuration section of the HTML report |
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
 | a copy of a file or of a CFK support bundle already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …` / `⏭️ … same CFK support bundle as …`, only one report), counted in the last line |
 
-🔒 The digest, the HTML report and the JSON are **sanitized by default**:
+🔒 The digest, the HTML report and the JSON are **not sanitized by default**: `--sanitize` redacts them, before sharing
+them outside Confluent. Off by default because it can hide evidence (a dump of bytes taken for a secret, the IP of the
+broker you need to correlate) and doubles the time on a large bundle. With `--sanitize`:
 - **What is replaced:** passwords and other secrets (`password=…`, JAAS configs, tokens, API keys, credentials in
   URLs, PEM blocks), IPs, hostnames, emails and LDAP DNs.
 - **Placeholders:** `<REDACTED>`, `<IP-1>`, `<HOST-1>`… A value gets the same placeholder everywhere in one run.
   Values the application already masked (`password=********`) are left as they are.
 - **Report:** the last log line says what was redacted (`redaction_summary` in the JSON).
-- **Best effort:** review before sharing. `--no-sanitize` keeps the values, for internal logs only.
+- **Best effort:** review before sharing.
 
 The output names each file with its path inside the archive, and only shows files with findings:
 
@@ -442,7 +444,7 @@ playground container logs -c <container> [-c <c2>] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
 playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--include-warnings] [--max-findings N] [--output-dir <dir>] [--json]
                        [--connector <name> [--with-worker]] [--show-config <name>] [--json-sections summary,findings]
-                       [--no-sanitize] [--logs-only] [--component connect] [--severity high] [--problem "<symptom>"] # CFK support bundle
+                       [--sanitize] [--logs-only] [--component connect] [--severity high] [--problem "<symptom>"] # CFK support bundle
 playground analyze logs --sample connect_task_failure|support_bundle
 ```
 
