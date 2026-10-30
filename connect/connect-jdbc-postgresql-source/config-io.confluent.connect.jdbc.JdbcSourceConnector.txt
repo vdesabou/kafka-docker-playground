@@ -63,12 +63,14 @@ Database
 ==========================
 🔘 connection.url
 
+JDBC connection URL.
 For example: ``jdbc:oracle:thin:@localhost:1521:orclpdb1``, ``jdbc:mysql://localhost/db_name``, ``jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=db_name``
+For SQL Server (Driver 10.2.4+) - TLS encryption is recommended.Use ``encrypt=true;trustServerCertificate=false`` for secure connections, In order to bypass certificate validation (not recommended for production), use ``encrypt=true;trustServerCertificate=true`` and in order to disable  TLS encryption entirely, use ``encrypt=false`` (not recommended for production).
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JDBC connection URL.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connection.user
 
@@ -117,43 +119,45 @@ Backoff time in milliseconds between connection attempts.
 
 🔘 table.whitelist
 
+List of tables to include in copying. If specified, ``table.blacklist`` may not be set. Use a comma-separated list to specify multiple tables (for example, ``table.whitelist: "User, Address, Email"``).
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of tables to include in copying. If specified, ``table.blacklist`` may not be set. Use a comma-separated list to specify multiple tables (for example, ``table.whitelist: "User, Address, Email"``).
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.blacklist
 
+List of tables to exclude from copying. If specified, ``table.whitelist`` may not be set. Use a comma-separated list to specify multiple tables (for example, ``table.blacklist: "User, Address, Email"``).
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of tables to exclude from copying. If specified, ``table.whitelist`` may not be set. Use a comma-separated list to specify multiple tables (for example, ``table.blacklist: "User, Address, Email"``).
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.include.list
 
+A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.include.list: "schema1.customer.*,schema2.order.*"``. If specified, the legacy configs of ``table.whitelist``, and ``table.blacklist`` cannot be set.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.include.list: "schema1.customer.*,schema2.order.*"``. If specified, the legacy configs of ``table.whitelist``, and ``table.blacklist`` cannot be set.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.exclude.list
 
+A comma-separated list of regular expressions that match the fully-qualified names of tables not to be copied. This only applies to tables that match the include list. REQUIRES ``table.include.list`` to be specified. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.exclude.list: ".*.temp.*,.*.staging.*"``. If specified, ``table.whitelist`` and ``table.blacklist`` cannot not be set.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables not to be copied. This only applies to tables that match the include list. REQUIRES ``table.include.list`` to be specified. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.exclude.list: ".*.temp.*,.*.staging.*"``. If specified, ``table.whitelist`` and ``table.blacklist`` cannot not be set.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 catalog.pattern
 
 Catalog pattern to fetch table metadata from the database.
+  * ``""`` retrieves those without a catalog 
+  * null (default) indicates that the schema name is not used to narrow the search and that all table metadata is fetched, regardless of the catalog.
 
 	 - Type: STRING
 	 - Default: null
@@ -163,6 +167,8 @@ Catalog pattern to fetch table metadata from the database.
 🔘 schema.pattern
 
 Schema pattern to fetch table metadata from the database.
+  * ``""`` retrieves those without a schema.
+  * null (default) indicates that the schema name is not used to narrow the search and that all table metadata is fetched, regardless of the schema.
 
 	 - Type: STRING
 	 - Default: null
@@ -181,6 +187,11 @@ Whether or not to attempt mapping NUMERIC values by precision to integral types.
 🔘 numeric.mapping
 
 Map NUMERIC values by precision and optionally scale to integral or decimal types.
+  * Use ``none`` if all NUMERIC columns are to be represented by Connect's DECIMAL logical type.
+  * Use ``best_fit`` if NUMERIC columns should be cast to Connect's INT8, INT16, INT32, INT64, or FLOAT64 based upon the column's precision and scale. This option may still represent the NUMERIC value as Connect DECIMAL if it cannot be cast to a native type without losing precision. For example, a NUMERIC(20) type with precision 20 would not be able to fit in a native INT64 without overflowing and thus would be retained as DECIMAL.
+  * Use ``best_fit_eager_double`` if in addition to the properties of ``best_fit`` described above, it is desirable to always cast NUMERIC columns with scale to Connect FLOAT64 type, despite potential of loss in accuracy.
+  * Use ``precision_only`` to map NUMERIC columns based only on the column's precision assuming that column's scale is 0.
+  * The ``none`` option is the default, but may lead to serialization issues with Avro since Connect's DECIMAL type is mapped to its binary representation, and ``best_fit`` will often be preferred since it maps to the most appropriate primitive type.
 
 	 - Type: STRING
 	 - Default: null
@@ -189,12 +200,12 @@ Map NUMERIC values by precision and optionally scale to integral or decimal type
 
 🔘 dialect.name
 
+The name of the database dialect that should be used for this connector. By default this is empty, and the connector automatically determines the dialect based upon the JDBC connection URL. Use this if you want to override that behavior and use a specific dialect. All properly-packaged dialects in the JDBC connector plugin can be used.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the database dialect that should be used for this connector. By default this is empty, and the connector automatically determines the dialect based upon the JDBC connection URL. Use this if you want to override that behavior and use a specific dialect. All properly-packaged dialects in the JDBC connector plugin can be used.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 date.calendar.system
 
@@ -210,48 +221,52 @@ Mode
 ==========================
 🔘 mode
 
+The mode for updating a table each time it is polled. Options include:
   * bulk: perform a bulk load of the entire table each time it is polled
+  * incrementing: use a strictly incrementing column on each table to detect only new rows. Note that this will not detect modifications or deletions of existing rows.
+  * timestamp: use a timestamp (or timestamp-like) column to detect new and modified rows. This assumes the column is updated with each write, and that values are monotonically incrementing, but not necessarily unique.
+  * timestamp+incrementing: use two columns, a timestamp column that detects new and modified rows and a strictly incrementing column which provides a globally unique ID for updates so each row can be assigned a unique stream offset.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The mode for updating a table each time it is polled. Options include:
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 incrementing.column.name
 
+The name of the strictly incrementing column to use to detect new rows. Any empty value indicates the column should be autodetected by looking for an auto-incrementing column. This column may not be nullable.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the strictly incrementing column to use to detect new rows. Any empty value indicates the column should be autodetected by looking for an auto-incrementing column. This column may not be nullable.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.column.name
 
+Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.columns.mapping
 
+A comma separated list of table regex to timestamp columns mappings. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. Expected format is ``regex1:[col1|col2],regex2:[col3]``. Regexes would be matched against the fully-qualified table names of tables. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``SCHEMA1.EMPLOYEES.SALARY.*:[UPDATED_AT|MODIFIED_AT],ACCOUNTS.*:[CHANGED_AT]``
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma separated list of table regex to timestamp columns mappings. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. Expected format is ``regex1:[col1|col2],regex2:[col3]``. Regexes would be matched against the fully-qualified table names of tables. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``SCHEMA1.EMPLOYEES.SALARY.*:[UPDATED_AT|MODIFIED_AT],ACCOUNTS.*:[CHANGED_AT]``
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 incrementing.column.mapping
 
+A comma separated list of table regex to incrementing column mappings. Expected format is ``regex1:col2,regex2:col1``. Regexes would be matched against the fully-qualified table names of tables. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``SCHEMA1.EMPLOYEES.SALARY*:EMP_ID,ACCOUNTS.*:ID``
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma separated list of table regex to incrementing column mappings. Expected format is ``regex1:col2,regex2:col1``. Regexes would be matched against the fully-qualified table names of tables. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``SCHEMA1.EMPLOYEES.SALARY*:EMP_ID,ACCOUNTS.*:ID``
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.initial
 
@@ -273,12 +288,12 @@ By default, the JDBC connector will validate that all incrementing and timestamp
 
 🔘 query
 
+If specified, the query to perform to select new or updated rows. Use this setting if you want to join tables, select subsets of columns in a table, or filter data. If used, this connector will only copy data using this query -- whole-table copying will be disabled. Different query modes may still be used for incremental updates, but in order to properly construct the incremental query, it must be possible to append a WHERE clause to this query (i.e. no WHERE clauses may be used). If you use a WHERE clause, it must handle incremental queries itself.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If specified, the query to perform to select new or updated rows. Use this setting if you want to join tables, select subsets of columns in a table, or filter data. If used, this connector will only copy data using this query -- whole-table copying will be disabled. Different query modes may still be used for incremental updates, but in order to properly construct the incremental query, it must be possible to append a WHERE clause to this query (i.e. no WHERE clauses may be used). If you use a WHERE clause, it must handle incremental queries itself.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 query.masked
 
@@ -300,16 +315,23 @@ When to quote table names, column names, and other identifiers in SQL statements
 
 🔘 query.suffix
 
+Suffix to append at the end of the generated query.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix to append at the end of the generated query.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 transaction.isolation.mode
 
 Mode to control which transaction isolation level is used when running queries against the database. By default no explicit transaction isolationmode is set. SQL_SERVER_SNAPSHOT will only workagainst a connector configured to write to Sql Server.  Options include:
+  * DEFAULT
+   * READ_UNCOMMITED
+  * READ_COMMITED
+  * REPEATABLE_READ
+  * SERIALIZABLE
+  * SQL_SERVER_SNAPSHOT
+
 
 	 - Type: STRING
 	 - Default: DEFAULT
@@ -331,6 +353,14 @@ Connector
 🔘 table.types
 
 By default, the JDBC connector will only detect tables with type TABLE from the source Database. This config allows a command separated list of table types to extract. Options include:
+  * TABLE
+  * VIEW
+  * SYSTEM TABLE
+  * GLOBAL TEMPORARY
+  * LOCAL TEMPORARY
+  * ALIAS
+  * SYNONYM
+  In most cases it only makes sense to have either TABLE or VIEW.
 
 	 - Type: LIST
 	 - Default: TABLE
@@ -399,12 +429,12 @@ Frequency in ms to poll for new or removed tables, which may result in updated t
 
 🔘 topic.prefix
 
+Prefix to prepend to table names to generate the name of the Kafka topic to publish data to, or in the case of a custom query, the full name of the topic to publish to.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix to prepend to table names to generate the name of the Kafka topic to publish data to, or in the case of a custom query, the full name of the topic to publish to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 timestamp.delay.interval.ms
 
@@ -427,9 +457,18 @@ Name of the JDBC timezone used in the connector when querying with time-based cr
 🔘 timestamp.granularity
 
 Define the granularity of the Timestamp column. Options include: 
+  * connect_logical (default): represents timestamp values using Kafka Connect's built-in representations 
+  * micros_long: represents timestamp values as micros since epoch
+  * micros_string: represents timestamp values as micros since epoch in string
+  * micros_iso_datetime_string: uses iso format 'yyyy-MM-dd'T'HH:mm:ss.SSSSSS'
+  * nanos_long: represents timestamp values as nanos since epoch
+  * nanos_string: represents timestamp values as nanos since epoch in string
+  * nanos_iso_datetime_string: uses iso format 'yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'
+
 
 	 - Type: STRING
 	 - Default: connect_logical
 	 - Importance: LOW
 	 - Required: false
+
 
