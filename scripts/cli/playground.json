@@ -7357,7 +7357,7 @@
     },
     {
       "name": "connector-plugin",
-      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  info                  one page on a plugin: license, versions, examples, CI, fully managed\n  versions              every released version of a plugin\n  changelog             what changed between two versions (release notes)\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  dependencies          which libraries (and versions) it bundles, what changed between two versions\n  config-key            what a config key does, its default, since when, who sets it\n  config-diff           config keys added, removed or changed between two versions\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
+      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  info                  one page on a plugin: license, versions, examples, CI, fully managed\n  versions              every released version of a plugin\n  changelog             what changed between two versions (release notes)\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  dependencies          which libraries (and versions) it bundles, what changed between two versions\n  cve-scan              known vulnerabilities of its jars, fixed or not by another version\n  config-key            what a config key does, its default, since when, who sets it\n  config-diff           config keys added, removed or changed between two versions\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
       "usage": "playground connector-plugin COMMAND",
       "options": [],
       "subcommands": [
@@ -7476,6 +7476,77 @@
           ],
           "aliases": [
             "deps"
+          ]
+        },
+        {
+          "name": "cve-scan",
+          "description": "🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version\n\n\"The customer's scanner flags CVE-… in our connector: is it real, and\nwhich version fixes it?\". The jars of the version (same download and\ncache as search-jar) are scanned with grype in Docker; with\n--compare-with, the other version too: fixed ✅, still there ⚠️, new 🆕.\nFor Confluent plugins, the fixed CVE ids are looked up in the release\nnotes between the two versions (📜).\n\n⚠️ What a scanner sees in the jars, not an official Confluent statement:\na vulnerable library can be unused, or its vulnerable code unreachable.\n\nThe first scan downloads the vulnerability database of grype (a minute\nor two), kept in the docker volume kdp-grype-db; a scan is kept one day.\nAn HTML report is written in --output-dir.",
+          "usage": "playground connector-plugin cve-scan [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-plugin",
+                "-c"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name (or --connector-zip)\n\n🎓 Tip: use <tab> completion to trigger fzf completion"
+            },
+            {
+              "names": [
+                "--connector-tag"
+              ],
+              "argument": "CONNECTOR_TAG",
+              "description": "🔗 Connector version to use\n\nBy default, for each connector, the latest available version on Confluent Hub is used\n\n🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent plugins, the preview shows the release notes of each version)\n\nConflicts with: --connector-zip"
+            },
+            {
+              "names": [
+                "--connector-zip"
+              ],
+              "argument": "CONNECTOR_ZIP",
+              "description": "🤐 Connector zip to use\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n        use <option+enter> to use the value you typed manually\n\nConflicts with: --connector-tag"
+            },
+            {
+              "names": [
+                "--compare-with"
+              ],
+              "argument": "VERSION",
+              "description": "🔢 Another version of the plugin (Confluent Hub): which vulnerabilities it fixes, keeps or adds"
+            },
+            {
+              "names": [
+                "--severity"
+              ],
+              "argument": "SEVERITY",
+              "description": "🚦 Only this severity or worse\n\nAllowed values: critical, high, medium, low"
+            },
+            {
+              "names": [
+                "--output-dir"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the HTML report (default: /tmp/playground-cve-scan)"
+            },
+            {
+              "names": [
+                "--no-open"
+              ],
+              "argument": "",
+              "description": "🚫 Do not open the HTML report in the browser"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON (no HTML report)"
+            },
+            {
+              "names": [
+                "--force-refresh"
+              ],
+              "argument": "",
+              "description": "☢️ Force refresh."
+            }
           ]
         },
         {

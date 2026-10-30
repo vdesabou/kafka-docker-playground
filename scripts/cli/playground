@@ -298,6 +298,7 @@ playground_usage() {
   printf "  %s   🔌 Connector-plugin commands\n" "$(green "connector-plugin")                          "
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin search-jar")               "
   printf "  %s   📚 Libraries bundled in a connector plugin, and what changed between two versions\n" "$(green "connector-plugin dependencies")             "
+  printf "  %s   🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version\n" "$(green "connector-plugin cve-scan")                 "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                 "
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "connector-plugin info")                     "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "connector-plugin changelog")                "
@@ -14858,7 +14859,7 @@ playground_rbac_acl_list_usage() {
 playground_connector_plugin_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin\n\n"
-    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    config-key            what a config key does, its default, since when, who\n  sets it\n    config-diff           config keys added, removed or changed between two\n  versions\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
+    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    cve-scan              known vulnerabilities of its jars, fixed or not by\n  another version\n    config-key            what a config key does, its default, since when, who\n  sets it\n    config-diff           config keys added, removed or changed between two\n  versions\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
   else
     printf "playground connector-plugin - 🔌 Connector-plugin commands\n\n"
   fi
@@ -14871,6 +14872,7 @@ playground_connector_plugin_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "search-jar")          "
   printf "  %s   📚 Libraries bundled in a connector plugin, and what changed between two versions\n" "$(green "dependencies")        "
+  printf "  %s   🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version\n" "$(green "cve-scan")            "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "versions")            "
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "info")                "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "changelog")           "
@@ -15036,6 +15038,95 @@ playground_connector_plugin_dependencies_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector-plugin dependencies --connector-plugin\n  confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep \"jackson|netty\"\n  playground connector-plugin dependencies --connector-plugin\n  confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --connector-tag 12.1.15\n  playground connector-plugin dependencies --connector-plugin\n  confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0\n  playground connector-plugin deps --connector-zip /path/to/customer-plugin.zip\n  --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.9.9\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_plugin_cve_scan_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector-plugin cve-scan\n\n"
+    printf "  🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version\n  \n  \"The customer's scanner flags CVE-… in our connector: is it real, and\n  which version fixes it?\". The jars of the version (same download and\n  cache as search-jar) are scanned with grype in Docker; with\n  --compare-with, the other version too: fixed ✅, still there ⚠️, new 🆕.\n  For Confluent plugins, the fixed CVE ids are looked up in the release\n  notes between the two versions (📜).\n  \n  ⚠️ What a scanner sees in the jars, not an official Confluent statement:\n  a vulnerable library can be unused, or its vulnerable code unreachable.\n  \n  The first scan downloads the vulnerability database of grype (a minute\n  or two), kept in the docker volume kdp-grype-db; a scan is kept one day.\n  An HTML report is written in --output-dir.\n\n"
+  else
+    printf "playground connector-plugin cve-scan - 🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector-plugin cve-scan [OPTIONS]\n"
+  printf "  playground connector-plugin cve-scan --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN")"
+    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent\n    plugins, the preview shows the release notes of each version)\n"
+    printf "    %s\n" "Conflicts: --connector-zip"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n            use <option+enter> to use the value you typed manually\n"
+    printf "    %s\n" "Conflicts: --connector-tag"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compare-with VERSION")"
+    printf "    🔢 Another version of the plugin (Confluent Hub): which vulnerabilities it\n    fixes, keeps or adds\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--severity SEVERITY")"
+    printf "    🚦 Only this severity or worse\n"
+    printf "    %s\n" "Allowed: critical, high, medium, low"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: /tmp/playground-cve-scan)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🚫 Do not open the HTML report in the browser\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON (no HTML report)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force-refresh")"
+    printf "    ☢️ Force refresh.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "PG_CVE_SCANNER_IMAGE")"
+    printf "    🛡️ grype image used for the scan (default anchore/grype:latest)\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector-plugin cve-scan --connector-plugin\n  confluentinc/kafka-connect-jdbc --connector-tag 10.7.4\n  playground connector-plugin cve-scan --connector-plugin\n  confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9\n  --severity high\n  playground connector-plugin cve-scan --connector-zip\n  /path/to/customer-plugin.zip --json\n"
     echo
 
   fi
@@ -64578,6 +64669,154 @@ playground_connector_plugin_dependencies_command() {
 }
 
 # :command.function
+playground_connector_plugin_cve_scan_command() {
+
+  # src/commands/connector-plugin/cve-scan.sh
+  connector_plugin="${args[--connector-plugin]}"
+  connector_tag="${args[--connector-tag]}"
+  connector_zip="${args[--connector-zip]}"
+  compare_with="${args[--compare-with]}"
+  severity="${args[--severity]}"
+  json="${args[--json]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
+  force_refresh="${args[--force-refresh]}"
+
+  if [[ $connector_plugin == *"@"* ]]
+  then
+    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required"
+      exit 1
+  fi
+  if [[ -z "$connector_plugin" ]] && [[ -z "$connector_zip" ]]
+  then
+      logerror "❌ --connector-plugin or --connector-zip is required"
+      exit 1
+  fi
+  if [[ -n "$compare_with" ]] && [[ -z "$connector_plugin" ]]
+  then
+      logerror "❌ --compare-with is a version of Confluent Hub: it needs --connector-plugin"
+      exit 1
+  fi
+
+  scanner_image="${PG_CVE_SCANNER_IMAGE:-anchore/grype:latest}"
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  # with --json, the logs go to stderr
+  function cve_log () {
+      if [[ -n "$json" ]]
+      then
+          log "$@" >&2
+      else
+          log "$@"
+      fi
+  }
+
+  # grype scan of lib dir $1 into $2, kept one day next to the jars (the vulnerability database changes every day)
+  function cve_scan_lib_dir () {
+      local lib_dir="$1" out="$2" label="$3"
+      local cached
+      cached="$(dirname "$lib_dir")/.grype-$(date +%Y-%m-%d).json"
+      if [[ -n "$force_refresh" ]]
+      then
+          rm -f "$cached"
+      fi
+      if [ ! -s "$cached" ]
+      then
+          cve_log "🛡️ Scanning the jars of $label with $scanner_image (the first scan downloads its vulnerability database, a minute or two)"
+          # the database is kept in the docker volume kdp-grype-db
+          if ! docker run --rm -v kdp-grype-db:/.cache/grype -v "$lib_dir:/scan:ro" "$scanner_image" dir:/scan -o json -q > "$cached.tmp" 2> "$tmp_dir/scan.err" || ! jq -e '.matches' "$cached.tmp" > /dev/null 2>&1
+          then
+              logerror "❌ the scan of $label failed:"
+              tail -5 "$tmp_dir/scan.err"
+              rm -f "$cached.tmp"
+              exit 1
+          fi
+          mv "$cached.tmp" "$cached"
+      else
+          cve_log "♻️ Using today's scan of $label"
+      fi
+      cp "$cached" "$out"
+  }
+
+  get_connector_plugin_lib_dir "$connector_plugin" "$connector_tag" "$connector_zip" "" || exit 1
+  label="$plugin_label"
+  version="$plugin_version"
+  cve_scan_lib_dir "$plugin_lib_dir" $tmp_dir/scan.json "$label"
+
+  scan_args=(--scan $tmp_dir/scan.json --label "$label" --plugin "${connector_plugin:-$label}")
+  if [[ -n "$compare_with" ]]
+  then
+      get_connector_plugin_lib_dir "$connector_plugin" "$compare_with" "" "" || exit 1
+      compare_label="$plugin_label"
+      compare_version="$plugin_version"
+      cve_scan_lib_dir "$plugin_lib_dir" $tmp_dir/compare.json "$compare_label"
+      scan_args+=(--compare-scan $tmp_dir/compare.json --compare-label "$compare_label")
+      # which release notes mention the CVE ids fixed (Confluent plugins: docs.confluent.io feeds)
+      if [[ -z "$connector_zip" ]] && [[ "$connector_plugin" == confluentinc/* ]] && version_gt "$compare_version" "$version"
+      then
+          python3 -I "$root_folder/tools/connector-changelog/changelog.py" --connector-plugin "$connector_plugin" --from "$version" --to "$compare_version" --grep "CVE-" > $tmp_dir/changelog.json 2> /dev/null || rm -f $tmp_dir/changelog.json
+          [ -s $tmp_dir/changelog.json ] && scan_args+=(--changelog $tmp_dir/changelog.json)
+      fi
+  fi
+  [[ -n "$severity" ]] && scan_args+=(--min-severity "$severity")
+
+  report=""
+  if [[ -z "$json" ]]
+  then
+      output_dir="${output_dir:-/tmp/playground-cve-scan}"
+      mkdir -p "$output_dir"
+      output_dir=$(cd "$output_dir" && pwd)
+      report="$output_dir/cve-scan-$(printf '%s' "$label${compare_label:+-vs-$compare_label}" | tr -c 'A-Za-z0-9._-' '_')-$(date '+%Y%m%d-%H%M%S').html"
+      scan_args+=(--html-out "$report")
+  fi
+
+  if ! python3 -I -B "$root_folder/tools/connector-plugin-jars/cve_scan.py" "${scan_args[@]}" > $tmp_dir/result.json 2> $tmp_dir/stderr
+  then
+      logerror "❌ could not read the scan: $(cat $tmp_dir/stderr)"
+      exit 1
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      cat $tmp_dir/result.json
+      exit 0
+  fi
+
+  r=$tmp_dir/result.json
+  format_vuln='"   \(if .severity == "Critical" then "🔴" elif .severity == "High" then "🟠" elif .severity == "Medium" then "🟡" else "🟢" end) \(.id) \(.severity) \(.library) \(.version)\(if (.fixed_in | length) > 0 then " (fixed in \(.fixed_in | join(", ")))" else "" end) in \(.jars | join(", "))"'
+  if [[ -z "$compare_with" ]]
+  then
+      nb=$(jq '.vulnerabilities | length' $r)
+      if [ "$nb" == "0" ]
+      then
+          log "✅ no known vulnerability in the jars of $label${severity:+ (severity $severity or worse)}"
+      else
+          log "🛡️ $nb known vulnerabilit(y/ies) in the jars of $label${severity:+ (severity $severity or worse)}: $(jq -r '.counts | to_entries | map("\(.value) \(.key)") | join(", ")' $r)"
+          jq -r ".vulnerabilities[] | $format_vuln" $r
+      fi
+  else
+      log "🛡️ $label: $(jq '[.counts_from[]] | add // 0' $r) known vulnerabilit(y/ies), $compare_label: $(jq '[.counts_to[]] | add // 0' $r)${severity:+ (severity $severity or worse)}"
+      log "✅ $(jq '.fixed | length' $r) fixed by $compare_label:"
+      jq -r ".fixed[] | $format_vuln + (if .release_notes then \"   📜 release notes of \(.release_notes)\" else \"\" end)" $r
+      log "⚠️ $(jq '.still | length' $r) still in $compare_label:"
+      jq -r ".still[] | $format_vuln" $r
+      if [ "$(jq '.new | length' $r)" != "0" ]
+      then
+          logwarn "🆕 $(jq '.new | length' $r) new in $compare_label:"
+          jq -r ".new[] | $format_vuln" $r
+      fi
+  fi
+  logwarn "⚠️ what a scanner sees in the jars, not an official Confluent statement: a vulnerable library can be unused, or its vulnerable code unreachable"
+  open_html_report "$report" "$no_open"
+
+}
+
+# :command.function
 playground_connector_plugin_versions_command() {
 
   # src/commands/connector-plugin/versions.sh
@@ -111749,6 +111988,13 @@ playground_connector_plugin_parse_requirements() {
       shift $#
       ;;
 
+    cve-scan)
+      action="cve-scan"
+      shift
+      playground_connector_plugin_cve_scan_parse_requirements "$@"
+      shift $#
+      ;;
+
     versions)
       action="versions"
       shift
@@ -112214,6 +112460,234 @@ playground_connector_plugin_dependencies_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--find-first ARTIFACT_VERSION" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_plugin_cve_scan_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_plugin_cve_scan_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("PG_CVE_SCANNER_IMAGE")
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="connector-plugin cve-scan"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector-plugin | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-tag)
+        # :flag.conflicts
+        if [[ -n "${args['--connector-zip']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-zip" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-tag requires an argument: --connector-tag CONNECTOR_TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-zip)
+        # :flag.conflicts
+        if [[ -n "${args['--connector-tag']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--connector-tag" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-zip']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-zip requires an argument: --connector-zip CONNECTOR_ZIP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --compare-with)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compare-with']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compare-with requires an argument: --compare-with VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --severity)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--severity']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--severity requires an argument: --severity SEVERITY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force-refresh)
+
+        # :flag.case_no_arg
+        args['--force-refresh']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--connector-zip'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--connector-zip']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--compare-with'] ]]; then
+    validation_output="$(validate_not_empty "${args['--compare-with']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--compare-with VERSION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--severity']:-} ]] && [[ ! ${args['--severity']:-} =~ ^(critical|high|medium|low)$ ]]; then
+    printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_docker_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
   fi
 
 }
@@ -139268,6 +139742,11 @@ playground_connector_plugin_completion() {
         playground_connector_plugin_dependencies_completion "$completion_current" "$@"
         return
         ;;
+      cve-scan)
+        shift
+        playground_connector_plugin_cve_scan_completion "$completion_current" "$@"
+        return
+        ;;
       versions)
         shift
         playground_connector_plugin_versions_completion "$completion_current" "$@"
@@ -139312,7 +139791,7 @@ playground_connector_plugin_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" search-jar dependencies deps versions info changelog display-last-updated config-diff config-key sourcecode
+  completion_candidates "$completion_current" search-jar dependencies deps cve-scan versions info changelog display-last-updated config-diff config-key sourcecode
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -139502,6 +139981,128 @@ playground_connector_plugin_dependencies_completion() {
     completion_flag_candidates --connector-zip "$completion_current" --connector-zip
     completion_flag_candidates --grep "$completion_current" --grep
     completion_flag_candidates --find-first "$completion_current" --find-first
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --force-refresh "$completion_current" --force-refresh
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_plugin_cve_scan_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --connector-plugin | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-plugin "$completion_current" "onprem"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-plugin"]=1
+
+        ;;
+      --connector-tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-tag"]=1
+        completion_blocked_flags["--connector-zip"]=1
+
+        ;;
+      --connector-zip)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-zip-or-jar-with-fzf --type zip "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-zip"]=1
+        completion_blocked_flags["--connector-tag"]=1
+
+        ;;
+      --compare-with)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compare-with"]=1
+
+        ;;
+      --severity)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "critical"
+            "high"
+            "medium"
+            "low"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--severity"]=1
+
+        ;;
+      --output-dir)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --force-refresh)
+        completion_blocked_flags["--force-refresh"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin -c
+    completion_flag_candidates --connector-tag "$completion_current" --connector-tag
+    completion_flag_candidates --connector-zip "$completion_current" --connector-zip
+    completion_flag_candidates --compare-with "$completion_current" --compare-with
+    completion_flag_candidates --severity "$completion_current" --severity
+    completion_flag_candidates --output-dir "$completion_current" --output-dir
+    completion_flag_candidates --no-open "$completion_current" --no-open
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --force-refresh "$completion_current" --force-refresh
   fi
@@ -144564,6 +145165,7 @@ run() {
     "connector-plugin") playground_connector_plugin_command ;;
     "connector-plugin search-jar") playground_connector_plugin_search_jar_command ;;
     "connector-plugin dependencies") playground_connector_plugin_dependencies_command ;;
+    "connector-plugin cve-scan") playground_connector_plugin_cve_scan_command ;;
     "connector-plugin versions") playground_connector_plugin_versions_command ;;
     "connector-plugin info") playground_connector_plugin_info_command ;;
     "connector-plugin changelog") playground_connector_plugin_changelog_command ;;

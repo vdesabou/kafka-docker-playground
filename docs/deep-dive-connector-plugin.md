@@ -27,6 +27,7 @@ run.
 | the commits / changed files between X and Y | `… sourcecode … --connector-tag 10.8.4 --connector-tag 10.9.9 --log` (`--grep "offset"`) / `--files` (`--path "*/JdbcSinkConfig.java"` for the diff) |
 | the jars of the plugin, and which one has a class | `playground connector-plugin search-jar -c confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider` (`--connector-zip`, `--json`) |
 | the libraries (and versions) a plugin version bundles, what changed between two versions | `playground connector-plugin dependencies -c confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep jackson` (2× `--connector-tag` to compare, `--json`) |
+| the known vulnerabilities (CVE) of a plugin version, fixed or not by another one | `playground connector-plugin cve-scan -c confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9` (`--severity high`, `--json`, HTML report) |
 | the first plugin version shipping library X ≥ Y | `playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0` |
 | the classes of the plugin that Connect loads from the worker instead | `playground connector-plugin search-jar -c confluentinc/kafka-connect-replicator --with-worker` |
 
@@ -431,6 +432,35 @@ Gotchas:
   `changelog --grep <library>` (`PR-1635 - Bump org.postgresql:postgresql to 42.7.11 (CVE-…)`).
 - `--connector-zip` with one `--connector-tag` compares a customer's zip with a Hub version.
 
+### Vulnerabilities: `cve-scan`
+
+```bash
+playground connector-plugin cve-scan -c confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9
+# 🛡️ confluentinc/kafka-connect-jdbc:10.7.4: 3 known vulnerabilit(y/ies), confluentinc/kafka-connect-jdbc:10.9.9: 0
+# ✅ 3 fixed by confluentinc/kafka-connect-jdbc:10.9.9:
+#    🔴 CVE-2024-1597 Critical postgresql 42.4.3 (fixed in 42.4.4) in postgresql-42.4.3.jar   📜 release notes of 10.7.5
+#    🟠 CVE-2025-59250 High mssql-jdbc 8.4.1 (fixed in 10.2.4.jre11) in mssql-jdbc-8.4.1.jre8.jar   📜 release notes of 10.9.1
+#    🟠 CVE-2026-42198 High postgresql 42.4.3 (fixed in 42.7.11) in postgresql-42.4.3.jar   📜 release notes of 10.9.4
+# ⚠️ 0 still in confluentinc/kafka-connect-jdbc:10.9.9:
+# ⚠️ what a scanner sees in the jars, not an official Confluent statement: …
+# ✅ HTML report saved: /tmp/playground-cve-scan/cve-scan-…html
+```
+
+The jars of each version (cache of `search-jar`) are scanned with [grype](https://github.com/anchore/grype) in Docker;
+for Confluent plugins, the CVE ids fixed between the two versions are looked up in their release notes (`📜`).
+
+Gotchas:
+
+- **A scanner result is not an official statement**: a vulnerable library can be unused, or its vulnerable code
+  unreachable in the connector. Use it to answer "which version removes the jar the customer's scanner flags", and
+  point to the Confluent security advisories for the official position.
+- The first scan downloads the grype database (a minute or two), kept in the `kdp-grype-db` docker volume; a scan is
+  kept one day next to the jars (the database changes daily, `--force-refresh`). `PG_CVE_SCANNER_IMAGE` changes the
+  image.
+- The libraries shaded inside fat jars are scanned too (the location shows the jar they're in). The id is the CVE when
+  there is one, else the GitHub advisory (`GHSA-…`), the other ids in `aliases` (`--json`).
+- `--severity high` keeps High and Critical. `--connector-zip` scans a customer's zip (no `--compare-with` then).
+
 ## 6. Hands-on lab (≈10 min, no environment needed)
 
 Steps 1 to 4 need internet access only; step 5 needs Docker; step 6 is for Confluent employees (`GH_TOKEN` + VPN).
@@ -552,6 +582,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | "what does this key do, and what's its default in our version?" | `config-key --key <k> -c <class>`; for their exact version, `playground connector show-config-parameters` with `--connector-tag` (adds it to `🗂️ versions run locally`) |
 | "this key doesn't work for us" | `config-key`: not in their version (❌ in `versions run locally`), a framework key, or a typo (`💡 similar keys`) |
 | "what value do people use?" | the `🧪 values used` part of `config-key`, with one example file per value |
+| "our scanner reports CVEs in the connector: are they real, which version fixes them?" | `cve-scan --connector-tag <theirs> --compare-with <latest>` (HTML report to share internally), then `changelog --grep CVE` |
 | "our scanner flags jackson / netty 2.x in the connector: which version do we ship, which plugin version upgrades it?" | `dependencies --connector-tag <theirs> --grep <lib>`, then `--find-first <artifact>:<fixed version>` and `changelog --grep <lib>` |
 | "NoSuchMethodError / ClassNotFoundException" | `search-jar --class <Class> --connector-tag <theirs> --with-worker`: is the class shipped, with which signature, is the worker's copy used instead (and its signature) |
 | "read the code of the version that fails" | `sourcecode --connector-tag <theirs> --checkout-only`, then grep the folder it prints |
@@ -573,6 +604,7 @@ playground connector-plugin config-diff -c <owner/name> --from X [--to Y] [--con
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
 playground connector-plugin sourcecode -c <owner/name> --connector-tag X --grep <regex> | --connector-tag X --connector-tag Y --log [--grep <regex>] | --files [--path <glob>]
 playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --connector-zip <zip> [--class <Class>] [--with-worker] [--json]
+playground connector-plugin cve-scan -c <owner/name> [--connector-tag X] [--compare-with Y] [--severity high] [--json] [--no-open]
 playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--connector-tag Y]] [--grep <regex>] [--find-first <artifact>:<version>] [--json]
 ```
 
@@ -597,6 +629,7 @@ playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--c
 - 🧠 CLI reference: [playground connector-plugin](/playground%20connector-plugin),
   [playground connector-plugin info](/playground%20connector-plugin%20info),
   [playground connector-plugin dependencies](/playground%20connector-plugin%20dependencies),
+  [playground connector-plugin cve-scan](/playground%20connector-plugin%20cve-scan),
   [playground connector-plugin config-key](/playground%20connector-plugin%20config-key),
   [playground connector-plugin config-diff](/playground%20connector-plugin%20config-diff),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode),
