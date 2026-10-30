@@ -5,6 +5,8 @@ Connection
 
 Password of the Couchbase user.
 
+May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
+
 	 - Type: PASSWORD
 	 - Default: null
 	 - Importance: HIGH
@@ -21,29 +23,13 @@ Name of the Couchbase user to authenticate as.
 
 🔘 couchbase.bucket
 
+Name of the Couchbase bucket to use.
+
 This property is required unless using the experimental AnalyticsSinkHandler.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the Couchbase bucket to use.
-	 - Required: HIGH
-
-🔘 couchbase.seed.nodes
-
-Addresses of Couchbase Server nodes, delimited by commas.
-
-	 - Type: LIST
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 couchbase.network
-
-The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
-
 	 - Type: STRING
-	 - Default: auto
-	 - Importance: MEDIUM
+	 - Default: 
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 couchbase.bootstrap.timeout
@@ -55,9 +41,44 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 couchbase.seed.nodes
+
+Addresses of Couchbase Server nodes, delimited by commas.
+
+If a custom port is specified, it must be the KV port (which is normally 11210 for insecure connections, or 11207 for secure connections).
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.network
+
+The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
+
+A Couchbase node running inside a container environment (like Docker or Kubernetes) might be configured to advertise both its address within the container environment (known as its "default" address) as well as an "external" address for use by clients connecting from outside the environment.
+
+Setting the 'couchbase.network' config property to 'default' or 'external' forces the selection of the respective addresses. Setting the value to 'auto' tells the connector to select whichever network contains the addresses specified in the 'couchbase.seed.nodes' config property.
+
+	 - Type: STRING
+	 - Default: auto
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Security
 ==========================
+🔘 couchbase.enable.tls
+
+Use secure connection to Couchbase Server.
+
+If true, you must also tell the connector which certificate to trust. Specify a certificate file with 'couchbase.trust.certificate.path', or a Java keystore file with 'couchbase.trust.store.path' and 'couchbase.trust.store.password'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.hostname.verification
 
 Set this to `false` to disable TLS hostname verification for Couchbase connections. Less secure, but might be required if for some reason you can't issue a certificate whose Subject Alternative Names match the hostname used to connect to the server. Only disable if you understand the impact and can accept the risks.
@@ -69,34 +90,42 @@ Set this to `false` to disable TLS hostname verification for Couchbase connectio
 
 🔘 couchbase.trust.store.path
 
+Absolute filesystem path to the Java keystore holding the CA certificate used by Couchbase Server.
+
 If you want to use a PEM file instead of a Java keystore, specify `couchbase.trust.certificate.path` instead.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Absolute filesystem path to the Java keystore holding the CA certificate used by Couchbase Server.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.trust.certificate.path
 
+Absolute filesystem path to the PEM file containing the CA certificate used by Couchbase Server.
+
 If you want to use a Java keystore instead of a PEM file, specify `couchbase.trust.store.path` instead.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Absolute filesystem path to the PEM file containing the CA certificate used by Couchbase Server.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.client.certificate.path
 
+Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
+
 If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.client.certificate.password
 
 Password for accessing the client certificate.
+
+May be overridden with the KAFKA_COUCHBASE_CLIENT_CERTIFICATE_PASSWORD environment variable.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
@@ -105,25 +134,20 @@ Password for accessing the client certificate.
 
 🔘 couchbase.cipher.suites
 
+The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
+
 Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
-	 - Required: MEDIUM
-
-🔘 couchbase.enable.tls
-
-Use secure connection to Couchbase Server.
-
-	 - Type: BOOLEAN
-	 - Default: false
+	 - Type: LIST
+	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 couchbase.trust.store.password
 
 Password for accessing the trust store.
+
+May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
@@ -155,6 +179,12 @@ If true, document lifecycle milestones will be logged at INFO level instead of D
 
 The connector writes metrics to the log at this interval.
 
+Disable metric logging by setting this to `0`.
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+* Since: 4.2.3
+
 	 - Type: STRING
 	 - Default: 10m
 	 - Importance: MEDIUM
@@ -167,6 +197,14 @@ Sink Behavior
 
 Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
 
+If the bucket component contains a dot, escape it by enclosing it in backticks.
+
+If the bucket component is omitted, it defaults to the value of the `couchbase.bucket` property.
+
+*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
+
+* Override example: `couchbase.default.collection[widgets]=inventory.widgets`
+
 	 - Type: STRING
 	 - Default: _default._default
 	 - Importance: MEDIUM
@@ -174,25 +212,51 @@ Qualified name (scope.collection or bucket.scope.collection) of the destination 
 
 🔘 couchbase.topic.to.collection
 
+A map from Kafka topic to Couchbase collection.
+
 Topic and collection are joined by an equals sign. Map entries are delimited by commas.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A map from Kafka topic to Couchbase collection.
-	 - Required: MEDIUM
+A collection name is of the form `bucket.scope.collection` or `scope.collection`. If the bucket component is omitted, it defaults to the value of the `couchbase.bucket` property. If the bucket component contains a dot, escape it by enclosing it in backticks.
+
+For example, if you want to write messages from topic "topic1" to collection "scope-a.invoices" in the default bucket, and messages from topic "topic2" to collection "scope-a.widgets" in bucket "other-bucket" you would write: "topic1=scope-a.invoices,topic2=other-bucket.scope-a.widgets".
+
+Defaults to an empty map, with all documents going to the collection specified by `couchbase.default.collection`.
+
+WARNING: *DEPRECATED.* Instead, please use `couchbase.default.collection` with contextual overrides.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.topic.to.document.id
 
+A map of per-topic overrides for the `couchbase.document.id` configuration property.
+
 Topic and document ID format are joined by an equals sign. Map entries are delimited by commas.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A map of per-topic overrides for the `couchbase.document.id` configuration property.
-	 - Required: MEDIUM
+For example, if documents from topic "topic1" should be assigned document IDs that match their "id" field, and documents from topic "topic2" should be assigned documents IDs that match their "identifier" field, you would write: "topic1=${/id},topic2=${/identifier}".
+
+Defaults to an empty map, which means the value of the `couchbase.document.id` configuration property is applied to documents from all topics.
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+WARNING: *DEPRECATED.* Instead, please use `couchbase.document.id` with contextual overrides.
+
+* Since: 4.2.4
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.sink.handler
 
 The fully-qualified class name of the sink handler to use. The sink handler determines how the Kafka record is translated into actions on Couchbase documents.
+
+The built-in handlers are: `com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler`, `com.couchbase.connect.kafka.handler.sink.N1qlSinkHandler`, and `com.couchbase.connect.kafka.handler.sink.SubDocumentSinkHandler`.
+
+You can customize the sink connector's behavior by implementing your own SinkHandler.
 
 	 - Type: CLASS
 	 - Default: com.couchbase.connect.kafka.handler.sink.UpsertSinkHandler
@@ -203,6 +267,10 @@ The fully-qualified class name of the sink handler to use. The sink handler dete
 
 Overrides the `couchbase.sink.handler` property.
 
+A value of `N1QL` forces the handler to `com.couchbase.connect.kafka.handler.sink.N1qlSinkHandler`. A value of `SUBDOCUMENT` forces the handler to `com.couchbase.connect.kafka.handler.sink.SubDocumentSinkHandler`.
+
+WARNING: *DEPRECATED.* Please set the `couchbase.sink.handler` property instead.
+
 	 - Type: STRING
 	 - Default: DOCUMENT
 	 - Importance: MEDIUM
@@ -210,16 +278,26 @@ Overrides the `couchbase.sink.handler` property.
 
 🔘 couchbase.document.id
 
+Format string to use for the Couchbase document ID. May refer to document fields via placeholders like ${/path/to/field}
+
 If not specified, the Couchbase document ID is the Kafka record key.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Format string to use for the Couchbase document ID. May refer to document fields via placeholders like ${/path/to/field}
-	 - Required: MEDIUM
+*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
+
+* Override example: `couchbase.document.id[widgets]=widget::${/widgetId}`
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.remove.document.id
 
 Whether to remove the ID identified by 'couchbase.documentId' from the document before storing in Couchbase.
+
+*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
+
+* Override example: `couchbase.remove.document.id[widgets]=true`
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -230,6 +308,12 @@ Whether to remove the ID identified by 'couchbase.documentId' from the document 
 
 Document expiration time specified as an integer followed by a time unit (s = seconds, m = minutes, h = hours, d = days). For example, to have documents expire after 30 minutes, set this value to "30m".
 
+A value of "0" (the default) means documents never expire.
+
+*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
+
+* Override example: `couchbase.document.expiration[alerts]=14d`
+
 	 - Type: STRING
 	 - Default: 0
 	 - Importance: MEDIUM
@@ -238,6 +322,14 @@ Document expiration time specified as an integer followed by a time unit (s = se
 🔘 couchbase.retry.timeout
 
 Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
+
+A value of `0` (the default) means the connector will terminate immediately when a write fails.
+
+NOTE: This retry timeout is distinct from the KV timeout (which you can set via `couchbase.env.*`). The KV timeout affects an individual write attempt, while the retry timeout spans multiple attempts and makes the connector resilient to more kinds of transient failures.
+
+TIP: Try not to confuse this with the Kafka Connect framework's built-in `errors.retry.timeout` config property, which applies only to failures occurring _before_ the framework delivers the record to the Couchbase connector.
+
+* Since: 4.1.4
 
 	 - Type: STRING
 	 - Default: 0
@@ -251,6 +343,10 @@ Durability
 
 The preferred way to specify an enhanced durability requirement when using Couchbase Server 6.5 or later.
 
+The default value of `NONE` means a write is considered successful as soon as it reaches the memory of the active node.
+
+NOTE: If you set this to anything other than `NONE`, then you must not set `couchbase.persist.to` or `couchbase.replicate.to`.
+
 	 - Type: STRING
 	 - Default: NONE
 	 - Importance: MEDIUM
@@ -260,6 +356,8 @@ The preferred way to specify an enhanced durability requirement when using Couch
 
 For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write is persisted to disk on a certain number of replicas before considering the write successful.
 
+If you're using Couchbase Server 6.5 or later, we recommend using the `couchbase.durability` property instead.
+
 	 - Type: STRING
 	 - Default: NONE
 	 - Importance: MEDIUM
@@ -268,6 +366,8 @@ For Couchbase Server versions prior to 6.5, this is how you require the connecto
 🔘 couchbase.replicate.to
 
 For Couchbase Server versions prior to 6.5, this is how you require the connector to verify a write has reached the memory of a certain number of replicas before considering the write successful.
+
+If you're using Couchbase Server 6.5 or later, we recommend using the `couchbase.durability` property instead.
 
 	 - Type: STRING
 	 - Default: NONE
@@ -281,6 +381,8 @@ N1ql Sink Handler
 
 The type of update to use when `couchbase.sink.handler` is set to `com.couchbase.connect.kafka.handler.sink.N1qlSinkHandler`.
 
+This property is specific to `N1qlSinkHandler`.
+
 	 - Type: STRING
 	 - Default: UPDATE
 	 - Importance: MEDIUM
@@ -288,16 +390,20 @@ The type of update to use when `couchbase.sink.handler` is set to `com.couchbase
 
 🔘 couchbase.n1ql.where.fields
 
+When using the UPDATE_WHERE operation, this is the list of document fields that must match the Kafka message in order for the document to be updated with the remaining message fields. To match against a literal value instead of a message field, use a colon to delimit the document field name and the target value. For example, "type:widget,color" matches documents whose 'type' field is 'widget' and whose 'color' field matches the 'color' field of the Kafka message.
+
 This property is specific to `N1qlSinkHandler`.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: When using the UPDATE_WHERE operation, this is the list of document fields that must match the Kafka message in order for the document to be updated with the remaining message fields. To match against a literal value instead of a message field, use a colon to delimit the document field name and the target value. For example, "type:widget,color" matches documents whose 'type' field is 'widget' and whose 'color' field matches the 'color' field of the Kafka message.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.n1ql.create.document
 
 Controls whether to create the document if it does not exist.
+
+This property is specific to `N1qlSinkHandler`.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -311,6 +417,12 @@ Analytics Sink Handler
 
 Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property determines the maximum number of records in the UPSERT or DELETE statement in the batch. Users can configure this parameter based on the capacity of their analytics cluster.
 
+This property is specific to `AnalyticsSinkHandler`.
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+* Since: 4.1.14
+
 	 - Type: INT
 	 - Default: 100
 	 - Importance: MEDIUM
@@ -320,6 +432,12 @@ Every Batch consists of an UPSERT or a DELETE statement, based on mutations. Thi
 
 Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property defines the max size of all docs in bytes in an UPSERT statement in a batch. Users can configure this parameter based on the capacity of their analytics cluster.
 
+This property is specific to `AnalyticsSinkHandler`.
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+* Since: 4.2.0
+
 	 - Type: STRING
 	 - Default: 5m
 	 - Importance: MEDIUM
@@ -328,6 +446,12 @@ Every Batch consists of an UPSERT or a DELETE statement, based on mutations. Thi
 🔘 couchbase.analytics.query.timeout
 
 This property determines the time period after which client cancels the Query request for Analytics.
+
+This property is specific to `AnalyticsSinkHandler`.
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+* Since: 4.2.0
 
 	 - Type: STRING
 	 - Default: 5m
@@ -339,16 +463,20 @@ Sub Document Sink Handler
 ==========================
 🔘 couchbase.subdocument.path
 
+JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document.
+
 This property is specific to `SubDocumentSinkHandler`.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.subdocument.operation
 
 Setting to indicate the type of update to a sub-document.
+
+This property is specific to `SubDocumentSinkHandler`.
 
 	 - Type: STRING
 	 - Default: UPSERT
@@ -359,6 +487,10 @@ Setting to indicate the type of update to a sub-document.
 
 Whether to add the parent paths if they are missing in the document.
 
+This property being set to false has no effect if `couchbase.subdocument.create.document` is set to true.
+
+This property is specific to `SubDocumentSinkHandler`.
+
 	 - Type: BOOLEAN
 	 - Default: true
 	 - Importance: MEDIUM
@@ -367,6 +499,8 @@ Whether to add the parent paths if they are missing in the document.
 🔘 couchbase.subdocument.create.document
 
 This property controls whether to create the document if it does not exist.
+
+This property is specific to `SubDocumentSinkHandler`.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -462,4 +596,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 
