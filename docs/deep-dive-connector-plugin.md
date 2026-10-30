@@ -22,6 +22,7 @@ run.
 | the config keys added, removed or changed between two versions (an upgrade) | `playground connector-plugin config-diff -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--file <customer config>`, `--json`) |
 | the GitHub tree of the code at version X | `playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --only-show-url` |
 | what changed between X and Y | the same with `--connector-tag 10.8.4 --connector-tag 10.9.9` |
+| fully managed: the connector version of each cc-connect image, the first image with a fix, the commits between them | `playground connector-plugin fm-versions -c confluentinc/SalesforceBulkApiV2Sink` (`--find-first 3.2.1`, `--cc-connect-version`, `--with-log`; employees) |
 | a local checkout of version X, to grep it | `… sourcecode … --connector-tag 10.8.4 --checkout-only` (the folder is the last line) |
 | grep the code of version X | `… sourcecode … --connector-tag 10.8.4 --grep "BATCH_SIZE_DEFAULT"` (`file:line`, `--json`) |
 | the commits / changed files between X and Y | `… sourcecode … --connector-tag 10.8.4 --connector-tag 10.9.9 --log` (`--grep "offset"`) / `--files` (`--path "*/JdbcSinkConfig.java"` for the diff) |
@@ -60,7 +61,8 @@ run.
    no `-`) has no Hub version: `--connector-tag` is the **cc-connect image version** of the cluster, and the connector
    version is read from `cc-connect/cache-versions.env` of the private `confluentinc/cc-docker-connect` repository at
    that tag. That needs `GH_TOKEN` (or `GITHUB_TOKEN`) and the Confluent VPN. Without `--connector-tag`, the latest
-   `cache-versions.env` is used.
+   `cache-versions.env` is used. `fm-versions` reads that file over the cc-connect versions: which connector version each
+   image ships, and the first image shipping a fix.
 
 ---
 
@@ -165,8 +167,9 @@ Gotchas:
 - `--from` is excluded, `--to` included (default: the latest on the Hub). Without `--from`, only the minor line of
   `--to` is shown. `--from` at the latest version prints `✅ … is the latest version`.
 - **Only Confluent self-managed plugins documented under `docs.confluent.io/kafka-connectors/`** have a feed (about
-  70 of the 80 on the Hub). The others print `⚠️ no changelog feed for …` and exit 0: fully managed connectors,
-  partner plugins, Replicator, retired connectors.
+  70 of the 80 on the Hub). The others print `⚠️ no changelog feed for …` and exit 0: partner plugins, Replicator,
+  retired connectors. A fully managed type points to `fm-versions --with-log` (the commits between the connector
+  versions of the cc-connect images); `sourcecode --log` gives the commits for the others.
 - The feed URL is not in the manifest: it is derived from the manifest's `documentation_url` after its redirects
   (`docs.confluent.io/kafka-connect-jdbc/current/` → `kafka-connectors/jdbc/current/`).
 - The notes are only as complete as the docs (`Updated hadoop and jose4j dependencies`). A match gives the version
@@ -559,15 +562,38 @@ playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --conn
 #    ✅ slf4j-api-1.7.36.jar: 34 class(es) loaded from the same jar of the worker
 ```
 
-**Step 6 (optional, Confluent employees): a fully managed connector** (not run for this page: the output below is
-described from the code)
+**Step 6 (optional, Confluent employees): a fully managed connector** (not replayed by the lab: it needs the VPN and
+private repositories)
 
 ```bash
 GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBulkApiV2Sink --only-show-url
 # 🌥️  connector plugin confluentinc/SalesforceBulkApiV2Sink was identified as fully managed connector
 # ✨ --connector-tag was not set, using latest version on cc-docker-connect (…cache-versions.env) which is <version>
 # https://github.com/confluentinc/kafka-connect-salesforce/tree/v<version>
+playground connector-plugin fm-versions -c confluentinc/SalesforceBulkApiV2Sink --last 250
+# ☁️ confluentinc/SalesforceBulkApiV2Sink (SALESFORCE_CONNECTOR_VERSION) in the last 250 cc-connect versions, newest first
+#    0.3730.0 … 0.3785.0  →  3.2.0-rc-4be74dd8-cloud
+#    0.3710.0 … 0.3729.0  →  3.2.0-rc-7b0f5ae9-cloud
+#    0.3683.0 … 0.3709.0  →  3.2.0-rc-6f27adbb-cloud
+#    0.3682.5 … 0.3682.7  →  3.2.0-rc-7b0f5ae9-cloud      <- a rollback
+#    …
+playground connector-plugin fm-versions -c confluentinc/SalesforceBulkApiV2Sink --last 60 --with-log
+# 📜 3.2.0-rc-7b0f5ae9-cloud → 3.2.0-rc-4be74dd8-cloud (cc-connect 0.3729.0 → 0.3730.0)
+#    2026-10-14 d2584e88b CC-45809: Fixed the Salesforce Source V2 connector rejecting a valid instance URL when the My Domain enforces SSO. (…)
+#    …
+playground connector-plugin fm-versions -c confluentinc/S3_SINK --cc-connect-version 0.3780.0
+# ☁️ cc-connect 0.3780.0 ships confluentinc/S3_SINK 0.139.0
 ```
+
+`fm-versions` gotchas:
+
+- Needs `gh` logged in (or `GH_TOKEN`), the VPN, and the employee plugin list (it maps the type to its variable in
+  `cache-versions.env`, `SALESFORCE_CONNECTOR_VERSION`). The tags are listed once a day (about 30 s); each version's
+  `cache-versions.env` is cached forever in `/tmp/connector-plugin-fm` (a tag doesn't move): a first `--last 250` takes
+  about a minute.
+- `--find-first 3.2.1` compares the numeric part of the connector versions (`3.2.0-rc-4be74dd8-cloud` → `3.2.0`), by
+  binary search: rollbacks between rc builds of the same version don't change the answer.
+- **An image version is not a deployment**: which cc-connect version a cluster runs is in its connect logs (chewie).
 
 ---
 
@@ -586,6 +612,8 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | "our scanner flags jackson / netty 2.x in the connector: which version do we ship, which plugin version upgrades it?" | `dependencies --connector-tag <theirs> --grep <lib>`, then `--find-first <artifact>:<fixed version>` and `changelog --grep <lib>` |
 | "NoSuchMethodError / ClassNotFoundException" | `search-jar --class <Class> --connector-tag <theirs> --with-worker`: is the class shipped, with which signature, is the worker's copy used instead (and its signature) |
 | "read the code of the version that fails" | `sourcecode --connector-tag <theirs> --checkout-only`, then grep the folder it prints |
+| "is the fix of the fully managed connector deployed? which cc-connect image has it?" | `fm-versions -c confluentinc/<Type> --find-first <connector version>` (the image, not the deployment: the cc-connect version of the cluster is in its connect logs) |
+| "what changed in the fully managed connector lately?" | `fm-versions -c confluentinc/<Type> --last 50 --with-log` |
 | "fully managed connector behaves differently" | `sourcecode -c confluentinc/<Type> --connector-tag <cc-connect version of the cluster>` (`GH_TOKEN` + VPN) |
 | "is our bug fixed in a later version? which one?" / "which CVEs are fixed after our version?" | `changelog --from <theirs> --grep "<symptom>\|CVE"`, then the `CC-xxxxx` Jira and the code at that tag |
 | "something changed overnight" | `display-last-updated --days 2 --vendor <vendor>` |
@@ -603,6 +631,7 @@ playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-e
 playground connector-plugin config-diff -c <owner/name> --from X [--to Y] [--connector-class <class>] [--file <config>] [--with-docs] [--json]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
 playground connector-plugin sourcecode -c <owner/name> --connector-tag X --grep <regex> | --connector-tag X --connector-tag Y --log [--grep <regex>] | --files [--path <glob>]
+playground connector-plugin fm-versions -c confluentinc/<Type> [--last 10] [--with-log] | --cc-connect-version <v> | --find-first <connector version> [--json]
 playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --connector-zip <zip> [--class <Class>] [--with-worker] [--json]
 playground connector-plugin cve-scan -c <owner/name> [--connector-tag X] [--compare-with Y] [--severity high] [--json] [--no-open]
 playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--connector-tag Y]] [--grep <regex>] [--find-first <artifact>:<version>] [--json]
@@ -630,6 +659,7 @@ playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--c
   [playground connector-plugin info](/playground%20connector-plugin%20info),
   [playground connector-plugin dependencies](/playground%20connector-plugin%20dependencies),
   [playground connector-plugin cve-scan](/playground%20connector-plugin%20cve-scan),
+  [playground connector-plugin fm-versions](/playground%20connector-plugin%20fm-versions),
   [playground connector-plugin config-key](/playground%20connector-plugin%20config-key),
   [playground connector-plugin config-diff](/playground%20connector-plugin%20config-diff),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode),

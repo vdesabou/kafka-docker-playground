@@ -10,6 +10,14 @@ then
   connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
 fi
 
+if [[ "$connector_plugin" == confluentinc/* ]] && [[ "${connector_plugin#*/}" != *"-"* ]]
+then
+    # fully managed: no release notes feed, but the versions shipped by each cc-connect image and their commits
+    log "☁️ $connector_plugin is a fully managed connector: there is no release notes feed for it"
+    log "💡 the connector versions of the last cc-connect images, and the commits between them: playground connector-plugin fm-versions --connector-plugin $connector_plugin --with-log"
+    exit 0
+fi
+
 if ! command -v python3 > /dev/null 2>&1
 then
     logerror "❌ python3 is required"

@@ -299,6 +299,7 @@ playground_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin search-jar")               "
   printf "  %s   📚 Libraries bundled in a connector plugin, and what changed between two versions\n" "$(green "connector-plugin dependencies")             "
   printf "  %s   🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version\n" "$(green "connector-plugin cve-scan")                 "
+  printf "  %s   ☁️ Fully managed connector: the connector version shipped by each cc-connect image (Confluent employees)\n" "$(green "connector-plugin fm-versions")              "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                 "
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "connector-plugin info")                     "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "connector-plugin changelog")                "
@@ -14859,7 +14860,7 @@ playground_rbac_acl_list_usage() {
 playground_connector_plugin_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin\n\n"
-    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    cve-scan              known vulnerabilities of its jars, fixed or not by\n  another version\n    config-key            what a config key does, its default, since when, who\n  sets it\n    config-diff           config keys added, removed or changed between two\n  versions\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
+    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    cve-scan              known vulnerabilities of its jars, fixed or not by\n  another version\n    fm-versions           fully managed: connector version of each cc-connect\n  image (Confluent employees)\n    config-key            what a config key does, its default, since when, who\n  sets it\n    config-diff           config keys added, removed or changed between two\n  versions\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
   else
     printf "playground connector-plugin - 🔌 Connector-plugin commands\n\n"
   fi
@@ -14873,6 +14874,7 @@ playground_connector_plugin_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "search-jar")          "
   printf "  %s   📚 Libraries bundled in a connector plugin, and what changed between two versions\n" "$(green "dependencies")        "
   printf "  %s   🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version\n" "$(green "cve-scan")            "
+  printf "  %s   ☁️ Fully managed connector: the connector version shipped by each cc-connect image (Confluent employees)\n" "$(green "fm-versions")         "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "versions")            "
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "info")                "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "changelog")           "
@@ -15127,6 +15129,87 @@ playground_connector_plugin_cve_scan_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector-plugin cve-scan --connector-plugin\n  confluentinc/kafka-connect-jdbc --connector-tag 10.7.4\n  playground connector-plugin cve-scan --connector-plugin\n  confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9\n  --severity high\n  playground connector-plugin cve-scan --connector-zip\n  /path/to/customer-plugin.zip --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_plugin_fm_versions_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector-plugin fm-versions\n\n"
+    printf "  ☁️ Fully managed connector: the connector version shipped by each cc-connect\n  image (Confluent employees)\n  \n  Fully managed connectors have no Confluent Hub versions: each cc-connect\n  image version (a tag of the private confluentinc/cc-docker-connect\n  repository) pins one version of every connector in\n  cc-connect/cache-versions.env.\n  \n  Without option: the last --last cc-connect versions, grouped by connector\n  version, newest first; --with-log adds the commits between two connector\n  versions (playground connector-plugin sourcecode --log).\n  --cc-connect-version: the connector version of one image.\n  --find-first: the first cc-connect version shipping a connector version\n  (binary search), to answer \"is the fix of 3.2.1 in an image yet?\".\n  \n  Needs gh logged in (or GH_TOKEN), the Confluent VPN, and the employee\n  version of the plugin list (playground generate-connector-plugin-list\n  with AWS credentials). The tags are listed once a day (about 30 s).\n  An image version is not a deployment: the cc-connect version of a\n  cluster is in its connect logs.\n\n"
+  else
+    printf "playground connector-plugin fm-versions - ☁️ Fully managed connector: the connector version shipped by each cc-connect image (Confluent employees)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector-plugin fm-versions [OPTIONS]\n"
+  printf "  playground connector-plugin fm-versions --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
+    printf "    ☁️ Fully managed connector, for example confluentinc/SalesforceBulkApiV2Sink\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--last LAST")"
+    printf "    🆕 Number of last cc-connect versions to look at (default 10)\n"
+    printf "    %s\n" "Conflicts: --cc-connect-version, --find-first"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cc-connect-version CC_CONNECT_VERSION")"
+    printf "    🏷️ Only this cc-connect version: the connector version it ships\n"
+    printf "    %s\n" "Conflicts: --last, --find-first, --with-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--find-first CONNECTOR_VERSION")"
+    printf "    🎯 First cc-connect version shipping at least this connector version (numeric\n    part compared, 3.2.1)\n"
+    printf "    %s\n" "Conflicts: --last, --cc-connect-version, --with-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--with-log")"
+    printf "    📜 Also the commits between two consecutive connector versions\n"
+    printf "    %s\n" "Conflicts: --cc-connect-version, --find-first, --json"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    printf "    %s\n" "Conflicts: --with-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force-refresh")"
+    printf "    ☢️ Force refresh.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "GH_TOKEN")"
+    printf "    🔑 GitHub token, when gh is not logged in (cc-docker-connect is private)\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector-plugin fm-versions --connector-plugin\n  confluentinc/SalesforceBulkApiV2Sink\n  playground connector-plugin fm-versions --connector-plugin\n  confluentinc/SalesforceBulkApiV2Sink --last 30 --with-log\n  playground connector-plugin fm-versions --connector-plugin\n  confluentinc/S3_SINK --cc-connect-version 0.3780.0\n  playground connector-plugin fm-versions --connector-plugin\n  confluentinc/SalesforceBulkApiV2Sink --find-first 3.2.0\n"
     echo
 
   fi
@@ -64817,6 +64900,248 @@ playground_connector_plugin_cve_scan_command() {
 }
 
 # :command.function
+playground_connector_plugin_fm_versions_command() {
+
+  # src/commands/connector-plugin/fm-versions.sh
+  connector_plugin="${args[--connector-plugin]}"
+  last="${args[--last]}"
+  cc_connect_version="${args[--cc-connect-version]}"
+  find_first="${args[--find-first]}"
+  with_log="${args[--with-log]}"
+  json="${args[--json]}"
+  force_refresh="${args[--force-refresh]}"
+
+  if [[ $connector_plugin == *"@"* ]]
+  then
+    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+
+  # with --json, the logs go to stderr
+  exec 3>&1
+  if [[ -n "$json" ]]
+  then
+      exec 1>&2
+  fi
+
+  if [[ "$connector_plugin" == *"-"* ]]
+  then
+      logerror "❌ $connector_plugin is a self-managed plugin: use playground connector-plugin versions"
+      exit 1
+  fi
+
+  plugin_list="$root_folder/scripts/cli/confluent-hub-plugin-list.txt"
+  if [ ! -f "$plugin_list" ]
+  then
+      log "file $plugin_list not found. Generating it now, it may take a while..."
+      playground generate-connector-plugin-list
+  fi
+  if ! grep -q "CONFLUENT EMPLOYEE VERSION" "$plugin_list" 2>/dev/null
+  then
+      logerror "❌ fully managed connectors need the Confluent employee version of the plugin list: set your AWS credentials, then run playground generate-connector-plugin-list"
+      exit 1
+  fi
+  line=$(awk -F'|' -v plugin="$connector_plugin" '{ current = $1; sub(/^[^[:space:]]+[[:space:]]+/, "", current); if (current == plugin) { print $0; exit } }' "$plugin_list")
+  variable=$(echo "$line" | cut -d "|" -f 3)
+  repo_url=$(echo "$line" | cut -d "|" -f 2)
+  if [[ -z "$line" ]] || [[ -z "$variable" ]]
+  then
+      logerror "❌ $connector_plugin is not a fully managed connector of the plugin list (no cache-versions.env variable)"
+      exit 1
+  fi
+
+  # GET on the private repository confluentinc/cc-docker-connect: gh when logged in, else curl with GH_TOKEN / GITHUB_TOKEN
+  token="${GH_TOKEN:-$GITHUB_TOKEN}"
+  use_gh=0
+  if command -v gh > /dev/null 2>&1 && gh auth status > /dev/null 2>&1
+  then
+      use_gh=1
+      [[ -z "$token" ]] && token=$(gh auth token 2>/dev/null)
+  fi
+  if [ $use_gh -eq 0 ] && [[ -z "$token" ]]
+  then
+      logerror "❌ confluentinc/cc-docker-connect is private: log in with gh auth login, or set GH_TOKEN (Confluent employees, VPN)"
+      exit 1
+  fi
+
+  cache_dir="/tmp/connector-plugin-fm"
+  mkdir -p "$cache_dir"
+
+  # the cc-connect image versions: tags v0.<n>.<patch> of cc-docker-connect, cached one day (about 30 s to list)
+  tags_file="$cache_dir/cc-docker-connect-tags.txt"
+  if [[ -n "$force_refresh" ]] || [ ! -s "$tags_file" ] || [ -z "$(find "$tags_file" -mmin -1440 2>/dev/null)" ]
+  then
+      log "🏷️ Listing the cc-connect versions (tags of confluentinc/cc-docker-connect, once a day)"
+      if [ $use_gh -eq 1 ]
+      then
+          gh api --paginate "repos/confluentinc/cc-docker-connect/tags?per_page=100" --jq '.[].name' > "$tags_file.tmp" 2>/dev/null
+      else
+          : > "$tags_file.tmp"
+          for page in $(seq 1 100)
+          do
+              names=$(curl -s -f -H "Authorization: Bearer $token" "https://api.github.com/repos/confluentinc/cc-docker-connect/tags?per_page=100&page=$page" | jq -r '.[].name' 2>/dev/null)
+              [[ -z "$names" ]] && break
+              echo "$names" >> "$tags_file.tmp"
+          done
+      fi
+      grep -E '^v0\.[0-9]+\.[0-9]+$' "$tags_file.tmp" | sed 's/^v//' | sort -V -u > "$tags_file"
+      rm -f "$tags_file.tmp"
+      if [ ! -s "$tags_file" ]
+      then
+          logerror "❌ could not list the tags of confluentinc/cc-docker-connect (VPN? token?)"
+          rm -f "$tags_file"
+          exit 1
+      fi
+  fi
+
+  # connector version in cc-connect version $1 (cache-versions.env at that tag, cached forever: a tag doesn't move)
+  function fm_connector_version_in () {
+      local tag="$1" file="$cache_dir/cache-versions-$1.env"
+      if [ ! -s "$file" ]
+      then
+          if [ $use_gh -eq 1 ]
+          then
+              gh api "repos/confluentinc/cc-docker-connect/contents/cc-connect/cache-versions.env?ref=v$tag" -H "Accept: application/vnd.github.raw" > "$file" 2>/dev/null || rm -f "$file"
+          else
+              curl -s -f -H "Authorization: Bearer $token" "https://raw.githubusercontent.com/confluentinc/cc-docker-connect/refs/tags/v$tag/cc-connect/cache-versions.env" -o "$file" || rm -f "$file"
+          fi
+      fi
+      # always succeeds (empty when unknown): it is called in $(...) under set -e
+      if [ -s "$file" ]
+      then
+          grep -E "^export ${variable}=" "$file" | head -1 | cut -d "=" -f 2 || true
+      fi
+      return 0
+  }
+
+  # numeric part of a connector version: 3.2.0-rc-4be74dd8-cloud -> 3.2.0
+  function fm_numeric () {
+      echo "$1" | grep -oE '^[0-9]+(\.[0-9]+)*'
+  }
+
+  tags=()
+  while IFS= read -r t
+  do
+      tags+=("$t")
+  done < "$tags_file"
+  nb_tags=${#tags[@]}
+
+  if [[ -n "$cc_connect_version" ]]
+  then
+      cc_connect_version="${cc_connect_version#v}"
+      version=$(fm_connector_version_in "$cc_connect_version")
+      if [[ -z "$version" ]]
+      then
+          logerror "❌ no $variable in cache-versions.env of cc-connect $cc_connect_version (unknown version, or connector not in it)"
+          exit 1
+      fi
+      if [[ -n "$json" ]]
+      then
+          jq -n --arg p "$connector_plugin" --arg cc "$cc_connect_version" --arg v "$version" '{connector_plugin: $p, cc_connect_version: $cc, connector_version: $v}' >&3
+      else
+          log "☁️ cc-connect $cc_connect_version ships $connector_plugin $version"
+          echo "$version" >&3
+      fi
+      exit 0
+  fi
+
+  if [[ -n "$find_first" ]]
+  then
+      target=$(fm_numeric "$find_first")
+      if [[ -z "$target" ]]
+      then
+          logerror "❌ --find-first $find_first is not a version (for example 3.2.0)"
+          exit 1
+      fi
+      # true when cc-connect version $1 ships the connector in version >= target
+      function fm_ships () {
+          local v n
+          v=$(fm_connector_version_in "$1")
+          n=$(fm_numeric "$v")
+          if [[ -z "$n" ]] || version_gt "$target" "$n"
+          then
+              log "   🔍 cc-connect $1: ${v:-not in it}" >&2
+              return 1
+          fi
+          log "   🔍 cc-connect $1: $v ✅" >&2
+          return 0
+      }
+      log "🔎 First cc-connect version shipping $connector_plugin ≥ $target, among $nb_tags versions (binary search)"
+      lo=0
+      hi=$((nb_tags - 1))
+      if ! fm_ships "${tags[$hi]}"
+      then
+          if [[ -n "$json" ]]
+          then
+              jq -n --arg p "$connector_plugin" --arg t "$target" --arg latest "${tags[$hi]}" '{connector_plugin: $p, target: $t, first_cc_connect_version: null, latest_cc_connect_version: $latest}' >&3
+          else
+              logwarn "🤷 even the latest cc-connect version ${tags[$hi]} doesn't ship $connector_plugin ≥ $target"
+          fi
+          exit 0
+      fi
+      while [ $lo -lt $hi ]
+      do
+          mid=$(( (lo + hi) / 2 ))
+          if fm_ships "${tags[$mid]}"
+          then
+              hi=$mid
+          else
+              lo=$((mid + 1))
+          fi
+      done
+      found=$(fm_connector_version_in "${tags[$lo]}")
+      if [[ -n "$json" ]]
+      then
+          jq -n --arg p "$connector_plugin" --arg t "$target" --arg cc "${tags[$lo]}" --arg v "$found" '{connector_plugin: $p, target: $t, first_cc_connect_version: $cc, connector_version: $v}' >&3
+      else
+          log "✅ cc-connect ${tags[$lo]} is the first version shipping $connector_plugin ≥ $target ($found)"
+          log "💡 that's the image version, not a deployment: the cc-connect version of a cluster is in its connect logs (chewie)"
+      fi
+      exit 0
+  fi
+
+  # the last --last cc-connect versions, grouped by connector version
+  last="${last:-10}"
+  start=$(( nb_tags > last ? nb_tags - last : 0 ))
+  : > "$cache_dir/rows.$$"
+  for (( i=start; i<nb_tags; i++ ))
+  do
+      printf '%s\t%s\n' "${tags[$i]}" "$(fm_connector_version_in "${tags[$i]}")" >> "$cache_dir/rows.$$"
+  done
+  rows_json=$(jq -R -s 'split("\n") | map(select(. != "") | split("\t") | {cc_connect_version: .[0], connector_version: (.[1] | if . == "" then null else . end)})' "$cache_dir/rows.$$")
+  rm -f "$cache_dir/rows.$$"
+  # consecutive cc-connect versions shipping the same connector version
+  groups_json=$(echo "$rows_json" | jq 'reduce .[] as $r ([]; if (length > 0 and .[-1].connector_version == $r.connector_version) then .[-1].to = $r.cc_connect_version else . + [{connector_version: $r.connector_version, from: $r.cc_connect_version, to: $r.cc_connect_version}] end)')
+
+  if [[ -n "$json" ]]
+  then
+      jq -n --arg p "$connector_plugin" --arg var "$variable" --arg repo "$repo_url" --argjson rows "$rows_json" --argjson groups "$groups_json" \
+          '{connector_plugin: $p, variable: $var, repository: $repo, cc_connect_versions: $rows, changes: $groups}' >&3
+      exit 0
+  fi
+
+  log "☁️ $connector_plugin ($variable) in the last $((nb_tags - start)) cc-connect versions, newest first"
+  echo "$groups_json" | jq -r 'reverse[] | "   \(if .from == .to then .from else "\(.from) … \(.to)" end)  →  \(.connector_version // "not in it")"'
+  log "🧑‍💻 source code: playground connector-plugin sourcecode -c $connector_plugin --connector-tag <cc-connect version> --only-show-url"
+
+  if [[ -n "$with_log" ]]
+  then
+      # the commits between two consecutive connector versions (sourcecode --log maps the cc-connect versions to repository tags)
+      nb_groups=$(echo "$groups_json" | jq length)
+      for (( g=nb_groups-1; g>0; g-- ))
+      do
+          old_cc=$(echo "$groups_json" | jq -r ".[$((g-1))].to")
+          new_cc=$(echo "$groups_json" | jq -r ".[$g].from")
+          old_v=$(echo "$groups_json" | jq -r ".[$((g-1))].connector_version // empty")
+          new_v=$(echo "$groups_json" | jq -r ".[$g].connector_version // empty")
+          [[ -z "$old_v" ]] || [[ -z "$new_v" ]] && continue
+          log "📜 $old_v → $new_v (cc-connect $old_cc → $new_cc)"
+          GH_TOKEN="$token" playground --output-level WARN connector-plugin sourcecode -c "$connector_plugin" --connector-tag "$old_cc" --connector-tag "$new_cc" --log 2>&1 | grep -E "^   [0-9]{4}-" || logwarn "   no commit found (tags missing in $repo_url?)"
+      done
+  fi
+
+}
+
+# :command.function
 playground_connector_plugin_versions_command() {
 
   # src/commands/connector-plugin/versions.sh
@@ -65236,6 +65561,14 @@ playground_connector_plugin_changelog_command() {
   if [[ $connector_plugin == *"@"* ]]
   then
     connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+
+  if [[ "$connector_plugin" == confluentinc/* ]] && [[ "${connector_plugin#*/}" != *"-"* ]]
+  then
+      # fully managed: no release notes feed, but the versions shipped by each cc-connect image and their commits
+      log "☁️ $connector_plugin is a fully managed connector: there is no release notes feed for it"
+      log "💡 the connector versions of the last cc-connect images, and the commits between them: playground connector-plugin fm-versions --connector-plugin $connector_plugin --with-log"
+      exit 0
   fi
 
   if ! command -v python3 > /dev/null 2>&1
@@ -111995,6 +112328,13 @@ playground_connector_plugin_parse_requirements() {
       shift $#
       ;;
 
+    fm-versions)
+      action="fm-versions"
+      shift
+      playground_connector_plugin_fm_versions_parse_requirements "$@"
+      shift $#
+      ;;
+
     versions)
       action="versions"
       shift
@@ -112688,6 +113028,216 @@ playground_connector_plugin_cve_scan_parse_requirements() {
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_plugin_fm_versions_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_plugin_fm_versions_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("GH_TOKEN")
+
+  # :command.command_filter
+  action="connector-plugin fm-versions"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector-plugin | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --last)
+        # :flag.conflicts
+        for conflict in --cc-connect-version --find-first; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--last']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--last requires an argument: --last LAST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cc-connect-version)
+        # :flag.conflicts
+        for conflict in --last --find-first --with-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cc-connect-version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cc-connect-version requires an argument: --cc-connect-version CC_CONNECT_VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --find-first)
+        # :flag.conflicts
+        for conflict in --last --cc-connect-version --with-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--find-first']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--find-first requires an argument: --find-first CONNECTOR_VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --with-log)
+        # :flag.conflicts
+        for conflict in --cc-connect-version --find-first --json; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--with-log']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+        # :flag.conflicts
+        if [[ -n "${args['--with-log']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--with-log" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force-refresh)
+
+        # :flag.case_no_arg
+        args['--force-refresh']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector-plugin']+x} ]]; then
+    printf "missing required flag: --connector-plugin, -c CONNECTOR-PLUGIN\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--last'] ]]; then
+    validation_output="$(validate_integer "${args['--last']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--last LAST" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--cc-connect-version'] ]]; then
+    validation_output="$(validate_not_empty "${args['--cc-connect-version']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--cc-connect-version CC_CONNECT_VERSION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--find-first'] ]]; then
+    validation_output="$(validate_not_empty "${args['--find-first']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--find-first CONNECTOR_VERSION" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -139747,6 +140297,11 @@ playground_connector_plugin_completion() {
         playground_connector_plugin_cve_scan_completion "$completion_current" "$@"
         return
         ;;
+      fm-versions)
+        shift
+        playground_connector_plugin_fm_versions_completion "$completion_current" "$@"
+        return
+        ;;
       versions)
         shift
         playground_connector_plugin_versions_completion "$completion_current" "$@"
@@ -139791,7 +140346,7 @@ playground_connector_plugin_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" search-jar dependencies deps cve-scan versions info changelog display-last-updated config-diff config-key sourcecode
+  completion_candidates "$completion_current" search-jar dependencies deps cve-scan fm-versions versions info changelog display-last-updated config-diff config-key sourcecode
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -140103,6 +140658,106 @@ playground_connector_plugin_cve_scan_completion() {
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --output-dir "$completion_current" --output-dir
     completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --force-refresh "$completion_current" --force-refresh
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_plugin_fm_versions_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --connector-plugin | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-plugin "$completion_current" "all"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-plugin"]=1
+
+        ;;
+      --last)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--last"]=1
+        completion_blocked_flags["--cc-connect-version"]=1
+        completion_blocked_flags["--find-first"]=1
+
+        ;;
+      --cc-connect-version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cc-connect-version"]=1
+        completion_blocked_flags["--last"]=1
+        completion_blocked_flags["--find-first"]=1
+        completion_blocked_flags["--with-log"]=1
+
+        ;;
+      --find-first)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--find-first"]=1
+        completion_blocked_flags["--last"]=1
+        completion_blocked_flags["--cc-connect-version"]=1
+        completion_blocked_flags["--with-log"]=1
+
+        ;;
+      --with-log)
+        completion_blocked_flags["--with-log"]=1
+        completion_blocked_flags["--cc-connect-version"]=1
+        completion_blocked_flags["--find-first"]=1
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--with-log"]=1
+
+        shift
+        ;;
+      --force-refresh)
+        completion_blocked_flags["--force-refresh"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin -c
+    completion_flag_candidates --last "$completion_current" --last
+    completion_flag_candidates --cc-connect-version "$completion_current" --cc-connect-version
+    completion_flag_candidates --find-first "$completion_current" --find-first
+    completion_flag_candidates --with-log "$completion_current" --with-log
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --force-refresh "$completion_current" --force-refresh
   fi
@@ -145166,6 +145821,7 @@ run() {
     "connector-plugin search-jar") playground_connector_plugin_search_jar_command ;;
     "connector-plugin dependencies") playground_connector_plugin_dependencies_command ;;
     "connector-plugin cve-scan") playground_connector_plugin_cve_scan_command ;;
+    "connector-plugin fm-versions") playground_connector_plugin_fm_versions_command ;;
     "connector-plugin versions") playground_connector_plugin_versions_command ;;
     "connector-plugin info") playground_connector_plugin_info_command ;;
     "connector-plugin changelog") playground_connector_plugin_changelog_command ;;

@@ -10994,6 +10994,7 @@ commands:
       search-jar            which jars ship in it, and which class is where
       dependencies          which libraries (and versions) it bundles, what changed between two versions
       cve-scan              known vulnerabilities of its jars, fixed or not by another version
+      fm-versions           fully managed: connector version of each cc-connect image (Confluent employees)
       config-key            what a config key does, its default, since when, who sets it
       config-diff           config keys added, removed or changed between two versions
       sourcecode            open the source on GitHub
@@ -11237,6 +11238,78 @@ commands:
       playground connector-plugin cve-scan --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.7.4
       playground connector-plugin cve-scan --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9 --severity high
       playground connector-plugin cve-scan --connector-zip /path/to/customer-plugin.zip --json
+
+  - name: fm-versions
+    help: |-
+      ☁️ Fully managed connector: the connector version shipped by each cc-connect image (Confluent employees)
+
+      Fully managed connectors have no Confluent Hub versions: each cc-connect
+      image version (a tag of the private confluentinc/cc-docker-connect
+      repository) pins one version of every connector in
+      cc-connect/cache-versions.env.
+
+      Without option: the last --last cc-connect versions, grouped by connector
+      version, newest first; --with-log adds the commits between two connector
+      versions (playground connector-plugin sourcecode --log).
+      --cc-connect-version: the connector version of one image.
+      --find-first: the first cc-connect version shipping a connector version
+      (binary search), to answer "is the fix of 3.2.1 in an image yet?".
+
+      Needs gh logged in (or GH_TOKEN), the Confluent VPN, and the employee
+      version of the plugin list (playground generate-connector-plugin-list
+      with AWS credentials). The tags are listed once a day (about 30 s).
+      An image version is not a deployment: the cc-connect version of a
+      cluster is in its connect logs.
+    environment_variables:
+    - name: GH_TOKEN
+      help: "🔑 GitHub token, when gh is not logged in (cc-docker-connect is private)"
+    flags:
+    - long: --connector-plugin
+      short: -c
+      required: true
+      arg: connector-plugin
+      completions:
+        dynamic:
+        - playground get-connector-plugin "$completion_current" "all"
+      help: |-
+        ☁️ Fully managed connector, for example confluentinc/SalesforceBulkApiV2Sink
+    - long: --last
+      arg: last
+      required: false
+      validate: integer
+      conflicts: [--cc-connect-version, --find-first]
+      help: |-
+        🆕 Number of last cc-connect versions to look at (default 10)
+    - long: --cc-connect-version
+      arg: cc_connect_version
+      required: false
+      validate: not_empty
+      conflicts: [--last, --find-first, --with-log]
+      help: |-
+        🏷️ Only this cc-connect version: the connector version it ships
+    - long: --find-first
+      arg: connector_version
+      required: false
+      validate: not_empty
+      conflicts: [--last, --cc-connect-version, --with-log]
+      help: |-
+        🎯 First cc-connect version shipping at least this connector version (numeric part compared, 3.2.1)
+    - long: --with-log
+      required: false
+      conflicts: [--cc-connect-version, --find-first, --json]
+      help: |-
+        📜 Also the commits between two consecutive connector versions
+    - long: --json
+      required: false
+      conflicts: [--with-log]
+      help: |-
+        🤖 Print the result as JSON
+    - *force_refresh
+    examples: |
+      playground connector-plugin fm-versions --connector-plugin confluentinc/SalesforceBulkApiV2Sink
+      playground connector-plugin fm-versions --connector-plugin confluentinc/SalesforceBulkApiV2Sink --last 30 --with-log
+      playground connector-plugin fm-versions --connector-plugin confluentinc/S3_SINK --cc-connect-version 0.3780.0
+      playground connector-plugin fm-versions --connector-plugin confluentinc/SalesforceBulkApiV2Sink --find-first 3.2.0
 
   - name: versions
     help: |-

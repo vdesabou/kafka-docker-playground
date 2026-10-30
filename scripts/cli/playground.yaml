@@ -7317,13 +7317,14 @@ subcommands:
     by vendor\n  search-jar            which jars ship in it, and which class is where\n
     \ dependencies          which libraries (and versions) it bundles, what changed
     between two versions\n  cve-scan              known vulnerabilities of its jars,
-    fixed or not by another version\n  config-key            what a config key does,
-    its default, since when, who sets it\n  config-diff           config keys added,
-    removed or changed between two versions\n  sourcecode            open the source
-    on GitHub\n\n\U0001F393 Tip: search-jar answers \"is this class really in the
-    plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError
-    and\nClassNotFoundException reports; with --with-worker, also \"does Connect\nload
-    the worker's copy instead\".\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
+    fixed or not by another version\n  fm-versions           fully managed: connector
+    version of each cc-connect image (Confluent employees)\n  config-key            what
+    a config key does, its default, since when, who sets it\n  config-diff           config
+    keys added, removed or changed between two versions\n  sourcecode            open
+    the source on GitHub\n\n\U0001F393 Tip: search-jar answers \"is this class really
+    in the plugin, and with\nwhich signature\", which is the question behind most
+    NoSuchMethodError and\nClassNotFoundException reports; with --with-worker, also
+    \"does Connect\nload the worker's copy instead\".\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
     Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version"
   usage: playground connector-plugin COMMAND
   options: []
@@ -7508,6 +7509,66 @@ subcommands:
       - "--json"
       argument: ''
       description: "\U0001F916 Print the result as JSON (no HTML report)"
+    - names:
+      - "--force-refresh"
+      argument: ''
+      description: "☢️ Force refresh."
+  - name: fm-versions
+    description: |-
+      ☁️ Fully managed connector: the connector version shipped by each cc-connect image (Confluent employees)
+
+      Fully managed connectors have no Confluent Hub versions: each cc-connect
+      image version (a tag of the private confluentinc/cc-docker-connect
+      repository) pins one version of every connector in
+      cc-connect/cache-versions.env.
+
+      Without option: the last --last cc-connect versions, grouped by connector
+      version, newest first; --with-log adds the commits between two connector
+      versions (playground connector-plugin sourcecode --log).
+      --cc-connect-version: the connector version of one image.
+      --find-first: the first cc-connect version shipping a connector version
+      (binary search), to answer "is the fix of 3.2.1 in an image yet?".
+
+      Needs gh logged in (or GH_TOKEN), the Confluent VPN, and the employee
+      version of the plugin list (playground generate-connector-plugin-list
+      with AWS credentials). The tags are listed once a day (about 30 s).
+      An image version is not a deployment: the cc-connect version of a
+      cluster is in its connect logs.
+    usage: playground connector-plugin fm-versions [OPTIONS]
+    options:
+    - names:
+      - "--connector-plugin"
+      - "-c"
+      argument: CONNECTOR-PLUGIN
+      description: |-
+        ☁️ Fully managed connector, for example confluentinc/SalesforceBulkApiV2Sink
+
+        Required: ✓ Yes
+    - names:
+      - "--last"
+      argument: LAST
+      description: "\U0001F195 Number of last cc-connect versions to look at (default
+        10)\n\nConflicts with: --cc-connect-version, --find-first"
+    - names:
+      - "--cc-connect-version"
+      argument: CC_CONNECT_VERSION
+      description: "\U0001F3F7️ Only this cc-connect version: the connector version
+        it ships\n\nConflicts with: --last, --find-first, --with-log"
+    - names:
+      - "--find-first"
+      argument: CONNECTOR_VERSION
+      description: "\U0001F3AF First cc-connect version shipping at least this connector
+        version (numeric part compared, 3.2.1)\n\nConflicts with: --last, --cc-connect-version,
+        --with-log"
+    - names:
+      - "--with-log"
+      argument: ''
+      description: "\U0001F4DC Also the commits between two consecutive connector
+        versions\n\nConflicts with: --cc-connect-version, --find-first, --json"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON\n\nConflicts with: --with-log"
     - names:
       - "--force-refresh"
       argument: ''
