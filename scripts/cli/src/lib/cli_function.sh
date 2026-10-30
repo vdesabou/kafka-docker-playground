@@ -1814,6 +1814,41 @@ function repro_model_base_examples () {
   done | sort -u | tr '\n' ' '
 }
 
+# the examples that deploy the connector.class of a normalized connector config ($1), best first, one path per line
+# (relative to the repository). find-example finds the examples whose config uses the class; they are ranked by the
+# words of the class (S3SinkConnector: s3, sink) and of the config (the database of a jdbc url, the auth type…) found in
+# their path, then by the find-example score and the shortest path (the main example before its variants)
+function repro_base_example_candidates () {
+  local config="$1"
+  local class category words
+  class=$(echo "$config" | jq -r '."connector.class" // empty')
+  if [ -z "$class" ]
+  then
+    return 0
+  fi
+  # a fully managed connector.class (S3_SINK) has no dot
+  category="connect"
+  if [[ "$class" != *.* ]]
+  then
+    category="ccloud"
+  fi
+  words=$( {
+      echo "$class" | tr '._' '  ' | sed -E 's/([a-z0-9])([A-Z])/\1 \2/g'
+      echo "$config" | jq -r '
+        (to_entries[] | select(.key | test("connection\\.url$")) | .value | capture("^jdbc:(?<db>[a-z0-9]+):")?.db // empty),
+        (to_entries[] | select(.key | test("auth\\.type$")) | .value | ascii_downcase | gsub("[^a-z]"; "") | select(. != "none")),
+        (."value.converter" // "" | ascii_downcase | capture("(?<f>avro|protobuf|jsonschema)")?.f // empty)'
+    } | tr ' A-Z' '\na-z' | sed -e 's/^postgresql$/postgres/' -e 's/^jsonschema$/json-schema/' \
+      | grep . | grep -vxE 'io|com|org|net|confluent|confluentinc|connect|connector|kafka|apache|v[0-9]+' | sort -u | paste -sd ' ' -)
+  playground find-example "$class" --category "$category" --limit 500 --json 2>/dev/null \
+    | jq -r --arg class "$class" --arg words "$words" '
+        ($words | split(" ") | map(select(. != ""))) as $words
+        | map(select(.connector_classes | index($class)))
+        | map(. + {rank: ([$words[] as $w | select(.path | ascii_downcase | contains($w))] | length)})
+        | sort_by(-.rank, -.score, (.path | length))
+        | .[].path'
+}
+
 # point the git hooks of the reproduction-models repository to scripts/repro-git-hooks, whose
 # pre-commit runs 'playground repro check --staged'. Never replaces hooks set up by the user
 function repro_install_git_hook () {

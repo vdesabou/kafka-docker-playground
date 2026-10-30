@@ -6,6 +6,7 @@ from="${args[--from]}"
 name="${args[--name]}"
 no_adapt="${args[--no-adapt]}"
 json="${args[--json]}"
+secrets_as_variables="${args[--secrets-as-variables]}"
 
 if [ "$file" = "-" ]
 then
@@ -42,6 +43,28 @@ fi
 connector_config_findings "$config" >&2
 placeholders=$(connector_config_placeholders "$config")
 
+# keys whose value is a secret, for terraform config_sensitive
+secret_keys_regex='(password|secret|jaas|token|credential|api[._]key|private[._]key|keystore\.key|access[._]key|user\.info)'
+
+if [[ -n "$secrets_as_variables" ]]
+then
+    # the secrets written as they are, so that the heredoc can go in a script that is committed: the settings next to
+    # them (basic.auth.credentials.source, *.mechanism…), values already masked or read from a file of the examples stay
+    secrets=$(echo "$config" | jq -r --arg secret_regex "$secret_keys_regex" --arg already "$(echo "$placeholders" | cut -d'|' -f1)" '
+        ($already | split("\n")) as $listed
+        | to_entries[]
+        | select(.key | test($secret_regex; "i"))
+        | select(.key | test("\\.(source|mechanism|protocol|type|class|location|enabled|algorithm|path|file)$"; "i") | not)
+        | select((.value | type) == "string" and .value != "" and (.value | test("^\\$\\{") | not))
+        | select(.key as $k | $listed | index($k) | not)
+        | "\(.key)|secret value of the customer, kept out of the script"')
+    if [ -n "$secrets" ]
+    then
+        log "🔐 $(echo "$secrets" | grep -c .) secret value(s) replaced with variables: $(echo "$secrets" | cut -d'|' -f1 | paste -sd ' ' -)" >&2
+        placeholders=$(printf '%s\n%s' "$placeholders" "$secrets" | grep .)
+    fi
+fi
+
 if [[ -n "$json" ]]
 then
     jq -n --arg format "$NORMALIZED_FORMAT" --arg name "$name" --argjson config "$config" --arg placeholders "$placeholders" '{
@@ -52,9 +75,6 @@ then
     }'
     exit 0
 fi
-
-# keys whose value is a secret, for terraform config_sensitive
-secret_keys_regex='(password|secret|jaas|token|credential|api[._]key|private[._]key|keystore\.key|access[._]key|user\.info)'
 
 case "$to" in
     json)

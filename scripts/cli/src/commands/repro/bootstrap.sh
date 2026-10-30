@@ -16,6 +16,8 @@ schema_file_value="${args[--producer-schema-value]}"
 expected="${args[--expected]}"
 actual="${args[--actual]}"
 jira="${args[--jira]}"
+config_file="${args[--config]}"
+config_connector="${args[--config-connector]}"
 
 # optional fields of the header, asked right after the description in interactive mode (enter or esc to skip)
 function prompt_header_field () {
@@ -35,6 +37,60 @@ function prompt_header_fields () {
     actual=$(prompt_header_field "💥 actual behaviour, for example: the task fails with Unknown magic byte")
   fi
 }
+
+# --config: the connector config the customer sent, in any format of 'playground connector convert'
+config_class=""
+if [ -n "$config_file" ]
+then
+  config_file="${config_file#@}"
+  if [ ! -f "$config_file" ]
+  then
+    logerror "❌ --config file $config_file not found"
+    exit 1
+  fi
+  # the script changes directory later
+  config_file="$(cd "$(dirname "$config_file")" && pwd)/$(basename "$config_file")"
+  if ! normalize_connector_config "$(cat "$config_file")" "$config_connector" "auto"
+  then
+    logerror "❌ --config $config_file: $NORMALIZED_ERROR"
+    exit 1
+  fi
+  config_class=$(echo "$NORMALIZED_CONFIG" | jq -r '."connector.class" // empty')
+  log "📄 --config: $NORMALIZED_FORMAT, connector ${NORMALIZED_NAME:-without name}, connector.class ${config_class:-not set}"
+  if [ -z "$test_file" ]
+  then
+    if [ -z "$config_class" ]
+    then
+      logerror "❌ the config has no connector.class to find the example to start from: use --file (-f)"
+      exit 1
+    fi
+    candidates=$(repro_base_example_candidates "$NORMALIZED_CONFIG")
+    if [ -z "$candidates" ]
+    then
+      logerror "❌ no example deploys $config_class: use --file (-f) with the closest one (playground find-example \"<connector> <feature>\")"
+      exit 1
+    fi
+    if [ -z "$no_run" ] && [ -t 0 ] && [ -t 1 ] && [ $(echo "$candidates" | wc -l) -gt 1 ]
+    then
+      set +e
+      picked=$(echo "$candidates" | head -20 | fzf --margin=1%,1%,1%,1% --info=inline --cycle --prompt="🔖 " --header="examples that deploy $config_class, best first: pick the one to start from (esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE")
+      if [ $? -ne 0 ]
+      then
+        exit 0
+      fi
+      set -e
+    else
+      picked=$(echo "$candidates" | head -1)
+      log "🔖 example to start from: $picked (-f to pick another one)"
+      if [ $(echo "$candidates" | wc -l) -gt 1 ]
+      then
+        log "   other examples that deploy $config_class:"
+        echo "$candidates" | sed -n '2,6p' | sed 's/^/     /'
+      fi
+    fi
+    test_file="$root_folder/$picked"
+  fi
+fi
 
 if [[ ! -n "$test_file" ]]
 then
@@ -472,6 +528,150 @@ echo "" >> $tmp_dir/intro
 cat $tmp_dir/intro > $tmp_dir/tmp_file
 cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
 mv $tmp_dir/tmp_file $repro_test_file
+
+if [ -n "$config_file" ]
+then
+  # the customer config, adapted to the playground (as 'playground connector convert' does), its secrets, masked
+  # values and config providers as variables to fill in
+  if ! playground connector convert "$config_file" --json --secrets-as-variables ${config_connector:+--connector "$config_connector"} > $tmp_dir/converted.json 2> $tmp_dir/convert.log
+  then
+    cat $tmp_dir/convert.log
+    logerror "❌ could not convert $config_file"
+    exit 1
+  fi
+  # what convert says about the rewrites for the playground; the values still pointing to the customer and the secrets
+  # are handled below
+  hide='🌍|🔐|📦 detected|value[(]s[)] to fill in'
+  if [[ "$test_file" == */ccloud/* ]]
+  then
+    # the fully managed config goes in a fully managed example, as it should
+    hide="$hide|☁️"
+  fi
+  awk -v hide="$hide" '$0 ~ hide { skip = 1; next } /^[^ ]/ { skip = 0 } !skip' $tmp_dir/convert.log
+  # the same without the rewrites for the playground, to know which values point to the playground already
+  playground connector convert "$config_file" --json --no-adapt ${config_connector:+--connector "$config_connector"} > $tmp_dir/raw.json 2> /dev/null || echo '{"config": {}}' > $tmp_dir/raw.json
+
+  # the connector heredoc of the example that deploys the same connector.class (else the first one): first and last line
+  location=$(REPRO_CLASS="$config_class" awk '
+    BEGIN { cls = ENVIRON["REPRO_CLASS"] }
+    { lines[NR] = $0 }
+    END {
+      for (i = 1; i <= NR; i++) {
+        if (lines[i] !~ /playground connector create-or-update/ || lines[i] !~ /<</) continue
+        delim = lines[i]; sub(/.*<<-?[ \t]*/, "", delim); gsub(/["\047]/, "", delim); sub(/[ \t].*/, "", delim)
+        for (j = i + 1; j <= NR; j++) { l = lines[j]; gsub(/^[ \t]+|[ \t]+$/, "", l); if (l == delim) break }
+        if (j > NR) continue
+        if (!first) { first = i " " j }
+        if (cls != "" && !found) for (k = i; k <= j; k++) if (index(lines[k], "\"connector.class\"") && index(lines[k], "\"" cls "\"")) { found = i " " j; break }
+        i = j
+      }
+      if (found) print found; else if (first) print first
+    }' $repro_test_file)
+  start=${location% *}
+  end=${location#* }
+
+  # "key": value lines of the example config, the value as written (it can use variables of the example)
+  echo '{}' > $tmp_dir/example.json
+  if [ -n "$location" ]
+  then
+    sed -n "$((start + 1)),$((end - 1))p" $repro_test_file \
+      | sed -nE 's/^[[:space:]]*"([^"]+)"[[:space:]]*:[[:space:]]*(.*[^,[:space:]])[[:space:]]*,?[[:space:]]*$/\1\t\2/p' \
+      | jq -R -s 'split("\n") | map(select(length > 0) | split("\t") | {key: .[0], value: (.[1:] | join("\t"))}) | from_entries' > $tmp_dir/example.json
+  fi
+
+  # the keys that point to systems (hosts, urls, credentials, cloud locations, topics) keep the value of the example,
+  # that the rest of the scenario uses; the others (the behaviour) come from the customer. The name is left out: the
+  # connector keeps the name of the example
+  system_keys='(^|\.)(connection\.(url|uri|user|username|password|host|hostname|port|database|dbname)|url|urls|uri|host|hosts|hostname|port|endpoint|server|servers|user|username|password|database|db|bucket|bucket\.name|region|account\.name|container\.name|project|dataset|keyfile|credentials|credentials\.json|instance|file|sid|pdb\.name|service\.name|database\.(hostname|port|user|password|dbname|names|server\.name)|topics|topics\.regex|topic|topic\.prefix|topic\.name\.prefix|kafka\.topic|access\.key\.id|secret\.access\.key|secret|api\.key|api\.secret|kafka\.auth\.mode|kafka\.service\.account\.id)$|replication\.factor$|(password|secret|jaas|token|credential|api[._]key|private[._]key|access[._]key|user\.info)'
+  kept=$(jq -r --slurpfile example $tmp_dir/example.json --arg system_keys "$system_keys" '
+    [$example[0] | keys_unsorted[] | select(test($system_keys; "i"))] | join(" ")' $tmp_dir/converted.json)
+  # the customer keys that point to systems the example does not use (connection.user when the example puts the user
+  # in the url…) are left out, and so is the topic selection when the example has one (topics and topics.regex can't
+  # be both set); the values rewritten for the playground (schema registry url…) stay
+  dropped=$(jq -r --slurpfile example $tmp_dir/example.json --slurpfile raw $tmp_dir/raw.json --arg system_keys "$system_keys" '
+    .config as $config
+    | ($example[0] | has("topics") or has("topics.regex")) as $example_topics
+    | [$config | keys_unsorted[]
+        | select(test($system_keys; "i"))
+        | select((test("^topics(\\.regex)?$") | not) or $example_topics)
+        | select(. as $k | $example[0] | has($k) | not)
+        | select(. as $k | $raw[0].config[$k] == $config[$k])] | join(" ")' $tmp_dir/converted.json)
+  jq -r --slurpfile example $tmp_dir/example.json --arg system_keys "$system_keys" --arg dropped " $dropped " '
+    def system_key: test($system_keys; "i");
+    $example[0] as $example
+    | (.config | del(.name) | with_entries(.key as $k | select($dropped | contains(" " + $k + " ") | not))) as $config
+    | ([.to_fill_in[].key]) as $fill
+    | ($example | with_entries(select(.key | system_key))) as $kept
+    | ([$config | keys_unsorted[]] + ([$kept | keys_unsorted[]] - [$config | keys_unsorted[]])) as $all
+    | [ $all[] as $k
+        | (if ($kept | has($k)) then $kept[$k]
+           elif ($fill | index($k)) then "\"${" + ($k | ascii_upcase | gsub("[^A-Z0-9]"; "_")) + "}\""
+           # an unquoted heredoc: \, $ and ` of the customer values are escaped
+           else ($config[$k] | tostring | tojson | gsub("\\\\"; "\\\\") | gsub("\\$"; "\\$") | gsub("`"; "\\`")) end) as $v
+        | "  " + ($k | tojson) + ": " + $v ]
+    | ((.[:-1] | map(. + ",")) + .[-1:]) as $lines
+    | "{", $lines[], "}"' $tmp_dir/converted.json > $tmp_dir/config_lines
+  # the values to fill in that the example does not provide
+  jq -r --arg skip " $kept $dropped " '.to_fill_in[] | .key as $k | select($skip | contains(" " + $k + " ") | not) | "\(.key)|\(.reason)"' $tmp_dir/converted.json > $tmp_dir/to_fill
+
+  {
+    echo "# 📄 connector config from $(basename "$config_file") ($(jq -r '.detected_format' $tmp_dir/converted.json)), put in by 'playground repro bootstrap --config'"
+    if [ -n "$kept" ]
+    then
+      echo "#    values of the example kept, they point to its systems: $kept"
+    fi
+    if [ -n "$dropped" ]
+    then
+      echo "#    left out, they point to systems of the customer the example does not use: $dropped"
+    fi
+    while IFS='|' read -r key reason
+    do
+      echo "#    to fill in: $key ($reason)"
+    done < $tmp_dir/to_fill
+    if [ -n "$location" ]
+    then
+      # the command line of the example (its --connector, --level…)
+      prefix=$(sed -n "${start}p" $repro_test_file | sed -E 's/[[:space:]]*<<.*//')
+      echo "$prefix << EOF"
+    else
+      echo "playground connector create-or-update --connector $(jq -r '.name // "my-connector"' $tmp_dir/converted.json) << EOF"
+    fi
+    cat $tmp_dir/config_lines
+    echo "EOF"
+  } > $tmp_dir/block
+
+  if [ -n "$location" ]
+  then
+    { sed -n "1,$((start - 1))p" $repro_test_file; cat $tmp_dir/block; sed -n "$((end + 1)),\$p" $repro_test_file; } > $tmp_dir/tmp_file
+    mv $tmp_dir/tmp_file $repro_test_file
+    log "📄 the connector config of the example is replaced with the one of $(basename "$config_file")"
+    [ -n "$kept" ] && log "   values of the example kept (they point to its systems): $kept"
+    [ -n "$dropped" ] && log "   left out (systems of the customer the example does not use): $dropped"
+  else
+    cat $tmp_dir/block >> $repro_test_file
+    logwarn "📄 no 'playground connector create-or-update' heredoc in the example: the config of $(basename "$config_file") is added at the end of the scenario"
+  fi
+
+  # the values to fill in are checked with the standard message, so that 'playground run' loads them from the
+  # 'playground secrets' store
+  if [ -s $tmp_dir/to_fill ]
+  then
+    : > $tmp_dir/checks
+    while IFS='|' read -r key reason
+    do
+      variable=$(echo "$key" | tr '[:lower:]' '[:upper:]' | sed -E 's/[^A-Z0-9]/_/g')
+      printf 'if [ -z "$%s" ]\nthen\n     logerror "%s is not set. Export it as environment variable or pass it as argument"\n     exit 1\nfi\n' "$variable" "$variable" >> $tmp_dir/checks
+    done < $tmp_dir/to_fill
+    awk -v checks="$tmp_dir/checks" '{ print } !done && /^source .*scripts\/utils\.sh/ { print ""; while ((getline l < checks) > 0) print l; done = 1 }' $repro_test_file > $tmp_dir/tmp_file
+    mv $tmp_dir/tmp_file $repro_test_file
+    logwarn "🔐 $(grep -c . $tmp_dir/to_fill) value(s) of the config to provide before running the model, with playground secrets set <VAR> (or export <VAR>=…):"
+    while IFS='|' read -r key reason
+    do
+      echo "   $(echo "$key" | tr '[:lower:]' '[:upper:]' | sed -E 's/[^A-Z0-9]/_/g'): $key ($reason)"
+    done < $tmp_dir/to_fill
+  fi
+  log "💡 once it runs, compare it with the customer file: playground connector diff --connector <c> --file $config_file"
+fi
 
 # benchmark-load.bash: the load of playground connector benchmark for a source example
 for file in README.md docker-compose*.yml keyfile.json stop.sh sql-datagen benchmark-load.bash config-*.json config-*.txt

@@ -16,6 +16,7 @@ records what it proves and what came out of it, `repro check` scans it for secre
 | You want | Command |
 | --- | --- |
 | a new model from an example, with menus | `playground repro bootstrap` |
+| a new model from the connector config the customer sent (CFK, Strimzi, terraform, `.properties`, REST dump, JSON) | `playground repro bootstrap --config <file> -d "<case> <symptom>" --no-run` |
 | the same, without menus (scripts, AI agents) | `playground repro bootstrap -f "<absolute path of the example>" -d "<case number> <symptom>" --no-run` |
 | to say what it proves, and what came out of it | `playground repro status --expected "…" --actual "…" --jira CC-1234 --set "fixed in 10.8.3"` |
 | to know whether a model holds a secret | `playground repro check -f <model>` (`--json`) |
@@ -98,6 +99,57 @@ Gotchas:
   re-created, never duplicated. Delete a model by deleting its `.sh` and its compose override only.
 - A name containing `perf` also enables Grafana (or SQL datagen for Debezium sources) on the first run.
 - The ticket link is written for any description starting with 6 digits: `000000 test` gets a ticket link too.
+
+### From the config the customer sent: `--config`
+
+Most cases start with a connector config: a CFK `Connector` resource, a Strimzi `KafkaConnector`, a terraform
+`confluent_connector`, a `connect-standalone` `.properties`, a `GET /connectors?expand=info` dump or plain JSON (the
+formats of [`connector convert`](/deep-dive-connector-create-or-update.md)). `--config` puts it in the model instead of
+the one of the example:
+
+```bash
+playground repro bootstrap --config ~/Downloads/customer-connector.yaml -d "123456 dlq not working" --no-run
+# 📄 --config: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs), connector orders-to-mysql, connector.class io.confluent.connect.jdbc.JdbcSinkConnector
+# 🔖 example to start from: connect/connect-jdbc-mysql-sink/mysql-sink.sh (-f to pick another one)
+#    other examples that deploy io.confluent.connect.jdbc.JdbcSinkConnector:
+#      connect/connect-jdbc-mysql-sink/mysql-sink-ssl.sh
+#      …
+# 🔧 adapted to the playground (--no-adapt to keep the config as is):
+#    value.converter.schema.registry.url: https://sr.corp.internal:8081 → http://schema-registry:8081
+# 📄 the connector config of the example is replaced with the one of customer-connector.yaml
+#    values of the example kept (they point to its systems): connection.url topics
+#    left out (systems of the customer the example does not use): connection.user connection.password
+```
+
+1. **The example to start from.** Without `-f`, it is one that deploys the same `connector.class`, ranked with the
+   words of the class (`S3SinkConnector`: s3, sink) and of the config (the database of a `jdbc:` url, the
+   `auth.type`, an Avro / Protobuf / JSON Schema converter) found in its path. `--no-run` takes the best one and lists
+   the next ones; with menus, you pick it. A fully managed class (`S3_SINK`) picks a `ccloud/fm-*` example.
+2. **The connector heredoc of the example** that deploys the same class (else the first one) is replaced. Its command
+   line stays (`--connector <name of the example>`, `--package … --level DEBUG`, `--wait`): the rest of the scenario
+   uses that name. The config is adapted to the playground like `create-or-update` does (schema registry, bootstrap
+   servers, license, replication factors).
+3. **Behaviour from the customer, systems from the example.** The keys that say *how* the connector works
+   (`insert.mode`, `pk.mode`, transforms, converters, error handling, `tasks.max`…) come from the customer. The keys
+   that say *where* (urls, hosts, ports, users, passwords, database / SID / PDB names, buckets, regions, `file`,
+   topics and topic prefixes, replication factors, Kafka authentication of a fully managed connector) keep the value
+   of the example, which the producer, the containers and the checks of the scenario use. The customer keys of that
+   kind that the example doesn't set are left out (the user and password of a MySQL example that puts them in the
+   url), except the values just rewritten for the playground. Both lists are logged and written in a comment above
+   the heredoc.
+4. **Secrets never land in the model.** Values still needed that the example doesn't provide (masked `****`, config
+   providers of the customer, terraform references, plaintext passwords) become `"${VAR}"`, and each variable gets
+   the standard `<VAR> is not set` check at the top of the model, so that `playground run` loads it from
+   [`playground secrets`](/deep-dive-secrets.md): `playground secrets set <VAR>` once.
+
+Gotchas:
+
+- The customer's topic selection is replaced with the example's (`topics` and `topics.regex` can't be both set): when
+  the regex is the problem, put it back by hand. Table names (`table.include.list`, `table.inclusion.regex`) stay the
+  customer's: create those tables in the scenario, or change the value.
+- The original file isn't copied in the repository (customer data): keep it next to the case and compare once the
+  model runs, `playground connector diff --connector <c> --file <file>`.
+- `--config-connector <name>` picks one connector of a file that holds several (REST dump, several resources).
 
 ### The fields of the header: `repro status`
 
@@ -327,13 +379,47 @@ diff "$m" reproduction-models/connect-connect-filestream-sink/filestream-sink-re
 # the github file url line of the header now names the -imported- file (and your "# a local change" is not in it)
 ```
 
-**Step 6: clean up**
+**Step 6: a model from the config the customer sent**
+
+```bash
+playground repro bootstrap --config "${PWD}/tools/connector-config/fixtures/cfk-filestream-sink.yaml" -d "000000 deep dive lab config" --no-run
+# 📄 --config: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs), connector filestream-cfk, connector.class org.apache.kafka.connect.file.FileStreamSinkConnector
+# 🔖 example to start from: connect/connect-filestream-sink/filestream-sink.sh (-f to pick another one)
+# 🔧 adapted to the playground (--no-adapt to keep the config as is):
+#    - confluent.license
+#    - value.converter.basic.auth.credentials.source
+#    - value.converter.basic.auth.user.info
+#    errors.deadletterqueue.topic.replication.factor: 3 → 1
+#    value.converter.schema.registry.url: https://sr.prod.example.com:8081 → http://schema-registry:8081
+# 📄 the connector config of the example is replaced with the one of cfk-filestream-sink.yaml
+#    values of the example kept (they point to its systems): topics file
+sed -n '/^# 📄/,/^EOF/p' reproduction-models/connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-config.sh
+# playground connector create-or-update --connector filestream-sink --wait << EOF      <- the command line of the example
+# {
+#   "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+#   "tasks.max": "1",
+#   "topics": "filestream",                                    <- the example's
+#   "file": "/tmp/output.json",                                <- the example's, the scenario reads it
+#   …
+#   "errors.tolerance": "all",                                 <- the customer's
+#   "errors.deadletterqueue.topic.name": "dlq-cfk",
+#   "errors.deadletterqueue.topic.replication.factor": "1",
+#   "value.converter.schema.registry.url": "http://schema-registry:8081"
+# }
+# EOF
+```
+
+The license and the schema registry password of the customer are not in the model: `repro check` finds nothing.
+
+**Step 7: clean up**
 
 ```bash
 d=reproduction-models/connect-connect-filestream-sink
 rm -f "$d/filestream-sink-repro-000000-deep-dive-lab.sh" \
       "$d/filestream-sink-repro-000000-deep-dive-lab-imported-$(date +%Y%m%d).sh" \
-      "$d/docker-compose.plaintext.repro-000000-deep-dive-lab.yml"
+      "$d/docker-compose.plaintext.repro-000000-deep-dive-lab.yml" \
+      "$d/filestream-sink-repro-000000-deep-dive-lab-config.sh" \
+      "$d/docker-compose.plaintext.repro-000000-deep-dive-lab-config.yml"
 rm -rf /tmp/deep-dive-repro
 git -C reproduction-models status --short connect-connect-filestream-sink   # same as before the lab
 ```
@@ -348,7 +434,7 @@ current one: run an example (or `playground state set run.test_file <script>`) b
 | Situation | Command |
 | --- | --- |
 | a new case | `playground find-example "<connector> <feature>"`, then `repro bootstrap -f <best hit> -d "<case> <symptom>" --no-run`; also look for an earlier model of the same symptom in `reproduction-models/` |
-| the customer gave a connector config | paste it in the model, then `playground connector diff --connector <c> --file customer.json` (see the [`create-or-update` deep dive](/deep-dive-connector-create-or-update.md)) |
+| the customer gave a connector config | `repro bootstrap --config <their file> -d "<case> <symptom>" --no-run` (the example is picked from the class, secrets become variables), then once it runs `playground connector diff --connector <c> --file <their file>` (see the [`create-or-update` deep dive](/deep-dive-connector-create-or-update.md)) |
 | the bug is fixed, or it turned out not to be one | `playground repro status -f <model> --set "fixed in <version>"` (`--jira CC-…`), or `--set "not a bug"` / `--set "customer config"` |
 | the model must fail when the bug is fixed | assert at the end: `playground topic consume --min-expected-messages N --grep …`, or `connector create-or-update --wait` (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
 | hand it to engineering / a colleague | run it once (for the run line), `repro export --dry-run`, then `repro export` (`--include-artifacts` for a custom jar) and attach the bundle |
@@ -366,7 +452,7 @@ hosts) and never customer data.
 
 ```bash
 playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symptom>" --no-run] \
-  [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>"]
+  [--config <customer file> [--config-connector <name>]] [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>"]
 playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
 playground repro check [-f <model> | --staged | --all] [--json] [--skip-secrets-store]
 playground repro export [-f <model> … | --all-uncommitted] [--output <dir>] [--dry-run] [--include-artifacts] [--force] [--no-clipboard]
@@ -374,6 +460,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 ```
 
 - Bootstrap = copy + header + own compose override + symlinks + cheat sheet. Scripts and agents: always `-f -d --no-run`.
+- `--config <customer file>`: example picked from the class, its heredoc replaced, behaviour from the customer, systems from the example, secrets as `${VAR}`.
 - `<script>-repro-<kebab description>.sh`; 6 leading digits = ticket link.
 - Header fields `🎯 expected`, `💥 actual`, `🎫 jira`, `🩹 status`: set at bootstrap, read and updated by `repro status`, carried by the bundle.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.

@@ -5514,7 +5514,7 @@ playground_repro_bootstrap_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE")"
-    printf "    🔖 Example file to use as basis, if not set, currently running example is\n    used\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Example file to use as basis, if not set, currently running example is\n    used\n    \n    ❕ It must be absolute full path\n    \n    With --config and without --file, the example is picked from the\n    connector.class of the config.\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -5535,6 +5535,16 @@ playground_repro_bootstrap_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--jira JIRA")"
     printf "    🎫 Jira of the problem, written in the '# 🎫 jira:' line of the header\n    \n    A key (CC-1234) becomes its https://confluentinc.atlassian.net/browse/ link.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--config CONFIG-FILE")"
+    printf "    📄 Connector config the customer sent, put in the model in place of the one\n    of the example\n    \n    Any format of 'playground connector convert': a JSON config, a REST\n    API dump, a CFK Connector or Strimzi KafkaConnector resource, a\n    terraform confluent_connector, a connect-standalone .properties.\n    \n    - without --file, the example to start from is the one that deploys\n      the same connector.class, ranked with the words of the class and\n      of the config (the database of a jdbc url, the auth type…): the\n      best one with --no-run, a list to pick from otherwise\n    - the connector heredoc of the example that deploys the same class\n      (else the first one) is replaced with the config, adapted to the\n      playground like 'playground connector create-or-update' does\n      (bootstrap servers, schema registry, license, replication\n      factors); the connector keeps the name of the example\n    - its secrets, masked values, config providers and terraform\n      references become variables, checked at the top of the model so\n      that 'playground run' loads them from 'playground secrets'\n    \n    🎓 Tip: then compare the running connector with the customer file:\n    playground connector diff --connector <c> --file <file>\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--config-connector CONNECTOR")"
+    printf "    🔗 With --config, the connector to pick when the file holds several (REST\n    dump, several resources)\n"
     echo
 
     if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
@@ -5598,6 +5608,7 @@ playground_repro_bootstrap_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground repro bootstrap (interactive mode)\n"
     printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-http-sink/http_no_auth.sh\" -d \"123456 dlq not working\"\n  --no-run\n"
+    printf "  playground repro bootstrap --config ~/Downloads/customer-connector.yaml -d\n  \"123456 dlq not working\" --no-run\n"
     printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-http-sink/http_no_auth.sh\" -d \"123456 dlq not working\"\n  --expected \"bad records go to the DLQ\" --actual \"the task fails with Unknown\n  magic byte\" --jira CC-1234 --no-run\n"
     echo
 
@@ -14714,6 +14725,11 @@ playground_connector_convert_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--secrets-as-variables")"
+    printf "    🔐 Also turn the secret values written as they are (passwords, keys, tokens,\n    JAAS configs) into variables to export, like the masked ones\n    \n    For --to heredoc (and the values to fill in of --json): the heredoc can then\n    go in a script that is committed,\n    like a reproduction model ('playground repro bootstrap --config' uses it).\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🤖 Print the detected format, the name, the config and the values to fill in\n    as JSON\n"
     echo
@@ -14735,6 +14751,7 @@ playground_connector_convert_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector convert customer-connector.yaml\n"
+    printf "  playground connector convert customer-connector.yaml --secrets-as-variables\n"
     printf "  playground connector convert connectors.json --connector s3-sink --to json\n"
     printf "  playground connector convert connector.properties --to cfk\n"
     printf "  playground connector convert main.tf --to heredoc --no-adapt\n"
@@ -19340,6 +19357,41 @@ function repro_model_base_examples () {
       fi
     done
   done | sort -u | tr '\n' ' '
+}
+
+# the examples that deploy the connector.class of a normalized connector config ($1), best first, one path per line
+# (relative to the repository). find-example finds the examples whose config uses the class; they are ranked by the
+# words of the class (S3SinkConnector: s3, sink) and of the config (the database of a jdbc url, the auth type…) found in
+# their path, then by the find-example score and the shortest path (the main example before its variants)
+function repro_base_example_candidates () {
+  local config="$1"
+  local class category words
+  class=$(echo "$config" | jq -r '."connector.class" // empty')
+  if [ -z "$class" ]
+  then
+    return 0
+  fi
+  # a fully managed connector.class (S3_SINK) has no dot
+  category="connect"
+  if [[ "$class" != *.* ]]
+  then
+    category="ccloud"
+  fi
+  words=$( {
+      echo "$class" | tr '._' '  ' | sed -E 's/([a-z0-9])([A-Z])/\1 \2/g'
+      echo "$config" | jq -r '
+        (to_entries[] | select(.key | test("connection\\.url$")) | .value | capture("^jdbc:(?<db>[a-z0-9]+):")?.db // empty),
+        (to_entries[] | select(.key | test("auth\\.type$")) | .value | ascii_downcase | gsub("[^a-z]"; "") | select(. != "none")),
+        (."value.converter" // "" | ascii_downcase | capture("(?<f>avro|protobuf|jsonschema)")?.f // empty)'
+    } | tr ' A-Z' '\na-z' | sed -e 's/^postgresql$/postgres/' -e 's/^jsonschema$/json-schema/' \
+      | grep . | grep -vxE 'io|com|org|net|confluent|confluentinc|connect|connector|kafka|apache|v[0-9]+' | sort -u | paste -sd ' ' -)
+  playground find-example "$class" --category "$category" --limit 500 --json 2>/dev/null \
+    | jq -r --arg class "$class" --arg words "$words" '
+        ($words | split(" ") | map(select(. != ""))) as $words
+        | map(select(.connector_classes | index($class)))
+        | map(. + {rank: ([$words[] as $w | select(.path | ascii_downcase | contains($w))] | length)})
+        | sort_by(-.rank, -.score, (.path | length))
+        | .[].path'
 }
 
 # point the git hooks of the reproduction-models repository to scripts/repro-git-hooks, whose
@@ -43897,6 +43949,8 @@ playground_repro_bootstrap_command() {
   expected="${args[--expected]}"
   actual="${args[--actual]}"
   jira="${args[--jira]}"
+  config_file="${args[--config]}"
+  config_connector="${args[--config-connector]}"
 
   # optional fields of the header, asked right after the description in interactive mode (enter or esc to skip)
   function prompt_header_field () {
@@ -43916,6 +43970,60 @@ playground_repro_bootstrap_command() {
       actual=$(prompt_header_field "💥 actual behaviour, for example: the task fails with Unknown magic byte")
     fi
   }
+
+  # --config: the connector config the customer sent, in any format of 'playground connector convert'
+  config_class=""
+  if [ -n "$config_file" ]
+  then
+    config_file="${config_file#@}"
+    if [ ! -f "$config_file" ]
+    then
+      logerror "❌ --config file $config_file not found"
+      exit 1
+    fi
+    # the script changes directory later
+    config_file="$(cd "$(dirname "$config_file")" && pwd)/$(basename "$config_file")"
+    if ! normalize_connector_config "$(cat "$config_file")" "$config_connector" "auto"
+    then
+      logerror "❌ --config $config_file: $NORMALIZED_ERROR"
+      exit 1
+    fi
+    config_class=$(echo "$NORMALIZED_CONFIG" | jq -r '."connector.class" // empty')
+    log "📄 --config: $NORMALIZED_FORMAT, connector ${NORMALIZED_NAME:-without name}, connector.class ${config_class:-not set}"
+    if [ -z "$test_file" ]
+    then
+      if [ -z "$config_class" ]
+      then
+        logerror "❌ the config has no connector.class to find the example to start from: use --file (-f)"
+        exit 1
+      fi
+      candidates=$(repro_base_example_candidates "$NORMALIZED_CONFIG")
+      if [ -z "$candidates" ]
+      then
+        logerror "❌ no example deploys $config_class: use --file (-f) with the closest one (playground find-example \"<connector> <feature>\")"
+        exit 1
+      fi
+      if [ -z "$no_run" ] && [ -t 0 ] && [ -t 1 ] && [ $(echo "$candidates" | wc -l) -gt 1 ]
+      then
+        set +e
+        picked=$(echo "$candidates" | head -20 | fzf --margin=1%,1%,1%,1% --info=inline --cycle --prompt="🔖 " --header="examples that deploy $config_class, best first: pick the one to start from (esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE")
+        if [ $? -ne 0 ]
+        then
+          exit 0
+        fi
+        set -e
+      else
+        picked=$(echo "$candidates" | head -1)
+        log "🔖 example to start from: $picked (-f to pick another one)"
+        if [ $(echo "$candidates" | wc -l) -gt 1 ]
+        then
+          log "   other examples that deploy $config_class:"
+          echo "$candidates" | sed -n '2,6p' | sed 's/^/     /'
+        fi
+      fi
+      test_file="$root_folder/$picked"
+    fi
+  fi
 
   if [[ ! -n "$test_file" ]]
   then
@@ -44354,255 +44462,399 @@ playground_repro_bootstrap_command() {
   cat $repro_test_file | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
   mv $tmp_dir/tmp_file $repro_test_file
 
-  # benchmark-load.bash: the load of playground connector benchmark for a source example
-  for file in README.md docker-compose*.yml keyfile.json stop.sh sql-datagen benchmark-load.bash config-*.json config-*.txt
-  do
-    if [ -f $file ]
-    then
-      cd $repro_dir > /dev/null
-      ln -sf ../../$dir2/$file .
-      cd - > /dev/null
-    fi
-  done
-
-  for file in .gitignore
-  do
-    if [ -f $file ]
-    then
-      cd $repro_dir > /dev/null
-      cp ../../$dir2/$file .
-      cd - > /dev/null
-    fi
-  done
-
-  if [ "$producer" != "none" ]
+  if [ -n "$config_file" ]
   then
-    case "${producer}" in
-      avro)
-        echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
-        echo "               \"value.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/value_converter
-        echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
-      ;;
-      avro-with-key)
-        echo "               \"key.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/key_converter
-        echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
-        echo "               \"value.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/value_converter
-        echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
-      ;;
-      json-schema)
-        echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
-        echo "               \"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/value_converter
-        echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
-      ;;
-      json-schema-with-key)
-        echo "               \"key.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/key_converter
-        echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
-        echo "               \"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/value_converter
-        echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
-      ;;
-      protobuf)
-        echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
-        echo "               \"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/value_converter
-        echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
-      ;;
-      protobuf-with-key)
-        echo "               \"key.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/key_converter
-        echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
-        echo "               \"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/value_converter
-        echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
-      ;;
-      none)
-      ;;
-      *)
-        logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
-        exit 1
-      ;;
-    esac
-    original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4 | head -1)
-    if [ "$original_topic_name" != "" ]
+    # the customer config, adapted to the playground (as 'playground connector convert' does), its secrets, masked
+    # values and config providers as variables to fill in
+    if ! playground connector convert "$config_file" --json --secrets-as-variables ${config_connector:+--connector "$config_connector"} > $tmp_dir/converted.json 2> $tmp_dir/convert.log
     then
-      tmp=$(echo $original_topic_name | tr '-' '\-')
-      sed -e "s|$tmp|$topic_name|g" \
-          $repro_test_file > /tmp/tmp
+      cat $tmp_dir/convert.log
+      logerror "❌ could not convert $config_file"
+      exit 1
+    fi
+    # what convert says about the rewrites for the playground; the values still pointing to the customer and the secrets
+    # are handled below
+    hide='🌍|🔐|📦 detected|value[(]s[)] to fill in'
+    if [[ "$test_file" == */ccloud/* ]]
+    then
+      # the fully managed config goes in a fully managed example, as it should
+      hide="$hide|☁️"
+    fi
+    awk -v hide="$hide" '$0 ~ hide { skip = 1; next } /^[^ ]/ { skip = 0 } !skip' $tmp_dir/convert.log
+    # the same without the rewrites for the playground, to know which values point to the playground already
+    playground connector convert "$config_file" --json --no-adapt ${config_connector:+--connector "$config_connector"} > $tmp_dir/raw.json 2> /dev/null || echo '{"config": {}}' > $tmp_dir/raw.json
 
-      mv /tmp/tmp $repro_test_file
-      # log "✨ Replacing topic $original_topic_name with $topic_name"
+    # the connector heredoc of the example that deploys the same connector.class (else the first one): first and last line
+    location=$(REPRO_CLASS="$config_class" awk '
+      BEGIN { cls = ENVIRON["REPRO_CLASS"] }
+      { lines[NR] = $0 }
+      END {
+        for (i = 1; i <= NR; i++) {
+          if (lines[i] !~ /playground connector create-or-update/ || lines[i] !~ /<</) continue
+          delim = lines[i]; sub(/.*<<-?[ \t]*/, "", delim); gsub(/["\047]/, "", delim); sub(/[ \t].*/, "", delim)
+          for (j = i + 1; j <= NR; j++) { l = lines[j]; gsub(/^[ \t]+|[ \t]+$/, "", l); if (l == delim) break }
+          if (j > NR) continue
+          if (!first) { first = i " " j }
+          if (cls != "" && !found) for (k = i; k <= j; k++) if (index(lines[k], "\"connector.class\"") && index(lines[k], "\"" cls "\"")) { found = i " " j; break }
+          i = j
+        }
+        if (found) print found; else if (first) print first
+      }' $repro_test_file)
+    start=${location% *}
+    end=${location#* }
+
+    # "key": value lines of the example config, the value as written (it can use variables of the example)
+    echo '{}' > $tmp_dir/example.json
+    if [ -n "$location" ]
+    then
+      sed -n "$((start + 1)),$((end - 1))p" $repro_test_file \
+        | sed -nE 's/^[[:space:]]*"([^"]+)"[[:space:]]*:[[:space:]]*(.*[^,[:space:]])[[:space:]]*,?[[:space:]]*$/\1\t\2/p' \
+        | jq -R -s 'split("\n") | map(select(length > 0) | split("\t") | {key: .[0], value: (.[1:] | join("\t"))}) | from_entries' > $tmp_dir/example.json
     fi
 
-    for((i=1;i<=$nb_producers;i++)); do
-      # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
-      producer_hostname=""
-      producer_hostname="producer-repro-$description_kebab_case"
-      producer_hostname=${producer_hostname:0:21}
-      if [ $nb_producers -eq 1 ]
+    # the keys that point to systems (hosts, urls, credentials, cloud locations, topics) keep the value of the example,
+    # that the rest of the scenario uses; the others (the behaviour) come from the customer. The name is left out: the
+    # connector keeps the name of the example
+    system_keys='(^|\.)(connection\.(url|uri|user|username|password|host|hostname|port|database|dbname)|url|urls|uri|host|hosts|hostname|port|endpoint|server|servers|user|username|password|database|db|bucket|bucket\.name|region|account\.name|container\.name|project|dataset|keyfile|credentials|credentials\.json|instance|file|sid|pdb\.name|service\.name|database\.(hostname|port|user|password|dbname|names|server\.name)|topics|topics\.regex|topic|topic\.prefix|topic\.name\.prefix|kafka\.topic|access\.key\.id|secret\.access\.key|secret|api\.key|api\.secret|kafka\.auth\.mode|kafka\.service\.account\.id)$|replication\.factor$|(password|secret|jaas|token|credential|api[._]key|private[._]key|access[._]key|user\.info)'
+    kept=$(jq -r --slurpfile example $tmp_dir/example.json --arg system_keys "$system_keys" '
+      [$example[0] | keys_unsorted[] | select(test($system_keys; "i"))] | join(" ")' $tmp_dir/converted.json)
+    # the customer keys that point to systems the example does not use (connection.user when the example puts the user
+    # in the url…) are left out, and so is the topic selection when the example has one (topics and topics.regex can't
+    # be both set); the values rewritten for the playground (schema registry url…) stay
+    dropped=$(jq -r --slurpfile example $tmp_dir/example.json --slurpfile raw $tmp_dir/raw.json --arg system_keys "$system_keys" '
+      .config as $config
+      | ($example[0] | has("topics") or has("topics.regex")) as $example_topics
+      | [$config | keys_unsorted[]
+          | select(test($system_keys; "i"))
+          | select((test("^topics(\\.regex)?$") | not) or $example_topics)
+          | select(. as $k | $example[0] | has($k) | not)
+          | select(. as $k | $raw[0].config[$k] == $config[$k])] | join(" ")' $tmp_dir/converted.json)
+    jq -r --slurpfile example $tmp_dir/example.json --arg system_keys "$system_keys" --arg dropped " $dropped " '
+      def system_key: test($system_keys; "i");
+      $example[0] as $example
+      | (.config | del(.name) | with_entries(.key as $k | select($dropped | contains(" " + $k + " ") | not))) as $config
+      | ([.to_fill_in[].key]) as $fill
+      | ($example | with_entries(select(.key | system_key))) as $kept
+      | ([$config | keys_unsorted[]] + ([$kept | keys_unsorted[]] - [$config | keys_unsorted[]])) as $all
+      | [ $all[] as $k
+          | (if ($kept | has($k)) then $kept[$k]
+             elif ($fill | index($k)) then "\"${" + ($k | ascii_upcase | gsub("[^A-Z0-9]"; "_")) + "}\""
+             # an unquoted heredoc: \, $ and ` of the customer values are escaped
+             else ($config[$k] | tostring | tojson | gsub("\\\\"; "\\\\") | gsub("\\$"; "\\$") | gsub("`"; "\\`")) end) as $v
+          | "  " + ($k | tojson) + ": " + $v ]
+      | ((.[:-1] | map(. + ",")) + .[-1:]) as $lines
+      | "{", $lines[], "}"' $tmp_dir/converted.json > $tmp_dir/config_lines
+    # the values to fill in that the example does not provide
+    jq -r --arg skip " $kept $dropped " '.to_fill_in[] | .key as $k | select($skip | contains(" " + $k + " ") | not) | "\(.key)|\(.reason)"' $tmp_dir/converted.json > $tmp_dir/to_fill
+
+    {
+      echo "# 📄 connector config from $(basename "$config_file") ($(jq -r '.detected_format' $tmp_dir/converted.json)), put in by 'playground repro bootstrap --config'"
+      if [ -n "$kept" ]
       then
-        producer_hostname="${producer_hostname}"
-      else
-        producer_hostname="${producer_hostname}$i"
+        echo "#    values of the example kept, they point to its systems: $kept"
       fi
-
-      rm -rf $producer_hostname
-      mkdir -p $repro_dir/$producer_hostname/
-      cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
-
-      if [[ -n "$schema_file_key" ]]
+      if [ -n "$dropped" ]
       then
-        log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-        playground open --file "$tmp_dir/key_schema" --wait
+        echo "#    left out, they point to systems of the customer the example does not use: $dropped"
+      fi
+      while IFS='|' read -r key reason
+      do
+        echo "#    to fill in: $key ($reason)"
+      done < $tmp_dir/to_fill
+      if [ -n "$location" ]
+      then
+        # the command line of the example (its --connector, --level…)
+        prefix=$(sed -n "${start}p" $repro_test_file | sed -E 's/[[:space:]]*<<.*//')
+        echo "$prefix << EOF"
+    else
+      echo "playground connector create-or-update --connector $(jq -r '.name // "my-connector"' $tmp_dir/converted.json) << EOF"
+    fi
+    cat $tmp_dir/config_lines
+    echo "EOF"
+  } > $tmp_dir/block
 
-        case "${producer}" in
-          avro-with-key)
-            original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
-            if [ "$original_namespace" != "null" ]
-            then
-              sed -e "s|$original_namespace|com.github.vdesabou|g" \
-                  $tmp_dir/key_schema  > /tmp/tmp
+  if [ -n "$location" ]
+  then
+    { sed -n "1,$((start - 1))p" $repro_test_file; cat $tmp_dir/block; sed -n "$((end + 1)),\$p" $repro_test_file; } > $tmp_dir/tmp_file
+    mv $tmp_dir/tmp_file $repro_test_file
+    log "📄 the connector config of the example is replaced with the one of $(basename "$config_file")"
+    [ -n "$kept" ] && log "   values of the example kept (they point to its systems): $kept"
+    [ -n "$dropped" ] && log "   left out (systems of the customer the example does not use): $dropped"
+  else
+    cat $tmp_dir/block >> $repro_test_file
+    logwarn "📄 no 'playground connector create-or-update' heredoc in the example: the config of $(basename "$config_file") is added at the end of the scenario"
+  fi
 
-              mv /tmp/tmp $tmp_dir/key_schema
-              log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
-            else
-              # need to add namespace
-              cp $tmp_dir/key_schema /tmp/tmp
-              line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
-            fi
-            # replace record name with MyKey
-            jq '.name = "MyKey"' $tmp_dir/key_schema > /tmp/tmp
+  # the values to fill in are checked with the standard message, so that 'playground run' loads them from the
+  # 'playground secrets' store
+  if [ -s $tmp_dir/to_fill ]
+  then
+    : > $tmp_dir/checks
+    while IFS='|' read -r key reason
+    do
+      variable=$(echo "$key" | tr '[:lower:]' '[:upper:]' | sed -E 's/[^A-Z0-9]/_/g')
+      printf 'if [ -z "$%s" ]\nthen\n     logerror "%s is not set. Export it as environment variable or pass it as argument"\n     exit 1\nfi\n' "$variable" "$variable" >> $tmp_dir/checks
+    done < $tmp_dir/to_fill
+    awk -v checks="$tmp_dir/checks" '{ print } !done && /^source .*scripts\/utils\.sh/ { print ""; while ((getline l < checks) > 0) print l; done = 1 }' $repro_test_file > $tmp_dir/tmp_file
+    mv $tmp_dir/tmp_file $repro_test_file
+    logwarn "🔐 $(grep -c . $tmp_dir/to_fill) value(s) of the config to provide before running the model, with playground secrets set <VAR> (or export <VAR>=…):"
+    while IFS='|' read -r key reason
+    do
+      echo "   $(echo "$key" | tr '[:lower:]' '[:upper:]' | sed -E 's/[^A-Z0-9]/_/g'): $key ($reason)"
+    done < $tmp_dir/to_fill
+  fi
+  log "💡 once it runs, compare it with the customer file: playground connector diff --connector <c> --file $config_file"
+fi
+
+# benchmark-load.bash: the load of playground connector benchmark for a source example
+for file in README.md docker-compose*.yml keyfile.json stop.sh sql-datagen benchmark-load.bash config-*.json config-*.txt
+do
+  if [ -f $file ]
+  then
+    cd $repro_dir > /dev/null
+    ln -sf ../../$dir2/$file .
+    cd - > /dev/null
+  fi
+done
+
+for file in .gitignore
+do
+  if [ -f $file ]
+  then
+    cd $repro_dir > /dev/null
+    cp ../../$dir2/$file .
+    cd - > /dev/null
+  fi
+done
+
+if [ "$producer" != "none" ]
+then
+  case "${producer}" in
+    avro)
+      echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
+    ;;
+    avro-with-key)
+      echo "               \"key.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/key_converter
+      echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
+    ;;
+    json-schema)
+      echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
+    ;;
+    json-schema-with-key)
+      echo "               \"key.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/key_converter
+      echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
+    ;;
+    protobuf)
+      echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
+    ;;
+    protobuf-with-key)
+      echo "               \"key.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/key_converter
+      echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
+    ;;
+    none)
+    ;;
+    *)
+      logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+      exit 1
+    ;;
+  esac
+  original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4 | head -1)
+  if [ "$original_topic_name" != "" ]
+  then
+    tmp=$(echo $original_topic_name | tr '-' '\-')
+    sed -e "s|$tmp|$topic_name|g" \
+        $repro_test_file > /tmp/tmp
+
+    mv /tmp/tmp $repro_test_file
+    # log "✨ Replacing topic $original_topic_name with $topic_name"
+  fi
+
+  for((i=1;i<=$nb_producers;i++)); do
+    # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
+    producer_hostname=""
+    producer_hostname="producer-repro-$description_kebab_case"
+    producer_hostname=${producer_hostname:0:21}
+    if [ $nb_producers -eq 1 ]
+    then
+      producer_hostname="${producer_hostname}"
+    else
+      producer_hostname="${producer_hostname}$i"
+    fi
+
+    rm -rf $producer_hostname
+    mkdir -p $repro_dir/$producer_hostname/
+    cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
+
+    if [[ -n "$schema_file_key" ]]
+    then
+      log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
+      playground open --file "$tmp_dir/key_schema" --wait
+
+      case "${producer}" in
+        avro-with-key)
+          original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
+          if [ "$original_namespace" != "null" ]
+          then
+            sed -e "s|$original_namespace|com.github.vdesabou|g" \
+                $tmp_dir/key_schema  > /tmp/tmp
+
             mv /tmp/tmp $tmp_dir/key_schema
+            log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
+          else
+            # need to add namespace
+            cp $tmp_dir/key_schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
+          fi
+          # replace record name with MyKey
+          jq '.name = "MyKey"' $tmp_dir/key_schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/key_schema
 
-            cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/mykey.avsc
-          ;;
-          json-schema-with-key)
-            # replace title name with ID
-            jq '.title = "ID"' $tmp_dir/key_schema > /tmp/tmp
+          cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/mykey.avsc
+        ;;
+        json-schema-with-key)
+          # replace title name with ID
+          jq '.title = "ID"' $tmp_dir/key_schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/key_schema
+
+          cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.json
+        ;;
+        protobuf-with-key)
+          original_package=$(grep "package " $tmp_dir/key_schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
+          if [ "$original_package" != "" ]
+          then
+            sed -e "s|$original_package|com.github.vdesabou|g" \
+                $tmp_dir/key_schema  > /tmp/tmp
+
             mv /tmp/tmp $tmp_dir/key_schema
+            log "✨ Replacing package $original_package with com.github.vdesabou"
+          else
+            # need to add package
+            cp $tmp_dir/key_schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
+          fi
 
-            cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.json
-          ;;
-          protobuf-with-key)
-            original_package=$(grep "package " $tmp_dir/key_schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
-            if [ "$original_package" != "" ]
-            then
-              sed -e "s|$original_package|com.github.vdesabou|g" \
-                  $tmp_dir/key_schema  > /tmp/tmp
+          original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/key_schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
+          if [ "$original_java_outer_classname" != "" ]
+          then
+            sed -e "s|$original_java_outer_classname|IdImpl|g" \
+                $tmp_dir/key_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/key_schema
-              log "✨ Replacing package $original_package with com.github.vdesabou"
-            else
-              # need to add package
-              cp $tmp_dir/key_schema /tmp/tmp
-              line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
-            fi
+            mv /tmp/tmp $tmp_dir/key_schema
+            log "✨ Replacing java_outer_classname $original_java_outer_classname with IdImpl"
+          else
+            # need to add java_outer_classname
+            cp $tmp_dir/key_schema /tmp/tmp
+            line=3
+            { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"IdImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
+          fi
 
-            original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/key_schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
-            if [ "$original_java_outer_classname" != "" ]
-            then
-              sed -e "s|$original_java_outer_classname|IdImpl|g" \
-                  $tmp_dir/key_schema  > /tmp/tmp
+          cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.proto
+        ;;
 
-              mv /tmp/tmp $tmp_dir/key_schema
-              log "✨ Replacing java_outer_classname $original_java_outer_classname with IdImpl"
-            else
-              # need to add java_outer_classname
-              cp $tmp_dir/key_schema /tmp/tmp
-              line=3
-              { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"IdImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
-            fi
+        none)
+        ;;
+        *)
+          logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+          exit 1
+        ;;
+      esac
+    fi
 
-            cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.proto
-          ;;
+    if [[ -n "$schema_file_value" ]]
+    then
+      log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
+      playground open --file "$tmp_dir/value_schema" --wait
 
-          none)
-          ;;
-          *)
-            logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
-            exit 1
-          ;;
-        esac
-      fi
+      case "${producer}" in
+        avro|avro-with-key)
+          original_namespace=$(cat $tmp_dir/value_schema | jq -r .namespace)
+          if [ "$original_namespace" != "null" ]
+          then
+            sed -e "s|$original_namespace|com.github.vdesabou|g" \
+                $tmp_dir/value_schema  > /tmp/tmp
 
-      if [[ -n "$schema_file_value" ]]
-      then
-        log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-        playground open --file "$tmp_dir/value_schema" --wait
-
-        case "${producer}" in
-          avro|avro-with-key)
-            original_namespace=$(cat $tmp_dir/value_schema | jq -r .namespace)
-            if [ "$original_namespace" != "null" ]
-            then
-              sed -e "s|$original_namespace|com.github.vdesabou|g" \
-                  $tmp_dir/value_schema  > /tmp/tmp
-
-              mv /tmp/tmp $tmp_dir/value_schema
-              log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
-            else
-              # need to add namespace
-              cp $tmp_dir/value_schema /tmp/tmp
-              line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
-            fi
-            # replace record name with Customer
-            jq '.name = "Customer"' $tmp_dir/value_schema > /tmp/tmp
             mv /tmp/tmp $tmp_dir/value_schema
+            log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
+          else
+            # need to add namespace
+            cp $tmp_dir/value_schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
+          fi
+          # replace record name with Customer
+          jq '.name = "Customer"' $tmp_dir/value_schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/value_schema
 
-            cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/customer.avsc
-          ;;
-          json-schema|json-schema-with-key)
-            # replace title name with Customer
-            jq '.title = "Customer"' $tmp_dir/value_schema > /tmp/tmp
+          cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/customer.avsc
+        ;;
+        json-schema|json-schema-with-key)
+          # replace title name with Customer
+          jq '.title = "Customer"' $tmp_dir/value_schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/value_schema
+
+          cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.json
+        ;;
+        protobuf|protobuf-with-key)
+          original_package=$(grep "package " $tmp_dir/value_schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
+          if [ "$original_package" != "" ]
+          then
+            sed -e "s|$original_package|com.github.vdesabou|g" \
+                $tmp_dir/value_schema  > /tmp/tmp
+
             mv /tmp/tmp $tmp_dir/value_schema
+            log "✨ Replacing package $original_package with com.github.vdesabou"
+          else
+            # need to add package
+            cp $tmp_dir/value_schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
+          fi
 
-            cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.json
-          ;;
-          protobuf|protobuf-with-key)
-            original_package=$(grep "package " $tmp_dir/value_schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
-            if [ "$original_package" != "" ]
-            then
-              sed -e "s|$original_package|com.github.vdesabou|g" \
-                  $tmp_dir/value_schema  > /tmp/tmp
+          original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/value_schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
+          if [ "$original_java_outer_classname" != "" ]
+          then
+            sed -e "s|$original_java_outer_classname|CustomerImpl|g" \
+                $tmp_dir/value_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/value_schema
-              log "✨ Replacing package $original_package with com.github.vdesabou"
-            else
-              # need to add package
-              cp $tmp_dir/value_schema /tmp/tmp
-              line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
-            fi
+            mv /tmp/tmp $tmp_dir/value_schema
+            log "✨ Replacing java_outer_classname $original_java_outer_classname with CustomerImpl"
+          else
+            # need to add java_outer_classname
+            cp $tmp_dir/value_schema /tmp/tmp
+            line=3
+            { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"CustomerImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
+          fi
 
-            original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/value_schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
-            if [ "$original_java_outer_classname" != "" ]
-            then
-              sed -e "s|$original_java_outer_classname|CustomerImpl|g" \
-                  $tmp_dir/value_schema  > /tmp/tmp
+          cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.proto
+        ;;
 
-              mv /tmp/tmp $tmp_dir/value_schema
-              log "✨ Replacing java_outer_classname $original_java_outer_classname with CustomerImpl"
-            else
-              # need to add java_outer_classname
-              cp $tmp_dir/value_schema /tmp/tmp
-              line=3
-              { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"CustomerImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
-            fi
+        none)
+        ;;
+        *)
+          logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+          exit 1
+        ;;
+      esac
+    fi
 
-            cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.proto
-          ;;
-
-          none)
-          ;;
-          *)
-            logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
-            exit 1
-          ;;
-        esac
-      fi
-
-      # update docker compose with producer container
-      if [[ "$dir1" = *connect ]]
-      then
-          cat << EOF >> $tmp_dir/producer
+    # update docker compose with producer container
+    if [[ "$dir1" = *connect ]]
+    then
+        cat << EOF >> $tmp_dir/producer
 
   $producer_hostname:
     build:
@@ -61816,6 +62068,7 @@ playground_connector_convert_command() {
   name="${args[--name]}"
   no_adapt="${args[--no-adapt]}"
   json="${args[--json]}"
+  secrets_as_variables="${args[--secrets-as-variables]}"
 
   if [ "$file" = "-" ]
   then
@@ -61852,6 +62105,28 @@ playground_connector_convert_command() {
   connector_config_findings "$config" >&2
   placeholders=$(connector_config_placeholders "$config")
 
+  # keys whose value is a secret, for terraform config_sensitive
+  secret_keys_regex='(password|secret|jaas|token|credential|api[._]key|private[._]key|keystore\.key|access[._]key|user\.info)'
+
+  if [[ -n "$secrets_as_variables" ]]
+  then
+      # the secrets written as they are, so that the heredoc can go in a script that is committed: the settings next to
+      # them (basic.auth.credentials.source, *.mechanism…), values already masked or read from a file of the examples stay
+      secrets=$(echo "$config" | jq -r --arg secret_regex "$secret_keys_regex" --arg already "$(echo "$placeholders" | cut -d'|' -f1)" '
+          ($already | split("\n")) as $listed
+          | to_entries[]
+          | select(.key | test($secret_regex; "i"))
+          | select(.key | test("\\.(source|mechanism|protocol|type|class|location|enabled|algorithm|path|file)$"; "i") | not)
+          | select((.value | type) == "string" and .value != "" and (.value | test("^\\$\\{") | not))
+          | select(.key as $k | $listed | index($k) | not)
+          | "\(.key)|secret value of the customer, kept out of the script"')
+      if [ -n "$secrets" ]
+      then
+          log "🔐 $(echo "$secrets" | grep -c .) secret value(s) replaced with variables: $(echo "$secrets" | cut -d'|' -f1 | paste -sd ' ' -)" >&2
+          placeholders=$(printf '%s\n%s' "$placeholders" "$secrets" | grep .)
+      fi
+  fi
+
   if [[ -n "$json" ]]
   then
       jq -n --arg format "$NORMALIZED_FORMAT" --arg name "$name" --argjson config "$config" --arg placeholders "$placeholders" '{
@@ -61862,9 +62137,6 @@ playground_connector_convert_command() {
       }'
       exit 0
   fi
-
-  # keys whose value is a secret, for terraform config_sensitive
-  secret_keys_regex='(password|secret|jaas|token|credential|api[._]key|private[._]key|keystore\.key|access[._]key|user\.info)'
 
   case "$to" in
       json)
@@ -82881,6 +83153,34 @@ playground_repro_bootstrap_parse_requirements() {
         ;;
 
       # :flag.case
+      --config)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--config']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--config requires an argument: --config CONFIG-FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --config-connector)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--config-connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--config-connector requires an argument: --config-connector CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --producer | -p)
         # :flag.conflicts
         if [[ -n "${args['--pipeline']:-}" ]]; then
@@ -83035,6 +83335,15 @@ playground_repro_bootstrap_parse_requirements() {
     validation_output="$(validate_not_empty "${args['--description']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--description, -d DESCRIPTION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--config'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--config']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--config CONFIG-FILE" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -105851,6 +106160,14 @@ playground_connector_convert_parse_requirements() {
         ;;
 
       # :flag.case
+      --secrets-as-variables)
+
+        # :flag.case_no_arg
+        args['--secrets-as-variables']=1
+        shift
+        ;;
+
+      # :flag.case
       --json)
 
         # :flag.case_no_arg
@@ -117938,6 +118255,26 @@ playground_repro_bootstrap_completion() {
         completion_blocked_flags["--jira"]=1
 
         ;;
+      --config)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--config"]=1
+
+        ;;
+      --config-connector)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--config-connector"]=1
+
+        ;;
       --custom-smt)
         completion_blocked_flags["--custom-smt"]=1
 
@@ -117986,6 +118323,8 @@ playground_repro_bootstrap_completion() {
     completion_flag_candidates --expected "$completion_current" --expected
     completion_flag_candidates --actual "$completion_current" --actual
     completion_flag_candidates --jira "$completion_current" --jira
+    completion_flag_candidates --config "$completion_current" --config
+    completion_flag_candidates --config-connector "$completion_current" --config-connector
     completion_flag_candidates --custom-smt "$completion_current" --custom-smt
     completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin
     completion_flag_candidates --pipeline "$completion_current" --pipeline
@@ -129568,6 +129907,11 @@ playground_connector_convert_completion() {
 
         shift
         ;;
+      --secrets-as-variables)
+        completion_blocked_flags["--secrets-as-variables"]=1
+
+        shift
+        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -129592,6 +129936,7 @@ playground_connector_convert_completion() {
     completion_flag_candidates --from "$completion_current" --from
     completion_flag_candidates --name "$completion_current" --name -n
     completion_flag_candidates --no-adapt "$completion_current" --no-adapt
+    completion_flag_candidates --secrets-as-variables "$completion_current" --secrets-as-variables
     completion_flag_candidates --json "$completion_current" --json
   fi
 

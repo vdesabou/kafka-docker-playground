@@ -20,7 +20,9 @@ fi
 model="${model_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
 override="${model_dir}/docker-compose.plaintext.repro-000000-deep-dive-lab-ci.yml"
 imported="${model_dir}/filestream-sink-repro-000000-deep-dive-lab-ci-imported-$(date +%Y%m%d).sh"
-for f in "$model" "$override" "$imported"
+config_model="${model_dir}/filestream-sink-repro-000000-deep-dive-lab-ci-config.sh"
+config_override="${model_dir}/docker-compose.plaintext.repro-000000-deep-dive-lab-ci-config.yml"
+for f in "$model" "$override" "$imported" "$config_model" "$config_override"
 do
     if [ -e "$f" ]
     then
@@ -32,7 +34,7 @@ prev_test_file=$(playground state get run.test_file 2> /dev/null | tail -1)
 prev_clipboard=$(playground config get clipboard 2> /dev/null | tail -1)
 export_dir=$(mktemp -d)
 function cleanup_lab () {
-    rm -f "$model" "$override" "$imported"
+    rm -f "$model" "$override" "$imported" "$config_model" "$config_override"
     rm -rf "$export_dir"
     if [ -n "$prev_test_file" ]
     then
@@ -142,6 +144,28 @@ fi
 lab_run playground state get run.test_file
 lab_expect_contains "$imported" "the imported model is now the current one"
 
-log "Step 6: clean up (in the EXIT trap: the model, its compose override and the imported copy)"
+log "Step 6: a model from the config the customer sent"
+lab_run playground repro bootstrap --config "${root_dir}/tools/connector-config/fixtures/cfk-filestream-sink.yaml" -d "000000 deep dive lab ci config" --no-run
+lab_expect_exit 0
+lab_expect_contains "📄 --config: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs), connector filestream-cfk, connector.class org.apache.kafka.connect.file.FileStreamSinkConnector"
+lab_expect_contains "🔖 example to start from: connect/connect-filestream-sink/filestream-sink.sh (-f to pick another one)"
+lab_expect_contains "value.converter.schema.registry.url: https://sr.prod.example.com:8081 → http://schema-registry:8081"
+lab_expect_contains "📄 the connector config of the example is replaced with the one of cfk-filestream-sink.yaml"
+lab_expect_contains "values of the example kept (they point to its systems): topics file"
+lab_expect_contains "✨ Creating file ${config_model}"
+lab_run sed -n '/^# 📄/,/^EOF/p' "$config_model"
+lab_expect_contains "playground connector create-or-update --connector filestream-sink --wait << EOF"
+lab_expect_contains '"file": "/tmp/output.json"' "the file of the example, that the scenario reads"
+lab_expect_contains '"errors.deadletterqueue.topic.name": "dlq-cfk"' "the behaviour of the customer config"
+lab_expect_contains '"errors.deadletterqueue.topic.replication.factor": "1"'
+lab_expect_not_contains "sr-password" "secrets of the customer"
+lab_expect_not_contains "customer-license"
+lab_run bash -n "$config_model"
+lab_expect_exit 0
+lab_run playground repro check -f "$config_model" --skip-secrets-store
+lab_expect_exit 0
+lab_expect_contains "✅ no secret nor customer data found"
+
+log "Step 7: clean up (in the EXIT trap: the models, their compose overrides and the imported copy)"
 
 log "✅ all the outputs of the page are as expected"
