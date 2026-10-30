@@ -4,16 +4,13 @@ Log viewer pages of the HTML reports of playground analyze logs (tools/log-analy
 report cfk-analysis/html_report.py): one page per file with findings, written next to the report in a
 <report>-files/ folder, with line numbers, a #L<n> anchor per line, the lines of the findings highlighted and
 "previous / next finding" buttons. A location of the report (connect-0.log:33) links to <report>-files/<page>#L33.
+The pages hold the raw lines (the reports stay inside Confluent); a big file keeps only the lines around the findings.
 
-The input files are often extracted from an archive to a temporary folder deleted at the end of the command, and the
-report is sanitized: so the pages are a copy of the files, sanitized with the same placeholders as the report.
-A big file keeps only the lines around the findings.
-
-Next to each page, a plain text copy of the file (same name without .html, same sanitization, the lines not copied left
-empty so that the line numbers match) is what the ✏️ links open in the editor: the editor of
-`playground config editor` (PLAYGROUND_EDITOR, code by default) through its URL scheme (vscode://file/<path>:<line>…),
-VS Code for an editor without one (vi, nano…). PLAYGROUND_REPORT_HOST_DIR: the folder of the report on the host, when
-it is written in a container (the CFK analyzer).
+The ✏️ links open the file at the line in the editor of `playground config editor` (PLAYGROUND_EDITOR, code by default)
+through its URL scheme (vscode://file/<path>:<line>…), VS Code for an editor without one (vi, nano…): the input file
+itself when it stays on disk, else (extracted from an archive to a temporary folder deleted at the end of the command,
+or a .gz) a whole copy written next to its page (same name without .html). PLAYGROUND_REPORT_HOST_DIR: the folder of
+the report on the host, when it is written in a container (the CFK analyzer).
 """
 
 import gzip
@@ -21,18 +18,16 @@ import os
 import re
 import shutil
 from urllib.parse import quote
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from report_html import e, log_html, style
 
-# a file up to this size is copied whole, a bigger one only around the findings
+# a file up to this size is shown whole, a bigger one only around the findings
 MAX_FULL_BYTES = 2 * 1024 * 1024
 # lines kept before and after each finding of a big file
 WINDOW = 250
 # findings highlighted per file (their windows for a big file)
 MAX_HITS = 300
-# lines sanitized at once (several lines together: a multi-line secret, a PEM block)
-SANITIZE_CHUNK = 500
 
 VIEWER_CSS = """
 .page{max-width:none}
@@ -62,7 +57,7 @@ html[data-theme=dark] .lv .gap{background:#0f172a;border-color:#334155}
 """
 
 # previous / next finding (buttons, n / p keys), from the line of the URL (#L33) or the current one; the ✏️ button opens
-# the text copy at that line
+# the file at that line
 VIEWER_SCRIPT = """<script>
 (function () {
   const hits = [...document.querySelectorAll(".lv .l.hit")];
@@ -145,21 +140,6 @@ def kept_ranges(nb_lines: int, hits: Iterable[int], whole: bool) -> List[Tuple[i
     return ranges
 
 
-def sanitized_lines(lines: List[str], sanitize: Optional[Callable[[str], str]]) -> List[str]:
-    """the lines sanitized by chunks, one output line per input line (the line numbers of the report stay right)"""
-    if sanitize is None:
-        return lines
-    out: List[str] = []
-    for i in range(0, len(lines), SANITIZE_CHUNK):
-        chunk = lines[i:i + SANITIZE_CHUNK]
-        done = sanitize("\n".join(chunk)).split("\n")
-        # a multi-line secret collapsed: line by line
-        if len(done) != len(chunk):
-            done = [sanitize(line).replace("\n", " ") for line in chunk]
-        out.extend(done)
-    return out
-
-
 def page_name(index: int, label: str) -> str:
     """file name of the page of a file: its number and its base name (the label may hold a path or archive:path)"""
     base = re.sub(r"[^\w.-]+", "_", re.split(r"[/:\\]", label.rstrip("/"))[-1])[:80] or "file"
@@ -190,11 +170,11 @@ def editor_url(path: str, line="{line}") -> str:
     return editor()[1].replace("{path}", quote(path)).replace("{line}", str(line))
 
 
-def write_page(path: str, out_path: str, label: str, hits: Iterable[int], sanitize: Optional[Callable[[str], str]],
-               report_name: str, note: str = "", host_copy: str = "") -> bool:
-    """writes the viewer page of one file and its text copy (out_path without .html); hits: line numbers of its findings
-    (highlighted); report_name: file name of the report, for the link back; host_copy: path of the text copy on the
-    host, for the ✏️ button. False when the file cannot be read."""
+def write_page(path: str, out_path: str, label: str, hits: Iterable[int], report_name: str, editor_path: str = "",
+               copy: bool = False) -> bool:
+    """writes the viewer page of one file; hits: line numbers of its findings (highlighted); report_name: file name of
+    the report, for the link back; editor_path: path on the host the ✏️ button opens; copy: also write the whole file
+    next to the page (out_path without .html), for the editor. False when the file cannot be read."""
     lines = read_lines(path)
     if lines is None:
         return False
@@ -203,83 +183,85 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], saniti
     ranges = kept_ranges(len(lines), hits, whole)
     hit_set = set(hits)
     body: List[str] = []
-    # the text copy, the lines not copied left empty
-    copy: List[str] = [""] * len(lines)
     previous_end = 0
+    gap = f"(file over {MAX_FULL_BYTES // (1024 * 1024)} MB: {WINDOW} lines around each finding, ✏️ for the whole file)"
     for lo, hi in ranges:
         if lo > previous_end + 1:
-            body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{lo - 1} not copied (file over "
-                        f"{MAX_FULL_BYTES // (1024 * 1024)} MB: {WINDOW} lines around each finding)</div>")
-        for n, text in enumerate(sanitized_lines(lines[lo - 1:hi], sanitize), start=lo):
-            copy[n - 1] = text
+            body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{lo - 1} not shown {e(gap)}</div>")
+        for n in range(lo, hi + 1):
             body.append(f"<div class='l{' hit' if n in hit_set else ''}' id='L{n}'><a class='n' href='#L{n}'>{n}</a>"
-                        f"<span>{log_html(text)}</span></div>")
+                        f"<span>{log_html(lines[n - 1])}</span></div>")
         previous_end = hi
     if previous_end < len(lines):
-        body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{len(lines)} not copied (file over "
-                    f"{MAX_FULL_BYTES // (1024 * 1024)} MB: {WINDOW} lines around each finding)</div>")
-    copied = "whole file" if whole else f"{sum(hi - lo + 1 for lo, hi in ranges)} of {len(lines)} lines"
+        body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{len(lines)} not shown {e(gap)}</div>")
+    shown = "whole file" if whole else f"{sum(hi - lo + 1 for lo, hi in ranges)} of {len(lines)} lines shown"
     bar = (f"<div class='lv-bar'><a class='lv-btn' href='../{e(report_name)}'>⬅️ Report</a>"
            f"<button type='button' id='lv-prev' title='previous finding (p)'>▲ Previous</button>"
            f"<button type='button' id='lv-next' title='next finding (n)'>▼ Next</button>"
            f"<span>finding <span id='lv-pos'>– / {len(hits)}</span></span>"
-           + (f"<a class='lv-btn' id='lv-edit' href='#' data-url='{e(editor_url(host_copy))}' "
-              f"title='open the copy of the file at this line in {e(editor()[0])} (playground config editor)'>✏️ {e(editor()[0])}</a>"
-              if host_copy else "") +
-           f"<span class='mono'>· {e(label)} · {len(lines)} lines · {copied}</span>"
-           + (f"<span>· {e(note)}</span>" if note else "") + "</div>")
+           + (f"<a class='lv-btn' id='lv-edit' href='#' data-url='{e(editor_url(editor_path))}' "
+              f"title='open {e(editor_path)} at this line in {e(editor()[0])} (playground config editor)'>✏️ {e(editor()[0])}</a>"
+              if editor_path else "")
+           + f"<span class='mono'>· {e(label)} · {len(lines)} lines · {shown}</span></div>")
     html = ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>{e(label.rsplit('/', 1)[-1])}</title>{style(VIEWER_CSS)}</head><body><div class='page'>"
             f"{bar}<div class='lv'>{''.join(body)}</div></div>{VIEWER_SCRIPT}</body></html>")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as fh:
         fh.write(html)
-    with open(out_path[:-len(".html")], "w", encoding="utf-8") as fh:
-        fh.write("\n".join(copy) + "\n")
+    if copy:
+        if path.endswith(".gz"):
+            with open(out_path[:-len(".html")], "w", encoding="utf-8") as fh:
+                fh.write("\n".join(lines) + "\n")
+        else:
+            shutil.copyfile(path, out_path[:-len(".html")])
     return True
 
 
 class Viewers(dict):
-    """label -> href of the page of the file, relative to the report; host_dir: folder of the report on the host"""
-    host_dir = ""
+    """label -> href of the page of the file, relative to the report; editor_paths: label -> path on the host the ✏️
+    links open"""
+    def __init__(self):
+        super().__init__()
+        self.editor_paths: Dict[str, str] = {}
 
 
-def write_pages(report_path: str, files: List[Tuple[str, str, Iterable[int]]], sanitize: Optional[Callable[[str], str]],
-                note: str = "") -> Viewers:
+def write_pages(report_path: str, files: List[Tuple[str, str, Iterable[int], Optional[str]]]) -> Viewers:
     """writes the viewer pages of the files of a report, in <report stem>-files/ next to it.
-    files: (label, path on disk, line numbers of the findings). Returns label -> href relative to the report."""
+    files: (label, path, line numbers of the findings, path of the file on the host when it stays there after the
+    command, else None: copied next to its page for the editor)."""
     report_dir = os.path.dirname(os.path.abspath(report_path))
     report_name = os.path.basename(report_path)
     folder = os.path.splitext(report_name)[0] + "-files"
+    host_dir = os.environ.get("PLAYGROUND_REPORT_HOST_DIR") or report_dir
     # the pages of a previous report with the same name
     shutil.rmtree(os.path.join(report_dir, folder), ignore_errors=True)
     hrefs = Viewers()
-    hrefs.host_dir = os.environ.get("PLAYGROUND_REPORT_HOST_DIR") or report_dir
-    for i, (label, path, hits) in enumerate(files, start=1):
+    for i, (label, path, hits, original) in enumerate(files, start=1):
         if label in hrefs or not path or not os.path.isfile(path):
             continue
         name = page_name(i, label)
-        host_copy = os.path.join(hrefs.host_dir, folder, name[:-len(".html")])
-        if write_page(path, os.path.join(report_dir, folder, name), label, hits, sanitize, report_name, note, host_copy):
+        # a .gz is opened decompressed
+        copy = not original or original.endswith(".gz")
+        editor_path = os.path.join(host_dir, folder, name[:-len(".html")]) if copy else original
+        if write_page(path, os.path.join(report_dir, folder, name), label, hits, report_name, editor_path, copy):
             hrefs[label] = f"{folder}/{name}"
+            hrefs.editor_paths[label] = editor_path
     return hrefs
 
 
 def edit_url(hrefs: Dict[str, str], label: str, line: Optional[int] = None) -> str:
-    """URL opening the text copy of a file at a line in the editor, "" when the file has no page"""
-    href = hrefs.get(label, "").split("#")[0]
-    host_dir = getattr(hrefs, "host_dir", "")
-    if not href or not host_dir:
-        return ""
-    return editor_url(os.path.join(host_dir, href[:-len(".html")]), line or 1)
+    """URL opening a file at a line in the editor, "" when the file has no page"""
+    path = getattr(hrefs, "editor_paths", {}).get(label)
+    return editor_url(path, line or 1) if path else ""
 
 
 def edit_link(hrefs: Dict[str, str], label: str, line: Optional[int] = None) -> str:
-    """✏️ link opening the text copy of a file at a line in the editor, "" when the file has no page"""
+    """✏️ link opening a file at a line in the editor, "" when the file has no page"""
     url = edit_url(hrefs, label, line)
     if not url:
         return ""
-    return (f"<a class='lv-edit' style='text-decoration:none;margin-left:5px' href='{e(url)}' title='open the copy of {e(label)}{f' at line {line}' if line else ''} "
+    return (f"<a class='lv-edit' style='text-decoration:none;margin-left:5px' href='{e(url)}' title='open {e(label)}{f' at line {line}' if line else ''} "
             f"in {e(editor()[0])} (playground config editor)'>✏️</a>")
 
 

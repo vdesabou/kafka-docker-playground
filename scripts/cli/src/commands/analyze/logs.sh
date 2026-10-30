@@ -72,8 +72,9 @@ fi
 # every distinct record, for the HTML report and --json (see summarize_log_errors)
 records_file="$tmp_dir/records"
 : > "$records_file"
-# label<tab>path on disk of each file analyzed (extracted ones included, in $tmp_dir until the end): the HTML report
-# copies the files with findings next to it, its locations (connect.log:33) link to them
+# label<tab>path on disk<tab>1 when the file stays there after the command (not extracted to $tmp_dir) of each file
+# analyzed: the HTML report writes a page per file with findings next to it, its locations (connect.log:33) link to
+# them, and its ✏️ open the file in the editor (a copy for the extracted ones)
 sources_file="$tmp_dir/sources"
 : > "$sources_file"
 nb_files=0
@@ -177,7 +178,7 @@ function is_cfk_bundle () {
 # $1: label to display, $2: path of the file
 function analyze_logs_digest () {
     label="$1"
-    printf '%s\t%s\n' "$label" "$2" >> "$sources_file"
+    printf '%s\t%s\t%s\n' "$label" "$2" "$([[ "$2" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
     output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
     nb_files=$((nb_files+1))
     if [[ "$output" == "✅"* ]]
@@ -345,6 +346,12 @@ cfk_compare_files=()
 for i in "${!cfk_bundles[@]}"
 do
     CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
+    # extracted from an archive: deleted at the end, the report copies its files for the editor
+    CFK_ANALYSIS_TEMPORARY=""
+    if [[ "${cfk_bundles[$i]}" == "$tmp_dir/"* ]]
+    then
+        CFK_ANALYSIS_TEMPORARY=1
+    fi
     CFK_ANALYSIS_JSON=""
     if [[ -n "$json_out" ]]
     then
@@ -490,13 +497,8 @@ else
     echo "Not sanitized (--no-sanitize): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
     report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
 fi
-# a copy of each file with findings in <report>-files/, sanitized with the same placeholders as the report
+# a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
 report_args+=(--sources "$sources_file")
-# the ✏️ links open these copies in the editor of playground config editor
 export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
-if [[ -n "$sanitize" ]]
-then
-    report_args+=(--sanitize-state "$sanitize_state")
-fi
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
 exit $cfk_exit

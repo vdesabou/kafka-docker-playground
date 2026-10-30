@@ -2761,7 +2761,7 @@
                 "-o"
               ],
               "argument": "OUTPUT_DIR",
-              "description": "📂 Output directory for the HTML report (default: ./log-analysis-output), with a <report>-files/ folder next to it: a sanitized copy of each file with findings, which the file names and line numbers of the report open (✏️ in the editor of playground config editor)\n\nDefault value: ./log-analysis-output"
+              "description": "📂 Output directory for the HTML report (default: ./log-analysis-output), with a <report>-files/ folder next to it: a page per file with findings, which the file names and line numbers of the report open (✏️ in the editor of playground config editor)\n\nDefault value: ./log-analysis-output"
             },
             {
               "names": [

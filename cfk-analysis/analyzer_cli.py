@@ -344,18 +344,21 @@ def run(
                               components, json_out, label)
 
 
-def write_viewers(html_out: str, bundle_dir: str, raw_issues: list, issues: list, sanitizer) -> None:
-    """copies the files of the issues next to the report (log_viewer, sanitized with the placeholders of the report) and
-    sets the link of each issue to its file and line (viewer); raw_issues: the issues before sanitization (their paths
-    are the ones of the bundle), in the same order as issues"""
+def write_viewers(html_out: str, bundle_dir: str, raw_issues: list, issues: list) -> None:
+    """writes a page per file of the issues next to the report (log_viewer) and sets the link of each issue to its file
+    and line (viewer, editor); raw_issues: the issues before sanitization (their paths are the ones of the bundle), in
+    the same order as issues. PLAYGROUND_BUNDLE_HOST_DIR: the bundle folder on the host, when it stays there after the
+    command (not an archive, not extracted by playground analyze logs): the editor opens its files, else copies."""
     lines = {}
     names = {}
     for issue in raw_issues:
         line = issue.get("line_number") or yaml_line(bundle_dir, issue.get("file") or "", issue.get("_viewer_name"), names)
         issue["_viewer_line"] = line
         lines.setdefault(issue.get("file") or "", []).append(line)
-    files = [(f, os.path.join(bundle_dir, f), hits) for f, hits in lines.items() if f]
-    hrefs = log_viewer.write_pages(html_out, files, sanitizer.sanitize_text if sanitizer else None)
+    host_bundle = os.environ.get("PLAYGROUND_BUNDLE_HOST_DIR")
+    files = [(f, os.path.join(bundle_dir, f), hits, os.path.join(host_bundle, f) if host_bundle else None)
+             for f, hits in lines.items() if f]
+    hrefs = log_viewer.write_pages(html_out, files)
     for raw, issue in zip(raw_issues, issues):
         href = hrefs.get(raw.get("file") or "")
         if href:
@@ -400,12 +403,10 @@ def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, ht
               "only log patterns were checked.", file=sys.stderr)
 
     raw_issues = results["issues"]
-    sanitizer = None
     if sanitize:
-        sanitizer = DataSanitizer()
-        results = sanitizer.sanitize_results(results)
+        results = DataSanitizer().sanitize_results(results)
     if html_out:
-        write_viewers(html_out, bundle_dir, raw_issues, results["issues"], sanitizer)
+        write_viewers(html_out, bundle_dir, raw_issues, results["issues"])
 
     if severity or components:
         results["issues"] = filter_by_component(filter_by_severity(results["issues"], severity), components)

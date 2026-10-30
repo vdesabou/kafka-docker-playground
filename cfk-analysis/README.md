@@ -124,10 +124,11 @@ review the output before sharing it.
   secrets first, then emails / LDAP DNs / IPs / hostnames.
 - `recommendations.py` — category → concrete CFK remediation steps mapping.
 - `html_report.py` — self-contained offline HTML report (no CDN dependency). The location of each issue links to a
-  sanitized copy of its file in `<report>-files/` (`tools/report-common/log_viewer.py`, written by `analyzer_cli.py`
-  while the bundle is still extracted; a YAML file without line number opens at the `name:` of the pod or CR), and a ✏️
-  opens its text copy in the editor (`PLAYGROUND_EDITOR`, at its host path `PLAYGROUND_REPORT_HOST_DIR`, both passed
-  to the container by `analyze_cfk_bundle`).
+  page of its file in `<report>-files/` (`tools/report-common/log_viewer.py`, written by `analyzer_cli.py` while the
+  bundle is still extracted; a YAML file without line number opens at the `name:` of the pod or CR), and a ✏️ opens the
+  file in the editor (`PLAYGROUND_EDITOR`): the file of the bundle folder on the host (`PLAYGROUND_BUNDLE_HOST_DIR`), or
+  a copy next to its page for an archive (`PLAYGROUND_REPORT_HOST_DIR`), all passed to the container by
+  `analyze_cfk_bundle`.
 - `analyzer_cli.py` — CLI entrypoint: safe extraction → analyze → sanitize → render.
 - `Dockerfile` / `requirements.txt` — runtime image (`python:3.12-slim` + `PyYAML`). The playground builds it
   once (tag derived from these two files) and mounts the code at run time.
