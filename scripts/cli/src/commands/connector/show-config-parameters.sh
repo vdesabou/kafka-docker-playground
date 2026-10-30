@@ -157,24 +157,9 @@ do
             exit 1
         fi
 
-        # one jq for all the parameters: splitting the fields with bash dropped the empty ones (an empty default
-        # value shifted the type, importance... of the parameter by one)
-        excluded_groups='["Common","Transforms","Error Handling","Topic Creation","offsets.topic","Predicates","Confluent Licensing"]'
-        echo "$curl_output" | jq -r --argjson excluded "$excluded_groups" '
-            [.configs[].definition | select(.group as $g | $excluded | index($g) | not)]
-            | reduce .[] as $d ({out: "", group: []};
-                (if $d.group != .group then .out += "==========================\n\($d.group)\n==========================\n" | .group = $d.group else . end)
-                | .out += "🔘 \($d.name)\n\n\($d.documentation)\n\n\t - Type: \($d.type)\n\t - Default: \($d.default_value)\n\t - Importance: \($d.importance)\n\t - Required: \($d.required)\n\n")
-            | .out' > "$filename"
-        echo "$curl_output" | jq -r --argjson excluded "$excluded_groups" '
-            .configs[].definition | select(.group as $g | $excluded | index($g) | not)
-            | "    \"\(.name)\": \"\(if .default_value == null then "" else .default_value end)\","' | sort > /tmp/tmp
-        # fix unwanted commits like this one #7231
-        cat /tmp/tmp | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > "$json_filename"
-        if [ ! -s "$filename" ]
-        then
-            rm -f "$filename" "$json_filename"
-        fi
+        echo "$curl_output" > /tmp/tmp-validate.json
+        write_connector_config_reference /tmp/tmp-validate.json "$filename" "$json_filename"
+        rm -f /tmp/tmp-validate.json
     fi
 
     if [ ! -f $filename ]

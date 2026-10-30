@@ -69,6 +69,12 @@ lab_run playground connector-plugin config-key --key batch.size -c io.confluent.
 lab_expect_contains "🔑 batch.size in io.confluent.connect.jdbc.JdbcSinkConnector (group: Writes)"
 lab_expect_contains "- Type: INT"
 lab_expect_contains "- Default: 3000"
+lab_run playground connector-plugin config-diff -c confluentinc/kafka-connect-jdbc --from 10.7.4 --to 10.9.9 --connector-class io.confluent.connect.jdbc.JdbcSourceConnector
+lab_expect_exit 0
+lab_expect_contains "🔧 io.confluent.connect.jdbc.JdbcSourceConnector 10.7.4 → 10.9.9: 31 → 40 keys"
+lab_expect_contains "✏️ batch.max.rows: default 100 → 1000"
+lab_expect_contains "➕ poll.linger.ms (LONG, default 5000, LOW)"
+lab_expect_not_contains "@"
 
 log "Step 3: framework keys and typos"
 lab_run playground connector-plugin config-key --key errors.tolerance -c JdbcSinkConnector

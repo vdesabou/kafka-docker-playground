@@ -7317,7 +7317,8 @@ subcommands:
     by vendor\n  search-jar            which jars ship in it, and which class is where\n
     \ dependencies          which libraries (and versions) it bundles, what changed
     between two versions\n  config-key            what a config key does, its default,
-    since when, who sets it\n  sourcecode            open the source on GitHub\n\n\U0001F393
+    since when, who sets it\n  config-diff           config keys added, removed or
+    changed between two versions\n  sourcecode            open the source on GitHub\n\n\U0001F393
     Tip: search-jar answers \"is this class really in the plugin, and with\nwhich
     signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException
     reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n\U0001F36A
@@ -7609,6 +7610,56 @@ subcommands:
       argument: ''
       description: "\U0001F916 Print the result as JSON\n\nconnector_plugin, version,
         release_date, days_ago, documentation_url, and changes with --with-changelog."
+  - name: config-diff
+    description: "\U0001F527 Configuration keys added, removed or changed between
+      two versions of a plugin\n\n\"What changes in the configuration when the customer
+      upgrades from 10.7.4\nto the latest?\": keys added ➕, removed ➖, default changed
+      ✏️, type,\nimportance, valid values or required changed \U0001F500 (\U0001F4DD
+      documentation with\n--with-docs), for every connector class of the plugin.\n\nWith
+      --file (the customer's connector config: JSON, CFK, Strimzi,\nterraform, properties),
+      only the keys it sets are compared, and a key it\nsets that the new version
+      doesn't know is flagged ❗.\n\nNo environment needed: each version is downloaded
+      (same cache as\nsearch-jar), and its configuration read by loading the connector
+      class\nwith the java of the connect image (a small reader compiled once in a
+      JDK\ncontainer). The result is also kept in .connector_config, like\nplayground
+      connector show-config-parameters: connector-plugin config-key\nthen lists those
+      versions under \"versions run locally\"."
+    usage: playground connector-plugin config-diff [OPTIONS]
+    options:
+    - names:
+      - "--connector-plugin"
+      - "-c"
+      argument: CONNECTOR-PLUGIN
+      description: "\U0001F50C Connector plugin name\n\n\U0001F393 Tip: use <tab>
+        completion to trigger fzf completion\n\nRequired: ✓ Yes"
+    - names:
+      - "--from"
+      argument: FROM
+      description: "\U0001F522 Version in use (the customer's)\n\nRequired: ✓ Yes"
+    - names:
+      - "--to"
+      argument: TO
+      description: "\U0001F522 Version to compare with, default is the latest on Confluent
+        Hub"
+    - names:
+      - "--connector-class"
+      argument: CONNECTOR-CLASS
+      description: "\U0001F50C Only this connector class (default: every connector
+        of the plugin, or the connector.class of --file)"
+    - names:
+      - "--file"
+      argument: FILE
+      description: "\U0001F4C4 Connector configuration of the customer: only the keys
+        it sets are compared\n\nJSON ({\"name\":…, \"config\":{…}} or the bare config),
+        or a CFK / Strimzi / terraform / properties file."
+    - names:
+      - "--with-docs"
+      argument: ''
+      description: "\U0001F4DD Also report the keys whose documentation changed"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON"
   - name: config-key
     description: "\U0001F511 Explain a connector configuration key: documentation,
       type, default, since when, and which examples set it\n\nAnswers \"what does
@@ -7643,6 +7694,20 @@ subcommands:
       argument: MAX_EXAMPLES
       description: "\U0001F9EA Maximum number of examples to show (default 10)\n\nDefault
         value: 10"
+    - names:
+      - "--since-version"
+      argument: ''
+      description: "\U0001F4C5 Find the first version of the plugin having the key
+        (self-managed connectors)\n\nA binary search over the versions of Confluent
+        Hub: each probed version is downloaded and its configuration\nread without
+        a worker, like playground connector-plugin config-diff (about 5 s per version,
+        6 or 7 versions).\nNeeds one connector (--connector-class). The plugin is
+        found from the examples, or set with --connector-plugin."
+    - names:
+      - "--connector-plugin"
+      argument: CONNECTOR-PLUGIN
+      description: "\U0001F50C Plugin of the connector for --since-version (owner/name),
+        when the examples don't tell it"
   - name: sourcecode
     description: "\U0001F9D1‍\U0001F4BB Open source code url in your browser (or in
       your editor when used with --open)\n\nYou can compare different sourcecode versions

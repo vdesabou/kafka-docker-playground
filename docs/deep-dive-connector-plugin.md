@@ -18,7 +18,8 @@ run.
 | how far behind the customer's version is | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--latest` prints only the latest version) |
 | what changed since version X (release notes), is a bug fixed after it | `playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6` (`--grep "CVE\|NullPointer"`, `--to`, `--json`) |
 | what was released on the Hub in the last days | `playground connector-plugin display-last-updated --days 7` (`--vendor confluentinc`, `--with-changelog`, `--json`) |
-| what a config key does, its default, since when, values used | `playground connector-plugin config-key --key batch.size` (`-c JdbcSinkConnector`) |
+| what a config key does, its default, since when, values used | `playground connector-plugin config-key --key batch.size` (`-c JdbcSinkConnector`, `--since-version` for the exact version) |
+| the config keys added, removed or changed between two versions (an upgrade) | `playground connector-plugin config-diff -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--file <customer config>`, `--json`) |
 | the GitHub tree of the code at version X | `playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --only-show-url` |
 | what changed between X and Y | the same with `--connector-tag 10.8.4 --connector-tag 10.9.9` |
 | a local checkout of version X, to grep it | `… sourcecode … --connector-tag 10.8.4 --checkout-only` (the folder is the last line) |
@@ -41,6 +42,7 @@ run.
    | `versions` | Confluent Hub API (`api.hub.confluent.io/api/plugins/<owner>/<name>/versions`) | one day: the Hub answer is cached in `/tmp/version_<owner>_<name>.json` until `--force-refresh` |
    | `display-last-updated` | Confluent Hub API, one request listing every plugin with its latest version (`api.hub.confluent.io/api/plugins`) | now: not cached |
    | `changelog` | the changelog feeds of docs.confluent.io, one per minor line (`docs.confluent.io/kafka-connectors/<slug>/<major.minor>/changelog.xml`), found from the `documentation_url` of the plugin manifest; release dates from the Hub API | one day: cached in `/tmp/connector-plugin-changelog` until `--force-refresh` |
+   | `config-diff`, `config-key --since-version` | the plugin version itself: downloaded (cache of `search-jar`), its connector loaded with the `java` of the connect image by `tools/connector-plugin-jars/ConfigDump.java` (compiled once in a JDK container), which prints its `ConfigDef` as `config/validate` would | kept per version in `.connector_config/` too |
    | `config-key` | the `config-<class>.txt` references next to the examples (about 290 files, tracked in git, refreshed by CI with the latest connector version), plus the versions you ran locally (`.connector_config/`) | your last `git pull` |
    | `sourcecode` | `scripts/cli/confluent-hub-plugin-list.txt` (plugin → repository), built from the Hub on first use; fully managed versions from `cc-docker-connect` | the list: until you regenerate it (`playground generate-connector-plugin-list`) |
    | `search-jar` | the plugin itself, downloaded with `confluent-hub install` in a throw-away container of the connect image | now (needs Docker, not an environment) |
@@ -48,8 +50,8 @@ run.
 2. **"Since when" is a CI date, not a release note.** `config-key` looks for the commit where the key first appeared
    in the recorded reference of that connector (`git log -S`). CI records the reference with the latest version it
    tests, so that date tells **roughly when a new connector version introduced the key**, not which version. For the
-   exact version, run `playground connector show-config-parameters` on two versions (each one is cached in
-   `.connector_config/`), or compare the code of the two tags with `sourcecode`.
+   exact version, add `--since-version`: it reads the configuration of the plugin versions themselves (binary search,
+   no environment), like `config-diff` does.
 
 3. **Self-managed and fully managed resolve versions differently.** A self-managed plugin (`confluentinc/kafka-connect-jdbc`,
    with a `-`) maps a Hub version to a GitHub tag (`v10.8.4`, with per-repository exceptions: Debezium `v<ver>.Final`,
@@ -211,6 +213,11 @@ How to read it:
 
 Gotchas:
 
+- **`--since-version`** finds the first version having the key, with the same reader as `config-diff` (binary search
+  over the Hub versions, about 5 s per probed version):
+  `📅 timestamp.precision.mode was added in confluentinc/kafka-connect-jdbc 10.8.3 (absent in 10.8.2)`. It needs one
+  connector (`-c`); the plugin is the one the examples of that class mount, or `--connector-plugin`. "First" is in
+  version order: with minor lines patched in parallel, check the line of the customer.
 - **Framework keys are not in a plugin's reference**: `errors.tolerance`, `transforms.*`, `topics`, converters,
   `consumer.override.*`… are answered with `🧩 … is a Kafka Connect framework key, common to every connector` and the
   links to the Connect docs.
@@ -224,6 +231,48 @@ Gotchas:
   the same key often shows both, with different defaults (`flush.size`: `1000` fully managed, `null` self-managed).
 
 ---
+
+### What an upgrade changes in the configuration: `config-diff`
+
+```bash
+playground connector-plugin config-diff -c confluentinc/kafka-connect-jdbc --from 10.7.4
+# 🔧 io.confluent.connect.jdbc.JdbcSinkConnector 10.7.4 → 10.9.9: 22 → 29 keys, 7 change(s)
+#    ➕ date.calendar.system (STRING, default LEGACY, LOW): Conversion of time since epoch value …
+#    ➕ timestamp.precision.mode (STRING, default MICROSECONDS, LOW): Convert the Timestamp with precision. …
+#    …
+# 🔧 io.confluent.connect.jdbc.JdbcSourceConnector 10.7.4 → 10.9.9: 31 → 40 keys, 11 change(s)
+#    ➕ poll.linger.ms (LONG, default 5000, LOW): The maximum time to wait for a record before returning an empty batch. …
+#    …
+#    ✏️ batch.max.rows: default 100 → 1000
+#    🔀 timestamp.granularity: valid_values [connect_logical, nanos_long, …] → [connect_logical, micros_long, …]
+
+# only the keys of the customer's config (JSON, CFK, Strimzi, terraform, properties)
+playground connector-plugin config-diff -c confluentinc/kafka-connect-jdbc --from 10.7.4 --file customer.json
+# 🔧 io.confluent.connect.jdbc.JdbcSourceConnector 10.7.4 → 10.9.9: 31 → 40 keys, 1 change(s), among the 9 keys of customer.json
+#    ✏️ batch.max.rows: default 100 → 1000
+```
+
+| Line | Meaning |
+| --- | --- |
+| `➕` / `➖` | key added / removed, with its type, default and importance |
+| `✏️ <key>: default A → B` | the default changed: a config that doesn't set the key behaves differently after the upgrade |
+| `🔀 <key>: type / importance / valid_values / required A → B` | the definition changed |
+| `📝 <key>: documentation changed` | with `--with-docs` |
+| `❗ <key> is set in <file> but <class> <to> doesn't know it` | with `--file`: removed, renamed, or a typo |
+
+Gotchas:
+
+- **No environment, but Docker**: each version is downloaded once, then its connector is loaded in the connect image
+  (`--tag` of the playground, or the running `connect`) by a small reader compiled once in an `eclipse-temurin` JDK
+  container. About 10 s for two new versions, instant after.
+- It is the configuration of the plugin (its `ConfigDef`), like the references CI records: the framework keys
+  (`errors.*`, `transforms`, converters…) are not in it.
+- Every connector class of the plugin is compared (from its `META-INF/services`, else the classes named `*Connector`),
+  or `--connector-class`, or the `connector.class` of `--file`.
+- A validator that only prints an object identity (`Class$1@6438a396`) has no `valid_values`: no false change.
+- Each version read is also written to `.connector_config/` like `connector show-config-parameters`: `config-key` lists
+  it in `🗂️ versions run locally` (dated in the past, so that `connector diff` keeps using the reference of the running
+  version).
 
 ## 4. Source code: `sourcecode`
 
@@ -498,6 +547,8 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | --- | --- |
 | "what is this connector, is it supported, how far behind are we?" | `info --from <theirs>` |
 | "is this fixed in a newer version?" | `versions --from <theirs>`, `changelog --from <theirs> --grep <symptom>`, then `sourcecode --connector-tag <theirs> --connector-tag <latest> --log --grep <symptom>` and `--files --path <file>` |
+| "what changes in our config if we upgrade from X to Y?" | `config-diff --from X --to Y --file <their config>` |
+| "since which version does this key exist?" | `config-key --key <k> -c <class> --since-version` |
 | "what does this key do, and what's its default in our version?" | `config-key --key <k> -c <class>`; for their exact version, `playground connector show-config-parameters` with `--connector-tag` (adds it to `🗂️ versions run locally`) |
 | "this key doesn't work for us" | `config-key`: not in their version (❌ in `versions run locally`), a framework key, or a typo (`💡 similar keys`) |
 | "what value do people use?" | the `🧪 values used` part of `config-key`, with one example file per value |
@@ -517,7 +568,8 @@ playground connector-plugin info -c <owner/name> [--from X] [--max-examples 10] 
 playground connector-plugin versions -c <owner/name> [--last N] [--from X] [--latest] [--with-changelog] [--json] [--force-refresh]
 playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--grep <regex>] [--json]
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>] [--with-changelog] [--json]
-playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]
+playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10] [--since-version]
+playground connector-plugin config-diff -c <owner/name> --from X [--to Y] [--connector-class <class>] [--file <config>] [--with-docs] [--json]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
 playground connector-plugin sourcecode -c <owner/name> --connector-tag X --grep <regex> | --connector-tag X --connector-tag Y --log [--grep <regex>] | --files [--path <glob>]
 playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --connector-zip <zip> [--class <Class>] [--with-worker] [--json]
@@ -526,7 +578,8 @@ playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--c
 
 - `versions` = Hub API, cached one day in `/tmp/version_<owner>_<name>.json` (`--force-refresh` after a release); `--from` = how far behind.
 - `changelog` = docs.confluent.io feeds, self-managed Confluent plugins only, `--from` excluded.
-- `config-key` = CI references in git + versions run locally. "Since" = CI date, not a version.
+- `config-key` = CI references in git + versions run locally. "Since" = CI date, not a version: `--since-version` for the version.
+- `config-diff` = the plugin versions themselves (no environment, Docker): added / removed / default changed.
 - `sourcecode`: always pass the customer's `--connector-tag`. Scripts: `--only-show-url` / `--checkout-only`, never
   `--open` / `--compile`.
 - Fully managed: no `-` in the name, `--connector-tag` = cc-connect image version, `GH_TOKEN` + VPN.
@@ -545,6 +598,7 @@ playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--c
   [playground connector-plugin info](/playground%20connector-plugin%20info),
   [playground connector-plugin dependencies](/playground%20connector-plugin%20dependencies),
   [playground connector-plugin config-key](/playground%20connector-plugin%20config-key),
+  [playground connector-plugin config-diff](/playground%20connector-plugin%20config-diff),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode),
   [playground connector-plugin versions](/playground%20connector-plugin%20versions),
   [playground connector-plugin changelog](/playground%20connector-plugin%20changelog),

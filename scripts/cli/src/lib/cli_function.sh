@@ -9065,3 +9065,113 @@ function connector_plugin_cache_complete () {
     [ -f "$lib_dir/$jar" ] || return 1
   done < "$plugin_dir/.jars"
 }
+
+# writes the configuration reference of a connector (the config-<class>.txt format read by connector-plugin config-key,
+# and the "key": "default" json used by connector diff --defaults) from the answer of config/validate in file $1
+# write_connector_config_reference <validate json file> <txt file> <json file>
+function write_connector_config_reference () {
+  local validate_file="$1" filename="$2" json_filename="$3"
+  # one jq for all the parameters: splitting the fields with bash dropped the empty ones (an empty default
+  # value shifted the type, importance... of the parameter by one)
+  local excluded_groups='["Common","Transforms","Error Handling","Topic Creation","offsets.topic","Predicates","Confluent Licensing"]'
+  jq -r --argjson excluded "$excluded_groups" '
+      [.configs[].definition | select(.group as $g | $excluded | index($g) | not)]
+      | reduce .[] as $d ({out: "", group: []};
+          (if $d.group != .group then .out += "==========================\n\($d.group)\n==========================\n" | .group = $d.group else . end)
+          | .out += "🔘 \($d.name)\n\n\($d.documentation)\n\n\t - Type: \($d.type)\n\t - Default: \($d.default_value)\n\t - Importance: \($d.importance)\n\t - Required: \($d.required)\n\n")
+      | .out' "$validate_file" > "$filename"
+  # fix unwanted commits like this one #7231
+  jq -r --argjson excluded "$excluded_groups" '
+      .configs[].definition | select(.group as $g | $excluded | index($g) | not)
+      | "    \"\(.name)\": \"\(if .default_value == null then "" else .default_value end)\","' "$validate_file" | sort \
+    | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > "$json_filename"
+  if [ ! -s "$filename" ]
+  then
+    rm -f "$filename" "$json_filename"
+  fi
+}
+
+# configuration of the connectors of a plugin version, without a worker: tools/connector-plugin-jars/ConfigDump.java
+# (compiled once in a JDK container) loads the plugin jars with the java of the connect image and prints its ConfigDef
+# as the answer of config/validate. Also cached in .connector_config like playground connector show-config-parameters.
+# get_connector_plugin_configs <owner/name> <version> [<connector class>]
+# sets plugin_configs_dir (one config-<class>.json per connector class) and plugin_config_classes; returns 1 on failure
+function get_connector_plugin_configs () {
+  local connector_plugin="$1" version="$2" wanted_class="$3"
+  local src="$root_folder/tools/connector-plugin-jars/ConfigDump.java"
+  local dump_dir cp_script class out
+
+  get_connector_plugin_lib_dir "$connector_plugin" "$version" "" "" || return 1
+  # compiled once per version of the source (Docker Desktop shares /tmp), and the results kept per version of it
+  dump_dir="/tmp/connector-plugin-jars/configdump-$(shasum "$src" | cut -c1-12)"
+  plugin_configs_dir="$(dirname "$plugin_lib_dir")/.configs-$(basename "$dump_dir")"
+  mkdir -p "$plugin_configs_dir"
+
+  if [ ! -f "$dump_dir/ConfigDump.class" ]
+  then
+    log "☕ Compiling the configuration reader (once)" >&2
+    mkdir -p "$dump_dir"
+    cp "$src" "$dump_dir/"
+    if ! docker run --rm -v "$dump_dir:/src" -w /src ${PG_JAVAP_IMAGE:-eclipse-temurin:21-jdk} javac --release 8 -Xlint:-options ConfigDump.java > "$dump_dir/javac.log" 2>&1
+    then
+      logerror "❌ could not compile $src:"
+      cat "$dump_dir/javac.log" >&2
+      rm -f "$dump_dir/ConfigDump.class"
+      return 1
+    fi
+  fi
+
+  get_connect_image
+  # the Kafka API jars only (the plugin brings the rest, like in a worker); all the jars of the worker when that fails
+  cp_script='cp=/dump; for j in /usr/share/java/kafka/connect_api*.jar /usr/share/java/kafka/connect-api*.jar /usr/share/java/kafka/clients_*.jar /usr/share/java/kafka/kafka-clients*.jar /usr/share/java/kafka/slf4j-api*.jar; do [ -f "$j" ] && cp="$cp:$j"; done; java -cp "$cp" ConfigDump "$@" 2>/dev/null || java -cp "/dump:/usr/share/java/kafka/*" ConfigDump "$@"'
+
+  if [[ -n "$wanted_class" ]]
+  then
+    plugin_config_classes="$wanted_class"
+  elif [ -s "$plugin_configs_dir/classes" ]
+  then
+    plugin_config_classes=$(cat "$plugin_configs_dir/classes")
+  else
+    plugin_config_classes=$(docker run --rm -v "$dump_dir:/dump:ro" -v "$plugin_lib_dir:/plugin:ro" --entrypoint bash ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} -c "$cp_script" _ /plugin --discover 2>/dev/null)
+    if [[ -z "$plugin_config_classes" ]]
+    then
+      logerror "❌ no connector class found in $plugin_label: set --connector-class"
+      return 1
+    fi
+    echo "$plugin_config_classes" > "$plugin_configs_dir/classes"
+  fi
+
+  for class in $plugin_config_classes
+  do
+    out="$plugin_configs_dir/config-$class.json"
+    if [ ! -s "$out" ]
+    then
+      log "🔩 Reading the configuration of $class $version" >&2
+      if ! docker run --rm -v "$dump_dir:/dump:ro" -v "$plugin_lib_dir:/plugin:ro" --entrypoint bash ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} -c "$cp_script" _ /plugin "$class" > "$out.tmp" 2> "$out.err" || ! jq -e '.configs' "$out.tmp" > /dev/null 2>&1
+      then
+        logerror "❌ could not read the configuration of $class in $plugin_label:"
+        grep -m3 -E "Exception|Error" "$out.err" >&2
+        rm -f "$out.tmp"
+        return 1
+      fi
+      mv "$out.tmp" "$out"
+      rm -f "$out.err"
+    fi
+    # same cache as playground connector show-config-parameters: config-key lists it in "versions run locally"
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      mkdir -p "$root_folder/.connector_config"
+      if [ "$(cat "$root_folder/.connector_config/.format" 2>/dev/null)" != "2" ]
+      then
+        rm -f "$root_folder"/.connector_config/config-*
+        echo "2" > "$root_folder/.connector_config/.format"
+      fi
+      if [ ! -f "$root_folder/.connector_config/config-$class-$version.txt" ]
+      then
+        write_connector_config_reference "$out" "$root_folder/.connector_config/config-$class-$version.txt" "$root_folder/.connector_config/config-$class-$version.json"
+        # dated in the past: connector diff takes the newest file as the reference of the running version
+        touch -t 200001010000 "$root_folder/.connector_config/config-$class-$version.txt" "$root_folder/.connector_config/config-$class-$version.json" 2>/dev/null || true
+      fi
+    fi
+  done
+}
