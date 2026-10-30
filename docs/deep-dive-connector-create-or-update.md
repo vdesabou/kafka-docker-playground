@@ -59,7 +59,7 @@ deploy it (`validate`), compare it with a customer's (`diff`), wait for any stat
    `--adapt` for a plain json heredoc too). Masked secrets (`****`, `[hidden]`), config providers of the customer
    environment (`${file:/mnt/...}`), terraform references (`var.x`) and the keys still pointing to external systems are
    listed. The heredocs of the examples are never changed. `playground connector convert` writes any of these formats
-   in another one.
+   in another one. Step 8 of the [hands-on lab](/deep-dive-connector-create-or-update?id=_5-hands-on-lab-≈10-min) shows each format with its output.
 
 2. **It waits, and how strict it is depends on what runs.** After the update, a self-managed connector is polled
    (`playground connector wait`, every 5 s, up to `--max-wait`, default 120 s) until the connector **and all its
@@ -410,6 +410,180 @@ playground connector resume -c filestream-sink
 playground connector status -c filestream-sink
 # filestream-sink   ✅ RUNNING  0:🟢 RUNNING,1:🟢 RUNNING,2:🟢 RUNNING,3:🟢 RUNNING   <- the 4 tasks start on resume
 ```
+
+**Step 8: the formats customers send (CFK, terraform, `.properties`, REST dumps)**
+
+A customer rarely sends REST JSON. They send what they deploy with. The files below are the fixtures of
+[`tools/connector-config/fixtures`](https://github.com/vdesabou/kafka-docker-playground/tree/master/tools/connector-config/fixtures)
+(made up, shaped like real customer files); run the commands from the root of the repository.
+
+*8a. A CFK `Connector` resource, deployed as is.* `cfk-filestream-sink.yaml` has `spec.class`, `taskMax: 1`, and in
+`spec.configs` the customer's Schema Registry with its credentials, their license, and a dead letter queue with
+`replication.factor: 3`, as on their 3-broker cluster:
+
+```bash
+playground connector create-or-update -c filestream-cfk tools/connector-config/fixtures/cfk-filestream-sink.yaml
+# 📄 reading the connector config from tools/connector-config/fixtures/cfk-filestream-sink.yaml
+# 📦 detected: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs)
+# 🔧 adapted to the playground (--no-adapt to keep the config as is):
+#    - confluent.license
+#    - value.converter.basic.auth.credentials.source
+#    - value.converter.basic.auth.user.info
+#    errors.deadletterqueue.topic.replication.factor: 3 → 1
+#    value.converter.schema.registry.url: https://sr.prod.example.com:8081 → http://schema-registry:8081
+# 🛠️ Creating 🌎onprem connector filestream-cfk
+# ✅ 🌎onprem connector filestream-cfk is RUNNING (1 task(s)) after 11 seconds
+```
+
+`spec.class` became `connector.class`, `taskMax: 1` became `"tasks.max": "1"`, `3` became a string. The edits that
+otherwise fail the first run are done and printed: a DLQ topic with a replication factor of 3 cannot be created on one
+broker, and the customer's Schema Registry is not reachable. Only values that point outside the playground are rewritten:
+a host that is a playground container (`broker`, `broker-us`, `schema-registry`…), `localhost` or `*.confluent.cloud`
+is kept.
+
+*8b. What differs from the customer, now.* `diff --file` reads the same resource, as it is:
+
+```bash
+playground connector diff -c filestream-cfk --file tools/connector-config/fixtures/cfk-filestream-sink.yaml
+# 📦 tools/connector-config/fixtures/cfk-filestream-sink.yaml: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs)
+# 🔀 Diff of connector filestream-cfk (➖) with cfk-filestream-sink.yaml (➕)
+#   ✏️  errors.deadletterqueue.topic.replication.factor
+#        ➖ 1
+#        ➕ 3
+#   ✏️  value.converter.schema.registry.url
+#        ➖ http://schema-registry:8081
+#        ➕ https://sr.prod.example.com:8081
+#   ➕ confluent.license = eyJhbGciOiJSUzI1NiJ9.customer-license   (only in cfk-filestream-sink.yaml)
+#   ➕ value.converter.basic.auth.credentials.source = USER_INFO   (only in cfk-filestream-sink.yaml)
+#   ➕ value.converter.basic.auth.user.info = sr-user:sr-password   (only in cfk-filestream-sink.yaml)
+# 📊 5 key(s) differ, 9 identical
+```
+
+The only differences are the adaptations: everything else runs with the customer's values. (The terminal prints the
+values of the file in clear; the HTML report masks the secrets.)
+
+*8c. A CFK file with two connectors and a mounted secret, turned into a repro heredoc.* `cfk-connectors.yaml` holds two
+`Connector` documents; the JDBC one reads its password from a CFK mounted secret, talks to a SASL_SSL cluster for its
+license topic, and uses a production Schema Registry:
+
+```bash
+playground connector convert tools/connector-config/fixtures/cfk-connectors.yaml
+# ❌ 2 connectors in the config (jdbc-sink s3-sink), pick one with --connector
+playground connector convert tools/connector-config/fixtures/cfk-connectors.yaml --connector jdbc-sink
+```
+
+On stderr, what to know:
+
+```text
+📦 detected: CFK Connector custom resource (spec.class, spec.taskMax, spec.configs)
+🔧 adapted to the playground (--no-adapt to keep the config as is):
+   - confluent.topic.security.protocol
+   - value.converter.basic.auth.credentials.source
+   - value.converter.basic.auth.user.info
+   confluent.topic.bootstrap.servers: kafka.prod.example.com:9092 → broker:9092
+   confluent.topic.replication.factor: 3 → 1
+   errors.deadletterqueue.topic.replication.factor: 3 → 1
+   value.converter.schema.registry.url: https://schemaregistry.prod.example.com:8081 → http://schema-registry:8081
+🌍 still pointing to the customer environment (external systems, files): use the ones of the example
+   connection.url=jdbc:postgresql://db.prod.example.com:5432/orders
+⚠️ 1 value(s) to fill in, they cannot work as they are:
+   connection.password: config provider of the customer environment (${file:/mnt/secrets/jdbc-credentials/creds.properties:password})
+```
+
+On stdout, ready to paste in a reproduction model (`convert ... > repro-config.sh` keeps only this part):
+
+```bash
+# values to fill in before running it:
+#   export CONNECTION_PASSWORD=...   # connection.password: config provider of the customer environment (${file:/mnt/secrets/jdbc-credentials/creds.properties:password})
+playground connector create-or-update --connector jdbc-sink << EOF
+{
+  "name": "jdbc-sink",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "4",
+  "topics": "orders",
+  "connection.url": "jdbc:postgresql://db.prod.example.com:5432/orders",
+  "connection.user": "app",
+  "connection.password": "${CONNECTION_PASSWORD}",
+  "auto.create": "true",
+  "transforms": "route",
+  "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.route.regex": "(.*)",
+  "transforms.route.replacement": "prod_\$1",
+  "value.converter": "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url": "http://schema-registry:8081",
+  "confluent.topic.bootstrap.servers": "broker:9092",
+  "confluent.topic.replication.factor": "1",
+  "errors.deadletterqueue.topic.replication.factor": "1"
+}
+EOF
+```
+
+The secret the CFK pod reads from a mounted file becomes a variable instead of a value that silently fails. The heredoc
+is unquoted for that variable, so `$1` is escaped as `\$1` (bash gives back `prod_$1`). The JDBC URL is listed as the
+one thing to replace with the database of the example.
+
+*8d. Terraform, a fully managed connector.* `terraform-confluent-connector.tf` is a `confluent_connector` resource with
+references to other resources and variables:
+
+```bash
+playground connector convert tools/connector-config/fixtures/terraform-confluent-connector.tf
+# 📦 detected: terraform confluent_connector resource "sink" (config_nonsensitive + config_sensitive)
+# ☁️ connector.class S3_SINK is a fully managed connector: run it as a fully managed example (ccloud/fm-*), the self-managed plugin has another class and other keys
+# ⚠️ 4 value(s) to fill in, they cannot work as they are:
+#    topics: terraform reference (confluent_kafka_topic.orders.topic_name)
+#    kafka.service.account.id: terraform reference (confluent_service_account.app-connector.id)
+#    s3.bucket.name: terraform reference (${var.prefix}-bucket)
+#    aws.secret.access.key: terraform reference (var.aws_secret)
+```
+
+followed by the heredoc with `"topics": "${TOPICS}"`, `"aws.secret.access.key": "${AWS_SECRET_ACCESS_KEY}"`… and
+`"flush.size": "1000"` (a number in HCL, a string for Connect). `config_sensitive` is merged, and no Terraform expression
+is sent as a literal value.
+
+*8e. Answer a CFK customer in their format.* The repro used a `connect-standalone` file; the customer runs CFK:
+
+```bash
+playground connector convert tools/connector-config/fixtures/connect-standalone.properties --to cfk
+# 📦 detected: connect-standalone .properties file
+apiVersion: platform.confluent.io/v1beta1
+kind: Connector
+metadata:
+  name: s3-sink
+  namespace: confluent
+spec:
+  class: io.confluent.connect.s3.S3SinkConnector
+  taskMax: 2
+  connectClusterRef:
+    name: connect
+  configs:
+    topics.regex: orders-.*
+    transforms: route
+    transforms.route.type: org.apache.kafka.connect.transforms.RegexRouter
+    transforms.route.regex: (.*)\.public\.(.*)
+    transforms.route.replacement: $1_$2
+    s3.bucket.name: my-bucket
+    key.converter.basic.auth.user.info: user:pass
+```
+
+The `.properties` file has what breaks a hand (or `yq -p props`) conversion: `transforms=route` next to
+`transforms.route.*`, a `\\.` escape in a regex, a `my-\` line continuation, `\:` in a value, `:` and space
+separators, a `!` comment. `--to terraform`, `--to strimzi`, `--to properties`, `--to json` work the same way, and
+every output converts back to the same config.
+
+*8f. A `.properties` file to validate, a dump of several connectors to deploy:*
+
+```bash
+playground connector validate < tools/connector-config/fixtures/filestream-sink.properties
+# 📦 detected: connect-standalone .properties file
+# ❌ Validation errors found in connector config
+# tasks.max ->> Invalid value abc for configuration tasks.max: Not a number of type INT, Invalid value null for configuration tasks.max: Value must be non-null
+playground connector create-or-update -c filestream-source --dry-run tools/connector-config/fixtures/rest-expand-info.json
+# 📦 detected: dump of GET /connectors?expand=info
+# 🌵 --dry-run: 🌎onprem connector filestream-source would be created with this config
+```
+
+The heredocs of the examples (plain JSON on stdin) are never adapted: no detection line, no change. `--adapt` adapts a
+customer config pasted in a heredoc.
 
 ```bash
 playground stop

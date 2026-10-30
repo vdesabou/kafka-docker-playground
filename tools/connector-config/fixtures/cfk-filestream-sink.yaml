@@ -1,0 +1,24 @@
+# a CFK Connector custom resource as a customer would send it (FileStream sink, so it runs in the deep-dive lab)
+apiVersion: platform.confluent.io/v1beta1
+kind: Connector
+metadata:
+  name: filestream-cfk
+  namespace: confluent
+spec:
+  class: "org.apache.kafka.connect.file.FileStreamSinkConnector"
+  taskMax: 1
+  connectClusterRef:
+    name: connect
+  configs:
+    topics: "filestream"
+    file: "/tmp/output-cfk.json"
+    key.converter: "org.apache.kafka.connect.storage.StringConverter"
+    value.converter: "org.apache.kafka.connect.json.JsonConverter"
+    value.converter.schemas.enable: "false"
+    errors.tolerance: "all"
+    errors.deadletterqueue.topic.name: "dlq-cfk"
+    errors.deadletterqueue.topic.replication.factor: 3
+    confluent.license: "eyJhbGciOiJSUzI1NiJ9.customer-license"
+    value.converter.schema.registry.url: "https://sr.prod.example.com:8081"
+    value.converter.basic.auth.credentials.source: "USER_INFO"
+    value.converter.basic.auth.user.info: "sr-user:sr-password"
