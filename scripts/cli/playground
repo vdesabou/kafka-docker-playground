@@ -23870,6 +23870,8 @@ function summarize_log_errors() {
         key = rec[1]
         sub(/^\[?[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9:,.]*\]?[ \t]*/, "", key)
         key = lvl ":" substr(key, 1, 200) "|" substr(cause, 1, 200)
+        # Java identity hash of Object.toString() (KafkaConsumerReadTask@9c3da5a): a new one per object
+        gsub(/@[0-9a-f]+/, "@#", key)
         gsub(/[0-9]+/, "#", key)
 
         total_occurrences++

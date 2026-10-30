@@ -491,6 +491,8 @@ class CFKBundleAnalyzer:
         (re.compile(r'\b\d{2}:\d{2}:\d{2}[.,]?\d*\b'), '<TS>'),
         (re.compile(r'\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b'), '<UUID>'),
         (re.compile(r'\b0x[0-9a-fA-F]+\b'), '<HEX>'),
+        # Java identity hash of Object.toString(): KafkaConsumerReadTask@9c3da5a (1 to 8 hex digits, a new one per object)
+        (re.compile(r'@[0-9a-f]{1,8}\b'), '@<HASH>'),
         # Short hex IDs (request IDs, correlation IDs, short hashes). Without
         # this, `creqId=040cd1e6` and `creqId=8d3bbd11` are treated as
         # different "issues" even though they're the same recurring event.
