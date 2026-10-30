@@ -31,7 +31,7 @@ from typing import Dict, List, Optional, Tuple
 # no __pycache__ left in the repository
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
-from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html,  # noqa: E402
+from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, svg_time_columns, time_bins, verdict_html)
 import known_causes  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
@@ -554,8 +554,8 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
         out.append(f"<details data-level='{e(r['level'])}'{connectors_attr([r['connector']] if r.get('connector') else [])}"
                    f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} ×{r['count']}{mine} "
                    f"{conn}<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {e(when)}</span></summary>"
-                   f"<pre>{e(r['text'])}</pre>"
-                   + (f"<details><summary>📋 Show context</summary><pre>{e(r['context'])}</pre></details>" if r.get("context") else "")
+                   f"<pre>{log_html(r['text'])}</pre>"
+                   + (f"<details><summary>📋 Show context</summary><pre>{log_html(r['context'])}</pre></details>" if r.get("context") else "")
                    + "</details>")
     return "".join(out)
 
