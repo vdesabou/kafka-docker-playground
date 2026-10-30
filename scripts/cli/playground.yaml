@@ -7315,11 +7315,12 @@ subcommands:
     released version of a plugin\n  changelog             what changed between two
     versions (release notes)\n  display-last-updated  what was published recently,
     by vendor\n  search-jar            which jars ship in it, and which class is where\n
-    \ config-key            what a config key does, its default, since when, who sets
-    it\n  sourcecode            open the source on GitHub\n\n\U0001F393 Tip: search-jar
-    answers \"is this class really in the plugin, and with\nwhich signature\", which
-    is the question behind most NoSuchMethodError and\nClassNotFoundException reports;
-    with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n\U0001F36A
+    \ dependencies          which libraries (and versions) it bundles, what changed
+    between two versions\n  config-key            what a config key does, its default,
+    since when, who sets it\n  sourcecode            open the source on GitHub\n\n\U0001F393
+    Tip: search-jar answers \"is this class really in the plugin, and with\nwhich
+    signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException
+    reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n\U0001F36A
     Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
     Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version"
   usage: playground connector-plugin COMMAND
@@ -7396,6 +7397,57 @@ subcommands:
       - "--force-refresh"
       argument: ''
       description: "☢️ Force refresh."
+  - name: dependencies
+    description: "\U0001F4DA Libraries bundled in a connector plugin, and what changed
+      between two versions\n\n\"Which jackson / netty / aws-sdk version ships in 10.7.4,
+      and which\nplugin version bumped it?\", often after a CVE scanner flagged a
+      jar.\n\nLibraries are read from the META-INF/maven/**/pom.properties of each
+      jar\n(the libraries shaded inside a fat jar are listed too, \"inside <jar>\"),\nor
+      from the jar file name. Same download and cache as search-jar\n(/tmp/connector-plugin-jars).\n\nOne
+      --connector-tag (default latest) or --connector-zip: the list.\nTwo of them
+      (or a zip and a version): upgraded ⬆️, downgraded ⬇️,\nadded ➕ and removed ➖
+      libraries.\n\n--find-first <artifact>:<version> finds the first version of the
+      plugin\nthat ships at least that version of the library, with a binary search\nover
+      the versions of Confluent Hub (each probed version is downloaded)."
+    usage: playground connector-plugin dependencies [OPTIONS]
+    options:
+    - names:
+      - "--connector-plugin"
+      - "-c"
+      argument: CONNECTOR-PLUGIN
+      description: "\U0001F50C Connector plugin name (or --connector-zip)\n\n\U0001F393
+        Tip: use <tab> completion to trigger fzf completion"
+    - names:
+      - "--connector-tag"
+      argument: CONNECTOR_TAG
+      description: "\U0001F517 Connector version, default is the latest on Confluent
+        Hub\n\nSet it twice to compare two versions. With --find-first, the version
+        to start the search from.\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--connector-zip"
+      argument: CONNECTOR_ZIP
+      description: "\U0001F910 Connector zip: its libraries, or compared with --connector-tag"
+    - names:
+      - "--grep"
+      argument: GREP
+      description: "\U0001F50E Only the libraries matching this regular expression
+        (group:artifact or jar name, case insensitive)\n\nExample: --grep \"jackson|netty\""
+    - names:
+      - "--find-first"
+      argument: ARTIFACT_VERSION
+      description: "\U0001F3AF <artifact>:<version>: first plugin version shipping
+        at least that version of the library\n\nExample: --find-first jackson-databind:2.18.0
+        (the artifactId, as in the list)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON"
+    - names:
+      - "--force-refresh"
+      argument: ''
+      description: "☢️ Force refresh."
+    aliases:
+    - deps
   - name: versions
     description: "\U0001F4AF List versions for a connector plugin from confluent hub
       https://www.confluent.io/hub/\n\nWhat to feed to --connector-tag when you want

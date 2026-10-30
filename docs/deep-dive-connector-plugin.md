@@ -23,6 +23,8 @@ run.
 | what changed between X and Y | the same with `--connector-tag 10.8.4 --connector-tag 10.9.9` |
 | a local checkout of version X, to grep it | `… sourcecode … --connector-tag 10.8.4 --checkout-only` (the folder is the last line) |
 | the jars of the plugin, and which one has a class | `playground connector-plugin search-jar -c confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider` (`--connector-zip`, `--json`) |
+| the libraries (and versions) a plugin version bundles, what changed between two versions | `playground connector-plugin dependencies -c confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep jackson` (2× `--connector-tag` to compare, `--json`) |
+| the first plugin version shipping library X ≥ Y | `playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0` |
 | the classes of the plugin that Connect loads from the worker instead | `playground connector-plugin search-jar -c confluentinc/kafka-connect-replicator --with-worker` |
 
 ---
@@ -329,6 +331,45 @@ Gotchas:
 
 ---
 
+### Libraries: `dependencies`
+
+```bash
+playground connector-plugin dependencies -c confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep "jackson-databind"
+# 📚 3 librar(y/ies) in confluentinc/kafka-connect-s3:10.5.0 matching "jackson-databind"
+# com.fasterxml.jackson.core:jackson-databind  2.13.4.2  jackson-databind-2.13.4.2.jar
+# com.fasterxml.jackson.core:jackson-databind  2.13.4.2  inside kafka-connect-storage-common-htrace-core4-shaded-11.0.20.jar
+# com.fasterxml.jackson.core:jackson-databind  2.13.4.2  inside kafka-connect-storage-format-11.0.20.jar
+
+playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --connector-tag 10.9.9
+# 📚 confluentinc/kafka-connect-jdbc:10.8.4 → confluentinc/kafka-connect-jdbc:10.9.9: 6 change(s), 14 librar(y/ies) unchanged
+# ⬆️   mssql-jdbc          8.4.1 → 12.8.2
+# ⬆️   postgresql          42.4.4 → 42.7.12
+# ➕  jsqlparser          4.9
+# ➖  checker-qual        3.5.0
+# …
+
+playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --connector-tag 10.7.0 --find-first postgresql:42.7.0
+#    🔍 confluentinc/kafka-connect-jdbc 10.9.9: postgresql 42.7.12 ✅
+#    🔍 confluentinc/kafka-connect-jdbc 10.8.5: postgresql 42.4.4
+#    …
+# ✅ confluentinc/kafka-connect-jdbc 10.9.4 is the first version shipping postgresql ≥ 42.7.0 (42.7.11)
+```
+
+Same download and cache as `search-jar`. Each library comes from the `META-INF/maven/<group>/<artifact>/pom.properties`
+of the jars, or from the jar file name when there is none (no group then).
+
+Gotchas:
+
+- **Shaded copies count**: a fat jar holds the `pom.properties` of the libraries shaded inside it, listed as
+  `inside <jar>`. That's what a CVE scanner sees too: a library can be fixed in its own jar and still old inside
+  another. In a diff, the library's own jar wins over a shaded copy.
+- **`--find-first` is a binary search in version order** (previews and release candidates left out) from the first
+  `--connector-tag`, or the oldest version: each probed version is downloaded once (about 5 s each, 6 probes for 35
+  versions). When several minor lines are patched in parallel, the answer is the first version in version order, not
+  the first release date: start from the customer's line with `--connector-tag`. Cross-check with
+  `changelog --grep <library>` (`PR-1635 - Bump org.postgresql:postgresql to 42.7.11 (CVE-…)`).
+- `--connector-zip` with one `--connector-tag` compares a customer's zip with a Hub version.
+
 ## 6. Hands-on lab (≈10 min, no environment needed)
 
 Steps 1 to 4 need internet access only; step 5 needs Docker; step 6 is for Confluent employees (`GH_TOKEN` + VPN).
@@ -437,6 +478,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | "what does this key do, and what's its default in our version?" | `config-key --key <k> -c <class>`; for their exact version, `playground connector show-config-parameters` with `--connector-tag` (adds it to `🗂️ versions run locally`) |
 | "this key doesn't work for us" | `config-key`: not in their version (❌ in `versions run locally`), a framework key, or a typo (`💡 similar keys`) |
 | "what value do people use?" | the `🧪 values used` part of `config-key`, with one example file per value |
+| "our scanner flags jackson / netty 2.x in the connector: which version do we ship, which plugin version upgrades it?" | `dependencies --connector-tag <theirs> --grep <lib>`, then `--find-first <artifact>:<fixed version>` and `changelog --grep <lib>` |
 | "NoSuchMethodError / ClassNotFoundException" | `search-jar --class <Class> --connector-tag <theirs> --with-worker`: is the class shipped, with which signature, is the worker's copy used instead (and its signature) |
 | "read the code of the version that fails" | `sourcecode --connector-tag <theirs> --checkout-only`, then grep the folder it prints |
 | "fully managed connector behaves differently" | `sourcecode -c confluentinc/<Type> --connector-tag <cc-connect version of the cluster>` (`GH_TOKEN` + VPN) |
@@ -455,6 +497,7 @@ playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>] 
 playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
 playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --connector-zip <zip> [--class <Class>] [--with-worker] [--json]
+playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--connector-tag Y]] [--grep <regex>] [--find-first <artifact>:<version>] [--json]
 ```
 
 - `versions` = Hub API, cached one day in `/tmp/version_<owner>_<name>.json` (`--force-refresh` after a release); `--from` = how far behind.
@@ -476,6 +519,7 @@ playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --c
   plugin's defaults), [reproduction models](/deep-dive-reproduction-models.md) (test the fix with `--connector-tag`)
 - 🧠 CLI reference: [playground connector-plugin](/playground%20connector-plugin),
   [playground connector-plugin info](/playground%20connector-plugin%20info),
+  [playground connector-plugin dependencies](/playground%20connector-plugin%20dependencies),
   [playground connector-plugin config-key](/playground%20connector-plugin%20config-key),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode),
   [playground connector-plugin versions](/playground%20connector-plugin%20versions),

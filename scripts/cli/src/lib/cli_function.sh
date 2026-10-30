@@ -8942,3 +8942,126 @@ function connector_config_adapt () {
     echo "$others"
   fi
 }
+
+# lib/ folder of a connector plugin version (or of a zip), downloaded once in /tmp/connector-plugin-jars and reused
+# get_connector_plugin_lib_dir <owner/name> <version|latest|" "|""> <zip or ""> <force refresh or "">
+# sets plugin_lib_dir, plugin_label and plugin_version; logs go to stderr; returns 1 when it fails
+function get_connector_plugin_lib_dir () {
+  local connector_plugin="$1"
+  local connector_tag="$2"
+  local connector_zip="$3"
+  local force_refresh="$4"
+  local cache_root="/tmp/connector-plugin-jars"
+  local plugin_dir work_dir jar
+  mkdir -p "$cache_root"
+  plugin_lib_dir=""
+  plugin_label=""
+  plugin_version=""
+
+  if [[ -n "$connector_zip" ]]
+  then
+    if [[ $connector_zip == *"@"* ]]
+    then
+      connector_zip=${connector_zip#*@}
+    fi
+    if [[ "$connector_zip" != *.zip ]]
+    then
+      logerror "❌ --connector-zip $connector_zip is not a .zip file"
+      return 1
+    fi
+    plugin_dir="$cache_root/zip-$(basename "$connector_zip" .zip)-$(shasum "$connector_zip" | cut -c1-12)"
+    plugin_label="$(basename "$connector_zip")"
+    plugin_version="$(basename "$connector_zip" .zip)"
+    if [[ -n "$force_refresh" ]] || { [ -d "$plugin_dir" ] && ! connector_plugin_cache_complete "$plugin_dir"; }
+    then
+      rm -rf "$plugin_dir"
+    fi
+    if [ ! -d "$plugin_dir" ]
+    then
+      log "📦 Extracting $connector_zip" >&2
+      work_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      if ! unzip -q "$connector_zip" -d "$work_dir"
+      then
+        logerror "❌ could not extract $connector_zip"
+        rm -rf "$work_dir"
+        return 1
+      fi
+      mkdir -p "$plugin_dir"
+      mv "$work_dir"/* "$plugin_dir"/
+      rm -rf "$work_dir"
+    fi
+  else
+    if [ "$connector_tag" == " " ]
+    then
+      connector_tag=$(choose_connector_tag "$connector_plugin" | cut -d ' ' -f 2 | sed 's/^v//')
+    fi
+    if [[ -z "$connector_tag" ]] || [ "$connector_tag" == "latest" ]
+    then
+      connector_tag=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
+      if [[ -z "$connector_tag" ]]
+      then
+        logwarn "could not find the latest version of $connector_plugin on Confluent Hub, its jars won't be cached" >&2
+        connector_tag="latest"
+      fi
+    fi
+    plugin_label="$connector_plugin:$connector_tag"
+    plugin_version="$connector_tag"
+    plugin_dir="$cache_root/$(echo "$connector_plugin" | tr '/' '-')-$connector_tag"
+    if [[ -n "$force_refresh" ]] || [ "$connector_tag" == "latest" ]
+    then
+      rm -rf "$plugin_dir"
+    elif [ -d "$plugin_dir" ] && ! connector_plugin_cache_complete "$plugin_dir"
+    then
+      logwarn "📂 the jars of $plugin_label in $plugin_dir are incomplete (files deleted by the cleanup of /tmp?), downloading them again" >&2
+      rm -rf "$plugin_dir"
+    fi
+    if [ ! -d "$plugin_dir" ]
+    then
+      get_connect_image
+      log "🔌 Downloading connector plugin $connector_plugin:$connector_tag" >&2
+      # in a mktemp folder: Docker Desktop doesn't share /tmp (/private/tmp) by default
+      work_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      if ! docker run -u0 -i --rm -v "$work_dir:/usr/share/confluent-hub-components" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $connector_plugin:$connector_tag && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > "$work_dir.log" 2>&1
+      then
+        logerror "❌ could not download $connector_plugin:$connector_tag from Confluent Hub:"
+        tail -5 "$work_dir.log" >&2
+        rm -rf "$work_dir" "$work_dir.log"
+        return 1
+      fi
+      mkdir -p "$plugin_dir"
+      mv "$work_dir"/* "$plugin_dir"/
+      rm -rf "$work_dir" "$work_dir.log"
+    else
+      log "♻️ Using the jars of $plugin_label already downloaded in $plugin_dir" >&2
+    fi
+  fi
+
+  plugin_lib_dir=$(find "$plugin_dir" -type d -name lib | head -1)
+  if [[ -z "$plugin_lib_dir" ]]
+  then
+    # some zips have their jars at the top level
+    plugin_lib_dir=$(dirname "$(find "$plugin_dir" -name '*.jar' | head -1)")
+  fi
+  if [[ -z "$plugin_lib_dir" ]] || [ "$plugin_lib_dir" == "." ]
+  then
+    logerror "❌ no jar found in $plugin_dir"
+    return 1
+  fi
+  # list of the jars, to detect a folder emptied by the cleanup of /tmp (macOS deletes the files untouched for 3 days, keeps the folders)
+  if [ ! -f "$plugin_dir/.jars" ]
+  then
+    (cd "$plugin_lib_dir" && ls -1 *.jar) > "$plugin_dir/.jars" 2>/dev/null
+  fi
+}
+
+# true when the cached plugin folder $1 still has every jar listed when it was downloaded
+function connector_plugin_cache_complete () {
+  local plugin_dir="$1" lib_dir jar
+  [ -s "$plugin_dir/.jars" ] || return 1
+  lib_dir=$(find "$plugin_dir" -type d -name lib | head -1)
+  [[ -n "$lib_dir" ]] || lib_dir=$(dirname "$(find "$plugin_dir" -name '*.jar' | head -1)")
+  while IFS= read -r jar
+  do
+    [ -f "$lib_dir/$jar" ] || return 1
+  done < "$plugin_dir/.jars"
+}

@@ -10992,6 +10992,7 @@ commands:
       changelog             what changed between two versions (release notes)
       display-last-updated  what was published recently, by vendor
       search-jar            which jars ship in it, and which class is where
+      dependencies          which libraries (and versions) it bundles, what changed between two versions
       config-key            what a config key does, its default, since when, who sets it
       sourcecode            open the source on GitHub
 
@@ -11087,6 +11088,84 @@ commands:
         ...
         17:23:51 ℹ️ 🔎 1 class(es) named WebIdentityTokenCredentialsProvider in the jars of confluentinc/kafka-connect-s3:12.1.13
            👉 software.amazon.awssdk.auth.credentials.WebIdentityTokenCredentialsProvider in auth-2.28.23.jar
+
+  - name: dependencies
+    alias: deps
+    help: |-
+      📚 Libraries bundled in a connector plugin, and what changed between two versions
+
+      "Which jackson / netty / aws-sdk version ships in 10.7.4, and which
+      plugin version bumped it?", often after a CVE scanner flagged a jar.
+
+      Libraries are read from the META-INF/maven/**/pom.properties of each jar
+      (the libraries shaded inside a fat jar are listed too, "inside <jar>"),
+      or from the jar file name. Same download and cache as search-jar
+      (/tmp/connector-plugin-jars).
+
+      One --connector-tag (default latest) or --connector-zip: the list.
+      Two of them (or a zip and a version): upgraded ⬆️, downgraded ⬇️,
+      added ➕ and removed ➖ libraries.
+
+      --find-first <artifact>:<version> finds the first version of the plugin
+      that ships at least that version of the library, with a binary search
+      over the versions of Confluent Hub (each probed version is downloaded).
+    dependencies:
+      python3: visit https://www.python.org/downloads/ to install
+    flags:
+    - long: --connector-plugin
+      short: -c
+      required: false
+      arg: connector-plugin
+      completions:
+        dynamic:
+        - playground get-connector-plugin "$completion_current" "onprem"
+      help: |-
+        🔌 Connector plugin name (or --connector-zip)
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+    - long: --connector-tag
+      arg: connector_tag
+      repeatable: true
+      required: false
+      help: |-
+        🔗 Connector version, default is the latest on Confluent Hub
+
+        Set it twice to compare two versions. With --find-first, the version to start the search from.
+    - long: --connector-zip
+      arg: connector_zip
+      required: false
+      validate: file_exists_with_trick
+      completions:
+        dynamic:
+        - playground get-zip-or-jar-with-fzf --type zip "$completion_current"
+      help: |-
+        🤐 Connector zip: its libraries, or compared with --connector-tag
+    - long: --grep
+      arg: grep
+      required: false
+      validate: not_empty
+      help: |-
+        🔎 Only the libraries matching this regular expression (group:artifact or jar name, case insensitive)
+
+        Example: --grep "jackson|netty"
+    - long: --find-first
+      arg: artifact_version
+      required: false
+      validate: not_empty
+      help: |-
+        🎯 <artifact>:<version>: first plugin version shipping at least that version of the library
+
+        Example: --find-first jackson-databind:2.18.0 (the artifactId, as in the list)
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON
+    - *force_refresh
+    examples: |
+      playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep "jackson|netty"
+      playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --connector-tag 12.1.15
+      playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0
+      playground connector-plugin deps --connector-zip /path/to/customer-plugin.zip --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.9.9
 
   - name: versions
     help: |-
