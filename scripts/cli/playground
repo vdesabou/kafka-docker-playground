@@ -27802,7 +27802,7 @@ function get_connector_plugin_lib_dir () {
   local connector_zip="$3"
   local force_refresh="$4"
   local cache_root="/tmp/connector-plugin-jars"
-  local plugin_dir work_dir
+  local plugin_dir work_dir jar
   mkdir -p "$cache_root"
   plugin_lib_dir=""
   plugin_label=""
@@ -27822,7 +27822,7 @@ function get_connector_plugin_lib_dir () {
     plugin_dir="$cache_root/zip-$(basename "$connector_zip" .zip)-$(shasum "$connector_zip" | cut -c1-12)"
     plugin_label="$(basename "$connector_zip")"
     plugin_version="$(basename "$connector_zip" .zip)"
-    if [[ -n "$force_refresh" ]]
+    if [[ -n "$force_refresh" ]] || { [ -d "$plugin_dir" ] && ! connector_plugin_cache_complete "$plugin_dir"; }
     then
       rm -rf "$plugin_dir"
     fi
@@ -27860,6 +27860,10 @@ function get_connector_plugin_lib_dir () {
     if [[ -n "$force_refresh" ]] || [ "$connector_tag" == "latest" ]
     then
       rm -rf "$plugin_dir"
+    elif [ -d "$plugin_dir" ] && ! connector_plugin_cache_complete "$plugin_dir"
+    then
+      logwarn "📂 the jars of $plugin_label in $plugin_dir are incomplete (files deleted by the cleanup of /tmp?), downloading them again" >&2
+      rm -rf "$plugin_dir"
     fi
     if [ ! -d "$plugin_dir" ]
     then
@@ -27893,6 +27897,23 @@ function get_connector_plugin_lib_dir () {
     logerror "❌ no jar found in $plugin_dir"
     return 1
   fi
+  # list of the jars, to detect a folder emptied by the cleanup of /tmp (macOS deletes the files untouched for 3 days, keeps the folders)
+  if [ ! -f "$plugin_dir/.jars" ]
+  then
+    (cd "$plugin_lib_dir" && ls -1 *.jar) > "$plugin_dir/.jars" 2>/dev/null
+  fi
+}
+
+# true when the cached plugin folder $1 still has every jar listed when it was downloaded
+function connector_plugin_cache_complete () {
+  local plugin_dir="$1" lib_dir jar
+  [ -s "$plugin_dir/.jars" ] || return 1
+  lib_dir=$(find "$plugin_dir" -type d -name lib | head -1)
+  [[ -n "$lib_dir" ]] || lib_dir=$(dirname "$(find "$plugin_dir" -name '*.jar' | head -1)")
+  while IFS= read -r jar
+  do
+    [ -f "$lib_dir/$jar" ] || return 1
+  done < "$plugin_dir/.jars"
 }
 
 # src/lib/colors.sh
