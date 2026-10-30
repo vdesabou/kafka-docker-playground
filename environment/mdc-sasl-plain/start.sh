@@ -23,23 +23,9 @@ fi
 DISABLE_REPLICATOR_MONITORING=""
 if ! version_gt $TAG_BASE "5.4.99"; then
   logwarn "Replicator Monitoring is disabled as you're using an old version"
-  DISABLE_REPLICATOR_MONITORING="-f ../../environment/mdc-plaintext/docker-compose.no-replicator-monitoring.yml"
+  DISABLE_REPLICATOR_MONITORING="-f ${DIR}/../mdc-plaintext/docker-compose.no-replicator-monitoring.yml"
 else
-  set +e
-  log "🎱 Installing replicator confluentinc/kafka-connect-replicator:$TAG for Replicator Monitoring"
-  docker run -u0 -i --rm -v ${DIR}/../../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt confluentinc/kafka-connect-replicator:$TAG && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
-  if [ $? -ne 0 ]
-  then
-    LATEST_TAG=$(grep "export TAG" ${DIR}/../../scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
-    logwarn "Installing replicator confluentinc/kafka-connect-replicator:$TAG failed, trying now with default tag $LATEST_TAG"
-    docker run -u0 -i --rm -v ${DIR}/../../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt confluentinc/kafka-connect-replicator:$LATEST_TAG && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
-    if [ -z "$LATEST_TAG" ]
-    then
-        logerror "❌ error while getting default TAG "
-        exit 1
-    fi
-  fi
-  set -e
+  mdc_install_replicator
 fi
 
 # Support selective service startup via START_SERVICES env var
@@ -51,17 +37,17 @@ then
   log "🔍 Starting only services: $START_SERVICES"
 fi
 
+DOCKER_COMPOSE_ARGS="-f ${DIR}/../mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command}"
+
 # Only run 'down' if we're NOT skipping container stop (--no-stop not set)
 if [[ -z "$NO_STOP" ]]
 then
-  docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} down -v --remove-orphans
+  docker compose ${DOCKER_COMPOSE_ARGS} down -v --remove-orphans
 fi
 
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull $SERVICES_ARGS
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} down -v --remove-orphans
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull
+docker compose ${DOCKER_COMPOSE_ARGS} up -d --quiet-pull $SERVICES_ARGS
 log "📝 To see the actual properties file, use cli command 'playground container get-properties -c <container>'"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull $SERVICES_ARGS"
+command="source ${DIR}/../../scripts/utils.sh && docker compose ${DOCKER_COMPOSE_ARGS} up -d --quiet-pull $SERVICES_ARGS"
 playground state set run.docker_command "$command"
 playground state set run.environment "mdc-sasl-plain"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"

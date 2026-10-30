@@ -29500,6 +29500,33 @@ function stop_all() {
   playground stop
 }
 
+# Install the Replicator plugin in confluent-hub/ for the mdc-* environments (Replicator Monitoring, plugin.path of
+# connect-us and connect-europe). Skipped when that version is already installed; falls back to the default tag
+# when $TAG is not on Confluent Hub.
+function mdc_install_replicator() {
+  local hub_dir="${DIR_UTILS}/../confluent-hub"
+  local manifest="${hub_dir}/confluentinc-kafka-connect-replicator/manifest.json"
+  local default_tag
+  local version
+
+  default_tag=$(grep "export TAG" ${DIR_UTILS}/../scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
+  for version in $(echo "$TAG $default_tag" | tr ' ' '\n' | awk 'NF && !seen[$0]++')
+  do
+    if [ -f "$manifest" ] && grep -Eq "\"version\"[[:space:]]*:[[:space:]]*\"${version}\"" "$manifest"
+    then
+      log "🎱 Replicator confluentinc/kafka-connect-replicator:$version is already installed for Replicator Monitoring"
+      return 0
+    fi
+    log "🎱 Installing replicator confluentinc/kafka-connect-replicator:$version for Replicator Monitoring"
+    if docker run -u0 -i --rm -v ${hub_dir}:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt confluentinc/kafka-connect-replicator:$version && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
+    then
+      return 0
+    fi
+    logwarn "Installing replicator confluentinc/kafka-connect-replicator:$version failed"
+  done
+  logwarn "⚠️ Replicator could not be installed: the Replicator examples and Replicator Monitoring will not work"
+}
+
 function wait_container_ready() {
   # Record the start time
   start_time=$SECONDS
