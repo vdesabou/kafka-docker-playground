@@ -1,8 +1,8 @@
 # 🍪 Deep dive: reproduction models (`playground repro`)
 
 A reproduction model is an example rewritten to show **one** problem, so that anyone can reproduce it with a single
-`playground run`. Five commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro status`
-records what it proves and what came out of it, `repro check` scans it for secrets and customer data before a commit,
+`playground run`. Six commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro assert`
+ends it with its verdict, `repro status` records what it proves and what came out of it, `repro check` scans it for secrets and customer data before a commit,
 `repro export` packs it as a self-contained bundle for a colleague, and `repro import` unpacks one. Takes about 15 minutes to read and run.
 
 > [!TIP]
@@ -18,6 +18,7 @@ records what it proves and what came out of it, `repro check` scans it for secre
 | a new model from an example, with menus | `playground repro bootstrap` |
 | a new model from the connector config the customer sent (CFK, Strimzi, terraform, `.properties`, REST dump, JSON) | `playground repro bootstrap --config <file> -d "<case> <symptom>" --no-run` |
 | the same, without menus (scripts, AI agents) | `playground repro bootstrap -f "<absolute path of the example>" -d "<case number> <symptom>" --no-run` |
+| to end the scenario with its verdict, 🐞 reproduced or ✅ not reproduced | `playground repro assert --reproduced-if-log "<error>"` (or `--reproduced-if-connector-state FAILED`, `--reproduced-if-records-less-than N --topic <t>`, `--reproduced-if-command "…"`) |
 | to say what it proves, and what came out of it | `playground repro status --expected "…" --actual "…" --jira CC-1234 --set "fixed in 10.8.3"` |
 | to know whether a model holds a secret | `playground repro check -f <model>` (`--json`) |
 | what a commit would push | `playground repro check --staged` (what the pre-commit hook runs) |
@@ -180,6 +181,31 @@ A model is only useful later if it says what it proves and what came out of it. 
   above the free text) the first time `repro status` sets one. Free text under the fields is kept.
 - One line per field: line breaks in a value become spaces. Write the details as free comments under the fields.
 
+### Its verdict: `repro assert`
+
+The real output of a model is one sentence: the problem is there, or it isn't. `repro assert` ends the scenario with
+that sentence, from the check that says the `💥 actual` is there:
+
+```bash
+playground repro assert --reproduced-if-log "Unknown magic byte"                         # a line of the connect logs (--container) matches
+playground repro assert --reproduced-if-connector-state FAILED --connector http-sink     # the connector or a task is in this state
+playground repro assert --reproduced-if-records-less-than 10 --topic orders              # records lost (more-than: duplicates, DLQ)
+playground repro assert --reproduced-if-command "<shell test>" --message "rows missing in the table"
+# 🐞 REPRODUCED: 3 line(s) of the connect logs match "Unknown magic byte" (CP 8.4.0, connector 10.8.0)
+# ✅ NOT REPRODUCED: nothing FAILED in connector http-sink (connector RUNNING, task 0 RUNNING) (CP 8.4.0, connector 10.8.1)
+```
+
+- Bootstrap writes these lines, commented, at the end of the scenario: uncomment the one that fits.
+- **Both verdicts exit with 0**: a model that doesn't reproduce on a version is a result, not an error, and the script
+  goes on. The exit code is 1 only when the check can't run (no connector, a record count that fails, two checks).
+- One check per call. To combine several, use `--reproduced-if-command` (a shell test of your own), or call it once per
+  check: the last call is the verdict.
+- Each verdict is kept with its date, CP and connector versions and environment, in `playground-repro-verdicts` at the
+  root of the repository (local, git-ignored, never in a bundle). `repro status` shows the last one of the model,
+  `repro export` writes it in `repro-manifest.json` (`last_verdict`) and `repro import` prints it, so the colleague who
+  runs the bundle knows what to expect. The CP and connector versions are the ones of the run (`TAG`, `CONNECTOR_TAG`,
+  or the `--connector-zip` / `--connector-jar` file): run it with `playground run -f <model>`.
+
 ---
 
 ## 3. `repro check` and the pre-commit hook
@@ -315,7 +341,17 @@ playground repro status -f "$PWD/$m" --set "lab only" --jira CC-1234
 # ❗    💥 actual: (empty)
 #    🎫 jira: https://confluentinc.atlassian.net/browse/CC-1234
 #    🩹 status: lab only
+#    🧪 last verdict: none yet (end the scenario with 'playground repro assert')
 # 💡 fill in the empty fields: playground repro status -f …/filestream-sink-repro-000000-deep-dive-lab.sh --expected "…" --actual "…"
+grep -n "^# playground repro assert" "$m"          # the verdict lines to uncomment, at the end of the scenario
+playground repro assert -f "$PWD/$m" --reproduced-if-command "test -f '$PWD/$m'" --message "the model exists"
+# 🐞 REPRODUCED: the model exists (the command succeeded: test -f '…') (CP default)       <- no container needed for this check
+playground repro assert -f "$PWD/$m" --reproduced-if-command false; echo "exit=$?"
+# ✅ NOT REPRODUCED: the command failed: false (CP default)
+# exit=0
+playground repro assert -f "$PWD/$m" --reproduced-if-command "test -f '$PWD/$m'"
+playground repro status -f "$PWD/$m" | grep "🧪"
+#    🧪 last verdict: 🐞 reproduced on 2026-10-30 (CP default): the command succeeded: test -f '…'
 ```
 
 **Step 3: check it, with and without a secret**
@@ -354,8 +390,8 @@ playground repro export -f "$PWD/$m" --output /tmp/deep-dive-repro --no-clipboar
 # 📥 To import it: playground repro import -f <path>/playground_repro_filestream-sink-repro-000000-deep-dive-lab_2026-10-23.tgz
 tar tzf /tmp/deep-dive-repro/playground_repro_*.tgz
 # repro-manifest.json and the 7 files under connect-connect-filestream-sink/
-tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, run_command}'
-# {"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab.sh"}
+tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, verdict: .last_verdict.verdict, run_command}'
+# {"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","verdict":"reproduced","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab.sh"}
 ```
 
 **Step 5: import, with a conflict**
@@ -421,6 +457,7 @@ rm -f "$d/filestream-sink-repro-000000-deep-dive-lab.sh" \
       "$d/filestream-sink-repro-000000-deep-dive-lab-config.sh" \
       "$d/docker-compose.plaintext.repro-000000-deep-dive-lab-config.yml"
 rm -rf /tmp/deep-dive-repro
+grep -vF "000000-deep-dive-lab" playground-repro-verdicts > /tmp/verdicts && mv /tmp/verdicts playground-repro-verdicts   # the lab verdicts
 git -C reproduction-models status --short connect-connect-filestream-sink   # same as before the lab
 ```
 
@@ -436,7 +473,8 @@ current one: run an example (or `playground state set run.test_file <script>`) b
 | a new case | `playground find-example "<connector> <feature>"`, then `repro bootstrap -f <best hit> -d "<case> <symptom>" --no-run`; also look for an earlier model of the same symptom in `reproduction-models/` |
 | the customer gave a connector config | `repro bootstrap --config <their file> -d "<case> <symptom>" --no-run` (the example is picked from the class, secrets become variables), then once it runs `playground connector diff --connector <c> --file <their file>` (see the [`create-or-update` deep dive](/deep-dive-connector-create-or-update.md)) |
 | the bug is fixed, or it turned out not to be one | `playground repro status -f <model> --set "fixed in <version>"` (`--jira CC-…`), or `--set "not a bug"` / `--set "customer config"` |
-| the model must fail when the bug is fixed | assert at the end: `playground topic consume --min-expected-messages N --grep …`, or `connector create-or-update --wait` (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
+| say whether it reproduces | end the scenario with `playground repro assert --reproduced-if-…`: 🐞 / ✅ with the versions, kept for `repro status` and the bundle |
+| the model must fail when the bug is fixed | assert at the end: `playground topic consume --min-expected-messages N --grep …`, or `connector create-or-update --wait` (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)); `repro assert` reports instead of failing |
 | hand it to engineering / a colleague | run it once (for the run line), `repro export --dry-run`, then `repro export` (`--include-artifacts` for a custom jar) and attach the bundle |
 | a colleague sent you a bundle | `repro import --dry-run`, then `repro import`, then the printed `playground run` line |
 | test the fix on another version | `playground run -f <model> --connector-tag <fixed version>`, or `playground update-version` on the running model |
@@ -454,6 +492,8 @@ hosts) and never customer data.
 playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symptom>" --no-run] \
   [--config <customer file> [--config-connector <name>]] [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>"]
 playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
+playground repro assert --reproduced-if-log "<pattern>" [--container connect] | --reproduced-if-connector-state FAILED [--connector <c>] \
+  | --reproduced-if-records-less-than|more-than <n> --topic <t> | --reproduced-if-command "<cmd>"   [--message "…"] [--json]
 playground repro check [-f <model> | --staged | --all] [--json] [--skip-secrets-store]
 playground repro export [-f <model> … | --all-uncommitted] [--output <dir>] [--dry-run] [--include-artifacts] [--force] [--no-clipboard]
 playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
@@ -463,12 +503,14 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 - `--config <customer file>`: example picked from the class, its heredoc replaced, behaviour from the customer, systems from the example, secrets as `${VAR}`.
 - `<script>-repro-<kebab description>.sh`; 6 leading digits = ticket link.
 - Header fields `🎯 expected`, `💥 actual`, `🎫 jira`, `🩹 status`: set at bootstrap, read and updated by `repro status`, carried by the bundle.
+- `repro assert`: 🐞 / ✅ verdict with the versions, exit 0 both, kept in `playground-repro-verdicts`, shown by `repro status`, carried by the bundle.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.
 - Bundle = files + symlinks as content + manifest (run line, credential names, sha256). Run the model once first.
 - Import: identical skipped, conflicts abort unless `rename` / `overwrite`, first model becomes current.
 - In a model, `create-or-update` warns instead of failing: `--wait` to make it strict.
 - Sources: [`repro/bootstrap.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bootstrap.sh),
   [`repro/status.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/status.sh),
+  [`repro/assert.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/assert.sh),
   [`repro/check.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/check.sh),
   [`repro/export.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/export.sh),
   [`repro/import.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/import.sh),
@@ -485,5 +527,5 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
   [Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) in the Reproduction toolkit
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the warn-only wait of models),
   [`topic produce`](/deep-dive-topic-produce.md) and [`topic consume`](/deep-dive-topic-consume.md) (data in, assertions out)
-- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro check](/playground%20repro%20check),
+- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro check](/playground%20repro%20check),
   [playground repro export](/playground%20repro%20export), [playground repro import](/playground%20repro%20import)

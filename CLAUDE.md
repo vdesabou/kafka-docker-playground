@@ -332,7 +332,10 @@ Then edit the generated file to build the scenario, and run it with `playground 
 
 Keep them minimal and focused on one issue, fill in expected vs actual in the header (`--expected` / `--actual` at
 bootstrap, or `playground repro status -f <model> --expected … --actual …`), set the outcome with
-`playground repro status --set "fixed in <version>"` (`--jira CC-…`), and never include customer-sensitive data.
+`playground repro status --set "fixed in <version>"` (`--jira CC-…`), end the scenario with its verdict
+(`playground repro assert --reproduced-if-log "<error>"`, `--reproduced-if-connector-state FAILED`,
+`--reproduced-if-records-less-than N --topic <t>`, `--reproduced-if-command …`: 🐞 / ✅ with the versions, exit 0 both),
+and never include customer-sensitive data.
 
 ## Conventions
 

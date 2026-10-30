@@ -1425,7 +1425,7 @@
     },
     {
       "name": "repro",
-      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  status      show or update what a model proves: expected, actual, jira, status\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
+      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  status      show or update what a model proves: expected, actual, jira, status\n  assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
       "usage": "playground repro COMMAND",
       "options": [],
       "subcommands": [
@@ -1692,6 +1692,94 @@
               ],
               "argument": "",
               "description": "🤖 Print the fields as JSON"
+            }
+          ]
+        },
+        {
+          "name": "assert",
+          "description": "🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n\nPut it at the end of the scenario, with the check that says the\nproblem is there (the 💥 actual of the header). It prints the verdict\nwith the CP and connector versions, and records it in\nplayground-repro-verdicts (a local file of the repository root, not\ncommitted), so that it can be compared between runs and versions:\n\n  playground repro status     shows the last verdict of the model\n  playground repro export     writes it in repro-manifest.json\n\nOne check per call (combine several with --reproduced-if-command):\n\n  --reproduced-if-log <pattern>               a line of the logs of\n                                              --container (default\n                                              connect) matches (grep)\n  --reproduced-if-connector-state <state>     the connector or one of\n                                              its tasks is in this state\n  --reproduced-if-records-less-than <n>       --topic has less records\n  --reproduced-if-records-more-than <n>       --topic has more records\n  --reproduced-if-command \"<command>\"         the shell command succeeds\n\nBoth verdicts exit with 0: a model that does not reproduce is a result,\nnot an error. The exit code is 1 only when the check cannot run.\n\nWithout --file, the verdict is recorded for the current model (the one\n'playground run' runs).",
+          "usage": "playground repro assert [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--reproduced-if-log"
+              ],
+              "argument": "PATTERN",
+              "description": "🔍 Reproduced when a line of the logs of --container matches this grep pattern"
+            },
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Container whose logs --reproduced-if-log reads (default: connect)\n\nDefault value: connect"
+            },
+            {
+              "names": [
+                "--reproduced-if-connector-state"
+              ],
+              "argument": "STATE",
+              "description": "🧩 Reproduced when the connector or one of its tasks is in this state\n\nAllowed values: FAILED, RUNNING, PAUSED, STOPPED, UNASSIGNED, RESTARTING"
+            },
+            {
+              "names": [
+                "--connector"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector of --reproduced-if-connector-state (default: the only one running)"
+            },
+            {
+              "names": [
+                "--reproduced-if-records-less-than"
+              ],
+              "argument": "NUMBER",
+              "description": "📉 Reproduced when --topic has less records than this (records lost, not delivered)"
+            },
+            {
+              "names": [
+                "--reproduced-if-records-more-than"
+              ],
+              "argument": "NUMBER",
+              "description": "📈 Reproduced when --topic has more records than this (duplicates, records sent to a DLQ)"
+            },
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic of --reproduced-if-records-less-than / --reproduced-if-records-more-than"
+            },
+            {
+              "names": [
+                "--reproduced-if-command"
+              ],
+              "argument": "COMMAND",
+              "description": "💻 Reproduced when this shell command succeeds (exit code 0)"
+            },
+            {
+              "names": [
+                "--message",
+                "-m"
+              ],
+              "argument": "MESSAGE",
+              "description": "💬 Text printed with the verdict, before what the check found"
+            },
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🔖 Reproduction model the verdict is recorded for (default: current one)"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the verdict as JSON"
             }
           ]
         }

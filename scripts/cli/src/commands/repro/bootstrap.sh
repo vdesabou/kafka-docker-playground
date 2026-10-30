@@ -1532,6 +1532,11 @@ cat $repro_test_file > $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
 
 cat >> $tmp_dir/tmp_file << 'EOF'
+# 🧪 end the scenario with its verdict, the check that says the 💥 actual of the header is there (playground repro assert --help):
+# playground repro assert --reproduced-if-log "<error of the problem>"
+# playground repro assert --reproduced-if-connector-state FAILED --connector <connector>
+# playground repro assert --reproduced-if-records-less-than <n> --topic <topic>
+
 #################################################################################################
 # 🧠 below is a list of cli commands that are helpful at the end of an example
 # 🧠 for full documentation, visit https://kafka-docker-playground.io/#/cli !
