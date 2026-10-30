@@ -45,6 +45,11 @@ lab_expect_exit 0
 lab_expect_equals "$(grep -c "🔢 v" <<< "$LAB_OUTPUT")" "3" "number of versions listed"
 lab_expect_contains "   • "
 lab_expect_contains "📜 changelog: https://docs.confluent.io/kafka-connectors/jdbc/"
+lab_run playground connector-plugin display-last-updated --days 365 --vendor confluentinc --json
+lab_expect_exit 0
+lab_expect_equals "$(jq 'length > 0' <<< "$LAB_OUTPUT")" "true" "confluentinc plugins released in the last year"
+lab_expect_equals "$(jq '[.[].release_date] == ([.[].release_date] | sort | reverse)' <<< "$LAB_OUTPUT")" "true" "newest first"
+lab_expect_equals "$(jq 'all(.connector_plugin | startswith("confluentinc/"))' <<< "$LAB_OUTPUT")" "true" "--vendor filter"
 
 log "Step 2: a config key, everywhere then for one connector"
 lab_run playground connector-plugin config-key --key flush.size

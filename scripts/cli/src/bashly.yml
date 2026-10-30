@@ -11184,6 +11184,10 @@ commands:
 
       A quick way to see what has just been released on the Hub, which often
       explains why an example that passed yesterday behaves differently today.
+
+      One request to the Confluent Hub API lists every plugin with its latest
+      version, newest first. A plugin released twice in the period shows its
+      latest version only.
     flags:
     - long: --days
       arg: days
@@ -11200,8 +11204,24 @@ commands:
       arg: vendor
       help: |-
         🏢 Only display results for this vendor
+
+        A regular expression matched against owner/name, for example confluentinc or debezium
+    - long: --with-changelog
+      required: false
+      help: |-
+        📜 Show the release notes of each new version under it
+
+        From the changelog feeds of docs.confluent.io, like playground connector-plugin changelog: Confluent self-managed plugins only.
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON
+
+        connector_plugin, version, release_date, days_ago, documentation_url, and changes with --with-changelog.
     examples: |
       playground connector-plugin display-last-updated --days 7
+      playground connector-plugin display-last-updated --days 7 --vendor confluentinc --with-changelog
+      playground connector-plugin display-last-updated --days 30 --json
   - name: config-key
     help: |-
       🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it
