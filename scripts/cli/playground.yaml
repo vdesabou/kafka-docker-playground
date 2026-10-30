@@ -7453,7 +7453,9 @@ subcommands:
     description: "\U0001F195 List last updated connector plugins from confluent hub
       https://www.confluent.io/hub/\n\nA quick way to see what has just been released
       on the Hub, which often\nexplains why an example that passed yesterday behaves
-      differently today."
+      differently today.\n\nOne request to the Confluent Hub API lists every plugin
+      with its latest\nversion, newest first. A plugin released twice in the period
+      shows its\nlatest version only."
     usage: playground connector-plugin display-last-updated [OPTIONS]
     options:
     - names:
@@ -7464,7 +7466,19 @@ subcommands:
     - names:
       - "--vendor"
       argument: VENDOR
-      description: "\U0001F3E2 Only display results for this vendor"
+      description: "\U0001F3E2 Only display results for this vendor\n\nA regular expression
+        matched against owner/name, for example confluentinc or debezium"
+    - names:
+      - "--with-changelog"
+      argument: ''
+      description: "\U0001F4DC Show the release notes of each new version under it\n\nFrom
+        the changelog feeds of docs.confluent.io, like playground connector-plugin
+        changelog: Confluent self-managed plugins only."
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON\n\nconnector_plugin, version,
+        release_date, days_ago, documentation_url, and changes with --with-changelog."
   - name: config-key
     description: "\U0001F511 Explain a connector configuration key: documentation,
       type, default, since when, and which examples set it\n\nAnswers \"what does

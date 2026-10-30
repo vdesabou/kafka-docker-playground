@@ -7499,7 +7499,7 @@
         },
         {
           "name": "display-last-updated",
-          "description": "🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n\nA quick way to see what has just been released on the Hub, which often\nexplains why an example that passed yesterday behaves differently today.",
+          "description": "🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n\nA quick way to see what has just been released on the Hub, which often\nexplains why an example that passed yesterday behaves differently today.\n\nOne request to the Confluent Hub API lists every plugin with its latest\nversion, newest first. A plugin released twice in the period shows its\nlatest version only.",
           "usage": "playground connector-plugin display-last-updated [OPTIONS]",
           "options": [
             {
@@ -7514,7 +7514,21 @@
                 "--vendor"
               ],
               "argument": "VENDOR",
-              "description": "🏢 Only display results for this vendor"
+              "description": "🏢 Only display results for this vendor\n\nA regular expression matched against owner/name, for example confluentinc or debezium"
+            },
+            {
+              "names": [
+                "--with-changelog"
+              ],
+              "argument": "",
+              "description": "📜 Show the release notes of each new version under it\n\nFrom the changelog feeds of docs.confluent.io, like playground connector-plugin changelog: Confluent self-managed plugins only."
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON\n\nconnector_plugin, version, release_date, days_ago, documentation_url, and changes with --with-changelog."
             }
           ]
         },

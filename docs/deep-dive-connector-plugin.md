@@ -16,7 +16,7 @@ run.
 | every released version, with its release date | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc` (`--last 5`, `--with-changelog`, `--json`) |
 | how far behind the customer's version is | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--latest` prints only the latest version) |
 | what changed since version X (release notes), is a bug fixed after it | `playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6` (`--grep "CVE\|NullPointer"`, `--to`, `--json`) |
-| what was released on the Hub in the last days | `playground connector-plugin display-last-updated --days 7` (`--vendor confluentinc`) |
+| what was released on the Hub in the last days | `playground connector-plugin display-last-updated --days 7` (`--vendor confluentinc`, `--with-changelog`, `--json`) |
 | what a config key does, its default, since when, values used | `playground connector-plugin config-key --key batch.size` (`-c JdbcSinkConnector`) |
 | the GitHub tree of the code at version X | `playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --only-show-url` |
 | what changed between X and Y | the same with `--connector-tag 10.8.4 --connector-tag 10.9.9` |
@@ -31,7 +31,8 @@ run.
 
    | Command | Source | Fresh as of |
    | --- | --- | --- |
-   | `versions`, `display-last-updated` | Confluent Hub API (`api.hub.confluent.io/api/plugins/<owner>/<name>/versions`) | one day: the Hub answer is cached in `/tmp/version_<owner>_<name>.json` until `--force-refresh` |
+   | `versions` | Confluent Hub API (`api.hub.confluent.io/api/plugins/<owner>/<name>/versions`) | one day: the Hub answer is cached in `/tmp/version_<owner>_<name>.json` until `--force-refresh` |
+   | `display-last-updated` | Confluent Hub API, one request listing every plugin with its latest version (`api.hub.confluent.io/api/plugins`) | now: not cached |
    | `changelog` | the changelog feeds of docs.confluent.io, one per minor line (`docs.confluent.io/kafka-connectors/<slug>/<major.minor>/changelog.xml`), found from the `documentation_url` of the plugin manifest; release dates from the Hub API | one day: cached in `/tmp/connector-plugin-changelog` until `--force-refresh` |
    | `config-key` | the `config-<class>.txt` references next to the examples (about 290 files, tracked in git, refreshed by CI with the latest connector version), plus the versions you ran locally (`.connector_config/`) | your last `git pull` |
    | `sourcecode` | `scripts/cli/confluent-hub-plugin-list.txt` (plugin → repository), built from the Hub on first use; fully managed versions from `cc-docker-connect` | the list: until you regenerate it (`playground generate-connector-plugin-list`) |
@@ -86,8 +87,11 @@ Gotchas:
   `versions -c confluentinc/kafka-connect-jdbc --last 3 --with-changelog`.
 - The `--connector-tag` picker (`--connector-tag " "` of `run`, `update-version`, `sourcecode`, `search-jar`) shows the
   release notes of the highlighted version in its preview, for `confluentinc` plugins.
-- `display-last-updated` calls `versions --force-refresh` for every self-managed plugin of the list (fully managed ones
-  are skipped): it takes minutes. Narrow it with `--vendor`.
+- `display-last-updated` makes one request to the Hub (a few seconds), newest first. It shows the **latest** version of
+  each plugin only: a plugin released twice in the period appears once. `--vendor` is a regular expression on
+  `owner/name`; a release date in the future (a vendor's typo) is skipped. `--with-changelog` adds the release notes of
+  the new version of `confluentinc` plugins, `--json` gives `connector_plugin`, `version`, `release_date`, `days_ago`,
+  `documentation_url` (and `changes`).
 - A self-managed `playground run` can compute it in the background (last 3 days, `confluentinc`) and print it at the
   end: off by default, `playground config display-last-updated-connector-plugins true` turns it on,
   `display-last-updated-connector-plugins-days <n>` / `display-last-updated-connector-plugins-vendor <vendor|all>`
@@ -363,7 +367,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 ```bash
 playground connector-plugin versions -c <owner/name> [--last N] [--from X] [--latest] [--with-changelog] [--json] [--force-refresh]
 playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--grep <regex>] [--json]
-playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>]
+playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>] [--with-changelog] [--json]
 playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
 playground connector-plugin search-jar -c <owner/name> [--connector-tag X] [--class <Class>]
