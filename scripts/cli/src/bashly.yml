@@ -10993,6 +10993,7 @@ commands:
       display-last-updated  what was published recently, by vendor
       search-jar            which jars ship in it, and which class is where
       dependencies          which libraries (and versions) it bundles, what changed between two versions
+      cve-scan              known vulnerabilities of its jars, fixed or not by another version
       config-key            what a config key does, its default, since when, who sets it
       config-diff           config keys added, removed or changed between two versions
       sourcecode            open the source on GitHub
@@ -11167,6 +11168,75 @@ commands:
       playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --connector-tag 12.1.15
       playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0
       playground connector-plugin deps --connector-zip /path/to/customer-plugin.zip --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.9.9
+
+  - name: cve-scan
+    help: |-
+      🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version
+
+      "The customer's scanner flags CVE-… in our connector: is it real, and
+      which version fixes it?". The jars of the version (same download and
+      cache as search-jar) are scanned with grype in Docker; with
+      --compare-with, the other version too: fixed ✅, still there ⚠️, new 🆕.
+      For Confluent plugins, the fixed CVE ids are looked up in the release
+      notes between the two versions (📜).
+
+      ⚠️ What a scanner sees in the jars, not an official Confluent statement:
+      a vulnerable library can be unused, or its vulnerable code unreachable.
+
+      The first scan downloads the vulnerability database of grype (a minute
+      or two), kept in the docker volume kdp-grype-db; a scan is kept one day.
+      An HTML report is written in --output-dir.
+    environment_variables:
+    - name: PG_CVE_SCANNER_IMAGE
+      help: "🛡️ grype image used for the scan (default anchore/grype:latest)"
+    dependencies:
+      python3: visit https://www.python.org/downloads/ to install
+    filters:
+    - docker_running
+    flags:
+    - long: --connector-plugin
+      short: -c
+      required: false
+      arg: connector-plugin
+      completions:
+        dynamic:
+        - playground get-connector-plugin "$completion_current" "onprem"
+      help: |-
+        🔌 Connector plugin name (or --connector-zip)
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+    - *connector-tag
+    - *connector-zip
+    - long: --compare-with
+      arg: version
+      required: false
+      validate: not_empty
+      help: |-
+        🔢 Another version of the plugin (Confluent Hub): which vulnerabilities it fixes, keeps or adds
+    - long: --severity
+      arg: severity
+      required: false
+      allowed: [critical, high, medium, low]
+      help: |-
+        🚦 Only this severity or worse
+    - long: --output-dir
+      arg: output_dir
+      required: false
+      help: |-
+        📂 Output directory for the HTML report (default: /tmp/playground-cve-scan)
+    - long: --no-open
+      required: false
+      help: |-
+        🚫 Do not open the HTML report in the browser
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON (no HTML report)
+    - *force_refresh
+    examples: |
+      playground connector-plugin cve-scan --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.7.4
+      playground connector-plugin cve-scan --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9 --severity high
+      playground connector-plugin cve-scan --connector-zip /path/to/customer-plugin.zip --json
 
   - name: versions
     help: |-

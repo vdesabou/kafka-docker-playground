@@ -119,6 +119,11 @@ lab_expect_contains "42.4.4 → 42.7.12"
 lab_run playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.0 --find-first postgresql:42.7.0
 lab_expect_exit 0
 lab_expect_contains "✅ confluentinc/kafka-connect-jdbc 10.9.4 is the first version shipping postgresql ≥ 42.7.0 (42.7.11)"
+lab_run playground connector-plugin cve-scan -c confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9 --no-open --output-dir /tmp/playground-cve-scan
+lab_expect_exit 0
+lab_expect_contains "CVE-2026-42198"
+lab_expect_contains "📜 release notes of 10.9.4"
+lab_expect_contains "what a scanner sees in the jars, not an official Confluent statement"
 
 # step 6 (fully managed connector) needs GH_TOKEN and the Confluent VPN: not replayed
 
