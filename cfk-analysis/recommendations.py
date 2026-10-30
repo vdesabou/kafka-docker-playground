@@ -337,6 +337,7 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "Validate the CR with: kubectl apply --dry-run=server -f <cr.yaml>.",
             "If a webhook is failing: check the operator's ValidatingWebhookConfiguration and its TLS cert validity.",
             "Restart the operator pod after fixing the CR — it will retry on next reconcile loop.",
+            "Confluent only: playground debug cfk sourcecode --bundle <bundle> --grep \"<message>\" shows the operator code that logs it, at the version of the bundle.",
         ],
     },
     "Component Status": {

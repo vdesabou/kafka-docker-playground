@@ -22,6 +22,7 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | the `Connector` resource the CLI would apply | `playground connector create-or-update -c <name> --dry-run << EOF … EOF` |
 | the status of a connector, CFK side and Connect side | `playground connector status -c <name>` |
 | a support bundle of the namespace | `playground debug cfk generate-bundle` |
+| the operator code that logs an error, at the version of a bundle (Confluent only) | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>"` |
 | what is wrong in a support bundle (yours or the customer's) | `playground analyze logs -f <dir\|.tar.gz\|.zip>` |
 | is this example red on CFK in CI? | `playground get-ci-result --test <dir> --environment cfk --logs` |
 
@@ -94,6 +95,7 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | `debug flight-recorder` | `jcmd` in the pod (no JMX port to record over) |
 | `debug tcp-dump`, `block-traffic`, `degrade-traffic` | an ephemeral `nicolaka/netshoot` container in the pod (`kubectl debug`) |
 | `debug cfk generate-bundle` | `kubectl confluent support-bundle --namespace confluent` (cfk environments only) |
+| `debug cfk sourcecode` | clones the private `confluentinc/confluent-operator` at the tag of a CFK version or bundle (no environment needed) |
 | `stop` | runs `environment/cfk/stop.sh` and kills the port-forwards: **the k3d cluster keeps running** |
 
 Not supported, or different:
@@ -244,6 +246,15 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration, `--sample cfk_rollout` for a half-done upgrade).
   `analyze cfk-bundle --bundle <bundle>` still works, as a hidden alias.
+- `debug cfk sourcecode` (Confluent only: the source of the operator is the private repository
+  `confluentinc/confluent-operator`, `gh auth login` and VPN) answers "which code logs this error?" at the exact
+  version of the cluster. The helm chart version of CFK (`0.1718.10` for CFK 3.3.0) is also the image tag of the
+  operator and the git tag `v0.1718.10`: `--cfk-version 3.3.0`, `--operator-tag 0.1718.10` or `--bundle <bundle>` (read
+  from its `cluster-details.txt` or operator Deployment) pick it, the tag is cloned once (shallow) in
+  `/tmp/cfk-operator-sourcecode/` and the folder is the last line printed. `--grep "<message>"` gives each match with its
+  GitHub link; a message built from a template (`fmt.Errorf("missing inter %s credentials …")`) is found from its
+  longest literal part. `--compare-with 3.3.0` says whether the message is still there in another version and which of
+  its files changed; `--only-show-url` only prints the links.
 
 ---
 
@@ -489,6 +500,7 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 | "a connector restart / pause through annotations does nothing" | `playground connector pause` / `resume` / `restart` print the `kubectl annotate` they run: try the same on the lab connector |
 | "the Connect pod was restarted and the connector lost its state" | `playground container restart -c connect` (deletes connect-0), then `connector wait`, `container logs -c connect --previous` for the instance before |
 | "the customer sent a support bundle" | `playground analyze logs -f <bundle> --output-dir /tmp/cfk-reports` (no environment needed), `--component connect` |
+| "which operator code logs this error? is it fixed after version X?" | `playground debug cfk sourcecode --bundle <bundle> --grep "<message>" [--compare-with <version>]` (private repository, Confluent only) |
 | "what would a support bundle of my repro look like?" | `playground debug cfk generate-bundle`, then `analyze logs` on it |
 | "RBAC on CFK: `ConfluentRolebinding`, MDS, LDAP" | `--environment cfk-rbac`, `playground rbac role-binding list --principal User:connectorSA`, `kubectl -n confluent get confluentrolebinding` |
 | "another CFK version" | `CFK_VERSION=3.2.3 playground run -f <example> --environment cfk` (2.9.5 to 3.3.0) |

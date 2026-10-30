@@ -8074,6 +8074,7 @@ playground_debug_usage() {
   printf "  %s   🧱 CFK debug sub-commands\n" "$(green "cfk")                     "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze cfk-bundle' (kept as a hidden alias)\n" "$(green "cfk cfk-bundle-analyze")  "
   printf "  %s   ⛑️ Generate a Support bundle\n" "$(green "cfk generate-bundle")     "
+  printf "  %s   🧑‍💻 Source code of the CFK operator at the version of a cluster or of a support bundle\n" "$(green "cfk sourcecode")          "
   echo
 
   # :command.long_usage
@@ -9267,6 +9268,7 @@ playground_debug_cfk_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze cfk-bundle' (kept as a hidden alias)\n" "$(green "cfk-bundle-analyze")"
   printf "  %s   ⛑️ Generate a Support bundle\n" "$(green "generate-bundle")   "
+  printf "  %s   🧑‍💻 Source code of the CFK operator at the version of a cluster or of a support bundle\n" "$(green "sourcecode")        "
   echo
 
   # :command.long_usage
@@ -9396,6 +9398,77 @@ playground_debug_cfk_generate_bundle_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug cfk generate-bundle\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_cfk_sourcecode_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug cfk sourcecode\n\n"
+    printf "  🧑‍💻 Source code of the CFK operator at the version of a cluster or of a\n  support bundle\n  \n  The helm chart version of CFK (0.1718.10 for CFK 3.3.0) is also the image tag\n  of the operator and the git tag\n  (v0.1718.10) of its source, in the private repository\n  confluentinc/confluent-operator (Confluent only: gh auth\n  login, VPN). The tag is cloned once, shallow, in\n  /tmp/cfk-operator-sourcecode/confluent-operator-v<tag>, and the\n  folder is printed as the last line, for an agent or an engineer to read the\n  code that logs an error.\n  \n  --grep \"<message>\" searches a literal part of an operator message in the code\n  (tests and vendor left out), with\n  the GitHub link of each match. With --compare-with <version>, it also says\n  whether the message is still there in\n  another version, and which of its files changed (is it fixed after X?).\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk\n\n"
+  else
+    printf "playground debug cfk sourcecode - 🧑‍💻 Source code of the CFK operator at the version of a cluster or of a support bundle\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug cfk sourcecode [OPTIONS]\n"
+  printf "  playground debug cfk sourcecode --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cfk-version VERSION")"
+    printf "    🔢 CFK version (3.3.0), mapped to its operator tag\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--operator-tag TAG")"
+    printf "    🏷️ Operator tag, the helm chart version (0.1718.10)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--bundle, -f BUNDLE")"
+    printf "    📦 CFK support bundle (folder, .tar.gz, .tgz, .zip): its operator version\n    (cluster-details.txt, operator Deployment)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep MESSAGE")"
+    printf "    🔎 Literal text to search in the code, a part of an operator log message\n    (\"cluster not rollable from roll pre checks\")\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compare-with VERSION")"
+    printf "    🆚 Another CFK version or operator tag: whether the --grep text is still\n    there, which files changed, the GitHub compare link\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only-show-url")"
+    printf "    🔗 Only print the GitHub URL of the tag (and of the comparison with\n    --compare-with), no clone\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--checkout-only")"
+    printf "    📂 Clone the tag and print its folder as the last line (also what the command\n    does without --grep / --compare-with)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug cfk sourcecode --cfk-version 3.3.0 --only-show-url\n"
+    printf "  playground debug cfk sourcecode --bundle ./support-bundle-ns-confluent.tar.gz\n  --grep \"cluster not rollable from roll pre checks\"\n"
+    printf "  playground debug cfk sourcecode --cfk-version 3.2.3 --grep \"missing inter\n  replication credentials\" --compare-with 3.3.0\n"
+    printf "  playground debug cfk sourcecode --operator-tag 0.1718.10 --checkout-only\n"
     echo
 
   fi
@@ -52630,6 +52703,266 @@ playground_debug_cfk_generate_bundle_command() {
 }
 
 # :command.function
+playground_debug_cfk_sourcecode_command() {
+
+  # src/commands/debug/cfk/sourcecode.sh
+  cfk_version="${args[--cfk-version]}"
+  operator_tag="${args[--operator-tag]}"
+  bundle="${args[--bundle]}"
+  only_show_url="${args[--only-show-url]}"
+  checkout_only="${args[--checkout-only]}"
+  grep_text="${args[--grep]}"
+  compare_with="${args[--compare-with]}"
+
+  repo="confluentinc/confluent-operator"
+  repo_root_folder="/tmp/cfk-operator-sourcecode"
+
+  # CFK version (3.3.0) or operator tag (0.1718.10) -> operator tag: the helm chart version, also the image tag of the
+  # operator and the git tag (v0.1718.10) of its source. From the tables of cfk-analysis/environment.py, then of
+  # environment/cfk/start.sh
+  function cfk_operator_tag () {
+      local version="${1#v}"
+      if [[ "$version" == 0.* ]]
+      then
+          echo "$version"
+          return
+      fi
+      local tag
+      tag=$(grep -oE "'0\.[0-9]+\.[0-9]+': '${version//./\\.}'" "$root_folder/cfk-analysis/environment.py" | head -1 | cut -d "'" -f 2)
+      if [ -z "$tag" ]
+      then
+          tag=$(grep -E "^ *${version//./\\.}\) echo \"" "$root_folder/environment/cfk/start.sh" | head -1 | grep -oE '"[0-9.]+"' | tr -d '"')
+      fi
+      echo "$tag"
+  }
+
+  # operator tag -> CFK version, for the display
+  function cfk_release_of_tag () {
+      grep -oE "'${1//./\\.}': '[0-9.]+'" "$root_folder/cfk-analysis/environment.py" | head -1 | cut -d "'" -f 4
+  }
+
+  # operator tag of a CFK support bundle (folder, .tar(.gz), .tgz or .zip): "Operator Version" or the chart version of
+  # its cluster-details.txt, else the image of the operator Deployment
+  function cfk_bundle_operator_tag () {
+      local path="$1"
+      local text=""
+      if [ -d "$path" ]
+      then
+          local file
+          file=$(find "$path" -name cluster-details.txt 2>/dev/null | head -1)
+          [ -n "$file" ] && text=$(cat "$file")
+          if [ -z "$text" ]
+          then
+              file=$(find "$path" -path "*operator*" -name "deployment.yaml" 2>/dev/null | head -1)
+              [ -n "$file" ] && text=$(cat "$file")
+          fi
+      elif [[ "$path" == *.zip ]]
+      then
+          text=$(unzip -p "$path" '*cluster-details.txt' 2>/dev/null)
+          [ -z "$text" ] && text=$(unzip -p "$path" '*operator/deployment.yaml' 2>/dev/null)
+      else
+          local member
+          member=$(tar -tf "$path" 2>/dev/null | grep -E '(^|/)cluster-details\.txt$' | head -1)
+          [ -n "$member" ] && text=$(tar -xOf "$path" "$member" 2>/dev/null)
+          if [ -z "$text" ]
+          then
+              member=$(tar -tf "$path" 2>/dev/null | grep -E '(^|/)operator/deployment\.yaml$' | head -1)
+              [ -n "$member" ] && text=$(tar -xOf "$path" "$member" 2>/dev/null)
+          fi
+      fi
+      local tag
+      tag=$(echo "$text" | grep -oE 'Operator Version: *0\.[0-9]+\.[0-9]+' | grep -oE '0\.[0-9]+\.[0-9]+' | head -1)
+      [ -z "$tag" ] && tag=$(echo "$text" | grep -oE 'v0\.[0-9]+\.[0-9]+' | head -1 | tr -d 'v')
+      [ -z "$tag" ] && tag=$(echo "$text" | grep -oE 'confluent-operator:0\.[0-9]+\.[0-9]+' | head -1 | cut -d ':' -f 2)
+      echo "$tag"
+  }
+
+  # shallow clone of a tag in /tmp/cfk-operator-sourcecode (reused), prints the folder
+  function cfk_operator_checkout () {
+      local tag="$1"
+      local folder="$repo_root_folder/confluent-operator-v$tag"
+      if [ ! -d "$folder/.git" ]
+      then
+          mkdir -p "$repo_root_folder"
+          rm -rf "$folder"
+          log "🐏 cloning $repo at tag v$tag into $folder (shallow, first time only)" >&2
+          if ! git clone --quiet --depth 1 --branch "v$tag" "https://github.com/$repo.git" "$folder" > /tmp/cfk-operator-sourcecode.log 2>&1
+          then
+              logerror "❌ could not clone $repo at tag v$tag, see /tmp/cfk-operator-sourcecode.log" >&2
+              logerror "   it is a private repository of Confluent: you need access to it (gh auth login, VPN), and the tag must exist" >&2
+              tail -5 /tmp/cfk-operator-sourcecode.log >&2
+              return 1
+          fi
+      fi
+      echo "$folder"
+  }
+
+  # matches of a literal string in a checkout (go and yaml sources, tests and vendored code left out), at most 40
+  function cfk_operator_grep () {
+      git -C "$1" grep -n -I -F -e "$2" -- ':!vendor' ':!**/*_test.go' ':!test/**' ':!**/testdata/**' 2>/dev/null | head -40
+  }
+
+  # when the whole text is not in the code (a message built from a template, fmt.Errorf("missing inter %s credentials")):
+  # the longest run of consecutive words of the text (10 characters at least) that is, prints it on the first line
+  function cfk_operator_grep_partial () {
+      local folder="$1"
+      local -a words
+      read -r -a words <<< "$2"
+      local n=${#words[@]}
+      local size start part found
+      for (( size = n - 1; size >= 2; size-- ))
+      do
+          for (( start = 0; start + size <= n; start++ ))
+          do
+              part="${words[*]:$start:$size}"
+              if [ ${#part} -lt 10 ]
+              then
+                  continue
+              fi
+              found=$(cfk_operator_grep "$folder" "$part")
+              if [ -n "$found" ]
+              then
+                  echo "$part"
+                  echo "$found"
+                  return 0
+              fi
+          done
+      done
+      return 1
+  }
+
+  # prints the matches with their GitHub link: $1 tag, then the matches on stdin
+  function cfk_operator_print_matches () {
+      while IFS= read -r line
+      do
+          echo "  $line  ->  https://github.com/$repo/blob/v$1/$(echo "$line" | cut -d ':' -f 1)#L$(echo "$line" | cut -d ':' -f 2)"
+      done
+  }
+
+  nb_sources=0
+  [ -n "$cfk_version" ] && nb_sources=$((nb_sources + 1))
+  [ -n "$operator_tag" ] && nb_sources=$((nb_sources + 1))
+  [ -n "$bundle" ] && nb_sources=$((nb_sources + 1))
+  if [ $nb_sources -ne 1 ]
+  then
+      logerror "❌ give one of --cfk-version, --operator-tag or --bundle"
+      exit 1
+  fi
+
+  if [ -n "$bundle" ]
+  then
+      if [ ! -e "$bundle" ]
+      then
+          logerror "❌ bundle not found: $bundle"
+          exit 1
+      fi
+      tag=$(cfk_bundle_operator_tag "$bundle")
+      if [ -z "$tag" ]
+      then
+          logerror "❌ no operator version in $bundle (cluster-details.txt, operator/deployment.yaml): use --cfk-version or --operator-tag"
+          exit 1
+      fi
+      log "📦 operator version of the bundle: $tag"
+  else
+      tag=$(cfk_operator_tag "${cfk_version:-$operator_tag}")
+      if [ -z "$tag" ]
+      then
+          logerror "❌ unknown CFK version ${cfk_version}: give the operator tag (helm chart version, 0.1718.10) with --operator-tag"
+          exit 1
+      fi
+  fi
+  release=$(cfk_release_of_tag "$tag")
+  url="https://github.com/$repo/tree/v$tag"
+  log "🏷️  CFK ${release:-?} = operator tag $tag = git tag v$tag"
+
+  compare_tag=""
+  if [ -n "$compare_with" ]
+  then
+      compare_tag=$(cfk_operator_tag "$compare_with")
+      if [ -z "$compare_tag" ]
+      then
+          logerror "❌ unknown CFK version for --compare-with: $compare_with (or give an operator tag, 0.1718.10)"
+          exit 1
+      fi
+      compare_release=$(cfk_release_of_tag "$compare_tag")
+  fi
+
+  if [[ -n "$only_show_url" ]]
+  then
+      echo "$url"
+      if [ -n "$compare_tag" ]
+      then
+          echo "https://github.com/$repo/compare/v$tag...v$compare_tag"
+      fi
+      exit 0
+  fi
+
+  if ! command -v git > /dev/null 2>&1
+  then
+      logerror "❌ git is not installed"
+      exit 1
+  fi
+
+  folder=$(cfk_operator_checkout "$tag") || exit 1
+
+  if [ -n "$grep_text" ]
+  then
+      matches=$(cfk_operator_grep "$folder" "$grep_text")
+      if [ -n "$matches" ]
+      then
+          log "🔎 \"$grep_text\" in CFK ${release:-$tag} ($(echo "$matches" | wc -l | tr -d ' ') match(es), tests and vendor left out):"
+          echo "$matches" | cfk_operator_print_matches "$tag"
+      elif partial=$(cfk_operator_grep_partial "$folder" "$grep_text")
+      then
+          # the message is built from a template: compare the part found
+          grep_text=$(echo "$partial" | head -1)
+          matches=$(echo "$partial" | tail -n +2)
+          log "🔎 the whole text is not in CFK ${release:-$tag} (a message built from a template, fmt.Errorf(\"… %s …\")): \"$grep_text\" is ($(echo "$matches" | wc -l | tr -d ' ') match(es)):"
+          echo "$matches" | cfk_operator_print_matches "$tag"
+      else
+          logwarn "🔎 \"$grep_text\" not found in CFK ${release:-$tag}, nor 2 consecutive words of it: check the spelling, or search another part"
+      fi
+      if [ -n "$compare_tag" ]
+      then
+          compare_folder=$(cfk_operator_checkout "$compare_tag") || exit 1
+          compare_matches=$(cfk_operator_grep "$compare_folder" "$grep_text")
+          if [ -n "$matches" ] && [ -z "$compare_matches" ]
+          then
+              log "🆚 not in CFK ${compare_release:-$compare_tag}: the message (or the code that logs it) changed or was removed"
+          elif [ -z "$matches" ] && [ -n "$compare_matches" ]
+          then
+              log "🆚 in CFK ${compare_release:-$compare_tag} only ($(echo "$compare_matches" | wc -l | tr -d ' ') match(es))"
+          elif [ -n "$compare_matches" ]
+          then
+              log "🆚 also in CFK ${compare_release:-$compare_tag}: files that changed between the two versions:"
+              echo "$matches" | cut -d ':' -f 1 | sort -u | while IFS= read -r file
+              do
+                  if ! cmp -s "$folder/$file" "$compare_folder/$file"
+                  then
+                      echo "  $file  (changed: https://github.com/$repo/compare/v$tag...v$compare_tag)"
+                  else
+                      echo "  $file  (same)"
+                  fi
+              done
+          fi
+      fi
+  elif [ -n "$compare_tag" ]
+  then
+      compare_folder=$(cfk_operator_checkout "$compare_tag") || exit 1
+      log "🆚 changes between CFK ${release:-$tag} and ${compare_release:-$compare_tag}: https://github.com/$repo/compare/v$tag...v$compare_tag"
+      log "   checkout of ${compare_release:-$compare_tag}: $compare_folder"
+  fi
+
+  if [[ -z "$checkout_only" && -z "$grep_text" && -z "$compare_tag" ]]
+  then
+      log "🔗 $url"
+  fi
+  # last line: the folder of the checkout, for scripts and agents
+  echo "$folder"
+
+}
+
+# :command.function
 playground_get_jmx_metrics_command() {
 
   # src/commands/get-jmx-metrics.sh
@@ -93914,6 +94247,13 @@ playground_debug_cfk_parse_requirements() {
       shift $#
       ;;
 
+    sourcecode)
+      action="sourcecode"
+      shift
+      playground_debug_cfk_sourcecode_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_debug_cfk_usage >&2
@@ -94280,6 +94620,166 @@ playground_debug_cfk_generate_bundle_parse_requirements() {
     echo "$filter_error" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_debug_cfk_sourcecode_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_cfk_sourcecode_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v git >/dev/null 2>&1; then
+    printf "missing dependency: git\n" >&2
+    printf "%s\n\n" "visit https://git-scm.com/downloads to install" >&2
+    missing_deps=1
+  else
+    deps['git']="$(command -v git | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="debug cfk sourcecode"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --cfk-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cfk-version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cfk-version requires an argument: --cfk-version VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --operator-tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--operator-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--operator-tag requires an argument: --operator-tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --bundle | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--bundle']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--bundle requires an argument: --bundle, -f BUNDLE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep MESSAGE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --compare-with)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compare-with']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compare-with requires an argument: --compare-with VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --only-show-url)
+
+        # :flag.case_no_arg
+        args['--only-show-url']=1
+        shift
+        ;;
+
+      # :flag.case
+      --checkout-only)
+
+        # :flag.case_no_arg
+        args['--checkout-only']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -124663,6 +125163,11 @@ playground_debug_cfk_completion() {
         playground_debug_cfk_generate_bundle_completion "$completion_current" "$@"
         return
         ;;
+      sourcecode)
+        shift
+        playground_debug_cfk_sourcecode_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -124672,7 +125177,7 @@ playground_debug_cfk_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" generate-bundle
+  completion_candidates "$completion_current" generate-bundle sourcecode
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -124840,6 +125345,99 @@ playground_debug_cfk_generate_bundle_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --follow-logs-duration "$completion_current" --follow-logs-duration
+  fi
+
+}
+
+# :command.completion_function
+playground_debug_cfk_sourcecode_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --cfk-version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cfk-version"]=1
+
+        ;;
+      --operator-tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--operator-tag"]=1
+
+        ;;
+      --bundle | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-any-file-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--bundle"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --compare-with)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compare-with"]=1
+
+        ;;
+      --only-show-url)
+        completion_blocked_flags["--only-show-url"]=1
+
+        shift
+        ;;
+      --checkout-only)
+        completion_blocked_flags["--checkout-only"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --cfk-version "$completion_current" --cfk-version
+    completion_flag_candidates --operator-tag "$completion_current" --operator-tag
+    completion_flag_candidates --bundle "$completion_current" --bundle -f
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --compare-with "$completion_current" --compare-with
+    completion_flag_candidates --only-show-url "$completion_current" --only-show-url
+    completion_flag_candidates --checkout-only "$completion_current" --checkout-only
   fi
 
 }
@@ -135001,6 +135599,7 @@ run() {
     "debug cfk") playground_debug_cfk_command ;;
     "debug cfk cfk-bundle-analyze") playground_debug_cfk_cfk_bundle_analyze_command ;;
     "debug cfk generate-bundle") playground_debug_cfk_generate_bundle_command ;;
+    "debug cfk sourcecode") playground_debug_cfk_sourcecode_command ;;
     "get-jmx-metrics") playground_get_jmx_metrics_command ;;
     "container") playground_container_command ;;
     "container get-properties") playground_container_get_properties_command ;;
