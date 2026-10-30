@@ -45,6 +45,16 @@ lab_expect_exit 0
 lab_expect_equals "$(grep -c "🔢 v" <<< "$LAB_OUTPUT")" "3" "number of versions listed"
 lab_expect_contains "   • "
 lab_expect_contains "📜 changelog: https://docs.confluent.io/kafka-connectors/jdbc/"
+lab_run playground connector-plugin info -c confluentinc/kafka-connect-jdbc --from 10.7.4
+lab_expect_exit 0
+lab_expect_contains "🔌 confluentinc/kafka-connect-jdbc: Kafka Connect JDBC"
+lab_expect_contains "📜 Confluent Community License"
+lab_expect_contains "📌 10.7.4 is"
+lab_expect_contains "🔌 connector classes: io.confluent.connect.jdbc.JdbcSinkConnector, io.confluent.connect.jdbc.JdbcSourceConnector"
+lab_expect_contains "PostgresSink"
+lab_run playground connector-plugin info -c confluentinc/kafka-connect-jdbc --json
+lab_expect_exit 0
+lab_expect_equals "$(jq '[.examples[] | select(.dir == "connect/connect-jdbc-postgresql-sink")] | length' <<< "$LAB_OUTPUT")" "1" "connect-jdbc-postgresql-sink listed in the examples"
 lab_run playground connector-plugin display-last-updated --days 365 --vendor confluentinc --json
 lab_expect_exit 0
 lab_expect_equals "$(jq 'length > 0' <<< "$LAB_OUTPUT")" "true" "confluentinc plugins released in the last year"
