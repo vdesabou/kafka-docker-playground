@@ -1604,8 +1604,14 @@ subcommands:
       jar path written by\n'repro bootstrap --custom-smt') to the local ones.\n\n--cluster-creds
       / --cluster-schema-registry-creds are removed from the\nrun line: whoever imports
       runs with their own cluster.\n\nWithout --file, the current reproduction model
-      is exported.\n\n\U0001F4CB On macOS, the bundle is copied to the clipboard as
-      a file: paste it\n(Cmd+V) in a Slack conversation to attach it (--no-clipboard
+      is exported.\n\n\U0001F4D6 Each model gets a hand-off report, <model>.REPRO.md
+      next to its\nscript in the bundle: case, jira, status, last verdict, \U0001F3AF
+      expected,\n\U0001F4A5 actual, the commands to import and run it, the credentials
+      it\nneeds, and what it changes compared with the script of its base\nexample
+      (diff). 'playground repro import' prints where it is.\n--report-only prints
+      it (Markdown, for a Jira or a Slack message)\nwithout writing the bundle, --no-report
+      leaves it out.\n\n\U0001F4CB On macOS, the bundle is copied to the clipboard
+      as a file: paste it\n(Cmd+V) in a Slack conversation to attach it (--no-clipboard
       to skip).\n\n\U0001F393 Tip: start with --dry-run to see what would be packed,
       and what the scan finds.\nThe same scan runs on commits with 'playground repro
       check'."
@@ -1648,6 +1654,17 @@ subcommands:
       - "--no-clipboard"
       argument: ''
       description: "\U0001F4CB Do not copy the bundle to the clipboard (macOS)"
+    - names:
+      - "--report-only"
+      argument: ''
+      description: "\U0001F4D6 Print the hand-off report of the models (Markdown)
+        on stdout, without writing the bundle (the scan still runs)\n\nConflicts with:
+        --no-report, --dry-run"
+    - names:
+      - "--no-report"
+      argument: ''
+      description: "\U0001F4D6 Do not put the hand-off report (<model>.REPRO.md) in
+        the bundle"
   - name: check
     description: "\U0001F575️ Scan reproduction models for secrets and customer data
       before they are committed\n\nRuns the scan of 'playground repro export' on the

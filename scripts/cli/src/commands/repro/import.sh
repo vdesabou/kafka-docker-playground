@@ -375,6 +375,16 @@ do
     i=$((i+1))
     run_flags=$(apply_rewrites "$(jq -r '.run_flags // empty' <<< "$model")")
     log "▶️  playground run -f $model_path${run_flags:+ $run_flags}"
+    # the report keeps the name of the exported model when the model was imported under another one (--on-conflict rename)
+    original_script=$(jq -r '.script' <<< "$model")
+    for report in "${model_path%.sh}.REPRO.md" "$(dirname "$model_path")/$(basename "${original_script%.sh}").REPRO.md"
+    do
+        if [ -f "$report" ]
+        then
+            log "   📖 hand-off report: $report"
+            break
+        fi
+    done
     while IFS= read -r external_file
     do
         external_file=$(apply_rewrites "$external_file")

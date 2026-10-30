@@ -5,6 +5,108 @@ dry_run="${args[--dry-run]}"
 force="${args[--force]}"
 include_artifacts="${args[--include-artifacts]}"
 no_clipboard="${args[--no-clipboard]}"
+no_report="${args[--no-report]}"
+report_only="${args[--report-only]}"
+
+# with --report-only, only the report goes to stdout
+if [[ -n "$report_only" ]]
+then
+    exec 3>&1 1>&2
+fi
+
+# the hand-off report of a model ($1 script, $2 its entry of the manifest, $3 name of the bundle), in Markdown
+function repro_write_report () {
+    local script="$1" model="$2" bundle="$3"
+    local description case_number jira status expected actual author base_example base_script prefix
+    description=$(jq -r '.description // ""' <<< "$model")
+    case_number=$(jq -r '.case // ""' <<< "$model")
+    jira=$(jq -r '.jira // ""' <<< "$model")
+    status=$(jq -r '.status // ""' <<< "$model")
+    expected=$(jq -r '.expected // ""' <<< "$model")
+    actual=$(jq -r '.actual // ""' <<< "$model")
+    author=$(jq -r '.author // ""' <<< "$model")
+    base_example=$(jq -r '.base_example // ""' <<< "$model")
+
+    echo "# 🐞 ${description:-$(basename "$script" .sh)}"
+    echo ""
+    echo "| | |"
+    echo "| --- | --- |"
+    [ -n "$case_number" ] && echo "| 🔮 case | [$case_number](https://confluent.zendesk.com/agent/tickets/$case_number) |"
+    [ -n "$jira" ] && echo "| 🎫 jira | $jira |"
+    echo "| 🩹 status | ${status:-not set} |"
+    [ -n "$author" ] && echo "| 👤 author | $author |"
+    [ -n "$base_example" ] && echo "| 🧬 based on | [\`$base_example\`](https://github.com/vdesabou/kafka-docker-playground/tree/master/$base_example) |"
+    echo "| 🧪 last verdict | $(jq -r 'if .last_verdict == null then "none: the model does not end with `playground repro assert`, or it was not run" else (if .last_verdict.verdict == "reproduced" then "🐞 reproduced" else "✅ not reproduced" end) + " on \(.last_verdict.date[0:10]) (CP \(if .last_verdict.cp_version == "" then "default" else .last_verdict.cp_version end)" + (if .last_verdict.connector_version != "" then ", connector \(.last_verdict.connector_version)" else "" end) + "): \(.last_verdict.reason)" end' <<< "$model") |"
+    echo ""
+    echo "## 🎯 Expected"
+    echo ""
+    echo "${expected:-_not written in the header of the model (\`# 🎯 expected:\`)_}"
+    echo ""
+    echo "## 💥 Actual"
+    echo ""
+    echo "${actual:-_not written in the header of the model (\`# 💥 actual:\`)_}"
+    echo ""
+    # free text of the header: the lines under '# 💬 comments:' that are not fields
+    comments=$(awk '/^# [^ ]+ comments:/ { on = 1; next } on && /^#####/ { exit } on' "$script" | grep -vE '^# [^ ]+ (expected|actual|jira|status):|^#[[:space:]]*$' | sed -E 's/^# ?//')
+    if [ -n "$comments" ]
+    then
+        echo "## 💬 Comments"
+        echo ""
+        echo "$comments"
+        echo ""
+    fi
+    echo "## ▶️ How to run it"
+    echo ""
+    echo '```bash'
+    echo "playground repro import -f $bundle"
+    jq -r '.run_command | sub("\\{repro_dir\\}"; "<printed by import>")' <<< "$model"
+    echo '```'
+    echo ""
+    credentials=$(jq -r '.credentials | join(", ")' <<< "$model")
+    [ -n "$credentials" ] && echo "🔑 Needs: $credentials (\`playground secrets set <NAME>\`, or the cloud credentials of the helper)." && echo ""
+    external=$(jq -r '.external_files | join(", ")' <<< "$model")
+    [ -n "$external" ] && echo "📎 Runs with files outside the repository: $external." && echo ""
+
+    # what the model changes: its scenario (no header, no cheat sheet) compared with the script of the base example
+    prefix=$(basename "$script" | sed -E 's/-repro-.*$//')
+    base_script="$root_folder/$base_example/$prefix.sh"
+    if [ -n "$base_example" ] && [ -f "$base_script" ]
+    then
+        # no header, no cheat sheet, no leading / trailing empty lines; the compose override renamed by bootstrap
+        # (docker-compose.plaintext.repro-<description>.yml) gets back the name of the example's
+        trim='{ lines[NR] = $0 } END { n = NR; while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--; s = 1; while (s <= n && lines[s] ~ /^[[:space:]]*$/) s++; for (i = s; i <= n; i++) print lines[i] }'
+        awk 'banners < 2 { if (/^#####/) banners++; next } /^# 🧪 end the scenario with its verdict|^# 🧠 below is a list of cli commands/ { exit } { print }' "$script" \
+            | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/g' | awk "$trim" > "$tmp_dir/report_model"
+        grep -v '^#!/bin/bash' "$base_script" | awk "$trim" > "$tmp_dir/report_base"
+        echo "## 🔀 What it changes compared with \`$base_example/$prefix.sh\`"
+        echo ""
+        if diff -q "$tmp_dir/report_base" "$tmp_dir/report_model" > /dev/null
+        then
+            echo "Nothing yet: the scenario is the one of the example."
+        else
+            echo '```diff'
+            diff -u --label "$base_example/$prefix.sh" --label "$(basename "$script")" "$tmp_dir/report_base" "$tmp_dir/report_model" | head -300 || true
+            echo '```'
+        fi
+        echo ""
+        # and its docker compose override, when it changed
+        model_override=$(grep -oE 'docker-compose\.[A-Za-z0-9.-]*repro-[A-Za-z0-9-]+\.yml' "$script" | head -1)
+        base_override=$(echo "$model_override" | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/')
+        if [ -n "$model_override" ] && [ -f "$(dirname "$script")/$model_override" ] && [ -f "$root_folder/$base_example/$base_override" ] \
+            && ! diff -q "$root_folder/$base_example/$base_override" "$(dirname "$script")/$model_override" > /dev/null
+        then
+            echo "## 🐳 What it changes in \`$base_example/$base_override\`"
+            echo ""
+            echo '```diff'
+            diff -u --label "$base_example/$base_override" --label "$model_override" "$root_folder/$base_example/$base_override" "$(dirname "$script")/$model_override" | head -200 || true
+            echo '```'
+            echo ""
+        fi
+    fi
+    echo "---"
+    echo "_Generated by \`playground repro export\` on $(date -u +%Y-%m-%d) from playground commit $(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)._"
+}
+
 
 if [ ! -z "$OUTPUT_FOLDER" ]
 then
@@ -95,6 +197,17 @@ do
     fi
     model_scripts+=("$script_dir/$(basename "$script")")
 done
+
+if [ ${#model_scripts[@]} -eq 1 ]
+then
+    bundle_name=$(basename "${model_scripts[0]}" .sh)
+elif [[ -n "$all_uncommitted" ]]
+then
+    bundle_name="all-uncommitted"
+else
+    bundle_name="${#model_scripts[@]}-models"
+fi
+bundle_date=$(date +%Y-%m-%d)
 
 # 2. the files of the bundle
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -257,6 +370,24 @@ do
         }' >> "$tmp_dir/models.json"
 done
 
+# the hand-off report of each model, <model>.REPRO.md next to its script: what it shows, how to run it, what it changes
+# compared with its base example. Listed in the manifest like the other files (an older playground imports it too)
+: > "$tmp_dir/generated"
+if [[ ! -n "$no_report" ]]
+then
+    while IFS= read -r model
+    do
+        script=$(jq -r '.script' <<< "$model")
+        report="${script%.sh}.REPRO.md"
+        mkdir -p "$tmp_dir/reports/$(dirname "$report")"
+        repro_write_report "$repro_root/$script" "$model" "playground_repro_${bundle_name}_${bundle_date}.tgz" > "$tmp_dir/reports/$report"
+        echo "$report" >> "$tmp_dir/files"
+        printf '%s\t%s\t\n' "$report" "$tmp_dir/reports/$report" >> "$tmp_dir/generated"
+    done < <(jq -c '.' "$tmp_dir/models.json")
+fi
+# where each file of the bundle is read from: the artifacts (outside the repository) and the generated reports
+cat "$tmp_dir/artifacts" "$tmp_dir/generated" > "$tmp_dir/sources"
+
 sort -u "$tmp_dir/files" -o "$tmp_dir/files"
 
 : > "$tmp_dir/files.json"
@@ -274,7 +405,7 @@ do
     fi
     jq -n \
         --arg path "$file" \
-        --arg sha256 "$(repro_sha256 "$(repro_bundle_source "$repro_root" "$tmp_dir/artifacts" "$file")")" \
+        --arg sha256 "$(repro_sha256 "$(repro_bundle_source "$repro_root" "$tmp_dir/sources" "$file")")" \
         --arg link_to "$link_to" \
         '{ path: $path, sha256: $sha256 } + (if $link_to == "" then {} else { link_to: $link_to } end)' >> "$tmp_dir/files.json"
 done < "$tmp_dir/files"
@@ -310,7 +441,7 @@ jq -r '.artifacts as $artifacts | .files[] | .path as $path | "   📄 \(.path)"
 
 # 5. secrets and customer data, before anything leaves the machine
 log "🕵️ scanning the bundle for secrets and customer data"
-repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")" "$tmp_dir/artifacts"
+repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")" "$tmp_dir/sources"
 nb_blocks=$(grep -c "^block" "$tmp_dir/findings" || true)
 nb_warnings=$(grep -c "^warn" "$tmp_dir/findings" || true)
 repro_show_findings "$tmp_dir/findings"
@@ -332,6 +463,23 @@ then
     log "✅ no secret nor customer data found"
 fi
 
+if [[ -n "$report_only" ]]
+then
+    if [ ! -s "$tmp_dir/generated" ]
+    then
+        logerror "❌ --report-only and --no-report can't be used together"
+        exit 1
+    fi
+    first=1
+    while IFS=$'\t' read -r report source rest
+    do
+        [ -z "$first" ] && echo "" >&3
+        cat "$source" >&3
+        first=""
+    done < "$tmp_dir/generated"
+    exit 0
+fi
+
 if [[ -n "$dry_run" ]]
 then
     log "🔍 dry run: no bundle written"
@@ -344,19 +492,9 @@ mkdir -p "$staging"
 while IFS= read -r file
 do
     mkdir -p "$staging/$(dirname "$file")"
-    cp -pL "$(repro_bundle_source "$repro_root" "$tmp_dir/artifacts" "$file")" "$staging/$file"
+    cp -pL "$(repro_bundle_source "$repro_root" "$tmp_dir/sources" "$file")" "$staging/$file"
 done < "$tmp_dir/files"
 cp "$tmp_dir/repro-manifest.json" "$staging/"
-
-if [ ${#model_scripts[@]} -eq 1 ]
-then
-    bundle_name=$(basename "${model_scripts[0]}" .sh)
-elif [[ -n "$all_uncommitted" ]]
-then
-    bundle_name="all-uncommitted"
-else
-    bundle_name="${#model_scripts[@]}-models"
-fi
 
 if [[ -n "$output" ]]
 then
@@ -371,7 +509,7 @@ else
 fi
 mkdir -p "$output_dir"
 output_dir=$(cd "$output_dir" && pwd)
-final_archive="$output_dir/playground_repro_${bundle_name}_$(date +%Y-%m-%d).tgz"
+final_archive="$output_dir/playground_repro_${bundle_name}_${bundle_date}.tgz"
 
 if ! (cd "$staging" && tar czf "$final_archive" repro-manifest.json $(cut -d "/" -f 1 "$tmp_dir/files" | sort -u))
 then
@@ -381,6 +519,10 @@ fi
 
 log "📤 Exported bundle is available: $final_archive ($(du -h "$final_archive" | cut -f 1 | tr -d ' '))"
 log "📥 To import it: playground repro import -f <path>/$(basename "$final_archive")"
+while IFS=$'\t' read -r report source rest
+do
+    log "📖 hand-off report in the bundle: $report (read it: tar xzOf $final_archive $report)"
+done < "$tmp_dir/generated"
 
 # the bundle itself (not its path) goes to the clipboard: Cmd+V in Slack, Zendesk or a mail attaches it.
 # Always, unless --no-clipboard: the 'clipboard' config is about the run line and connector configs
