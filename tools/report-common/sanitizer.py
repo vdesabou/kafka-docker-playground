@@ -13,6 +13,12 @@ Data Sanitizer of the log analyzers: redacts secrets, IPs, hostnames, emails and
   Lines starting with @@PG (the markers of the records file: counts, line numbers, timestamps) are kept as they are,
   except the log text of the @@PGCTX@@ (context of a record) and @@PGCFGL@@ (config) lines, sanitized.
 
+- the CI logs pasted in the 🔥 GitHub issues (run-tests.sh before the upload to S3, update-readme before the issue
+  comment, see sanitize_ci_log) keep their IPs (docker networks), LDAP DNs (test users of the ldap environments) and
+  hashes, and also lose the values of the CI secrets, which GitHub masks in the job logs only:
+
+    python3 -I sanitizer.py --keep ips,ldap-dns,hashes --workflow-secrets .github/workflows/ci.yml < log > sanitized-log
+
 Best effort: always review the output before sharing it outside Confluent.
 """
 
@@ -39,7 +45,11 @@ _SECRET_KV_RE = re.compile(
     re.IGNORECASE,
 )
 _SECRET_KEY_KEEP_RE = re.compile(r'(?:ref|refs|name|file|path|location|type|mechanisms?|enabled?|algorithm|provider|source|'
-                                 r'class|\.ms|length|iterations)$', re.IGNORECASE)
+                                 r'class|\.ms|seconds|length|iterations|url|uri|property|region)$', re.IGNORECASE)
+# values that are not a secret: unset (null, ""), a boolean, the type of a config key in a validate / config-def output
+# ("connection.password": "PASSWORD")
+_SECRET_VALUE_KEEP_RE = re.compile(r'(["\']?)(?:|null|none|true|false|\*+|\[hidden\]|PASSWORD|STRING|LIST|BOOLEAN|INT|LONG|'
+                                   r'SHORT|DOUBLE|CLASS)\1')
 
 _SIMPLE_RULES = [
     # PEM blocks (keys and certificates)
@@ -53,11 +63,16 @@ _SIMPLE_RULES = [
     # Cloud keys
     (re.compile(r'\bAKIA[0-9A-Z]{16}\b'), '<AWS-KEY-REDACTED>'),
     (re.compile(r'\bAIza[0-9A-Za-z\-_]{35}\b'), '<GCP-KEY-REDACTED>'),
-    # Long base64 blobs (Secret data, keystores). Dotted / slashed identifiers don't match, nor the phase / sub-phase of a
-    # CFK KRaftMigrationJob (SETUP/SubPhaseMoveToKRaftControllerEnsureKRaftControllerMigrationModeRemovalComplete)
-    (re.compile(r'(?<![\w/+=.-])(?![A-Za-z-]*/?SubPhase[A-Za-z]+(?![\w/+=.-]))[A-Za-z0-9+/]{40,}={0,2}(?![\w/+=.-])'),
-     '<BASE64-REDACTED>'),
 ]
+# Long base64 blobs (Secret data, keystores). Dotted / slashed identifiers don't match, nor the phase / sub-phase of a
+# CFK KRaftMigrationJob (SETUP/SubPhaseMoveToKRaftControllerEnsureKRaftControllerMigrationModeRemovalComplete), nor a
+# path without digit (java.lang.NoClassDefFoundError: org/apache/kafka/common/utils/AppInfoParser)
+_BASE64_RE = re.compile(r'(?<![\w/+=.-])(?![A-Za-z-]*/?SubPhase[A-Za-z]+(?![\w/+=.-]))(?=[A-Za-z+/]*[0-9])'
+                        r'[A-Za-z0-9+/]{40,}={0,2}(?![\w/+=.-])')
+_SIMPLE_RULES.append((_BASE64_RE, '<BASE64-REDACTED>'))
+# checksums, image digests, container ids, commit ids: kept with --keep hashes (CI logs, whose real secrets are
+# redacted by value)
+_HEX_RE = re.compile(r'[0-9a-f]{40,}')
 
 # Hostname-looking tokens that are not hostnames
 _JAVA_ROOTS = {'java', 'javax', 'jdk', 'sun', 'org', 'io', 'com', 'net', 'scala', 'akka', 'reactor'}
@@ -66,6 +81,11 @@ _KEEP_HOST_SUFFIXES = (
     'docker.io', 'docker.com', 'github.com', 'githubusercontent.com', 'apache.org', 'oracle.com',
     'amazonaws.com', 'googleapis.com', 'azure.com', 'microsoft.com', 'gcr.io', 'quay.io', 'redhat.com',
     'cert-manager.io', 'openshift.io', 'example.com',
+    # public sites and registries of the docs links, image pulls and banners of the logs
+    'ghcr.io', 'icr.io', 'docker.elastic.co', 'shields.io', 'prometheus.io', 'debezium.io', 'mongodb.com', 'mongodb.org',
+    'snowflake.com', 'azul.com', 'centos.org', 'solace.com', 'slf4j.org', 'login.salesforce.com', 'test.salesforce.com',
+    # the docker / k3d host seen from a container, the playground and the hosts of its kerberos environments
+    'host.docker.internal', 'host.k3d.internal', 'kafka-docker-playground.io', 'kerberos-demo.local',
 )
 # TLDs considered for hostnames: every 2-letter ccTLD plus common generic / internal ones.
 # `state.change.logger` or `ssl.keystore.location` are not hostnames.
@@ -80,9 +100,13 @@ _GENERIC_TLDS = {
 # source location of a CFK operator log line
 _FILE_EXTENSIONS = {
     'properties', 'java', 'scala', 'kt', 'py', 'go', 'js', 'ts', 'rs', 'rb', 'sh', 'yaml', 'yml', 'json', 'xml', 'log',
-    'conf', 'cfg', 'txt', 'jar',
+    'conf', 'cfg', 'txt', 'jar', 'so', 'cpp',
     'html', 'md', 'sql', 'gz', 'zip', 'tar', 'tgz', 'jks', 'pem', 'crt', 'key', 'p12', 'keytab', 'jaas', 'avsc', 'proto',
 }
+# 2-letter endings of config keys (retry.backoff.ms, group.id), not ccTLDs unless the name is in a URL or has a port
+_CONFIG_KEY_ENDINGS = {'ms', 'id'}
+# a config key: key = value, "key": value, key: value (not host:9092)
+_CONFIG_KEY_AFTER_RE = re.compile(r'["\']?[ \t]*(?:=|:(?!\d))')
 # a name in a URL (https://host), with a port (host:9092) or with its IP (host/10.0.0.1:2888, a java InetSocketAddress,
 # the IP being already <IP-1>): a hostname whatever its TLD (.anz, .corp…)
 _HOST_AFTER_RE = re.compile(r':\d{2,5}\b|/(?:<IP-|\d{1,3}\.\d)')
@@ -91,7 +115,11 @@ _HOST_AFTER_RE = re.compile(r':\d{2,5}\b|/(?:<IP-|\d{1,3}\.\d)')
 class DataSanitizer:
     """Sanitizes sensitive data from analysis results"""
 
-    def __init__(self):
+    def __init__(self, keep=(), known_secrets: Dict[str, str] = None):
+        # categories not redacted (KEEP_CATEGORIES)
+        self.keep = set(keep)
+        # exact values to redact (value -> name), longest first so that a value containing another one goes first
+        self.known_secrets = dict(sorted((known_secrets or {}).items(), key=lambda kv: -len(kv[0])))
         self.ip_map = {}
         self.hostname_map = {}
         self.email_map = {}
@@ -173,17 +201,30 @@ class DataSanitizer:
         if not text:
             return text
 
-        self.learn(text)
-        sanitized = self._redact_secret_values(text)
+        if 'hostnames' not in self.keep:
+            self.learn(text)
+        sanitized = text
+        for value, name in self.known_secrets.items():
+            n = sanitized.count(value)
+            if n:
+                sanitized = sanitized.replace(value, f'<REDACTED:{name}>')
+                self.secrets_redacted += n
+        sanitized = self._redact_secret_values(sanitized)
         for pattern, repl in _SIMPLE_RULES:
+            if 'hashes' in self.keep and pattern is _BASE64_RE:
+                repl = self._redact_base64_but_hex
             sanitized, n = pattern.subn(repl, sanitized)
             self.secrets_redacted += n
 
-        sanitized = self._redact_with_map(sanitized, self.patterns['email'], self.email_map, 'EMAIL')
-        sanitized = self._redact_with_map(sanitized, self.patterns['ldap_dn'], self.dn_map, 'LDAP-DN')
-        sanitized = self._redact_ips(sanitized)
-        sanitized = self._redact_with_map(sanitized, self.patterns['ipv6'], self.ip_map, 'IPV6')
-        sanitized = self._redact_hostnames(sanitized)
+        if 'emails' not in self.keep:
+            sanitized = self._redact_with_map(sanitized, self.patterns['email'], self.email_map, 'EMAIL')
+        if 'ldap-dns' not in self.keep:
+            sanitized = self._redact_with_map(sanitized, self.patterns['ldap_dn'], self.dn_map, 'LDAP-DN')
+        if 'ips' not in self.keep:
+            sanitized = self._redact_ips(sanitized)
+            sanitized = self._redact_with_map(sanitized, self.patterns['ipv6'], self.ip_map, 'IPV6')
+        if 'hostnames' not in self.keep:
+            sanitized = self._redact_hostnames(sanitized)
         return sanitized
 
     def sanitize_path(self, path: str) -> str:
@@ -216,13 +257,22 @@ class DataSanitizer:
                 sanitized[key] = value
         return sanitized
 
+    def _redact_base64_but_hex(self, match) -> str:
+        if _HEX_RE.fullmatch(match.group(0).lstrip('/')):  # containerd://<id>
+            self.secrets_redacted -= 1  # counted by subn
+            return match.group(0)
+        return '<BASE64-REDACTED>'
+
     def _redact_secret_values(self, text: str) -> str:
         def replacer(match):
             quote, key, sep, value = match.group(1), match.group(2), match.group(3), match.group(4)
             if _SECRET_KEY_KEEP_RE.search(key) or value.startswith('<') or value.startswith('${'):
                 return match.group(0)
-            # already masked by the application (password=********, [hidden])
-            if re.fullmatch(r'["\']?(?:\*+|\[hidden\])["\']?', value):
+            # already masked by the application (password=********, [hidden]), unset, a type name
+            if _SECRET_VALUE_KEEP_RE.fullmatch(value):
+                return match.group(0)
+            # a java source location (com.snowflake.kafka.connector.internal.PrivateKeyTool:46)
+            if sep == ':' and value.isdigit():
                 return match.group(0)
             self.secrets_redacted += 1
             return f"{quote}{key}{quote}{sep}<REDACTED>"
@@ -284,6 +334,8 @@ class DataSanitizer:
                 return False
             if self._confident_host(text, match):
                 return True
+            if tld.lower() in _CONFIG_KEY_ENDINGS or _CONFIG_KEY_AFTER_RE.match(text, match.end()):
+                return False  # retry.backoff.ms = 100, "report.errors.as": "error_string"
             if any(host.lower().endswith('.' + suffix) for suffix in self.learned_suffixes):
                 return True
             if any(c.isupper() for c in host):
@@ -381,14 +433,57 @@ def sanitize_stream(sanitizer: DataSanitizer, text: str) -> str:
     return "\n".join(out)
 
 
+# what --keep can leave as it is
+KEEP_CATEGORIES = ("ips", "hostnames", "emails", "ldap-dns", "hashes")
+
+# env: VAR: ${{ secrets.NAME }} lines of a GitHub workflow
+_WORKFLOW_SECRET_RE = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*\$\{\{\s*secrets\.', re.MULTILINE)
+# shorter values (true, a region…) would redact unrelated words of the logs
+_MIN_SECRET_LENGTH = 6
+
+
+def workflow_secrets(workflow: str) -> Dict[str, str]:
+    """Values of the environment variables that the workflow maps from ${{ secrets.* }} (value -> variable name):
+    the whole value, the value of each key = value line of a multi-line one (AWS credentials file) and the secret
+    strings of a JSON one (private_key of a GCP keyfile)"""
+    with open(workflow, encoding="utf-8") as f:
+        names = sorted(set(_WORKFLOW_SECRET_RE.findall(f.read())))
+    secret_key = re.compile(_SECRET_KEY, re.IGNORECASE)
+    secrets = {}
+    for name in names:
+        value = os.environ.get(name, "")
+        parts = [value]
+        if "\n" in value.strip():
+            parts += [line.split("=", 1)[1].strip() for line in value.splitlines() if "=" in line]
+        try:
+            parsed = json.loads(value)
+        except ValueError:
+            parsed = None
+        if isinstance(parsed, dict):
+            parts += [v for k, v in parsed.items() if isinstance(v, str) and secret_key.fullmatch(k)]
+        for part in parts:
+            if len(part) >= _MIN_SECRET_LENGTH:
+                secrets.setdefault(part, name)
+    return secrets
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Redact secrets, IPs, hostnames, emails and LDAP DNs of the text on stdin")
     ap.add_argument("--state", help="JSON file with the placeholders given so far, read and updated")
     ap.add_argument("--summary", action="store_true", help="print what was redacted (JSON) instead of filtering stdin")
     ap.add_argument("--no-count", action="store_true",
                     help="do not count the secrets of this text (a digest of records sanitized again later)")
+    ap.add_argument("--keep", type=lambda v: [c for c in v.split(",") if c], default=[], metavar="CATEGORIES",
+                    help=f"comma-separated categories not to redact: {','.join(KEEP_CATEGORIES)} (hashes: hexadecimal "
+                         "checksums, digests and ids, otherwise redacted as base64)")
+    ap.add_argument("--workflow-secrets", metavar="WORKFLOW",
+                    help="also redact the values of the environment variables set from ${{ secrets.* }} in this GitHub workflow")
     args = ap.parse_args()
-    sanitizer = DataSanitizer()
+    unknown = set(args.keep) - set(KEEP_CATEGORIES)
+    if unknown:
+        ap.error(f"--keep: unknown categories {','.join(sorted(unknown))}, expected {','.join(KEEP_CATEGORIES)}")
+    sanitizer = DataSanitizer(keep=args.keep,
+                              known_secrets=workflow_secrets(args.workflow_secrets) if args.workflow_secrets else None)
     if args.state and os.path.exists(args.state):
         _load_state(sanitizer, args.state)
     if args.summary:

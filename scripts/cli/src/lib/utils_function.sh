@@ -6210,3 +6210,22 @@ function salesforce_sync_user_keystore () {
     log "🔐 using your Salesforce keystore $user_keystore (copied into the example folders)" >&2
   fi
 }
+
+# Sanitizes, in place, the output of a CI run before it leaves the job (S3, then the comments of the 🔥 GitHub issues):
+# the values of the CI secrets (GitHub masks them in the job logs only), the secret-looking values, hostnames and emails
+# are redacted, IPs, LDAP DNs and hashes are kept. Fails, leaving the file as it is, when python3 or the sanitizer fail: the caller must not
+# share it then.
+#
+#   sanitize_ci_log "$file_output"
+function sanitize_ci_log () {
+  local file="$1" root
+  root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+  [ -n "$root_folder" ] && root="$root_folder"
+  if ! python3 -I "$root/tools/report-common/sanitizer.py" --keep ips,ldap-dns,hashes \
+      --workflow-secrets "$root/.github/workflows/ci.yml" < "$file" > "$file.sanitized"
+  then
+    rm -f "$file.sanitized"
+    return 1
+  fi
+  mv "$file.sanitized" "$file"
+}
