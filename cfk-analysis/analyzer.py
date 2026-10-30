@@ -618,6 +618,9 @@ class CFKBundleAnalyzer:
 
     def _assign_component(self, issue: Dict):
         kind, name = issue.pop('_resource', ('', ''))
+        if name and not issue.get('line_number'):
+            # the line of the HTML report link to a YAML file without line number (analyzer_cli.write_viewers)
+            issue['_viewer_name'] = name
         # flat layout (confluent/connect/logs/connect-0.log): the log file is named after its pod
         stem = re.sub(r'\.(?:log|txt|out)(?:\..*)?$', '', os.path.basename(issue.get('file', '')), flags=re.IGNORECASE)
         component, instance = self._component_from_path(issue.get('file', '')) or (None, None)

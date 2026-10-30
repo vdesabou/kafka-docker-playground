@@ -7,6 +7,12 @@ to their `Caused by:` chain.
 
 ## HTML report and JSON
 
+With `--sources <label<tab>path<tab>1 when the file stays on disk>` (written by `analyze logs`) and `--html-out`,
+`tools/report-common/log_viewer.py` (shared with the CFK report) writes a page per file with findings next to the
+report in `<report>-files/`; the file names and line numbers of the report link to them (`#L33`), and a ✏️ opens the
+file in the editor of `PLAYGROUND_EDITOR` (`playground config editor`, VS Code by default): the input file itself, or a
+copy next to its page for a file extracted from an archive or a `.gz`.
+
 With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every distinct record to that file.
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
 (task killed, with one line per distinct exception chain of the killed tasks, authentication, TLS, unknown magic byte,

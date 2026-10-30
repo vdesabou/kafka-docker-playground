@@ -243,7 +243,10 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   `different clusters`), in the terminal, a `cfk-bundles-comparison-*.html` report and `"comparison"` in `--json`.
   `--sample cfk_rollout --sample cfk_rollout_after` shows one. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
-  `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
+  `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. The location of each
+  issue (`confluent/connect/logs/connect-0.log:33`, `pods.yaml`) opens the file at that line (the `name:` of the pod or
+  CR for a YAML file) in a page written in `<report>-files/` next to the report, and its ✏️ opens it in the editor of
+  `playground config editor`: the file of the bundle folder, or a copy next to the page for an archive. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration, `--sample cfk_rollout` for a half-done upgrade).
   `analyze cfk-bundle --bundle <bundle>` still works, as a hidden alias.
 - `debug cfk sourcecode` (Confluent only: the source of the operator is the private repository
