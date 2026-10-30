@@ -63,7 +63,7 @@ out of context.
 - **`playground container logs` follows the logs by default and never returns** — always pass
   `--errors`, `--no-follow` or `--wait-for-log` when running it non-interactively.
 - `playground analyze logs` is the same digest for offline logs: folders are scanned recursively,
-  `.zip` / `.tar(.gz)` (nested too) are extracted to a temporary folder, `.gz` files are read on the fly,
+  `.zip` / `.tar(.gz|.bz2|.xz)` / `.7z` (nested too) are extracted to a temporary folder, `.gz` files are read on the fly,
   binary files are skipped, and only the files with findings are shown. Secrets, IPs, hostnames, emails and LDAP DNs
   are replaced by placeholders by default (best effort, `--no-sanitize` to keep them). Read its 🧭 summary first;
   the full `--json` is mostly the configuration, so pass `--json-sections`. It also writes an HTML report (known causes,

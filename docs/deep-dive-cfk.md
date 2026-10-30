@@ -198,7 +198,8 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   `packages.confluent.io` and extracts the plugin of your OS and architecture into `/usr/local/bin` (with `sudo` if
   needed, `~/.local/bin` as a last resort). It only works on a running `cfk` / `cfk-rbac` environment.
 - `analyze logs` detects a CFK support bundle (a folder with `cluster-details.txt`, or with `cluster-resources/` and
-  `operator/`, alone or inside a folder or an archive: `--logs-only` to get the plain log digest instead) and works offline on any bundle made by `kubectl confluent support-bundle`: a customer's one, or
+  `operator/`, or a flat collection of `kubectl` outputs made by hand with a `confluent-operator-*.log` or the YAML of a
+  `platform.confluent.io` custom resource at its top, alone or inside a folder or an archive: `--logs-only` to get the plain log digest instead) and works offline on any bundle made by `kubectl confluent support-bundle`: a customer's one, or
   yours. It prints the environment (Kubernetes and CFK versions, images, checked against the support matrix), the
   recent changes, and the issues by category (pod failures, resources, TLS, auth, connect…) with the next steps. Its
   HTML report also shows the **configuration** of Kafka, ZooKeeper, Schema Registry, Connect and Control Center: the

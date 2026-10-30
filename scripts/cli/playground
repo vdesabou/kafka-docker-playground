@@ -7561,7 +7561,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails\n  and LDAP DNs are sanitized by default (best effort: review before sharing),\n  --no-sanitize for internal bundles only. --logs-only gives the plain log\n  digest instead. 🎯 --problem \"<component, symptom, since when>\" matches the\n  bundle against what the customer reports: the issues that explain it first, a\n  verdict (explained, not explained, not covered by the logs), the changes\n  before the date. 📥 A Data to request section says what to ask the customer for\n  next, with why and the command: from the gaps of the bundle (logs that start\n  too late, previous logs of restarted containers, no events, no operator log),\n  from its findings (OOMKilled, Pending pods, TLS, failed connectors) and from\n  the symptoms of --problem.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 Secrets, IPs,\n  hostnames, emails and LDAP DNs are sanitized by default (best effort: review\n  before sharing), --no-sanitize for internal bundles only. --logs-only gives\n  the plain log digest instead. 🎯 --problem \"<component, symptom, since when>\"\n  matches the bundle against what the customer reports: the issues that explain\n  it first, a verdict (explained, not explained, not covered by the logs), the\n  changes before the date. 📥 A Data to request section says what to ask the\n  customer for next, with why and the command: from the gaps of the bundle (logs\n  that start too late, previous logs of restarted containers, no events, no\n  operator log), from its findings (OOMKilled, Pending pods, TLS, failed\n  connectors) and from the symptoms of --problem.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7579,7 +7579,7 @@ playground_analyze_logs_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
-    printf "    🗒️  Log file, folder, .zip, .tar(.gz) or .gz file to analyze\n    \n    🎓 Tip: can be set several times\n"
+    printf "    🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze\n    \n    🎓 Tip: can be set several times\n"
     echo
 
     # :flag.usage
@@ -8682,7 +8682,7 @@ playground_debug_analyze_logs_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
-    printf "    🗒️  Log file, folder, .zip, .tar(.gz) or .gz file to analyze\n    \n    🎓 Tip: can be set several times\n"
+    printf "    🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze\n    \n    🎓 Tip: can be set several times\n"
     echo
 
     # :flag.usage
@@ -23870,6 +23870,8 @@ function summarize_log_errors() {
         key = rec[1]
         sub(/^\[?[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9:,.]*\]?[ \t]*/, "", key)
         key = lvl ":" substr(key, 1, 200) "|" substr(cause, 1, 200)
+        # Java identity hash of Object.toString() (KafkaConsumerReadTask@9c3da5a): a new one per object
+        gsub(/@[0-9a-f]+/, "@#", key)
         gsub(/[0-9]+/, "#", key)
 
         total_occurrences++
@@ -49560,16 +49562,30 @@ playground_analyze_logs_command() {
   }
 
   # a folder written by kubectl confluent support-bundle (or playground debug cfk generate-bundle): cluster-details.txt
-  # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout)
+  # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout). Also a flat
+  # collection of kubectl outputs made by hand (kubectl logs > kafka-0.log, kubectl get kafka -o yaml > kafka.yaml…): a
+  # log of the CFK operator, or the YAML of a platform.confluent.io custom resource, at the top of the folder
   # $1: folder
   function is_cfk_bundle () {
       local d
       [ -f "$1/cluster-details.txt" ] && return 0
-      [ -d "$1/operator" ] || return 1
-      [ -d "$1/cluster-resources" ] && return 0
-      for d in "$1"/*/cluster-details.txt
+      if [ -d "$1/operator" ]
+      then
+          [ -d "$1/cluster-resources" ] && return 0
+          for d in "$1"/*/cluster-details.txt
+          do
+              [ -f "$d" ] && return 0
+          done
+      fi
+      # the operator/ folder of a support bundle has the logs of the operator: it is not a bundle on its own
+      [ "$(basename "$1")" == "operator" ] && return 1
+      for d in "$1"/confluent-operator*.log "$1"/*.yaml "$1"/*.yml
       do
-          [ -f "$d" ] && return 0
+          [ -f "$d" ] || continue
+          case "$(basename "$d")" in
+              confluent-operator*.log) return 0 ;;
+          esac
+          head -n 20 "$d" 2>/dev/null | grep -q 'apiVersion: platform.confluent.io/' && return 0
       done
       return 1
   }
@@ -49647,12 +49663,22 @@ playground_analyze_logs_command() {
           fi
           # CFK bundles in sub folders: analyzed on their own, their files are left out of the log digest
           local prune=()
+          local found_bundles=()
+          local -A checked_dirs=()
           local bundle_dir
+          local d
           if [[ -z "$logs_only" ]]
           then
               while IFS= read -r -d '' f
               do
                   bundle_dir=$(dirname "$f")
+                  # inside a bundle already found (the CR yamls and operator log of a support bundle), or checked
+                  for d in "${found_bundles[@]}"
+                  do
+                      [[ "$bundle_dir/" == "$d/"* ]] && continue 2
+                  done
+                  [ -n "${checked_dirs[$bundle_dir]}" ] && continue
+                  checked_dirs[$bundle_dir]=1
                   # <bundle>/<namespace>/cluster-details.txt (older layout): the bundle is the folder above
                   if [ "$(dirname "$bundle_dir")" != "$path" ] && is_cfk_bundle "$(dirname "$bundle_dir")"
                   then
@@ -49661,6 +49687,7 @@ playground_analyze_logs_command() {
                   if is_cfk_bundle "$bundle_dir"
                   then
                       case " ${prune[*]} " in *" -path $bundle_dir "*) continue ;; esac
+                      found_bundles+=("$bundle_dir")
                       [ ${#prune[@]} -gt 0 ] && prune+=(-o)
                       prune+=(-path "$bundle_dir")
                       if [[ "$label" == *":" ]]
@@ -49670,7 +49697,10 @@ playground_analyze_logs_command() {
                           analyze_logs_path "$bundle_dir" "${label%/}/${bundle_dir#$path/}"
                       fi
                   fi
-              done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z)
+              # the support bundles first, then the flat collections of kubectl outputs (operator log, CR yamls), so that the
+              # files of a support bundle are never taken for a flat collection
+              done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z
+                       find "$path" -mindepth 2 -type f \( -name 'confluent-operator*.log' -o -name '*.yaml' -o -name '*.yml' \) ! -path "*/__MACOSX/*" -print0 | sort -z)
           fi
           if [ ${#prune[@]} -gt 0 ]
           then
@@ -49689,7 +49719,39 @@ playground_analyze_logs_command() {
       fi
 
       case "$path" in
-          *.zip|*.tar|*.tar.gz|*.tgz)
+          *.7z)
+              # bsdtar (macOS tar, libarchive) reads 7z, else 7-Zip
+              local seven_zip=""
+              if tar --version 2>/dev/null | grep -q bsdtar
+              then
+                  seven_zip="tar"
+              elif command -v bsdtar > /dev/null 2>&1
+              then
+                  seven_zip="bsdtar"
+              else
+                  seven_zip=$(command -v 7zz || command -v 7z || command -v 7za)
+              fi
+              if [ -z "$seven_zip" ]
+              then
+                  logwarn "⚠️ $label: cannot extract a .7z archive without bsdtar or 7-Zip (brew install sevenzip, apt install p7zip-full / libarchive-tools): extract it and pass the folder"
+                  nb_skipped=$((nb_skipped+1))
+                  return
+              fi
+              nb_extracted=$((nb_extracted+1))
+              extract_dir=$(basename "$path")
+              extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
+              mkdir -p "$extract_dir"
+              case "$(basename "$seven_zip")" in
+                  tar|bsdtar) "$seven_zip" -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
+                  *) "$seven_zip" x -y -o"$extract_dir" "$path" > /dev/null 2>&1 ;;
+              esac
+              if [ $? -ne 0 ]
+              then
+                  logwarn "⚠️ could not fully extract $label"
+              fi
+              analyze_logs_path "$extract_dir" "$label:"
+              ;;
+          *.zip|*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz)
               nb_extracted=$((nb_extracted+1))
               # named after the archive: it names the report of a CFK bundle archived without a top folder
               extract_dir=$(basename "$path")
@@ -49720,6 +49782,10 @@ playground_analyze_logs_command() {
                       append_config_file "$path" "$label"
                   fi
               else
+                  case "$path" in
+                      *.rar|*.bz2|*.xz|*.zst|*.lz4)
+                          logwarn "⚠️ $label: archive format not supported, extract it and pass the folder" ;;
+                  esac
                   nb_skipped=$((nb_skipped+1))
               fi
               ;;
@@ -51470,16 +51536,30 @@ playground_debug_analyze_logs_command() {
   }
 
   # a folder written by kubectl confluent support-bundle (or playground debug cfk generate-bundle): cluster-details.txt
-  # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout)
+  # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout). Also a flat
+  # collection of kubectl outputs made by hand (kubectl logs > kafka-0.log, kubectl get kafka -o yaml > kafka.yaml…): a
+  # log of the CFK operator, or the YAML of a platform.confluent.io custom resource, at the top of the folder
   # $1: folder
   function is_cfk_bundle () {
       local d
       [ -f "$1/cluster-details.txt" ] && return 0
-      [ -d "$1/operator" ] || return 1
-      [ -d "$1/cluster-resources" ] && return 0
-      for d in "$1"/*/cluster-details.txt
+      if [ -d "$1/operator" ]
+      then
+          [ -d "$1/cluster-resources" ] && return 0
+          for d in "$1"/*/cluster-details.txt
+          do
+              [ -f "$d" ] && return 0
+          done
+      fi
+      # the operator/ folder of a support bundle has the logs of the operator: it is not a bundle on its own
+      [ "$(basename "$1")" == "operator" ] && return 1
+      for d in "$1"/confluent-operator*.log "$1"/*.yaml "$1"/*.yml
       do
-          [ -f "$d" ] && return 0
+          [ -f "$d" ] || continue
+          case "$(basename "$d")" in
+              confluent-operator*.log) return 0 ;;
+          esac
+          head -n 20 "$d" 2>/dev/null | grep -q 'apiVersion: platform.confluent.io/' && return 0
       done
       return 1
   }
@@ -51557,12 +51637,22 @@ playground_debug_analyze_logs_command() {
           fi
           # CFK bundles in sub folders: analyzed on their own, their files are left out of the log digest
           local prune=()
+          local found_bundles=()
+          local -A checked_dirs=()
           local bundle_dir
+          local d
           if [[ -z "$logs_only" ]]
           then
               while IFS= read -r -d '' f
               do
                   bundle_dir=$(dirname "$f")
+                  # inside a bundle already found (the CR yamls and operator log of a support bundle), or checked
+                  for d in "${found_bundles[@]}"
+                  do
+                      [[ "$bundle_dir/" == "$d/"* ]] && continue 2
+                  done
+                  [ -n "${checked_dirs[$bundle_dir]}" ] && continue
+                  checked_dirs[$bundle_dir]=1
                   # <bundle>/<namespace>/cluster-details.txt (older layout): the bundle is the folder above
                   if [ "$(dirname "$bundle_dir")" != "$path" ] && is_cfk_bundle "$(dirname "$bundle_dir")"
                   then
@@ -51571,6 +51661,7 @@ playground_debug_analyze_logs_command() {
                   if is_cfk_bundle "$bundle_dir"
                   then
                       case " ${prune[*]} " in *" -path $bundle_dir "*) continue ;; esac
+                      found_bundles+=("$bundle_dir")
                       [ ${#prune[@]} -gt 0 ] && prune+=(-o)
                       prune+=(-path "$bundle_dir")
                       if [[ "$label" == *":" ]]
@@ -51580,7 +51671,10 @@ playground_debug_analyze_logs_command() {
                           analyze_logs_path "$bundle_dir" "${label%/}/${bundle_dir#$path/}"
                       fi
                   fi
-              done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z)
+              # the support bundles first, then the flat collections of kubectl outputs (operator log, CR yamls), so that the
+              # files of a support bundle are never taken for a flat collection
+              done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z
+                       find "$path" -mindepth 2 -type f \( -name 'confluent-operator*.log' -o -name '*.yaml' -o -name '*.yml' \) ! -path "*/__MACOSX/*" -print0 | sort -z)
           fi
           if [ ${#prune[@]} -gt 0 ]
           then
@@ -51599,7 +51693,39 @@ playground_debug_analyze_logs_command() {
       fi
 
       case "$path" in
-          *.zip|*.tar|*.tar.gz|*.tgz)
+          *.7z)
+              # bsdtar (macOS tar, libarchive) reads 7z, else 7-Zip
+              local seven_zip=""
+              if tar --version 2>/dev/null | grep -q bsdtar
+              then
+                  seven_zip="tar"
+              elif command -v bsdtar > /dev/null 2>&1
+              then
+                  seven_zip="bsdtar"
+              else
+                  seven_zip=$(command -v 7zz || command -v 7z || command -v 7za)
+              fi
+              if [ -z "$seven_zip" ]
+              then
+                  logwarn "⚠️ $label: cannot extract a .7z archive without bsdtar or 7-Zip (brew install sevenzip, apt install p7zip-full / libarchive-tools): extract it and pass the folder"
+                  nb_skipped=$((nb_skipped+1))
+                  return
+              fi
+              nb_extracted=$((nb_extracted+1))
+              extract_dir=$(basename "$path")
+              extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
+              mkdir -p "$extract_dir"
+              case "$(basename "$seven_zip")" in
+                  tar|bsdtar) "$seven_zip" -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
+                  *) "$seven_zip" x -y -o"$extract_dir" "$path" > /dev/null 2>&1 ;;
+              esac
+              if [ $? -ne 0 ]
+              then
+                  logwarn "⚠️ could not fully extract $label"
+              fi
+              analyze_logs_path "$extract_dir" "$label:"
+              ;;
+          *.zip|*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz)
               nb_extracted=$((nb_extracted+1))
               # named after the archive: it names the report of a CFK bundle archived without a top folder
               extract_dir=$(basename "$path")
@@ -51630,6 +51756,10 @@ playground_debug_analyze_logs_command() {
                       append_config_file "$path" "$label"
                   fi
               else
+                  case "$path" in
+                      *.rar|*.bz2|*.xz|*.zst|*.lz4)
+                          logwarn "⚠️ $label: archive format not supported, extract it and pass the folder" ;;
+                  esac
                   nb_skipped=$((nb_skipped+1))
               fi
               ;;
