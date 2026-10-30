@@ -34,13 +34,13 @@ minutes to read and run.
    Each worker writes to **its own** cluster (`bootstrap.servers=broker-us:9092`, group `connect-us`, internal topics
    `connect-us.config|offsets|status`; the same with `europe`), and has the Replicator plugin installed
    (`plugin.path=/usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator`, installed by
-   `start.sh` at the CP version, or at the default tag when that version is not on Confluent Hub). Brokers have no port on the host: everything goes through
+   `start.sh` at the CP version, or at the default tag when that version is not on Confluent Hub, and skipped when that version is already in `confluent-hub/`). Brokers have no port on the host: everything goes through
    `docker exec`. `broker-metrics` receives the metrics reporters and monitoring interceptors of both clusters, for
    Control Center (`--enable-control-center`). `mdc-sasl-plain` and `mdc-kerberos` add their compose file on top of the
    plaintext one, like the single cluster environments (SASL/PLAIN `client` / `client-secret`; Kerberos with a `kdc`
    and a `client` container, brokers named `broker-us.kerberos-demo.local`). In KRaft mode the cluster ids are fixed in
-   `docker-compose-kraft.yml`: `NkU3OEVBNTcwNTJENDM2Qk` for `us`, and `MkU3OEVBNTcwNTJENDM2Qk` for `europe` **and**
-   `metrics` (the same id: keep it in mind when a tool compares cluster ids, like the Replicator provenance header).
+   `docker-compose-kraft.yml`: `NkU3OEVBNTcwNTJENDM2Qk` for `us`, `MkU3OEVBNTcwNTJENDM2Qk` for `europe` and
+   `OkU3OEVBNTcwNTJENDM2Qk` for `metrics`.
 
 2. **The three tools copy different things, from different places.**
 
