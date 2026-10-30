@@ -4748,14 +4748,15 @@ subcommands:
     Get data out\n  consume         read from the beginning, deserialising automatically\n
     \ get-number-records   count what is in the topic\n  wait-for-records     wait
     until the topic contains N records\n  get-offsets          earliest and latest
-    offsets per partition\n  display-consumer-offsets   read the internal offsets
-    topic\n\n\U0001F527 Manage\n  list / describe / alter / delete\n  reassign / elect-leader
-    \  move replicas between brokers, move leaders\n  dlq inspect / replay   dead
-    letter queue grouped by error, and replay\n  set-schema-compatibility   compatibility
-    of the topic subjects\n  tag             stream catalog tags (Confluent Cloud
-    only)\n\nSerialisation is handled for you: 'produce' registers the schema you
-    give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson
-    schema or plain text.\n\n\U0001F393 Tip: in an example script, 'consume --min-expected-messages
+    offsets per partition\n  compare              a topic and its replica, is everything
+    replicated?\n  display-consumer-offsets   read the internal offsets topic\n\n\U0001F527
+    Manage\n  list / describe / alter / delete\n  reassign / elect-leader   move replicas
+    between brokers, move leaders\n  dlq inspect / replay   dead letter queue grouped
+    by error, and replay\n  set-schema-compatibility   compatibility of the topic
+    subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation
+    is handled for you: 'produce' registers the schema you give\nit and 'consume'
+    works out from the payload whether it is avro, protobuf,\njson schema or plain
+    text.\n\n\U0001F393 Tip: in an example script, 'consume --min-expected-messages
     N' is the\nassertion that the data made it through; it fails the run if it did
     not."
   usage: playground topic COMMAND
@@ -4847,6 +4848,57 @@ subcommands:
         the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
+  - name: compare
+    description: "\U0001F500 Compare a topic with its replica: is everything replicated?\n\nEarliest
+      and latest offsets and number of records of every partition, on\nboth sides,
+      and what the destination misses. In an mdc-* environment\nthe two sides are
+      the clusters given with --from and --to (Replicator,\nMirrorMaker 2, Cluster
+      Linking); elsewhere, two topics of the same\ncluster (--to-topic).\n\nExits
+      1 when the destination has fewer records than the source. The\ncounts come from
+      the offsets: transaction markers and compaction make\nthem approximate.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication"
+    usage: playground topic compare [OPTIONS]
+    options:
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Topic name in the source\n\nRequired: ✓ Yes"
+    - names:
+      - "--to-topic"
+      argument: TO_TOPIC
+      description: "\U0001F3AF Topic name in the destination (default: the same name).
+        MirrorMaker 2\nprefixes it with the source alias, e.g. EUROPE.sales_EUROPE"
+    - names:
+      - "--from"
+      argument: FROM
+      description: "\U0001F30D Source cluster in an mdc-* environment\n\nAllowed values:
+        us, europe"
+    - names:
+      - "--to"
+      argument: TO
+      description: "\U0001F30D Destination cluster in an mdc-* environment\n\nAllowed
+        values: us, europe"
+    - names:
+      - "--wait"
+      argument: ''
+      description: "⏳ Wait until the destination has as many records as the source"
+    - names:
+      - "--max-wait"
+      argument: MAX_WAIT
+      description: |-
+        ⏳ Max seconds to wait with --wait (default 120)
+
+        Default value: 120
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the comparison as JSON"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
   - name: display-consumer-offsets
     description: "\U0001F4ED Display content of __consumer_offsets topic\n\nDecodes
       the internal topic where Kafka keeps committed offsets, so you\ncan see exactly

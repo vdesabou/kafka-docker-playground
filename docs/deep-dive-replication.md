@@ -157,6 +157,11 @@ playground consumer-group describe --cluster europe --group my-app
 playground consumer-group describe --cluster us --group my-app
 ```
 
+- **Is everything replicated?** `playground topic compare --topic sales_EUROPE --from europe --to us` prints the
+  earliest and latest offsets and the records of every partition on both sides, and exits 1 when the destination has
+  fewer records (`--to-topic EUROPE.sales_EUROPE` for MirrorMaker 2, `--wait --max-wait 180` to wait for the
+  replication, `--json`). The counts come from the offsets: transaction markers and compaction make them approximate.
+  Outside the mdc environments it compares two topics of the cluster (`--topic test-topic --to-topic test-topic-duplicate`).
 - `playground status` shows the connectors and the topics of each cluster (`🌍 Cluster us`, `🌍 Cluster europe`),
   unless one is selected.
 - **A data center goes down**: `playground broker stop --cluster europe --broker 1 --kill` (a crash, `docker kill`) or
@@ -352,6 +357,12 @@ playground container exec -c broker-us --command "kafka-console-consumer --boots
 # __replicator_id:MkU3OEVBNTcwNTJENDM2Qk,sales_EUROPE,1793189867473	european_sale_1      <- the provenance header
 # …
 # Processed a total of 20 messages
+playground topic compare --topic sales_EUROPE --from europe --to us --wait
+# 🔀 Comparing sales_EUROPE (europe) with sales_EUROPE (us)
+# PARTITION  FROM-EARLIEST  FROM-LATEST    FROM-RECORDS   TO-EARLIEST    TO-LATEST      TO-RECORDS
+# 0          0              20             20             0              20             20
+# TOTAL                                    20                                           20
+# ✅ sales_EUROPE (us) has as many records as sales_EUROPE (europe) (20)
 playground container exec -c broker-us --command "kafka-consumer-groups --bootstrap-server broker-us:9092 --describe --group app-with-interceptor"
 # Consumer group 'app-with-interceptor' has no active members.
 # app-with-interceptor sales_EUROPE    0          10              20              10      <- translated: 10 in us too
@@ -397,6 +408,8 @@ playground container exec -c connect-us --command "nohup connect-mirror-maker /t
 playground container exec -c broker-us --command "kafka-console-consumer --bootstrap-server broker-us:9092 --topic EUROPE.sales_EUROPE --from-beginning --max-messages 20 --timeout-ms 180000"
 # european_sale_1 … european_sale_20
 # Processed a total of 20 messages              <- in EUROPE.sales_EUROPE: the source alias is the prefix
+playground topic compare --topic sales_EUROPE --to-topic EUROPE.sales_EUROPE --from europe --to us
+# ✅ EUROPE.sales_EUROPE (us) has as many records as sales_EUROPE (europe) (20)
 playground container exec -c broker-us --command "kafka-consumer-groups --bootstrap-server broker-us:9092 --describe --group app-without-interceptor"
 # GROUP                   TOPIC               PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG
 # app-without-interceptor EUROPE.sales_EUROPE 0          1               20              19     <- 10 in europe, 1 in us
@@ -474,6 +487,7 @@ playground stop
 | "Replicator, MirrorMaker 2 or Cluster Linking?" | see the table of §1: same offsets and no Connect to run → Cluster Linking (Confluent Server on both ends, or Confluent Cloud); topic renaming, filtering, a Connect cluster already there → Replicator (or MirrorMaker 2 when only Apache Kafka is allowed). Replay the three on the same data with the lab (steps 3 to 5) |
 | "consumer offsets not translated" (Replicator) | the consumers didn't run the `ConsumerTimestampsInterceptor` (no `__consumer_timestamps` in the source: `kafka-topics --list` on the source broker), or a member of the group is connected in the destination, or `offset.topic.commit=false`. Lab step 3: `app-without-interceptor` doesn't exist in `us` |
 | "consumer offsets not translated" (MirrorMaker 2) | `sync.group.offsets.enabled` is false by default; the group must have committed on a replicated topic, and have no active member in the target. Look at `<source>.checkpoints.internal` in the target |
+| "is everything replicated? the destination misses records" | `playground topic compare --topic <t> --from <source> --to <destination>` (`--to-topic <prefix>.<t>` for MirrorMaker 2): records per partition on both sides, exit 1 when the destination misses some. More records in the destination = duplicates after a restart of the replication, or other producers |
 | "duplicates after failover" | MirrorMaker 2: expected, lab step 4 (a group at 10 restarts at 1). Replicator: the translation goes through timestamps, exact in step 3, and only for consumers with the interceptor. Cluster Linking keeps the offsets (step 5). Make the consumer idempotent, or reset the group in the destination to a timestamp |
 | "the consumers in DR started from the beginning / the end" | the group didn't exist in the destination: `auto.offset.reset` decided. `kafka-consumer-groups --describe --group <g>` on both brokers (`GroupIdNotFoundException` = never translated) |
 | "messages loop between the two data centers" | Replicator both ways without `provenance.header.enable=true` (`replicator-connect` sets it). MirrorMaker 2 doesn't loop: the prefix marks remote topics |
@@ -499,7 +513,8 @@ playground container exec -c broker-us|broker-europe --command "kafka-topics --b
 playground container exec -c broker-us --command "kafka-consumer-groups --bootstrap-server broker-us:9092 --describe --group <g>"
 playground container exec -c connect-us --command "curl -s http://localhost:8083/connectors/<c>/status"     # connect-europe: same, from inside
 playground container logs -c connect-us --errors      playground debug thread-dump -c connect-europe
-playground topic|consumer-group|connector|schema … --cluster us|europe     # or: export PLAYGROUND_CLUSTER=us, playground state set run.cluster us
+playground topic|consumer-group|connector|schema … --cluster us|europe
+playground topic compare --topic <t> [--to-topic <t2>] --from europe --to us [--wait]      # is everything replicated?     # or: export PLAYGROUND_CLUSTER=us, playground state set run.cluster us
 playground broker health|describe|metrics --cluster europe        playground broker stop --cluster europe --broker 1 --kill   # a data center goes down
 # Cluster Linking, on the destination broker:
 kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link <l> --config bootstrap.servers=broker-us:9092,consumer.offset.sync.enable=true [--consumer-group-filters-json-file <f>]

@@ -7389,6 +7389,7 @@ commands:
       get-number-records   count what is in the topic
       wait-for-records     wait until the topic contains N records
       get-offsets          earliest and latest offsets per partition
+      compare              a topic and its replica, is everything replicated?
       display-consumer-offsets   read the internal offsets topic
 
     🔧 Manage
@@ -7529,6 +7530,71 @@ commands:
           PARTITION  EARLIEST        LATEST          RECORDS
           0          0               5               5
           TOTAL                                      5
+
+    - name: compare
+      group: Topic
+      help: |-
+        🔀 Compare a topic with its replica: is everything replicated?
+
+        Earliest and latest offsets and number of records of every partition, on
+        both sides, and what the destination misses. In an mdc-* environment
+        the two sides are the clusters given with --from and --to (Replicator,
+        MirrorMaker 2, Cluster Linking); elsewhere, two topics of the same
+        cluster (--to-topic).
+
+        Exits 1 when the destination has fewer records than the source. The
+        counts come from the offsets: transaction markers and compaction make
+        them approximate.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication
+      flags:
+      - long: --topic
+        short: -t
+        required: true
+        arg: topic
+        completions:
+          dynamic:
+          - playground get-topic-list
+        help: |-
+          🗳 Topic name in the source
+      - long: --to-topic
+        required: false
+        arg: to_topic
+        help: |-
+          🎯 Topic name in the destination (default: the same name). MirrorMaker 2
+          prefixes it with the source alias, e.g. EUROPE.sales_EUROPE
+      - long: --from
+        required: false
+        arg: from
+        allowed: [us, europe]
+        help: |-
+          🌍 Source cluster in an mdc-* environment
+      - long: --to
+        required: false
+        arg: to
+        allowed: [us, europe]
+        help: |-
+          🌍 Destination cluster in an mdc-* environment
+      - long: --wait
+        required: false
+        help: |-
+          ⏳ Wait until the destination has as many records as the source
+      - long: --max-wait
+        arg: max_wait
+        required: false
+        default: "120"
+        validate: integer
+        help: |-
+          ⏳ Max seconds to wait with --wait (default 120)
+      - long: --json
+        required: false
+        help: |-
+          🤖 Print the comparison as JSON
+      - *verbose
+      examples:
+      - playground topic compare --topic sales_EUROPE --from europe --to us
+      - playground topic compare --topic sales_EUROPE --to-topic EUROPE.sales_EUROPE --from europe --to us --wait
+      - playground topic compare --topic test-topic --to-topic test-topic-duplicate
 
     - name: display-consumer-offsets
       group: Topic

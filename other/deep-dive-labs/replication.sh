@@ -134,6 +134,9 @@ echo "$LAB_OUTPUT"
 lab_run playground container exec -c broker-us --command "kafka-console-consumer --bootstrap-server broker-us:9092 --topic sales_EUROPE --from-beginning --max-messages 20 --timeout-ms 120000 --property print.headers=true"
 lab_expect_contains "Processed a total of 20 messages"
 lab_expect_contains "__replicator_id:"
+lab_run playground topic compare --topic sales_EUROPE --from europe --to us --wait
+lab_expect_exit 0
+lab_expect_contains "sales_EUROPE (us) has as many records as sales_EUROPE (europe) (20)"
 wait_for_output "offsets of app-with-interceptor translated in us" 180 "sales_EUROPE" describe_group broker-us app-with-interceptor
 echo "$LAB_OUTPUT"
 lab_expect_contains "app-with-interceptor sales_EUROPE 0 10 20 10"
@@ -170,6 +173,9 @@ EOF
 playground container exec -c connect-us --command "nohup connect-mirror-maker /tmp/mm2.properties > /tmp/mm2.log 2>&1 < /dev/null &"
 lab_run playground container exec -c broker-us --command "kafka-console-consumer --bootstrap-server broker-us:9092 --topic EUROPE.sales_EUROPE --from-beginning --max-messages 20 --timeout-ms 180000"
 lab_expect_contains "Processed a total of 20 messages"
+lab_run playground topic compare --topic sales_EUROPE --to-topic EUROPE.sales_EUROPE --from europe --to us
+lab_expect_exit 0
+lab_expect_contains "EUROPE.sales_EUROPE (us) has as many records as sales_EUROPE (europe) (20)"
 wait_for_output "offsets of app-without-interceptor synced by MirrorMaker 2" 240 "EUROPE.sales_EUROPE" describe_group broker-us app-without-interceptor
 echo "$LAB_OUTPUT"
 sleep 15
