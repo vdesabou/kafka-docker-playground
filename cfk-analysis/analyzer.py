@@ -1072,6 +1072,10 @@ class CFKBundleAnalyzer:
                 self._process_event(obj, file_path)
             elif api_version.startswith('platform.confluent.io/'):
                 self.coverage['custom_resources'] += 1
+                if metadata.get('namespace'):
+                    namespaces = self.environment.setdefault('namespaces', [])
+                    if metadata['namespace'] not in namespaces:
+                        namespaces.append(metadata['namespace'])
                 # a Connector belongs to its Connect cluster, a Schema to its Schema Registry…
                 spec = obj.get('spec') or {}
                 cluster = next((spec[ref].get('name') for ref in _CLUSTER_REFS

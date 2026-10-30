@@ -7314,7 +7314,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🚚 A ZooKeeper to\n  KRaft migration gets its own finding: phase / sub-phase of the\n  KRaftMigrationJob, how long it has been there (events, operator requeues), its\n  last error and the next steps of that sub-phase (DUAL-WRITE waiting for the\n  finalize annotation is low). Probe failures and back-offs of a pod that is\n  Running and Ready in the bundle are low and marked transient. Each issue is\n  attributed to a component and an instance (CR name), and to its connector:\n  --component keeps some of them, the HTML report has Component / Instance /\n  Connector filters. 🔒 Secrets, IPs, hostnames, emails and LDAP DNs are\n  sanitized by default (best effort: review before sharing), --no-sanitize for\n  internal bundles only. --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails\n  and LDAP DNs are sanitized by default (best effort: review before sharing),\n  --no-sanitize for internal bundles only. --logs-only gives the plain log\n  digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7337,8 +7337,8 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
     echo
 
     # :flag.usage
@@ -7430,6 +7430,8 @@ playground_analyze_logs_usage() {
     printf "  playground analyze logs --sample cfk_bundle\n"
     printf "  playground analyze logs --sample cfk_kraft_migration\n"
     printf "  playground analyze logs --sample cfk_rollout\n"
+    printf "  playground analyze logs --sample cfk_rollout --sample cfk_rollout_after\n"
+    printf "  playground analyze logs -f bundle-monday.tar.gz -f bundle-tuesday.tar.gz\n"
     printf "  playground analyze logs -f connect-logs.zip --connector my-jdbc-sink\n  --show-config my-jdbc-sink\n"
     printf "  playground analyze logs -f connect.log --json --json-sections\n  summary,findings,root_causes\n"
     printf "  playground analyze logs -f ./support-bundle-ns-confluent.tar.gz --component\n  connect --severity high\n"
@@ -8430,8 +8432,8 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
     echo
 
     # :flag.usage
@@ -23775,7 +23777,14 @@ function analyze_cfk_bundle() {
         bundle_basename="${bundle_basename%.zip}"
         html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
         cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
+        # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
+        CFK_ANALYSIS_JSON="${html_out%.html}.json"
+        cli_args+=(--json-out "/tmp/output/$(basename "$CFK_ANALYSIS_JSON")")
         docker_args+=(-v "$output_dir_abs:/tmp/output")
+    fi
+    if [[ -n "${CFK_ANALYSIS_LABEL:-}" ]]
+    then
+        cli_args+=(--label "$CFK_ANALYSIS_LABEL")
     fi
 
     docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
@@ -23790,6 +23799,49 @@ function analyze_cfk_bundle() {
     then
         log ""
         open_html_report "$html_out"
+    fi
+    return $exit_code
+}
+
+# Comparison of several CFK support bundles (cfk-analysis/compare.py), from the JSON of their analysis: sorted by the
+# time they were collected, each one compared with the previous one (same cluster?, versions, changes between them,
+# issues fixed / new / still there).
+# $1: non-empty for JSON on stdout (no HTML report), $2: output directory of the HTML report, then the JSON files
+function compare_cfk_bundles() {
+    local json_out="$1"
+    local output_dir="$2"
+    shift 2
+    local analyzer_dir="$root_folder/cfk-analysis"
+    local image_tag
+    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+    local image="cfk-bundle-analyzer:$image_tag"
+    local docker_args=(--rm --user "$(id -u):$(id -g)" --entrypoint python
+        -v "$analyzer_dir:/tmp/cfk-analysis:ro" -v "$root_folder/tools/report-common:/tmp/report-common:ro")
+    local args=()
+    local i=0
+    local file
+    for file in "$@"
+    do
+        docker_args+=(-v "$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file"):/tmp/input/analysis-$i.json:ro")
+        args+=("/tmp/input/analysis-$i.json")
+        i=$((i + 1))
+    done
+    if [[ -n "$json_out" ]]
+    then
+        docker run "${docker_args[@]}" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" --json
+        return $?
+    fi
+    mkdir -p "$output_dir"
+    local output_dir_abs
+    output_dir_abs=$(cd "$output_dir" && pwd -P)
+    local html_out="cfk-bundles-comparison-$(date '+%Y%m%d-%H%M%S').html"
+    docker run "${docker_args[@]}" -v "$output_dir_abs:/tmp/output" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" \
+        --html-out "/tmp/output/$html_out"
+    local exit_code=$?
+    if [[ $exit_code -eq 0 && -f "$output_dir_abs/$html_out" ]]
+    then
+        log ""
+        open_html_report "$output_dir_abs/$html_out"
     fi
     return $exit_code
 }
@@ -48152,6 +48204,7 @@ playground_analyze_logs_command() {
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
           cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
           cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
+          cfk_rollout_after) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout-after.tar.gz") ;;
       esac
   done
 
@@ -48447,8 +48500,12 @@ playground_analyze_logs_command() {
   # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
   cfk_exit=0
   cfk_json_files=()
+  # JSON of the analysis of each bundle, written next to its HTML report: compared when there are several bundles
+  cfk_compare_files=()
   for i in "${!cfk_bundles[@]}"
   do
+      CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
+      CFK_ANALYSIS_JSON=""
       if [[ -n "$json_out" ]]
       then
           log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
@@ -48463,12 +48520,27 @@ playground_analyze_logs_command() {
           log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
           analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
           rc=$?
+          if [ $rc -eq 0 ] && [ -f "$CFK_ANALYSIS_JSON" ]
+          then
+              cfk_compare_files+=("$CFK_ANALYSIS_JSON")
+          fi
       fi
       if [ $rc -ne 0 ]
       then
           cfk_exit=$rc
       fi
   done
+  # several CFK bundles: compared, each one with the previous one (by collection time)
+  cfk_comparison="$tmp_dir/cfk-comparison.json"
+  echo "[]" > "$cfk_comparison"
+  if [ ${#cfk_compare_files[@]} -ge 2 ]
+  then
+      log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
+      compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
+  elif [ ${#cfk_json_files[@]} -ge 2 ]
+  then
+      compare_cfk_bundles "1" "" "${cfk_json_files[@]}" > "$cfk_comparison" || echo "[]" > "$cfk_comparison"
+  fi
   # only CFK bundles: their JSON (one bundle) and no log digest
   if [ ${#cfk_bundles[@]} -gt 0 ] && [ $nb_files -eq 0 ]
   then
@@ -48478,7 +48550,8 @@ playground_analyze_logs_command() {
           then
               jq 'del(.label)' "${cfk_json_files[0]}" >&3
           else
-              jq -s '{type: "cfk-bundles", cfk_bundles: .}' "${cfk_json_files[@]}" >&3
+              jq -s --slurpfile comparison "$cfk_comparison" '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0]}' \
+                  "${cfk_json_files[@]}" >&3
           fi
       fi
       exit $cfk_exit
@@ -48554,7 +48627,9 @@ playground_analyze_logs_command() {
       then
           cat "$tmp_dir/logs-redacted.json" >&3
       else
-          jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") '. + {cfk_bundles: $cfk[0]}' "$tmp_dir/logs-redacted.json" >&3
+          jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") --slurpfile comparison "$cfk_comparison" \
+              '. + {cfk_bundles: $cfk[0]} + (if ($comparison[0] | length) > 0 then {cfk_comparison: $comparison[0]} else {} end)' \
+              "$tmp_dir/logs-redacted.json" >&3
       fi
       exit $cfk_exit
   fi
@@ -50021,6 +50096,7 @@ playground_debug_analyze_logs_command() {
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
           cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
           cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
+          cfk_rollout_after) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout-after.tar.gz") ;;
       esac
   done
 
@@ -50316,8 +50392,12 @@ playground_debug_analyze_logs_command() {
   # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
   cfk_exit=0
   cfk_json_files=()
+  # JSON of the analysis of each bundle, written next to its HTML report: compared when there are several bundles
+  cfk_compare_files=()
   for i in "${!cfk_bundles[@]}"
   do
+      CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
+      CFK_ANALYSIS_JSON=""
       if [[ -n "$json_out" ]]
       then
           log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
@@ -50332,12 +50412,27 @@ playground_debug_analyze_logs_command() {
           log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
           analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
           rc=$?
+          if [ $rc -eq 0 ] && [ -f "$CFK_ANALYSIS_JSON" ]
+          then
+              cfk_compare_files+=("$CFK_ANALYSIS_JSON")
+          fi
       fi
       if [ $rc -ne 0 ]
       then
           cfk_exit=$rc
       fi
   done
+  # several CFK bundles: compared, each one with the previous one (by collection time)
+  cfk_comparison="$tmp_dir/cfk-comparison.json"
+  echo "[]" > "$cfk_comparison"
+  if [ ${#cfk_compare_files[@]} -ge 2 ]
+  then
+      log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
+      compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
+  elif [ ${#cfk_json_files[@]} -ge 2 ]
+  then
+      compare_cfk_bundles "1" "" "${cfk_json_files[@]}" > "$cfk_comparison" || echo "[]" > "$cfk_comparison"
+  fi
   # only CFK bundles: their JSON (one bundle) and no log digest
   if [ ${#cfk_bundles[@]} -gt 0 ] && [ $nb_files -eq 0 ]
   then
@@ -50347,7 +50442,8 @@ playground_debug_analyze_logs_command() {
           then
               jq 'del(.label)' "${cfk_json_files[0]}" >&3
           else
-              jq -s '{type: "cfk-bundles", cfk_bundles: .}' "${cfk_json_files[@]}" >&3
+              jq -s --slurpfile comparison "$cfk_comparison" '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0]}' \
+                  "${cfk_json_files[@]}" >&3
           fi
       fi
       exit $cfk_exit
@@ -50423,7 +50519,9 @@ playground_debug_analyze_logs_command() {
       then
           cat "$tmp_dir/logs-redacted.json" >&3
       else
-          jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") '. + {cfk_bundles: $cfk[0]}' "$tmp_dir/logs-redacted.json" >&3
+          jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") --slurpfile comparison "$cfk_comparison" \
+              '. + {cfk_bundles: $cfk[0]} + (if ($comparison[0] | length) > 0 then {cfk_comparison: $comparison[0]} else {} end)' \
+              "$tmp_dir/logs-redacted.json" >&3
       fi
       exit $cfk_exit
   fi
@@ -88681,8 +88779,8 @@ playground_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration|cfk_rollout)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
       exit 1
     fi
   done
@@ -91470,8 +91568,8 @@ playground_debug_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration|cfk_rollout)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
       exit 1
     fi
   done
@@ -121328,6 +121426,7 @@ playground_analyze_logs_completion() {
             "cfk_bundle"
             "cfk_kraft_migration"
             "cfk_rollout"
+            "cfk_rollout_after"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
@@ -122790,6 +122889,7 @@ playground_debug_analyze_logs_completion() {
             "cfk_bundle"
             "cfk_kraft_migration"
             "cfk_rollout"
+            "cfk_rollout_after"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 

@@ -155,6 +155,7 @@ playground analyze logs --sample support_bundle           # a .zip with that log
 playground analyze logs --sample cfk_bundle               # a CFK support bundle (see below)
 playground analyze logs --sample cfk_kraft_migration      # a CFK support bundle with a stuck ZooKeeper to KRaft migration
 playground analyze logs --sample cfk_rollout              # a CFK support bundle with a half-done CP upgrade
+playground analyze logs --sample cfk_rollout --sample cfk_rollout_after   # two bundles of that cluster, compared
 ```
 
 What it does with what you give it:

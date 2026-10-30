@@ -39,6 +39,7 @@ do
         cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
         cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
         cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
+        cfk_rollout_after) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout-after.tar.gz") ;;
     esac
 done
 
@@ -334,8 +335,12 @@ fi
 # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
 cfk_exit=0
 cfk_json_files=()
+# JSON of the analysis of each bundle, written next to its HTML report: compared when there are several bundles
+cfk_compare_files=()
 for i in "${!cfk_bundles[@]}"
 do
+    CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
+    CFK_ANALYSIS_JSON=""
     if [[ -n "$json_out" ]]
     then
         log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
@@ -350,12 +355,27 @@ do
         log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
         analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
         rc=$?
+        if [ $rc -eq 0 ] && [ -f "$CFK_ANALYSIS_JSON" ]
+        then
+            cfk_compare_files+=("$CFK_ANALYSIS_JSON")
+        fi
     fi
     if [ $rc -ne 0 ]
     then
         cfk_exit=$rc
     fi
 done
+# several CFK bundles: compared, each one with the previous one (by collection time)
+cfk_comparison="$tmp_dir/cfk-comparison.json"
+echo "[]" > "$cfk_comparison"
+if [ ${#cfk_compare_files[@]} -ge 2 ]
+then
+    log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
+    compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
+elif [ ${#cfk_json_files[@]} -ge 2 ]
+then
+    compare_cfk_bundles "1" "" "${cfk_json_files[@]}" > "$cfk_comparison" || echo "[]" > "$cfk_comparison"
+fi
 # only CFK bundles: their JSON (one bundle) and no log digest
 if [ ${#cfk_bundles[@]} -gt 0 ] && [ $nb_files -eq 0 ]
 then
@@ -365,7 +385,8 @@ then
         then
             jq 'del(.label)' "${cfk_json_files[0]}" >&3
         else
-            jq -s '{type: "cfk-bundles", cfk_bundles: .}' "${cfk_json_files[@]}" >&3
+            jq -s --slurpfile comparison "$cfk_comparison" '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0]}' \
+                "${cfk_json_files[@]}" >&3
         fi
     fi
     exit $cfk_exit
@@ -441,7 +462,9 @@ then
     then
         cat "$tmp_dir/logs-redacted.json" >&3
     else
-        jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") '. + {cfk_bundles: $cfk[0]}' "$tmp_dir/logs-redacted.json" >&3
+        jq --slurpfile cfk <(jq -s . "${cfk_json_files[@]}") --slurpfile comparison "$cfk_comparison" \
+            '. + {cfk_bundles: $cfk[0]} + (if ($comparison[0] | length) > 0 then {cfk_comparison: $comparison[0]} else {} end)' \
+            "$tmp_dir/logs-redacted.json" >&3
     fi
     exit $cfk_exit
 fi

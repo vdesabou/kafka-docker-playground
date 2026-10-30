@@ -334,6 +334,8 @@ def run(
     html_out: Optional[str] = None,
     include_warnings: bool = False,
     components: Optional[list] = None,
+    json_out: Optional[str] = None,
+    label: Optional[str] = None,
 ) -> int:
     with extracted_bundle(bundle_path) as bundle_dir:
         analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings)
@@ -363,6 +365,9 @@ def run(
         results["summary"]["components"] = components
     # after the sanitizer: it would redact the hostnames of the links
     results["runbooks"] = analyzer.runbooks.summarize(results["issues"])
+    results["collected"] = collected_at(results)
+    if label:
+        results["label"] = label
 
     if html_out:
         rendered = html_report.render(results, bundle_label=os.path.basename(bundle_path))
@@ -370,9 +375,14 @@ def run(
         with open(html_out, "w", encoding="utf-8") as f:
             f.write(rendered)
 
-    if as_json:
+    if as_json or json_out:
         for issue in results["issues"]:
             issue["recommendation"] = recommendations.for_category(issue["category"])
+    if json_out:
+        # the same JSON as --json, next to the HTML report: playground analyze logs compares the bundles with it
+        with open(json_out, "w", encoding="utf-8") as f:
+            json.dump(dict({"type": "cfk-bundle"}, **results), f, indent=2, default=str)
+    if as_json:
         # type: playground analyze logs emits this JSON for a CFK support bundle, and its own ("logs") otherwise
         json.dump(dict({"type": "cfk-bundle"}, **results), sys.stdout, indent=2, default=str)
         sys.stdout.write("\n")
@@ -382,6 +392,15 @@ def run(
         print_verdict(results)
 
     return 0
+
+
+def collected_at(results) -> Optional[str]:
+    """When the bundle was collected, about: its newest timestamp (end of the logs, last event, last change)"""
+    times = [w.get("last") for w in (results.get("coverage") or {}).get("log_windows") or []]
+    times += [i.get("timestamp") for i in results.get("issues") or []]
+    times += [c.get("time") for c in results.get("timeline") or []]
+    times = [str(t).replace("T", " ").replace("Z", "")[:19] for t in times if t]
+    return max(times) if times else None
 
 
 def print_verdict(results):
@@ -412,6 +431,8 @@ def main() -> int:
     p.add_argument("--component", action="append", choices=COMPONENTS,
                    help="Only keep the issues of this component (repeatable)")
     p.add_argument("--include-warnings", action="store_true", help="Also report WARN log records that match no known category")
+    p.add_argument("--json-out", help="Also write the JSON of --json to this file (with the text report)")
+    p.add_argument("--label", help="Name of the bundle in the JSON (label), for the comparison of several bundles")
     args = p.parse_args()
 
     try:
@@ -424,6 +445,8 @@ def main() -> int:
             html_out=args.html_out,
             include_warnings=args.include_warnings,
             components=args.component,
+            json_out=args.json_out,
+            label=args.label,
         )
     except (FileNotFoundError, ValueError, BundleError) as e:
         print(f"Error: {e}", file=sys.stderr)
