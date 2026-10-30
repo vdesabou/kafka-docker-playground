@@ -7392,7 +7392,7 @@
         },
         {
           "name": "versions",
-          "description": "💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n\nWhat to feed to --connector-tag when you want to test another version,\nand the way to find out which release you are behind on. The list is\ncached; use --force-refresh after a brand new release.",
+          "description": "💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n\nWhat to feed to --connector-tag when you want to test another version,\nand the way to find out which release you are behind on (--from).\n\nThe answer of Confluent Hub is cached for one day in\n/tmp/version_<owner>_<name>.json and the age of each version is\ncomputed on every call; use --force-refresh right after a release.",
           "usage": "playground connector-plugin versions [OPTIONS]",
           "options": [
             {
@@ -7415,14 +7415,35 @@
                 "--last"
               ],
               "argument": "LAST",
-              "description": "🆕 Number of last versions to show\n\nConflicts with: --all"
+              "description": "🆕 Number of last versions to show\n\nConflicts with: --latest"
+            },
+            {
+              "names": [
+                "--from"
+              ],
+              "argument": "FROM",
+              "description": "📌 Version in use: show how many versions it is behind, and only the newer ones\n\nCombine with --with-changelog to read what changed since, or use playground connector-plugin changelog --from.\n\nConflicts with: --latest"
+            },
+            {
+              "names": [
+                "--latest"
+              ],
+              "argument": "",
+              "description": "🔝 Only print the latest version number, nothing else\n\n🎓 Tip: use it in scripts and from AI agents, the output is just the version (for example 10.9.9)\n\nConflicts with: --last, --from, --with-changelog, --json"
             },
             {
               "names": [
                 "--with-changelog"
               ],
               "argument": "",
-              "description": "📜 Show the release notes of each version under it\n\nFrom the changelog feeds of docs.confluent.io, like playground connector-plugin changelog: Confluent self-managed plugins only."
+              "description": "📜 Show the release notes of each version under it\n\nFrom the changelog feeds of docs.confluent.io, like playground connector-plugin changelog: Confluent self-managed plugins only.\n\nConflicts with: --latest"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON\n\nlatest, versions (version, release_date, days_ago, and changes with --with-changelog), documentation_url, versions_behind with --from.\n\nConflicts with: --latest"
             }
           ]
         },

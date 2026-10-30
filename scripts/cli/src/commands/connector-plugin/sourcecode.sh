@@ -67,14 +67,13 @@ function get_version_from_cc_docker_connect_cache_versions_env () {
 }
 
 function get_latest_version_from_confluent_hub () {
-    output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-    last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
+    last_version=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
     if [[ -n "$last_version" ]]
     then
         log "✨ --connector-tag was not set, using latest version on hub $last_version"
         connector_tag="$last_version"
     else
-        logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>"
+        logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --latest>"
         logerror "❌ --connector-tag flag is set 2 times, but one of them is set to latest. Comparison between version can only works when providing versions"
         exit 1
     fi
@@ -670,14 +669,13 @@ else
     then
         if [ $is_fully_managed -eq 0 ]
         then
-            output=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --last 1 | head -n 1)
-            last_version=$(echo "$output" | cut -d " " -f 2 | cut -d "v" -f 2)
+            last_version=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
             if [[ -n "$last_version" ]]
             then
                 log "✨ --connector-tag was not set, using latest version on hub $last_version"
                 connector_tag="$last_version"
             else
-                logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --last 1>, using latest"
+                logwarn "could not find latest version using <playground connector-plugin versions --connector-plugin \"$connector_plugin\" --latest>, using latest"
                 connector_tag="latest"
             fi
         else

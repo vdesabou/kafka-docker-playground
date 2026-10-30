@@ -13,7 +13,8 @@ run.
 
 | You want | Command |
 | --- | --- |
-| every released version, with its release date | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc` (`--last 5`, `--with-changelog`) |
+| every released version, with its release date | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc` (`--last 5`, `--with-changelog`, `--json`) |
+| how far behind the customer's version is | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--latest` prints only the latest version) |
 | what changed since version X (release notes), is a bug fixed after it | `playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6` (`--grep "CVE\|NullPointer"`, `--to`, `--json`) |
 | what was released on the Hub in the last days | `playground connector-plugin display-last-updated --days 7` (`--vendor confluentinc`) |
 | what a config key does, its default, since when, values used | `playground connector-plugin config-key --key batch.size` (`-c JdbcSinkConnector`) |
@@ -30,7 +31,7 @@ run.
 
    | Command | Source | Fresh as of |
    | --- | --- | --- |
-   | `versions`, `display-last-updated` | Confluent Hub API (`api.hub.confluent.io/api/plugins/<owner>/<name>/versions`) | the first call: cached in `/tmp/version_<owner>_<name>` until `--force-refresh` |
+   | `versions`, `display-last-updated` | Confluent Hub API (`api.hub.confluent.io/api/plugins/<owner>/<name>/versions`) | one day: the Hub answer is cached in `/tmp/version_<owner>_<name>.json` until `--force-refresh` |
    | `changelog` | the changelog feeds of docs.confluent.io, one per minor line (`docs.confluent.io/kafka-connectors/<slug>/<major.minor>/changelog.xml`), found from the `documentation_url` of the plugin manifest; release dates from the Hub API | one day: cached in `/tmp/connector-plugin-changelog` until `--force-refresh` |
    | `config-key` | the `config-<class>.txt` references next to the examples (about 290 files, tracked in git, refreshed by CI with the latest connector version), plus the versions you ran locally (`.connector_config/`) | your last `git pull` |
    | `sourcecode` | `scripts/cli/confluent-hub-plugin-list.txt` (plugin → repository), built from the Hub on first use; fully managed versions from `cc-docker-connect` | the list: until you regenerate it (`playground generate-connector-plugin-list`) |
@@ -67,9 +68,19 @@ playground connector-plugin display-last-updated --days 7 --vendor confluentinc
 
 Gotchas:
 
-- **The list is cached, "days ago" included.** The first call writes `/tmp/version_<owner>_<name>` with the lines
-  as printed, the number of days computed that day: a week later it still says `36 days ago`, and a release published
-  since is missing. Use `--force-refresh` after a release, or before quoting a date.
+- **The list is cached for one day.** The answer of the Hub is kept in `/tmp/version_<owner>_<name>.json`; the
+  "days ago" are computed on every call, so they are always right, but a release published in the last hours can be
+  missing: use `--force-refresh` right after a release. When the Hub can't be reached, an older cache is used with
+  `⚠️ could not refresh the versions of … using the cache of <date>`.
+- `/tmp/version_<owner>_<name>` (no extension) is the text rendering, rewritten on every call: the `--connector-tag`
+  picker and `repro bisect` read it.
+- **`--from <customer version>`** prints how far behind it is, then only the newer versions:
+  `📌 10.9.5 is 4 version(s) behind the latest 10.9.9 (released 2026-09-16, 44 days ago)`. At the latest version:
+  `✅ … is the latest version`; a version the Hub doesn't know gets `⚠️ … is not a version of …` first. Add
+  `--with-changelog` to read what changed since.
+- **`--latest`** prints only the version number (`10.9.9`), for scripts. **`--json`** gives `latest`, `versions`
+  (`version`, `release_date`, `days_ago`, `changes` with `--with-changelog`), `documentation_url`, and
+  `from` / `versions_behind` with `--from` (counted before `--last`).
 - Oldest first: `--last N` shows the N most recent, in release order, then the documentation link.
 - `--with-changelog` adds the release notes of each version under it (same source and limits as `changelog` below):
   `versions -c confluentinc/kafka-connect-jdbc --last 3 --with-changelog`.
@@ -250,7 +261,13 @@ playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --last 3
 # 🔢 v10.9.8 - 📅 release date: 2026-09-16 (36 days ago)
 # 🔢 v10.9.9 - 📅 release date: 2026-09-16 (36 days ago)
 # 🌐 documentation: https://docs.confluent.io/kafka-connect-jdbc/current/
-ls -l /tmp/version_confluentinc_kafka-connect-jdbc                                      # the cache
+ls -l /tmp/version_confluentinc_kafka-connect-jdbc.json                                 # the cache (one day)
+playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --from 10.9.5 --last 2
+# 📌 10.9.5 is 4 version(s) behind the latest 10.9.9 (released 2026-09-16, 44 days ago)
+# 🔢 v10.9.8 - 📅 release date: 2026-09-16 (44 days ago)
+# 🔢 v10.9.9 - 📅 release date: 2026-09-16 (44 days ago)
+playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --latest
+# 10.9.9
 playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6 --to 10.9.8
 # 📜 Release notes of confluentinc/kafka-connect-jdbc after 10.9.6 up to 10.9.8: 2 version(s)
 # 🔢 v10.9.8 - 📅 release date: 2026-09-16
@@ -329,7 +346,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 
 | Customer question | Command |
 | --- | --- |
-| "is this fixed in a newer version?" | `versions --last 10`, then `sourcecode --connector-tag <theirs> --connector-tag <latest> --only-show-url` and read the compare (commits, changed files) |
+| "is this fixed in a newer version?" | `versions --from <theirs>`, then `sourcecode --connector-tag <theirs> --connector-tag <latest> --only-show-url` and read the compare (commits, changed files) |
 | "what does this key do, and what's its default in our version?" | `config-key --key <k> -c <class>`; for their exact version, `playground connector show-config-parameters` with `--connector-tag` (adds it to `🗂️ versions run locally`) |
 | "this key doesn't work for us" | `config-key`: not in their version (❌ in `versions run locally`), a framework key, or a typo (`💡 similar keys`) |
 | "what value do people use?" | the `🧪 values used` part of `config-key`, with one example file per value |
@@ -344,7 +361,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 ## 8. Cheat sheet
 
 ```bash
-playground connector-plugin versions -c <owner/name> [--last N] [--with-changelog] [--force-refresh]
+playground connector-plugin versions -c <owner/name> [--last N] [--from X] [--latest] [--with-changelog] [--json] [--force-refresh]
 playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--grep <regex>] [--json]
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>]
 playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]
@@ -352,7 +369,7 @@ playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--con
 playground connector-plugin search-jar -c <owner/name> [--connector-tag X] [--class <Class>]
 ```
 
-- `versions` = Hub API, cached in `/tmp/version_<owner>_<name>` ("days ago" frozen): `--force-refresh`.
+- `versions` = Hub API, cached one day in `/tmp/version_<owner>_<name>.json` (`--force-refresh` after a release); `--from` = how far behind.
 - `changelog` = docs.confluent.io feeds, self-managed Confluent plugins only, `--from` excluded.
 - `config-key` = CI references in git + versions run locally. "Since" = CI date, not a version.
 - `sourcecode`: always pass the customer's `--connector-tag`. Scripts: `--only-show-url` / `--checkout-only`, never

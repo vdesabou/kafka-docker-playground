@@ -14,12 +14,25 @@ lab_expect_exit 0
 lab_expect_contains "💯 Listing last 3 versions for connector plugin confluentinc/kafka-connect-jdbc"
 lab_expect_equals "$(grep -c "🔢 v" <<< "$LAB_OUTPUT")" "3" "number of versions listed"
 lab_expect_contains "🌐 documentation: https://docs.confluent.io/kafka-connect-jdbc/current/"
-if [ ! -f /tmp/version_confluentinc_kafka-connect-jdbc ]
+if [ ! -f /tmp/version_confluentinc_kafka-connect-jdbc.json ]
 then
-    logerror "❌ cache file /tmp/version_confluentinc_kafka-connect-jdbc not found"
+    logerror "❌ cache file /tmp/version_confluentinc_kafka-connect-jdbc.json not found"
     exit 1
 fi
-log "✅ cache file /tmp/version_confluentinc_kafka-connect-jdbc"
+log "✅ cache file /tmp/version_confluentinc_kafka-connect-jdbc.json"
+lab_run playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --from 10.9.5 --last 2
+lab_expect_exit 0
+lab_expect_contains "📌 10.9.5 is"
+lab_expect_contains "version(s) behind the latest"
+lab_expect_equals "$(grep -c "🔢 v" <<< "$LAB_OUTPUT")" "2" "number of versions listed"
+lab_expect_not_contains "v10.9.5 -"
+lab_run playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --latest
+lab_expect_exit 0
+lab_expect_equals "$(grep -cE '^[0-9][0-9A-Za-z.-]*$' <<< "$LAB_OUTPUT")" "1" "--latest prints only the version"
+lab_run playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --last 2 --json
+lab_expect_exit 0
+lab_expect_equals "$(jq '.versions | length' <<< "$LAB_OUTPUT")" "2" "number of versions in the JSON"
+lab_expect_equals "$(jq -r '.versions[-1].version == .latest' <<< "$LAB_OUTPUT")" "true" "last version of the JSON is latest"
 lab_run playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6 --to 10.9.8
 lab_expect_exit 0
 lab_expect_contains "📜 Release notes of confluentinc/kafka-connect-jdbc after 10.9.6 up to 10.9.8: 2 version(s)"
