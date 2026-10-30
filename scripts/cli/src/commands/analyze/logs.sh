@@ -161,16 +161,30 @@ function is_duplicate_cfk_bundle () {
 }
 
 # a folder written by kubectl confluent support-bundle (or playground debug cfk generate-bundle): cluster-details.txt
-# and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout)
+# and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout). Also a flat
+# collection of kubectl outputs made by hand (kubectl logs > kafka-0.log, kubectl get kafka -o yaml > kafka.yaml…): a
+# log of the CFK operator, or the YAML of a platform.confluent.io custom resource, at the top of the folder
 # $1: folder
 function is_cfk_bundle () {
     local d
     [ -f "$1/cluster-details.txt" ] && return 0
-    [ -d "$1/operator" ] || return 1
-    [ -d "$1/cluster-resources" ] && return 0
-    for d in "$1"/*/cluster-details.txt
+    if [ -d "$1/operator" ]
+    then
+        [ -d "$1/cluster-resources" ] && return 0
+        for d in "$1"/*/cluster-details.txt
+        do
+            [ -f "$d" ] && return 0
+        done
+    fi
+    # the operator/ folder of a support bundle has the logs of the operator: it is not a bundle on its own
+    [ "$(basename "$1")" == "operator" ] && return 1
+    for d in "$1"/confluent-operator*.log "$1"/*.yaml "$1"/*.yml
     do
-        [ -f "$d" ] && return 0
+        [ -f "$d" ] || continue
+        case "$(basename "$d")" in
+            confluent-operator*.log) return 0 ;;
+        esac
+        head -n 20 "$d" 2>/dev/null | grep -q 'apiVersion: platform.confluent.io/' && return 0
     done
     return 1
 }
@@ -248,12 +262,22 @@ function analyze_logs_path () {
         fi
         # CFK bundles in sub folders: analyzed on their own, their files are left out of the log digest
         local prune=()
+        local found_bundles=()
+        local -A checked_dirs=()
         local bundle_dir
+        local d
         if [[ -z "$logs_only" ]]
         then
             while IFS= read -r -d '' f
             do
                 bundle_dir=$(dirname "$f")
+                # inside a bundle already found (the CR yamls and operator log of a support bundle), or checked
+                for d in "${found_bundles[@]}"
+                do
+                    [[ "$bundle_dir/" == "$d/"* ]] && continue 2
+                done
+                [ -n "${checked_dirs[$bundle_dir]}" ] && continue
+                checked_dirs[$bundle_dir]=1
                 # <bundle>/<namespace>/cluster-details.txt (older layout): the bundle is the folder above
                 if [ "$(dirname "$bundle_dir")" != "$path" ] && is_cfk_bundle "$(dirname "$bundle_dir")"
                 then
@@ -262,6 +286,7 @@ function analyze_logs_path () {
                 if is_cfk_bundle "$bundle_dir"
                 then
                     case " ${prune[*]} " in *" -path $bundle_dir "*) continue ;; esac
+                    found_bundles+=("$bundle_dir")
                     [ ${#prune[@]} -gt 0 ] && prune+=(-o)
                     prune+=(-path "$bundle_dir")
                     if [[ "$label" == *":" ]]
@@ -271,7 +296,10 @@ function analyze_logs_path () {
                         analyze_logs_path "$bundle_dir" "${label%/}/${bundle_dir#$path/}"
                     fi
                 fi
-            done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z)
+            # the support bundles first, then the flat collections of kubectl outputs (operator log, CR yamls), so that the
+            # files of a support bundle are never taken for a flat collection
+            done < <(find "$path" -mindepth 2 \( -name cluster-details.txt -o -name cluster-resources \) ! -path "*/__MACOSX/*" -print0 | sort -z
+                     find "$path" -mindepth 2 -type f \( -name 'confluent-operator*.log' -o -name '*.yaml' -o -name '*.yml' \) ! -path "*/__MACOSX/*" -print0 | sort -z)
         fi
         if [ ${#prune[@]} -gt 0 ]
         then
@@ -290,7 +318,39 @@ function analyze_logs_path () {
     fi
 
     case "$path" in
-        *.zip|*.tar|*.tar.gz|*.tgz)
+        *.7z)
+            # bsdtar (macOS tar, libarchive) reads 7z, else 7-Zip
+            local seven_zip=""
+            if tar --version 2>/dev/null | grep -q bsdtar
+            then
+                seven_zip="tar"
+            elif command -v bsdtar > /dev/null 2>&1
+            then
+                seven_zip="bsdtar"
+            else
+                seven_zip=$(command -v 7zz || command -v 7z || command -v 7za)
+            fi
+            if [ -z "$seven_zip" ]
+            then
+                logwarn "⚠️ $label: cannot extract a .7z archive without bsdtar or 7-Zip (brew install sevenzip, apt install p7zip-full / libarchive-tools): extract it and pass the folder"
+                nb_skipped=$((nb_skipped+1))
+                return
+            fi
+            nb_extracted=$((nb_extracted+1))
+            extract_dir=$(basename "$path")
+            extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
+            mkdir -p "$extract_dir"
+            case "$(basename "$seven_zip")" in
+                tar|bsdtar) "$seven_zip" -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
+                *) "$seven_zip" x -y -o"$extract_dir" "$path" > /dev/null 2>&1 ;;
+            esac
+            if [ $? -ne 0 ]
+            then
+                logwarn "⚠️ could not fully extract $label"
+            fi
+            analyze_logs_path "$extract_dir" "$label:"
+            ;;
+        *.zip|*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz)
             nb_extracted=$((nb_extracted+1))
             # named after the archive: it names the report of a CFK bundle archived without a top folder
             extract_dir=$(basename "$path")
@@ -321,6 +381,10 @@ function analyze_logs_path () {
                     append_config_file "$path" "$label"
                 fi
             else
+                case "$path" in
+                    *.rar|*.bz2|*.xz|*.zst|*.lz4)
+                        logwarn "⚠️ $label: archive format not supported, extract it and pass the folder" ;;
+                esac
                 nb_skipped=$((nb_skipped+1))
             fi
             ;;

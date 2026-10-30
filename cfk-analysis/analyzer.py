@@ -168,6 +168,13 @@ _PLUGIN_INSTALL_ERRORS = (
 _PLUGIN_NAME_RE = re.compile(r"(?:Attempting to download|to download|plugin install) (\S+)")
 
 
+def _is_operator_log(rel: str) -> bool:
+    """a log of the CFK operator: operator/ folder of a support bundle, or confluent-operator-<hash>.log of a flat
+    collection of kubectl logs"""
+    return rel.split(os.sep)[0] == 'operator' or '/operator/' in f'/{rel}' or \
+        os.path.basename(rel).startswith('confluent-operator')
+
+
 def _log_stem(rel: str) -> str:
     """pod of a log file: cluster-resources/kafka/logs/kafka-0.log -> kafka-0"""
     return re.sub(r'\.(?:log|txt|out)(?:\..*)?$', '', os.path.basename(rel), flags=re.IGNORECASE)
@@ -722,8 +729,7 @@ class CFKBundleAnalyzer:
         plugin_log = {'plugin': None} if any('Installing connector plugins' in l or 'connect plugin install' in l
                                              for l in lines[:5000]) else None
         # states of known CFK issues that the operator logs at INFO (runbooks.py operator_info)
-        operator_info_re = self.runbooks.operator_info_re if rel.split(os.sep)[0] == 'operator' or \
-            '/operator/' in f'/{rel}' else None
+        operator_info_re = self.runbooks.operator_info_re if _is_operator_log(rel) else None
         for line_num, line in enumerate(lines, 1):
             if record is not None:
                 cb = _CAUSED_BY_RE.match(line)
@@ -1373,8 +1379,7 @@ class CFKBundleAnalyzer:
             return None
         first = first_ts(lines[:2000])
         last = first_ts(reversed(lines[-2000:]))
-        if first and last and ('/logs/' in f'/{rel}' or rel.split(os.sep)[0] == 'operator' or '/operator/' in f'/{rel}'
-                               or self._component_from_path(rel)):
+        if first and last and ('/logs/' in f'/{rel}' or _is_operator_log(rel) or self._component_from_path(rel)):
             self.log_windows[rel] = {'pod': _log_stem(rel), 'first': first, 'last': last}
 
     def _check_log_coverage(self):
@@ -1392,8 +1397,7 @@ class CFKBundleAnalyzer:
                 notes.append(f"{rel} starts at {w['first']:%Y-%m-%d %H:%M}, {kraft_migration._duration(started, w['first'])} "
                              f"after its pod started ({started:%Y-%m-%d %H:%M})")
         self.coverage['log_windows'] = windows
-        operator_logs = [(rel, w) for rel, w in self.log_windows.items()
-                         if rel.split(os.sep)[0] == 'operator' or '/operator/' in f'/{rel}']
+        operator_logs = [(rel, w) for rel, w in self.log_windows.items() if _is_operator_log(rel)]
         changes = [c for c in self.timeline if c.get('kind') not in ('Pod', 'StatefulSet')]
         newest = max(changes, key=lambda c: c['time'], default=None)
         newest_time = kraft_migration._parse_ts(newest['time']) if newest else None

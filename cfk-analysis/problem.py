@@ -115,6 +115,23 @@ SYMPTOMS: Dict[str, tuple] = {
 }
 
 
+# the categories that are the symptom itself (the others of SYMPTOMS are related: a TLS problem with only "Connection
+# refused" issues is not explained): only they make the verdict "explained"
+MAIN_CATEGORIES: Dict[str, set] = {
+    "roll / upgrade stuck": {"Rollout Issues", "Reconciliation Blocked", "Operator Issues", "Compatibility"},
+    "crash / restarts": {"Pod Failures", "Container Status", "Pod Status", "Init Container Issues", "Image Issues"},
+    "pending / scheduling": {"Scheduling Issues", "Pod Status", "Volume Issues"},
+    "memory / OOM": {"Resource Issues"},
+    "TLS / certificate": {"Certificate/TLS Issues", "JVM Truststore Issues"},
+    "auth / RBAC": {"Authentication Issues", "RBAC Issues", "MDS/RBAC Issues", "License Issues"},
+    "KRaft migration": {"KRaft Migration"},
+    "connector failed": {"Connect Issues", "Plugin Issues", "Serialization Issues"},
+    "slow / lag / hang": {"Replication Issues", "Resource Issues", "Connect Issues"},
+    "disk / storage": {"Storage Issues", "Volume Issues"},
+    "network": {"Network Issues"},
+}
+
+
 def _dates(text: str, ref: datetime) -> List[datetime]:
     """Dates (with their time when given) of the problem statement; ref: the collection time of the bundle"""
     out = []
@@ -208,9 +225,10 @@ def correlate(results: Dict, problem: Dict) -> Dict:
     on the dates (log coverage, changes before), issues that explain it"""
     components = set(problem["components"])
     instances = set(problem["instances"])
-    wanted = set()
+    wanted, main = set(), set()
     for s in problem["symptoms"]:
         wanted |= SYMPTOMS[s][1]
+        main |= MAIN_CATEGORIES[s]
     dates = problem["dates"]
     matched = []
     for issue in results.get("issues") or []:
@@ -221,8 +239,10 @@ def correlate(results: Dict, problem: Dict) -> Dict:
             why.append(f"instance {issue['instance']}")
         elif components and issue.get("component") in components:
             why.append(f"component {issue['component']}")
-        if wanted and issue.get("category") in wanted:
+        if wanted and issue.get("category") in main:
             why.append(f"symptom ({issue['category']})")
+        elif wanted and issue.get("category") in wanted:
+            why.append(f"related symptom ({issue['category']})")
         if dates and _near(issue, dates):
             why.append("date")
         # a component alone is not enough when symptoms were given, a date alone never is
@@ -232,7 +252,9 @@ def correlate(results: Dict, problem: Dict) -> Dict:
             issue["problem_match"] = ", ".join(why)
             matched.append(issue)
     order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    matched.sort(key=lambda i: (order.get(i.get("severity"), 4), "date" not in i["problem_match"], -i.get("count", 1)))
+    # the main categories of the symptoms first, then by severity
+    matched.sort(key=lambda i: (bool(wanted) and i.get("category") not in main, order.get(i.get("severity"), 4),
+                                "date" not in i["problem_match"], -i.get("count", 1)))
 
     facts = []
     windows = (results.get("coverage") or {}).get("log_windows") or []
@@ -259,10 +281,15 @@ def correlate(results: Dict, problem: Dict) -> Dict:
         if missing:
             facts.append(f"ℹ️ no issue for {', '.join(missing)} in the bundle")
 
-    serious = [i for i in matched if i.get("severity") in ("critical", "high", "medium")]
+    serious = [i for i in matched if i.get("severity") in ("critical", "high", "medium")
+               and (not wanted or i.get("category") in main)]
+    related = sorted({i["category"] for i in matched if wanted and i.get("category") not in main})
     if serious:
         verdict = ("explained", f"🎯 {len(serious)} issue(s) of the bundle match the problem: start with "
                                 f"{serious[0]['category']} ({serious[0].get('component', 'other')})")
+    elif related:
+        verdict = ("partly explained", f"🔎 only issues of related categories match ({', '.join(related)}), none of "
+                                       f"{', '.join(sorted(main))}: the bundle may not show the cause, see 📥 Data to request")
     elif matched:
         verdict = ("partly explained", f"🔎 only {len(matched)} low issue(s) match the problem: the bundle may not show the cause")
     elif uncovered:

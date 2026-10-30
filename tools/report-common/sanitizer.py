@@ -106,7 +106,9 @@ class DataSanitizer:
         self.patterns = {
             'ipv4': re.compile(r'(?<![\w.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![\w.])'),
             'ipv6': re.compile(r'\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b'),
-            'email': re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'),
+            # starts at the beginning of a run of local-part characters only: with \b, a long run without @ (an URL-encoded
+            # query of Control Center, 366 KB on one line) was scanned again from each word boundary in it (quadratic, 24 s)
+            'email': re.compile(r'(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'),
             'ldap_dn': re.compile(r'\b(?:uid|cn|ou|dc|o)=[^,\s"\']+(?:,\s*(?:uid|cn|ou|dc|o|c|l|st)=[^,\s"\']+)+', re.IGNORECASE),
             'hostname': re.compile(r'(?<![\w.-])(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?![\w-])'),
         }

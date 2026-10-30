@@ -2964,24 +2964,25 @@ subcommands:
       and the .properties\nand connector JSON files of the input.\n\n☸️ A Confluent
       for Kubernetes (CFK) support bundle (kubectl confluent support-bundle or playground
       debug cfk generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
-      and operator/), alone or inside a folder or an archive, is detected and analyzed
-      as a whole, in a Docker image built on first use: Warning events, pods (phase,
-      waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource
-      (phase/state, ready replicas, False conditions, failed connector tasks), the
-      environment checked against the CFK support matrix (Kubernetes, CFK operator,
-      CP and init container versions), the recent changes (who edited which CR and
-      when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
-      zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties
-      rendered by CFK, configOverrides, config logged at startup, connector configs
-      from the Connector CRs and the config dumps of the logs), a JVM default truststore
-      set without its password, and the ERROR/FATAL records of its logs, sorted into
-      ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,
-      storage, scheduling…) with remediation steps. \U0001F4D5 The log messages and
-      events of known CFK problems (CFK triage table of Confluent support: roll blocked
-      by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper
-      to KRaft migration, authorizer timeout, license secret…) are listed first, with
-      what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds
-      the internal runbook links of Confluent support (\U0001F512 in the terminal,
+      and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log
+      or the YAML of a platform.confluent.io custom resource at its top), alone or
+      inside a folder or an archive, is detected and analyzed as a whole, in a Docker
+      image built on first use: Warning events, pods (phase, waiting reasons, restarts,
+      OOMKilled), every platform.confluent.io custom resource (phase/state, ready
+      replicas, False conditions, failed connector tasks), the environment checked
+      against the CFK support matrix (Kubernetes, CFK operator, CP and init container
+      versions), the recent changes (who edited which CR and when, StatefulSet rollouts,
+      pod restarts), the configuration (kafka.properties, zookeeper.properties, schemaregistry.properties,
+      connect.properties and controlcenter.properties rendered by CFK, configOverrides,
+      config logged at startup, connector configs from the Connector CRs and the config
+      dumps of the logs), a JVM default truststore set without its password, and the
+      ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS,
+      auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation
+      steps. \U0001F4D5 The log messages and events of known CFK problems (CFK triage
+      table of Confluent support: roll blocked by the pre-roll checks, expired certificate,
+      INCONSISTENT_CLUSTER_ID, ZooKeeper to KRaft migration, authorizer timeout, license
+      secret…) are listed first, with what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE
+      adds the internal runbook links of Confluent support (\U0001F512 in the terminal,
       the HTML report and --json). \U0001F504 A CR whose image is not what its StatefulSet
       or pods run (operator did not apply it, roll not complete) is one finding, the
       exceeded quota events become one finding per ResourceQuota, each Warning event
@@ -3035,8 +3036,9 @@ subcommands:
       - "--file"
       - "-f"
       argument: FILE
-      description: "\U0001F5D2️  Log file, folder, .zip, .tar(.gz) or .gz file to
-        analyze\n\n\U0001F393 Tip: can be set several times\n\nRepeatable: ✓ Yes"
+      description: "\U0001F5D2️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or
+        .gz file to analyze\n\n\U0001F393 Tip: can be set several times\n\nRepeatable:
+        ✓ Yes"
     - names:
       - "--sample"
       - "-s"

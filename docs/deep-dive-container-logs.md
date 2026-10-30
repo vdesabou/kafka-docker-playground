@@ -20,7 +20,7 @@ Takes about 15 minutes to read and run.
 | to watch live | `-c connect` (ctrl-c to stop), several `-c` for several containers |
 | to block until a line shows up (scripts) | `-c connect --wait-for-log "<text>" --max-wait 120` |
 | the whole log in your editor | `-c connect --open` |
-| the digest of files, folders, `.zip` / `.tar.gz` bundles | `playground analyze logs -f <path>` (repeat `-f`) |
+| the digest of files, folders, `.zip` / `.tar.gz` / `.7z` bundles | `playground analyze logs -f <path>` (repeat `-f`) |
 
 ---
 
@@ -163,9 +163,9 @@ What it does with what you give it:
 | Input | Handling |
 | --- | --- |
 | a folder | scanned recursively, sorted, `__MACOSX/` and `.DS_Store` ignored |
-| `.zip`, `.tar`, `.tar.gz`, `.tgz` | extracted to a temporary folder (deleted at the end), nested archives too |
+| `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z` | extracted to a temporary folder (deleted at the end), nested archives too. `.7z` needs `bsdtar` (the `tar` of macOS) or 7-Zip; `.rar`, `.xz`, `.zst`… are skipped with a warning: extract them first |
 | `.gz` | decompressed on the fly |
-| a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, sanitized, in its own HTML report. `--problem "<component, symptom, since when>"` matches it against the problem of the customer (🎯 verdict, issues that explain it first), and a 📥 Data to request section says what to ask the customer for next. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
+| a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`; or a flat collection of `kubectl` outputs with a `confluent-operator-*.log` or the YAML of a `platform.confluent.io` custom resource at its top), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, sanitized, in its own HTML report. `--problem "<component, symptom, since when>"` matches it against the problem of the customer (🎯 verdict, issues that explain it first), and a 📥 Data to request section says what to ask the customer for next. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
 | a `.properties` file, a JSON file with connector configs | analyzed like a text file, and shown in the ⚙️ configuration section of the HTML report |
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
 | a copy of a file or of a CFK support bundle already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …` / `⏭️ … same CFK support bundle as …`, only one report), counted in the last line |
