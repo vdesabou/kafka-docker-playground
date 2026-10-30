@@ -154,6 +154,7 @@ playground analyze logs --sample connect_task_failure     # a Connect worker log
 playground analyze logs --sample support_bundle           # a .zip with that log and a gzipped broker log
 playground analyze logs --sample cfk_bundle               # a CFK support bundle (see below)
 playground analyze logs --sample cfk_kraft_migration      # a CFK support bundle with a stuck ZooKeeper to KRaft migration
+playground analyze logs --sample cfk_rollout              # a CFK support bundle with a half-done CP upgrade
 ```
 
 What it does with what you give it:

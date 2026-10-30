@@ -198,6 +198,11 @@ class CFKBundleAnalyzer:
         self.pod_images = {}
         self.log_versions = {}
         self.blocked_crs = set()
+        # what the bundle covers in time (_check_log_coverage): log file -> {pod, first, last}, pod -> status.startTime
+        self.log_windows = {}
+        self.pod_started = {}
+        # CRs with the block-reconcile condition True but without the annotation: (ref, since, file, name, kind)
+        self.stale_block_conditions = []
         # ZooKeeper to KRaft migration (kraft_migration.py): KRaftMigrationJob CRs (name -> status, file), their Warning
         # events, the "Migration current status <phase>/<sub-phase>" lines of the operator log
         self.kraft_migrations = {}
@@ -369,6 +374,8 @@ class CFKBundleAnalyzer:
         self._drop_duplicate_text_events()
         self._merge_quota_events()
         self._check_rollouts()
+        self._check_stale_block_conditions()
+        self._check_log_coverage()
         for issue in self.issues:
             self._assign_component(issue)
         self._mark_transient()
@@ -472,7 +479,7 @@ class CFKBundleAnalyzer:
                    file_path: str, line_number: int = None, context: str = None,
                    caused_by: List[str] = None, count: int = 1, timestamp: str = None,
                    dedupe_key: str = None, resource: str = None, resource_kind: str = None,
-                   affected: str = None, connector: str = None):
+                   affected: str = None, connector: str = None, first_seen: str = None):
         """Add an issue, or bump the occurrence count of an identical one.
 
         Identical means same category, same file (rotated logs of the same pod count
@@ -505,6 +512,8 @@ class CFKBundleAnalyzer:
         }
         if timestamp:
             issue['timestamp'] = timestamp
+        if first_seen:
+            issue['first_seen'] = first_seen
         if line_number:
             issue['line_number'] = line_number
         if context:
@@ -735,6 +744,7 @@ class CFKBundleAnalyzer:
                 self._handle_k8s_line(rel, lines, line_num, line)
 
         flush()
+        self._record_log_window(rel, lines)
         component = self._component_from_path(rel)
         if component and component[0] in _CONFIG_COMPONENTS:
             self._collect_config_dumps(rel, lines, *component)
@@ -989,6 +999,7 @@ class CFKBundleAnalyzer:
             context=yaml.safe_dump(event, default_flow_style=False, sort_keys=False),
             count=count,
             timestamp=event.get('lastTimestamp') or event.get('eventTime') or event.get('firstTimestamp'),
+            first_seen=event.get('firstTimestamp') or event.get('eventTime'),
             resource=obj.get('name'),
             resource_kind=obj.get('kind'),
         )
@@ -1161,6 +1172,78 @@ class CFKBundleAnalyzer:
                 resource=name, resource_kind=truststore['kind'],
             )
 
+    def _check_stale_block_conditions(self):
+        """CRs that still have the "Reconcile is blocked." condition after their block-reconcile annotation was removed:
+        one finding for all of them. The condition is not cleared when the annotation is removed, so it says nothing
+        about the reconciliation of today."""
+        if not self.stale_block_conditions:
+            return
+        crs = ", ".join(f"{ref} (since {since})" if since else ref for ref, since, _, _, _ in self.stale_block_conditions)
+        first = self.stale_block_conditions[0]
+        self._add_issue(
+            severity='low', category='Reconciliation Blocked',
+            message=(f"{len(self.stale_block_conditions)} CR(s) still have the condition platform.confluent.io/block-reconcile "
+                     f"= True (\"Reconcile is blocked.\") without the annotation: {crs}. The annotation was removed, so the "
+                     "operator reconciles them again: the condition is not cleared when the annotation goes away, ignore it"),
+            file_path=first[2], resource=first[3], resource_kind=first[4], dedupe_key="stale-block-reconcile",
+        )
+        self.issues[-1]['next_steps'] = [
+            "to confirm, the operator log has no \"reconcile is blocked\" line for these CRs after the annotation was removed",
+            "pods deleted by hand while a CR was blocked came back with the spec of that time: compare what runs with the "
+            "CR (Rollout Issues finding)",
+        ]
+
+    def _record_log_window(self, rel: str, lines: List[str]):
+        """First and last timestamp of a log file (in the first 120 characters of a line, as written)"""
+        def first_ts(seq):
+            for line in seq:
+                ts = kraft_migration._parse_ts(line[:120])
+                if ts:
+                    return ts
+            return None
+        first = first_ts(lines[:2000])
+        last = first_ts(reversed(lines[-2000:]))
+        if first and last and ('/logs/' in f'/{rel}' or rel.split(os.sep)[0] == 'operator' or '/operator/' in f'/{rel}'
+                               or self._component_from_path(rel)):
+            self.log_windows[rel] = {'pod': _log_stem(rel), 'first': first, 'last': last}
+
+    def _check_log_coverage(self):
+        """What the logs of the bundle cover: the time range of each log (.coverage.log_windows), and one finding when
+        a log starts long after its pod started (the bundle keeps the end of each log), or after the last change of the
+        CRs (operator log): what happened before is not in the bundle"""
+        windows = []
+        notes = []
+        for rel, w in sorted(self.log_windows.items()):
+            started = kraft_migration._parse_ts(self.pod_started.get(w['pod']))
+            windows.append({'file': rel, 'pod': w['pod'], 'first': w['first'].isoformat(sep=' '),
+                            'last': w['last'].isoformat(sep=' '), 'span': kraft_migration._duration(w['first'], w['last']),
+                            'pod_started': started.isoformat(sep=' ') if started else None})
+            if started and (w['first'] - started).total_seconds() > 30 * 60:
+                notes.append(f"{rel} starts at {w['first']:%Y-%m-%d %H:%M}, {kraft_migration._duration(started, w['first'])} "
+                             f"after its pod started ({started:%Y-%m-%d %H:%M})")
+        self.coverage['log_windows'] = windows
+        operator_logs = [(rel, w) for rel, w in self.log_windows.items()
+                         if rel.split(os.sep)[0] == 'operator' or '/operator/' in f'/{rel}']
+        changes = [c for c in self.timeline if c.get('kind') not in ('Pod', 'StatefulSet')]
+        newest = max(changes, key=lambda c: c['time'], default=None)
+        newest_time = kraft_migration._parse_ts(newest['time']) if newest else None
+        for rel, w in operator_logs:
+            if newest_time and newest_time < w['first']:
+                notes.append(f"the last change of the CRs ({newest['kind']}/{newest['name']} at {newest_time:%Y-%m-%d %H:%M}) "
+                             f"is before the start of the operator log {rel} ({w['first']:%Y-%m-%d %H:%M}): how the "
+                             "operator applied it is not in the bundle")
+        if not notes:
+            return
+        self._add_issue(
+            severity='low', category='Bundle Coverage',
+            message="Some logs start too late to explain what happened before: " + "; ".join(notes),
+            file_path=operator_logs[0][0] if operator_logs else 'cluster-resources', dedupe_key="log-coverage",
+        )
+        self.issues[-1]['next_steps'] = [
+            "ask for the full logs of these pods: kubectl logs <pod> -n <namespace> --since=<duration> > <pod>.log",
+            "and for the container before its last restart: kubectl logs <pod> -n <namespace> --previous",
+        ]
+
     def _drop_duplicate_text_events(self):
         """The Warning rows of kubectl get events (event.txt) that are also in the YAML events of the bundle (event.yaml):
         counted once, from the YAML (which has the count and the timestamps)"""
@@ -1194,10 +1277,10 @@ class CFKBundleAnalyzer:
             group = groups.setdefault((quota.group(1), owner.group(1), owner.group(2)), {
                 'count': 0, 'first': None, 'last': None, 'file': issue['file'], 'quota': quota})
             group['count'] += issue.get('count', 1)
-            ts = issue.get('timestamp')
-            if ts:
-                group['first'] = min(filter(None, [group['first'], ts]))
-                group['last'] = max(filter(None, [group['last'], ts]))
+            if issue.get('first_seen') or issue.get('timestamp'):
+                group['first'] = min(filter(None, [group['first'], issue.get('first_seen') or issue.get('timestamp')]))
+            if issue.get('timestamp'):
+                group['last'] = max(filter(None, [group['last'], issue['timestamp']]))
         self.issues = kept
         for (name, kind, owner), group in sorted(groups.items()):
             parse = lambda text: dict(kv.split('=', 1) for kv in text.strip(',').split(',') if '=' in kv)
@@ -1381,6 +1464,8 @@ class CFKBundleAnalyzer:
         statuses = [(c, True) for c in status.get('initContainerStatuses') or []] + \
                    [(c, False) for c in status.get('containerStatuses') or []]
         containers = status.get('containerStatuses') or []
+        if status.get('startTime'):
+            self.pod_started[name] = status['startTime']
         spec_images = [str(c.get('image', '')) for c in (pod.get('spec') or {}).get('containers') or [] if isinstance(c, dict)]
         if spec_images:
             # the image of the spec has the tag; the status one is sometimes only a digest
@@ -1527,6 +1612,10 @@ class CFKBundleAnalyzer:
             if not isinstance(condition, dict):
                 continue
             condition_type = condition.get('type', '')
+            if condition_type.endswith('block-reconcile') and condition.get('status') == 'True' and \
+                    str(annotations.get('platform.confluent.io/block-reconcile', '')).lower() != 'true':
+                self.stale_block_conditions.append((ref, condition.get('lastTransitionTime'), file_path,
+                                                    metadata.get('name'), kind))
             text = f"{condition.get('reason', '')} {condition.get('message', '')}"
             bad_when_false = _GOOD_WHEN_TRUE_RE.search(condition_type) or _FAILURE_WORDS_RE.search(text)
             if condition.get('status') == 'False' and bad_when_false and 'progressing' not in condition_type.lower():

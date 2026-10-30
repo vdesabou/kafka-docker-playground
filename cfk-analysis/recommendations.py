@@ -267,6 +267,13 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "If on a KRaft-supported CFK version, plan migration off Zookeeper.",
         ],
     },
+    "Bundle Coverage": {
+        "summary": "Some logs of the bundle start too late to show what happened before: the bundle keeps the end of each log.",
+        "steps": [
+            "Compare the time of the problem with the time range of each log (🕰️ Log coverage of the HTML report, .coverage.log_windows of --json).",
+            "Ask for the logs that cover it: kubectl logs <pod> --since=<duration>, and --previous for the container before a restart.",
+        ],
+    },
     "Rollout Issues": {
         "summary": "A CR asks for another image than what runs: the operator did not apply it to the StatefulSet, or the roll of the pods is not complete.",
         "steps": [

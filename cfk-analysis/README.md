@@ -72,6 +72,13 @@ scheduling, …) with concrete remediation steps per category:
 - Each Warning event once: the rows of `kubectl get events` (`event.txt`) also in the YAML events (`event.yaml`) are
   dropped (`coverage.duplicate_events`), and a copy of the bundle inside the bundle (an archive extracted next to its
   content) is analyzed once (`coverage.skipped_copies`).
+- Log coverage (`.coverage.log_windows`, 🕰️ panel of the HTML report): the first and last timestamp of each log, with
+  the start of its pod when the bundle has its manifest; one `Bundle Coverage` finding when a log starts more than
+  30 minutes after its pod started, or when the operator log starts after the last change of the CRs.
+- A CR with the `platform.confluent.io/block-reconcile` condition `True` but without the annotation (the condition is
+  not cleared when the annotation is removed): one low finding for all of them.
+- Sample of the rollout, quota, coverage and stale condition findings: `samples/cfk-support-bundle-rollout.tar.gz`
+  (`make_rollout_bundle.py`, `playground analyze logs --sample cfk_rollout`).
 - Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
   container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
   while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC
