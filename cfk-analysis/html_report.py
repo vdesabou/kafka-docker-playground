@@ -655,8 +655,10 @@ def _runbooks_html(results: Dict) -> str:
     for hit in hits:
         example = hit.get("example") or {}
         where = example.get("file", "") + (f":{example['line_number']}" if example.get("line_number") else "")
-        links = " · ".join(f'<a href="{_esc(l["url"])}" target="_blank" rel="noopener">📘 {_esc(l.get("title") or l["url"])}</a>'
-                           for l in hit.get("links") or [])
+        links = " · ".join([f'<a href="{_esc(l["url"])}" target="_blank" rel="noopener">📘 {_esc(l.get("title") or l["url"])}</a>'
+                            for l in hit.get("links") or []] +
+                           [f'<a href="{_esc(l["url"])}" target="_blank" rel="noopener" title="internal runbook of Confluent support">'
+                            f'🔒 {_esc(l.get("title") or l["url"])}</a>' for l in hit.get("internal_links") or []])
         rows.append(f"<tr><td class=\"nowrap\"><span class=\"severity-pill {_esc(hit['severity'])}\">"
                     f"{SEVERITY_EMOJI.get(hit['severity'], '')} {_esc(hit['severity'])}</span></td>"
                     f"<td><strong>{_esc(hit['title'])}</strong><br>{_esc(hit['advice'])}"

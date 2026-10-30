@@ -211,7 +211,7 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   what they mean and the public KB / docs to read ([`cfk-analysis/runbooks.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/cfk-analysis/runbooks.py)).
   Confluent support adds the internal runbook of each one with a private file, `PLAYGROUND_CFK_RUNBOOKS_FILE`
   (default `reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json`): those links are printed in the
-  terminal and in `--json`, never in the HTML report. Probe failures and back-offs of a pod that is Running and Ready
+  terminal, the HTML report and `--json`, with a 🔒. Probe failures and back-offs of a pod that is Running and Ready
   in the bundle, with fewer than 3 restarts, are `low` and marked `transient` (a pod not Ready while Kafka starts),
   and neither the `Normal` events of kubectl output nor the lines of a `…Config values:` dump are issues. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
