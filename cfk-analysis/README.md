@@ -44,6 +44,19 @@ scheduling, …) with concrete remediation steps per category:
   cause failing 27 tasks is one issue, with the tasks listed in `affected` and their connectors (the
   `[connector|task-0]` context of the log record) in `connectors`. Classifications are cached on the record text with
   its digits folded, so a WARN storm of millions of records costs seconds, not minutes.
+- Known CFK issues (`runbooks.py`, 📕 section on top of the text digest and of the HTML report, `.runbooks` and
+  `issues[].runbooks` of `--json`): the log messages and events of the CFK triage table of Confluent support (roll
+  blocked by the pre-roll checks, expired certificate, `INCONSISTENT_CLUSTER_ID`, ZooKeeper to KRaft migration,
+  authorizer timeout, license secret, JAAS context, cluster shrink, PVC resize, Multi-Attach…), matched on the message
+  and `Caused by:` chain of every issue (and on the INFO lines of the operator logs for the states it logs at INFO: `cluster not rollable from roll pre checks`, `Migration current status …/SubPhase… requeuing`), with what they mean and the public KB / docs links. The internal runbook
+  links of Confluent support come from an optional private JSON file, in `$CFK_RUNBOOKS_PRIVATE` (mounted by
+  `playground analyze logs` from `PLAYGROUND_CFK_RUNBOOKS_FILE`, default
+  `reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json`, format in the docstring of `runbooks.py`):
+  they are printed in the text digest and in `--json`, never in the HTML report, which is shared with customers.
+- Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
+  container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
+  while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC
+  `WaitForFirstConsumer`) and the `key = value` lines of a `…Config values:` dump are not issues.
 - `False` conditions are reported only when `True` is the healthy value (`*-ready`, `*-available`…) or their
   reason says something failed: `garbage-collecting` / `config-revision-hash` `False` are normal.
 

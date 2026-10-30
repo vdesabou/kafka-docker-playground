@@ -2682,8 +2682,15 @@ subcommands:
       from the Connector CRs and the config dumps of the logs), a JVM default truststore
       set without its password, and the ERROR/FATAL records of its logs, sorted into
       ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,
-      storage, scheduling…) with remediation steps. Each issue is attributed to a
-      component and an instance (CR name), and to its connector: --component keeps
+      storage, scheduling…) with remediation steps. \U0001F4D5 The log messages and
+      events of known CFK problems (CFK triage table of Confluent support: roll blocked
+      by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper
+      to KRaft migration, authorizer timeout, license secret…) are listed first, with
+      what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds
+      the internal runbook links of Confluent support (terminal and --json only, never
+      in the HTML report). Probe failures and back-offs of a pod that is Running and
+      Ready in the bundle are low and marked transient. Each issue is attributed to
+      a component and an instance (CR name), and to its connector: --component keeps
       some of them, the HTML report has Component / Instance / Connector filters.
       \U0001F512 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default
       (best effort: review before sharing), --no-sanitize for internal bundles only.

@@ -646,6 +646,29 @@ def _environment_html(results: Dict, timeline_limit: int = 40) -> str:
     return "".join(blocks)
 
 
+def _runbooks_html(results: Dict) -> str:
+    """Known CFK issues matched in the bundle (runbooks.py): what they mean, public KB / docs links"""
+    hits = results.get("runbooks") or []
+    if not hits:
+        return ""
+    rows = []
+    for hit in hits:
+        example = hit.get("example") or {}
+        where = example.get("file", "") + (f":{example['line_number']}" if example.get("line_number") else "")
+        links = " · ".join(f'<a href="{_esc(l["url"])}" target="_blank" rel="noopener">📘 {_esc(l.get("title") or l["url"])}</a>'
+                           for l in hit.get("links") or [])
+        rows.append(f"<tr><td class=\"nowrap\"><span class=\"severity-pill {_esc(hit['severity'])}\">"
+                    f"{SEVERITY_EMOJI.get(hit['severity'], '')} {_esc(hit['severity'])}</span></td>"
+                    f"<td><strong>{_esc(hit['title'])}</strong><br>{_esc(hit['advice'])}"
+                    f"{'<br>' + links if links else ''}</td>"
+                    f"<td>{_esc(hit['issues'])} issue(s), ×{_esc(hit['occurrences'])}<br><code>{_esc(where)}</code></td></tr>")
+    return f"""
+        <details class="panel" open>
+          <summary>📕 Known CFK issues <span class="label">{len(hits)} matched: log messages and events of known CFK problems, read the runbook before digging further</span></summary>
+          <table class="env"><tr><th>Severity</th><th>Known issue</th><th>Seen in</th></tr>{"".join(rows)}</table>
+        </details>"""
+
+
 def _properties_table(text: str) -> Tuple[str, int]:
     """key=value lines as a table (comments and blank lines left out), with the number of keys"""
     rows = []
@@ -744,6 +767,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
     summary = results.get("summary", {})
     issues = results.get("issues", [])
 
+    runbook_titles = {h["name"]: h["title"] for h in results.get("runbooks") or []}
     grouped: Dict[str, List[Dict]] = defaultdict(list)
     for i in issues:
         grouped[i.get("category", "Uncategorized")].append(i)
@@ -801,6 +825,8 @@ def render(results: Dict, bundle_label: str = "") -> str:
                 msg = _esc(issue.get("message", ""))
                 for cause in issue.get("caused_by") or []:
                     msg += f"<br>&nbsp;&nbsp;↳ Caused by: {_esc(cause)}"
+                for name in issue.get("runbooks") or []:
+                    msg += f"<br>&nbsp;&nbsp;📕 Known CFK issue: <strong>{_esc(runbook_titles.get(name, name))}</strong>"
                 affected = issue.get("affected") or []
                 if len(affected) > 1 or (affected and issue.get("count", 1) > 1):
                     msg += (f'<details class="affected"><summary>🔌 Affects {len(affected)} task(s)</summary>'
@@ -883,6 +909,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
   <main>
     {verdict_html}
     {summary_html}
+    {_runbooks_html(results)}
     {_environment_html(results)}
     {_configuration_html(results)}
     {controls_html}
