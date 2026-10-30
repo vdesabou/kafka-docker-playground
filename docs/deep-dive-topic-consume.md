@@ -277,7 +277,7 @@ playground topic consume [-t <topic>] \
 - 🍪 Deep dives: [`topic produce`](/deep-dive-topic-produce.md), to write the data you read here;
   [`connector diagnose` and the dead letter queue](/deep-dive-connector-troubleshooting.md), to read a DLQ by error;
   [offsets and lag](/deep-dive-offsets-and-lag.md), to move a connector to the record you found
-- 📖 [Consuming data](/reusables?id=👉-consuming-data) in the Reproduction toolkit
+- 📖 [Consuming data](/toolkit-data?id=👉-consuming-data) in the Reproduction toolkit
 - 🧠 CLI reference: [playground topic consume](/playground%20topic%20consume),
   [playground topic get-number-records](/playground%20topic%20get-number-records),
   [playground topic dlq inspect](/playground%20topic%20dlq%20inspect)

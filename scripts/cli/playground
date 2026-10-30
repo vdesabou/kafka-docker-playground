@@ -5630,7 +5630,7 @@ playground_repro_import_usage() {
 playground_repro_bootstrap_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro bootstrap\n\n"
-    printf "  🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n  \n  🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground\n  repro bootstrap> !\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%%f0%%9f%%9b%%a0-bootstrap-reproduction-model\n\n"
+    printf "  🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n  \n  🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground\n  repro bootstrap> !\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=%%f0%%9f%%9b%%a0-bootstrap-reproduction-model\n\n"
   else
     printf "playground repro bootstrap - 🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n\n"
   fi
@@ -8425,7 +8425,7 @@ playground_debug_usage() {
 playground_debug_enable_remote_debugging_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug enable-remote-debugging\n\n"
-    printf "  ✨ Enable java remote debugging for container\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%%e2%%9c%%a8-remote-debugging\n  \n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%90%%9E-a-breakpoint-in-a-running-connector-remote-debugging\n\n"
+    printf "  ✨ Enable java remote debugging for container\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/toolkit-debugging?id=%%e2%%9c%%a8-remote-debugging\n  \n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%90%%9E-a-breakpoint-in-a-running-connector-remote-debugging\n\n"
   else
     printf "playground debug enable-remote-debugging - ✨ Enable java remote debugging for container\n\n"
   fi
@@ -16370,7 +16370,7 @@ playground_connector_sourcecode_usage() {
     if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
       # :flag.usage
       printf "  %s\n" "$(magenta "--enable-remote-debugging")"
-      printf "    ✨ This will enable java remote debugging for connect container\n    \n    👉 Check documentation\n    https://kafka-docker-playground.io/#/reusables?id=%%e2%%9c%%a8-remote-debugging\n    \n    ⚠️ This does not work for fully and custom connectors.\n"
+      printf "    ✨ This will enable java remote debugging for connect container\n    \n    👉 Check documentation\n    https://kafka-docker-playground.io/#/toolkit-debugging?id=%%e2%%9c%%a8-remote-debugging\n    \n    ⚠️ This does not work for fully and custom connectors.\n"
       printf "    %s\n" "Needs: --compile"
       echo
 
@@ -16393,7 +16393,7 @@ playground_connector_sourcecode_usage() {
 playground_connector_enable_remote_debugging_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector enable-remote-debugging\n\n"
-    printf "  ✨ Enable java remote debugging for the connector.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%%e2%%9c%%a8-remote-debugging\n  \n  🏗️ It will checkout (you need git installed) and compile code for the\n  connector (required for remote debugging).\n  \n  💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need to\n  be on Confluent VPN with proper AWS credentials set in order to be able to\n  download proprietary dependencies.\n  \n  ⚠️ This does not work for fully and custom connectors.\n\n"
+    printf "  ✨ Enable java remote debugging for the connector.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/toolkit-debugging?id=%%e2%%9c%%a8-remote-debugging\n  \n  🏗️ It will checkout (you need git installed) and compile code for the\n  connector (required for remote debugging).\n  \n  💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need to\n  be on Confluent VPN with proper AWS credentials set in order to be able to\n  download proprietary dependencies.\n  \n  ⚠️ This does not work for fully and custom connectors.\n\n"
   else
     printf "playground connector enable-remote-debugging - ✨ Enable java remote debugging for the connector.\n\n"
   fi
@@ -51993,7 +51993,7 @@ playground_debug_enable_remote_debugging_command() {
           "
       fi
 
-      log "see https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"
+      log "see https://kafka-docker-playground.io/#/toolkit-debugging?id=✨-remote-debugging"
   done
 }
 

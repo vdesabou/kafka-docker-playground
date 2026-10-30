@@ -102,7 +102,7 @@ report and click around: this is what you get on your own data.
   <div class="report-card">
     <a href="reports/benchmark.html" target="_blank" rel="noopener"><img src="images/reports/benchmark.png" alt="🏎️ Connector benchmark report" loading="lazy"></a>
     <div class="report-body">
-      <h3><a href="#/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector">🏎️ Connector benchmark</a></h3>
+      <h3><a href="#/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector">🏎️ Connector benchmark</a></h3>
       <p>How fast is this connector, and is version Y slower? Drains a backlog with each connector version, compares the throughput, CPU and batch times, and says where the task time went.</p>
       <p><code>playground connector benchmark --connector-tag 10.8.4 --connector-tag 10.9.9</code></p>
     </div>

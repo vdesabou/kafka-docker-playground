@@ -108,7 +108,7 @@ connectors. When a source example has no load yet, or a reproduction model needs
 > add a benchmark load to the orders table of my reproduction model
 ```
 
-See [Benchmark a connector](/reusables?id=⏱️-benchmark-a-connector) for the command itself.
+See [Benchmark a connector](/toolkit-performance?id=⏱️-benchmark-a-connector) for the command itself.
 
 ### 🅾️ kdp-xstream-report
 

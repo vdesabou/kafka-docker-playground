@@ -1012,7 +1012,7 @@ User is getting StackOverflowError with S3 sink connector. See stack trace in De
 
 💡 What you'll learn:
 
-* [Bootstrap a reproduction model](/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model).
+* [Bootstrap a reproduction model](/toolkit-reproduction-models?id=%f0%9f%9b%a0-bootstrap-reproduction-model).
 
 #### **🤯 Details**
 
@@ -1114,7 +1114,7 @@ Caused by: java.lang.StackOverflowError
 
 *  🎯 Choose the best [example](/content) to use as basis.
 
-* 🛠 [Bootstrap](/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model) your reproduction model!
+* 🛠 [Bootstrap](/toolkit-reproduction-models?id=%f0%9f%9b%a0-bootstrap-reproduction-model) your reproduction model!
 
 > [!TIP]
 > Do not forget to [🪄 Specify versions](/how-to-use?id=%f0%9f%aa%84-specify-versions) for CP and Connector before running the test!

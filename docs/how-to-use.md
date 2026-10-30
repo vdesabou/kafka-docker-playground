@@ -332,7 +332,7 @@ For example, if you're running an AZURE Fully Managed connector example and `AZU
 
 ### 👤 Fully managed connectors with a service account
 
-Add `--ccloud-service-account` (or tick *👤 Connector service account* in the run menu) to run the fully managed connectors of an example with a [service account](https://docs.confluent.io/cloud/current/connectors/service-account.html) (`kafka.auth.mode=SERVICE_ACCOUNT`) and the ACLs of the documentation, instead of an API key. Then remove or deny ACLs with `playground rbac acl --connector <connector>` to reproduce authorization errors: see [Fully managed connectors with a service account](/reusables?id=%f0%9f%91%a4-fully-managed-connectors-with-a-service-account).
+Add `--ccloud-service-account` (or tick *👤 Connector service account* in the run menu) to run the fully managed connectors of an example with a [service account](https://docs.confluent.io/cloud/current/connectors/service-account.html) (`kafka.auth.mode=SERVICE_ACCOUNT`) and the ACLs of the documentation, instead of an API key. Then remove or deny ACLs with `playground rbac acl --connector <connector>` to reproduce authorization errors: see [Fully managed connectors with a service account](/toolkit-fully-managed?id=%f0%9f%91%a4-fully-managed-connectors-with-a-service-account).
 
 ![playground run menu: Connector service account toggle](./images/run_menu_ccloud_service_account.png)
 
@@ -490,7 +490,7 @@ By default, there is only one connect node enabled. To enable three connect node
 
 ### 🌀 Enabling SQL Datagen
 
-For the JDBC, Debezium, Oracle CDC and XStream source examples (Oracle, MySQL, MariaDB, PostgreSQL, SQL Server, self-managed and fully managed), the `--enable-sql-datagen` option of [playground run](/playground%20run) keeps inserting rows once the example is done: the `benchmark-load.bash` of the example, one row per transaction, in 5 parallel sessions, for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION`). See [Databases: keep a load running](/reusables?id=%f0%9f%8c%aa%ef%b8%8f-databases-keep-a-load-running-with-enable-sql-datagen).
+For the JDBC, Debezium, Oracle CDC and XStream source examples (Oracle, MySQL, MariaDB, PostgreSQL, SQL Server, self-managed and fully managed), the `--enable-sql-datagen` option of [playground run](/playground%20run) keeps inserting rows once the example is done: the `benchmark-load.bash` of the example, one row per transaction, in 5 parallel sessions, for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION`). See [Databases: keep a load running](/toolkit-performance?id=%f0%9f%8c%aa%ef%b8%8f-databases-keep-a-load-running-with-enable-sql-datagen).
 
 ### 🎯 Starting only some services
 
@@ -507,7 +507,7 @@ You can enable this with `--enable-jmx-grafana` option of [playground run](/play
 📛 [Pyroscope](https://pyroscope.io/docs/) is reachable at [http://127.0.0.1:4040](http://127.0.0.1:4040)
 
 > [!TIP]
-> [playground connector benchmark](/reusables?id=%f0%9f%93%8a-grafana) annotates its measure on the Kafka Connect, connector and Kafka cluster dashboards, and links to them at the time of the run.
+> [playground connector benchmark](/toolkit-performance?id=%f0%9f%93%8a-grafana) annotates its measure on the Kafka Connect, connector and Kafka cluster dashboards, and links to them at the time of the run.
 
 #### Grafana dashboards
 

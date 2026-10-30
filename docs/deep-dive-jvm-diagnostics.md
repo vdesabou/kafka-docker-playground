@@ -507,7 +507,7 @@ playground debug tcp-dump         [-c <c>]… [--port <p>] [--filter <bpf>] [--d
   [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go),
   [✂️ jscissors](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do),
   [🐞 remote debugging](/sessions?id=🐞-a-breakpoint-in-a-running-connector-remote-debugging)
-- 📖 [Analyze what you collected](/reusables?id=🔎-analyze-what-you-collected) in the Reproduction toolkit
+- 📖 [Analyze what you collected](/toolkit-debugging?id=🔎-analyze-what-you-collected) in the Reproduction toolkit
 - 🍪 Deep dives: [`container logs` and `analyze logs`](/deep-dive-container-logs.md) (the same digest for logs),
   [containers](/deep-dive-container-lifecycle.md) (`change-jdk`, `set-environment-variables`)
 - 🧠 CLI reference: [playground analyze](/playground%20analyze), [playground debug](/playground%20debug)

@@ -3566,7 +3566,7 @@ commands:
 
       🔥 HIGHLY RECOMMENDED: start in interactive mode by simple running <playground repro bootstrap> !
       
-      👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
+      👉 Check documentation https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=%f0%9f%9b%a0-bootstrap-reproduction-model
     flags:
     - long: --file
       short: -f
@@ -6074,7 +6074,7 @@ commands:
     help: |-
       ✨ Enable java remote debugging for container
       
-      👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+      👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging
 
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging
     flags:
@@ -12195,7 +12195,7 @@ commands:
         help: |-
           ✨ This will enable java remote debugging for connect container
       
-          👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+          👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging
 
           ⚠️ This does not work for fully and custom connectors.
     examples: |
@@ -12219,7 +12219,7 @@ commands:
     help: |-
       ✨ Enable java remote debugging for the connector.
 
-      👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+      👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging
 
       🏗️ It will checkout (you need git installed) and compile code for the connector (required for remote debugging).
 

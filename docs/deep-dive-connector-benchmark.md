@@ -307,7 +307,7 @@ playground run -f <example> --enable-sql-datagen
 
 - 🎬 Video session: [📈 Is version Y slower? Benchmark two versions](/sessions?id=📈-is-version-y-slower-benchmark-two-versions),
   and <a href="reports/benchmark.html" target="_blank" rel="noopener">a benchmark report</a> to click around
-- 📖 [⏱️ Benchmark a connector](/reusables?id=⏱️-benchmark-a-connector) in the Reproduction toolkit (load scripts, a table of your own)
+- 📖 [⏱️ Benchmark a connector](/toolkit-performance?id=⏱️-benchmark-a-connector) in the Reproduction toolkit (load scripts, a table of your own)
 - 🍪 Deep dives: [JVM diagnostics](/deep-dive-jvm-diagnostics.md) (the flight recording of the measure),
   [offsets and lag](/deep-dive-offsets-and-lag.md) (`show-lag` while a sink drains),
   [running examples and changing versions](/deep-dive-run-and-versions.md) (`update-version --connector-tag`)
