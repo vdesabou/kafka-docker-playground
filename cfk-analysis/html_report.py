@@ -54,6 +54,7 @@ CATEGORY_EMOJI = {
     "Replication Issues": "🔁",
     "KRaft Issues": "🗳️",
     "KRaft Migration": "🚚",
+    "Rollout Issues": "🔄",
     "Zookeeper Issues": "🦓",
     "Schema Registry Issues": "🧬",
     "Connect Issues": "🔌",

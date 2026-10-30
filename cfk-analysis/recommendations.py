@@ -267,6 +267,16 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "If on a KRaft-supported CFK version, plan migration off Zookeeper.",
         ],
     },
+    "Rollout Issues": {
+        "summary": "A CR asks for another image than what runs: the operator did not apply it to the StatefulSet, or the roll of the pods is not complete.",
+        "steps": [
+            "Read the next steps of the finding: they depend on what is behind (StatefulSet or pods) and why.",
+            "platform.confluent.io/block-reconcile stops the operator: pods deleted by hand while it is set come back with the old spec.",
+            "CFK rolls one pod at a time and only a healthy cluster: a pod that is not Ready or under-replicated partitions stop the roll.",
+            "An operator that does not run (quota, crash loop) applies nothing: check its pod and its log.",
+        ],
+        "docs": "https://docs.confluent.io/operator/current/co-roll-cluster.html",
+    },
     "KRaft Migration": {
         "summary": "ZooKeeper to KRaft migration (KRaftMigrationJob): the finding gives its phase / sub-phase, how long it has been there and the next steps of that sub-phase.",
         "steps": [
