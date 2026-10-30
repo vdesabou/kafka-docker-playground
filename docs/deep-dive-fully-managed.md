@@ -268,6 +268,7 @@ playground stop                                                              # d
 | "will our self-managed config work on Confluent Cloud?" | `connector translate` on the self-managed example run with `--environment ccloud`, or the Connector Migration Utility (🚚 session) |
 | "we deploy with Terraform" | `create-or-update --terraform`: the same JSON becomes `connector.tf` (🏗️ session) |
 | "which version of the connector runs in Confluent Cloud?" | `connector-plugin sourcecode -c confluentinc/<Type> --only-show-url` (employees, see the [connector plugins deep dive](/deep-dive-connector-plugin.md)) |
+| "is the fix of connector version X in a cc-connect image yet? what changed in the last images?" | `connector-plugin fm-versions -c confluentinc/<Type> --find-first X` / `--last 50 --with-log` (employees) |
 | "the example uses the wrong cluster" | `playground cleanup-cloud-details`, then export `CLUSTER_NAME`… or `CLUSTER_CLOUD` / `CLUSTER_REGION` |
 | "how much did that test cost?" | `playground ccloud-costs --start-date <day before> --end-date <day after>` (72 h delay), its HTML report for the resources billed that day and the ones still billing; `ccloud-costs-history` for the trend |
 
