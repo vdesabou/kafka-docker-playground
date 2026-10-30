@@ -187,7 +187,16 @@ do
     then
         displayed=$(history_mask_creds "$displayed")
     fi
-    printf '%s %-16s  %s\x1f%s\x1f%s\x1f%s\x1f%s\n' "$icon" "${date:0:16}" "${displayed#playground run -f }" "$command" "$script" "$meta" "$runs" >> $tmp_dir/entries
+    # fzf counts these emojis (with a variation selector) as one column, the terminal draws two
+    case "$icon" in
+        ⏭️|⏹️|🗑️) icon+=" " ;;
+    esac
+    # no date column for the runs recorded before the dates were kept: just the icon
+    if [ -n "$date" ]
+    then
+        icon+=" ${date:0:16} "
+    fi
+    printf '%s %s\x1f%s\x1f%s\x1f%s\x1f%s\n' "$icon" "${displayed#playground run -f }" "$command" "$script" "$meta" "$runs" >> $tmp_dir/entries
 done < $tmp_dir/history
 
 if [[ -n "$prune" ]]
@@ -339,7 +348,7 @@ history_mask_creds "$command"
 EOF
 } > $tmp_dir/preview.sh
 
-res=$(cat $tmp_dir/entries | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🏰" --header="ctrl-c or esc to quit · ✅ success ❌ failure ⏭️ skipped ⏹️ interrupted" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter $'\x1f' --with-nth 1 --query "$query" --preview "bash $tmp_dir/preview.sh {2} {3} {4} {5}" $fzf_option_wrap $fzf_option_pointer | cut -d $'\x1f' -f 2)
+res=$(cat $tmp_dir/entries | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🏰" --header="ctrl-c or esc to quit · ✅ success ❌ failure ⏭️  skipped ⏹️  interrupted" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter $'\x1f' --with-nth 1 --query "$query" --preview "bash $tmp_dir/preview.sh {2} {3} {4} {5}" $fzf_option_wrap $fzf_option_pointer | cut -d $'\x1f' -f 2)
 if [ -z "$res" ]
 then
     exit 0
