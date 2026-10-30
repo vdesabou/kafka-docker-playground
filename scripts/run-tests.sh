@@ -447,6 +447,12 @@ do
         fi
         if [ -f "$file_output" ]
         then
+            # pasted in the 🔥 GitHub issue by update-readme: the CI secrets are in the environment of this job only
+            if ! sanitize_ci_log "$file_output"
+            then
+                logerror "❌ $file_output could not be sanitized, its content is not uploaded"
+                echo "🔒 the output of this run could not be sanitized: see the logs of the GitHub Actions job" > "$file_output"
+            fi
             aws s3 cp "$file_output" "s3://kafka-docker-playground/ci_output/" --region us-east-1
             log "📄 INFO: <$file_output> was uploaded to S3 bucket in ci_output folder"
         else

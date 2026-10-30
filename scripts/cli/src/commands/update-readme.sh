@@ -308,7 +308,11 @@ do
         TEST_FAILED_COUNT[$image_version_no_dot]=$(( ${TEST_FAILED_COUNT[$image_version_no_dot]:-0} + 1 ))
         TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)]($html_url)"
         echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
-        if [ -f ${ci_output_file} ]; then
+        # sanitized again here: run-tests.sh sanitizes it before the upload, but not the files uploaded before
+        if [ -f ${ci_output_file} ] && ! sanitize_ci_log "${ci_output_file}"; then
+            logerror "❌ ${ci_output_file} could not be sanitized, its logs are not added to the GitHub issue"
+            echo -e "🔒 Logs not included: they could not be sanitized\n" >> ${gh_msg_file}
+        elif [ -f ${ci_output_file} ]; then
             echo -e "<details><summary>Logs</summary>" >> ${gh_msg_file}
             echo -e "<pre>\n" >> ${gh_msg_file}
             echo -e "<code>\n" >> ${gh_msg_file}
