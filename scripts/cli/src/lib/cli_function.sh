@@ -7732,10 +7732,11 @@ function run_log_secret_values () {
 }
 
 # filter (stdin to stdout) turning a raw terminal capture into a shareable text: terminal control sequences and
-# carriage returns removed, then secrets masked:
+# carriage returns removed, the docker compose progress redrawn in place reduced to its last state, then secrets masked:
 #   - each value of the file $1 (one per line, see run_log_secret_values), and each part of a key:secret value
 #   - the value of secret-looking keys: "password": "x" (json, python dict), password=x (properties, jdbc urls,
-#     jaas), password: x (yaml), except ${...} config provider references
+#     jaas), password: x (yaml), except ${...} config provider references and keys naming something else than the
+#     secret (oauth2.token.property, ssl.keystore.password.type...)
 #   - well-known shapes: private key blocks, AWS access key ids, JWTs, Bearer / Basic tokens, user:password@ in urls,
 #     GitHub, Slack and Google api keys
 # the number of masked strings is printed on stderr
@@ -7758,14 +7759,26 @@ function run_log_mask () {
     @values = sort { length($b) <=> length($a) } @values;
     my $secret_key = qr/[\w.\-]*(?:password|passwd|secret|token|credentials?|apikey|api[_.\-]key|access[_.\-]key|session[_.\-]key|private[_.\-]key|sasl\.jaas\.config)[\w.\-]*/i;
     my ($n, $in_key) = (0, 0);
+    # last segment of a secret-looking key that names something else than the secret: oauth2.token.property (a field
+    # name), *.password.type, *.token.url...
+    my $not_secret_key = qr/[._\-](?:property|type|path|location|url|endpoint|algorithm|mode|enabled|separator|format|header)["\x27]?\s*[:=]\s*$/i;
     # value of a secret-looking key: kept when it is not a secret (config provider reference, already masked, enum such
     # as USER_INFO, boolean, number), masked otherwise
     sub mask_value {
-      my $v = shift;
+      my ($v, $k) = @_;
       (my $u = $v) =~ s/^["\x27]|["\x27]$//g;
-      return $v if $u eq "" || $u =~ /^\$\{/ || $u =~ /^\*+$/ || $u =~ /^[A-Z_]+$/ || $u =~ /^(?:true|false|null|none)$/i || $u =~ /^[0-9]+$/;
+      return $v if (defined $k && $k =~ $not_secret_key) || $u eq "" || $u =~ /^\$\{/ || $u =~ /^\*+$/ || $u =~ /^[A-Z_]+$/ || $u =~ /^(?:true|false|null|none)$/i || $u =~ /^[0-9]+$/;
       $n++;
       return $v =~ /^(["\x27])/ ? "$1********$1" : "********";
+    }
+    # docker compose redraws its progress block in place (cursor up): once the escapes are removed, every frame
+    # stays, with blank lines. Kept: the last header ([+] up 9/9) and the last line of each container, network...
+    my ($compose_verb, $compose_header, @compose_order, %compose_item);
+    sub compose_flush {
+      return unless defined $compose_verb;
+      print $compose_header;
+      print $compose_item{$_} for @compose_order;
+      ($compose_verb, $compose_header, @compose_order, %compose_item) = ();
     }
     while (my $line = <STDIN>) {
       $line =~ s/\e\][^\a\e]*(?:\a|\e\\)//g;
@@ -7776,6 +7789,20 @@ function run_log_mask () {
       # a progress line redrawn in place: keep what was shown last
       $line =~ s/^.*\r//;
       $line =~ s/[\x00-\x08\x0b-\x1f\x7f]//g;
+      if ($line =~ /^\[\+\] (\w+) \d+\/\d+\s*$/) {
+        compose_flush() if defined $compose_verb && $compose_verb ne $1;
+        ($compose_verb, $compose_header) = ($1, $line);
+        next;
+      }
+      if (defined $compose_verb) {
+        next if $line =~ /^\s*$/;
+        if ($line =~ /^\s*\S+\s+(Container|Network|Volume|Image)\s+(\S+)\s/) {
+          push @compose_order, "$1 $2" unless exists $compose_item{"$1 $2"};
+          $compose_item{"$1 $2"} = $line;
+          next;
+        }
+        compose_flush();
+      }
       if ($in_key) {
         if ($line =~ /-----END [A-Z ]*PRIVATE KEY-----/) { $in_key = 0; print $line; }
         next;
@@ -7788,9 +7815,9 @@ function run_log_mask () {
         next;
       }
       for my $v (@values) { $n += ($line =~ s/\Q$v\E/********/g); }
-      $line =~ s/((["\x27])$secret_key\2\s*:\s*)(["\x27])((?:\\.|(?!\3).)*)\3/$1 . $3 . mask_value($4) . $3/ge;
-      $line =~ s/(?<![\w.\-])($secret_key\s*=\s*)("(?:\\.|[^"\\])*"|\x27[^\x27]*\x27|[^\s,;&"\x27)\]]+)/$1 . mask_value($2)/ge;
-      $line =~ s/^(\s*(?:-\s+)?$secret_key:\s+)(\S.*)$/$1 . mask_value($2)/e;
+      $line =~ s/((["\x27])$secret_key\2\s*:\s*)(["\x27])((?:\\.|(?!\3).)*)\3/$1 . $3 . mask_value($4, $1) . $3/ge;
+      $line =~ s/(?<![\w.\-])($secret_key\s*=\s*)("(?:\\.|[^"\\])*"|\x27[^\x27]*\x27|[^\s,;&"\x27)\]]+)/$1 . mask_value($2, $1)/ge;
+      $line =~ s/^(\s*(?:-\s+)?$secret_key:\s+)(\S.*)$/$1 . mask_value($2, $1)/e;
       $n += ($line =~ s/\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/********/g);
       $n += ($line =~ s/\beyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}/********/g);
       $n += ($line =~ s/\b(Bearer|Basic)\s+(?!\*{8})[A-Za-z0-9\-._~+\/]{8,}=*/$1 ********/g);
@@ -7798,6 +7825,7 @@ function run_log_mask () {
       $n += ($line =~ s/\b(?:gh[pousr]_[A-Za-z0-9]{30,}|xox[abprs]-[A-Za-z0-9\-]{10,}|AIza[0-9A-Za-z_\-]{35})/********/g);
       print $line;
     }
+    compose_flush();
     print STDERR "$n\n";
   '
 }

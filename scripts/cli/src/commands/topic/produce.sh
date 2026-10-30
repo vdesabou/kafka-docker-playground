@@ -969,9 +969,9 @@ then
     log "✨ only showing first $size_limit_to_show characters"
     render_batch 1 1 | tr '\037' '|' | cut -c 1-${size_limit_to_show} | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of $record_size>...\"}"
 else
-    if (( nb_generated_messages < 10 ))
+    if (( nb_generated_messages <= 10 ))
     then
-        log "✨ $nb_generated_messages records were generated$value_str"
+        log "✨ $nb_generated_messages records were generated$value_str, $ELAPSED"
         render_batch "$nb_generated_messages" 1 | tr '\037' '|'
     else
         log "✨ $nb_generated_messages records were generated$value_str (only showing first 10), $ELAPSED"

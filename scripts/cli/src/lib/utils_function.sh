@@ -892,17 +892,19 @@ function determine_kraft_mode() {
   first_version=${TAG_BASE}
   if [[ -n $ENABLE_KRAFT ]] || version_gt $first_version "7.9.99"
   then
+    # called by 'playground run' then by the environment: logged once, with the first reason
     if [[ -n $ENABLE_KRAFT ]]
     then
-      log "🛰️ Starting up Confluent Platform in Kraft mode as ENABLE_KRAFT environment variable is set"
+      [ -n "$KRAFT_MODE_LOGGED" ] || log "🛰️ Starting up Confluent Platform in Kraft mode as ENABLE_KRAFT environment variable is set"
       if ! version_gt $TAG_BASE "7.3.99"
       then
         logerror "❌ Kraft mode is not supported with playground for CP version < 7.4, please use Zookeeper mode"
         exit 1
       fi
     else
-      log "🛰️ Starting up Confluent Platform in Kraft mode as CP version is > 8"
+      [ -n "$KRAFT_MODE_LOGGED" ] || log "🛰️ Starting up Confluent Platform in Kraft mode as CP version is > 8"
     fi
+    export KRAFT_MODE_LOGGED="true"
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/plaintext/docker-compose-kraft.yml"
     if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]] && version_gt $TAG_BASE "7.9.99"
@@ -1715,7 +1717,6 @@ function display_jmx_info() {
   else
     log "    - zookeeper       : 9999"
   fi
-  log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
   log "    - schema-registry : 10001"
   log "    - connect         : 10002"

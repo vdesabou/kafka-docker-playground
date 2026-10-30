@@ -11,18 +11,16 @@ then
      exit 111
 fi
 
-cd ../../connect/connect-http-sink/
-if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+# since 1.7.14 (CC-45231), the connector routes the HttpClient logs (org.apache.http) through slf4j and ships jcl-over-slf4j
+if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.7.13"
 then
-     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+     if [ ! -f ${DIR}/jcl-over-slf4j-2.0.7.jar ]
+     then
+          wget -q -P ${DIR} https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+     fi
+     mkdir -p ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
+     cp ${DIR}/jcl-over-slf4j-2.0.7.jar ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
 fi
-cd -
-
-cd ../../connect/connect-http-sink
-# Copy JAR to confluent-hub
-mkdir -p ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
-cp ../../connect/connect-http-sink/jcl-over-slf4j-2.0.7.jar ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
-cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
@@ -53,8 +51,8 @@ EOF
 playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
+curl -s -w "\n" -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
+curl -s -w "\n" -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
 
 # curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
 
@@ -80,8 +78,6 @@ playground connector create-or-update --connector http-sink  << EOF
      "headers": "Content-Type: application/json"
 }
 EOF
-
-sleep 10
 
 log "Check the success-responses topic"
 playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
