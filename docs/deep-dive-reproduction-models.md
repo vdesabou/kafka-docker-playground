@@ -122,6 +122,12 @@ playground repro bootstrap --config ~/Downloads/customer-connector.yaml -d "1234
 #    left out (systems of the customer the example does not use): connection.user connection.password
 ```
 
+With menus (`playground repro bootstrap`, no `-f` nor `--config`), the first menu asks whether to start from an example
+or from the connector config: the files of the folders of `playground config folder_zip_or_jar` (your home folder by
+default) and of the current folder, 3 levels deep, that hold a `connector.class`, a `Connector` / `KafkaConnector`
+resource or a `confluent_connector` resource are listed, newest first, with a preview. `--config <tab>` uses the same
+list.
+
 1. **The example to start from.** Without `-f`, it is one that deploys the same `connector.class`, ranked with the
    words of the class (`S3SinkConnector`: s3, sink) and of the config (the database of a `jdbc:` url, the
    `auth.type`, an Avro / Protobuf / JSON Schema converter) found in its path. `--no-run` takes the best one and lists

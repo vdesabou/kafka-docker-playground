@@ -1044,6 +1044,56 @@ function get_playground_repro_export_with_fzf() {
   echo "$cur@$res"
 }
 
+# connector configs a customer sent (JSON, CFK / Strimzi resources, terraform, .properties), newest first: the files of
+# the folders of 'playground config folder_zip_or_jar' and of the current folder (3 levels deep, not the playground
+# itself) that hold a connector.class, a Connector / KafkaConnector resource or a confluent_connector resource
+function get_connector_config_file_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_option_wrap=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  folder_zip_or_jar=$(playground config get folder_zip_or_jar)
+  folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
+  folder_zip_or_jar=${folder_zip_or_jar//,/ }
+
+  fzf_output=$(find $folder_zip_or_jar $PWD -maxdepth 3 \
+      \( -path "$root_folder" -o -name node_modules -o -name Library -o -name target -o -name '.*' ! -name '.' \) -prune \
+      -o -type f \( -name '*.json' -o -name '*.yaml' -o -name '*.yml' -o -name '*.tf' -o -name '*.properties' \) -size -1024k -print 2>/dev/null \
+    | sort -u \
+    | while IFS= read -r file
+      do
+        if grep -qE 'connector\.class|kind:[[:space:]]*"?(Connector|KafkaConnector)|resource[[:space:]]+"confluent_connector"' "$file" 2>/dev/null
+        then
+          echo "$(date -r "$file" +%s) $file"
+        fi
+      done \
+    | sort -rn | cut -d' ' -f2- \
+    | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📄" --header="select the connector config the customer sent, newest first (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "head -60 {}" --print-query --bind "alt-enter:print-query")
+
+  # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
+  query_line=$(echo "$fzf_output" | head -n1)
+  selected_line=$(echo "$fzf_output" | tail -n1)
+
+  # If both lines are the same, user pressed alt-enter (use typed value)
+  if [ "$query_line" = "$selected_line" ]; then
+    res="$query_line"
+  else
+    res="$selected_line"
+  fi
+
+  echo "$cur@$res"
+}
+
 #
 # Reproduction model bundles (playground repro export / import)
 #

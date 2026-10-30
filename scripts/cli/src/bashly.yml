@@ -355,6 +355,14 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: get-connector-config-file-with-fzf
+  help: Return some completion for connector config files (json, yaml, tf, properties holding a connector config)
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: get-predefined-schemas
   help: Return some completion for predefined schemas
   private: true
@@ -3493,6 +3501,9 @@ commands:
       required: false
       validate: file_exists_with_trick
       arg: config-file
+      completions:
+        dynamic:
+        - playground get-connector-config-file-with-fzf "$completion_current"
       help: |-
         📄 Connector config the customer sent, put in the model in place of the one of the example
 
@@ -3512,6 +3523,14 @@ commands:
         - its secrets, masked values, config providers and terraform
           references become variables, checked at the top of the model so
           that 'playground run' loads them from 'playground secrets'
+
+        In interactive mode (no --file, no --config), the first menu asks
+        whether to start from an example or from a connector config: the
+        files of the folders of 'playground config folder_zip_or_jar' and of
+        the current folder that hold a connector config are listed, newest
+        first.
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
 
         🎓 Tip: then compare the running connector with the customer file:
         playground connector diff --connector <c> --file <file>

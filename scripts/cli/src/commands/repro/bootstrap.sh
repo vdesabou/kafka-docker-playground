@@ -38,6 +38,29 @@ function prompt_header_fields () {
   fi
 }
 
+# interactive mode: start from an example, or from the connector config the customer sent
+if [ -z "$test_file" ] && [ -z "$config_file" ] && [ -t 0 ] && [ -t 1 ]
+then
+  MENU_START_FROM_EXAMPLE="🔖 Start from an example"
+  MENU_START_FROM_CONFIG="📄 Start from the connector config the customer sent (CFK, Strimzi, terraform, .properties, REST dump, JSON)"
+  set +e
+  start_from=$(printf '%s\n' "$MENU_START_FROM_EXAMPLE" "$MENU_START_FROM_CONFIG" | fzf --margin=1%,1%,1%,1% --info=inline --cycle --prompt="🛠 " --header="how do you want to start the reproduction model? (esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE")
+  if [ $? -ne 0 ]
+  then
+    exit 0
+  fi
+  set -e
+  if [ "$start_from" == "$MENU_START_FROM_CONFIG" ]
+  then
+    config_file=$(playground get-connector-config-file-with-fzf)
+    config_file="${config_file#*@}"
+    if [ -z "$config_file" ]
+    then
+      exit 0
+    fi
+  fi
+fi
+
 # --config: the connector config the customer sent, in any format of 'playground connector convert'
 config_class=""
 if [ -n "$config_file" ]
