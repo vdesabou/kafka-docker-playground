@@ -3424,18 +3424,24 @@ commands:
 
       Then the model becomes the current one, and the command prints the
       'playground run' line to use and the credentials missing from your
-      'playground secrets' profile.
+      'playground secrets' profile. --run goes on with that line when
+      nothing is missing (in a terminal, it asks first when containers are
+      running: the run stops them).
+
+      --file also takes a URL (a GitHub release asset, a raw file, any public
+      link): the bundle is downloaded into an empty temporary folder, then
+      checked like a local one. Links that need a login (Slack, Google
+      Drive) must be downloaded by hand.
     flags:
     - long: --file
       short: -f
       arg: file
       required: true
-      validate: file_exists_with_trick
       completions:
         dynamic:
         - playground get-playground-repro-export-with-fzf "$completion_current"
       help: |-
-        🤐 Bundle file (playground_repro_*.tgz, any name is accepted)
+        🤐 Bundle file (playground_repro_*.tgz, any name is accepted), or its https:// URL
 
         🎓 Tip: use <tab> completion to trigger fzf completion
                 use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
@@ -3452,10 +3458,17 @@ commands:
         overwrite: replace your copy
     - long: --dry-run
       required: false
+      conflicts: [--run]
       help: |-
         🔍 Only show the manifest, the files and the conflicts
+    - long: --run
+      required: false
+      help: |-
+        ▶️ Then run the model with its run line (bundle with one model, nothing missing: credentials, external files)
     examples:
     - playground repro import -f ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz
+    - playground repro import -f ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz --run
+    - playground repro import -f https://github.com/<owner>/<repo>/releases/download/v1/playground_repro_http-repro-123456-dlq_2026-10-21.tgz
     - playground repro import -f ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz --on-conflict rename
 
   - name: bootstrap

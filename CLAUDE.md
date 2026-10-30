@@ -299,7 +299,7 @@ playground repro export [-f <repro script>] [--dry-run]   # self-contained bundl
 playground repro export --all-uncommitted                 # every new or modified model
 playground repro export --include-artifacts               # also pack connector zip/jar and files referenced by absolute path
 playground repro export --report-only                     # the hand-off report (<model>.REPRO.md, also in every bundle) on stdout, for a Jira
-playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
+playground repro import -f <bundle.tgz | https://…> [--dry-run | --run] [--on-conflict abort|rename|overwrite]
 playground repro check [--staged | -f <repro script> | --all] [--json]   # same secret / customer data scan, before a commit
 ```
 
@@ -330,7 +330,7 @@ playground repro bootstrap -f "${PWD}/connect/connect-http-sink/http_no_auth.sh"
 - **Always pass `--no-run`** from an agent: the command generates the files and returns in a few seconds,
   printing the `playground run -f …` line. Without it, bootstrap opens the generated file in the editor,
   then runs `playground run --force-interactive-repro`, which kills every container and stops the
-  running environment.
+  running environment (in a terminal it asks first when containers run; an agent has no terminal and is not asked).
 
 Then edit the generated file to build the scenario, and run it with `playground run -f <generated file>`.
 
