@@ -118,6 +118,9 @@ Name of the database service to which to connect. In a multitenant container dat
 🔘 database.tls.mode
 
 Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle database. Select one of the following options: 
+'disable' (default): Does not use a TLS connection.
+'one-way': Uses a TLS encrypted connection and also verifies the server's TLS certificate. The trusted CA root certificate used to sign the server's certificate must be present either in the default certificate store of the system running the connector or stored within a client wallet provided to the connector using the database.wallet.location configuration property.
+'two-way': Uses a TLS encrypted connection and also verifies the server's TLS certificate. In addition, the client presents its own certificate, which the server verifies to authenticate the client (mutual TLS). The client certificate and the trusted CA root certificate used to sign the server's certificate must be stored within a client wallet and provided to the connector using the database.wallet.location configuration property.
 
 	 - Type: STRING
 	 - Default: disable
@@ -126,12 +129,12 @@ Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle
 
 🔘 database.wallet.location
 
+Specifies the directory path containing the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Specifies the directory path containing the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 database.pdb.name
 
@@ -208,6 +211,9 @@ Name of the downstream database service to which to connect. In a multitenant co
 🔘 downstream.database.tls.mode
 
 Specifies whether to use Transport Layer Security (TLS) to connect to the downstream Oracle database. Select one of the following options: 
+'disable' (default): Does not use a TLS connection.
+'one-way': Uses a TLS encrypted connection and also verifies the server's TLS certificate. The trusted CA root certificate used to sign the server's certificate must be present either in the default certificate store of the system running the connector or stored within a client wallet provided to the connector using the downstream.database.wallet.location configuration property.
+'two-way': Uses a TLS encrypted connection and also verifies the server's TLS certificate. In addition, the client presents its own certificate, which the server verifies to authenticate the client (mutual TLS). The client certificate and the trusted CA root certificate used to sign the server's certificate must be stored within a client wallet and provided to the connector using the downstream.database.wallet.location configuration property.
 
 	 - Type: STRING
 	 - Default: disable
@@ -216,12 +222,12 @@ Specifies whether to use Transport Layer Security (TLS) to connect to the downst
 
 🔘 downstream.database.wallet.location
 
+Specifies the directory path containing the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the downstream database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Specifies the directory path containing the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the downstream database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Connector
@@ -256,6 +262,8 @@ A comma-separated list of regular expressions that match the fully-qualified nam
 🔘 snapshot.mode
 
 The criteria for running a snapshot upon startup of the connector. Select one of the following snapshot options: 'initial' (default): The snapshot includes both the structure (schema) and data of the captured tables. Specify this value to populate topics with a complete representation of the data from the captured tables. After the snapshot completes,the connector begins to stream event records for subsequent database changes.
+'no_data': The snapshot includes only the structure (schema) of captured tables. Specify this value if you want the connector to capture data only for changes that occur after the snapshot. After the snapshot completes, the connector begins to stream event records for subsequent database changes.
+'recovery': Set this option to restore a database schema history topic that is lost or corrupted. After a restart, the connector runs a snapshot that rebuilds the topic from the source tables. You can also set the property to periodically prune a database schema history topic that experiences unexpected growth. WARNING: Do not use this mode to perform a snapshot if schema changes were committed to the database after the last connector shutdown.
 
 	 - Type: STRING
 	 - Default: initial
@@ -409,6 +417,8 @@ Specifies the database server's operating system timezone. This is used to read 
 🔘 lob.oversize.handling.mode
 
 Defines how the connector handles large object (LOB) and XMLType column values that exceed the size threshold specified using the `lob.oversize.threshold` configuration. Select one of the following options:
+'fail' (default): The connector stops processing and reports an error.
+'skip': The connector replaces the value with a placeholder specified using the `skip.value.placeholder` configuration.
 
 	 - Type: STRING
 	 - Default: fail
@@ -454,6 +464,8 @@ Specifies the constant provided by the connector to indicate that the original v
 🔘 signal.data.collection
 
 Specifies the fully qualified name of the signaling table in the format: databaseName.schemaName.tableName. This table is used to send signals to the connector when using the source channel.
+The case of object names in the fully-qualified name must match exactly how they are stored in the Oracle database. Unquoted identifiers are case-insensitive and are treated as uppercase by default, whereas quoted identifiers are case-sensitive. 
+When connecting to a pluggable database (PDB), use the name of the PDB as the database name component of the fully qualified name.
 
 	 - Type: STRING
 	 - Default: null
@@ -463,6 +475,9 @@ Specifies the fully qualified name of the signaling table in the format: databas
 🔘 signal.enabled.channels
 
 Specifies which signaling channels are enabled for the connector. Supported values are:
+'source': Signals are read from a signaling table in the source database.
+'kafka': Signals are consumed from a Kafka topic.
+You can enable multiple channels by providing a comma-separated list. If not set, only the source channel is enabled by default.
 
 	 - Type: LIST
 	 - Default: source
@@ -490,6 +505,7 @@ A list of host/port pairs that the connector will use for establishing the initi
 🔘 snapshot.select.statement.overrides.data.map
 
 An optional JSON object that maps fully-qualified table identifiers to custom SELECT statements that determine which rows to include in the initial snapshot. Each identifier is of the form `schemaName.tableName`. The connector runs these statements during the initial snapshot instead of selecting all rows. It does not apply to events that the connector reads from the log during the streaming phase. Tables configured with a custom SELECT statement are read as of the statement's own execution SCN rather than the shared snapshot SCN, and are therefore not captured with the same point-in-time consistency as other tables.
+The case of object names in the fully-qualified table identifier must match exactly how they are stored in the Oracle database. Unquoted identifiers are case-insensitive and are treated as uppercase by default, whereas quoted identifiers are case-sensitive and must be enclosed in double quotes. Any double quotes inside the key or value must be escaped with a backslash.
 
 	 - Type: PASSWORD
 	 - Default: null
@@ -499,6 +515,10 @@ An optional JSON object that maps fully-qualified table identifiers to custom SE
 🔘 snapshot.select.statement.overrides
 
 An optional, comma-separated list of tables for which the connector uses custom SELECT statements to determine which rows to include in the initial snapshot. The connector runs these statements during the initial snapshot instead of selecting all rows. It does not apply to events that the connector reads from the log during the streaming phase. Tables configured with a custom SELECT statement are read as of the statement's own execution SCN rather than the shared snapshot SCN, and are therefore not captured with the same point-in-time consistency as other tables.
+This property works together with secondary per-table properties:
+- Main property (`snapshot.select.statement.overrides`): A comma-separated list of fully-qualified table identifiers in the format `schemaName.tableName`. This list identifies the tables for which custom snapshot SELECT statements are provided.
+- Per-table properties: For each table listed in the main property, define a property in the format `snapshot.select.statement.overrides.schemaName.tableName` that specifies the custom SELECT statement to run during the initial snapshot. If a table is listed in the main property but its secondary property is missing, the connector logs a warning and uses the default snapshot behavior for that table.
+The case of object names in the fully-qualified name must match exactly how they are stored in the Oracle database. Unquoted identifiers are case-insensitive and are treated as uppercase, whereas quoted identifiers are case-sensitive and must be enclosed in double quotes. If any of the object names contain special characters such as spaces or periods (.), enclose them in double quotes.
 
 	 - Type: STRING
 	 - Default: null
@@ -508,6 +528,10 @@ An optional, comma-separated list of tables for which the connector uses custom 
 🔘 outbound.server.attach.position.mode
 
 Specifies the position the connector passes when attaching to the XStream outbound server. Select one of the following options:
+'connector_managed' (default): The connector passes the last position it persisted to the Kafka Connect offsets topic. The outbound server resumes streaming from the first LCR with a position greater than this value. If no offset is stored, the connector passes the position corresponding to the database's current SCN.
+'server_managed': The connector passes NULL to the outbound server instead of the stored position. The outbound server automatically determines the processed low position and starts streaming from the first LCR with a position greater than this value. The connector then discards any LCR with a position less than or equal to the last position it persisted to the Kafka Connect offsets topic.
+Warning: In this mode, resetting the connector's stored offset to a position below the outbound server's processed low position does not cause the connector to fail (as it would in connector_managed mode). The reset has no effect, the connector resumes from the outbound server's processed low position.
+Note: Change the default value only after consulting Confluent support.
 
 	 - Type: STRING
 	 - Default: connector_managed
@@ -552,4 +576,5 @@ Specifies whether the connector records schema changes for all tables in the dat
 	 - Default: true
 	 - Importance: LOW
 	 - Required: false
+
 
