@@ -55,10 +55,14 @@ lab_run playground state get run.test_file
 lab_expect_not_contains "$model" "--no-run leaves the current model unchanged"
 
 log "Step 2: what was generated"
-lab_run head -16 "$model"
+lab_run head -20 "$model"
 lab_expect_contains "# 💡 description: 000000 deep dive lab ci"
 lab_expect_contains "# 🔮 ticket: https://confluent.zendesk.com/agent/tickets/000000"
 lab_expect_contains "# 💬 comments:"
+lab_expect_contains "# 🎯 expected:"
+lab_expect_contains "# 💥 actual:"
+lab_expect_contains "# 🎫 jira:"
+lab_expect_contains "# 🩹 status: open"
 lab_run grep -n "docker-compose" "$model"
 lab_expect_contains '--docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000000-deep-dive-lab-ci.yml"'
 lab_run grep -c "^exit 0" "$model"
@@ -67,6 +71,16 @@ lab_run readlink "${model_dir}/README.md"
 lab_expect_contains "../../connect/connect-filestream-sink/README.md"
 lab_run readlink "${model_dir}/stop.sh"
 lab_expect_contains "../../connect/connect-filestream-sink/stop.sh"
+lab_run playground repro status -f "$model" --set "lab only" --jira CC-1234
+lab_expect_exit 0
+lab_expect_contains "✏️  updated in the header: jira status"
+lab_expect_contains "🧬 based on: connect/connect-filestream-sink"
+lab_expect_contains "🎯 expected: (empty)"
+lab_expect_contains "🎫 jira: https://confluentinc.atlassian.net/browse/CC-1234"
+lab_expect_contains "🩹 status: lab only"
+lab_expect_contains "💡 fill in the empty fields: playground repro status -f ${model} --expected"
+lab_run grep -c "^# 🩹 status: lab only$" "$model"
+lab_expect_equals "$LAB_OUTPUT" "1" "status lines (replaced, not added)"
 
 log "Step 3: check it, with and without a secret"
 lab_run playground repro check -f "$model"
@@ -100,13 +114,14 @@ lab_run tar tzf "$bundle"
 lab_expect_contains "repro-manifest.json"
 lab_expect_contains "connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
 lab_expect_contains "connect-connect-filestream-sink/docker-compose.plaintext.repro-000000-deep-dive-lab-ci.yml"
-lab_run bash -c "tar xzOf '$bundle' repro-manifest.json | jq -c '.models[0] | {script, case, base_example, run_command}'"
-lab_expect_contains '{"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh","case":"000000","base_example":"connect/connect-filestream-sink","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"}'
+lab_run bash -c "tar xzOf '$bundle' repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, run_command}'"
+lab_expect_contains '{"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"}'
 
 log "Step 5: import, with a conflict"
 lab_run playground repro import -f "$bundle" --dry-run
 lab_expect_exit 0
 lab_expect_contains "🧬 based on connect/connect-filestream-sink"
+lab_expect_contains "🩹 status: lab only"
 lab_expect_contains "📋 0 new, "
 lab_expect_contains " identical, 0 conflicting file(s)" "your own model: every file identical"
 lab_expect_contains "🔍 dry run: nothing imported"

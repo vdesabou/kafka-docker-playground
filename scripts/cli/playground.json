@@ -1425,7 +1425,7 @@
     },
     {
       "name": "repro",
-      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its comments header, and never put customer data in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
+      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  status      show or update what a model proves: expected, actual, jira, status\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
       "usage": "playground repro COMMAND",
       "options": [],
       "subcommands": [
@@ -1582,6 +1582,27 @@
             },
             {
               "names": [
+                "--expected"
+              ],
+              "argument": "EXPECTED",
+              "description": "🎯 Expected behaviour, written in the '# 🎯 expected:' line of the header\n\nAsked after the description in interactive mode. Update it later with\n'playground repro status --expected'."
+            },
+            {
+              "names": [
+                "--actual"
+              ],
+              "argument": "ACTUAL",
+              "description": "💥 Actual behaviour (the problem), written in the '# 💥 actual:' line of the header\n\nAsked after the description in interactive mode. Update it later with\n'playground repro status --actual'."
+            },
+            {
+              "names": [
+                "--jira"
+              ],
+              "argument": "JIRA",
+              "description": "🎫 Jira of the problem, written in the '# 🎫 jira:' line of the header\n\nA key (CC-1234) becomes its https://confluentinc.atlassian.net/browse/ link."
+            },
+            {
+              "names": [
                 "--custom-smt"
               ],
               "argument": "",
@@ -1607,6 +1628,56 @@
               ],
               "argument": "",
               "description": "🛑 Only generate the reproduction model files, then exit\n\nSkips opening the generated file in the editor and running it, so\nthe running environment is left untouched.\n\n🎓 Tip: use it in scripts and from AI agents, together with --file and --description"
+            }
+          ]
+        },
+        {
+          "name": "status",
+          "description": "🩹 Show or update what a reproduction model proves, from its header\n\n'playground repro bootstrap' writes these fields under '# 💬 comments:'\nin the header of the model, one line each:\n\n  # 🎯 expected: what should happen\n  # 💥 actual: what happens instead (the problem)\n  # 🎫 jira: the Jira of the problem\n  # 🩹 status: open, fixed in <version>, not a bug, customer config…\n\nWithout flag, prints the fields with the description, case, author and\nbase example (--json for scripts). With --set, --expected, --actual or\n--jira, updates the lines, then prints them. A model created before the\nfields existed gets the missing lines added after '# 💬 comments:'.\n\n'playground repro export' copies the fields into repro-manifest.json,\nand 'playground repro import' prints them.\n\nWithout --file, the current reproduction model is used.",
+          "usage": "playground repro status [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🔖 Reproduction model script (default: current one)"
+            },
+            {
+              "names": [
+                "--set"
+              ],
+              "argument": "STATUS",
+              "description": "🩹 New status, for example: open, fixed in 10.8.3, not a bug, customer config, workaround"
+            },
+            {
+              "names": [
+                "--expected"
+              ],
+              "argument": "EXPECTED",
+              "description": "🎯 New expected behaviour"
+            },
+            {
+              "names": [
+                "--actual"
+              ],
+              "argument": "ACTUAL",
+              "description": "💥 New actual behaviour"
+            },
+            {
+              "names": [
+                "--jira"
+              ],
+              "argument": "JIRA",
+              "description": "🎫 New Jira (a key like CC-1234 becomes its link)"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the fields as JSON"
             }
           ]
         }

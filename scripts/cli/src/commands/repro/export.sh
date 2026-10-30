@@ -202,6 +202,10 @@ do
         case_number="${BASH_REMATCH[0]}"
     fi
     author=$(repro_header_value "$script" "author")
+    expected=$(repro_header_value "$script" "expected")
+    actual=$(repro_header_value "$script" "actual")
+    jira=$(repro_header_value "$script" "jira")
+    status=$(repro_header_value "$script" "status")
 
     # the base example is where the symlinks created by bootstrap point to
     base_example=""
@@ -226,6 +230,10 @@ do
         --arg case "$case_number" \
         --arg author "$author" \
         --arg base_example "$base_example" \
+        --arg expected "$expected" \
+        --arg actual "$actual" \
+        --arg jira "$jira" \
+        --arg status "$status" \
         --arg run_flags "$run_flags" \
         --arg credentials "$credentials" \
         --arg external_files "$external_files" \
@@ -235,6 +243,10 @@ do
             case: $case,
             author: $author,
             base_example: $base_example,
+            expected: $expected,
+            actual: $actual,
+            jira: $jira,
+            status: $status,
             run_flags: $run_flags,
             run_command: ("playground run -f {repro_dir}/" + ($script | split("/") | last) + (if $run_flags == "" then "" else " " + $run_flags end)),
             credentials: ($credentials | split("\n") | map(select(. != ""))),
