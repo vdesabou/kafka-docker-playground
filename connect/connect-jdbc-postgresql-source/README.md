@@ -65,7 +65,7 @@ playground run -f postgres-orders.sh
 BENCHMARK_LOAD_SCRIPT=benchmark-load-orders.bash playground connector benchmark --nb-records 1000000
 ```
 
-This is how a reproduction model loads a table of its own: a `benchmark-load-<ticket>.bash` next to its script, see "A table of your own" in the [documentation](https://kafka-docker-playground.io/#/reusables?id=a-table-of-your-own-reproduction-models).
+This is how a reproduction model loads a table of its own: a `benchmark-load-<ticket>.bash` next to its script, see "A table of your own" in the [documentation](https://kafka-docker-playground.io/#/toolkit-performance?id=a-table-of-your-own-reproduction-models).
 
 `playground run -f postgres.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
 

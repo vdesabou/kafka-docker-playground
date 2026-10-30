@@ -22,7 +22,7 @@ SSL cluster" or "the connector gets `TopicAuthorizationException`". Takes about 
 | the config exactly as written, without them | `create-or-update … --skip-automatic-connector-config` |
 | new certificates (expired, or another container) | `playground tools certs-create --output-folder <dir> [-c <container>]` |
 | an authorization error (RBAC) | `playground rbac role-binding delete --principal User:connectorSA …` |
-| an authorization error (Confluent Cloud ACLs) | `playground rbac acl delete --connector <c> …` (see [🚦 Reproduce an authorization error](/reusables?id=🚦-reproduce-an-authorization-error)) |
+| an authorization error (Confluent Cloud ACLs) | `playground rbac acl delete --connector <c> …` (see [🚦 Reproduce an authorization error](/toolkit-fully-managed?id=🚦-reproduce-an-authorization-error)) |
 
 ---
 
@@ -279,6 +279,6 @@ playground rbac role-binding list|create|delete …    playground rbac user add|
 - 🍪 Deep dives: [running examples and changing versions](/deep-dive-run-and-versions.md),
   [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (`--dry-run`, `--skip-automatic-connector-config`),
   [containers](/deep-dive-container-lifecycle.md) (`get-properties`)
-- 📖 [How it works: environments](/how-it-works.md) and [🚦 Reproduce an authorization error](/reusables?id=🚦-reproduce-an-authorization-error)
+- 📖 [How it works: environments](/how-it-works.md) and [🚦 Reproduce an authorization error](/toolkit-fully-managed?id=🚦-reproduce-an-authorization-error)
 - 🧠 CLI reference: [playground run](/playground%20run),
   [playground rbac](/playground%20rbac), [playground tools certs-create](/playground%20tools%20certs-create)

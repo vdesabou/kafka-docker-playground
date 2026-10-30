@@ -48,6 +48,42 @@
 </head>
 <body>
   <div id="app"></div>
+  <script>
+    // The Reproduction toolkit (reusables.md) was split into toolkit-*.md pages: send the links to one of its
+    // sections (#/reusables?id=<section>), shared before the split, to the page that now holds it
+    (function () {
+      var pages = {
+      'toolkit-reproduction-models': ["🛠-bootstrap-reproduction-model", "basic", "deprecated-java-producer-producer", "with-custom-smt-custom-smt", "with-pipeline-pipeline", "📦-share-a-reproduction-model", "📤-export", "🕵️-secrets-and-customer-data-scan", "📎-files-outside-the-repository-include-artifacts", "📥-import", "🧰-useful-functions-for-reproduction-models"],
+      'toolkit-data': ["👉-producing-data", "👉-consuming-data", "🧪-testing-smts", "the-record", "the-result", "another-cp-version", "smts-that-are-not-in-the-worker"],
+      'toolkit-debugging': ["🐛-debugging-tools", "✨-remote-debugging", "☑️-prerequisites", "💫-full-example", "🔗-connectors", "🔑-ssl-debug", "🔒-kerberos-debug", "🔬-class-loading", "🕸️-debug-servicenow-or-salesforce", "🌍-debug-http-sink", "🕵️♂️-see-tls-traffic-with-mitmproxy", "🕵-tcp-dump", "👻-heap-dump", "🎯-thread-dump", "🛩️-flight-recorder", "🧰-more-debug-commands", "🔎-analyze-what-you-collected", "🛩️-what-analyze-flight-recorder-reports"],
+      'toolkit-network': ["🚫-blocking-traffic", "🐌-degrade-traffic-add-latency-packet-loss-or-corruption", "🏚-simulate-tcp-connections-problems", "🌐-using-https-proxy", "🔐-proxy-with-basic-authentication"],
+      'toolkit-fully-managed': ["👤-fully-managed-connectors-with-a-service-account", "🚦-reproduce-an-authorization-error", "🏗️-fully-managed-connectors-with-terraform"],
+      'toolkit-environment': ["🧙-how-to-install-other-connectors", "♨️-using-specific-jdk", "🌀-azul-zulu-jdk", "⭕️-oracle-jdk"],
+      'toolkit-performance': ["🏎️-performance-testing", "⏱️-benchmark-a-connector", "your-own-load", "a-real-life-example-the-salesforce-bulk-api-source", "a-table-of-your-own-reproduction-models", "is-the-connector-the-bottleneck", "⏱️-end-to-end-latency-of-a-source", "insert-update-then-delete-the-same-rows", "compare-connector-versions", "🛩️-where-the-time-goes", "📊-grafana", "☁️-fully-managed-connectors", "🌪️-databases-keep-a-load-running-with-enable-sql-datagen"],
+      };
+      var page = {};
+      Object.keys(pages).forEach(function (p) {
+        pages[p].forEach(function (id) { page[id] = p; });
+      });
+      function redirect() {
+        var match = /^#\/reusables(?:\.md)?\?(?:.*&)?id=([^&]+)/.exec(window.location.hash);
+        if (!match) {
+          return;
+        }
+        var id;
+        try {
+          id = decodeURIComponent(match[1]).toLowerCase().replace(/-+/g, '-');
+        } catch (e) {
+          return;
+        }
+        if (page[id]) {
+          window.location.replace('#/' + page[id] + '?id=' + encodeURIComponent(id));
+        }
+      }
+      redirect();
+      window.addEventListener('hashchange', redirect);
+    })();
+  </script>
   <script src="cli-pages.js"></script>
   <script>
     window.$docsify = {
@@ -76,6 +112,7 @@
                         '/deep-dive-log-levels', '/deep-dive-connector-smt-test', '/deep-dive-reproduction-models', '/deep-dive-container-lifecycle',
                         '/deep-dive-connector-plugin', '/deep-dive-schema', '/deep-dive-jvm-diagnostics', '/deep-dive-run-and-versions',
                         '/deep-dive-topic-administration', '/deep-dive-broker', '/deep-dive-secured-environments', '/deep-dive-replication', '/deep-dive-cfk', '/deep-dive-connector-benchmark', '/deep-dive-fully-managed', '/deep-dive-secrets', '/deep-dive-oracle-cdc', '/how-it-works', '/reusables',
+                        '/toolkit-reproduction-models', '/toolkit-data', '/toolkit-debugging', '/toolkit-network', '/toolkit-fully-managed', '/toolkit-environment', '/toolkit-performance',
                         '/academy', '/tips-and-tricks', '/claude-code', '/legacy-java-producer', '/changelog'].concat(window.KDP_CLI_PAGES || []),
           namespace  : 'kdp',
           // the index is cached in localStorage: rebuild it hourly, as CI updates the generated pages several times a day (default: 1 day)
@@ -115,7 +152,7 @@
           });
         },
         // Links to a section (?id=...): docsify scrolls once, right after rendering, but the images and videos above
-        // the section load afterwards and push it down (2455px for the benchmark section of reusables). Keep the
+        // the section load afterwards and push it down (2455px for the benchmark section of toolkit-performance). Keep the
         // section at the top while the page grows, until the reader scrolls or 10s have passed.
         function (hook, vm) {
           var stopPrevious = function () {};
@@ -206,7 +243,7 @@
         },
         // "On this page" table of contents on the right of long pages (6 headings or more), when the screen is wide
         // enough (see main.css). The sidebar lists the sections down to h3 (subMaxLevel), this one also lists the h4
-        // sub-sections (academy, reusables, CLI options) and highlights the one being read.
+        // sub-sections (academy, toolkit pages, CLI options) and highlights the one being read.
         function (hook) {
           var MIN_HEADINGS = 6;
           var toc = document.createElement('nav');

@@ -554,7 +554,7 @@ playground debug enable-remote-debugging -c broker
 
 **Links**
 
-- 📚 Step by step with Visual Studio Code: [✨ Remote debugging](/reusables?id=✨-remote-debugging) in the Reproduction toolkit
+- 📚 Step by step with Visual Studio Code: [✨ Remote debugging](/toolkit-debugging?id=✨-remote-debugging) in the Reproduction toolkit
 - 🧠 CLI reference: [playground debug enable-remote-debugging](/playground%20debug%20enable-remote-debugging),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode)
 
@@ -916,7 +916,7 @@ playground connector benchmark --mode steady --duration 5m          # a throughp
 - 🍪 Deep dive: [`connector benchmark`: drain vs steady, loads, versions, hands-on lab](/deep-dive-connector-benchmark.md)
 - 🌐 <a href="reports/benchmark.html" target="_blank" rel="noopener">A benchmark report</a> (JDBC PostgreSQL sink 10.8.4 vs 10.9.9: click around)
 - 🧠 CLI reference: [playground connector benchmark](/playground%20connector%20benchmark), and
-  [⏱️ Benchmark a connector](/reusables?id=⏱️-benchmark-a-connector) in the Reproduction toolkit
+  [⏱️ Benchmark a connector](/toolkit-performance?id=⏱️-benchmark-a-connector) in the Reproduction toolkit
 
 ## 🐌 A slow or broken network, on purpose
 
@@ -966,7 +966,7 @@ Recorded on the example `connect/connect-jdbc-postgresql-sink/postgres-sink.sh`.
 **Links**
 
 - 🍪 Deep dive: [`block-traffic` and `degrade-traffic` under the hood, hands-on lab and repro recipes](/deep-dive-network-traffic.md)
-- 📖 [Blocking traffic](/reusables?id=🚫-blocking-traffic) and [Degrade traffic](/reusables?id=🐌-degrade-traffic---add-latency-packet-loss-or-corruption)
+- 📖 [Blocking traffic](/toolkit-network?id=🚫-blocking-traffic) and [Degrade traffic](/toolkit-network?id=🐌-degrade-traffic-add-latency-packet-loss-or-corruption)
   in the Reproduction toolkit
 - 🧠 CLI reference: [playground debug degrade-traffic](/playground%20debug%20degrade-traffic),
   [playground debug block-traffic](/playground%20debug%20block-traffic), [playground connector wait](/playground%20connector%20wait)
@@ -1054,7 +1054,7 @@ Recorded on the example `ccloud/fm-datagen-source/fully-managed-datagen-source.s
 **Links**
 
 - 🍪 Deep dive: [fully managed connectors: what differs from self-managed, hands-on lab](/deep-dive-fully-managed.md)
-- 📖 [Fully managed connectors with Terraform](/reusables?id=🏗️-fully-managed-connectors-with-terraform)
+- 📖 [Fully managed connectors with Terraform](/toolkit-fully-managed?id=🏗️-fully-managed-connectors-with-terraform)
 - 🧠 CLI reference: [playground connector create-or-update](/playground%20connector%20create-or-update),
   [playground connector delete](/playground%20connector%20delete)
 
@@ -1108,7 +1108,7 @@ playground connector delete --connector DatagenSource_$USER
 
 **Links**
 
-- 📖 [Fully managed connectors with a service account](/reusables?id=👤-fully-managed-connectors-with-a-service-account)
+- 📖 [Fully managed connectors with a service account](/toolkit-fully-managed?id=👤-fully-managed-connectors-with-a-service-account)
   in the Reproduction toolkit
 - 🍪 Deep dive: [fully managed connectors: what differs from self-managed, hands-on lab](/deep-dive-fully-managed.md)
 - 🧠 CLI reference: [playground run](/playground%20run), [playground rbac acl](/playground%20rbac%20acl),

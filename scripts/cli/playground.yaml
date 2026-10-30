@@ -1828,7 +1828,7 @@ subcommands:
     description: "\U0001F6E0  Bootstrap reproduction model, just run <playground repro
       bootstrap> !\n\n\U0001F525 HIGHLY RECOMMENDED: start in interactive mode by
       simple running <playground repro bootstrap> !\n\n\U0001F449 Check documentation
-      https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model"
+      https://kafka-docker-playground.io/#/toolkit-reproduction-models?id=%f0%9f%9b%a0-bootstrap-reproduction-model"
     usage: playground repro bootstrap [OPTIONS]
     options:
     - names:
@@ -3731,7 +3731,7 @@ subcommands:
   subcommands:
   - name: enable-remote-debugging
     description: "✨ Enable java remote debugging for container\n\n\U0001F449 Check
-      documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging\n\n\U0001F3AC
+      documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging\n\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging"
     usage: playground debug enable-remote-debugging [OPTIONS]
     options:
@@ -8222,7 +8222,7 @@ subcommands:
         such case it will open github in comparison mode\n\nRepeatable: ✓ Yes"
   - name: enable-remote-debugging
     description: "✨ Enable java remote debugging for the connector.\n\n\U0001F449
-      Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging\n\n\U0001F3D7️
+      Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging\n\n\U0001F3D7️
       It will checkout (you need git installed) and compile code for the connector
       (required for remote debugging).\n\n\U0001F48C Confluent employees only: make
       sure to follow \"Maven FAQ\", you also need to be on Confluent VPN with proper

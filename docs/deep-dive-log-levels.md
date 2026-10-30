@@ -325,7 +325,7 @@ playground run -f <example> --connect-log-level "<pkg>=TRACE,<pkg2>=DEBUG"
 - 🎬 Video sessions: [🧬 TRACE on a running connector, without a restart](/sessions?id=🧬-trace-on-a-running-connector-without-a-restart), [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) (`--connect-log-level`)
 - 🍪 Deep dives: [`container logs` and `analyze logs`](/deep-dive-container-logs.md) to read what the new levels print,
   [`connector diagnose` and the dead letter queue](/deep-dive-connector-troubleshooting.md) for what to look at first
-- 📖 [Connectors logging](/reusables?id=🔗-connectors) in the Reproduction toolkit, and the Confluent docs on
+- 📖 [Connectors logging](/toolkit-debugging?id=🔗-connectors) in the Reproduction toolkit, and the Confluent docs on
   [changing the log level of a logger](https://docs.confluent.io/platform/current/connect/logging.html#change-the-log-level-for-a-specific-logger)
 - 🧠 CLI reference: [playground debug log-level](/playground%20debug%20log-level),
   [playground connector log-level](/playground%20connector%20log-level), [playground run](/playground%20run)

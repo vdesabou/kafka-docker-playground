@@ -12,7 +12,7 @@
 [📊 Reports](/reports.md)
 [🎬 Bite size sessions](/sessions.md)
 [🍪 Deep dives](/deep-dives.md)
-[📈 Benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector)
+[📈 Benchmark](/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector)
 [🤖 Claude Code](/claude-code.md)
 [🎓 How it works](/how-it-works.md)
 [🧰 Reproduction toolkit](/reusables.md)

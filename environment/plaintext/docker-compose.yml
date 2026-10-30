@@ -299,11 +299,11 @@ services:
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'false'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
-      # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
+      # # https://kafka-docker-playground.io/#/toolkit-debugging?id=✨-remote-debugging
       KAFKA_DEBUG: 'true'
       # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-      # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
+      # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/toolkit-debugging?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
       KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
@@ -375,11 +375,11 @@ services:
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'false'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
-      # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
+      # # https://kafka-docker-playground.io/#/toolkit-debugging?id=✨-remote-debugging
       KAFKA_DEBUG: 'true'
       # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-      # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
+      # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/toolkit-debugging?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
       KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
@@ -451,11 +451,11 @@ services:
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'false'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
-      # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
+      # # https://kafka-docker-playground.io/#/toolkit-debugging?id=✨-remote-debugging
       KAFKA_DEBUG: 'true'
       # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-      # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
+      # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/toolkit-debugging?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
       KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization

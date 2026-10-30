@@ -37,5 +37,5 @@ do
         "
     fi
 
-    log "see https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"
+    log "see https://kafka-docker-playground.io/#/toolkit-debugging?id=✨-remote-debugging"
 done

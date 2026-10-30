@@ -9,8 +9,8 @@ ends it with its verdict, `repro bisect` runs it on several versions, `repro sta
 > [!TIP]
 > 🎬 Short on time? The video session [🧪 The life of a reproduction model](/sessions?id=🧪-the-life-of-a-reproduction-model) shows it in 4 minutes: `repro bootstrap --no-run`, a scenario edited and run, `repro check` catching a key, then `export` and `import` on another machine.
 >
-> The [🛠 Bootstrap reproduction model](/reusables?id=🛠-bootstrap-reproduction-model) and
-> [📦 Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) sections of the Reproduction toolkit show
+> The [🛠 Bootstrap reproduction model](/toolkit-reproduction-models?id=🛠-bootstrap-reproduction-model) and
+> [📦 Share a reproduction model](/toolkit-reproduction-models?id=📦-share-a-reproduction-model) sections of the Reproduction toolkit show
 > the commands, with a video of the interactive bootstrap. This page goes further: what each command generates or
 > checks under the hood, the gotchas, a hands-on lab and recipes for support cases.
 
@@ -669,8 +669,8 @@ playground repro import -f <bundle.tgz | https://…> [--dry-run | --run] [--on-
 **Links**
 
 - 🎬 Video session: [🧪 The life of a reproduction model](/sessions?id=🧪-the-life-of-a-reproduction-model)
-- 📖 [Bootstrap reproduction model](/reusables?id=🛠-bootstrap-reproduction-model) and
-  [Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) in the Reproduction toolkit
+- 📖 [Bootstrap reproduction model](/toolkit-reproduction-models?id=🛠-bootstrap-reproduction-model) and
+  [Share a reproduction model](/toolkit-reproduction-models?id=📦-share-a-reproduction-model) in the Reproduction toolkit
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the warn-only wait of models),
   [`topic produce`](/deep-dive-topic-produce.md) and [`topic consume`](/deep-dive-topic-consume.md) (data in, assertions out)
 - 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro bisect](/playground%20repro%20bisect), [playground repro list](/playground%20repro%20list), [playground repro diff](/playground%20repro%20diff), [playground repro check](/playground%20repro%20check),

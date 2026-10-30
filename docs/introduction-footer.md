@@ -8,7 +8,7 @@
 - ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](https://kafka-docker-playground.io/#/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
-- 📈 [Benchmark](https://kafka-docker-playground.io/#/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
+- 📈 [Benchmark](https://kafka-docker-playground.io/#/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
 - 📊 Find what is wrong with shareable [reports](https://kafka-docker-playground.io/#/reports): thread dumps, GC logs, flight recordings, network captures, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
 - 🎬 Learn with [bite size sessions](https://kafka-docker-playground.io/#/sessions): short narrated videos, each about one thing the playground does for you, with the commands to copy
 - 🍪 Master a family of commands with the [deep dives](https://kafka-docker-playground.io/#/deep-dives): mental model, what runs under the hood, gotchas, a hands-on lab replayed nightly by CI, and recipes for support repros
@@ -95,13 +95,13 @@ Turn an example into a reproduction model of your own issue, ready to edit and r
 
 #### **🔗 Pipeline**
 
-Chain a source example and a sink example on the same topic in a single [reproduction model](/reusables).
+Chain a source example and a sink example on the same topic in a single [reproduction model](/toolkit-reproduction-models?id=with-pipeline-pipeline).
 
 <video src="videos/repro-pipeline.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
 #### **📈 Benchmark**
 
-[Benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) the throughput of a connector (and compare versions), with a flight recording that says where the time went.
+[Benchmark](/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) the throughput of a connector (and compare versions), with a flight recording that says where the time went.
 
 <video src="videos/benchmark.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
@@ -127,7 +127,7 @@ Check out the **[How to Use](/how-to-use.md)** section, then select an example i
 
 ## 💡 Ideology
 
-Most of the examples in the playground are very basic, but it allows to quickly test components in an automated way (and with any [versions](/how-to-use?id=🪄-specify-versions)) and most importantly to easily [build](/reusables) your own reproduction models !
+Most of the examples in the playground are very basic, but it allows to quickly test components in an automated way (and with any [versions](/how-to-use?id=🪄-specify-versions)) and most importantly to easily [build](/toolkit-reproduction-models) your own reproduction models !
 
 ## ⭐️ Support my work
 
