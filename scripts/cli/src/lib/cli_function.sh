@@ -1197,6 +1197,99 @@ function repro_last_verdict () {
   fi
 }
 
+# the base example of a model (folder relative to the repository), from the symlinks bootstrap created in its folder
+function repro_base_example_of () {
+  local script="$1" link target
+  for link in README.md stop.sh
+  do
+    target=$(readlink "$(dirname "$script")/$link" 2>/dev/null || true)
+    if [[ "$target" == ../../* ]]
+    then
+      dirname "${target#../../}"
+      return 0
+    fi
+  done
+}
+
+# what 'repro diff' and the hand-off report compare, written in folder $2: base_scenario / model_scenario (the script of
+# the base example and the scenario of the model: no header, no cheat sheet, no leading or trailing empty lines, the
+# compose override renamed by bootstrap, docker-compose.plaintext.repro-<description>.yml, gets back the name of the
+# example's), base_override / model_override when the model has its own override. Sets REPRO_DIFF_BASE_EXAMPLE,
+# REPRO_DIFF_BASE_SCRIPT, REPRO_DIFF_BASE_OVERRIDE, REPRO_DIFF_MODEL_OVERRIDE (names); returns 1 without base example
+function repro_diff_files () {
+  local script="$1" out="$2" prefix trim
+  REPRO_DIFF_BASE_EXAMPLE=$(repro_base_example_of "$script")
+  prefix=$(basename "$script" | sed -E 's/-repro-.*$//')
+  REPRO_DIFF_BASE_SCRIPT="$REPRO_DIFF_BASE_EXAMPLE/$prefix.sh"
+  REPRO_DIFF_MODEL_OVERRIDE=""
+  REPRO_DIFF_BASE_OVERRIDE=""
+  if [ -z "$REPRO_DIFF_BASE_EXAMPLE" ] || [ ! -f "$root_folder/$REPRO_DIFF_BASE_SCRIPT" ]
+  then
+    return 1
+  fi
+  trim='{ lines[NR] = $0 } END { n = NR; while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--; s = 1; while (s <= n && lines[s] ~ /^[[:space:]]*$/) s++; for (i = s; i <= n; i++) print lines[i] }'
+  awk 'banners < 2 { if (/^#####/) banners++; next } /^# 🧪 end the scenario with its verdict|^# 🧠 below is a list of cli commands/ { exit } { print }' "$script" \
+    | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/g' | awk "$trim" > "$out/model_scenario"
+  grep -v '^#!/bin/bash' "$root_folder/$REPRO_DIFF_BASE_SCRIPT" | awk "$trim" > "$out/base_scenario"
+  REPRO_DIFF_MODEL_OVERRIDE=$(grep -oE 'docker-compose\.[A-Za-z0-9.-]*repro-[A-Za-z0-9-]+\.yml' "$script" | head -1 || true)
+  if [ -n "$REPRO_DIFF_MODEL_OVERRIDE" ]
+  then
+    REPRO_DIFF_BASE_OVERRIDE=$(echo "$REPRO_DIFF_MODEL_OVERRIDE" | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/')
+    if [ -f "$(dirname "$script")/$REPRO_DIFF_MODEL_OVERRIDE" ] && [ -f "$root_folder/$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE" ]
+    then
+      cp "$(dirname "$script")/$REPRO_DIFF_MODEL_OVERRIDE" "$out/model_override"
+      cp "$root_folder/$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE" "$out/base_override"
+    fi
+  fi
+  return 0
+}
+
+# the "key": value lines of the 'playground connector create-or-update' heredocs of a scenario: connector<TAB>key<TAB>value
+function repro_config_keys () {
+  awk '
+    /playground connector create-or-update/ && /<</ {
+      connector = $0; sub(/.*(--connector|-c)[ =]/, "", connector); sub(/[ \t].*/, "", connector); gsub(/["\047]/, "", connector)
+      delim = $0; sub(/.*<<-?[ \t]*/, "", delim); gsub(/["\047]/, "", delim); sub(/[ \t].*/, "", delim)
+      inside = 1; next
+    }
+    inside { line = $0; gsub(/^[ \t]+|[ \t]+$/, "", line); if (line == delim) { inside = 0; next } }
+    inside && match($0, /^[ \t]*"[^"]+"[ \t]*:[ \t]*/) {
+      key = $0; sub(/^[ \t]*"/, "", key); sub(/".*/, "", key)
+      value = substr($0, RLENGTH + 1); sub(/[ \t]*,?[ \t]*$/, "", value)
+      print connector "\t" key "\t" value
+    }' "$1"
+}
+
+# the connector config keys changed, added and removed by the model ($2 its scenario) compared with the example ($1), as
+# JSON: [{connector, compared_with, changed: [keys], added: [keys], removed: [keys]}], for the connectors of the model. A
+# connector renamed in the model is compared with the connector of the example when the example has only one
+function repro_config_changes () {
+  jq -n -R --rawfile base <(repro_config_keys "$1") --rawfile model <(repro_config_keys "$2") '
+    def entries($s): $s | split("\n") | map(select(length > 0) | split("\t") | {connector: .[0], key: .[1], value: (.[2:] | join("\t"))});
+    entries($base) as $b | entries($model) as $m
+    | ($b | map(.connector) | unique) as $base_connectors
+    | [$m | map(.connector) | unique[] as $c
+        | (if ($base_connectors | index($c)) != null then $c elif ($base_connectors | length) == 1 then $base_connectors[0] else null end) as $bname
+        | ($b | map(select(.connector == $bname)) | map({key: .key, value: .value}) | from_entries) as $bc
+        | ($m | map(select(.connector == $c)) | map({key: .key, value: .value}) | from_entries) as $mc
+        | {connector: $c,
+           compared_with: $bname,
+           in_example: ($bc | length > 0),
+           changed: [$mc | keys_unsorted[] | select($bc[.] != null and $bc[.] != $mc[.])],
+           added: [$mc | keys_unsorted[] | select($bc[.] == null)],
+           removed: [$bc | keys_unsorted[] | select($mc[.] == null)]}]'
+}
+
+# one line per connector of repro_config_changes ($1): "🧩 connector x: 2 key(s) changed (a, b), 1 added (c), 0 removed"
+function repro_config_changes_lines () {
+  echo "$1" | jq -r '.[] | if (.in_example | not) then "🧩 connector \(.connector): not in the example, \(.added | length) key(s)"
+    elif ((.changed + .added + .removed) | length) == 0 then "🧩 connector \(.connector): same config as the example" + (if .compared_with != .connector then "\u0027s \(.compared_with)" else "" end)
+    else "🧩 connector \(.connector)" + (if .compared_with != .connector then " (vs \(.compared_with) of the example)" else "" end) + ": " + ([
+      (if (.changed | length) > 0 then "\(.changed | length) key(s) changed (\(.changed | join(", ")))" else empty end),
+      (if (.added | length) > 0 then "\(.added | length) added (\(.added | join(", ")))" else empty end),
+      (if (.removed | length) > 0 then "\(.removed | length) removed (\(.removed | join(", ")))" else empty end)] | join(", ")) end'
+}
+
 # one line for a verdict of playground-repro-verdicts: 🐞 reproduced on 2026-10-30 (CP 8.4.0, connector 10.8.0): <reason>
 function repro_verdict_line () {
   echo "$1" | jq -r '(if .verdict == "reproduced" then "🐞 reproduced" else "✅ not reproduced" end)

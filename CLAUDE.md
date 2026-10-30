@@ -293,6 +293,7 @@ The website is published from [`vdesabou/kafka-docker-playground-docs`](https://
 
 ```bash
 playground repro bootstrap              # scaffold a new model in reproduction-models/
+playground repro diff [-f <repro script>] [--summary]     # what it changes vs its base example: connector keys changed / added / removed + diffs
 playground repro list [--mine] [--case <n>] [--status <text>] [--verdict reproduced|not-reproduced|none] [--grep <regex>] [--json]   # find models again
 playground repro export [-f <repro script>] [--dry-run]   # self-contained bundle (+ repro-manifest.json, <model>.REPRO.md), committed or not, blocked if it holds a secret (--force)
 playground repro export --all-uncommitted                 # every new or modified model
