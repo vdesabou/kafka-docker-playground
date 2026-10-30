@@ -1066,17 +1066,23 @@ function get_connector_config_file_with_fzf() {
   folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
   folder_zip_or_jar=${folder_zip_or_jar//,/ }
 
+  # modification time and path: GNU stat (Linux) or BSD stat (macOS)
+  if stat -c '%Y' / > /dev/null 2>&1
+  then
+    stat_mtime=(stat -c '%Y %n')
+  else
+    stat_mtime=(stat -f '%m %N')
+  fi
+
+  # a home folder holds thousands of json / yaml files: one grep and one stat for all of them (a grep per file takes
+  # minutes), fzf only gets the list once it is sorted
   fzf_output=$(find $folder_zip_or_jar $PWD -maxdepth 3 \
       \( -path "$root_folder" -o -name node_modules -o -name Library -o -name target -o -name '.*' ! -name '.' \) -prune \
-      -o -type f \( -name '*.json' -o -name '*.yaml' -o -name '*.yml' -o -name '*.tf' -o -name '*.properties' \) -size -1024k -print 2>/dev/null \
-    | sort -u \
-    | while IFS= read -r file
-      do
-        if grep -qE 'connector\.class|kind:[[:space:]]*"?(Connector|KafkaConnector)|resource[[:space:]]+"confluent_connector"' "$file" 2>/dev/null
-        then
-          echo "$(date -r "$file" +%s) $file"
-        fi
-      done \
+      -o -type f \( -name '*.json' -o -name '*.yaml' -o -name '*.yml' -o -name '*.tf' -o -name '*.properties' \) -size -1024k -print0 2>/dev/null \
+    | sort -zu \
+    | xargs -0 grep -lE 'connector\.class|kind:[[:space:]]*"?(Connector|KafkaConnector)|resource[[:space:]]+"confluent_connector"' 2>/dev/null \
+    | tr '\n' '\0' \
+    | xargs -0 "${stat_mtime[@]}" 2>/dev/null \
     | sort -rn | cut -d' ' -f2- \
     | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📄" --header="select the connector config the customer sent, newest first (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "head -60 {}" --print-query --bind "alt-enter:print-query")
 
