@@ -297,6 +297,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Connector-Plugin commands:")"
   printf "  %s   🔌 Connector-plugin commands\n" "$(green "connector-plugin")                          "
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin search-jar")               "
+  printf "  %s   📚 Libraries bundled in a connector plugin, and what changed between two versions\n" "$(green "connector-plugin dependencies")             "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                 "
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "connector-plugin info")                     "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "connector-plugin changelog")                "
@@ -14856,7 +14857,7 @@ playground_rbac_acl_list_usage() {
 playground_connector_plugin_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin\n\n"
-    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    config-key            what a config key does, its default, since when, who\n  sets it\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
+    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    config-key            what a config key does, its default, since when, who\n  sets it\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
   else
     printf "playground connector-plugin - 🔌 Connector-plugin commands\n\n"
   fi
@@ -14868,6 +14869,7 @@ playground_connector_plugin_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "search-jar")          "
+  printf "  %s   📚 Libraries bundled in a connector plugin, and what changed between two versions\n" "$(green "dependencies")        "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "versions")            "
   printf "  %s   🪪 One page on a connector plugin of Confluent Hub\n" "$(green "info")                "
   printf "  %s   📜 Show the release notes of a connector plugin between two versions\n" "$(green "changelog")           "
@@ -14962,6 +14964,76 @@ playground_connector_plugin_search_jar_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector-plugin search-jar --connector-plugin\n  confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider\n  playground connector-plugin search-jar --connector-plugin\n  confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --class\n  io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect\n  playground connector-plugin search-jar --connector-plugin\n  confluentinc/kafka-connect-hdfs --with-worker\n  playground connector-plugin search-jar --connector-zip\n  /path/to/customer-plugin.zip --class Producer --with-worker\n  playground connector-plugin search-jar --connector-plugin\n  confluentinc/kafka-connect-s3 --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_plugin_dependencies_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector-plugin dependencies\n\n"
+    printf "  📚 Libraries bundled in a connector plugin, and what changed between two\n  versions\n  \n  \"Which jackson / netty / aws-sdk version ships in 10.7.4, and which\n  plugin version bumped it?\", often after a CVE scanner flagged a jar.\n  \n  Libraries are read from the META-INF/maven/**/pom.properties of each jar\n  (the libraries shaded inside a fat jar are listed too, \"inside <jar>\"),\n  or from the jar file name. Same download and cache as search-jar\n  (/tmp/connector-plugin-jars).\n  \n  One --connector-tag (default latest) or --connector-zip: the list.\n  Two of them (or a zip and a version): upgraded ⬆️, downgraded ⬇️,\n  added ➕ and removed ➖ libraries.\n  \n  --find-first <artifact>:<version> finds the first version of the plugin\n  that ships at least that version of the library, with a binary search\n  over the versions of Confluent Hub (each probed version is downloaded).\n\n"
+  else
+    printf "playground connector-plugin dependencies - 📚 Libraries bundled in a connector plugin, and what changed between two versions\n\n"
+  fi
+  printf "Alias: deps\n"
+  echo
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector-plugin dependencies [OPTIONS]\n"
+  printf "  playground connector-plugin dependencies --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN")"
+    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
+    printf "    🔗 Connector version, default is the latest on Confluent Hub\n    \n    Set it twice to compare two versions. With --find-first, the version to\n    start the search from.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
+    printf "    🤐 Connector zip: its libraries, or compared with --connector-tag\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep GREP")"
+    printf "    🔎 Only the libraries matching this regular expression (group:artifact or jar\n    name, case insensitive)\n    \n    Example: --grep \"jackson|netty\"\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--find-first ARTIFACT_VERSION")"
+    printf "    🎯 <artifact>:<version>: first plugin version shipping at least that version\n    of the library\n    \n    Example: --find-first jackson-databind:2.18.0 (the artifactId, as in the\n    list)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force-refresh")"
+    printf "    ☢️ Force refresh.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector-plugin dependencies --connector-plugin\n  confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep \"jackson|netty\"\n  playground connector-plugin dependencies --connector-plugin\n  confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --connector-tag 12.1.15\n  playground connector-plugin dependencies --connector-plugin\n  confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0\n  playground connector-plugin deps --connector-zip /path/to/customer-plugin.zip\n  --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.9.9\n"
     echo
 
   fi
@@ -27718,6 +27790,108 @@ function connector_config_adapt () {
   then
     log "🌍 still pointing to the customer environment (external systems, files): use the ones of the example"
     echo "$others"
+  fi
+}
+
+# lib/ folder of a connector plugin version (or of a zip), downloaded once in /tmp/connector-plugin-jars and reused
+# get_connector_plugin_lib_dir <owner/name> <version|latest|" "|""> <zip or ""> <force refresh or "">
+# sets plugin_lib_dir, plugin_label and plugin_version; logs go to stderr; returns 1 when it fails
+function get_connector_plugin_lib_dir () {
+  local connector_plugin="$1"
+  local connector_tag="$2"
+  local connector_zip="$3"
+  local force_refresh="$4"
+  local cache_root="/tmp/connector-plugin-jars"
+  local plugin_dir work_dir
+  mkdir -p "$cache_root"
+  plugin_lib_dir=""
+  plugin_label=""
+  plugin_version=""
+
+  if [[ -n "$connector_zip" ]]
+  then
+    if [[ $connector_zip == *"@"* ]]
+    then
+      connector_zip=${connector_zip#*@}
+    fi
+    if [[ "$connector_zip" != *.zip ]]
+    then
+      logerror "❌ --connector-zip $connector_zip is not a .zip file"
+      return 1
+    fi
+    plugin_dir="$cache_root/zip-$(basename "$connector_zip" .zip)-$(shasum "$connector_zip" | cut -c1-12)"
+    plugin_label="$(basename "$connector_zip")"
+    plugin_version="$(basename "$connector_zip" .zip)"
+    if [[ -n "$force_refresh" ]]
+    then
+      rm -rf "$plugin_dir"
+    fi
+    if [ ! -d "$plugin_dir" ]
+    then
+      log "📦 Extracting $connector_zip" >&2
+      work_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      if ! unzip -q "$connector_zip" -d "$work_dir"
+      then
+        logerror "❌ could not extract $connector_zip"
+        rm -rf "$work_dir"
+        return 1
+      fi
+      mkdir -p "$plugin_dir"
+      mv "$work_dir"/* "$plugin_dir"/
+      rm -rf "$work_dir"
+    fi
+  else
+    if [ "$connector_tag" == " " ]
+    then
+      connector_tag=$(choose_connector_tag "$connector_plugin" | cut -d ' ' -f 2 | sed 's/^v//')
+    fi
+    if [[ -z "$connector_tag" ]] || [ "$connector_tag" == "latest" ]
+    then
+      connector_tag=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
+      if [[ -z "$connector_tag" ]]
+      then
+        logwarn "could not find the latest version of $connector_plugin on Confluent Hub, its jars won't be cached" >&2
+        connector_tag="latest"
+      fi
+    fi
+    plugin_label="$connector_plugin:$connector_tag"
+    plugin_version="$connector_tag"
+    plugin_dir="$cache_root/$(echo "$connector_plugin" | tr '/' '-')-$connector_tag"
+    if [[ -n "$force_refresh" ]] || [ "$connector_tag" == "latest" ]
+    then
+      rm -rf "$plugin_dir"
+    fi
+    if [ ! -d "$plugin_dir" ]
+    then
+      get_connect_image
+      log "🔌 Downloading connector plugin $connector_plugin:$connector_tag" >&2
+      # in a mktemp folder: Docker Desktop doesn't share /tmp (/private/tmp) by default
+      work_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+      if ! docker run -u0 -i --rm -v "$work_dir:/usr/share/confluent-hub-components" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $connector_plugin:$connector_tag && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > "$work_dir.log" 2>&1
+      then
+        logerror "❌ could not download $connector_plugin:$connector_tag from Confluent Hub:"
+        tail -5 "$work_dir.log" >&2
+        rm -rf "$work_dir" "$work_dir.log"
+        return 1
+      fi
+      mkdir -p "$plugin_dir"
+      mv "$work_dir"/* "$plugin_dir"/
+      rm -rf "$work_dir" "$work_dir.log"
+    else
+      log "♻️ Using the jars of $plugin_label already downloaded in $plugin_dir" >&2
+    fi
+  fi
+
+  plugin_lib_dir=$(find "$plugin_dir" -type d -name lib | head -1)
+  if [[ -z "$plugin_lib_dir" ]]
+  then
+    # some zips have their jars at the top level
+    plugin_lib_dir=$(dirname "$(find "$plugin_dir" -name '*.jar' | head -1)")
+  fi
+  if [[ -z "$plugin_lib_dir" ]] || [ "$plugin_lib_dir" == "." ]
+  then
+    logerror "❌ no jar found in $plugin_dir"
+    return 1
   fi
 }
 
@@ -63752,7 +63926,7 @@ playground_connector_plugin_search_jar_command() {
       exit 1
   fi
 
-  # jars are kept here, one folder per plugin version (or per zip), and reused on the next call
+  # jars are kept here, one folder per plugin version (or per zip), and reused on the next call (get_connector_plugin_lib_dir)
   cache_root="/tmp/connector-plugin-jars"
   mkdir -p "$cache_root"
 
@@ -63780,84 +63954,12 @@ playground_connector_plugin_search_jar_command() {
       exit 1
   fi
 
-  if [[ -n "$connector_zip" ]]
+  if ! get_connector_plugin_lib_dir "$connector_plugin" "$connector_tag" "$connector_zip" "$force_refresh"
   then
-      if [[ $connector_zip == *"@"* ]]
-      then
-          connector_zip=${connector_zip#*@}
-      fi
-      if [[ "$connector_zip" != *.zip ]]
-      then
-          logerror "❌ --connector-zip $connector_zip is not a .zip file"
-          exit 1
-      fi
-      zip_id=$(shasum "$connector_zip" | cut -c1-12)
-      plugin_dir="$cache_root/zip-$(basename "$connector_zip" .zip)-$zip_id"
-      label="$(basename "$connector_zip")"
-      if [[ -n "$force_refresh" ]]
-      then
-          rm -rf "$plugin_dir"
-      fi
-      if [ ! -d "$plugin_dir" ]
-      then
-          search_jar_log "📦 Extracting $connector_zip"
-          unzip -q "$connector_zip" -d "$tmp_dir/zip"
-          mkdir -p "$plugin_dir"
-          mv "$tmp_dir/zip"/* "$plugin_dir"/
-      fi
-  else
-      if [[ -n "$connector_tag" ]] && [ "$connector_tag" == " " ]
-      then
-          ret=$(choose_connector_tag "$connector_plugin")
-          connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
-      fi
-      if [[ -z "$connector_tag" ]] || [ "$connector_tag" == "latest" ]
-      then
-          set +e
-          connector_tag=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
-          set -e
-          if [[ -z "$connector_tag" ]]
-          then
-              logwarn "could not find the latest version of $connector_plugin on Confluent Hub, its jars won't be cached"
-              connector_tag="latest"
-          fi
-      fi
-      label="$connector_plugin:$connector_tag"
-      plugin_dir="$cache_root/$(echo "$connector_plugin" | tr '/' '-')-$connector_tag"
-      if [[ -n "$force_refresh" ]] || [ "$connector_tag" == "latest" ]
-      then
-          rm -rf "$plugin_dir"
-      fi
-      if [ ! -d "$plugin_dir" ]
-      then
-          get_connect_image
-          search_jar_log "🔌 Downloading connector plugin $connector_plugin:$connector_tag"
-          mkdir -p "$tmp_dir/hub"
-          # in a mktemp folder: Docker Desktop doesn't share /tmp (/private/tmp) by default
-          if ! docker run -u0 -i --rm -v "$tmp_dir/hub:/usr/share/confluent-hub-components" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $connector_plugin:$connector_tag && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > "$tmp_dir/install.log" 2>&1
-          then
-              logerror "❌ could not download $connector_plugin:$connector_tag from Confluent Hub:"
-              tail -5 "$tmp_dir/install.log"
-              exit 1
-          fi
-          mkdir -p "$plugin_dir"
-          mv "$tmp_dir/hub"/* "$plugin_dir"/
-      else
-          search_jar_log "♻️ Using the jars of $label already downloaded in $plugin_dir"
-      fi
-  fi
-
-  lib_dir=$(find "$plugin_dir" -type d -name lib | head -1)
-  if [[ -z "$lib_dir" ]]
-  then
-      # some zips have their jars at the top level
-      lib_dir=$(dirname "$(find "$plugin_dir" -name '*.jar' | head -1)")
-  fi
-  if [[ -z "$lib_dir" ]] || [ "$lib_dir" == "." ]
-  then
-      logerror "❌ no jar found in $plugin_dir"
       exit 1
   fi
+  lib_dir="$plugin_lib_dir"
+  label="$plugin_label"
 
   jars_args=(--lib-dir "$lib_dir")
   if [[ -n "$class" ]]
@@ -64008,6 +64110,206 @@ playground_connector_plugin_search_jar_command() {
           jq -r '.worker.isolated_duplicates[0:5][] | "   • \(.plugin_jar) ↔ worker \(.worker_jar | split("/") | last): \(.nb_classes) class(es)"' $r
       fi
   fi
+
+}
+
+# :command.function
+playground_connector_plugin_dependencies_command() {
+
+  # src/commands/connector-plugin/dependencies.sh
+  connector_plugin="${args[--connector-plugin]}"
+  connector_zip="${args[--connector-zip]}"
+  grep="${args[--grep]}"
+  find_first="${args[--find-first]}"
+  json="${args[--json]}"
+  force_refresh="${args[--force-refresh]}"
+  eval "connector_tags=(${args[--connector-tag]:-})"
+
+  if [[ $connector_plugin == *"@"* ]]
+  then
+    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+  fi
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required"
+      exit 1
+  fi
+  if [[ -z "$connector_plugin" ]] && [[ -z "$connector_zip" ]]
+  then
+      logerror "❌ --connector-plugin or --connector-zip is required"
+      exit 1
+  fi
+  if [ ${#connector_tags[@]} -gt 2 ]
+  then
+      logerror "❌ --connector-tag can be set 2 times at most (to compare 2 versions)"
+      exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+  deps="$root_folder/tools/connector-plugin-jars/dependencies.py"
+
+  # --find-first <artifact>:<version>: binary search over the versions of the plugin on the Hub
+  if [[ -n "$find_first" ]]
+  then
+      if [[ -z "$connector_plugin" ]] || [[ -n "$connector_zip" ]]
+      then
+          logerror "❌ --find-first needs --connector-plugin (versions of Confluent Hub)"
+          exit 1
+      fi
+      artifact="${find_first%%:*}"
+      target="${find_first#*:}"
+      if [[ -z "$artifact" ]] || [[ -z "$target" ]] || [ "$artifact" == "$find_first" ]
+      then
+          logerror "❌ --find-first must be <artifact>:<version>, for example jackson-databind:2.18.0"
+          exit 1
+      fi
+      # release versions in version order (previews, betas and release candidates left out), from --connector-tag if set
+      playground connector-plugin versions --connector-plugin "$connector_plugin" --json 2> /dev/null | jq -r '.versions[].version' | grep -viE "preview|alpha|beta|rc|snapshot" | sort -V > $tmp_dir/versions || true
+      if [ ${#connector_tags[@]} -gt 0 ]
+      then
+          awk -v from="${connector_tags[0]}" 'found || $0 == from { found = 1; print }' $tmp_dir/versions > $tmp_dir/versions.from
+          mv $tmp_dir/versions.from $tmp_dir/versions
+      fi
+      versions=()
+      while IFS= read -r v
+      do
+          versions+=("$v")
+      done < $tmp_dir/versions
+      if [ ${#versions[@]} -eq 0 ]
+      then
+          logerror "❌ no version of $connector_plugin to search${connector_tags[0]:+ from ${connector_tags[0]}}"
+          exit 1
+      fi
+
+      # prints the version of $artifact shipped in version $1 (empty when absent)
+      function artifact_version_in () {
+          get_connector_plugin_lib_dir "$connector_plugin" "$1" "" "" 2> /dev/null > /dev/null || return 1
+          python3 -I "$deps" --lib-dir "$plugin_lib_dir" --grep "(^|:)${artifact}$" | jq -r --arg a "$artifact" '[.libraries[] | select((.artifact | ascii_downcase) == ($a | ascii_downcase)) | .version] | sort_by(split(".") | map(tonumber? // 0)) | last // empty'
+      }
+      # true when version $1 of the plugin ships $artifact >= $target
+      function ships_target () {
+          local found
+          found=$(artifact_version_in "$1")
+          if [[ -z "$found" ]]
+          then
+              log "   🔍 $connector_plugin $1: no $artifact" >&2
+              return 1
+          fi
+          if version_gt "$target" "$found"
+          then
+              log "   🔍 $connector_plugin $1: $artifact $found" >&2
+              return 1
+          fi
+          log "   🔍 $connector_plugin $1: $artifact $found ✅" >&2
+          return 0
+      }
+
+      log "🔎 First version of $connector_plugin shipping $artifact ≥ $target, among ${#versions[@]} version(s) from ${versions[0]} to ${versions[${#versions[@]}-1]} (binary search, each version downloaded once)" >&2
+      lo=0
+      hi=$((${#versions[@]} - 1))
+      if ! ships_target "${versions[$hi]}"
+      then
+          if [[ -n "$json" ]]
+          then
+              jq -n --arg p "$connector_plugin" --arg a "$artifact" --arg t "$target" --arg latest "${versions[$hi]}" '{connector_plugin: $p, artifact: $a, target: $t, first_version: null, latest: $latest}'
+          else
+              logwarn "🤷 even the latest version ${versions[$hi]} doesn't ship $artifact ≥ $target"
+          fi
+          exit 0
+      fi
+      while [ $lo -lt $hi ]
+      do
+          mid=$(( (lo + hi) / 2 ))
+          if ships_target "${versions[$mid]}"
+          then
+              hi=$mid
+          else
+              lo=$((mid + 1))
+          fi
+      done
+      first="${versions[$lo]}"
+      found=$(artifact_version_in "$first")
+      if [[ -n "$json" ]]
+      then
+          jq -n --arg p "$connector_plugin" --arg a "$artifact" --arg t "$target" --arg first "$first" --arg found "$found" '{connector_plugin: $p, artifact: $a, target: $t, first_version: $first, artifact_version: $found}'
+      else
+          log "✅ $connector_plugin $first is the first version shipping $artifact ≥ $target ($found)"
+          log "💡 versions of several minor lines are interleaved: check the line of the customer with --connector-tag <first version of that line>"
+      fi
+      exit 0
+  fi
+
+  # one version (or a zip), or the diff of two versions
+  lib_dirs=()
+  labels=()
+  if [[ -n "$connector_zip" ]]
+  then
+      get_connector_plugin_lib_dir "" "" "$connector_zip" "$force_refresh" || exit 1
+      lib_dirs+=("$plugin_lib_dir")
+      labels+=("$plugin_label")
+  fi
+  if [[ -n "$connector_plugin" ]]
+  then
+      if [ ${#connector_tags[@]} -eq 0 ]
+      then
+          connector_tags=("latest")
+      fi
+      for tag in "${connector_tags[@]}"
+      do
+          get_connector_plugin_lib_dir "$connector_plugin" "$tag" "" "$force_refresh" || exit 1
+          lib_dirs+=("$plugin_lib_dir")
+          labels+=("$plugin_label")
+      done
+  fi
+  if [ ${#lib_dirs[@]} -gt 2 ]
+  then
+      logerror "❌ compare 2 things at most: --connector-zip and one --connector-tag, or two --connector-tag"
+      exit 1
+  fi
+
+  deps_args=()
+  for i in "${!lib_dirs[@]}"
+  do
+      deps_args+=(--lib-dir "${lib_dirs[$i]}" --label "${labels[$i]}")
+  done
+  [[ -n "$grep" ]] && deps_args+=(--grep "$grep")
+  if ! python3 -I "$deps" "${deps_args[@]}" > $tmp_dir/result.json 2> $tmp_dir/stderr
+  then
+      logerror "❌ could not read the libraries: $(cat $tmp_dir/stderr)"
+      exit 1
+  fi
+  while IFS= read -r line
+  do
+      [[ -n "$line" ]] && logwarn "$line"
+  done < $tmp_dir/stderr
+
+  if [[ -n "$json" ]]
+  then
+      cat $tmp_dir/result.json
+      exit 0
+  fi
+
+  r=$tmp_dir/result.json
+  if [ ${#lib_dirs[@]} -eq 1 ]
+  then
+      nb=$(jq '.libraries | length' $r)
+      log "📚 $nb librar(y/ies) in ${labels[0]}${grep:+ matching \"$grep\"}"
+      if [ "$nb" == "0" ]
+      then
+          exit 0
+      fi
+      jq -r '.libraries[] | [ (if .group then "\(.group):\(.artifact)" else .artifact end), (.version // "?"), (if .shaded then "inside \(.jar)" else .jar end) ] | @tsv' $r | column -t -s $'\t'
+      exit 0
+  fi
+
+  nb=$(jq '.changes | length' $r)
+  log "📚 ${labels[0]} → ${labels[1]}: $nb change(s)${grep:+ matching \"$grep\"}, $(jq .nb_unchanged $r) librar(y/ies) unchanged"
+  jq -r '
+      (.changes[] | select(.change == "upgraded" or .change == "downgraded") | [ (if .change == "upgraded" then "⬆️" else "⬇️" end), .artifact, "\(.from) → \(.to)" ] | @tsv),
+      (.changes[] | select(.change == "added") | [ "➕", .artifact, (.to // "?") ] | @tsv),
+      (.changes[] | select(.change == "removed") | [ "➖", .artifact, (.from // "?") ] | @tsv)' $r | column -t -s $'\t'
 
 }
 
@@ -110779,6 +111081,13 @@ playground_connector_plugin_parse_requirements() {
       shift $#
       ;;
 
+    dependencies | deps)
+      action="dependencies"
+      shift
+      playground_connector_plugin_dependencies_parse_requirements "$@"
+      shift $#
+      ;;
+
     versions)
       action="versions"
       shift
@@ -111042,6 +111351,199 @@ playground_connector_plugin_search_jar_parse_requirements() {
     validation_output="$(validate_file_exists_with_trick "${args['--connector-zip']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_plugin_dependencies_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_plugin_dependencies_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="connector-plugin dependencies"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector-plugin | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-plugin']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-plugin requires an argument: --connector-plugin, -c CONNECTOR-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--connector-tag']+x} ]]; then
+            args['--connector-tag']="$escaped"
+          else
+            args['--connector-tag']="${args['--connector-tag']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-tag requires an argument: --connector-tag CONNECTOR_TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-zip)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-zip']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-zip requires an argument: --connector-zip CONNECTOR_ZIP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep GREP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --find-first)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--find-first']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--find-first requires an argument: --find-first ARTIFACT_VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force-refresh)
+
+        # :flag.case_no_arg
+        args['--force-refresh']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--connector-zip'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--connector-zip']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--grep'] ]]; then
+    validation_output="$(validate_not_empty "${args['--grep']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--grep GREP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--find-first'] ]]; then
+    validation_output="$(validate_not_empty "${args['--find-first']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--find-first ARTIFACT_VERSION" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -137766,6 +138268,11 @@ playground_connector_plugin_completion() {
         playground_connector_plugin_search_jar_completion "$completion_current" "$@"
         return
         ;;
+      dependencies | deps)
+        shift
+        playground_connector_plugin_dependencies_completion "$completion_current" "$@"
+        return
+        ;;
       versions)
         shift
         playground_connector_plugin_versions_completion "$completion_current" "$@"
@@ -137805,7 +138312,7 @@ playground_connector_plugin_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" search-jar versions info changelog display-last-updated config-key sourcecode
+  completion_candidates "$completion_current" search-jar dependencies deps versions info changelog display-last-updated config-key sourcecode
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -137900,6 +138407,101 @@ playground_connector_plugin_search_jar_completion() {
     completion_flag_candidates --connector-zip "$completion_current" --connector-zip
     completion_flag_candidates --class "$completion_current" --class
     completion_flag_candidates --with-worker "$completion_current" --with-worker
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --force-refresh "$completion_current" --force-refresh
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_plugin_dependencies_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --connector-plugin | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-plugin "$completion_current" "onprem"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-plugin"]=1
+
+        ;;
+      --connector-tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --connector-zip)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-zip-or-jar-with-fzf --type zip "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-zip"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --find-first)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--find-first"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --force-refresh)
+        completion_blocked_flags["--force-refresh"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin -c
+    completion_flag_candidates --connector-tag "$completion_current" --connector-tag
+    completion_flag_candidates --connector-zip "$completion_current" --connector-zip
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --find-first "$completion_current" --find-first
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --force-refresh "$completion_current" --force-refresh
   fi
@@ -142805,6 +143407,7 @@ run() {
     "rbac acl list") playground_rbac_acl_list_command ;;
     "connector-plugin") playground_connector_plugin_command ;;
     "connector-plugin search-jar") playground_connector_plugin_search_jar_command ;;
+    "connector-plugin dependencies") playground_connector_plugin_dependencies_command ;;
     "connector-plugin versions") playground_connector_plugin_versions_command ;;
     "connector-plugin info") playground_connector_plugin_info_command ;;
     "connector-plugin changelog") playground_connector_plugin_changelog_command ;;

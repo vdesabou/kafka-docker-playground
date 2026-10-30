@@ -100,6 +100,13 @@ lab_expect_contains "public class io.confluent.connect.jdbc.dialect.PostgreSqlDa
 lab_run playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --with-worker
 lab_expect_exit 0
 lab_expect_contains "slf4j-api-1.7.36.jar"
+lab_run playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --connector-tag 10.9.9
+lab_expect_exit 0
+lab_expect_contains "📚 confluentinc/kafka-connect-jdbc:10.8.4 → confluentinc/kafka-connect-jdbc:10.9.9:"
+lab_expect_contains "42.4.4 → 42.7.12"
+lab_run playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.0 --find-first postgresql:42.7.0
+lab_expect_exit 0
+lab_expect_contains "✅ confluentinc/kafka-connect-jdbc 10.9.4 is the first version shipping postgresql ≥ 42.7.0 (42.7.11)"
 
 # step 6 (fully managed connector) needs GH_TOKEN and the Confluent VPN: not replayed
 

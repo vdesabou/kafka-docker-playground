@@ -17,7 +17,7 @@ then
     exit 1
 fi
 
-# jars are kept here, one folder per plugin version (or per zip), and reused on the next call
+# jars are kept here, one folder per plugin version (or per zip), and reused on the next call (get_connector_plugin_lib_dir)
 cache_root="/tmp/connector-plugin-jars"
 mkdir -p "$cache_root"
 
@@ -45,84 +45,12 @@ then
     exit 1
 fi
 
-if [[ -n "$connector_zip" ]]
+if ! get_connector_plugin_lib_dir "$connector_plugin" "$connector_tag" "$connector_zip" "$force_refresh"
 then
-    if [[ $connector_zip == *"@"* ]]
-    then
-        connector_zip=${connector_zip#*@}
-    fi
-    if [[ "$connector_zip" != *.zip ]]
-    then
-        logerror "❌ --connector-zip $connector_zip is not a .zip file"
-        exit 1
-    fi
-    zip_id=$(shasum "$connector_zip" | cut -c1-12)
-    plugin_dir="$cache_root/zip-$(basename "$connector_zip" .zip)-$zip_id"
-    label="$(basename "$connector_zip")"
-    if [[ -n "$force_refresh" ]]
-    then
-        rm -rf "$plugin_dir"
-    fi
-    if [ ! -d "$plugin_dir" ]
-    then
-        search_jar_log "📦 Extracting $connector_zip"
-        unzip -q "$connector_zip" -d "$tmp_dir/zip"
-        mkdir -p "$plugin_dir"
-        mv "$tmp_dir/zip"/* "$plugin_dir"/
-    fi
-else
-    if [[ -n "$connector_tag" ]] && [ "$connector_tag" == " " ]
-    then
-        ret=$(choose_connector_tag "$connector_plugin")
-        connector_tag=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
-    fi
-    if [[ -z "$connector_tag" ]] || [ "$connector_tag" == "latest" ]
-    then
-        set +e
-        connector_tag=$(playground connector-plugin versions --connector-plugin "$connector_plugin" --latest 2>/dev/null)
-        set -e
-        if [[ -z "$connector_tag" ]]
-        then
-            logwarn "could not find the latest version of $connector_plugin on Confluent Hub, its jars won't be cached"
-            connector_tag="latest"
-        fi
-    fi
-    label="$connector_plugin:$connector_tag"
-    plugin_dir="$cache_root/$(echo "$connector_plugin" | tr '/' '-')-$connector_tag"
-    if [[ -n "$force_refresh" ]] || [ "$connector_tag" == "latest" ]
-    then
-        rm -rf "$plugin_dir"
-    fi
-    if [ ! -d "$plugin_dir" ]
-    then
-        get_connect_image
-        search_jar_log "🔌 Downloading connector plugin $connector_plugin:$connector_tag"
-        mkdir -p "$tmp_dir/hub"
-        # in a mktemp folder: Docker Desktop doesn't share /tmp (/private/tmp) by default
-        if ! docker run -u0 -i --rm -v "$tmp_dir/hub:/usr/share/confluent-hub-components" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $connector_plugin:$connector_tag && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > "$tmp_dir/install.log" 2>&1
-        then
-            logerror "❌ could not download $connector_plugin:$connector_tag from Confluent Hub:"
-            tail -5 "$tmp_dir/install.log"
-            exit 1
-        fi
-        mkdir -p "$plugin_dir"
-        mv "$tmp_dir/hub"/* "$plugin_dir"/
-    else
-        search_jar_log "♻️ Using the jars of $label already downloaded in $plugin_dir"
-    fi
-fi
-
-lib_dir=$(find "$plugin_dir" -type d -name lib | head -1)
-if [[ -z "$lib_dir" ]]
-then
-    # some zips have their jars at the top level
-    lib_dir=$(dirname "$(find "$plugin_dir" -name '*.jar' | head -1)")
-fi
-if [[ -z "$lib_dir" ]] || [ "$lib_dir" == "." ]
-then
-    logerror "❌ no jar found in $plugin_dir"
     exit 1
 fi
+lib_dir="$plugin_lib_dir"
+label="$plugin_label"
 
 jars_args=(--lib-dir "$lib_dir")
 if [[ -n "$class" ]]
