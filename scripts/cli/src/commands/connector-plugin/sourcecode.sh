@@ -7,6 +7,18 @@ verbose="${args[--compile-verbose]}"
 forced_url="${args[--forced-url]}"
 open="${args[--open]}"
 checkout_only="${args[--checkout-only]}"
+log_flag="${args[--log]}"
+files_flag="${args[--files]}"
+path_glob="${args[--path]}"
+grep_regex="${args[--grep]}"
+json="${args[--json]}"
+
+# with --json, everything printed goes to stderr and the JSON document to fd 3 (stdout)
+exec 3>&1
+if [[ -n "$json" ]]
+then
+    exec 1>&2
+fi
 
 function get_version_from_cc_docker_connect_cache_versions_env () {
     arg_version="$1"
@@ -127,6 +139,123 @@ function check_if_delete_folder()
     esac
 }
 
+# GET on the GitHub API: gh when it is logged in (private repositories, higher rate limit), else curl with GH_TOKEN / GITHUB_TOKEN if set
+function sourcecode_github_api () {
+    local api_path="$1"
+    if command -v gh > /dev/null 2>&1 && gh auth status > /dev/null 2>&1
+    then
+        gh api -X GET "$api_path" 2>/dev/null
+    else
+        local token="${GH_TOKEN:-$GITHUB_TOKEN}"
+        if [[ -n "$token" ]]
+        then
+            curl -s -f -H "Authorization: Bearer $token" -H "Accept: application/vnd.github+json" "https://api.github.com/$api_path"
+        else
+            curl -s -f -H "Accept: application/vnd.github+json" "https://api.github.com/$api_path"
+        fi
+    fi
+}
+
+# --log / --files: commits and changed files between two tags, from the GitHub compare API
+function sourcecode_compare () {
+    local repo_url="$1" ref_old="$2" ref_new="$3"
+    local repo page compare_dir
+    repo=$(echo "$repo_url" | sed -E 's#^https?://github.com/##; s#\.git$##; s#/$##')
+    compare_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+    # 100 commits / files per page, 10 pages at most
+    for page in 1 2 3 4 5 6 7 8 9 10
+    do
+        if ! sourcecode_github_api "repos/$repo/compare/$ref_old...$ref_new?per_page=100&page=$page" > "$compare_dir/page-$page.json" || ! jq -e '.commits' "$compare_dir/page-$page.json" > /dev/null 2>&1
+        then
+            if [ $page -eq 1 ]
+            then
+                logerror "❌ could not compare $ref_old...$ref_new in github.com/$repo (tags missing, private repository without GH_TOKEN, or GitHub API rate limit)"
+                rm -rf "$compare_dir"
+                exit 1
+            fi
+            rm -f "$compare_dir/page-$page.json"
+            break
+        fi
+        if [ "$(jq '.commits | length' "$compare_dir/page-$page.json")" -lt 100 ] && [ "$(jq '.files // [] | length' "$compare_dir/page-$page.json")" -lt 100 ]
+        then
+            break
+        fi
+    done
+    jq -s --arg repo "$repo" --arg old "$ref_old" --arg new "$ref_new" --arg grep "$grep_regex" '
+        {
+            repository: $repo, from: $old, to: $new,
+            total_commits: .[0].total_commits,
+            commits: ([.[].commits[]] | unique_by(.sha) | sort_by(.commit.committer.date) | reverse
+                | map({sha: .sha[0:9], date: .commit.committer.date[0:10], author: .commit.author.name, message: (.commit.message | split("\n")[0]), merge: ((.parents | length) > 1)})),
+            files: ([.[].files // [] | .[]] | unique_by(.filename) | map({file: .filename, status, additions, deletions, patch}))
+        }
+        | .nb_merges = ([.commits[] | select(.merge)] | length)
+        | .commits |= map(select(.merge | not))
+        | if $grep != "" then .commits |= map(select(.message | test($grep; "i"))) else . end' "$compare_dir"/page-*.json > "$compare_dir/compare.json"
+
+    if [[ -n "$path_glob" ]]
+    then
+        jq -r '.files[].file' "$compare_dir/compare.json" | while IFS= read -r f
+        do
+            [[ "$f" == $path_glob ]] && echo "$f"
+        done | jq -R . | jq -s . > "$compare_dir/kept.json"
+        jq --slurpfile kept "$compare_dir/kept.json" '.files |= map(select(.file as $f | $kept[0] | index($f)))' "$compare_dir/compare.json" > "$compare_dir/compare.tmp" && mv "$compare_dir/compare.tmp" "$compare_dir/compare.json"
+    fi
+
+    if [[ -n "$json" ]]
+    then
+        jq --arg url "$sourcecode_url" --arg log "$log_flag" --arg files "$files_flag" --arg path "$path_glob" '
+            {repository, from, to, url: $url, total_commits}
+            + (if $log != "" then {commits, nb_merges} else {} end)
+            + (if $files != "" then {files: (if $path != "" then .files else (.files | map(del(.patch))) end)} else {} end)' "$compare_dir/compare.json" >&3
+        rm -rf "$compare_dir"
+        return
+    fi
+
+    local c="$compare_dir/compare.json"
+    if [[ -n "$log_flag" ]]
+    then
+        log "📜 $(jq '.commits | length' $c) commit(s) from $ref_old to $ref_new in github.com/$repo${grep_regex:+ matching \"$grep_regex\"}, newest first ($(jq .nb_merges $c) merge commit(s) left out)"
+        jq -r '.commits[] | "   \(.date) \(.sha) \(.message) (\(.author))"' $c
+        if [ "$(jq '.total_commits' $c)" -gt 1000 ]
+        then
+            logwarn "⚠️ $(jq '.total_commits' $c) commits in total: only the first 1000 are read"
+        fi
+    fi
+    if [[ -n "$files_flag" ]]
+    then
+        log "🗂️ $(jq '.files | length' $c) file(s) changed from $ref_old to $ref_new${path_glob:+ matching $path_glob}"
+        jq -r '.files[] | "   \(.status | .[0:1] | ascii_upcase) \(.file) +\(.additions) -\(.deletions)"' $c
+        if [[ -n "$path_glob" ]]
+        then
+            jq -r '.files[] | "\n📄 \(.file)\n\(.patch // "   (no patch: binary or too large, see the compare url)")"' $c
+        fi
+    fi
+    rm -rf "$compare_dir"
+}
+
+# --grep with one version: matches in the checkout, file:line
+function sourcecode_grep () {
+    local folder="$1" regex="$2"
+    local matches
+    matches=$(cd "$folder" && grep -rnIE --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=target -- "$regex" . 2>/dev/null | sed 's#^\./##' | head -500)
+    if [[ -n "$json" ]]
+    then
+        printf '%s\n' "$matches" | grep -v '^$' | jq -R 'capture("^(?<file>[^:]+):(?<line>[0-9]+):(?<text>.*)$") | .line |= tonumber' | jq -s --arg folder "$folder" --arg p "$connector_plugin" --arg tag "$connector_tag" --arg url "$sourcecode_url" --arg regex "$regex" \
+            '{connector_plugin: $p, version: $tag, url: $url, checkout_folder: $folder, grep: $regex, matches: .}' >&3
+        return
+    fi
+    local nb
+    nb=$(printf '%s\n' "$matches" | grep -c . || true)
+    if [ "$nb" == "0" ]
+    then
+        logwarn "🤷 no match for \"$regex\" in $folder"
+        return
+    fi
+    log "🔎 $nb match(es) for \"$regex\" in $folder$( [ "$nb" -ge 500 ] && echo " (first 500)")"
+    printf '%s\n' "$matches" >&3
+}
+
 function compile () {
     arg_version="$1"
 
@@ -182,6 +311,12 @@ function compile () {
     mkdir -p "${repo_root_folder}"
     repo_folder="${repo_root_folder}/${repo_name}-${arg_version}"
     # --- 2. Checkout (Clone) Project ---
+    if [ -d "${repo_folder}" ] && { [ ! -f "${repo_folder}/.git/HEAD" ] || [ -n "$(git -C "${repo_folder}" ls-files --deleted 2>/dev/null | head -1)" ]; }
+    then
+        # the periodic cleanup of /tmp (macOS: files untouched for 3 days) deletes the files and keeps the folders
+        logwarn "📂 the checkout in ${repo_folder} is incomplete (files deleted by the cleanup of /tmp?), cloning it again"
+        rm -rf "${repo_folder}"
+    fi
     if [ -d "${repo_folder}" ]
     then
         check_if_delete_folder
@@ -646,14 +781,16 @@ then
         connector_tag2=$(echo "$ret" | cut -d ' ' -f 2 | sed 's/^v//')
     fi
 
+    # older version first, the tags of the repository are built below (prefix and suffix depend on it)
     if version_gt $connector_tag1 $connector_tag2
     then
-        log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag2 and v$connector_tag1"
-        comparison_mode_versions="v$connector_tag2...v$connector_tag1"
+        connector_tag_old="$connector_tag2"
+        connector_tag_new="$connector_tag1"
     else
-        log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions v$connector_tag1 and v$connector_tag2"
-        comparison_mode_versions="v$connector_tag1...v$connector_tag2"
+        connector_tag_old="$connector_tag1"
+        connector_tag_new="$connector_tag2"
     fi
+    comparison_mode_versions="$connector_tag_old...$connector_tag_new"
 else
     connector_tag="${connector_tag_array[0]}"
     if [ "$connector_tag" == "\\" ]
@@ -725,14 +862,12 @@ fi
 
 if [ "$comparison_mode_versions" != "" ]
 then
-    if version_gt $connector_tag1 $connector_tag2
-    then
-        additional_text=", comparing $maybe_tag_prefix$connector_tag2$maybe_tag_suffix and $maybe_tag_prefix$connector_tag1$maybe_tag_suffix"
-    else
-        additional_text=", comparing $maybe_tag_prefix$connector_tag1$maybe_tag_suffix and $maybe_tag_prefix$connector_tag2$maybe_tag_suffix"
-    fi
+    git_ref_old="$maybe_tag_prefix$connector_tag_old$maybe_tag_suffix"
+    git_ref_new="$maybe_tag_prefix$connector_tag_new$maybe_tag_suffix"
+    log "✨ --connector-tag flag is set 2 times, comparison mode will be opened with versions $git_ref_old and $git_ref_new"
+    additional_text=", comparing $git_ref_old and $git_ref_new"
     original_sourcecode_url="$sourcecode_url"
-    sourcecode_url="$sourcecode_url/compare/$comparison_mode_versions"
+    sourcecode_url="$sourcecode_url/compare/$git_ref_old...$git_ref_new"
 else
     additional_text=" for $connector_tag version"
     if [ "$connector_tag" != "latest" ] && [[ "$sourcecode_url" == *"github.com"* ]]
@@ -741,13 +876,52 @@ else
     fi
 fi
 
-if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]]
+if [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]]
+then
+    if [ "$comparison_mode_versions" == "" ]
+    then
+        logerror "❌ --log and --files compare two versions: set --connector-tag 2 times"
+        exit 1
+    fi
+    if [[ "$original_sourcecode_url" != *"github.com"* ]]
+    then
+        logerror "❌ --log and --files only work with source code hosted on GitHub ($original_sourcecode_url)"
+        exit 1
+    fi
+fi
+if [[ -n "$path_glob" ]] && [[ -z "$files_flag" ]]
+then
+    logerror "❌ --path filters the files of --files"
+    exit 1
+fi
+if [[ -n "$grep_regex" ]] && [ "$comparison_mode_versions" != "" ] && [[ -z "$log_flag" ]]
+then
+    logerror "❌ with two versions, --grep filters the commits of --log: add --log (or set --connector-tag once to grep the code)"
+    exit 1
+fi
+if [[ -n "$grep_regex" ]] && [ "$comparison_mode_versions" == "" ]
+then
+    # grep the code at that version: needs the checkout
+    checkout_only=1
+fi
+
+if [[ -n "$json" ]]
+then
+    # stdout is kept for the JSON document
+    log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at: $sourcecode_url" >&2
+elif [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]] || [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]] || [[ -n "$grep_regex" ]]
 then
     log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
     echo "$sourcecode_url"
 else
     log "🧑‍💻 opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
     open "$sourcecode_url"
+fi
+
+if [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]]
+then
+    sourcecode_compare "$original_sourcecode_url" "$git_ref_old" "$git_ref_new"
+    exit 0
 fi
 
 if [ "$comparison_mode_versions" != "" ]
@@ -775,6 +949,20 @@ else
 
     if [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]]
     then
-        compile "$connector_tag"
+        if [[ -n "$grep_regex" ]]
+        then
+            # the checkout logs go to stderr: stdout is for the matches
+            compile "$connector_tag" >&2
+        else
+            compile "$connector_tag"
+        fi
+    fi
+    if [[ -n "$grep_regex" ]]
+    then
+        sourcecode_grep "$repo_folder" "$grep_regex"
+    elif [[ -n "$json" ]]
+    then
+        jq -n --arg p "$connector_plugin" --arg url "$sourcecode_url" --arg tag "$connector_tag" --arg folder "${repo_folder:-}" --argjson fm "$is_fully_managed" \
+            '{connector_plugin: $p, version: $tag, url: $url, fully_managed: ($fm == 1)} + (if $folder != "" then {checkout_folder: $folder} else {} end)' >&3
     fi
 fi

@@ -87,9 +87,15 @@ lab_expect_contains "comparison mode will be opened with versions v10.8.4 and v1
 lab_expect_contains "https://github.com/confluentinc/kafka-connect-jdbc/compare/v10.8.4...v10.9.9"
 lab_run bash -c "$playground_cli connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --checkout-only < /dev/null | tail -1"
 lab_expect_contains "/tmp/connector-plugin-sourcecode/kafka-connect-jdbc-10.8.4"
-lab_run grep -rn "BATCH_SIZE_DEFAULT = " /tmp/connector-plugin-sourcecode/kafka-connect-jdbc-10.8.4/src/main/java
-lab_expect_contains "JdbcSinkConfig.java"
-lab_expect_contains "private static final int BATCH_SIZE_DEFAULT = 3000;"
+lab_run playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --grep "BATCH_SIZE_DEFAULT ="
+lab_expect_exit 0
+lab_expect_contains "src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java:145:  private static final int BATCH_SIZE_DEFAULT = 3000;"
+lab_run playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.3 --connector-tag 10.9.5 --log --grep "postgres"
+lab_expect_exit 0
+lab_expect_contains "Bump org.postgresql:postgresql to 42.7.11 (CVE-2026-42198)"
+lab_run playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.7 --connector-tag 10.9.8 --files --path "*/JdbcSinkConfig.java"
+lab_expect_exit 0
+lab_expect_contains "M src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java +3 -0"
 
 log "Step 5: which jar has a class (Docker)"
 lab_run playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --class PostgreSqlDatabaseDialect

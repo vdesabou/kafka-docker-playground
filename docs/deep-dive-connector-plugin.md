@@ -22,6 +22,8 @@ run.
 | the GitHub tree of the code at version X | `playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --only-show-url` |
 | what changed between X and Y | the same with `--connector-tag 10.8.4 --connector-tag 10.9.9` |
 | a local checkout of version X, to grep it | `… sourcecode … --connector-tag 10.8.4 --checkout-only` (the folder is the last line) |
+| grep the code of version X | `… sourcecode … --connector-tag 10.8.4 --grep "BATCH_SIZE_DEFAULT"` (`file:line`, `--json`) |
+| the commits / changed files between X and Y | `… sourcecode … --connector-tag 10.8.4 --connector-tag 10.9.9 --log` (`--grep "offset"`) / `--files` (`--path "*/JdbcSinkConfig.java"` for the diff) |
 | the jars of the plugin, and which one has a class | `playground connector-plugin search-jar -c confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider` (`--connector-zip`, `--json`) |
 | the libraries (and versions) a plugin version bundles, what changed between two versions | `playground connector-plugin dependencies -c confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep jackson` (2× `--connector-tag` to compare, `--json`) |
 | the first plugin version shipping library X ≥ Y | `playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0` |
@@ -247,6 +249,10 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | `--open` | the same checkout, then opens it in `playground config get editor` | editor; asks whether to delete an existing checkout |
 | `--compile` | the checkout, then a Maven build in Docker (JDK from `pom.xml`, or `--compile-jdk-version`), prints the zip | asks before recompiling; Confluent repositories need `dev-login` and AWS credentials |
 | `--connector-tag " "` | pick the version in an fzf menu | yes (self-managed only) |
+| `--grep <regex>` (one version) | the checkout, then `file:line` of every match (500 at most) | no |
+| `--log` (two versions) | the commits between the two tags, newest first, merge commits left out; `--grep` filters the messages | no |
+| `--files` (two versions) | the changed files with `+/-`; `--path <glob>` keeps some of them and prints their diff | no |
+| `--json` | the URL, checkout folder, commits, files or matches as JSON (logs on stderr) | no |
 
 Gotchas:
 
@@ -254,8 +260,14 @@ Gotchas:
   ask questions (an existing folder, recompile?), and wait.
 - **Without `--connector-tag`, the latest Hub version** is used (`✨ --connector-tag was not set, using latest version
   on hub 12.1.13`), not the version the customer runs: always pass theirs.
-- **The checkout is shallow** (`--depth 1`): `git log` inside has one commit. For history between two versions, use the
-  compare URL, or clone the repository yourself.
+- **The checkout is shallow** (`--depth 1`): `git log` inside has one commit. For the history between two versions, use
+  `--log` / `--files`.
+- **`--log` and `--files` call the GitHub compare API**: through `gh` when it is logged in, else with `GH_TOKEN` /
+  `GITHUB_TOKEN` when set, else anonymously (60 requests per hour). Private repositories (proprietary and fully managed
+  connectors) need a token. Up to 1000 commits and files are read. `--log` is what the release notes don't say (refactors,
+  reverts, the commits of a backport); the release notes say what was released, check both.
+- **A checkout emptied by the cleanup of `/tmp`** (macOS deletes the files untouched for 3 days, keeps the folders) is
+  cloned again: `📂 the checkout in … is incomplete (files deleted by the cleanup of /tmp?), cloning it again`.
 - **The plugin list decides the repository.** `scripts/cli/confluent-hub-plugin-list.txt` maps each plugin to its
   source URL; it's generated from the Hub on first use, and Confluent employees get the private mapping (proprietary
   connectors, fully managed types) when AWS credentials are set (`👽 # CONFLUENT EMPLOYEE VERSION` on top). A plugin
@@ -438,8 +450,19 @@ playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --conn
 # https://github.com/confluentinc/kafka-connect-jdbc/compare/v10.8.4...v10.9.9
 playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --checkout-only | tail -1
 # /tmp/connector-plugin-sourcecode/kafka-connect-jdbc-10.8.4        <- 2 s the first time, then reused (0.5 s)
-grep -rn "BATCH_SIZE_DEFAULT" /tmp/connector-plugin-sourcecode/kafka-connect-jdbc-10.8.4/src/main/java | head -3
-# …/sink/JdbcSinkConfig.java:145:  private static final int BATCH_SIZE_DEFAULT = 3000;
+playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --grep "BATCH_SIZE_DEFAULT ="
+# 🔎 1 match(es) for "BATCH_SIZE_DEFAULT =" in /tmp/connector-plugin-sourcecode/kafka-connect-jdbc-10.8.4
+# src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java:145:  private static final int BATCH_SIZE_DEFAULT = 3000;
+playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.3 --connector-tag 10.9.5 --log --grep "postgres"
+# 📜 3 commit(s) from v10.9.3 to v10.9.5 in github.com/confluentinc/kafka-connect-jdbc matching "postgres", newest first (11 merge commit(s) left out)
+#    2026-06-11 8cc4c8977 Strip catalog from discovered TableIds in Postgres dialect (…)
+#    2026-06-05 2aa9fbaff Revert - Bump org.postgresql:postgresql to 42.7.11 (CVE-2026-42198) [CC-41166] (#1646) (…)
+#    2026-05-13 1624be0df Bump org.postgresql:postgresql to 42.7.11 (CVE-2026-42198) (…)
+playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.9.7 --connector-tag 10.9.8 --files --path "*/JdbcSinkConfig.java"
+# 🗂️ 1 file(s) changed from v10.9.7 to v10.9.8 matching */JdbcSinkConfig.java
+#    M src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java +3 -0
+# 📄 src/main/java/io/confluent/connect/jdbc/sink/JdbcSinkConfig.java
+# @@ -337,6 +337,9 @@ …
 ```
 
 **Step 5: which jar has a class (Docker)**
@@ -474,7 +497,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | Customer question | Command |
 | --- | --- |
 | "what is this connector, is it supported, how far behind are we?" | `info --from <theirs>` |
-| "is this fixed in a newer version?" | `versions --from <theirs>`, then `sourcecode --connector-tag <theirs> --connector-tag <latest> --only-show-url` and read the compare (commits, changed files) |
+| "is this fixed in a newer version?" | `versions --from <theirs>`, `changelog --from <theirs> --grep <symptom>`, then `sourcecode --connector-tag <theirs> --connector-tag <latest> --log --grep <symptom>` and `--files --path <file>` |
 | "what does this key do, and what's its default in our version?" | `config-key --key <k> -c <class>`; for their exact version, `playground connector show-config-parameters` with `--connector-tag` (adds it to `🗂️ versions run locally`) |
 | "this key doesn't work for us" | `config-key`: not in their version (❌ in `versions run locally`), a framework key, or a typo (`💡 similar keys`) |
 | "what value do people use?" | the `🧪 values used` part of `config-key`, with one example file per value |
@@ -496,6 +519,7 @@ playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--gre
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>] [--with-changelog] [--json]
 playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
+playground connector-plugin sourcecode -c <owner/name> --connector-tag X --grep <regex> | --connector-tag X --connector-tag Y --log [--grep <regex>] | --files [--path <glob>]
 playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --connector-zip <zip> [--class <Class>] [--with-worker] [--json]
 playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--connector-tag Y]] [--grep <regex>] [--find-first <artifact>:<version>] [--json]
 ```

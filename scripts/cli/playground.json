@@ -7756,6 +7756,41 @@
               ],
               "argument": "",
               "description": "📂 Checkout the code at the right tag and print the path of the folder, nothing else\n\nNo browser, no editor, no question: an existing checkout of the same\nversion in /tmp/connector-plugin-sourcecode is reused. The path is\nthe last line of the output.\n\n🎓 Tip: use it in scripts and from AI agents, which can then read the code\n\nConflicts with: --open, --compile"
+            },
+            {
+              "names": [
+                "--log"
+              ],
+              "argument": "",
+              "description": "📜 With 2 --connector-tag: the commits between the two versions, newest first\n\nFrom the GitHub compare API (gh when logged in, else GH_TOKEN / GITHUB_TOKEN if set, else anonymous with\na low rate limit). Merge commits are left out. Complements playground connector-plugin changelog, which is\nonly as complete as the docs, and works for partner and fully managed plugins too.\n\nConflicts with: --compile, --open, --checkout-only"
+            },
+            {
+              "names": [
+                "--files"
+              ],
+              "argument": "",
+              "description": "🗂️ With 2 --connector-tag: the files changed between the two versions, with +/- line counts\n\nConflicts with: --compile, --open, --checkout-only"
+            },
+            {
+              "names": [
+                "--path"
+              ],
+              "argument": "PATH",
+              "description": "📄 Only the changed files matching this glob, and their diff\n\nExample: --path \"*/JdbcSinkConfig.java\""
+            },
+            {
+              "names": [
+                "--grep"
+              ],
+              "argument": "GREP",
+              "description": "🔎 One --connector-tag: grep the code at that version (checkout, file:line, 500 lines at most)\n\nWith 2 --connector-tag and --log: only the commits whose message matches (case insensitive).\nExtended regular expression, for example \"BATCH_SIZE_DEFAULT|batch.size\""
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON (url, checkout folder, commits, files, matches), logs on stderr"
             }
           ]
         }
