@@ -143,6 +143,7 @@ playground_usage() {
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "repro import")                              "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "repro status")                              "
+  printf "  %s   📋 List the reproduction models, newest first, with their case, status and last verdict\n" "$(green "repro list")                                "
   printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "repro assert")                              "
   printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "repro bisect")                              "
   echo
@@ -5281,7 +5282,7 @@ playground_cleanup_cloud_resources_usage() {
 playground_repro_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro\n\n"
-    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    bisect      run a model on several versions: which one introduced or fixed\n  it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
+    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    list        find models by case, status, verdict, base example, author, date\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    bisect      run a model on several versions: which one introduced or fixed\n  it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
   else
     printf "playground repro - 👷‍♂️ Reproduction model commands\n\n"
   fi
@@ -5297,6 +5298,7 @@ playground_repro_usage() {
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")   "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")"
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "status")   "
+  printf "  %s   📋 List the reproduction models, newest first, with their case, status and last verdict\n" "$(green "list")     "
   printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "assert")   "
   printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "bisect")   "
   echo
@@ -5710,6 +5712,95 @@ playground_repro_status_usage() {
     printf "  playground repro status\n"
     printf "  playground repro status -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --set \"fixed in 10.8.3\" --jira CC-1234\n"
     printf "  playground repro status --actual \"the task fails with Unknown magic byte\"\n  --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_repro_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground repro list\n\n"
+    printf "  📋 List the reproduction models, newest first, with their case, status and last\n  verdict\n  \n  Reads the header of every model of reproduction-models (date, author,\n  description, 🎯 expected, 💥 actual, 🎫 jira, 🩹 status), its base\n  example, whether it is committed, and the last verdict recorded by\n  'playground repro assert'. A model without a date in its header gets\n  the date of the commit that added it; one without a description, the\n  end of its file name.\n  \n  Filters can be combined. Models with uncommitted changes are marked ✏️.\n\n"
+  else
+    printf "playground repro list - 📋 List the reproduction models, newest first, with their case, status and last verdict\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground repro list [OPTIONS]\n"
+  printf "  playground repro list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--mine")"
+    printf "    👤 Only the models whose author is you (whoami)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--case CASE")"
+    printf "    🔮 Only the models of this case (6 digits at the start of the description, or\n    in the file name)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--status STATUS")"
+    printf "    🩹 Only the models whose 🩹 status contains this text (open, fixed, not a\n    bug…)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verdict VERDICT")"
+    printf "    🧪 Only the models with this last verdict (none: never ended with 'playground\n    repro assert' here)\n"
+    printf "    %s\n" "Allowed: reproduced, not-reproduced, none"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--base EXAMPLE")"
+    printf "    🧬 Only the models whose base example contains this text, for example\n    connect-jdbc-sink\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--since SINCE")"
+    printf "    📅 Only the models created since this number of days (90d) or this date\n    (2026-01-31)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep REGEX")"
+    printf "    🔍 Only the models whose description, expected, actual, jira or path matches\n    this regex (case insensitive)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--uncommitted")"
+    printf "    ✏️ Only the models with uncommitted changes\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--limit NUMBER")"
+    printf "    🔢 Number of models shown (default: 30, 0 for all)\n"
+    printf "    %s\n" "Default: 30"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the models as JSON (every field, with the last verdict and its\n    versions)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro list --mine --since 90d\n"
+    printf "  playground repro list --case 123456\n"
+    printf "  playground repro list --status open --base connect-cdc-oracle\n"
+    printf "  playground repro list --grep \"magic byte\" --limit 0\n"
+    printf "  playground repro list --verdict reproduced --json\n"
     echo
 
   fi
@@ -46156,6 +46247,195 @@ playground_repro_status_command() {
 }
 
 # :command.function
+playground_repro_list_command() {
+
+  # src/commands/repro/list.sh
+  mine="${args[--mine]}"
+  case_number="${args[--case]}"
+  status_filter="${args[--status]}"
+  verdict_filter="${args[--verdict]}"
+  base_filter="${args[--base]}"
+  since="${args[--since]}"
+  grep_filter="${args[--grep]}"
+  uncommitted="${args[--uncommitted]}"
+  limit="${args[--limit]}"
+  json="${args[--json]}"
+
+  repro_root="$root_folder/reproduction-models"
+  if [ ! -d "$repro_root" ]
+  then
+      logerror "❌ folder $repro_root does not exist"
+      exit 1
+  fi
+  repro_root=$(cd -P "$repro_root" && pwd)
+
+  since_days=""
+  since_date=""
+  if [ -n "$since" ]
+  then
+      if [[ "$since" =~ ^([0-9]+)d$ ]]
+      then
+          since_days="${BASH_REMATCH[1]}"
+      elif [[ "$since" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+      then
+          since_date="$since"
+      else
+          logerror "❌ --since takes a number of days (90d) or a date (2026-01-31)"
+          exit 1
+      fi
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  # 1. the header of every model, in one pass (only its first 30 lines are read)
+  find "$repro_root" -mindepth 2 -maxdepth 2 -type f -name '*-repro-*.sh' -print0 > "$tmp_dir/files"
+  if [ ! -s "$tmp_dir/files" ]
+  then
+      logwarn "🤷 no reproduction model in $repro_root"
+      exit 0
+  fi
+  xargs -0 awk '
+      function field(line, key) { sub("^# [^ ]+ " key ": ?", "", line); gsub("\t", " ", line); return line }
+      FNR == 1 { if (file != "") print_model(); file = FILENAME; date = author = description = expected = actual = jira = status = "" }
+      FNR > 30 { nextfile }
+      /^# [^ ]+ date: / && date == "" { date = field($0, "date") }
+      /^# [^ ]+ author: / && author == "" { author = field($0, "author") }
+      /^# [^ ]+ description: / && description == "" { description = field($0, "description") }
+      /^# [^ ]+ expected:/ && expected == "" { expected = field($0, "expected") }
+      /^# [^ ]+ actual:/ && actual == "" { actual = field($0, "actual") }
+      /^# [^ ]+ jira:/ && jira == "" { jira = field($0, "jira") }
+      /^# [^ ]+ status:/ && status == "" { status = field($0, "status") }
+      function print_model() { printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", file, date, author, description, expected, actual, jira, status }
+      END { if (file != "") print_model() }' < "$tmp_dir/files" > "$tmp_dir/headers.tsv"
+
+  # 2. what is not in the headers: the base example (the symlinks of each folder), the date the model was committed (models
+  # without a date in their header), the uncommitted models, the last verdict of 'playground repro assert'
+  for dir in "$repro_root"/*/
+  do
+      target=$(readlink "${dir}README.md" 2>/dev/null || readlink "${dir}stop.sh" 2>/dev/null || true)
+      if [[ "$target" == ../../* ]]
+      then
+          printf '%s\t%s\n' "$(basename "$dir")" "$(dirname "${target#../../}")"
+      fi
+  done > "$tmp_dir/bases.tsv"
+  : > "$tmp_dir/added.tsv"
+  : > "$tmp_dir/uncommitted"
+  if [ -e "$repro_root/.git" ]
+  then
+      # oldest first, so the last line of a file is the commit that added (or renamed) it
+      git -C "$repro_root" log --reverse --diff-filter=AR --name-only --format='@%as' -- '*-repro-*.sh' 2>/dev/null \
+          | awk '/^@/ { date = substr($0, 2); next } NF { print $0 "\t" date }' > "$tmp_dir/added.tsv"
+      git -C "$repro_root" status --porcelain --untracked-files=all 2>/dev/null | awk '{ print $NF }' | grep -- '-repro-.*\.sh$' > "$tmp_dir/uncommitted" || true
+  fi
+  : > "$tmp_dir/verdicts.tsv"
+  if [ -f "$root_folder/playground-repro-verdicts" ]
+  then
+      jq -r '[.script, .verdict, .date[0:10], .cp_version, .connector_version] | @tsv' "$root_folder/playground-repro-verdicts" 2>/dev/null > "$tmp_dir/verdicts.tsv" || true
+  fi
+
+  # 3. one JSON object per model, then the filters
+  models=$(jq -n -R \
+      --arg repro_root "$repro_root" \
+      --rawfile headers "$tmp_dir/headers.tsv" \
+      --rawfile bases "$tmp_dir/bases.tsv" \
+      --rawfile added "$tmp_dir/added.tsv" \
+      --rawfile uncommitted "$tmp_dir/uncommitted" \
+      --rawfile verdicts "$tmp_dir/verdicts.tsv" '
+      def lines($s): $s | split("\n") | map(select(length > 0) | split("\t"));
+      def months: {"jan":"01","feb":"02","mar":"03","apr":"04","may":"05","jun":"06","jul":"07","aug":"08","sep":"09","oct":"10","nov":"11","dec":"12"};
+      # "Fri Oct 30 09:31:17 CET 2026", "Fri 01 Sep 2023 07:25:14 AM UTC", "Tue Sep 15 2026"
+      def header_date: split(" ") as $t
+          | ([$t[] | select(test("^[0-9]{4}$"))][0]) as $y
+          | ([$t[] | ascii_downcase | .[0:3] | select(months[.] != null)][0]) as $m
+          | ([$t[] | select(test("^[0-9]{1,2}$"))][0]) as $d
+          | if $y and $m and $d then "\($y)-\(months[$m])-\(if ($d | length) == 1 then "0" + $d else $d end)" else "" end;
+      (lines($bases) | map({key: .[0], value: .[1]}) | from_entries) as $bases
+      | (lines($added) | map({key: .[0], value: .[1]}) | from_entries) as $added
+      | (lines($uncommitted) | map(.[0])) as $uncommitted
+      | (lines($verdicts) | map({key: .[0], value: {verdict: .[1], date: .[2], cp_version: .[3], connector_version: (.[4] // "")}}) | from_entries) as $verdicts
+      | [lines($headers)[]
+          | (.[0] | ltrimstr($repro_root + "/")) as $path
+          | ($path | split("/")[1] | capture("-repro-(?<d>.*)\\.sh$").d // "") as $name
+          | ((.[3] // "") | if . == "" then ($name | gsub("-"; " ")) else . end) as $description
+          | {
+              path: $path,
+              script: .[0],
+              created: ((.[1] // "") | header_date | if . == "" then ($added[$path] // "") else . end),
+              author: (.[2] // ""),
+              description: $description,
+              case: (($description | capture("^(?<c>[0-9]{6})")?.c) // ""),
+              expected: (.[4] // ""),
+              actual: (.[5] // ""),
+              jira: (.[6] // ""),
+              status: (.[7] // ""),
+              base_example: ($bases[$path | split("/")[0]] // ""),
+              committed: (($uncommitted | index($path)) == null),
+              last_verdict: ($verdicts[.[0]] // null)
+            }]')
+
+  me=$(whoami)
+  filtered=$(echo "$models" | jq \
+      --arg me "$me" --arg mine "$mine" --arg case "$case_number" --arg status "$status_filter" --arg verdict "$verdict_filter" \
+      --arg base "$base_filter" --arg since_days "$since_days" --arg since_date "$since_date" --arg grep "$grep_filter" \
+      --arg uncommitted "$uncommitted" '
+      (if $since_days != "" then (now - ($since_days | tonumber) * 86400 | strftime("%Y-%m-%d")) else $since_date end) as $since
+      | map(select(
+          ($mine == "" or .author == $me)
+          and ($case == "" or .case == $case or (.path | contains($case)))
+          and ($status == "" or (.status | ascii_downcase | contains($status | ascii_downcase)))
+          and ($verdict == "" or ($verdict == "none" and .last_verdict == null) or (.last_verdict != null and (.last_verdict.verdict | gsub(" "; "-")) == $verdict))
+          and ($base == "" or (.base_example | contains($base)))
+          and ($since == "" or (.created != "" and .created >= $since))
+          and ($grep == "" or ([.description, .expected, .actual, .path, .jira] | join(" ") | test($grep; "i")))
+          and ($uncommitted == "" or (.committed | not))))
+      | sort_by(.created, .path) | reverse')
+
+  total=$(echo "$models" | jq 'length')
+  count=$(echo "$filtered" | jq 'length')
+  if [ -n "$limit" ] && [ "$limit" != "0" ]
+  then
+      shown=$(echo "$filtered" | jq --argjson limit "$limit" '.[:$limit]')
+  else
+      shown="$filtered"
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      echo "$shown"
+      exit 0
+  fi
+
+  if [ "$count" -eq 0 ]
+  then
+      log "🤷 no reproduction model matches, out of $total"
+      exit 0
+  fi
+  log "👷 $count reproduction model(s) out of $total, newest first$( [ "$count" -gt "$(echo "$shown" | jq 'length')" ] && echo ", the first $limit (--limit 0 for all)")"
+  # printf pads bytes, and an emoji is 4 bytes for 2 columns: 2 more for each label
+  printf '   %-12s  %-8s  %-18s  %-18s  %s\n' "📅 created" "🔮 case" "🩹 status" "🧪 last verdict" "💡 description"
+  echo "$shown" | jq -r '.[] | [
+          (if .created == "" then "?" else .created end),
+          (if .case == "" then "-" else .case end),
+          (if .status == "" then "-" else .status end),
+          (if .last_verdict == null then "-" elif .last_verdict.verdict == "reproduced" then "🐞 \(.last_verdict.date)" else "✅ \(.last_verdict.date)" end),
+          (.description + (if .committed then "" else " ✏️" end)),
+          .path] | @tsv' \
+      | while IFS=$'\t' read -r created case status verdict description path
+      do
+          verdict_width=16
+          if [ "$verdict" != "-" ]
+          then
+              verdict_width=18
+          fi
+          printf "   %-10s  %-6s  %-16.16s  %-${verdict_width}s  %.70s\n" "$created" "$case" "$status" "$verdict" "$description"
+          printf '   %-10s  ↳ %s\n' "" "$path"
+      done
+  log "💡 details: playground repro status -f $repro_root/<path> | run: playground run -f $repro_root/<path>"
+
+}
+
+# :command.function
 playground_repro_assert_command() {
 
   # src/commands/repro/assert.sh
@@ -83556,6 +83836,13 @@ playground_repro_parse_requirements() {
       shift $#
       ;;
 
+    list)
+      action="list"
+      shift
+      playground_repro_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     assert)
       action="assert"
       shift
@@ -84551,6 +84838,206 @@ playground_repro_status_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_repro_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_repro_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="repro list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --mine)
+
+        # :flag.case_no_arg
+        args['--mine']=1
+        shift
+        ;;
+
+      # :flag.case
+      --case)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--case']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--case requires an argument: --case CASE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --status)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--status']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--status requires an argument: --status STATUS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verdict)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--verdict']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--verdict requires an argument: --verdict VERDICT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --base)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--base']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--base requires an argument: --base EXAMPLE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --since)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--since']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--since requires an argument: --since SINCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep REGEX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --uncommitted)
+
+        # :flag.case_no_arg
+        args['--uncommitted']=1
+        shift
+        ;;
+
+      # :flag.case
+      --limit)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--limit']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--limit requires an argument: --limit NUMBER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--limit']:-} ]] || args['--limit']="30"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--limit'] ]]; then
+    validation_output="$(validate_integer "${args['--limit']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--limit NUMBER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--verdict']:-} ]] && [[ ! ${args['--verdict']:-} =~ ^(reproduced|not-reproduced|none)$ ]]; then
+    printf "%s\n" "--verdict must be one of: reproduced, not-reproduced, none" >&2
+    exit 1
   fi
 
 }
@@ -119466,6 +119953,11 @@ playground_repro_completion() {
         playground_repro_status_completion "$completion_current" "$@"
         return
         ;;
+      list)
+        shift
+        playground_repro_list_completion "$completion_current" "$@"
+        return
+        ;;
       assert)
         shift
         playground_repro_assert_completion "$completion_current" "$@"
@@ -119485,7 +119977,7 @@ playground_repro_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" export check import bootstrap status assert bisect
+  completion_candidates "$completion_current" export check import bootstrap status list assert bisect
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -119926,6 +120418,130 @@ playground_repro_status_completion() {
     completion_flag_candidates --expected "$completion_current" --expected
     completion_flag_candidates --actual "$completion_current" --actual
     completion_flag_candidates --jira "$completion_current" --jira
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
+playground_repro_list_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --mine)
+        completion_blocked_flags["--mine"]=1
+
+        shift
+        ;;
+      --case)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--case"]=1
+
+        ;;
+      --status)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--status"]=1
+
+        ;;
+      --verdict)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "reproduced"
+            "not-reproduced"
+            "none"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--verdict"]=1
+
+        ;;
+      --base)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--base"]=1
+
+        ;;
+      --since)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--since"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --uncommitted)
+        completion_blocked_flags["--uncommitted"]=1
+
+        shift
+        ;;
+      --limit)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--limit"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --mine "$completion_current" --mine
+    completion_flag_candidates --case "$completion_current" --case
+    completion_flag_candidates --status "$completion_current" --status
+    completion_flag_candidates --verdict "$completion_current" --verdict
+    completion_flag_candidates --base "$completion_current" --base
+    completion_flag_candidates --since "$completion_current" --since
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --uncommitted "$completion_current" --uncommitted
+    completion_flag_candidates --limit "$completion_current" --limit
     completion_flag_candidates --json "$completion_current" --json
   fi
 
@@ -134933,6 +135549,7 @@ run() {
     "repro import") playground_repro_import_command ;;
     "repro bootstrap") playground_repro_bootstrap_command ;;
     "repro status") playground_repro_status_command ;;
+    "repro list") playground_repro_list_command ;;
     "repro assert") playground_repro_assert_command ;;
     "repro bisect") playground_repro_bisect_command ;;
     "get-docker-compose") playground_get_docker_compose_command ;;

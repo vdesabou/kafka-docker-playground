@@ -1,7 +1,8 @@
 # 🍪 Deep dive: reproduction models (`playground repro`)
 
 A reproduction model is an example rewritten to show **one** problem, so that anyone can reproduce it with a single
-`playground run`. Seven commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro assert`
+`playground run`. Eight commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro list`
+finds it again, `repro assert`
 ends it with its verdict, `repro bisect` runs it on several versions, `repro status` records what it proves and what came out of it, `repro check` scans it for secrets and customer data before a commit,
 `repro export` packs it as a self-contained bundle for a colleague, and `repro import` unpacks one. Takes about 15 minutes to read and run.
 
@@ -19,6 +20,7 @@ ends it with its verdict, `repro bisect` runs it on several versions, `repro sta
 | a new model from the connector config the customer sent (CFK, Strimzi, terraform, `.properties`, REST dump, JSON) | `playground repro bootstrap --config <file> -d "<case> <symptom>" --no-run` |
 | the same, without menus (scripts, AI agents) | `playground repro bootstrap -f "<absolute path of the example>" -d "<case number> <symptom>" --no-run` |
 | to end the scenario with its verdict, 🐞 reproduced or ✅ not reproduced | `playground repro assert --reproduced-if-log "<error>"` (or `--reproduced-if-connector-state FAILED`, `--reproduced-if-records-less-than N --topic <t>`, `--reproduced-if-command "…"`) |
+| to find your models, or the ones of a case, a status, a base example | `playground repro list --mine --since 90d` (`--case`, `--status`, `--verdict`, `--base`, `--grep`, `--uncommitted`, `--json`) |
 | which version introduced or fixed it | `playground repro bisect --from <version> --to <version>` (binary search over the Confluent Hub versions), `--connector-tag A --connector-tag B`, or `--tag A --tag B` for CP |
 | to say what it proves, and what came out of it | `playground repro status --expected "…" --actual "…" --jira CC-1234 --set "fixed in 10.8.3"` |
 | to know whether a model holds a secret | `playground repro check -f <model>` (`--json`) |
@@ -262,6 +264,30 @@ playground repro bisect --from 2.12.0 --to 2.13.0 --all --tag 8.2.0             
   The log of each run is in `/tmp/playground-repro-bisect/<model>-<version>.log` (the `tail -f` line is printed when
   it starts), the summary in `/tmp/playground-repro-bisect/<model>-<date>.json` (`--json` prints it). `--run-flags`
   passes other flags to every run (`--run-flags "--environment sasl-ssl"`).
+
+### Finding models again: `repro list`
+
+```bash
+playground repro list --mine --since 90d
+# 👷 3 reproduction model(s) out of 1859, newest first
+#    📅 created  🔮 case  🩹 status         🧪 last verdict   💡 description
+#    2026-10-30  369368  open              -                 369368 serverless npe fields must be non-null ✏️
+#                ↳ connect-connect-aws-redshift-sink/redshift-sink-repro-369368-serverless-npe-fields-must-be-non-null.sh
+#    2026-10-29  370680  -                 🐞 2026-10-30     370680 errors log include messages payload
+#                ↳ connect-connect-filestream-sink/filestream-sink-repro-370680-errors-log-include-messages-payload.sh
+playground repro list --case 369713                     # every model of a case
+playground repro list --status open --base connect-cdc-oracle
+playground repro list --grep "magic byte" --limit 0     # description, expected, actual, jira or path
+playground repro list --verdict reproduced --json       # every field, with the last verdict and its versions
+```
+
+- It reads the header of every model (its first 30 lines, in one pass: a few seconds for ~1900 models), the base
+  example (the symlinks of the folder), `git status` (✏️ = uncommitted changes) and the last verdict of
+  `playground repro assert` (local to your machine, `playground-repro-verdicts`).
+- Models older than the header have neither date nor description in it: the date is the one of the commit that added
+  (or renamed) the file, the description the end of the file name.
+- `--case` matches the 6 digits at the start of the description, or the file name. 30 models are shown by default,
+  `--limit 0` for all.
 
 ---
 
@@ -527,7 +553,8 @@ current one: run an example (or `playground state set run.test_file <script>`) b
 
 | Situation | Command |
 | --- | --- |
-| a new case | `playground find-example "<connector> <feature>"`, then `repro bootstrap -f <best hit> -d "<case> <symptom>" --no-run`; also look for an earlier model of the same symptom in `reproduction-models/` |
+| a new case | `playground find-example "<connector> <feature>"`, then `repro bootstrap -f <best hit> -d "<case> <symptom>" --no-run`; also look for an earlier model of the same symptom: `playground repro list --grep "<symptom>"` |
+| back to a case | `playground repro list --case <case>`, then `repro status -f <model>` |
 | the customer gave a connector config | `repro bootstrap --config <their file> -d "<case> <symptom>" --no-run` (the example is picked from the class, secrets become variables), then once it runs `playground connector diff --connector <c> --file <their file>` (see the [`create-or-update` deep dive](/deep-dive-connector-create-or-update.md)) |
 | the bug is fixed, or it turned out not to be one | `playground repro status -f <model> --set "fixed in <version>"` (`--jira CC-…`), or `--set "not a bug"` / `--set "customer config"` |
 | say whether it reproduces | end the scenario with `playground repro assert --reproduced-if-…`: 🐞 / ✅ with the versions, kept for `repro status` and the bundle |
@@ -552,6 +579,7 @@ playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symp
 playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
 playground repro assert --reproduced-if-log "<pattern>" [--container connect] | --reproduced-if-connector-state FAILED [--connector <c>] \
   | --reproduced-if-records-less-than|more-than <n> --topic <t> | --reproduced-if-command "<cmd>"   [--message "…"] [--json]
+playground repro list [--mine] [--case <n>] [--status <text>] [--verdict reproduced|not-reproduced|none] [--base <example>] [--since 90d|<date>] [--grep <regex>] [--uncommitted] [--limit 30] [--json]
 playground repro bisect [-f <model>] --from <v> --to <v> [--all] | --connector-tag A --connector-tag B … | --tag A --tag B …   [--tag <cp>] [--run-flags "…"] [--json]
 playground repro check [-f <model> | --staged | --all] [--json] [--skip-secrets-store]
 playground repro export [-f <model> … | --all-uncommitted] [--output <dir>] [--dry-run] [--include-artifacts] [--force] [--no-clipboard]
@@ -563,6 +591,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 - `<script>-repro-<kebab description>.sh`; 6 leading digits = ticket link.
 - Header fields `🎯 expected`, `💥 actual`, `🎫 jira`, `🩹 status`: set at bootstrap, read and updated by `repro status`, carried by the bundle.
 - `repro assert`: 🐞 / ✅ verdict with the versions, exit 0 both, kept in `playground-repro-verdicts`, shown by `repro status`, carried by the bundle.
+- `repro list`: newest first, from the headers, the verdicts and `git status`; filters combine.
 - `repro bisect`: one `playground run` per version (stops the environment), binary search with `--from` / `--to`, changelog where the verdict changes.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.
 - Bundle = files + symlinks as content + manifest (run line, credential names, sha256). Run the model once first.
@@ -572,6 +601,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
   [`repro/status.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/status.sh),
   [`repro/assert.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/assert.sh),
   [`repro/bisect.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bisect.sh),
+  [`repro/list.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/list.sh),
   [`repro/check.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/check.sh),
   [`repro/export.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/export.sh),
   [`repro/import.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/import.sh),
@@ -588,5 +618,5 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
   [Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) in the Reproduction toolkit
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the warn-only wait of models),
   [`topic produce`](/deep-dive-topic-produce.md) and [`topic consume`](/deep-dive-topic-consume.md) (data in, assertions out)
-- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro bisect](/playground%20repro%20bisect), [playground repro check](/playground%20repro%20check),
+- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro bisect](/playground%20repro%20bisect), [playground repro list](/playground%20repro%20list), [playground repro check](/playground%20repro%20check),
   [playground repro export](/playground%20repro%20export), [playground repro import](/playground%20repro%20import)

@@ -1425,7 +1425,7 @@
     },
     {
       "name": "repro",
-      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  status      show or update what a model proves: expected, actual, jira, status\n  assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n  bisect      run a model on several versions: which one introduced or fixed it\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
+      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  list        find models by case, status, verdict, base example, author, date\n  status      show or update what a model proves: expected, actual, jira, status\n  assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n  bisect      run a model on several versions: which one introduced or fixed it\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan models for secrets and customer data before committing them\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its header (🎯 expected / 💥 actual), and never put customer\ndata in it.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model",
       "usage": "playground repro COMMAND",
       "options": [],
       "subcommands": [
@@ -1692,6 +1692,83 @@
               ],
               "argument": "",
               "description": "🤖 Print the fields as JSON"
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "description": "📋 List the reproduction models, newest first, with their case, status and last verdict\n\nReads the header of every model of reproduction-models (date, author,\ndescription, 🎯 expected, 💥 actual, 🎫 jira, 🩹 status), its base\nexample, whether it is committed, and the last verdict recorded by\n'playground repro assert'. A model without a date in its header gets\nthe date of the commit that added it; one without a description, the\nend of its file name.\n\nFilters can be combined. Models with uncommitted changes are marked ✏️.",
+          "usage": "playground repro list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--mine"
+              ],
+              "argument": "",
+              "description": "👤 Only the models whose author is you (whoami)"
+            },
+            {
+              "names": [
+                "--case"
+              ],
+              "argument": "CASE",
+              "description": "🔮 Only the models of this case (6 digits at the start of the description, or in the file name)"
+            },
+            {
+              "names": [
+                "--status"
+              ],
+              "argument": "STATUS",
+              "description": "🩹 Only the models whose 🩹 status contains this text (open, fixed, not a bug…)"
+            },
+            {
+              "names": [
+                "--verdict"
+              ],
+              "argument": "VERDICT",
+              "description": "🧪 Only the models with this last verdict (none: never ended with 'playground repro assert' here)\n\nAllowed values: reproduced, not-reproduced, none"
+            },
+            {
+              "names": [
+                "--base"
+              ],
+              "argument": "EXAMPLE",
+              "description": "🧬 Only the models whose base example contains this text, for example connect-jdbc-sink"
+            },
+            {
+              "names": [
+                "--since"
+              ],
+              "argument": "SINCE",
+              "description": "📅 Only the models created since this number of days (90d) or this date (2026-01-31)"
+            },
+            {
+              "names": [
+                "--grep"
+              ],
+              "argument": "REGEX",
+              "description": "🔍 Only the models whose description, expected, actual, jira or path matches this regex (case insensitive)"
+            },
+            {
+              "names": [
+                "--uncommitted"
+              ],
+              "argument": "",
+              "description": "✏️ Only the models with uncommitted changes"
+            },
+            {
+              "names": [
+                "--limit"
+              ],
+              "argument": "NUMBER",
+              "description": "🔢 Number of models shown (default: 30, 0 for all)\n\nDefault value: 30"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the models as JSON (every field, with the last verdict and its versions)"
             }
           ]
         },
