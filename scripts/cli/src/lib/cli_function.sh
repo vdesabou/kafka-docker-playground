@@ -1046,7 +1046,8 @@ function get_playground_repro_export_with_fzf() {
 
 # connector configs a customer sent (JSON, CFK / Strimzi resources, terraform, .properties), newest first: the files of
 # the folders of 'playground config folder_zip_or_jar' and of the current folder (3 levels deep, not the playground
-# itself) that hold a connector.class, a Connector / KafkaConnector resource or a confluent_connector resource
+# itself) and of ~/Downloads and ~/Desktop (5 levels deep) that hold a connector.class, a Connector / KafkaConnector
+# resource or a confluent_connector resource. When there is none, asks for the path
 function get_connector_config_file_with_fzf() {
   cur="$1"
 
@@ -1074,16 +1075,47 @@ function get_connector_config_file_with_fzf() {
     stat_mtime=(stat -f '%m %N')
   fi
 
+  # where customer files land: Downloads and Desktop, deeper (archived downloads, SendSafely folders…)
+  deep_folders=""
+  for folder in "$HOME/Downloads" "$HOME/Desktop"
+  do
+    if [ -d "$folder" ]
+    then
+      deep_folders="$deep_folders $folder"
+    fi
+  done
+
   # a home folder holds thousands of json / yaml files: one grep and one stat for all of them (a grep per file takes
   # minutes), fzf only gets the list once it is sorted
-  fzf_output=$(find $folder_zip_or_jar $PWD -maxdepth 3 \
-      \( -path "$root_folder" -o -name node_modules -o -name Library -o -name target -o -name '.*' ! -name '.' \) -prune \
-      -o -type f \( -name '*.json' -o -name '*.yaml' -o -name '*.yml' -o -name '*.tf' -o -name '*.properties' \) -size -1024k -print0 2>/dev/null \
+  files=$( {
+      find $folder_zip_or_jar $PWD -maxdepth 3 \
+        \( -path "$root_folder" -o -name node_modules -o -name Library -o -name target -o -name '.*' ! -name '.' \) -prune \
+        -o -type f \( -name '*.json' -o -name '*.yaml' -o -name '*.yml' -o -name '*.tf' -o -name '*.properties' \) -size -1024k -print0 2>/dev/null
+      if [ -n "$deep_folders" ]
+      then
+        find $deep_folders -maxdepth 5 \
+          \( -name node_modules -o -name target -o -name '.*' ! -name '.' \) -prune \
+          -o -type f \( -name '*.json' -o -name '*.yaml' -o -name '*.yml' -o -name '*.tf' -o -name '*.properties' \) -size -1024k -print0 2>/dev/null
+      fi
+    } \
     | sort -zu \
     | xargs -0 grep -lE 'connector\.class|kind:[[:space:]]*"?(Connector|KafkaConnector)|resource[[:space:]]+"confluent_connector"' 2>/dev/null \
     | tr '\n' '\0' \
     | xargs -0 "${stat_mtime[@]}" 2>/dev/null \
-    | sort -rn | cut -d' ' -f2- \
+    | sort -rn | cut -d' ' -f2-)
+
+  if [ -z "$files" ]
+  then
+    # nothing found: the path is typed, pasted or dragged onto the terminal
+    res=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📄 " --header="no connector config found in ${folder_zip_or_jar:-your folders}, $PWD (3 levels) nor in Downloads / Desktop (5 levels): type, paste or drag the file here, then enter (configure the folders with playground config folder_zip_or_jar <folder1> <folder2>…)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap --print-query 2>/dev/null | head -1)
+    # a dragged file comes quoted, or with its spaces escaped
+    res=$(echo "$res" | sed -E "s/^[[:space:]]*['\"]?//; s/['\"]?[[:space:]]*$//; s/\\\\ / /g")
+    res=${res/#\~/$HOME}
+    echo "$cur@$res"
+    return
+  fi
+
+  fzf_output=$(echo "$files" \
     | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📄" --header="select the connector config the customer sent, newest first (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "head -60 {}" --print-query --bind "alt-enter:print-query")
 
   # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
