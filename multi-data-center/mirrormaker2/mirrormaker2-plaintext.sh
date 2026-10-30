@@ -9,13 +9,13 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Sending sales in Europe cluster"
-seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE
+playground topic produce --cluster europe --topic sales_EUROPE --nb-messages 10 --value "european_sale_%g ${RANDOM}"
 
 log "Sending sales in US cluster"
-seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --bootstrap-server broker-us:9092 --topic sales_US
+playground topic produce --cluster us --topic sales_US --nb-messages 10 --value "us_sale_%g ${RANDOM}"
 
 log "Consolidating all sales (logs are in /tmp/mirrormaker.log):"
 
@@ -24,18 +24,17 @@ docker exec -d connect-us bash -c '/usr/bin/connect-mirror-maker /etc/kafka/conn
 
 # docker exec connect-us bash -c '/usr/bin/connect-mirror-maker /etc/kafka/connect-mirror-maker.properties'
 
-log "sleeping 120 seconds"
-sleep 120
-
 # Topic Renaming
 
 # By default MM2 renames source topics to be prefixed with the source cluster name. e.g. if topic foo came from cluster A then it would be named A.foo on the destination. In the current release (5.4) MM2 does not support any different topic naming strategies out of the box.
 
 log "Verify we have received the data in topic US.sales_US in EUROPE"
-timeout 60 docker container exec broker-europe kafka-console-consumer --bootstrap-server broker-europe:9092 --topic "US.sales_US" --from-beginning --max-messages 10
+playground topic wait-for-records --cluster europe --topic "US.sales_US" --min-expected-messages 10 --max-wait 180
+playground topic consume --cluster europe --topic "US.sales_US" --min-expected-messages 10 --timeout 60
 
 log "Verify we have received the data in topic EUROPE.sales_EUROPE topics in the US"
-timeout 60 docker container exec broker-us kafka-console-consumer --bootstrap-server broker-us:9092 --topic "EUROPE.sales_EUROPE" --from-beginning --max-messages 10
+playground topic wait-for-records --cluster us --topic "EUROPE.sales_EUROPE" --min-expected-messages 10 --max-wait 180
+playground topic consume --cluster us --topic "EUROPE.sales_EUROPE" --min-expected-messages 10 --timeout 60
 
 log "Copying mirrormaker logs to /tmp/mirrormaker.log"
 playground container cp --source connect-us:/tmp/mirrormaker.log --destination /tmp/mirrormaker.log
