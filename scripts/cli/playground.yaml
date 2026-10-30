@@ -1559,18 +1559,19 @@ subcommands:
     is an example written to demonstrate one specific\nproblem, so that anyone can
     reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing
     example, then edit it\n  list        find models by case, status, verdict, base
-    example, author, date\n  status      show or update what a model proves: expected,
-    actual, jira, status\n  assert      end a model with its verdict: \U0001F41E reproduced
-    or ✅ not reproduced\n  bisect      run a model on several versions: which one
-    introduced or fixed it\n  export      package one or more models as a self-contained
-    tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check
-    \      scan models for secrets and customer data before committing them\n\n\U0001F449
-    Always scaffold with bootstrap rather than copying a script by hand: it\ncreates
-    the header, the docker compose override, the CLI cheat sheet and\nregisters the
-    model, which a hand-written file would be missing.\n\nKeep a model minimal and
-    about one issue, state expected versus actual\nbehaviour in its header (\U0001F3AF
-    expected / \U0001F4A5 actual), and never put customer\ndata in it.\n\n\U0001F36A
-    Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n\U0001F3AC
+    example, author, date\n  diff        what a model changes compared with its base
+    example\n  status      show or update what a model proves: expected, actual, jira,
+    status\n  assert      end a model with its verdict: \U0001F41E reproduced or ✅
+    not reproduced\n  bisect      run a model on several versions: which one introduced
+    or fixed it\n  export      package one or more models as a self-contained tgz
+    bundle\n  import      unpack a bundle someone sent you, and run it\n  check       scan
+    models for secrets and customer data before committing them\n\n\U0001F449 Always
+    scaffold with bootstrap rather than copying a script by hand: it\ncreates the
+    header, the docker compose override, the CLI cheat sheet and\nregisters the model,
+    which a hand-written file would be missing.\n\nKeep a model minimal and about
+    one issue, state expected versus actual\nbehaviour in its header (\U0001F3AF expected
+    / \U0001F4A5 actual), and never put customer\ndata in it.\n\n\U0001F36A Deep dive:
+    https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n\U0001F3AC
     Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model"
   usage: playground repro COMMAND
   options: []
@@ -1886,6 +1887,38 @@ subcommands:
       - "--json"
       argument: ''
       description: "\U0001F916 Print the fields as JSON"
+  - name: diff
+    description: "\U0001F500 Show what a reproduction model changes compared with
+      its base example\n\nCompares the scenario of the model (without its header,
+      the cheat\nsheet and the snippets after it) with the script of the example it\nwas
+      bootstrapped from, and its docker compose override with the one of\nthe example.
+      The compose override renamed by bootstrap\n(docker-compose.plaintext.repro-<description>.yml)
+      is compared under\nthe name of the example's, so that line is not reported.\n\nStarts
+      with a summary per connector: the config keys changed, added\nand removed (from
+      the 'playground connector create-or-update'\nheredocs), then the diffs (in color
+      in a terminal).\n\nThe hand-off report of 'playground repro export' has the
+      same diffs.\n\nWithout --file, the current reproduction model is used."
+    usage: playground repro diff [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F516 Reproduction model (default: current one)"
+    - names:
+      - "--summary"
+      argument: ''
+      description: "\U0001F9E9 Only the summary: config keys changed / added / removed
+        per connector, whether the compose override changed"
+    - names:
+      - "--compose"
+      argument: ''
+      description: "\U0001F433 Only the diff of the docker compose override\n\nConflicts
+        with: --summary"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the summary and the diffs as JSON"
   - name: list
     description: "\U0001F4CB List the reproduction models, newest first, with their
       case, status and last verdict\n\nReads the header of every model of reproduction-models

@@ -1,8 +1,8 @@
 # 🍪 Deep dive: reproduction models (`playground repro`)
 
 A reproduction model is an example rewritten to show **one** problem, so that anyone can reproduce it with a single
-`playground run`. Eight commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro list`
-finds it again, `repro assert`
+`playground run`. Nine commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro diff`
+shows what it changes, `repro list` finds it again, `repro assert`
 ends it with its verdict, `repro bisect` runs it on several versions, `repro status` records what it proves and what came out of it, `repro check` scans it for secrets and customer data before a commit,
 `repro export` packs it as a self-contained bundle for a colleague, and `repro import` unpacks one. Takes about 15 minutes to read and run.
 
@@ -20,6 +20,7 @@ ends it with its verdict, `repro bisect` runs it on several versions, `repro sta
 | a new model from the connector config the customer sent (CFK, Strimzi, terraform, `.properties`, REST dump, JSON) | `playground repro bootstrap --config <file> -d "<case> <symptom>" --no-run` |
 | the same, without menus (scripts, AI agents) | `playground repro bootstrap -f "<absolute path of the example>" -d "<case number> <symptom>" --no-run` |
 | to end the scenario with its verdict, 🐞 reproduced or ✅ not reproduced | `playground repro assert --reproduced-if-log "<error>"` (or `--reproduced-if-connector-state FAILED`, `--reproduced-if-records-less-than N --topic <t>`, `--reproduced-if-command "…"`) |
+| what a model changes compared with its example | `playground repro diff -f <model>` (`--summary`: the connector keys changed / added / removed, `--compose`, `--json`) |
 | to find your models, or the ones of a case, a status, a base example | `playground repro list --mine --since 90d` (`--case`, `--status`, `--verdict`, `--base`, `--grep`, `--uncommitted`, `--json`) |
 | which version introduced or fixed it | `playground repro bisect --from <version> --to <version>` (binary search over the Confluent Hub versions), `--connector-tag A --connector-tag B`, or `--tag A --tag B` for CP |
 | to say what it proves, and what came out of it | `playground repro status --expected "…" --actual "…" --jira CC-1234 --set "fixed in 10.8.3"` |
@@ -289,6 +290,34 @@ playground repro list --verdict reproduced --json       # every field, with the 
   (or renamed) the file, the description the end of the file name.
 - `--case` matches the 6 digits at the start of the description, or the file name. 30 models are shown by default,
   `--limit 0` for all.
+
+### What a model changes: `repro diff`
+
+Whoever reads a model (engineering, a colleague, you six months later) first wants to know what was changed in the
+example. The base example is known (the symlinks of the folder), so the diff is cheap:
+
+```bash
+playground repro diff -f <model>
+# 🧬 redshift-sink-repro-369368-serverless-npe-fields-must-be-non-null.sh compared with connect/connect-aws-redshift-sink/redshift-sink.sh
+# 🧩 connector redshift-sink: 1 key(s) changed (pk.mode), 1 added (insert.mode), 2 removed (aws.access.key.id, aws.secret.key.id)
+# 🟰 docker compose override: the one of the example (docker-compose.plaintext.yml)
+#
+# --- connect/connect-aws-redshift-sink/redshift-sink.sh
+# +++ redshift-sink-repro-369368-serverless-npe-fields-must-be-non-null.sh
+# @@ -12,114 +12,127 @@
+# …
+playground repro diff -f <model> --summary      # the 🧩 / 🐳 lines only
+playground repro diff -f <model> --compose      # the diff of the docker compose override only
+playground repro diff -f <model> --json | jq '.connectors'
+```
+
+- The scenario is compared without the header, the commented `repro assert` lines and the cheat sheet; the compose
+  override renamed by bootstrap (`docker-compose.plaintext.repro-<description>.yml`) under the name of the
+  example's, so that line never shows up.
+- The 🧩 summary reads the `"key": value` lines of the `create-or-update` heredocs, per connector name. A connector
+  renamed in the model is compared with the one of the example when the example deploys only one
+  (`🧩 connector sink-fixed (vs postgres-sink of the example): …`).
+- The hand-off report of `repro export` (`<model>.REPRO.md`) has the same summary and diffs. Colors in a terminal only.
 
 ---
 
@@ -594,6 +623,7 @@ playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symp
 playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
 playground repro assert --reproduced-if-log "<pattern>" [--container connect] | --reproduced-if-connector-state FAILED [--connector <c>] \
   | --reproduced-if-records-less-than|more-than <n> --topic <t> | --reproduced-if-command "<cmd>"   [--message "…"] [--json]
+playground repro diff [-f <model>] [--summary | --compose] [--json]
 playground repro list [--mine] [--case <n>] [--status <text>] [--verdict reproduced|not-reproduced|none] [--base <example>] [--since 90d|<date>] [--grep <regex>] [--uncommitted] [--limit 30] [--json]
 playground repro bisect [-f <model>] --from <v> --to <v> [--all] | --connector-tag A --connector-tag B … | --tag A --tag B …   [--tag <cp>] [--run-flags "…"] [--json]
 playground repro check [-f <model> | --staged | --all] [--json] [--skip-secrets-store]
@@ -606,6 +636,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 - `<script>-repro-<kebab description>.sh`; 6 leading digits = ticket link.
 - Header fields `🎯 expected`, `💥 actual`, `🎫 jira`, `🩹 status`: set at bootstrap, read and updated by `repro status`, carried by the bundle.
 - `repro assert`: 🐞 / ✅ verdict with the versions, exit 0 both, kept in `playground-repro-verdicts`, shown by `repro status`, carried by the bundle.
+- `repro diff`: scenario and compose override vs the base example, 🧩 config keys changed / added / removed per connector.
 - `repro list`: newest first, from the headers, the verdicts and `git status`; filters combine.
 - `repro bisect`: one `playground run` per version (stops the environment), binary search with `--from` / `--to`, changelog where the verdict changes.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.
@@ -617,6 +648,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
   [`repro/assert.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/assert.sh),
   [`repro/bisect.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bisect.sh),
   [`repro/list.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/list.sh),
+  [`repro/diff.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/diff.sh),
   [`repro/check.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/check.sh),
   [`repro/export.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/export.sh),
   [`repro/import.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/import.sh),
@@ -633,5 +665,5 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
   [Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) in the Reproduction toolkit
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the warn-only wait of models),
   [`topic produce`](/deep-dive-topic-produce.md) and [`topic consume`](/deep-dive-topic-consume.md) (data in, assertions out)
-- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro bisect](/playground%20repro%20bisect), [playground repro list](/playground%20repro%20list), [playground repro check](/playground%20repro%20check),
+- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro assert](/playground%20repro%20assert), [playground repro bisect](/playground%20repro%20bisect), [playground repro list](/playground%20repro%20list), [playground repro diff](/playground%20repro%20diff), [playground repro check](/playground%20repro%20check),
   [playground repro export](/playground%20repro%20export), [playground repro import](/playground%20repro%20import)

@@ -3185,6 +3185,7 @@ commands:
 
       bootstrap   scaffold one from an existing example, then edit it
       list        find models by case, status, verdict, base example, author, date
+      diff        what a model changes compared with its base example
       status      show or update what a model proves: expected, actual, jira, status
       assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced
       bisect      run a model on several versions: which one introduced or fixed it
@@ -3718,6 +3719,53 @@ commands:
     - playground repro status
     - playground repro status -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --set "fixed in 10.8.3" --jira CC-1234
     - playground repro status --actual "the task fails with Unknown magic byte" --json
+
+  - name: diff
+    help: |-
+      🔀 Show what a reproduction model changes compared with its base example
+
+      Compares the scenario of the model (without its header, the cheat
+      sheet and the snippets after it) with the script of the example it
+      was bootstrapped from, and its docker compose override with the one of
+      the example. The compose override renamed by bootstrap
+      (docker-compose.plaintext.repro-<description>.yml) is compared under
+      the name of the example's, so that line is not reported.
+
+      Starts with a summary per connector: the config keys changed, added
+      and removed (from the 'playground connector create-or-update'
+      heredocs), then the diffs (in color in a terminal).
+
+      The hand-off report of 'playground repro export' has the same diffs.
+
+      Without --file, the current reproduction model is used.
+    flags:
+      - long: --file
+        short: -f
+        arg: file
+        required: false
+        validate: file_exists_with_trick
+        completions:
+          dynamic:
+          - playground get-examples-list-with-fzf --repro-only "$completion_current"
+        help: |-
+          🔖 Reproduction model (default: current one)
+      - long: --summary
+        required: false
+        help: |-
+          🧩 Only the summary: config keys changed / added / removed per connector, whether the compose override changed
+      - long: --compose
+        required: false
+        conflicts: [--summary]
+        help: |-
+          🐳 Only the diff of the docker compose override
+      - long: --json
+        required: false
+        help: |-
+          🤖 Print the summary and the diffs as JSON
+    examples:
+    - playground repro diff
+    - playground repro diff -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --summary
+    - playground repro diff --json | jq '.connectors'
 
   - name: list
     help: |-

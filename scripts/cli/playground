@@ -143,6 +143,7 @@ playground_usage() {
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "repro import")                              "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "repro status")                              "
+  printf "  %s   🔀 Show what a reproduction model changes compared with its base example\n" "$(green "repro diff")                                "
   printf "  %s   📋 List the reproduction models, newest first, with their case, status and last verdict\n" "$(green "repro list")                                "
   printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "repro assert")                              "
   printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "repro bisect")                              "
@@ -5282,7 +5283,7 @@ playground_cleanup_cloud_resources_usage() {
 playground_repro_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro\n\n"
-    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    list        find models by case, status, verdict, base example, author, date\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    bisect      run a model on several versions: which one introduced or fixed\n  it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
+    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    list        find models by case, status, verdict, base example, author, date\n    diff        what a model changes compared with its base example\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    bisect      run a model on several versions: which one introduced or fixed\n  it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
   else
     printf "playground repro - 👷‍♂️ Reproduction model commands\n\n"
   fi
@@ -5298,6 +5299,7 @@ playground_repro_usage() {
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")   "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")"
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "status")   "
+  printf "  %s   🔀 Show what a reproduction model changes compared with its base example\n" "$(green "diff")     "
   printf "  %s   📋 List the reproduction models, newest first, with their case, status and last verdict\n" "$(green "list")     "
   printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "assert")   "
   printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "bisect")   "
@@ -5724,6 +5726,62 @@ playground_repro_status_usage() {
     printf "  playground repro status\n"
     printf "  playground repro status -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --set \"fixed in 10.8.3\" --jira CC-1234\n"
     printf "  playground repro status --actual \"the task fails with Unknown magic byte\"\n  --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_repro_diff_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground repro diff\n\n"
+    printf "  🔀 Show what a reproduction model changes compared with its base example\n  \n  Compares the scenario of the model (without its header, the cheat\n  sheet and the snippets after it) with the script of the example it\n  was bootstrapped from, and its docker compose override with the one of\n  the example. The compose override renamed by bootstrap\n  (docker-compose.plaintext.repro-<description>.yml) is compared under\n  the name of the example's, so that line is not reported.\n  \n  Starts with a summary per connector: the config keys changed, added\n  and removed (from the 'playground connector create-or-update'\n  heredocs), then the diffs (in color in a terminal).\n  \n  The hand-off report of 'playground repro export' has the same diffs.\n  \n  Without --file, the current reproduction model is used.\n\n"
+  else
+    printf "playground repro diff - 🔀 Show what a reproduction model changes compared with its base example\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground repro diff [OPTIONS]\n"
+  printf "  playground repro diff --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    🔖 Reproduction model (default: current one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--summary")"
+    printf "    🧩 Only the summary: config keys changed / added / removed per connector,\n    whether the compose override changed\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compose")"
+    printf "    🐳 Only the diff of the docker compose override\n"
+    printf "    %s\n" "Conflicts: --summary"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the summary and the diffs as JSON\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro diff\n"
+    printf "  playground repro diff -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --summary\n"
+    printf "  playground repro diff --json | jq '.connectors'\n"
     echo
 
   fi
@@ -19124,6 +19182,99 @@ function repro_last_verdict () {
   then
     jq -c --arg script "$script" 'select(.script == $script)' "$root_folder/playground-repro-verdicts" 2>/dev/null | tail -1
   fi
+}
+
+# the base example of a model (folder relative to the repository), from the symlinks bootstrap created in its folder
+function repro_base_example_of () {
+  local script="$1" link target
+  for link in README.md stop.sh
+  do
+    target=$(readlink "$(dirname "$script")/$link" 2>/dev/null || true)
+    if [[ "$target" == ../../* ]]
+    then
+      dirname "${target#../../}"
+      return 0
+    fi
+  done
+}
+
+# what 'repro diff' and the hand-off report compare, written in folder $2: base_scenario / model_scenario (the script of
+# the base example and the scenario of the model: no header, no cheat sheet, no leading or trailing empty lines, the
+# compose override renamed by bootstrap, docker-compose.plaintext.repro-<description>.yml, gets back the name of the
+# example's), base_override / model_override when the model has its own override. Sets REPRO_DIFF_BASE_EXAMPLE,
+# REPRO_DIFF_BASE_SCRIPT, REPRO_DIFF_BASE_OVERRIDE, REPRO_DIFF_MODEL_OVERRIDE (names); returns 1 without base example
+function repro_diff_files () {
+  local script="$1" out="$2" prefix trim
+  REPRO_DIFF_BASE_EXAMPLE=$(repro_base_example_of "$script")
+  prefix=$(basename "$script" | sed -E 's/-repro-.*$//')
+  REPRO_DIFF_BASE_SCRIPT="$REPRO_DIFF_BASE_EXAMPLE/$prefix.sh"
+  REPRO_DIFF_MODEL_OVERRIDE=""
+  REPRO_DIFF_BASE_OVERRIDE=""
+  if [ -z "$REPRO_DIFF_BASE_EXAMPLE" ] || [ ! -f "$root_folder/$REPRO_DIFF_BASE_SCRIPT" ]
+  then
+    return 1
+  fi
+  trim='{ lines[NR] = $0 } END { n = NR; while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--; s = 1; while (s <= n && lines[s] ~ /^[[:space:]]*$/) s++; for (i = s; i <= n; i++) print lines[i] }'
+  awk 'banners < 2 { if (/^#####/) banners++; next } /^# 🧪 end the scenario with its verdict|^# 🧠 below is a list of cli commands/ { exit } { print }' "$script" \
+    | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/g' | awk "$trim" > "$out/model_scenario"
+  grep -v '^#!/bin/bash' "$root_folder/$REPRO_DIFF_BASE_SCRIPT" | awk "$trim" > "$out/base_scenario"
+  REPRO_DIFF_MODEL_OVERRIDE=$(grep -oE 'docker-compose\.[A-Za-z0-9.-]*repro-[A-Za-z0-9-]+\.yml' "$script" | head -1 || true)
+  if [ -n "$REPRO_DIFF_MODEL_OVERRIDE" ]
+  then
+    REPRO_DIFF_BASE_OVERRIDE=$(echo "$REPRO_DIFF_MODEL_OVERRIDE" | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/')
+    if [ -f "$(dirname "$script")/$REPRO_DIFF_MODEL_OVERRIDE" ] && [ -f "$root_folder/$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE" ]
+    then
+      cp "$(dirname "$script")/$REPRO_DIFF_MODEL_OVERRIDE" "$out/model_override"
+      cp "$root_folder/$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE" "$out/base_override"
+    fi
+  fi
+  return 0
+}
+
+# the "key": value lines of the 'playground connector create-or-update' heredocs of a scenario: connector<TAB>key<TAB>value
+function repro_config_keys () {
+  awk '
+    /playground connector create-or-update/ && /<</ {
+      connector = $0; sub(/.*(--connector|-c)[ =]/, "", connector); sub(/[ \t].*/, "", connector); gsub(/["\047]/, "", connector)
+      delim = $0; sub(/.*<<-?[ \t]*/, "", delim); gsub(/["\047]/, "", delim); sub(/[ \t].*/, "", delim)
+      inside = 1; next
+    }
+    inside { line = $0; gsub(/^[ \t]+|[ \t]+$/, "", line); if (line == delim) { inside = 0; next } }
+    inside && match($0, /^[ \t]*"[^"]+"[ \t]*:[ \t]*/) {
+      key = $0; sub(/^[ \t]*"/, "", key); sub(/".*/, "", key)
+      value = substr($0, RLENGTH + 1); sub(/[ \t]*,?[ \t]*$/, "", value)
+      print connector "\t" key "\t" value
+    }' "$1"
+}
+
+# the connector config keys changed, added and removed by the model ($2 its scenario) compared with the example ($1), as
+# JSON: [{connector, compared_with, changed: [keys], added: [keys], removed: [keys]}], for the connectors of the model. A
+# connector renamed in the model is compared with the connector of the example when the example has only one
+function repro_config_changes () {
+  jq -n -R --rawfile base <(repro_config_keys "$1") --rawfile model <(repro_config_keys "$2") '
+    def entries($s): $s | split("\n") | map(select(length > 0) | split("\t") | {connector: .[0], key: .[1], value: (.[2:] | join("\t"))});
+    entries($base) as $b | entries($model) as $m
+    | ($b | map(.connector) | unique) as $base_connectors
+    | [$m | map(.connector) | unique[] as $c
+        | (if ($base_connectors | index($c)) != null then $c elif ($base_connectors | length) == 1 then $base_connectors[0] else null end) as $bname
+        | ($b | map(select(.connector == $bname)) | map({key: .key, value: .value}) | from_entries) as $bc
+        | ($m | map(select(.connector == $c)) | map({key: .key, value: .value}) | from_entries) as $mc
+        | {connector: $c,
+           compared_with: $bname,
+           in_example: ($bc | length > 0),
+           changed: [$mc | keys_unsorted[] | select($bc[.] != null and $bc[.] != $mc[.])],
+           added: [$mc | keys_unsorted[] | select($bc[.] == null)],
+           removed: [$bc | keys_unsorted[] | select($mc[.] == null)]}]'
+}
+
+# one line per connector of repro_config_changes ($1): "🧩 connector x: 2 key(s) changed (a, b), 1 added (c), 0 removed"
+function repro_config_changes_lines () {
+  echo "$1" | jq -r '.[] | if (.in_example | not) then "🧩 connector \(.connector): not in the example, \(.added | length) key(s)"
+    elif ((.changed + .added + .removed) | length) == 0 then "🧩 connector \(.connector): same config as the example" + (if .compared_with != .connector then "\u0027s \(.compared_with)" else "" end)
+    else "🧩 connector \(.connector)" + (if .compared_with != .connector then " (vs \(.compared_with) of the example)" else "" end) + ": " + ([
+      (if (.changed | length) > 0 then "\(.changed | length) key(s) changed (\(.changed | join(", ")))" else empty end),
+      (if (.added | length) > 0 then "\(.added | length) added (\(.added | join(", ")))" else empty end),
+      (if (.removed | length) > 0 then "\(.removed | length) removed (\(.removed | join(", ")))" else empty end)] | join(", ")) end'
 }
 
 # one line for a verdict of playground-repro-verdicts: 🐞 reproduced on 2026-10-30 (CP 8.4.0, connector 10.8.0): <reason>
@@ -43524,7 +43675,7 @@ playground_repro_export_command() {
   # the hand-off report of a model ($1 script, $2 its entry of the manifest, $3 name of the bundle), in Markdown
   function repro_write_report () {
       local script="$1" model="$2" bundle="$3"
-      local description case_number jira status expected actual author base_example base_script prefix
+      local description case_number jira status expected actual author base_example
       description=$(jq -r '.description // ""' <<< "$model")
       case_number=$(jq -r '.case // ""' <<< "$model")
       jira=$(jq -r '.jira // ""' <<< "$model")
@@ -43574,42 +43725,34 @@ playground_repro_export_command() {
       external=$(jq -r '.external_files | join(", ")' <<< "$model")
       [ -n "$external" ] && echo "📎 Runs with files outside the repository: $external." && echo ""
 
-      # what the model changes: its scenario (no header, no cheat sheet) compared with the script of the base example
-      prefix=$(basename "$script" | sed -E 's/-repro-.*$//')
-      base_script="$root_folder/$base_example/$prefix.sh"
-      if [ -n "$base_example" ] && [ -f "$base_script" ]
+      # what the model changes: its scenario and its compose override compared with the ones of the base example
+      mkdir -p "$tmp_dir/report_diff"
+      if repro_diff_files "$script" "$tmp_dir/report_diff"
       then
-          # no header, no cheat sheet, no leading / trailing empty lines; the compose override renamed by bootstrap
-          # (docker-compose.plaintext.repro-<description>.yml) gets back the name of the example's
-          trim='{ lines[NR] = $0 } END { n = NR; while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--; s = 1; while (s <= n && lines[s] ~ /^[[:space:]]*$/) s++; for (i = s; i <= n; i++) print lines[i] }'
-          awk 'banners < 2 { if (/^#####/) banners++; next } /^# 🧪 end the scenario with its verdict|^# 🧠 below is a list of cli commands/ { exit } { print }' "$script" \
-              | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/g' | awk "$trim" > "$tmp_dir/report_model"
-          grep -v '^#!/bin/bash' "$base_script" | awk "$trim" > "$tmp_dir/report_base"
-          echo "## 🔀 What it changes compared with \`$base_example/$prefix.sh\`"
+          echo "## 🔀 What it changes compared with \`$REPRO_DIFF_BASE_SCRIPT\`"
           echo ""
-          if diff -q "$tmp_dir/report_base" "$tmp_dir/report_model" > /dev/null
+          if diff -q "$tmp_dir/report_diff/base_scenario" "$tmp_dir/report_diff/model_scenario" > /dev/null
           then
               echo "Nothing yet: the scenario is the one of the example."
           else
+              repro_config_changes_lines "$(repro_config_changes "$tmp_dir/report_diff/base_scenario" "$tmp_dir/report_diff/model_scenario")" | sed 's/^/- /'
+              echo ""
               echo '```diff'
-              diff -u --label "$base_example/$prefix.sh" --label "$(basename "$script")" "$tmp_dir/report_base" "$tmp_dir/report_model" | head -300 || true
+              diff -u --label "$REPRO_DIFF_BASE_SCRIPT" --label "$(basename "$script")" "$tmp_dir/report_diff/base_scenario" "$tmp_dir/report_diff/model_scenario" | head -300 || true
               echo '```'
           fi
           echo ""
-          # and its docker compose override, when it changed
-          model_override=$(grep -oE 'docker-compose\.[A-Za-z0-9.-]*repro-[A-Za-z0-9-]+\.yml' "$script" | head -1)
-          base_override=$(echo "$model_override" | sed -E 's/\.repro-[A-Za-z0-9-]+\.yml/.yml/')
-          if [ -n "$model_override" ] && [ -f "$(dirname "$script")/$model_override" ] && [ -f "$root_folder/$base_example/$base_override" ] \
-              && ! diff -q "$root_folder/$base_example/$base_override" "$(dirname "$script")/$model_override" > /dev/null
+          if [ -f "$tmp_dir/report_diff/model_override" ] && ! diff -q "$tmp_dir/report_diff/base_override" "$tmp_dir/report_diff/model_override" > /dev/null
           then
-              echo "## 🐳 What it changes in \`$base_example/$base_override\`"
+              echo "## 🐳 What it changes in \`$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE\`"
               echo ""
               echo '```diff'
-              diff -u --label "$base_example/$base_override" --label "$model_override" "$root_folder/$base_example/$base_override" "$(dirname "$script")/$model_override" | head -200 || true
+              diff -u --label "$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE" --label "$REPRO_DIFF_MODEL_OVERRIDE" "$tmp_dir/report_diff/base_override" "$tmp_dir/report_diff/model_override" | head -200 || true
               echo '```'
               echo ""
           fi
       fi
+      rm -rf "$tmp_dir/report_diff"
       echo "---"
       echo "_Generated by \`playground repro export\` on $(date -u +%Y-%m-%d) from playground commit $(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)._"
   }
@@ -46478,6 +46621,109 @@ playground_repro_status_command() {
   if [ -n "$missing" ]
   then
       log "💡 fill in the empty fields: playground repro status -f $file$missing"
+  fi
+
+}
+
+# :command.function
+playground_repro_diff_command() {
+
+  # src/commands/repro/diff.sh
+  file="${args[--file]}"
+  compose_only="${args[--compose]}"
+  summary_only="${args[--summary]}"
+  json="${args[--json]}"
+
+  if [ -z "$file" ]
+  then
+      file=$(playground state get run.test_file)
+  fi
+  if [[ $file == *"@"* ]]
+  then
+      file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+  if [ -z "$file" ] || [ ! -f "$file" ]
+  then
+      logerror "❌ no reproduction model (run.test_file is <$file>), use --file"
+      exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  if ! repro_diff_files "$file" "$tmp_dir"
+  then
+      logerror "❌ the base example of $(basename "$file") was not found: its folder has no README.md / stop.sh symlink to an example, or ${REPRO_DIFF_BASE_SCRIPT:-its script} does not exist anymore"
+      exit 1
+  fi
+
+  changes=$(repro_config_changes "$tmp_dir/base_scenario" "$tmp_dir/model_scenario")
+  scenario_changed=0
+  if ! diff -q "$tmp_dir/base_scenario" "$tmp_dir/model_scenario" > /dev/null
+  then
+      scenario_changed=1
+  fi
+  override_changed=0
+  if [ -f "$tmp_dir/model_override" ] && ! diff -q "$tmp_dir/base_override" "$tmp_dir/model_override" > /dev/null
+  then
+      override_changed=1
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      jq -n \
+          --arg model "$file" \
+          --arg base_script "$REPRO_DIFF_BASE_SCRIPT" \
+          --arg model_override "$REPRO_DIFF_MODEL_OVERRIDE" \
+          --arg base_override "$REPRO_DIFF_BASE_OVERRIDE" \
+          --argjson connectors "$changes" \
+          --arg scenario_diff "$(diff -u --label "$REPRO_DIFF_BASE_SCRIPT" --label "$(basename "$file")" "$tmp_dir/base_scenario" "$tmp_dir/model_scenario" || true)" \
+          --arg override_diff "$( [ $override_changed -eq 1 ] && diff -u --label "$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE" --label "$REPRO_DIFF_MODEL_OVERRIDE" "$tmp_dir/base_override" "$tmp_dir/model_override" || true)" \
+          '{model: $model, base_script: $base_script, base_override: $base_override, model_override: $model_override,
+            connectors: $connectors, scenario_diff: $scenario_diff, override_diff: $override_diff}'
+      exit 0
+  fi
+
+  # colors in a terminal only
+  if [ -t 1 ]
+  then
+      colorize=(sed -e $'s/^-.*/\e[31m&\e[0m/' -e $'s/^+.*/\e[32m&\e[0m/' -e $'s/^@@.*/\e[36m&\e[0m/')
+  else
+      colorize=(cat)
+  fi
+
+  log "🧬 $(basename "$file") compared with $REPRO_DIFF_BASE_SCRIPT"
+  if [ $scenario_changed -eq 0 ]
+  then
+      log "🟰 scenario: the one of the example"
+  else
+      repro_config_changes_lines "$changes" | while IFS= read -r line
+      do
+          log "$line"
+      done
+  fi
+  if [ -f "$tmp_dir/model_override" ]
+  then
+      if [ $override_changed -eq 0 ]
+      then
+          log "🟰 docker compose override: the one of the example ($REPRO_DIFF_BASE_OVERRIDE)"
+      else
+          log "🐳 docker compose override: $REPRO_DIFF_MODEL_OVERRIDE differs from $REPRO_DIFF_BASE_OVERRIDE"
+      fi
+  fi
+  if [[ -n "$summary_only" ]]
+  then
+      exit 0
+  fi
+  if [ $scenario_changed -eq 1 ] && [[ ! -n "$compose_only" ]]
+  then
+      echo ""
+      diff -u --label "$REPRO_DIFF_BASE_SCRIPT" --label "$(basename "$file")" "$tmp_dir/base_scenario" "$tmp_dir/model_scenario" | "${colorize[@]}" || true
+  fi
+  if [ $override_changed -eq 1 ]
+  then
+      echo ""
+      diff -u --label "$REPRO_DIFF_BASE_EXAMPLE/$REPRO_DIFF_BASE_OVERRIDE" --label "$REPRO_DIFF_MODEL_OVERRIDE" "$tmp_dir/base_override" "$tmp_dir/model_override" | "${colorize[@]}" || true
   fi
 
 }
@@ -84332,6 +84578,13 @@ playground_repro_parse_requirements() {
       shift $#
       ;;
 
+    diff)
+      action="diff"
+      shift
+      playground_repro_diff_parse_requirements "$@"
+      shift $#
+      ;;
+
     list)
       action="list"
       shift
@@ -85310,6 +85563,118 @@ playground_repro_status_parse_requirements() {
           printf "%s\n" "--jira requires an argument: --jira JIRA" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_repro_diff_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_repro_diff_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="repro diff"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --summary)
+
+        # :flag.case_no_arg
+        args['--summary']=1
+        shift
+        ;;
+
+      # :flag.case
+      --compose)
+        # :flag.conflicts
+        if [[ -n "${args['--summary']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--summary" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--compose']=1
+        shift
         ;;
 
       # :flag.case
@@ -120639,6 +121004,11 @@ playground_repro_completion() {
         playground_repro_status_completion "$completion_current" "$@"
         return
         ;;
+      diff)
+        shift
+        playground_repro_diff_completion "$completion_current" "$@"
+        return
+        ;;
       list)
         shift
         playground_repro_list_completion "$completion_current" "$@"
@@ -120663,7 +121033,7 @@ playground_repro_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" export check import bootstrap status list assert bisect
+  completion_candidates "$completion_current" export check import bootstrap status diff list assert bisect
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -121118,6 +121488,62 @@ playground_repro_status_completion() {
     completion_flag_candidates --expected "$completion_current" --expected
     completion_flag_candidates --actual "$completion_current" --actual
     completion_flag_candidates --jira "$completion_current" --jira
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
+playground_repro_diff_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-examples-list-with-fzf --repro-only "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --summary)
+        completion_blocked_flags["--summary"]=1
+
+        shift
+        ;;
+      --compose)
+        completion_blocked_flags["--compose"]=1
+        completion_blocked_flags["--summary"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --summary "$completion_current" --summary
+    completion_flag_candidates --compose "$completion_current" --compose
     completion_flag_candidates --json "$completion_current" --json
   fi
 
@@ -136347,6 +136773,7 @@ run() {
     "repro import") playground_repro_import_command ;;
     "repro bootstrap") playground_repro_bootstrap_command ;;
     "repro status") playground_repro_status_command ;;
+    "repro diff") playground_repro_diff_command ;;
     "repro list") playground_repro_list_command ;;
     "repro assert") playground_repro_assert_command ;;
     "repro bisect") playground_repro_bisect_command ;;

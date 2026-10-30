@@ -111,6 +111,11 @@ lab_run playground repro status -f "$model"
 lab_expect_contains "🧪 last verdict: 🐞 reproduced on $(date -u +%Y-%m-%d)"
 lab_run bash -c "playground repro list --grep '000000-deep-dive-lab-ci' --json 2> /dev/null | jq -c '.[0] | {path, case, status, jira, verdict: .last_verdict.verdict, base_example}'"
 lab_expect_contains '{"path":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh","case":"000000","status":"lab only","jira":"https://confluentinc.atlassian.net/browse/CC-1234","verdict":"reproduced","base_example":"connect/connect-filestream-sink"}'
+lab_run playground repro diff -f "$model" --summary
+lab_expect_exit 0
+lab_expect_contains "🧬 filestream-sink-repro-000000-deep-dive-lab-ci.sh compared with connect/connect-filestream-sink/filestream-sink.sh"
+lab_expect_contains "🟰 scenario: the one of the example" "the commented repro assert lines and the header are not compared"
+lab_expect_contains "🟰 docker compose override: the one of the example (docker-compose.plaintext.yml)"
 lab_run playground repro list --case 000000 --status "lab only"
 lab_expect_contains "000000 deep dive lab ci"
 lab_expect_contains "↳ connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
