@@ -39,6 +39,13 @@ then
     is_cloud=1
 fi
 
+diagnose_connect_container="connect"
+if is_mdc_environment
+then
+    get_connect_container
+    diagnose_connect_container="$connect_container"
+fi
+
 # each step also lands in a folder per connector, for the HTML report (tools/connector-diagnose/diagnose_report.py)
 report_tmp=$(mktemp -d -t pg-diagnose-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
@@ -94,7 +101,7 @@ do
         display_ccloud_connector_service_account_acl_check "$connector"
     else
         log "🔥 2/4 errors: digest of connect ERROR/FATAL records since $since (whole worker, not only this connector)"
-        PG_LOG_DIGEST_RECORDS_FILE="$cdir/errors.records" PG_LOG_DIGEST_LABEL="connect" playground container logs --container connect --errors --since "$since" --max-findings "$max_findings"
+        PG_LOG_DIGEST_RECORDS_FILE="$cdir/errors.records" PG_LOG_DIGEST_LABEL="$diagnose_connect_container" playground container logs --container "$diagnose_connect_container" --errors --since "$since" --max-findings "$max_findings"
     fi
 
     echo ""
@@ -135,9 +142,9 @@ do
     then
         next_steps+=("playground connector logs --connector $connector")
     else
-        next_steps+=("playground container logs -c connect --grep \"$connector\" --no-follow --tail 200")
+        next_steps+=("playground container logs -c $diagnose_connect_container --grep \"$connector\" --no-follow --tail 200")
         next_steps+=("playground debug log-level set --package <connector package> --level TRACE")
-        next_steps+=("playground debug thread-dump --container connect")
+        next_steps+=("playground debug thread-dump --container $diagnose_connect_container")
     fi
     for step in "${next_steps[@]}"
     do

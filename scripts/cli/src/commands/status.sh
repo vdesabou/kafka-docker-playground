@@ -50,11 +50,29 @@ then
     playground connector open-docs --only-show-url
 fi
 
-playground connector status | grep -v "applying command to all connectors"
-playground connector show-config | grep -v "applying command to all connectors"
-playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
+# mdc-* environments: the connectors and topics of each cluster, unless one is selected with PLAYGROUND_CLUSTER
+clusters="current"
+if [[ "$environment" == mdc* ]] && [[ -z "$PLAYGROUND_CLUSTER" ]] && [[ -z "$(playground state get run.cluster)" ]]
+then
+    clusters="us europe"
+fi
+for cluster in $clusters
+do
+    if [[ "$cluster" != "current" ]]
+    then
+        log "🌍 Cluster $cluster"
+        export PLAYGROUND_CLUSTER="$cluster"
+    fi
+    playground connector status | grep -v "applying command to all connectors"
+    playground connector show-config | grep -v "applying command to all connectors"
+    playground connector show-config-parameters --only-show-file-path | grep -v "applying command to all connectors"
 
-playground topic list
+    playground topic list
+done
+if [[ "$clusters" != "current" ]]
+then
+    unset PLAYGROUND_CLUSTER
+fi
 
 if [[ "$environment" == "ccloud" ]]
 then

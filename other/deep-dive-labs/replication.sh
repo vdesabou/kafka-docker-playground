@@ -57,7 +57,9 @@ playground start-environment --environment mdc-plaintext --docker-compose-overri
 lab_run playground state get run.environment
 lab_expect_contains "mdc-plaintext"
 lab_run playground status
-lab_expect_contains "mdc-plaintext is not supported with this command !"
+# no cluster selected: status shows the connectors and topics of each cluster
+lab_expect_contains "🌍 Cluster us"
+lab_expect_contains "🌍 Cluster europe"
 lab_expect_contains "broker-europe"
 lab_expect_contains "broker-us"
 lab_expect_contains "connect-europe"
@@ -67,18 +69,25 @@ lab_expect_contains "bootstrap.servers=broker-us:9092"
 lab_run playground container get-properties -c connect-europe
 lab_expect_contains "bootstrap.servers=broker-europe:9092"
 
-log "Step 2: the commands that refuse an mdc environment"
+log "Step 2: pick the cluster with --cluster"
 lab_run playground topic list
 lab_expect_exit 1
-lab_expect_contains "mdc-plaintext is not supported with this command !"
-lab_run playground connector status
-lab_expect_exit 1
-lab_expect_contains "mdc-plaintext is not supported with this command !"
-lab_run playground consumer-group list
-lab_expect_exit 1
-lab_expect_contains "mdc-plaintext is not supported with this command !"
-lab_run playground container exec -c broker-europe --command "kafka-topics --bootstrap-server broker-europe:9092 --list"
+lab_expect_contains "mdc-plaintext runs two clusters: pass --cluster us|europe"
+lab_run playground topic create --topic lab_cluster_selector --cluster europe
 lab_expect_exit 0
+lab_run playground topic list --cluster europe
+lab_expect_contains "lab_cluster_selector"
+lab_run playground topic list --cluster us
+lab_expect_not_contains "lab_cluster_selector"
+# the same with the environment variable, for a whole session
+lab_run env PLAYGROUND_CLUSTER=europe ${DIR}/../../scripts/cli/playground topic describe --topic lab_cluster_selector
+lab_expect_exit 0
+lab_expect_contains "lab_cluster_selector"
+lab_run playground connector status --cluster us
+lab_expect_contains "No"
+lab_run playground consumer-group list --cluster europe
+lab_expect_exit 0
+playground topic delete --topic lab_cluster_selector --cluster europe
 
 log "Step 3: Replicator connector, europe to us, with offset translation"
 seq -f "european_sale_%g" 20 | playground container exec -c broker-europe --command "kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE"

@@ -95,6 +95,9 @@ then
   then
     security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $consumer_config_name $cfk_rbac_client_properties"
   fi
+elif [[ "$environment" == mdc* ]]
+then
+  get_mdc_client "$consumer_config_name" consumer
 elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
 then
   get_broker_container

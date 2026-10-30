@@ -2176,6 +2176,13 @@ subcommands:
       - "--deleted"
       argument: ''
       description: "\U0001F9DF Include soft deleted subjects\n\nConflicts with: id"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: register
     description: |-
       ⏺️ Register a schema in specified subject
@@ -2232,6 +2239,13 @@ subcommands:
       argument: ''
       description: "\U0001FAE7 Add ?normalize=true at the end of the request to normalize
         the schema. The default is false."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: get-compatibility
     description: "\U0001F6E1️ Get subject-level compatibility\n\nThe rule that decides
       whether a new schema version is accepted. When a\nproducer fails with \"Schema
@@ -2248,6 +2262,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: set-compatibility
     description: "\U0001F6E1️ Set subject-level compatibility\n\nOverrides the rule
       for one subject:\n\n  BACKWARD     new schema can read data written with the
@@ -2275,6 +2296,13 @@ subcommands:
 
         Required: ✓ Yes
         Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: get-mode
     description: "\U0001F50F Get subject-level mode\n\nREADWRITE normally; READONLY
       if registration has been frozen; IMPORT\nwhile schemas are being migrated with
@@ -2290,6 +2318,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: set-mode
     description: "\U0001F50F Set subject-level mode\n\n  READWRITE   the normal mode,
       schemas can be read and registered\n  READONLY    freeze the subject, registration
@@ -2317,6 +2352,13 @@ subcommands:
 
         Required: ✓ Yes
         Allowed values: IMPORT, READONLY, READWRITE
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: set-normalize
     description: "\U0001F9FD Set normalize at schema registry level\n\nWith normalization
       on, the registry rewrites a schema into a canonical\nform before storing it,
@@ -2339,6 +2381,13 @@ subcommands:
 
         Required: ✓ Yes
         Allowed values: true, false
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: validate-new-schemas
     description: "\U0001FA7A Validate new schemas (default is true since CP 8.2.0)\n\nControls
       whether the registry checks a schema is well formed before\naccepting it. Since
@@ -2362,6 +2411,13 @@ subcommands:
 
         Required: ✓ Yes
         Allowed values: true, false
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: delete
     description: "\U0001F9DF Delete schema\n\nWithout --version the whole subject
       goes; with it, only that version.\n\nA plain delete is soft: the schema is hidden
@@ -2391,6 +2447,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: derive-schema
     description: "\U0001FA84 Derive a schema based on payload\n\nGive it one or more
       json records, on stdin or with --payload, and it\nworks out a schema that covers
@@ -2429,6 +2492,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: get-alias
     description: "\U0001F52F Get subject alias\n\nShows which real subject an alias
       resolves to. Use it when a client reads\nschemas that do not match the subject
@@ -2445,6 +2515,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
 - name: tcp-proxy
   description: "\U0001F3DA Zazkia TCP Proxy commands\n\nSimulate TCP connection issues
     (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia)
@@ -4694,6 +4771,13 @@ subcommands:
       - "-t"
       argument: TOPIC
       description: "\U0001F5F3 Topic name"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: wait-for-records
     description: "⏳ Wait for a topic to contain a minimum number of records\n\nCounts
       the records in the topic every --interval seconds (same count as\n'get-number-records')
@@ -4727,6 +4811,13 @@ subcommands:
       argument: INTERVAL
       description: "\U0001F501 Interval in seconds between checks (default is 5)\n\nDefault
         value: 5"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: get-offsets
     description: "\U0001F4CD Get earliest and latest offsets per partition of a topic\n\nThe
       low and high watermarks of every partition, and the number of\nrecords in between.
@@ -4746,6 +4837,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: display-consumer-offsets
     description: "\U0001F4ED Display content of __consumer_offsets topic\n\nDecodes
       the internal topic where Kafka keeps committed offsets, so you\ncan see exactly
@@ -4757,6 +4855,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: list
     description: "\U0001F518 List topics\n\nAdd --show-internal to also see the topics
       Kafka and Connect maintain\nfor themselves, such as the connect configs, offsets
@@ -4775,6 +4880,13 @@ subcommands:
       argument: ''
       description: "\U0001F4CF Display size and number of partitions of each topic,
         largest first"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: get-size
     description: "\U0001F4CF Get size of topics\n\nShows the size and number of partitions
       of each topic, largest first,\nto find which topics take the most disk space.
@@ -4795,6 +4907,13 @@ subcommands:
       - "--show-internal"
       argument: ''
       description: "\U0001FAE5 Include internal topics (when --topic is not set)"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: describe
     description: "\U0001F52C Describe topic\n\nPartitions, replicas, in-sync replicas
       and the configuration overrides\nset on the topic. Where to look when records
@@ -4813,6 +4932,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: reassign
     description: "\U0001F500 Move the replicas of a topic to other brokers\n\nWraps
       kafka-reassign-partitions, to reproduce a partition\nreassignment or a rebalance
@@ -4946,6 +5072,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: consume
     description: "\U0001F4E5 Consume topic from beginning\n\nReads from the earliest
       offset and deserialises records on its own:\nthe subjects <topic>-key and <topic>-value
@@ -5111,6 +5244,13 @@ subcommands:
       argument: ''
       description: "\U0001F4DC Also print the key and value schemas registered for
         the topic"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: produce
     description: "\U0001F4E4 Produce to a topic\n\nSee video tutorial https://youtu.be/mbzHCewG_XE\n\nGenerates
       records for you rather than making you write them. Give it\na schema, in avro,
@@ -5367,6 +5507,13 @@ subcommands:
         minutes by default)
 
         Default value: 60000
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: create
     description: "\U0001F195 Create topic\n\nOnly needed when you want something other
       than the defaults, since\n'playground topic produce' creates the topic on the
@@ -5392,6 +5539,13 @@ subcommands:
         Number of partitions for the topic. (default is 1)
 
         Default value: 1
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: delete
     description: "❌ Delete topic and associated schema/subject if applicable\n\nAlso
       removes the key and value subjects from the schema registry,\nwhich is what
@@ -5418,6 +5572,13 @@ subcommands:
       - "--skip-delete-schema"
       argument: ''
       description: "\U0001F530 Do not delete subject/schema"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: alter
     description: "\U0001FA9B Alter topic config\n\nChanges topic level settings on
       a live topic, which is how you\nreproduce behaviour driven by configuration:
@@ -5437,6 +5598,13 @@ subcommands:
       - "-t"
       argument: TOPIC
       description: "\U0001F5F3 Topic name\n\nRequired: ✓ Yes"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: dlq
     description: "\U0001F4EC Dead letter queue commands\n\nRead the dead letter queue
       of a sink connector\n(errors.tolerance=all with errors.deadletterqueue.topic.name,
@@ -5510,6 +5678,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: replay
       description: "\U0001F501 Produce the records of a dead letter queue again\n\nOnce
         the cause is fixed (converter, schema, mapping...), sends the\nrecords back
@@ -5566,6 +5741,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
   - name: tag
     description: "\U0001F3F7️ Stream Catalog tags (Confluent Cloud only)\n\nTag definitions
       live in the Stream Catalog of the environment, served\nby the Schema Registry
@@ -6315,6 +6497,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: describe
     description: "\U0001F52C Describe consumer group\n\nBy default, shows the committed
       offset, log end offset and lag of\nevery partition consumed by the group, followed
@@ -6343,6 +6532,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: reset-offsets
     description: "⏪ Reset the committed offsets of a consumer group\n\nWraps kafka-consumer-groups
       --reset-offsets: set exactly one of\n--to-earliest, --to-latest, --to-offset,
@@ -6402,6 +6598,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: delete
     description: "\U0001F5D1️ Delete a consumer group, or its offsets for one topic\n\nWraps
       kafka-consumer-groups --delete. With --topic, only the\ncommitted offsets of
@@ -6425,6 +6628,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
 - name: flink
   description: "\U0001F43F️ Flink commands\n\nRun Flink SQL and manage the jobs of
     the Flink cluster started with\n'playground run --enable-flink' (jobmanager REST
@@ -7148,6 +7358,13 @@ subcommands:
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
         the command will apply to all connectors"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: wait
     description: "⏳ Wait for connectors to reach a state\n\nPolls the connector status
       every --interval seconds until the connector\nand all its tasks are in --state
@@ -7201,6 +7418,13 @@ subcommands:
       argument: INTERVAL
       description: "\U0001F501 Interval in seconds between status checks (default
         is 5)\n\nDefault value: 5"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: validate
     description: "✅ Validate a connector config without creating the connector\n\nSends
       the config to the validate endpoint of the plugin\n(PUT /connector-plugins/<class>/config/validate)
@@ -7235,6 +7459,13 @@ subcommands:
       argument: ''
       description: "\U0001F916 Do not add the automatic configuration of the environment
         (security settings on sasl-ssl...) before validating"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: diff
     description: "\U0001F500 Diff the config of a running connector with another config\n\nCompares
       the config of a running connector, key by key, with:\n\n  stdin              a
@@ -7297,6 +7528,13 @@ subcommands:
       - "--no-open"
       argument: ''
       description: "\U0001F648 Do not open the HTML report in the browser"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: convert
     description: "\U0001F504 Convert a connector config from the format a customer
       sent to another one\n\nReads the config in any of these formats (detected, --from
@@ -7530,6 +7768,13 @@ subcommands:
         argument: ''
         description: "\U0001F6AB Do not open the html report in the browser (it is
           still written, and its path printed)"
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
   - name: offsets
     description: "\U0001F488 Handle source and sink connectors offsets\n\nWhere a
       connector is in its data: for a source, the position it keeps in\nthe system
@@ -7568,6 +7813,13 @@ subcommands:
         argument: CONNECTOR
         description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
           the command will apply to all connectors"
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: reset
       description: "\U0001F195 Reset offsets for source and sink connectors\n\nWipes
         the recorded offsets so the connector starts over: a source\nre-reads its
@@ -7588,6 +7840,13 @@ subcommands:
         argument: CONNECTOR
         description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
           the command will apply to all connectors"
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: alter
       description: |-
         ⛏️ Alter offsets for source and sink connectors
@@ -7615,6 +7874,13 @@ subcommands:
         argument: CONNECTOR
         description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
           the command will apply to all connectors"
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: get-offsets-request-status
       description: "\U0001F441️‍\U0001F5E8️ Get the status of the previous offset
         request\n\nOn Confluent Cloud, alter and reset only queue a request. This
@@ -7651,6 +7917,13 @@ subcommands:
       - "--all"
       argument: ''
       description: "\U0001F315 Show also transforms, converters, predicates available"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: pause
     description: |-
       ⏸️  Pause connector
@@ -7671,6 +7944,13 @@ subcommands:
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
         the command will apply to all connectors"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: versions
     description: "\U0001F9DE Get current and latest versions available on Confluent
       Hub for connector(s) used in example\n\nTells you in one line whether you are
@@ -7755,6 +8035,13 @@ subcommands:
         is skipped. Uses the KIP-745 REST call\n(restart?includeTasks=true&onlyFailed=true,
         CP 7.0+); with older CP\nversions and fully managed connectors, restarts each
         FAILED task one by one.\n\nConflicts with: --task-id"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: tasks
     description: "\U0001F9F5 Show the tasks of a connector: state, worker, config
       and partitions\n\nAnswers \"why does task 0 get all the tables, partitions or
@@ -7791,6 +8078,13 @@ subcommands:
       - "--json"
       argument: ''
       description: "\U0001F916 Print the result as JSON"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: topics
     description: "\U0001F4DA Show the topics a connector is using, or reset that list\n\nThe
       active topics of each connector, as tracked by the worker (KIP-558):\nthe topics
@@ -7823,6 +8117,13 @@ subcommands:
       - "--json"
       argument: ''
       description: "\U0001F916 Print the result as JSON\n\nConflicts with: --reset"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: stop
     description: "\U0001F6D1 Stop connector (only available if CP > 7.5)\n\nStronger
       than pause: the tasks are shut down and unassigned, so the\nconnector consumes
@@ -7840,6 +8141,13 @@ subcommands:
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
         the command will apply to all connectors"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: resume
     description: |-
       ⏯️  Resume connector
@@ -7859,6 +8167,13 @@ subcommands:
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
         the command will apply to all connectors"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
     aliases:
     - unpause
   - name: delete
@@ -7888,6 +8203,13 @@ subcommands:
       argument: ''
       description: "\U0001F530 Do not delete the dlq, success and error topics of
         a fully managed or custom connector"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: diagnose
     description: "\U0001FA7A Diagnose a connector in one call: status, errors and
       progress\n\nChains the commands you would run one after the other when a connector\nmisbehaves,
@@ -7939,6 +8261,13 @@ subcommands:
       - "--no-open"
       argument: ''
       description: "\U0001F648 Do not open the HTML report in the browser"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: history
     description: "\U0001F570️ Show the history of a connector: state changes, failures,
       restarts and config changes\n\nAnswers \"when did it fail? how many times was
@@ -7990,6 +8319,13 @@ subcommands:
       - "--json"
       argument: ''
       description: "\U0001F916 Print the events and the summary as JSON"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: show-lag
     description: "\U0001F422 Show lag of sink connector\n\nThe consumer lag of the
       sink, refreshed every --interval seconds, so you\nsee whether it is catching
@@ -8024,6 +8360,13 @@ subcommands:
         ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.
 
         Default value: 0
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: benchmark
     description: "\U0001F3CE️ Benchmark the throughput of a connector\n\nMeasures
       how many records per second a running self managed connector\nprocesses, so
@@ -8322,6 +8665,13 @@ subcommands:
       - "--force-rest-endpoint"
       argument: ''
       description: "☢️ Force using REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: show-config-parameters
     description: "\U0001F529 Show all possible configuration parameters of connector\n\nThe
       full reference of what the plugin accepts, with types, defaults,\nimportance
@@ -8356,6 +8706,13 @@ subcommands:
       argument: ''
       description: "\U0001F4D7 Only show list of all available parameters for connector
         (with default value when applicable)"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: metrics
     description: "\U0001F4C8 Show the metrics of a connector: throughput, time, errors,
       and the metrics of the connector itself\n\nAnswers \"is it making progress?\",
@@ -8522,6 +8879,13 @@ subcommands:
 
         Required: ✓ Yes
         Allowed values: INFO, WARN, DEBUG, TRACE
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: logs
     description: "\U0001F575️  Tail and follow connect logs\n\nThe logs of the worker
       running your connector. Combine it with\n'playground connector log-level' to
@@ -8555,6 +8919,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: open-ccloud-connector-in-browser
     description: "\U0001F916 Open Fully Managed connector in browser (Confluent Cloud
       dashboard)\n\nJumps straight to the connector's page in the Confluent Cloud
@@ -8582,8 +8953,15 @@ subcommands:
       silent -u admin -p admin123 -e \\\"get -b kafka.connect:type=connect-worker-rebalance-metrics
       name=leader-name\\\"'\", --connector flag is not relevant\n\nFor Fully Managed
       connectors, this is not available as JMX is not accessible."
-    usage: playground connector display-leader-name
-    options: []
+    usage: playground connector display-leader-name [OPTIONS]
+    options:
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: translate
     description: "\U0001F4B1 Translate Self Managed Connector Plugin Configurations
       to Fully Managed Connector Plugin Configuration\n\nTakes the configuration of
@@ -8815,6 +9193,13 @@ subcommands:
         the command again updates the connector, and a\nconnector created with the
         REST API is imported first. playground connector delete runs terraform destroy.\n\n⚠️
         Only available for Confluent Cloud connectors"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: update
     description: "\U0001F6E0️ Update connector configuration by opening current connector
       config in text editor set with playground config editor <editor> (default is
@@ -8829,6 +9214,13 @@ subcommands:
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
         the command will apply to all connectors"
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
     aliases:
     - edit
     - alter
