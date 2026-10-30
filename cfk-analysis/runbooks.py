@@ -73,6 +73,27 @@ RUNBOOKS = [
                "the same sub-phase until its condition is met (roll complete, KRaftController healthy…). Check the "
                "KRaftController CR, its listeners and credentials, and the brokers roll",
      "links": [{"title": "Migrate from ZooKeeper to KRaft", "url": DOCS + "co-migrate-kraft.html"}]},
+    {"name": "kraft_migration_zk_noauth",
+     "title": "KRaft migration: KRaft cannot authenticate to ZooKeeper (digest authentication)",
+     "pattern": r"MigrationClientAuthException|KeeperErrorCode = NoAuth for /",
+     "advice": "with ZooKeeper digest authentication and zookeeper.set.acl=true on Kafka, the migration stays in MIGRATE: "
+               "add the JAAS override of the known issues page to the KRaftController CR",
+     "links": [{"title": "ZooKeeper to KRaft migration: known issues",
+                "url": DOCS + "co-migrate-kraft-known-issues.html"}]},
+    {"name": "kraft_rollback_ibp",
+     "title": "KRaft rollback to ZooKeeper: brokers refused for their metadata version",
+     "pattern": r"does not support finalized version \d+ of confluent\.metadata\.version",
+     "advice": "before CFK 2.9.8, the rollback does not add platform.confluent.io/format-cluster-metadata-in-kafka to the "
+               "Kafka CR: add it, check platform.confluent.io/kraft-migration-ibp-version, and retry the rollback",
+     "links": [{"title": "ZooKeeper to KRaft migration: known issues",
+                "url": DOCS + "co-migrate-kraft-known-issues.html"}]},
+    {"name": "kraft_rollback_zk_nodes",
+     "title": "KRaft rollback to ZooKeeper: ZooKeeper nodes cannot be deleted",
+     "pattern": r"Failed to delete some node\(s\) in the subtree",
+     "advice": "before CFK 2.9.0, the rollback cannot delete the znodes of a TLS ZooKeeper: give the TLS certificates to "
+               "zookeeper-shell / zkcli and delete them, then the rollback goes on",
+     "links": [{"title": "ZooKeeper to KRaft migration: known issues",
+                "url": DOCS + "co-migrate-kraft-known-issues.html"}]},
     {"name": "inconsistent_cluster_id",
      "title": "INCONSISTENT_CLUSTER_ID between KRaft controllers and brokers",
      "pattern": r"INCONSISTENT_CLUSTER_ID|setting kraft cluster id",

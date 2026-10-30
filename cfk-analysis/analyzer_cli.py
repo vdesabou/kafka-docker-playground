@@ -288,6 +288,12 @@ def print_text_report(results, top: int):
                 print(f"           Caused by: {cause}")
             for name in issue.get("runbooks") or []:
                 print(f"           📕 Known CFK issue: {runbooks_by_name.get(name, name)}")
+            if issue.get("next_steps"):
+                print("           Next steps:")
+                for step in issue["next_steps"]:
+                    print(f"             - {step}")
+                for url in issue.get("docs") or []:
+                    print(f"             Docs: {url}")
 
         if len(items) > top:
             print(f"  ... and {len(items) - top} more in this category")

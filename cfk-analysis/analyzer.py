@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 import environment
+import kraft_migration
 import runbooks
 
 # known causes shared with tools/log-analyzer/log_report.py: tools/report-common of the repository, mounted in
@@ -89,7 +90,7 @@ _KIND_COMPONENT = {
     'confluentrolebinding': 'kafka', 'kraftcontroller': 'kraftcontroller', 'zookeeper': 'zookeeper',
     'connect': 'connect', 'connector': 'connect', 'schemaregistry': 'schemaregistry',
     'schema': 'schemaregistry', 'schemaexporter': 'schemaregistry', 'ksqldb': 'ksqldb',
-    'controlcenter': 'controlcenter', 'kafkarestproxy': 'kafkarestproxy',
+    'controlcenter': 'controlcenter', 'kafkarestproxy': 'kafkarestproxy', 'kraftmigrationjob': 'kraftcontroller',
 }
 # CRs of the applications of a cluster (a subject, a topic, a role binding…): their instance is the cluster they
 # belong to (spec.*ClusterRef), not their own name
@@ -154,6 +155,11 @@ class CFKBundleAnalyzer:
         self.jvm_truststores = {}  # CR name -> JVM default truststore flags of its configOverrides / envVars
         self.pod_health = {}  # pod name -> (Running and every container ready, highest restart count)
         self.statefulset_ready = {}  # StatefulSet name -> every replica ready and updated, for bundles without pod manifests
+        # ZooKeeper to KRaft migration (kraft_migration.py): KRaftMigrationJob CRs (name -> status, file), their Warning
+        # events, the "Migration current status <phase>/<sub-phase>" lines of the operator log
+        self.kraft_migrations = {}
+        self.kraft_migration_events = {}
+        self.kraft_migration_log = {}  # (phase, sub-phase) -> {count, first, last, reason, file}
         self.runbooks = runbooks.Catalog()  # known CFK issues (runbooks.py + the private file of Confluent support)
         # Kafka / ZooKeeper / Schema Registry / Connect / Control Center CRs (component -> CR name -> ConfigMap files,
         # configOverrides, config dumps of the logs) and connectors (name -> Connector CR and config dumps of the logs),
@@ -317,10 +323,11 @@ class CFKBundleAnalyzer:
         for issue in self.issues:
             self._assign_component(issue)
         self._mark_transient()
+        self._check_kraft_migrations()
         for issue in self.issues:
             names = self.runbooks.match(issue['message'] + ' ' + ' '.join(issue.get('caused_by') or []))
             if names:
-                issue['runbooks'] = names
+                issue['runbooks'] = list(dict.fromkeys((issue.get('runbooks') or []) + names))
         for change in self.timeline:
             found = self._lookup_name(change['name'])
             if found:
@@ -628,6 +635,9 @@ class CFKBundleAnalyzer:
             if level is not None:
                 record = (line_num, level, line, [])
                 continue
+            if operator_info_re is not None and 'Migration current status' in line:
+                self._record_kraft_migration_log(line, rel)
+                continue
             if operator_info_re is not None and operator_info_re.search(line):
                 self._add_issue(
                     severity='medium', category='Operator Issues', message=f"Operator: {line.strip()[:300]}",
@@ -879,6 +889,13 @@ class CFKBundleAnalyzer:
             count = int(count)
         except (TypeError, ValueError):
             count = 1
+        if obj.get('kind') == 'KRaftMigrationJob':
+            category = 'KRaft Migration'
+            self.kraft_migration_events.setdefault(obj.get('name') or '?', []).append({
+                'reason': reason, 'message': message, 'count': count,
+                'first': kraft_migration._parse_ts(event.get('firstTimestamp') or event.get('eventTime')),
+                'last': kraft_migration._parse_ts(event.get('lastTimestamp') or event.get('eventTime')),
+            })
 
         self._add_issue(
             severity=severity,
@@ -934,6 +951,8 @@ class CFKBundleAnalyzer:
                 self._record_jvm_truststore(obj, kind, name, relative_path)
                 if kind.lower() in _CONFIG_COMPONENTS or kind.lower() == 'connector':
                     self._record_config_cr(obj, kind.lower(), name, relative_path)
+                if kind == 'KRaftMigrationJob':
+                    self.kraft_migrations[name] = {'status': obj.get('status') or {}, 'file': relative_path}
             elif kind == 'ConfigMap' or (not kind and isinstance(obj.get('data'), dict)):
                 self._record_configmap(obj, relative_path)
             elif kind == 'StatefulSet':
@@ -1048,6 +1067,46 @@ class CFKBundleAnalyzer:
                 file_path=truststore['file'],
                 resource=name, resource_kind=truststore['kind'],
             )
+
+    def _record_kraft_migration_log(self, line: str, rel: str):
+        """"Migration current status SETUP/SubPhaseSetupKRaftControllerHealthy: …, requeuing" of the operator log"""
+        m = kraft_migration.STATUS_LINE_RE.search(line)
+        if not m:
+            return
+        ts = kraft_migration._parse_ts(line[:120])
+        seen = self.kraft_migration_log.setdefault((m.group(1), m.group(2)), {'count': 0, 'first': None, 'last': None, 'file': rel})
+        seen['count'] += 1
+        seen['reason'] = m.group(3).strip()
+        if ts and (seen['first'] is None or ts < seen['first']):
+            seen['first'] = ts
+        if ts and (seen['last'] is None or ts > seen['last']):
+            seen['last'] = ts
+
+    def _check_kraft_migrations(self):
+        """One finding per KRaftMigrationJob: phase / sub-phase, how long it has been there, the last error and the next
+        steps of the sub-phase (kraft_migration.py). From the operator log alone when the bundle has no KMJ CR."""
+        names = set(self.kraft_migrations) | set(self.kraft_migration_events)
+        if not names and self.kraft_migration_log:
+            names = {'<name not in the bundle>'}
+        for name in sorted(names):
+            cr = self.kraft_migrations.get(name) or {}
+            found = kraft_migration.finding(name, cr.get('status') or {}, self.kraft_migration_events.get(name) or [],
+                                            self.kraft_migration_log)
+            if found is None:
+                continue
+            log_file = next((v['file'] for v in self.kraft_migration_log.values()), None)
+            self._add_issue(
+                severity=found['severity'], category='KRaft Migration', message=found['message'],
+                file_path=cr.get('file') or log_file or 'event.yaml',
+                resource=name, resource_kind='KRaftMigrationJob', dedupe_key=f"kraft-migration-finding:{name}",
+            )
+            issue = self.issues[-1]
+            issue.update(next_steps=found['next_steps'], docs=found['docs'], runbooks=['kraft_migration'],
+                         phase=found['phase'], sub_phase=found['sub_phase'])
+            # built after the walk: attribute it here, to the KRaftController side when nothing better is known
+            self._assign_component(issue)
+            if issue.get('component') in (None, 'other', 'operator'):
+                issue['component'] = 'kraftcontroller'
 
     def _mark_transient(self):
         """Probe failures and back-offs of the events / kubectl output of a pod that is Running and Ready in the bundle,
@@ -1204,8 +1263,9 @@ class CFKBundleAnalyzer:
                 resource=metadata.get('name'), resource_kind=kind,
             )
 
-        # Component CRs report `phase`, Connector / KafkaTopic / ConfluentRolebinding… report `state`
-        for key in ('phase', 'state'):
+        # Component CRs report `phase`, Connector / KafkaTopic / ConfluentRolebinding… report `state`. A
+        # KRaftMigrationJob gets its own finding (_check_kraft_migrations)
+        for key in (() if kind == 'KRaftMigrationJob' else ('phase', 'state')):
             value = status.get(key)
             if not isinstance(value, str) or not value or value.upper() in _GOOD_CR_STATES:
                 continue

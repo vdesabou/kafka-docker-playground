@@ -7283,7 +7283,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). Probe failures and back-offs of a pod that is Running and\n  Ready in the bundle are low and marked transient. Each issue is attributed to\n  a component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🚚 A ZooKeeper to KRaft migration gets its own finding:\n  phase / sub-phase of the KRaftMigrationJob, how long it has been there\n  (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 Secrets, IPs,\n  hostnames, emails and LDAP DNs are sanitized by default (best effort: review\n  before sharing), --no-sanitize for internal bundles only. --logs-only gives\n  the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7306,8 +7306,8 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration"
     echo
 
     # :flag.usage
@@ -7397,6 +7397,7 @@ playground_analyze_logs_usage() {
     printf "  playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports\n"
     printf "  playground analyze logs -f connect.log --json\n"
     printf "  playground analyze logs --sample cfk_bundle\n"
+    printf "  playground analyze logs --sample cfk_kraft_migration\n"
     printf "  playground analyze logs -f connect-logs.zip --connector my-jdbc-sink\n  --show-config my-jdbc-sink\n"
     printf "  playground analyze logs -f connect.log --json --json-sections\n  summary,findings,root_causes\n"
     printf "  playground analyze logs -f ./support-bundle-ns-confluent.tar.gz --component\n  connect --severity high\n"
@@ -8397,8 +8398,8 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration"
     echo
 
     # :flag.usage
@@ -47978,6 +47979,7 @@ playground_analyze_logs_command() {
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
+          cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
       esac
   done
 
@@ -49845,6 +49847,7 @@ playground_debug_analyze_logs_command() {
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
+          cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
       esac
   done
 
@@ -88426,8 +88429,8 @@ playground_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration" >&2
       exit 1
     fi
   done
@@ -91215,8 +91218,8 @@ playground_debug_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration" >&2
       exit 1
     fi
   done
@@ -121039,6 +121042,7 @@ playground_analyze_logs_completion() {
             "connect_task_failure"
             "support_bundle"
             "cfk_bundle"
+            "cfk_kraft_migration"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
@@ -122499,6 +122503,7 @@ playground_debug_analyze_logs_completion() {
             "connect_task_failure"
             "support_bundle"
             "cfk_bundle"
+            "cfk_kraft_migration"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 

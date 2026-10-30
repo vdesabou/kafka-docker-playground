@@ -53,6 +53,7 @@ CATEGORY_EMOJI = {
     "Kafka Issues": "📨",
     "Replication Issues": "🔁",
     "KRaft Issues": "🗳️",
+    "KRaft Migration": "🚚",
     "Zookeeper Issues": "🦓",
     "Schema Registry Issues": "🧬",
     "Connect Issues": "🔌",
@@ -271,6 +272,8 @@ table.cfg td:first-child { width: 34%; }
 }
 .recommendation .why { font-style: italic; color: #4b5563; margin-bottom: 10px; font-size: 14px; }
 .recommendation ol { margin: 0 0 12px 20px; padding: 0; }
+.next-steps { margin-top: 8px; padding: 8px 12px; border-left: 3px solid #2563eb; background: #eff6ff; border-radius: 4px; font-size: 13px; }
+.next-steps ol { margin: 4px 0 6px 20px; padding: 0; }
 .recommendation ol li { margin-bottom: 4px; font-size: 13.5px; color: #1f2937; }
 .recommendation .docs {
   font-size: 12px;
@@ -359,6 +362,7 @@ table.env td{border-bottom-color:#273449}
 .affected > summary,.recommendation .why{color:#94a3b8}
 .recommendation{background:#172033;border-bottom-color:#334155}
 .recommendation ol li,.issue .message{color:#e2e8f0}
+.next-steps{background:#172554;border-left-color:#60a5fa}
 .recommendation .docs,.issue details summary,a{color:#93c5fd}
 .issue{border-top-color:#273449}
 .issue pre{background:#0b1220}
@@ -835,6 +839,11 @@ def render(results: Dict, bundle_label: str = "") -> str:
                     msg += f"<br>&nbsp;&nbsp;↳ {_log('Caused by: ' + cause)}"
                 for name in issue.get("runbooks") or []:
                     msg += f"<br>&nbsp;&nbsp;📕 Known CFK issue: <strong>{_esc(runbook_titles.get(name, name))}</strong>"
+                if issue.get("next_steps"):
+                    msg += ('<div class="next-steps"><strong>🧭 Next steps</strong><ol>'
+                            + "".join(f"<li>{_esc(step)}</li>" for step in issue["next_steps"]) + "</ol>"
+                            + " · ".join(f'<a href="{_esc(u)}" target="_blank" rel="noopener">📘 {_esc(u.rsplit("/", 1)[-1])}</a>'
+                                         for u in issue.get("docs") or []) + "</div>")
                 affected = issue.get("affected") or []
                 if len(affected) > 1 or (affected and issue.get("count", 1) > 1):
                     msg += (f'<details class="affected"><summary>🔌 Affects {len(affected)} task(s)</summary>'

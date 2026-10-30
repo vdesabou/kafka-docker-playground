@@ -267,6 +267,16 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "If on a KRaft-supported CFK version, plan migration off Zookeeper.",
         ],
     },
+    "KRaft Migration": {
+        "summary": "ZooKeeper to KRaft migration (KRaftMigrationJob): the finding gives its phase / sub-phase, how long it has been there and the next steps of that sub-phase.",
+        "steps": [
+            "Read the next steps of the KRaftMigrationJob finding: they depend on its sub-phase.",
+            "The migration pauses in DUAL-WRITE until the finalize (or rollback) annotation: that pause is expected.",
+            "The Kafka, ZooKeeper and KRaftController CRs are locked during the migration: changes to them wait for the lock to be released.",
+            "Check the known issues of the migration for the CFK version of the bundle.",
+        ],
+        "docs": "https://docs.confluent.io/operator/current/co-migrate-kraft-known-issues.html",
+    },
     "KRaft Issues": {
         "summary": "KRaft controller quorum or metadata log error.",
         "steps": [

@@ -153,6 +153,7 @@ playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
 playground analyze logs --sample connect_task_failure     # a Connect worker log (Oracle XStream task failure)
 playground analyze logs --sample support_bundle           # a .zip with that log and a gzipped broker log
 playground analyze logs --sample cfk_bundle               # a CFK support bundle (see below)
+playground analyze logs --sample cfk_kraft_migration      # a CFK support bundle with a stuck ZooKeeper to KRaft migration
 ```
 
 What it does with what you give it:

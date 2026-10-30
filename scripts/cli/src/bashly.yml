@@ -4938,7 +4938,7 @@ commands:
       DistributedConfig, connector and client configs…) and the .properties
       and connector JSON files of the input.
 
-      ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt, or with cluster-resources/ and operator/), alone or inside a folder or an archive, is detected and analyzed as a whole, in a Docker image built on first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks), the environment checked against the CFK support matrix (Kubernetes, CFK operator, CP and init container versions), the recent changes (who edited which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties, zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties rendered by CFK, configOverrides, config logged at startup, connector configs from the Connector CRs and the config dumps of the logs), a JVM default truststore set without its password, and the ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation steps. 📕 The log messages and events of known CFK problems (CFK triage table of Confluent support: roll blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed first, with what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent support (🔒 in the terminal, the HTML report and --json). Probe failures and back-offs of a pod that is Running and Ready in the bundle are low and marked transient. Each issue is attributed to a component and an instance (CR name), and to its connector: --component keeps some of them, the HTML report has Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best effort: review before sharing), --no-sanitize for internal bundles only. --logs-only gives the plain log digest instead.
+      ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt, or with cluster-resources/ and operator/), alone or inside a folder or an archive, is detected and analyzed as a whole, in a Docker image built on first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks), the environment checked against the CFK support matrix (Kubernetes, CFK operator, CP and init container versions), the recent changes (who edited which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties, zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties rendered by CFK, configOverrides, config logged at startup, connector configs from the Connector CRs and the config dumps of the logs), a JVM default truststore set without its password, and the ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation steps. 📕 The log messages and events of known CFK problems (CFK triage table of Confluent support: roll blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed first, with what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent support (🔒 in the terminal, the HTML report and --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase / sub-phase of the KRaftMigrationJob, how long it has been there (events, operator requeues), its last error and the next steps of that sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and back-offs of a pod that is Running and Ready in the bundle are low and marked transient. Each issue is attributed to a component and an instance (CR name), and to its connector: --component keeps some of them, the HTML report has Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best effort: review before sharing), --no-sanitize for internal bundles only. --logs-only gives the plain log digest instead.
 
       🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON) by default. It is best effort: review the output before sharing it. --no-sanitize keeps them, for internal logs only.
 
@@ -4966,7 +4966,7 @@ commands:
         required: false
         repeatable: true
         arg: sample
-        allowed: [connect_task_failure, support_bundle, cfk_bundle]
+        allowed: [connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration]
         help: |-
           🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples
 
@@ -4976,6 +4976,8 @@ commands:
             cfk_bundle             CFK support bundle: kafka-2 crash-looping on an expired certificate, pending volume,
                                    OOMKilled Connect pod, failed connector task, Schema Registry authentication
                                    failure, operator reconcile errors
+            cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration (KRaftMigrationJob) stuck for 3
+                                   days in SETUP, the KRaftController missing inter replication credentials
       - long: --include-warnings
         required: false
         help: |-
@@ -5055,6 +5057,7 @@ commands:
     - playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports
     - playground analyze logs -f connect.log --json
     - playground analyze logs --sample cfk_bundle
+    - playground analyze logs --sample cfk_kraft_migration
     - playground analyze logs -f connect-logs.zip --connector my-jdbc-sink --show-config my-jdbc-sink
     - playground analyze logs -f connect.log --json --json-sections summary,findings,root_causes
     - playground analyze logs -f ./support-bundle-ns-confluent.tar.gz --component connect --severity high

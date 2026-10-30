@@ -53,6 +53,14 @@ scheduling, …) with concrete remediation steps per category:
   `playground analyze logs` from `PLAYGROUND_CFK_RUNBOOKS_FILE`, default
   `reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json`, format in the docstring of `runbooks.py`):
   they are shown with a 🔒 in the text digest, the HTML report and `--json`.
+- ZooKeeper to KRaft migration (`kraft_migration.py`, `KRaft Migration` category): one finding per `KRaftMigrationJob`
+  with its phase / sub-phase, how long it has been there (its Warning events, the `Migration current status <phase>/<sub-phase>:
+  … requeuing` lines of the operator log), the last error, and the `next_steps` of that sub-phase (from the public
+  migration docs and known issues), with `docs` links. `high` when stuck (`InputError` / 10+ Warning events, or 30
+  minutes in the same sub-phase), `critical` in `FAILURE`, `low` in `DUAL-WRITE` (the expected pause before the
+  finalize or rollback annotation), nothing once `COMPLETE`. Built from the operator log alone when the bundle has no
+  KMJ CR. Sample: `samples/cfk-support-bundle-kraft-migration.tar.gz` (`make_kraft_migration_bundle.py`,
+  `playground analyze logs --sample cfk_kraft_migration`).
 - Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
   container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
   while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC
