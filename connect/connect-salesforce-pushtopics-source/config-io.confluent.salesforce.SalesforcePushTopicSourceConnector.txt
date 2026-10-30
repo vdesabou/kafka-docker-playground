@@ -72,12 +72,12 @@ The URL of the Salesforce endpoint to use. The default is blank. This directs th
 
 🔘 salesforce.username
 
+Salesforce username for connector authentication
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Salesforce username for connector authentication
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.password
 
@@ -450,4 +450,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 

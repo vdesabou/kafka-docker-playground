@@ -30,7 +30,7 @@
     "salesforce.push.topic.notify.delete": "true",
     "salesforce.push.topic.notify.undelete": "true",
     "salesforce.push.topic.notify.update": "true",
-    "salesforce.username": "STRING",
+    "salesforce.username": "",
     "salesforce.version": "latest",
     "task.parallel.transform.chunk.size": "10000",
     "task.parallel.transform.enabled": "false",
