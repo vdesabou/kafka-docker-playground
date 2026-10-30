@@ -5496,7 +5496,7 @@ playground_repro_check_usage() {
 playground_repro_import_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro import\n\n"
-    printf "  📥 Import a tgz bundle created by 'playground repro export'\n  \n  The bundle is extracted to a temporary folder first and checked: no\n  absolute paths, no '..', no special files, and the sha256 of every file\n  must match its manifest. Bundles from older versions, without manifest,\n  are still accepted.\n  \n  Files identical to yours are skipped. When a file differs, the import\n  stops unless --on-conflict says what to do. Files that were symlinks to\n  a public example are restored as symlinks when the public file is\n  identical, otherwise their content is kept.\n  \n  Then the model becomes the current one, and the command prints the\n  'playground run' line to use and the credentials missing from your\n  'playground secrets' profile.\n\n"
+    printf "  📥 Import a tgz bundle created by 'playground repro export'\n  \n  The bundle is extracted to a temporary folder first and checked: no\n  absolute paths, no '..', no special files, and the sha256 of every file\n  must match its manifest. Bundles from older versions, without manifest,\n  are still accepted.\n  \n  Files identical to yours are skipped. When a file differs, the import\n  stops unless --on-conflict says what to do. Files that were symlinks to\n  a public example are restored as symlinks when the public file is\n  identical, otherwise their content is kept.\n  \n  Then the model becomes the current one, and the command prints the\n  'playground run' line to use and the credentials missing from your\n  'playground secrets' profile. --run goes on with that line when\n  nothing is missing (in a terminal, it asks first when containers are\n  running: the run stops them).\n  \n  --file also takes a URL (a GitHub release asset, a raw file, any public\n  link): the bundle is downloaded into an empty temporary folder, then\n  checked like a local one. Links that need a login (Slack, Google\n  Drive) must be downloaded by hand.\n\n"
   else
     printf "playground repro import - 📥 Import a tgz bundle created by 'playground repro export'\n\n"
   fi
@@ -5514,7 +5514,7 @@ playground_repro_import_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    🤐 Bundle file (playground_repro_*.tgz, any name is accepted)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    printf "    🤐 Bundle file (playground_repro_*.tgz, any name is accepted), or its\n    https:// URL\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
     echo
 
     # :flag.usage
@@ -5527,6 +5527,12 @@ playground_repro_import_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--dry-run")"
     printf "    🔍 Only show the manifest, the files and the conflicts\n"
+    printf "    %s\n" "Conflicts: --run"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--run")"
+    printf "    ▶️ Then run the model with its run line (bundle with one model, nothing\n    missing: credentials, external files)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -5537,6 +5543,8 @@ playground_repro_import_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground repro import -f\n  ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz\n"
+    printf "  playground repro import -f\n  ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz --run\n"
+    printf "  playground repro import -f\n  https://github.com/<owner>/<repo>/releases/download/v1/playground_repro_http-repro-123456-dlq_2026-10-21.tgz\n"
     printf "  playground repro import -f\n  ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz\n  --on-conflict rename\n"
     echo
 
@@ -20047,6 +20055,26 @@ function repro_base_example_candidates () {
         | map(. + {rank: ([$words[] as $w | select(.path | ascii_downcase | contains($w))] | length)})
         | sort_by(-.rank, -.score, (.path | length))
         | .[].path'
+}
+
+# 'playground run' stops whatever runs (kill-all or stop): ask first when containers are running, another example or the
+# environment of another session. $1 says what is about to run. Returns 1 when the answer is no. Never asks without a
+# terminal (scripts, agents, CI), nor when nothing runs
+function repro_confirm_stop_running_environment () {
+  local what="$1" running
+  if [ ! -t 0 ] || [ ! -t 1 ] || [ -n "$GITHUB_RUN_NUMBER" ]
+  then
+    return 0
+  fi
+  running=$(docker ps --format '{{.Names}}' 2>/dev/null | sort | tr '\n' ' ' | sed 's/ $//')
+  if [ -z "$running" ]
+  then
+    return 0
+  fi
+  logwarn "⚠️ $what stops the $(echo "$running" | wc -w | tr -d ' ') container(s) that are running: $running"
+  local choice
+  read -r -p "Stop them and go on (y/N)? " choice
+  [[ "$choice" == "y" || "$choice" == "Y" ]]
 }
 
 # point the git hooks of the reproduction-models repository to scripts/repro-git-hooks, whose
@@ -44384,6 +44412,7 @@ playground_repro_import_command() {
   file="${args[--file]}"
   on_conflict="${args[--on-conflict]}"
   dry_run="${args[--dry-run]}"
+  run="${args[--run]}"
 
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
@@ -44402,6 +44431,31 @@ playground_repro_import_command() {
   then
     file=$(echo "$file" | cut -d "@" -f 2)
   fi
+  # a bundle shared by URL (GitHub release, raw file, any public link) is downloaded into an empty folder, then checked
+  # like a local one
+  download_dir=""
+  if [[ "$file" =~ ^https?:// ]]
+  then
+    download_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+    name=$(basename "${file%%[?#]*}")
+    if [[ "$name" != *.tgz ]] && [[ "$name" != *.tar.gz ]]
+    then
+      name="bundle.tgz"
+    fi
+    log "🌐 downloading $file"
+    if ! curl -fsSL --max-time 300 -o "$download_dir/$name" "$file"
+    then
+      rm -rf "$download_dir"
+      logerror "❌ could not download $file (a link that needs a login, like a Slack or Google Drive one, must be downloaded by hand)"
+      exit 1
+    fi
+    file="$download_dir/$name"
+  fi
+  if [ ! -f "$file" ]
+  then
+    logerror "❌ file $file not found"
+    exit 1
+  fi
   file=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
 
   mkdir -p "$root_folder/$output_folder"
@@ -44410,7 +44464,7 @@ playground_repro_import_command() {
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
   then
-      trap 'rm -rf $tmp_dir' EXIT
+      trap 'rm -rf $tmp_dir $download_dir' EXIT
   else
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
@@ -44610,6 +44664,7 @@ playground_repro_import_command() {
   date_suffix=$(date +%Y%m%d)
   nb_new=0
   nb_identical=0
+  nb_reports=0
   declare -a conflicts=()
   : > "$tmp_dir/plan"
   while IFS= read -r path
@@ -44627,6 +44682,11 @@ playground_repro_import_command() {
           then
               status="identical"
               nb_identical=$((nb_identical+1))
+          elif [[ "$path" == *.REPRO.md ]]
+          then
+              # the hand-off report is generated by each export: the one of the bundle replaces yours, never a conflict
+              status="report"
+              nb_reports=$((nb_reports+1))
           else
               status="conflict"
               conflicts+=("$path")
@@ -44638,7 +44698,7 @@ playground_repro_import_command() {
       printf '%s\t%s\n' "$status" "$path" >> "$tmp_dir/plan"
   done < "$tmp_dir/files"
 
-  log "📋 $nb_new new, $nb_identical identical, ${#conflicts[@]} conflicting file(s)"
+  log "📋 $nb_new new, $nb_identical identical, ${#conflicts[@]} conflicting file(s)$( [ $nb_reports -gt 0 ] && echo ", $nb_reports hand-off report(s) replaced")"
   if [[ -n "$dry_run" ]] || [ ${#conflicts[@]} -gt 0 ]
   then
       while IFS=$'\t' read -r status path
@@ -44647,6 +44707,7 @@ playground_repro_import_command() {
               new) echo "   ✨ new        $path" ;;
               identical) echo "   🟰 identical  $path" ;;
               conflict) echo "   ⚔️  conflict   $path" ;;
+              report) echo "   📖 replaced   $path (hand-off report)" ;;
           esac
       done < "$tmp_dir/plan"
   fi
@@ -44671,6 +44732,10 @@ playground_repro_import_command() {
       if [ "$status" == "identical" ]
       then
           continue
+      fi
+      if [ "$status" == "report" ]
+      then
+          rm -f "$dest"
       fi
       if [ "$status" == "conflict" ]
       then
@@ -44758,6 +44823,9 @@ playground_repro_import_command() {
       i=$((i+1))
       run_flags=$(apply_rewrites "$(jq -r '.run_flags // empty' <<< "$model")")
       log "▶️  playground run -f $model_path${run_flags:+ $run_flags}"
+      run_model_path="$model_path"
+      run_model_flags="$run_flags"
+      nb_models_to_run=$((${nb_models_to_run:-0} + 1))
       # the report keeps the name of the exported model when the model was imported under another one (--on-conflict rename)
       original_script=$(jq -r '.script' <<< "$model")
       for report in "${model_path%.sh}.REPRO.md" "$(dirname "$model_path")/$(basename "${original_script%.sh}").REPRO.md"
@@ -44774,6 +44842,7 @@ playground_repro_import_command() {
           if [ -n "$external_file" ] && [ ! -f "$external_file" ]
           then
               logwarn "   📎 it runs with $external_file, which is not on this machine: ask for it and fix the path"
+              missing_for_run=1
           fi
       done < <(jq -r '.external_files[]?' <<< "$model")
       while IFS= read -r credential
@@ -44788,11 +44857,34 @@ playground_repro_import_command() {
                   if [ -z "$(secret_get "$credential" 2>/dev/null)" ]
                   then
                       logwarn "   🔑 $credential is not set: playground secrets set $credential"
+                      missing_for_run=1
                   fi
                   ;;
           esac
       done < <(jq -r '.credentials[]?' <<< "$model")
   done < <(jq -c '.models[]' "$manifest")
+
+  # --run: the model goes on with its run line, when nothing is missing
+  if [[ -n "$run" ]]
+  then
+      if [ "${nb_models_to_run:-0}" -ne 1 ]
+      then
+          logerror "❌ --run needs a bundle with one model, this one has ${nb_models_to_run:-0}: run the one you want with its playground run line"
+          exit 1
+      fi
+      if [ -n "${missing_for_run:-}" ]
+      then
+          logerror "❌ not running it: set what is missing above first, then playground run -f $run_model_path${run_model_flags:+ $run_model_flags}"
+          exit 1
+      fi
+      if ! repro_confirm_stop_running_environment "Running the imported model"
+      then
+          log "🛑 not running it: playground run -f $run_model_path${run_model_flags:+ $run_model_flags}"
+          exit 0
+      fi
+      # shellcheck disable=SC2086
+      playground run -f "$run_model_path" $run_model_flags
+  fi
 
 }
 
@@ -46477,6 +46569,12 @@ EOF
   if [[ -n "$no_run" ]]
   then
     log "🛑 --no-run is set, not running the reproduction model"
+    exit 0
+  fi
+
+  if ! repro_confirm_stop_running_environment "Running the new model"
+  then
+    log "🛑 not running it, the model is ready: playground run -f $repro_dir/$repro_test_filename"
     exit 0
   fi
 
@@ -85127,9 +85225,22 @@ playground_repro_import_parse_requirements() {
 
       # :flag.case
       --dry-run)
+        # :flag.conflicts
+        if [[ -n "${args['--run']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--run" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --run)
+
+        # :flag.case_no_arg
+        args['--run']=1
         shift
         ;;
 
@@ -85170,16 +85281,6 @@ playground_repro_import_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--on-conflict']:-} ]] || args['--on-conflict']="abort"
-
-  # :command.validations
-  # :flag.validations
-  if [[ -v args['--file'] ]]; then
-    validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
-    if [[ -n "${validation_output}" ]]; then
-      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
-      exit 1
-    fi
-  fi
 
   # :command.whitelist_filter
   if [[ ${args['--on-conflict']:-} ]] && [[ ! ${args['--on-conflict']:-} =~ ^(abort|rename|overwrite)$ ]]; then
@@ -121280,6 +121381,12 @@ playground_repro_import_completion() {
         ;;
       --dry-run)
         completion_blocked_flags["--dry-run"]=1
+        completion_blocked_flags["--run"]=1
+
+        shift
+        ;;
+      --run)
+        completion_blocked_flags["--run"]=1
 
         shift
         ;;
@@ -121294,6 +121401,7 @@ playground_repro_import_completion() {
     completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --on-conflict "$completion_current" --on-conflict
     completion_flag_candidates --dry-run "$completion_current" --dry-run
+    completion_flag_candidates --run "$completion_current" --run
   fi
 
 }

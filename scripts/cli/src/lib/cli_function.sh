@@ -2062,6 +2062,26 @@ function repro_base_example_candidates () {
         | .[].path'
 }
 
+# 'playground run' stops whatever runs (kill-all or stop): ask first when containers are running, another example or the
+# environment of another session. $1 says what is about to run. Returns 1 when the answer is no. Never asks without a
+# terminal (scripts, agents, CI), nor when nothing runs
+function repro_confirm_stop_running_environment () {
+  local what="$1" running
+  if [ ! -t 0 ] || [ ! -t 1 ] || [ -n "$GITHUB_RUN_NUMBER" ]
+  then
+    return 0
+  fi
+  running=$(docker ps --format '{{.Names}}' 2>/dev/null | sort | tr '\n' ' ' | sed 's/ $//')
+  if [ -z "$running" ]
+  then
+    return 0
+  fi
+  logwarn "⚠️ $what stops the $(echo "$running" | wc -w | tr -d ' ') container(s) that are running: $running"
+  local choice
+  read -r -p "Stop them and go on (y/N)? " choice
+  [[ "$choice" == "y" || "$choice" == "Y" ]]
+}
+
 # point the git hooks of the reproduction-models repository to scripts/repro-git-hooks, whose
 # pre-commit runs 'playground repro check --staged'. Never replaces hooks set up by the user
 function repro_install_git_hook () {

@@ -174,6 +174,9 @@ lab_expect_contains "🧪 last verdict of the exporter: 🐞 reproduced on"
 lab_expect_contains "📋 1 new, "
 lab_expect_contains " identical, 0 conflicting file(s)" "your own model: every file identical, plus its new hand-off report"
 lab_expect_contains "🔍 dry run: nothing imported"
+lab_run playground repro import -f /tmp/does-not-exist-deep-dive-lab.tgz
+lab_expect_exit 1
+lab_expect_contains "❌ file /tmp/does-not-exist-deep-dive-lab.tgz not found"
 echo "# a local change" >> "$model"
 lab_run playground repro import -f "$bundle"
 lab_expect_exit 1

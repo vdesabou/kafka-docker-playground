@@ -1688,6 +1688,12 @@ then
   exit 0
 fi
 
+if ! repro_confirm_stop_running_environment "Running the new model"
+then
+  log "🛑 not running it, the model is ready: playground run -f $repro_dir/$repro_test_filename"
+  exit 0
+fi
+
 if [[ "$repro_test_filename" == *"perf"* ]]
 then
   if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]]

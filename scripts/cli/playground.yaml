@@ -1726,18 +1726,22 @@ subcommands:
       are restored as symlinks when the public file is\nidentical, otherwise their
       content is kept.\n\nThen the model becomes the current one, and the command
       prints the\n'playground run' line to use and the credentials missing from your\n'playground
-      secrets' profile."
+      secrets' profile. --run goes on with that line when\nnothing is missing (in
+      a terminal, it asks first when containers are\nrunning: the run stops them).\n\n--file
+      also takes a URL (a GitHub release asset, a raw file, any public\nlink): the
+      bundle is downloaded into an empty temporary folder, then\nchecked like a local
+      one. Links that need a login (Slack, Google\nDrive) must be downloaded by hand."
     usage: playground repro import [OPTIONS]
     options:
     - names:
       - "--file"
       - "-f"
       argument: FILE
-      description: "\U0001F910 Bundle file (playground_repro_*.tgz, any name is accepted)\n\n\U0001F393
-        Tip: use <tab> completion to trigger fzf completion\n        use playground
-        config folder_zip_or_jar <folder1> <folder2>... (default is home folder and
-        current folder is always included) to configure where to search the files\n\nRequired:
-        ✓ Yes"
+      description: "\U0001F910 Bundle file (playground_repro_*.tgz, any name is accepted),
+        or its https:// URL\n\n\U0001F393 Tip: use <tab> completion to trigger fzf
+        completion\n        use playground config folder_zip_or_jar <folder1> <folder2>...
+        (default is home folder and current folder is always included) to configure
+        where to search the files\n\nRequired: ✓ Yes"
     - names:
       - "--on-conflict"
       argument: ON-CONFLICT
@@ -1753,7 +1757,13 @@ subcommands:
     - names:
       - "--dry-run"
       argument: ''
-      description: "\U0001F50D Only show the manifest, the files and the conflicts"
+      description: "\U0001F50D Only show the manifest, the files and the conflicts\n\nConflicts
+        with: --run"
+    - names:
+      - "--run"
+      argument: ''
+      description: "▶️ Then run the model with its run line (bundle with one model,
+        nothing missing: credentials, external files)"
   - name: bootstrap
     description: "\U0001F6E0  Bootstrap reproduction model, just run <playground repro
       bootstrap> !\n\n\U0001F525 HIGHLY RECOMMENDED: start in interactive mode by
