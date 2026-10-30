@@ -10987,6 +10987,7 @@ commands:
     Questions about connector plugins on Confluent Hub, answered without a
     running environment:
 
+      info                  one page on a plugin: license, versions, examples, CI, fully managed
       versions              every released version of a plugin
       changelog             what changed between two versions (release notes)
       display-last-updated  what was published recently, by vendor
@@ -11162,6 +11163,45 @@ commands:
         🔢 v1.7.13 - 📅 release date: 2026-05-05 (160 days ago)
         🔢 v1.7.14 - 📅 release date: 2026-10-01 (11 days ago)
         🌐 documentation: https://docs.confluent.io/kafka-connect-http/current/index.html
+
+  - name: info
+    help: |-
+      🪪 One page on a connector plugin of Confluent Hub
+
+      What it is and whether the customer is up to date, in one call: owner,
+      license, component types, latest version and how many versions since
+      when, how far behind --from is, the requirements of the manifest when
+      the vendor gives them, the examples of this repository using it with
+      their CI status, the connector classes, the fully managed examples named
+      like it, and the documentation, changelog and source code links.
+
+      The fully managed part is a heuristic: the ccloud/fm-* folders whose name
+      has the words of the plugin name (there is no mapping between a
+      self-managed plugin and fully managed connector types).
+    flags:
+    - *connector-plugin
+    - long: --from
+      arg: from
+      required: false
+      validate: not_empty
+      help: |-
+        📌 Version in use: show how many versions it is behind the latest
+    - long: --max-examples
+      arg: max_examples
+      required: false
+      validate: integer
+      default: "10"
+      help: |-
+        🧪 Maximum number of examples to list (default 10)
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON
+    - *force_refresh
+    examples: |
+      playground connector-plugin info --connector-plugin confluentinc/kafka-connect-jdbc
+      playground connector-plugin info --connector-plugin confluentinc/kafka-connect-s3 --from 10.5.0
+      playground connector-plugin info --connector-plugin debezium/debezium-connector-postgresql --json
 
   - name: changelog
     help: |-

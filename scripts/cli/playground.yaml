@@ -7310,15 +7310,16 @@ subcommands:
         description: "\U0001F41E Show command being ran."
 - name: connector-plugin
   description: "\U0001F50C Connector-plugin commands\n\nQuestions about connector
-    plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions
-    \             every released version of a plugin\n  changelog             what
-    changed between two versions (release notes)\n  display-last-updated  what was
-    published recently, by vendor\n  search-jar            which jars ship in it,
-    and which class is where\n  config-key            what a config key does, its
-    default, since when, who sets it\n  sourcecode            open the source on GitHub\n\n\U0001F393
-    Tip: search-jar answers \"is this class really in the plugin, and with\nwhich
-    signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException
-    reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n\U0001F36A
+    plugins on Confluent Hub, answered without a\nrunning environment:\n\n  info                  one
+    page on a plugin: license, versions, examples, CI, fully managed\n  versions              every
+    released version of a plugin\n  changelog             what changed between two
+    versions (release notes)\n  display-last-updated  what was published recently,
+    by vendor\n  search-jar            which jars ship in it, and which class is where\n
+    \ config-key            what a config key does, its default, since when, who sets
+    it\n  sourcecode            open the source on GitHub\n\n\U0001F393 Tip: search-jar
+    answers \"is this class really in the plugin, and with\nwhich signature\", which
+    is the question behind most NoSuchMethodError and\nClassNotFoundException reports;
+    with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n\U0001F36A
     Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
     Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version"
   usage: playground connector-plugin COMMAND
@@ -7445,6 +7446,42 @@ subcommands:
       description: "\U0001F916 Print the result as JSON\n\nlatest, versions (version,
         release_date, days_ago, and changes with --with-changelog), documentation_url,
         versions_behind with --from.\n\nConflicts with: --latest"
+  - name: info
+    description: "\U0001FAAA One page on a connector plugin of Confluent Hub\n\nWhat
+      it is and whether the customer is up to date, in one call: owner,\nlicense,
+      component types, latest version and how many versions since\nwhen, how far behind
+      --from is, the requirements of the manifest when\nthe vendor gives them, the
+      examples of this repository using it with\ntheir CI status, the connector classes,
+      the fully managed examples named\nlike it, and the documentation, changelog
+      and source code links.\n\nThe fully managed part is a heuristic: the ccloud/fm-*
+      folders whose name\nhas the words of the plugin name (there is no mapping between
+      a\nself-managed plugin and fully managed connector types)."
+    usage: playground connector-plugin info [OPTIONS]
+    options:
+    - names:
+      - "--connector-plugin"
+      - "-c"
+      argument: CONNECTOR-PLUGIN
+      description: "\U0001F50C Connector plugin name\n\n\U0001F393 Tip: use <tab>
+        completion to trigger fzf completion\n\nRequired: ✓ Yes"
+    - names:
+      - "--from"
+      argument: FROM
+      description: "\U0001F4CC Version in use: show how many versions it is behind
+        the latest"
+    - names:
+      - "--max-examples"
+      argument: MAX_EXAMPLES
+      description: "\U0001F9EA Maximum number of examples to list (default 10)\n\nDefault
+        value: 10"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON"
+    - names:
+      - "--force-refresh"
+      argument: ''
+      description: "☢️ Force refresh."
   - name: changelog
     description: "\U0001F4DC Show the release notes of a connector plugin between
       two versions\n\nReads the changelog feeds of docs.confluent.io (one per minor

@@ -13,6 +13,7 @@ run.
 
 | You want | Command |
 | --- | --- |
+| one page on a plugin: license, latest version, how far behind, examples and CI, fully managed equivalents, links | `playground connector-plugin info -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--json`) |
 | every released version, with its release date | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc` (`--last 5`, `--with-changelog`, `--json`) |
 | how far behind the customer's version is | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --from 10.7.4` (`--latest` prints only the latest version) |
 | what changed since version X (release notes), is a bug fixed after it | `playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6` (`--grep "CVE\|NullPointer"`, `--to`, `--json`) |
@@ -32,6 +33,7 @@ run.
 
    | Command | Source | Fresh as of |
    | --- | --- | --- |
+   | `info` | Hub API (`/api/plugins/<owner>/<name>`), `versions`, the examples of the repository and their CI badges (`kafka-docker-playground.io/content.md`, cached one hour) | `versions` cache + now |
    | `versions` | Confluent Hub API (`api.hub.confluent.io/api/plugins/<owner>/<name>/versions`) | one day: the Hub answer is cached in `/tmp/version_<owner>_<name>.json` until `--force-refresh` |
    | `display-last-updated` | Confluent Hub API, one request listing every plugin with its latest version (`api.hub.confluent.io/api/plugins`) | now: not cached |
    | `changelog` | the changelog feeds of docs.confluent.io, one per minor line (`docs.confluent.io/kafka-connectors/<slug>/<major.minor>/changelog.xml`), found from the `documentation_url` of the plugin manifest; release dates from the Hub API | one day: cached in `/tmp/connector-plugin-changelog` until `--force-refresh` |
@@ -98,6 +100,39 @@ Gotchas:
   `display-last-updated-connector-plugins-days <n>` / `display-last-updated-connector-plugins-vendor <vendor|all>`
   change the window and the vendor (also in the `⚙️ CLI preferences` entry of the `playground run` menu).
 - A version without a Hub release date prints `📅 release date: <unknown>`.
+
+### One page on a plugin: `info`
+
+```bash
+playground connector-plugin info -c confluentinc/kafka-connect-jdbc --from 10.7.4
+# 🔌 confluentinc/kafka-connect-jdbc: Kafka Connect JDBC
+#    🏢 Confluent, Inc.   📜 Confluent Community License   🧩 source, sink
+#    🔢 latest 10.9.9 (2026-09-16, 44 days ago), 119 version(s) since 2020-10-07
+#    📌 10.7.4 is 30 version(s) behind the latest (playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4)
+#    🐳 docker image: confluentinc/cp-kafka-connect
+# 🧪 35 example(s) use it, CI: 24 🟢 ok, 0 🔴 fail, 11 🤷 not tested or unknown
+#    🟢 connect/connect-jdbc-aws-redshift-source
+#    …
+#    🔌 connector classes: io.confluent.connect.jdbc.JdbcSinkConnector, io.confluent.connect.jdbc.JdbcSourceConnector
+# ☁️ fully managed examples named like it (9 folder(s) with "jdbc"): IbmDb2Source, MicrosoftSqlServerSink, … PostgresSink, PostgresSource
+# 🌐 documentation: https://docs.confluent.io/kafka-connect-jdbc/current/
+# 📜 changelog: https://docs.confluent.io/kafka-connectors/jdbc/10.9/changelog.html
+# 🧑‍💻 source code: https://github.com/confluentinc/kafka-connect-jdbc/tree/v10.9.9
+```
+
+Gotchas:
+
+- **Examples** are the folders whose `docker-compose*.yml` mount the plugin (`confluent-hub-components/<owner>-<name>`),
+  the private `reproduction-models` excluded. Their CI status comes from the badges of the published content page:
+  `🤷` when the example isn't tested by CI or isn't listed there.
+- **Connector classes** come from the `config-<class>.txt` of the examples that use this plugin only (an example with
+  several plugins records the classes of the others too).
+- **Fully managed** is a heuristic: the `ccloud/fm-*` folders whose name has every word of the plugin name (`jdbc`,
+  `debezium postgresql`), and the types of their `config-<Type>.txt`. There is no mapping between a plugin and fully
+  managed types: check it.
+- `✅ requirements` only shows when the vendor filled it in the manifest (often empty, `null` for most Confluent
+  plugins). A fully managed name (no `-`, like `confluentinc/SalesforceBulkApiV2Sink`) is refused: not on the Hub.
+- `--json` gives every field (`examples[].ci`, `fully_managed.types`, `versions_behind`…).
 
 ### What changed: `changelog`
 
@@ -397,6 +432,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 
 | Customer question | Command |
 | --- | --- |
+| "what is this connector, is it supported, how far behind are we?" | `info --from <theirs>` |
 | "is this fixed in a newer version?" | `versions --from <theirs>`, then `sourcecode --connector-tag <theirs> --connector-tag <latest> --only-show-url` and read the compare (commits, changed files) |
 | "what does this key do, and what's its default in our version?" | `config-key --key <k> -c <class>`; for their exact version, `playground connector show-config-parameters` with `--connector-tag` (adds it to `🗂️ versions run locally`) |
 | "this key doesn't work for us" | `config-key`: not in their version (❌ in `versions run locally`), a framework key, or a typo (`💡 similar keys`) |
@@ -412,6 +448,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 ## 8. Cheat sheet
 
 ```bash
+playground connector-plugin info -c <owner/name> [--from X] [--max-examples 10] [--json]
 playground connector-plugin versions -c <owner/name> [--last N] [--from X] [--latest] [--with-changelog] [--json] [--force-refresh]
 playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--grep <regex>] [--json]
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>] [--with-changelog] [--json]
@@ -438,6 +475,7 @@ playground connector-plugin search-jar -c <owner/name> [--connector-tag X] | --c
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (`diff --defaults` against the
   plugin's defaults), [reproduction models](/deep-dive-reproduction-models.md) (test the fix with `--connector-tag`)
 - 🧠 CLI reference: [playground connector-plugin](/playground%20connector-plugin),
+  [playground connector-plugin info](/playground%20connector-plugin%20info),
   [playground connector-plugin config-key](/playground%20connector-plugin%20config-key),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode),
   [playground connector-plugin versions](/playground%20connector-plugin%20versions),
