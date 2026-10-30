@@ -9175,3 +9175,49 @@ function get_connector_plugin_configs () {
     fi
   done
 }
+
+# owner/name of the Confluent Hub plugin of a connector class, from the examples of the repository: the plugin mounted
+# (CONNECT_PLUGIN_PATH) by the examples that record (config-<class>.txt) or create ("connector.class") that class and use
+# a single plugin; empty when none does
+function connector_plugin_of_class () {
+  local class="$1"
+  (
+    cd "$root_folder" > /dev/null || exit 0
+    { git ls-files -- "*/config-$class.txt"; git grep -l -F "\"$class\"" -- 'connect/*.sh' 2>/dev/null; } | xargs -n1 dirname 2>/dev/null | sort -u | while read -r dir
+    do
+      plugins=$(grep -ohE "confluent-hub-components/[A-Za-z0-9_.-]+" "$dir"/docker-compose*.yml 2>/dev/null | sort -u)
+      [ "$(echo "$plugins" | grep -c .)" == "1" ] && echo "$plugins"
+    done | sort | uniq -c | sort -rn | head -1 | awk '{print $2}' | sed 's#confluent-hub-components/##; s#-#/#'
+  )
+}
+
+# the owner/name of a connector plugin from what was typed for --connector-plugin: owner/name (also the "<typed>@owner/name"
+# of the fzf completion), a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin, see
+# connector_plugin_of_class) or a fully managed type (S3_SINK: confluentinc/S3_SINK)
+# prints it; returns 1, with an error on stderr, when a class can't be resolved
+function resolve_connector_plugin () {
+  local input="$1" plugin
+  if [[ "$input" == *"@"* ]]
+  then
+    input=$(echo "$input" | cut -d "@" -f 2)
+  fi
+  if [[ -z "$input" ]] || [[ "$input" == */* ]]
+  then
+    echo "$input"
+    return 0
+  fi
+  if [[ "$input" == *.* ]]
+  then
+    plugin=$(connector_plugin_of_class "$input")
+    if [[ -z "$plugin" ]]
+    then
+      logerror "❌ could not find the plugin of connector class $input in the examples: set --connector-plugin <owner/name>" >&2
+      return 1
+    fi
+    log "🔌 connector class $input is in plugin $plugin" >&2
+    echo "$plugin"
+    return 0
+  fi
+  log "☁️ $input is taken as the fully managed connector confluentinc/$input" >&2
+  echo "confluentinc/$input"
+}

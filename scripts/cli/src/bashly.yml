@@ -10987,17 +10987,17 @@ commands:
     Questions about connector plugins on Confluent Hub, answered without a
     running environment:
 
-      info                  one page on a plugin: license, versions, examples, CI, fully managed
+      info                  one page: license, versions behind, examples and CI
       versions              every released version of a plugin
       changelog             what changed between two versions (release notes)
       display-last-updated  what was published recently, by vendor
       search-jar            which jars ship in it, and which class is where
-      dependencies          which libraries (and versions) it bundles, what changed between two versions
-      cve-scan              known vulnerabilities of its jars, fixed or not by another version
-      fm-versions           fully managed: connector version of each cc-connect image (Confluent employees)
+      dependencies          bundled libraries, and their changes between versions
+      cve-scan              known CVEs in its jars, fixed or not by a version
+      fm-versions           fully managed: connector version per cc-connect image
       config-key            what a config key does, its default, since when, who sets it
-      config-diff           config keys added, removed or changed between two versions
-      sourcecode            open the source on GitHub
+      config-diff           config keys added, removed, changed by an upgrade
+      sourcecode            the source at a version, commits and files between two
 
     🎓 Tip: search-jar answers "is this class really in the plugin, and with
     which signature", which is the question behind most NoSuchMethodError and
@@ -11043,6 +11043,9 @@ commands:
         - playground get-connector-plugin "$completion_current" "onprem"
       help: |-
         🔌 Connector plugin name (or --connector-zip)
+
+        owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+        or a fully managed type (S3_SINK)
 
         🎓 Tip: use <tab> completion to trigger fzf completion
     - *connector-tag
@@ -11125,6 +11128,9 @@ commands:
       help: |-
         🔌 Connector plugin name (or --connector-zip)
 
+        owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+        or a fully managed type (S3_SINK)
+
         🎓 Tip: use <tab> completion to trigger fzf completion
     - long: --connector-tag
       arg: connector_tag
@@ -11204,6 +11210,9 @@ commands:
         - playground get-connector-plugin "$completion_current" "onprem"
       help: |-
         🔌 Connector plugin name (or --connector-zip)
+
+        owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+        or a fully managed type (S3_SINK)
 
         🎓 Tip: use <tab> completion to trigger fzf completion
     - *connector-tag
@@ -11332,6 +11341,9 @@ commands:
         - playground get-connector-plugin "$completion_current" "onprem"
       help: |-
         🔌 Connector plugin name
+
+        owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+        or a fully managed type (S3_SINK)
 
         🎓 Tip: use <tab> completion to trigger fzf completion
     - *force_refresh
@@ -11649,6 +11661,10 @@ commands:
         needs: [--since-version]
         help: |-
           🔌 Plugin of the connector for --since-version (owner/name), when the examples don't tell it
+      - long: --json
+        required: false
+        help: |-
+          🤖 Print the result as JSON (connectors with their definition, versions run locally, values in examples)
     examples:
     - playground connector-plugin config-key --key behavior.on.null.values
     - playground connector-plugin config-key --key behavior.on.null.values --connector-class S3SinkConnector
@@ -11720,6 +11736,8 @@ commands:
           - playground get-connector-plugin "$completion_current" "all"
         help: |-
           🔌 Connector plugin name
+
+          owner/name, a connector class (its plugin is found in the examples) or a fully managed type (S3_SINK)
 
           🎓 Tip: use <tab> completion to trigger fzf completion
       - long: --only-show-url

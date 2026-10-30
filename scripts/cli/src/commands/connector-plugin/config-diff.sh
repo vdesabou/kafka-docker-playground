@@ -6,9 +6,10 @@ file="${args[--file]}"
 with_docs="${args[--with-docs]}"
 json="${args[--json]}"
 
-if [[ $connector_plugin == *"@"* ]]
+# owner/name, a connector class or a fully managed type
+if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
 then
-  connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+    exit 1
 fi
 if [[ $file == *"@"* ]]
 then

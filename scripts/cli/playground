@@ -14860,7 +14860,7 @@ playground_rbac_acl_list_usage() {
 playground_connector_plugin_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin\n\n"
-    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page on a plugin: license, versions, examples, CI,\n  fully managed\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          which libraries (and versions) it bundles, what\n  changed between two versions\n    cve-scan              known vulnerabilities of its jars, fixed or not by\n  another version\n    fm-versions           fully managed: connector version of each cc-connect\n  image (Confluent employees)\n    config-key            what a config key does, its default, since when, who\n  sets it\n    config-diff           config keys added, removed or changed between two\n  versions\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
+    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    info                  one page: license, versions behind, examples and CI\n    versions              every released version of a plugin\n    changelog             what changed between two versions (release notes)\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    dependencies          bundled libraries, and their changes between versions\n    cve-scan              known CVEs in its jars, fixed or not by a version\n    fm-versions           fully managed: connector version per cc-connect image\n    config-key            what a config key does, its default, since when, who\n  sets it\n    config-diff           config keys added, removed, changed by an upgrade\n    sourcecode            the source at a version, commits and files between two\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports; with --with-worker, also \"does Connect\n  load the worker's copy instead\".\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%91%%F0%%9F%%92%%BB-the-source-code-of-a-connector-at-the-customers-version\n\n"
   else
     printf "playground connector-plugin - 🔌 Connector-plugin commands\n\n"
   fi
@@ -14919,7 +14919,7 @@ playground_connector_plugin_search_jar_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN")"
-    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector:\n    its plugin is found in the examples)\n    or a fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -14999,7 +14999,7 @@ playground_connector_plugin_dependencies_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN")"
-    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector:\n    its plugin is found in the examples)\n    or a fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -15067,7 +15067,7 @@ playground_connector_plugin_cve_scan_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN")"
-    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name (or --connector-zip)\n    \n    owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector:\n    its plugin is found in the examples)\n    or a fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -15237,7 +15237,7 @@ playground_connector_plugin_versions_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
-    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name\n    \n    owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector:\n    its plugin is found in the examples)\n    or a fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -15310,7 +15310,7 @@ playground_connector_plugin_info_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
-    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name\n    \n    owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector:\n    its plugin is found in the examples)\n    or a fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -15369,7 +15369,7 @@ playground_connector_plugin_changelog_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
-    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name\n    \n    owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector:\n    its plugin is found in the examples)\n    or a fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -15486,7 +15486,7 @@ playground_connector_plugin_config_diff_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
-    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name\n    \n    owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector:\n    its plugin is found in the examples)\n    or a fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -15579,6 +15579,11 @@ playground_connector_plugin_config_key_usage() {
     printf "    %s\n" "Needs: --since-version"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON (connectors with their definition, versions run\n    locally, values in examples)\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -15622,7 +15627,7 @@ playground_connector_plugin_sourcecode_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-plugin, -c CONNECTOR-PLUGIN (required)")"
-    printf "    🔌 Connector plugin name\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔌 Connector plugin name\n    \n    owner/name, a connector class (its plugin is found in the examples) or a\n    fully managed type (S3_SINK)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -28308,6 +28313,52 @@ function get_connector_plugin_configs () {
       fi
     fi
   done
+}
+
+# owner/name of the Confluent Hub plugin of a connector class, from the examples of the repository: the plugin mounted
+# (CONNECT_PLUGIN_PATH) by the examples that record (config-<class>.txt) or create ("connector.class") that class and use
+# a single plugin; empty when none does
+function connector_plugin_of_class () {
+  local class="$1"
+  (
+    cd "$root_folder" > /dev/null || exit 0
+    { git ls-files -- "*/config-$class.txt"; git grep -l -F "\"$class\"" -- 'connect/*.sh' 2>/dev/null; } | xargs -n1 dirname 2>/dev/null | sort -u | while read -r dir
+    do
+      plugins=$(grep -ohE "confluent-hub-components/[A-Za-z0-9_.-]+" "$dir"/docker-compose*.yml 2>/dev/null | sort -u)
+      [ "$(echo "$plugins" | grep -c .)" == "1" ] && echo "$plugins"
+    done | sort | uniq -c | sort -rn | head -1 | awk '{print $2}' | sed 's#confluent-hub-components/##; s#-#/#'
+  )
+}
+
+# the owner/name of a connector plugin from what was typed for --connector-plugin: owner/name (also the "<typed>@owner/name"
+# of the fzf completion), a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin, see
+# connector_plugin_of_class) or a fully managed type (S3_SINK: confluentinc/S3_SINK)
+# prints it; returns 1, with an error on stderr, when a class can't be resolved
+function resolve_connector_plugin () {
+  local input="$1" plugin
+  if [[ "$input" == *"@"* ]]
+  then
+    input=$(echo "$input" | cut -d "@" -f 2)
+  fi
+  if [[ -z "$input" ]] || [[ "$input" == */* ]]
+  then
+    echo "$input"
+    return 0
+  fi
+  if [[ "$input" == *.* ]]
+  then
+    plugin=$(connector_plugin_of_class "$input")
+    if [[ -z "$plugin" ]]
+    then
+      logerror "❌ could not find the plugin of connector class $input in the examples: set --connector-plugin <owner/name>" >&2
+      return 1
+    fi
+    log "🔌 connector class $input is in plugin $plugin" >&2
+    echo "$plugin"
+    return 0
+  fi
+  log "☁️ $input is taken as the fully managed connector confluentinc/$input" >&2
+  echo "confluentinc/$input"
 }
 
 # src/lib/colors.sh
@@ -64353,9 +64404,10 @@ playground_connector_plugin_search_jar_command() {
   json="${args[--json]}"
   force_refresh="${args[--force-refresh]}"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
 
   if ! command -v python3 > /dev/null 2>&1
@@ -64563,9 +64615,10 @@ playground_connector_plugin_dependencies_command() {
   force_refresh="${args[--force-refresh]}"
   eval "connector_tags=(${args[--connector-tag]:-})"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
 
   if ! command -v python3 > /dev/null 2>&1
@@ -64765,9 +64818,10 @@ playground_connector_plugin_cve_scan_command() {
   no_open="${args[--no-open]}"
   force_refresh="${args[--force-refresh]}"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
   if ! command -v python3 > /dev/null 2>&1
   then
@@ -64911,9 +64965,10 @@ playground_connector_plugin_fm_versions_command() {
   json="${args[--json]}"
   force_refresh="${args[--force-refresh]}"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
 
   # with --json, the logs go to stderr
@@ -65153,9 +65208,10 @@ playground_connector_plugin_versions_command() {
   force_refresh="${args[--force-refresh]}"
   with_changelog="${args[--with-changelog]}"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
 
   owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
@@ -65335,9 +65391,10 @@ playground_connector_plugin_info_command() {
   json="${args[--json]}"
   force_refresh="${args[--force-refresh]}"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
 
   owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
@@ -65558,9 +65615,10 @@ playground_connector_plugin_changelog_command() {
   json="${args[--json]}"
   force_refresh="${args[--force-refresh]}"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
 
   if [[ "$connector_plugin" == confluentinc/* ]] && [[ "${connector_plugin#*/}" != *"-"* ]]
@@ -65741,9 +65799,10 @@ playground_connector_plugin_config_diff_command() {
   with_docs="${args[--with-docs]}"
   json="${args[--json]}"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
   if [[ $file == *"@"* ]]
   then
@@ -65885,6 +65944,14 @@ playground_connector_plugin_config_key_command() {
   max_examples="${args[--max-examples]}"
   since_version="${args[--since-version]}"
   since_plugin="${args[--connector-plugin]}"
+  json="${args[--json]}"
+
+  # with --json, the text goes to stderr and the JSON document to fd 3 (stdout), at the end
+  exec 3>&1
+  if [[ -n "$json" ]]
+  then
+      exec 1>&2
+  fi
 
   # prints the entry of $1 (a config-<class>.txt reference) for key $2: group, documentation, type, default...
   function config_key_entry () {
@@ -65915,12 +65982,9 @@ playground_connector_plugin_config_key_command() {
       fi
       if [[ -z "$plugin" ]]
       then
-          # the plugin mounted by the examples that recorded this class (the ones using a single plugin)
-          plugin=$(for f in $(git ls-files -- "*/config-$class.txt")
-          do
-              plugins=$(grep -ohE "confluent-hub-components/[A-Za-z0-9_.-]+" "$(dirname "$f")"/docker-compose*.yml 2>/dev/null | sort -u)
-              [ "$(echo "$plugins" | grep -c .)" == "1" ] && echo "$plugins"
-          done | sort | uniq -c | sort -rn | head -1 | awk '{print $2}' | sed 's#confluent-hub-components/##; s#-#/#')
+          plugin=$(connector_plugin_of_class "$class")
+      else
+          plugin=$(resolve_connector_plugin "$plugin") || return
       fi
       if [[ -z "$plugin" ]]
       then
@@ -66203,6 +66267,45 @@ playground_connector_plugin_config_key_command() {
           | awk -F'|' '{ count[$1]++; if (!($1 in where)) where[$1] = $2 } END { for (v in count) printf "%d|%s|%s\n", count[v], v, where[v] }' \
           | sort -t'|' -k1,1 -rn | head -n "$max_examples" \
           | awk -F'|' '{ printf "   %-30s x%-3d e.g. %s\n", $2, $1, $3 }'
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      connectors_json="[]"
+      for class in $classes
+      do
+          file="${file_by_class[$class]}"
+          entry=$(config_key_entry "$file" "$key")
+          cached=""
+          for c in $(ls "$root_folder"/.connector_config/config-"$class"-*.txt 2>/dev/null | sort -V)
+          do
+              v=$(config_key_class "$c")
+              v="${v##*-}"
+              if grep -q -x -F "🔘 $key" "$c"
+              then
+                  cached="$cached$v|1|$(config_key_entry "$c" "$key" | sed -n 's/^[[:space:]]*- Default: //p')"$'\n'
+              else
+                  cached="$cached$v|0|"$'\n'
+              fi
+          done
+          connectors_json=$(echo "$connectors_json" | jq --arg class "$class" --arg file "$file" --arg entry "$entry" --arg cached "$cached" '
+              ($entry | split("\n")) as $l
+              | def field($n): ($l | map(select(test("^\\s*- " + $n + ": "))) | first // "" | sub("^\\s*- " + $n + ": "; ""));
+              . + [{
+                  connector_class: $class,
+                  group: ($l[0] | sub("^group: "; "")),
+                  documentation: ([$l[1:][] | select(test("^\\s*- ") | not)] | join(" ") | gsub("^\\s+|\\s+$"; "")),
+                  type: field("Type"), default: field("Default"), importance: field("Importance"), required: field("Required"),
+                  reference: $file,
+                  versions_run_locally: [$cached | split("\n")[] | select(. != "") | split("|") | {version: .[0], has_key: (.[1] == "1"), default: (if .[1] == "1" then (.[2:] | join("|")) else null end)}]
+              }]')
+      done
+      values_json=$(echo "$examples" | grep -v '^$' | sed -E "s/^([^:]+:[0-9]+):.*\"$(echo "$key" | sed 's/[][\.*^$/]/\\&/g')\"[[:space:]]*:[[:space:]]*(\"[^\"]*\"|[^,}]*).*/\2|\1/" \
+          | jq -R -s 'split("\n") | map(select(. != "") | split("|") | {value: (.[0] | gsub("^\"|\"$"; "")), where: .[1]}) | group_by(.value) | map({value: .[0].value, count: length, example: .[0].where}) | sort_by(-.count)')
+      jq -n --arg key "$key" --argjson found "$( [ $key_found -eq 1 ] && echo true || echo false)" \
+          --argjson framework "$( [[ "$key" =~ $framework_key_regex ]] && echo true || echo false)" \
+          --argjson connectors "$connectors_json" --argjson values "${values_json:-[]}" --arg cached_only "$cached_only_classes" \
+          '{key: $key, found: $found, framework_key: $framework, connectors: $connectors, only_in_versions_run_locally: ($cached_only | split(" ") | map(select(. != ""))), values_in_examples: $values}' >&3
   fi
 
   if [ $key_found -eq 0 ] && [ -z "$examples" ] && [[ ! "$key" =~ $framework_key_regex ]]
@@ -66827,9 +66930,10 @@ playground_connector_plugin_sourcecode_command() {
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
 
-  if [[ $connector_plugin == *"@"* ]]
+  # owner/name, a connector class or a fully managed type
+  if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
   then
-    connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+      exit 1
   fi
 
   if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
@@ -114161,6 +114265,14 @@ playground_connector_plugin_config_key_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -141214,6 +141326,11 @@ playground_connector_plugin_config_key_completion() {
         completion_blocked_flags["--connector-plugin"]=1
 
         ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -141227,6 +141344,7 @@ playground_connector_plugin_config_key_completion() {
     completion_flag_candidates --max-examples "$completion_current" --max-examples
     completion_flag_candidates --since-version "$completion_current" --since-version
     completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }

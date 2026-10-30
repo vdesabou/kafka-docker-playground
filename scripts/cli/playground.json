@@ -7357,7 +7357,7 @@
     },
     {
       "name": "connector-plugin",
-      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  info                  one page on a plugin: license, versions, examples, CI, fully managed\n  versions              every released version of a plugin\n  changelog             what changed between two versions (release notes)\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  dependencies          which libraries (and versions) it bundles, what changed between two versions\n  cve-scan              known vulnerabilities of its jars, fixed or not by another version\n  fm-versions           fully managed: connector version of each cc-connect image (Confluent employees)\n  config-key            what a config key does, its default, since when, who sets it\n  config-diff           config keys added, removed or changed between two versions\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
+      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  info                  one page: license, versions behind, examples and CI\n  versions              every released version of a plugin\n  changelog             what changed between two versions (release notes)\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  dependencies          bundled libraries, and their changes between versions\n  cve-scan              known CVEs in its jars, fixed or not by a version\n  fm-versions           fully managed: connector version per cc-connect image\n  config-key            what a config key does, its default, since when, who sets it\n  config-diff           config keys added, removed, changed by an upgrade\n  sourcecode            the source at a version, commits and files between two\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports; with --with-worker, also \"does Connect\nload the worker's copy instead\".\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
       "usage": "playground connector-plugin COMMAND",
       "options": [],
       "subcommands": [
@@ -7372,7 +7372,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name (or --connector-zip)\n\n🎓 Tip: use <tab> completion to trigger fzf completion"
+              "description": "🔌 Connector plugin name (or --connector-zip)\n\nowner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)\nor a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion"
             },
             {
               "names": [
@@ -7429,7 +7429,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name (or --connector-zip)\n\n🎓 Tip: use <tab> completion to trigger fzf completion"
+              "description": "🔌 Connector plugin name (or --connector-zip)\n\nowner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)\nor a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion"
             },
             {
               "names": [
@@ -7489,7 +7489,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name (or --connector-zip)\n\n🎓 Tip: use <tab> completion to trigger fzf completion"
+              "description": "🔌 Connector plugin name (or --connector-zip)\n\nowner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)\nor a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion"
             },
             {
               "names": [
@@ -7617,7 +7617,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
+              "description": "🔌 Connector plugin name\n\nowner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)\nor a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
             },
             {
               "names": [
@@ -7674,7 +7674,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
+              "description": "🔌 Connector plugin name\n\nowner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)\nor a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
             },
             {
               "names": [
@@ -7717,7 +7717,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
+              "description": "🔌 Connector plugin name\n\nowner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)\nor a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
             },
             {
               "names": [
@@ -7802,7 +7802,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
+              "description": "🔌 Connector plugin name\n\nowner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)\nor a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
             },
             {
               "names": [
@@ -7889,6 +7889,13 @@
               ],
               "argument": "CONNECTOR-PLUGIN",
               "description": "🔌 Plugin of the connector for --since-version (owner/name), when the examples don't tell it"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON (connectors with their definition, versions run locally, values in examples)"
             }
           ]
         },
@@ -7903,7 +7910,7 @@
                 "-c"
               ],
               "argument": "CONNECTOR-PLUGIN",
-              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
+              "description": "🔌 Connector plugin name\n\nowner/name, a connector class (its plugin is found in the examples) or a fully managed type (S3_SINK)\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
             },
             {
               "names": [
