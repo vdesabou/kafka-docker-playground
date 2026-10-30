@@ -469,6 +469,6 @@ playground analyze logs --sample connect_task_failure|support_bundle
 
 - 🎬 Video sessions: [🕵️ A connector failed: read the logs, live or from a customer bundle](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle), [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) (uses `--errors`)
 - 📖 [Analyze what you collected](/toolkit-debugging?id=🔎-analyze-what-you-collected) in the Reproduction toolkit
-- 💡 [Tail container logs](/tips-and-tricks?id=tail-container-logs) in Tips & Tricks
+- ⚡ [Everyday commands](/reusables?id=⚡-everyday-commands) in the Reproduction toolkit
 - 🧠 CLI reference: [playground container logs](/playground%20container%20logs),
   [playground analyze logs](/playground%20analyze%20logs), [playground connector logs](/playground%20connector%20logs)

@@ -50,7 +50,8 @@
   <div id="app"></div>
   <script>
     // The Reproduction toolkit (reusables.md) was split into toolkit-*.md pages: send the links to one of its
-    // sections (#/reusables?id=<section>), shared before the split, to the page that now holds it
+    // sections (#/reusables?id=<section>), shared before the split, to the page that now holds it.
+    // Tips & Tricks (tips-and-tricks.md) was replaced by the "Everyday commands" section of reusables.md.
     (function () {
       var pages = {
       'toolkit-reproduction-models': ["🛠-bootstrap-reproduction-model", "basic", "deprecated-java-producer-producer", "with-custom-smt-custom-smt", "with-pipeline-pipeline", "📦-share-a-reproduction-model", "📤-export", "🕵️-secrets-and-customer-data-scan", "📎-files-outside-the-repository-include-artifacts", "📥-import", "🧰-useful-functions-for-reproduction-models"],
@@ -66,6 +67,10 @@
         pages[p].forEach(function (id) { page[id] = p; });
       });
       function redirect() {
+        if (/^#\/tips-and-tricks(?:\.md)?(?:\?.*)?$/.test(window.location.hash)) {
+          window.location.replace('#/reusables?id=' + encodeURIComponent('⚡-everyday-commands'));
+          return;
+        }
         var match = /^#\/reusables(?:\.md)?\?(?:.*&)?id=([^&]+)/.exec(window.location.hash);
         if (!match) {
           return;
@@ -113,7 +118,7 @@
                         '/deep-dive-connector-plugin', '/deep-dive-schema', '/deep-dive-jvm-diagnostics', '/deep-dive-run-and-versions',
                         '/deep-dive-topic-administration', '/deep-dive-broker', '/deep-dive-secured-environments', '/deep-dive-replication', '/deep-dive-cfk', '/deep-dive-connector-benchmark', '/deep-dive-fully-managed', '/deep-dive-secrets', '/deep-dive-oracle-cdc', '/how-it-works', '/reusables',
                         '/toolkit-reproduction-models', '/toolkit-data', '/toolkit-debugging', '/toolkit-network', '/toolkit-fully-managed', '/toolkit-environment', '/toolkit-performance',
-                        '/academy', '/tips-and-tricks', '/claude-code', '/legacy-java-producer', '/changelog'].concat(window.KDP_CLI_PAGES || []),
+                        '/academy', '/claude-code', '/legacy-java-producer', '/changelog'].concat(window.KDP_CLI_PAGES || []),
           namespace  : 'kdp',
           // the index is cached in localStorage: rebuild it hourly, as CI updates the generated pages several times a day (default: 1 day)
           maxAge     : 3600000,

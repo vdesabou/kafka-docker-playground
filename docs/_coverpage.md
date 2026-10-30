@@ -17,5 +17,4 @@
 [🎓 How it works](/how-it-works.md)
 [🧰 Reproduction toolkit](/reusables.md)
 [🧑‍🎓 Academy](/academy.md)
-[💡 Tips & Tricks](/tips-and-tricks.md)
 [📜 Changelog](/changelog.md)

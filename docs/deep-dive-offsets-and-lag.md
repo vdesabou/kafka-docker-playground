@@ -337,7 +337,7 @@ playground topic display-consumer-offsets                               # follow
 
 - 🎬 Video sessions: [⏪ The lag of a sink is stuck](/sessions?id=⏪-the-lag-of-a-sink-is-stuck), [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
 - 🍪 Deep dive: [`topic consume`](/deep-dive-topic-consume.md), to look at the record behind an offset
-- 💡 [Check Kafka Connect offsets](/tips-and-tricks?id=check-kafka-connect-offsets) in Tips & Tricks
+- ⚡ [Everyday commands](/reusables?id=⚡-everyday-commands) in the Reproduction toolkit
 - 📖 KIP-875 offsets API: [Confluent Cloud connector offsets](https://docs.confluent.io/cloud/current/connectors/offsets.html)
 - 🧠 CLI reference: [playground connector show-lag](/playground%20connector%20show-lag),
   [playground connector offsets](/playground%20connector%20offsets), [playground consumer-group](/playground%20consumer-group),

@@ -17,7 +17,6 @@
   - [♨️ Connectors and JDKs](/toolkit-environment.md)
   - [🏎️ Performance](/toolkit-performance.md)
 - [🧑‍🎓 Academy](/academy.md)
-- [💡 Tips & Tricks](/tips-and-tricks.md)
 - [🤖 Claude Code](/claude-code.md)
 
 

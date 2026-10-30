@@ -37,7 +37,7 @@ needs nothing for those pages. If you ran `update-docs` locally, the pages it wr
 are ignored by `.gitignore`: never force-add them.
 
 The **hand-written** pages (`docs/how-to-use.md`, `docs/toolkit-*.md`,
-`docs/tips-and-tricks.md`, `docs/claude-code.md`…) are tracked here: when a
+`docs/claude-code.md`…) are tracked here: when a
 command or flag is new and worth mentioning, or renamed, update them in the same PR
 (`grep -n "<old name>" docs/*.md`).
 
