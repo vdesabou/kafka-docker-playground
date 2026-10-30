@@ -209,6 +209,8 @@ do
         value=$(jq -r --arg key "$key" '.[$key] // empty' <<< "$model")
         [ -n "$value" ] && log "   $(repro_header_emoji "$key") $key: $value"
     done
+    last_verdict=$(jq -c '.last_verdict // empty' <<< "$model")
+    [ -n "$last_verdict" ] && log "   🧪 last verdict of the exporter: $(repro_verdict_line "$last_verdict")"
     base_example=$(jq -r '.base_example // empty' <<< "$model")
     if [ -n "$base_example" ]
     then

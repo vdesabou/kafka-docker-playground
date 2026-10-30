@@ -55,7 +55,7 @@ created=$(repro_header_value "$file" "date")
 base_example=""
 for link in README.md stop.sh
 do
-    target=$(readlink "$(dirname "$file")/$link" 2>/dev/null)
+    target=$(readlink "$(dirname "$file")/$link" 2>/dev/null || true)
     if [[ "$target" == ../../* ]]
     then
         base_example=$(dirname "${target#../../}")
@@ -67,9 +67,12 @@ actual=$(repro_header_value "$file" "actual")
 jira=$(repro_header_value "$file" "jira")
 status=$(repro_header_value "$file" "status")
 
+last_verdict=$(repro_last_verdict "$file")
+
 if [[ -n "$json" ]]
 then
     jq -n \
+        --argjson last_verdict "${last_verdict:-null}" \
         --arg script "$file" \
         --arg description "$description" \
         --arg case "$case_number" \
@@ -82,7 +85,7 @@ then
         --arg status "$status" \
         --arg updated "${updated[*]}" \
         '{script: $script, description: $description, case: $case, author: $author, created: $created, base_example: $base_example,
-          expected: $expected, actual: $actual, jira: $jira, status: $status,
+          expected: $expected, actual: $actual, jira: $jira, status: $status, last_verdict: $last_verdict,
           updated: ($updated | split(" ") | map(select(. != "")))}'
     exit 0
 fi
@@ -108,6 +111,12 @@ do
         missing="$missing --$( [ "$key" == "status" ] && echo "set" || echo "$key" ) \"…\""
     fi
 done
+if [ -n "$last_verdict" ]
+then
+    log "   🧪 last verdict: $(repro_verdict_line "$last_verdict")"
+else
+    log "   🧪 last verdict: none yet (end the scenario with 'playground repro assert')"
+fi
 if [ -n "$missing" ]
 then
     log "💡 fill in the empty fields: playground repro status -f $file$missing"

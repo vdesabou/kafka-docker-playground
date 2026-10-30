@@ -34,6 +34,12 @@ export_dir=$(mktemp -d)
 function cleanup_lab () {
     rm -f "$model" "$override" "$imported"
     rm -rf "$export_dir"
+    # the verdicts of the lab models
+    if [ -f "${root_dir}/playground-repro-verdicts" ]
+    then
+        grep -vF "000000-deep-dive-lab-ci" "${root_dir}/playground-repro-verdicts" > "${root_dir}/playground-repro-verdicts.tmp" || true
+        mv "${root_dir}/playground-repro-verdicts.tmp" "${root_dir}/playground-repro-verdicts"
+    fi
     if [ -n "$prev_test_file" ]
     then
         playground state set run.test_file "$prev_test_file" > /dev/null 2>&1
@@ -79,8 +85,24 @@ lab_expect_contains "🎯 expected: (empty)"
 lab_expect_contains "🎫 jira: https://confluentinc.atlassian.net/browse/CC-1234"
 lab_expect_contains "🩹 status: lab only"
 lab_expect_contains "💡 fill in the empty fields: playground repro status -f ${model} --expected"
+lab_expect_contains "🧪 last verdict: none yet (end the scenario with 'playground repro assert')"
 lab_run grep -c "^# 🩹 status: lab only$" "$model"
 lab_expect_equals "$LAB_OUTPUT" "1" "status lines (replaced, not added)"
+lab_run grep -c "^# playground repro assert --reproduced-if-log" "$model"
+lab_expect_equals "$LAB_OUTPUT" "1" "commented repro assert lines at the end of the scenario"
+lab_run playground repro assert -f "$model" --reproduced-if-command "test -f '$model'" --message "the model exists"
+lab_expect_exit 0
+lab_expect_contains "🐞 REPRODUCED: the model exists (the command succeeded: test -f"
+lab_run playground repro assert -f "$model" --reproduced-if-command "false"
+lab_expect_exit 0 "a model that does not reproduce is a result, not an error"
+lab_expect_contains "✅ NOT REPRODUCED: the command failed: false"
+lab_run playground repro assert -f "$model" --reproduced-if-records-less-than 3
+lab_expect_exit 1
+lab_expect_contains "need --topic"
+lab_run playground repro assert -f "$model" --reproduced-if-command "test -f '$model'" --json
+lab_expect_contains '"verdict": "reproduced"'
+lab_run playground repro status -f "$model"
+lab_expect_contains "🧪 last verdict: 🐞 reproduced on $(date -u +%Y-%m-%d)"
 
 log "Step 3: check it, with and without a secret"
 lab_run playground repro check -f "$model"
@@ -114,14 +136,15 @@ lab_run tar tzf "$bundle"
 lab_expect_contains "repro-manifest.json"
 lab_expect_contains "connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh"
 lab_expect_contains "connect-connect-filestream-sink/docker-compose.plaintext.repro-000000-deep-dive-lab-ci.yml"
-lab_run bash -c "tar xzOf '$bundle' repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, run_command}'"
-lab_expect_contains '{"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"}'
+lab_run bash -c "tar xzOf '$bundle' repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, verdict: .last_verdict.verdict, run_command}'"
+lab_expect_contains '{"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","verdict":"reproduced","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab-ci.sh"}'
 
 log "Step 5: import, with a conflict"
 lab_run playground repro import -f "$bundle" --dry-run
 lab_expect_exit 0
 lab_expect_contains "🧬 based on connect/connect-filestream-sink"
 lab_expect_contains "🩹 status: lab only"
+lab_expect_contains "🧪 last verdict of the exporter: 🐞 reproduced on"
 lab_expect_contains "📋 0 new, "
 lab_expect_contains " identical, 0 conflicting file(s)" "your own model: every file identical"
 lab_expect_contains "🔍 dry run: nothing imported"

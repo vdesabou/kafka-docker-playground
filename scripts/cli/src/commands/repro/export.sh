@@ -206,6 +206,7 @@ do
     actual=$(repro_header_value "$script" "actual")
     jira=$(repro_header_value "$script" "jira")
     status=$(repro_header_value "$script" "status")
+    last_verdict=$(repro_last_verdict "$script")
 
     # the base example is where the symlinks created by bootstrap point to
     base_example=""
@@ -234,6 +235,7 @@ do
         --arg actual "$actual" \
         --arg jira "$jira" \
         --arg status "$status" \
+        --argjson last_verdict "${last_verdict:-null}" \
         --arg run_flags "$run_flags" \
         --arg credentials "$credentials" \
         --arg external_files "$external_files" \
@@ -247,6 +249,7 @@ do
             actual: $actual,
             jira: $jira,
             status: $status,
+            last_verdict: ($last_verdict | if . == null then null else del(.script) end),
             run_flags: $run_flags,
             run_command: ("playground run -f {repro_dir}/" + ($script | split("/") | last) + (if $run_flags == "" then "" else " " + $run_flags end)),
             credentials: ($credentials | split("\n") | map(select(. != ""))),

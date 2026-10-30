@@ -1067,7 +1067,7 @@ function repro_bundle_denied () {
   esac
   case "$name" in
     *.hprof|*.hprof.gz|*.jfr|*.log|*.tgz|*.tar.gz|.DS_Store|repro-manifest.json) return 0 ;;
-    keyfile.json|*.pem|*.key|*.p12|secrets.properties|playground.ini|playground-run-history) return 0 ;;
+    keyfile.json|*.pem|*.key|*.p12|secrets.properties|playground.ini|playground-run-history|playground-repro-verdicts) return 0 ;;
   esac
   return 1
 }
@@ -1091,6 +1091,29 @@ function repro_header_emoji () {
     jira) echo "🎫" ;;
     status) echo "🩹" ;;
   esac
+}
+
+# absolute path of a model with its folder resolved, the key of its verdicts in playground-repro-verdicts
+function repro_model_path () {
+  local script="$1"
+  echo "$(cd -P "$(dirname "$script")" 2>/dev/null && pwd)/$(basename "$script")"
+}
+
+# last verdict recorded by 'playground repro assert' for a model, as JSON (empty when there is none)
+function repro_last_verdict () {
+  local script
+  script=$(repro_model_path "$1")
+  if [ -f "$root_folder/playground-repro-verdicts" ]
+  then
+    jq -c --arg script "$script" 'select(.script == $script)' "$root_folder/playground-repro-verdicts" 2>/dev/null | tail -1
+  fi
+}
+
+# one line for a verdict of playground-repro-verdicts: 🐞 reproduced on 2026-10-30 (CP 8.4.0, connector 10.8.0): <reason>
+function repro_verdict_line () {
+  echo "$1" | jq -r '(if .verdict == "reproduced" then "🐞 reproduced" else "✅ not reproduced" end)
+    + " on \(.date[0:10]) (CP \(if .cp_version == "" then "default" else .cp_version end)"
+    + (if .connector_version != "" then ", connector \(.connector_version)" else "" end) + "): \(.reason)"'
 }
 
 # a Jira key (CC-1234) becomes its link, anything else is kept as is

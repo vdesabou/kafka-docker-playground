@@ -142,6 +142,7 @@ playground_usage() {
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "repro import")                              "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "repro status")                              "
+  printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "repro assert")                              "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                        "
@@ -5248,7 +5249,7 @@ playground_cleanup_cloud_resources_usage() {
 playground_repro_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro\n\n"
-    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
+    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    status      show or update what a model proves: expected, actual, jira,\n  status\n    assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its header (🎯 expected / 💥 actual), and never put customer\n  data in it.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A7%%AA-the-life-of-a-reproduction-model\n\n"
   else
     printf "playground repro - 👷‍♂️ Reproduction model commands\n\n"
   fi
@@ -5264,6 +5265,7 @@ playground_repro_usage() {
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")   "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")"
   printf "  %s   🩹 Show or update what a reproduction model proves, from its header\n" "$(green "status")   "
+  printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "assert")   "
   echo
 
   # :command.long_usage
@@ -5664,6 +5666,99 @@ playground_repro_status_usage() {
     printf "  playground repro status\n"
     printf "  playground repro status -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --set \"fixed in 10.8.3\" --jira CC-1234\n"
     printf "  playground repro status --actual \"the task fails with Unknown magic byte\"\n  --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_repro_assert_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground repro assert\n\n"
+    printf "  🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n  \n  Put it at the end of the scenario, with the check that says the\n  problem is there (the 💥 actual of the header). It prints the verdict\n  with the CP and connector versions, and records it in\n  playground-repro-verdicts (a local file of the repository root, not\n  committed), so that it can be compared between runs and versions:\n  \n    playground repro status     shows the last verdict of the model\n    playground repro export     writes it in repro-manifest.json\n  \n  One check per call (combine several with --reproduced-if-command):\n  \n    --reproduced-if-log <pattern>               a line of the logs of\n                                                --container (default\n                                                connect) matches (grep)\n    --reproduced-if-connector-state <state>     the connector or one of\n                                                its tasks is in this state\n    --reproduced-if-records-less-than <n>       --topic has less records\n    --reproduced-if-records-more-than <n>       --topic has more records\n    --reproduced-if-command \"<command>\"         the shell command succeeds\n  \n  Both verdicts exit with 0: a model that does not reproduce is a result,\n  not an error. The exit code is 1 only when the check cannot run.\n  \n  Without --file, the verdict is recorded for the current model (the one\n  'playground run' runs).\n\n"
+  else
+    printf "playground repro assert - 🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground repro assert [OPTIONS]\n"
+  printf "  playground repro assert --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reproduced-if-log PATTERN")"
+    printf "    🔍 Reproduced when a line of the logs of --container matches this grep\n    pattern\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container whose logs --reproduced-if-log reads (default: connect)\n"
+    printf "    %s\n" "Default: connect"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reproduced-if-connector-state STATE")"
+    printf "    🧩 Reproduced when the connector or one of its tasks is in this state\n"
+    printf "    %s\n" "Allowed: FAILED, RUNNING, PAUSED, STOPPED, UNASSIGNED, RESTARTING"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector CONNECTOR")"
+    printf "    🔗 Connector of --reproduced-if-connector-state (default: the only one\n    running)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reproduced-if-records-less-than NUMBER")"
+    printf "    📉 Reproduced when --topic has less records than this (records lost, not\n    delivered)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reproduced-if-records-more-than NUMBER")"
+    printf "    📈 Reproduced when --topic has more records than this (duplicates, records\n    sent to a DLQ)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Topic of --reproduced-if-records-less-than /\n    --reproduced-if-records-more-than\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reproduced-if-command COMMAND")"
+    printf "    💻 Reproduced when this shell command succeeds (exit code 0)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--message, -m MESSAGE")"
+    printf "    💬 Text printed with the verdict, before what the check found\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    🔖 Reproduction model the verdict is recorded for (default: current one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the verdict as JSON\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro assert --reproduced-if-log \"Unknown magic byte\"\n"
+    printf "  playground repro assert --reproduced-if-connector-state FAILED --connector\n  http-sink\n"
+    printf "  playground repro assert --reproduced-if-records-less-than 10 --topic orders\n  --message \"records lost\"\n"
+    printf "  playground repro assert --reproduced-if-command \"playground topic\n  get-number-records --topic dlq | tail -1 | grep -qv '^0$'\"\n"
     echo
 
   fi
@@ -18595,7 +18690,7 @@ function repro_bundle_denied () {
   esac
   case "$name" in
     *.hprof|*.hprof.gz|*.jfr|*.log|*.tgz|*.tar.gz|.DS_Store|repro-manifest.json) return 0 ;;
-    keyfile.json|*.pem|*.key|*.p12|secrets.properties|playground.ini|playground-run-history) return 0 ;;
+    keyfile.json|*.pem|*.key|*.p12|secrets.properties|playground.ini|playground-run-history|playground-repro-verdicts) return 0 ;;
   esac
   return 1
 }
@@ -18619,6 +18714,29 @@ function repro_header_emoji () {
     jira) echo "🎫" ;;
     status) echo "🩹" ;;
   esac
+}
+
+# absolute path of a model with its folder resolved, the key of its verdicts in playground-repro-verdicts
+function repro_model_path () {
+  local script="$1"
+  echo "$(cd -P "$(dirname "$script")" 2>/dev/null && pwd)/$(basename "$script")"
+}
+
+# last verdict recorded by 'playground repro assert' for a model, as JSON (empty when there is none)
+function repro_last_verdict () {
+  local script
+  script=$(repro_model_path "$1")
+  if [ -f "$root_folder/playground-repro-verdicts" ]
+  then
+    jq -c --arg script "$script" 'select(.script == $script)' "$root_folder/playground-repro-verdicts" 2>/dev/null | tail -1
+  fi
+}
+
+# one line for a verdict of playground-repro-verdicts: 🐞 reproduced on 2026-10-30 (CP 8.4.0, connector 10.8.0): <reason>
+function repro_verdict_line () {
+  echo "$1" | jq -r '(if .verdict == "reproduced" then "🐞 reproduced" else "✅ not reproduced" end)
+    + " on \(.date[0:10]) (CP \(if .cp_version == "" then "default" else .cp_version end)"
+    + (if .connector_version != "" then ", connector \(.connector_version)" else "" end) + "): \(.reason)"'
 }
 
 # a Jira key (CC-1234) becomes its link, anything else is kept as is
@@ -43098,6 +43216,7 @@ playground_repro_export_command() {
       actual=$(repro_header_value "$script" "actual")
       jira=$(repro_header_value "$script" "jira")
       status=$(repro_header_value "$script" "status")
+      last_verdict=$(repro_last_verdict "$script")
 
       # the base example is where the symlinks created by bootstrap point to
       base_example=""
@@ -43126,6 +43245,7 @@ playground_repro_export_command() {
           --arg actual "$actual" \
           --arg jira "$jira" \
           --arg status "$status" \
+          --argjson last_verdict "${last_verdict:-null}" \
           --arg run_flags "$run_flags" \
           --arg credentials "$credentials" \
           --arg external_files "$external_files" \
@@ -43139,6 +43259,7 @@ playground_repro_export_command() {
               actual: $actual,
               jira: $jira,
               status: $status,
+              last_verdict: ($last_verdict | if . == null then null else del(.script) end),
               run_flags: $run_flags,
               run_command: ("playground run -f {repro_dir}/" + ($script | split("/") | last) + (if $run_flags == "" then "" else " " + $run_flags end)),
               credentials: ($credentials | split("\n") | map(select(. != ""))),
@@ -43683,6 +43804,8 @@ playground_repro_import_command() {
           value=$(jq -r --arg key "$key" '.[$key] // empty' <<< "$model")
           [ -n "$value" ] && log "   $(repro_header_emoji "$key") $key: $value"
       done
+      last_verdict=$(jq -c '.last_verdict // empty' <<< "$model")
+      [ -n "$last_verdict" ] && log "   🧪 last verdict of the exporter: $(repro_verdict_line "$last_verdict")"
       base_example=$(jq -r '.base_example // empty' <<< "$model")
       if [ -n "$base_example" ]
       then
@@ -45206,6 +45329,11 @@ EOF
   echo "" >> $tmp_dir/tmp_file
 
   cat >> $tmp_dir/tmp_file << 'EOF'
+# 🧪 end the scenario with its verdict, the check that says the 💥 actual of the header is there (playground repro assert --help):
+# playground repro assert --reproduced-if-log "<error of the problem>"
+# playground repro assert --reproduced-if-connector-state FAILED --connector <connector>
+# playground repro assert --reproduced-if-records-less-than <n> --topic <topic>
+
 # 🧠 below is a list of cli commands that are helpful at the end of an example
 # 🧠 for full documentation, visit https://kafka-docker-playground.io/#/cli !
 
@@ -45404,7 +45532,7 @@ playground_repro_status_command() {
   base_example=""
   for link in README.md stop.sh
   do
-      target=$(readlink "$(dirname "$file")/$link" 2>/dev/null)
+      target=$(readlink "$(dirname "$file")/$link" 2>/dev/null || true)
       if [[ "$target" == ../../* ]]
       then
           base_example=$(dirname "${target#../../}")
@@ -45416,9 +45544,12 @@ playground_repro_status_command() {
   jira=$(repro_header_value "$file" "jira")
   status=$(repro_header_value "$file" "status")
 
+  last_verdict=$(repro_last_verdict "$file")
+
   if [[ -n "$json" ]]
   then
       jq -n \
+          --argjson last_verdict "${last_verdict:-null}" \
           --arg script "$file" \
           --arg description "$description" \
           --arg case "$case_number" \
@@ -45431,7 +45562,7 @@ playground_repro_status_command() {
           --arg status "$status" \
           --arg updated "${updated[*]}" \
           '{script: $script, description: $description, case: $case, author: $author, created: $created, base_example: $base_example,
-            expected: $expected, actual: $actual, jira: $jira, status: $status,
+            expected: $expected, actual: $actual, jira: $jira, status: $status, last_verdict: $last_verdict,
             updated: ($updated | split(" ") | map(select(. != "")))}'
       exit 0
   fi
@@ -45457,9 +45588,200 @@ playground_repro_status_command() {
           missing="$missing --$( [ "$key" == "status" ] && echo "set" || echo "$key" ) \"…\""
       fi
   done
+  if [ -n "$last_verdict" ]
+  then
+      log "   🧪 last verdict: $(repro_verdict_line "$last_verdict")"
+  else
+      log "   🧪 last verdict: none yet (end the scenario with 'playground repro assert')"
+  fi
   if [ -n "$missing" ]
   then
       log "💡 fill in the empty fields: playground repro status -f $file$missing"
+  fi
+
+}
+
+# :command.function
+playground_repro_assert_command() {
+
+  # src/commands/repro/assert.sh
+  file="${args[--file]}"
+  log_pattern="${args[--reproduced-if-log]}"
+  container="${args[--container]}"
+  connector_state="${args[--reproduced-if-connector-state]}"
+  connector="${args[--connector]}"
+  records_less_than="${args[--reproduced-if-records-less-than]}"
+  records_more_than="${args[--reproduced-if-records-more-than]}"
+  topic="${args[--topic]}"
+  command="${args[--reproduced-if-command]}"
+  message="${args[--message]}"
+  json="${args[--json]}"
+
+  nb_checks=0
+  for check in "$log_pattern" "$connector_state" "$records_less_than" "$records_more_than" "$command"
+  do
+      [ -n "$check" ] && nb_checks=$((nb_checks + 1))
+  done
+  if [ $nb_checks -ne 1 ]
+  then
+      logerror "❌ give exactly one check: --reproduced-if-log, --reproduced-if-connector-state, --reproduced-if-records-less-than, --reproduced-if-records-more-than or --reproduced-if-command (combine several with --reproduced-if-command)"
+      exit 1
+  fi
+  if { [ -n "$records_less_than" ] || [ -n "$records_more_than" ]; } && [ -z "$topic" ]
+  then
+      logerror "❌ --reproduced-if-records-less-than and --reproduced-if-records-more-than need --topic"
+      exit 1
+  fi
+
+  if [ -z "$file" ]
+  then
+      file=$(playground state get run.test_file)
+  fi
+  if [[ $file == *"@"* ]]
+  then
+      file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+  if [ -n "$file" ]
+  then
+      file=$(repro_model_path "$file")
+  fi
+
+  # 1. the check: reproduced=1 when the problem is there
+  reproduced=0
+  if [ -n "$log_pattern" ]
+  then
+      nb_lines=$(playground container logs --container "$container" --grep "$log_pattern" --no-follow 2> /dev/null | grep -c . || true)
+      if [ "${nb_lines:-0}" -gt 0 ]
+      then
+          reproduced=1
+          reason="$nb_lines line(s) of the $container logs match \"$log_pattern\""
+      else
+          reason="no line of the $container logs matches \"$log_pattern\""
+      fi
+  elif [ -n "$connector_state" ]
+  then
+      connector_type=$(playground state get run.connector_type)
+      if [ -z "$connector" ]
+      then
+          connector=$(playground get-connector-list)
+          if [ -z "$connector" ]
+          then
+              logerror "❌ no connector is running, use --connector"
+              exit 1
+          fi
+          if [ $(echo "$connector" | wc -w) -gt 1 ]
+          then
+              logerror "❌ several connectors are running ($(echo $connector)), use --connector"
+              exit 1
+          fi
+      fi
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1 || true
+      else
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1 || true
+      fi
+      states=$(echo "$curl_output" | jq -r '"connector \(.connector.state // "unknown")", (.tasks[]? | "task \(.id) \(.state)")' 2>/dev/null)
+      if [ -z "$states" ] || [[ "$states" == "connector unknown" ]]
+      then
+          logerror "❌ could not get the status of connector $connector"
+          exit 1
+      fi
+      matching=$(echo "$states" | grep " $connector_state$" | sed "s/ $connector_state$//" | paste -sd ',' - | sed 's/,/, /g')
+      if [ -n "$matching" ]
+      then
+          reproduced=1
+          reason="$connector_state in connector $connector: $matching"
+      else
+          reason="nothing $connector_state in connector $connector ($(echo "$states" | paste -sd ',' - | sed 's/,/, /g'))"
+      fi
+  elif [ -n "$records_less_than" ] || [ -n "$records_more_than" ]
+  then
+      count_output=$(playground topic get-number-records --topic "$topic" 2>&1 || true)
+      nb_records=$(echo "$count_output" | tail -1 | tr -cd '0-9')
+      # a count that fails still ends with 0: no verdict from it
+      if [ -z "$nb_records" ] || echo "$count_output" | grep -qE "Error occurred|Exception"
+      then
+          echo "$count_output" | grep -E "Error|Exception" | head -3
+          logerror "❌ could not count the records of topic $topic"
+          exit 1
+      fi
+      if [ -n "$records_less_than" ]
+      then
+          if [ "$nb_records" -lt "$records_less_than" ]
+          then
+              reproduced=1
+              reason="$nb_records record(s) in topic $topic, less than $records_less_than"
+          else
+              reason="$nb_records record(s) in topic $topic, not less than $records_less_than"
+          fi
+      else
+          if [ "$nb_records" -gt "$records_more_than" ]
+          then
+              reproduced=1
+              reason="$nb_records record(s) in topic $topic, more than $records_more_than"
+          else
+              reason="$nb_records record(s) in topic $topic, not more than $records_more_than"
+          fi
+      fi
+  else
+      if bash -c "$command" > /dev/null 2>&1
+      then
+          reproduced=1
+          reason="the command succeeded: $command"
+      else
+          reason="the command failed: $command"
+      fi
+  fi
+  if [ -n "$message" ]
+  then
+      reason="$message ($reason)"
+  fi
+
+  # 2. the verdict, kept with the versions it was obtained with (read by 'repro status' and 'repro export')
+  if [ $reproduced -eq 1 ]
+  then
+      verdict="reproduced"
+  else
+      verdict="not reproduced"
+  fi
+  connector_version="${CONNECTOR_TAG}"
+  if [ -z "$connector_version" ] && [ -n "$CONNECTOR_ZIP" ]
+  then
+      connector_version="zip $(basename "$CONNECTOR_ZIP")"
+  fi
+  if [ -z "$connector_version" ] && [ -n "$CONNECTOR_JAR" ]
+  then
+      connector_version="jar $(basename "$CONNECTOR_JAR")"
+  fi
+  record=$(jq -cn \
+      --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      --arg script "$file" \
+      --arg verdict "$verdict" \
+      --arg reason "$reason" \
+      --arg cp_version "${TAG:-}" \
+      --arg connector_version "$connector_version" \
+      --arg environment "$(playground state get run.environment 2> /dev/null)" \
+      '{date: $date, script: $script, verdict: $verdict, reason: $reason, cp_version: $cp_version, connector_version: $connector_version, environment: $environment}')
+  echo "$record" >> "$root_folder/playground-repro-verdicts"
+
+  if [[ -n "$json" ]]
+  then
+      echo "$record" | jq .
+      exit 0
+  fi
+  versions="CP ${TAG:-default}"
+  if [ -n "$connector_version" ]
+  then
+      versions="$versions, connector $connector_version"
+  fi
+  if [ $reproduced -eq 1 ]
+  then
+      log "🐞 REPRODUCED: $reason ($versions)"
+  else
+      log "✅ NOT REPRODUCED: $reason ($versions)"
   fi
 
 }
@@ -82259,6 +82581,13 @@ playground_repro_parse_requirements() {
       shift $#
       ;;
 
+    assert)
+      action="assert"
+      shift
+      playground_repro_assert_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_repro_usage >&2
@@ -83203,6 +83532,250 @@ playground_repro_status_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_repro_assert_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_repro_assert_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="repro assert"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --reproduced-if-log)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--reproduced-if-log']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--reproduced-if-log requires an argument: --reproduced-if-log PATTERN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --reproduced-if-connector-state)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--reproduced-if-connector-state']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--reproduced-if-connector-state requires an argument: --reproduced-if-connector-state STATE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --reproduced-if-records-less-than)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--reproduced-if-records-less-than']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--reproduced-if-records-less-than requires an argument: --reproduced-if-records-less-than NUMBER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --reproduced-if-records-more-than)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--reproduced-if-records-more-than']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--reproduced-if-records-more-than requires an argument: --reproduced-if-records-more-than NUMBER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --reproduced-if-command)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--reproduced-if-command']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--reproduced-if-command requires an argument: --reproduced-if-command COMMAND" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --message | -m)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--message']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--message requires an argument: --message, -m MESSAGE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--reproduced-if-records-less-than'] ]]; then
+    validation_output="$(validate_integer "${args['--reproduced-if-records-less-than']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--reproduced-if-records-less-than NUMBER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--reproduced-if-records-more-than'] ]]; then
+    validation_output="$(validate_integer "${args['--reproduced-if-records-more-than']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--reproduced-if-records-more-than NUMBER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--reproduced-if-connector-state']:-} ]] && [[ ! ${args['--reproduced-if-connector-state']:-} =~ ^(FAILED|RUNNING|PAUSED|STOPPED|UNASSIGNED|RESTARTING)$ ]]; then
+    printf "%s\n" "--reproduced-if-connector-state must be one of: FAILED, RUNNING, PAUSED, STOPPED, UNASSIGNED, RESTARTING" >&2
+    exit 1
   fi
 
 }
@@ -117651,6 +118224,11 @@ playground_repro_completion() {
         playground_repro_status_completion "$completion_current" "$@"
         return
         ;;
+      assert)
+        shift
+        playground_repro_assert_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -117660,7 +118238,7 @@ playground_repro_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" export check import bootstrap status
+  completion_candidates "$completion_current" export check import bootstrap status assert
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -118076,6 +118654,154 @@ playground_repro_status_completion() {
     completion_flag_candidates --expected "$completion_current" --expected
     completion_flag_candidates --actual "$completion_current" --actual
     completion_flag_candidates --jira "$completion_current" --jira
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
+playground_repro_assert_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --reproduced-if-log)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--reproduced-if-log"]=1
+
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --reproduced-if-connector-state)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "FAILED"
+            "RUNNING"
+            "PAUSED"
+            "STOPPED"
+            "UNASSIGNED"
+            "RESTARTING"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--reproduced-if-connector-state"]=1
+
+        ;;
+      --connector)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --reproduced-if-records-less-than)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--reproduced-if-records-less-than"]=1
+
+        ;;
+      --reproduced-if-records-more-than)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--reproduced-if-records-more-than"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --reproduced-if-command)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--reproduced-if-command"]=1
+
+        ;;
+      --message | -m)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--message"]=1
+
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --reproduced-if-log "$completion_current" --reproduced-if-log
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --reproduced-if-connector-state "$completion_current" --reproduced-if-connector-state
+    completion_flag_candidates --connector "$completion_current" --connector
+    completion_flag_candidates --reproduced-if-records-less-than "$completion_current" --reproduced-if-records-less-than
+    completion_flag_candidates --reproduced-if-records-more-than "$completion_current" --reproduced-if-records-more-than
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --reproduced-if-command "$completion_current" --reproduced-if-command
+    completion_flag_candidates --message "$completion_current" --message -m
+    completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --json "$completion_current" --json
   fi
 
@@ -132818,6 +133544,7 @@ run() {
     "repro import") playground_repro_import_command ;;
     "repro bootstrap") playground_repro_bootstrap_command ;;
     "repro status") playground_repro_status_command ;;
+    "repro assert") playground_repro_assert_command ;;
     "get-docker-compose") playground_get_docker_compose_command ;;
     "schema") playground_schema_command ;;
     "schema get") playground_schema_get_command ;;

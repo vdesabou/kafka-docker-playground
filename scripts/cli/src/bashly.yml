@@ -3177,6 +3177,7 @@ commands:
 
       bootstrap   scaffold one from an existing example, then edit it
       status      show or update what a model proves: expected, actual, jira, status
+      assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced
       export      package one or more models as a self-contained tgz bundle
       import      unpack a bundle someone sent you, and run it
       check       scan models for secrets and customer data before committing them
@@ -3639,6 +3640,105 @@ commands:
     - playground repro status
     - playground repro status -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --set "fixed in 10.8.3" --jira CC-1234
     - playground repro status --actual "the task fails with Unknown magic byte" --json
+
+  - name: assert
+    help: |-
+      🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED
+
+      Put it at the end of the scenario, with the check that says the
+      problem is there (the 💥 actual of the header). It prints the verdict
+      with the CP and connector versions, and records it in
+      playground-repro-verdicts (a local file of the repository root, not
+      committed), so that it can be compared between runs and versions:
+
+        playground repro status     shows the last verdict of the model
+        playground repro export     writes it in repro-manifest.json
+
+      One check per call (combine several with --reproduced-if-command):
+
+        --reproduced-if-log <pattern>               a line of the logs of
+                                                    --container (default
+                                                    connect) matches (grep)
+        --reproduced-if-connector-state <state>     the connector or one of
+                                                    its tasks is in this state
+        --reproduced-if-records-less-than <n>       --topic has less records
+        --reproduced-if-records-more-than <n>       --topic has more records
+        --reproduced-if-command "<command>"         the shell command succeeds
+
+      Both verdicts exit with 0: a model that does not reproduce is a result,
+      not an error. The exit code is 1 only when the check cannot run.
+
+      Without --file, the verdict is recorded for the current model (the one
+      'playground run' runs).
+    flags:
+      - long: --reproduced-if-log
+        arg: pattern
+        required: false
+        help: |-
+          🔍 Reproduced when a line of the logs of --container matches this grep pattern
+      - long: --container
+        short: -c
+        arg: container
+        required: false
+        default: "connect"
+        help: |-
+          🐳 Container whose logs --reproduced-if-log reads (default: connect)
+      - long: --reproduced-if-connector-state
+        arg: state
+        required: false
+        allowed: [FAILED, RUNNING, PAUSED, STOPPED, UNASSIGNED, RESTARTING]
+        help: |-
+          🧩 Reproduced when the connector or one of its tasks is in this state
+      - long: --connector
+        arg: connector
+        required: false
+        help: |-
+          🔗 Connector of --reproduced-if-connector-state (default: the only one running)
+      - long: --reproduced-if-records-less-than
+        arg: number
+        required: false
+        validate: integer
+        help: |-
+          📉 Reproduced when --topic has less records than this (records lost, not delivered)
+      - long: --reproduced-if-records-more-than
+        arg: number
+        required: false
+        validate: integer
+        help: |-
+          📈 Reproduced when --topic has more records than this (duplicates, records sent to a DLQ)
+      - long: --topic
+        short: -t
+        arg: topic
+        required: false
+        help: |-
+          🗳 Topic of --reproduced-if-records-less-than / --reproduced-if-records-more-than
+      - long: --reproduced-if-command
+        arg: command
+        required: false
+        help: |-
+          💻 Reproduced when this shell command succeeds (exit code 0)
+      - long: --message
+        short: -m
+        arg: message
+        required: false
+        help: |-
+          💬 Text printed with the verdict, before what the check found
+      - long: --file
+        short: -f
+        arg: file
+        required: false
+        validate: file_exists_with_trick
+        help: |-
+          🔖 Reproduction model the verdict is recorded for (default: current one)
+      - long: --json
+        required: false
+        help: |-
+          🤖 Print the verdict as JSON
+    examples:
+    - playground repro assert --reproduced-if-log "Unknown magic byte"
+    - playground repro assert --reproduced-if-connector-state FAILED --connector http-sink
+    - playground repro assert --reproduced-if-records-less-than 10 --topic orders --message "records lost"
+    - playground repro assert --reproduced-if-command "playground topic get-number-records --topic dlq | tail -1 | grep -qv '^0$'"
 
 - name: get-docker-compose
   group: Kafka
