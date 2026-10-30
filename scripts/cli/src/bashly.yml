@@ -3186,6 +3186,7 @@ commands:
       bootstrap   scaffold one from an existing example, then edit it
       status      show or update what a model proves: expected, actual, jira, status
       assert      end a model with its verdict: 🐞 reproduced or ✅ not reproduced
+      bisect      run a model on several versions: which one introduced or fixed it
       export      package one or more models as a self-contained tgz bundle
       import      unpack a bundle someone sent you, and run it
       check       scan models for secrets and customer data before committing them
@@ -3797,6 +3798,86 @@ commands:
     - playground repro assert --reproduced-if-connector-state FAILED --connector http-sink
     - playground repro assert --reproduced-if-records-less-than 10 --topic orders --message "records lost"
     - playground repro assert --reproduced-if-command "playground topic get-number-records --topic dlq | tail -1 | grep -qv '^0$'"
+
+  - name: bisect
+    help: |-
+      🔀 Run a reproduction model on several versions: which one introduced or fixed the problem
+
+      Runs the model once per version ('playground run -f <model>
+      --connector-tag <version>', or --tag for CP versions) and reads the
+      verdict that 'playground repro assert' records at the end of each run.
+      The model must end with 'playground repro assert'.
+
+        --connector-tag A --connector-tag B …   these connector versions
+        --from A --to B                         the Confluent Hub versions of
+                                                the connector of the model
+                                                between A and B: a binary
+                                                search (first, last, then the
+                                                middle until the verdict
+                                                changes), --all for every one
+        --tag A --tag B …                       these CP versions
+
+      Prints the verdict of each version (🐞 reproduced, ✅ not reproduced,
+      ❓ no verdict when the run stopped before 'repro assert'), the versions
+      where it changes and, for a Confluent connector, the changelog between
+      them ('playground connector-plugin changelog'). The log of each run is
+      in /tmp/playground-repro-bisect/<model>-<version>.log, the summary in
+      /tmp/playground-repro-bisect/<model>-<date>.json.
+
+      ⚠️ Each run stops the running environment, like 'playground run', and a
+      run takes the time of the model: a binary search over 30 versions is
+      about 6 runs.
+    flags:
+      - long: --file
+        short: -f
+        arg: file
+        required: false
+        validate: file_exists_with_trick
+        completions:
+          dynamic:
+          - playground get-examples-list-with-fzf --repro-only "$completion_current"
+        help: |-
+          🔖 Reproduction model to run (default: current one)
+      - long: --connector-tag
+        arg: connector-tag
+        required: false
+        repeatable: true
+        conflicts: [--from, --to]
+        help: |-
+          🔗 Connector version to run, repeat it for each version
+      - long: --from
+        arg: version
+        required: false
+        help: |-
+          ⏮️ First Confluent Hub version of the connector of the model (default: the oldest one)
+      - long: --to
+        arg: version
+        required: false
+        help: |-
+          ⏭️ Last Confluent Hub version of the connector of the model (default: the latest one)
+      - long: --all
+        required: false
+        help: |-
+          📚 With --from / --to, run every version of the range instead of a binary search
+      - long: --tag
+        arg: tag
+        required: false
+        repeatable: true
+        help: |-
+          🎯 CP version: repeat it to compare CP versions, or give one to run every connector version on it
+      - long: --run-flags
+        arg: flags
+        required: false
+        help: |-
+          ⛳ Other flags of 'playground run' for every run, for example "--environment sasl-ssl"
+      - long: --json
+        required: false
+        help: |-
+          🤖 Print the summary as JSON
+    examples:
+    - playground repro bisect --connector-tag 2.14.0 --connector-tag 2.14.5 --connector-tag 3.0.0
+    - playground repro bisect --from 2.10.0 --to 3.0.0
+    - playground repro bisect -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --tag 7.9.0 --tag 8.2.0 --tag 8.4.0
 
 - name: get-docker-compose
   group: Kafka
