@@ -164,7 +164,7 @@ environments where the raw command only works on `plaintext`.
 | `get-jmx-metrics -c broker` to check broker load | `playground broker metrics` (one column per broker: idle ratios, p99, bytes in/out, `--topic <t>`, `--json`) |
 | `kafka-reassign-partitions`, `kafka-leader-election` | `playground topic reassign` (`--replicas 2,3`, `--brokers 1,2,3`, `--throttle`, `--no-wait` / `--verify-only`) / `playground topic elect-leader` (`--leader <broker>` for a controlled leader move, `--unclean`); needs `--enable-multiple-brokers` |
 | `kafka-topics --create\|--list\|--delete\|--describe` | `playground topic create\|list\|delete\|describe` |
-| `docker exec broker-us kafka-…`, `curl localhost:8283/connectors` in an `mdc-*` environment (two clusters) | `playground topic\|consumer-group\|connector\|schema … --cluster us\|europe` (or `export PLAYGROUND_CLUSTER=us`); `broker` and `quota` stay blocked there |
+| `docker exec broker-us kafka-…`, `curl localhost:8283/connectors` in an `mdc-*` environment (two clusters) | `playground topic\|consumer-group\|connector\|schema\|broker\|quota … --cluster us\|europe` (or `export PLAYGROUND_CLUSTER=us`) |
 | `GetOffsetShell` / counting records | `playground topic get-number-records --topic <t>` |
 | `kafka-console-consumer` on `__consumer_offsets` | `playground topic display-consumer-offsets` |
 | `curl localhost:8081/subjects/...` | `playground schema get\|register\|get-compatibility\|set-compatibility` |

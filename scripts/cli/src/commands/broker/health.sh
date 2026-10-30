@@ -78,9 +78,9 @@ else
             logerror "❌ broker $id (container $container) is not registered: still starting? (playground container logs -c $container --errors)"
         elif echo "$health_registered" | grep -q -x "$id"
         then
-            logerror "❌ broker $id (container $container) is stopped, still registered until its session times out (playground broker start --broker $id)"
+            logerror "❌ broker $id (container $container) is stopped, still registered until its session times out (playground broker start --broker $id$(mdc_cluster_flag))"
         else
-            logerror "❌ broker $id (container $container) is not registered: it is stopped (playground broker start --broker $id)"
+            logerror "❌ broker $id (container $container) is not registered: it is stopped (playground broker start --broker $id$(mdc_cluster_flag))"
         fi
     done <<< "$health_not_registered"
     for id in $health_fenced

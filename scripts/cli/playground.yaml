@@ -5925,6 +5925,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: set
     description: "\U0001F6A6 Set client quotas\n\nSet one or more of --producer-byte-rate,
       --consumer-byte-rate,\n--request-percentage and --controller-mutation-rate,
@@ -5985,6 +5992,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: delete
     description: "\U0001F5D1️ Remove client quotas\n\nRemoves the quotas given with
       --producer-byte-rate,\n--consumer-byte-rate, --request-percentage and\n--controller-mutation-rate
@@ -6040,6 +6054,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
 - name: broker
   description: "\U0001F5A5️ Broker commands\n\n  config            read and change
     dynamic broker configs\n  health            brokers down, partition problems,
@@ -6097,6 +6118,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: set
       description: |-
         ⚙️ Set a dynamic broker config
@@ -6129,6 +6157,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: delete
       description: "\U0001F5D1️ Remove a dynamic broker config\n\nThe broker falls
         back to the next value: the cluster-wide default\n(when removing it from --broker),
@@ -6152,6 +6187,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
   - name: health
     description: "\U0001FA7A Check the health of the cluster\n\nOne digest of what
       makes a cluster unhealthy:\n\n  - broker containers that are not registered
@@ -6188,6 +6230,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: stop
     description: "\U0001F6D1 Stop a broker\n\nStops the container of a broker with
       a controlled shutdown: its leaders\nmove to the other replicas first. With --kill,
@@ -6214,6 +6263,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: start
     description: |-
       ▶️ Start a broker stopped with 'playground broker stop'
@@ -6245,6 +6301,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: rolling-restart
     description: "\U0001F504 Restart the brokers one by one, like a rolling upgrade\n\nChecks
       that the cluster is healthy (--force to skip), then for each\nbroker: restarts
@@ -6278,6 +6341,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: transactions
     description: "\U0001F4B1 Transaction commands\n\nInspect the transactions of the
       cluster and recover from hanging ones\n(wraps kafka-transactions). Works on
@@ -6313,6 +6383,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: describe
       description: "\U0001F50E Describe a transactional id\n\nState, producer id and
         epoch, timeout, start time and duration of the\ncurrent transaction, and the
@@ -6330,6 +6407,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: describe-producers
       description: "\U0001F3ED Describe the active producers of a topic\n\nFor each
         partition (or --partition only): the producers that wrote\nto it recently,
@@ -6353,6 +6437,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: find-hanging
       description: "\U0001F9DF Find hanging transactions\n\nA transaction is hanging
         when it is open on a partition for longer\nthan --max-transaction-timeout
@@ -6390,6 +6481,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
     - name: abort
       description: "\U0001F9F9 Abort a hanging transaction\n\nWrites an abort marker
         for the transaction started at --start-offset\non a partition (requires administrative
@@ -6417,6 +6515,13 @@ subcommands:
         - "-v"
         argument: ''
         description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
   - name: describe
     description: "\U0001F5FA️ Describe the cluster\n\nThe brokers (id, endpoint, rack,
       fenced, container, and the broker\ncontainers that are not registered), the
@@ -6440,6 +6545,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: metrics
     description: "\U0001F4C8 Display the key JMX metrics of the brokers\n\nOne column
       per broker: partitions and leaders, under-replicated and\nunder min ISR partitions,
@@ -6472,6 +6584,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
 - name: consumer-group
   description: "\U0001F465 Consumer group commands\n\nInspect any consumer group (not
     only the ones of sink connectors): which\ngroups exist, their state and members,

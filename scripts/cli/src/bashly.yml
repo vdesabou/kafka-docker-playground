@@ -16,7 +16,7 @@ environment_variables:
   private: true
   help: "Set by --vvv, propagated to the nested playground calls (internal)"
 - name: PLAYGROUND_CLUSTER
-  help: "🌍 Cluster used by the topic, consumer-group, connector and schema commands in an mdc-* environment (us or europe) when --cluster is not set"
+  help: "🌍 Cluster used by the topic, consumer-group, connector, schema, broker and quota commands in an mdc-* environment (us or europe) when --cluster is not set"
 
 # Use bash code here directly or a function name that references code elsewhere.
 help_header_override: |
@@ -9307,7 +9307,6 @@ commands:
   expose: always
   group: Kafka
   filters:
-  - not_mdc_environment
   - not_ccloud_environment
   help: |-
     🚦 Client quota commands
@@ -9384,6 +9383,7 @@ commands:
         help: |-
           🏷️ Default quota of all client ids (used by the client ids without their own quota)
       - *verbose
+      - *cluster
       examples:
       - playground quota get
       - playground quota get --connector filestream-sink
@@ -9432,6 +9432,7 @@ commands:
         help: |-
           🧬 Partitions created or deleted per second (controller_mutation_rate)
       - *verbose
+      - *cluster
       examples:
       - playground quota set --connector filestream-sink --consumer-byte-rate 1024
       - playground quota set --client-id my-producer --producer-byte-rate 10240
@@ -9475,6 +9476,7 @@ commands:
         help: |-
           🧬 Only remove controller_mutation_rate
       - *verbose
+      - *cluster
       examples:
       - playground quota delete --connector filestream-sink
       - playground quota delete --all-users --request-percentage
@@ -9502,7 +9504,6 @@ commands:
     expose: always
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     help: |-
       ⚙️ Dynamic broker config commands
@@ -9579,6 +9580,7 @@ commands:
           help: |-
             📜 Display every config of the broker (static and default ones too), not only the dynamic ones
         - *verbose
+        - *cluster
         examples:
         - playground broker config get
         - playground broker config get --key num.io.threads
@@ -9607,6 +9609,7 @@ commands:
           help: |-
             ✏️ New value
         - *verbose
+        - *cluster
         examples:
         - playground broker config set --key log.retention.ms --value 60000
         - playground broker config set --broker 1 --key num.io.threads --value 16
@@ -9625,6 +9628,7 @@ commands:
         - <<: *broker-config-key
           required: true
         - *verbose
+        - *cluster
         examples:
         - playground broker config delete --key log.retention.ms
         - playground broker config delete --broker 1 --key num.io.threads
@@ -9632,7 +9636,6 @@ commands:
   - name: health
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     help: |-
       🩺 Check the health of the cluster
@@ -9671,6 +9674,7 @@ commands:
       help: |-
         📗 Print the result as JSON (healthy, brokers, partitions, kraft_quorum), and nothing else
     - *verbose
+    - *cluster
     examples:
     - playground broker health
     - playground broker health --wait-healthy --max-wait 300
@@ -9699,7 +9703,6 @@ commands:
   - name: stop
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     - not_cfk_environment
     help: |-
@@ -9735,6 +9738,7 @@ commands:
       help: |-
         🔫 Kill the broker (like a crash) instead of a controlled shutdown
     - *verbose
+    - *cluster
     examples:
     - playground broker stop --broker 2
     - playground broker stop --broker 2 --kill
@@ -9742,7 +9746,6 @@ commands:
   - name: start
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     - not_cfk_environment
     help: |-
@@ -9765,6 +9768,7 @@ commands:
       help: |-
         ⏩ Do not wait for the broker to be registered and the cluster to be healthy
     - *verbose
+    - *cluster
     examples:
     - playground broker start --broker 2
     - playground broker start --broker 2 --no-wait
@@ -9772,7 +9776,6 @@ commands:
   - name: rolling-restart
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     - not_cfk_environment
     help: |-
@@ -9807,6 +9810,7 @@ commands:
       help: |-
         ☢️ Restart even if the cluster is not healthy before starting
     - *verbose
+    - *cluster
     examples:
     - playground broker rolling-restart
     - playground broker rolling-restart --brokers 3,2,1 --max-wait 600
@@ -9825,7 +9829,6 @@ commands:
     expose: always
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     help: |-
       💱 Transaction commands
@@ -9873,6 +9876,7 @@ commands:
           help: |-
             🔎 Only the transactional ids matching this regular expression
         - *verbose
+        - *cluster
         examples:
         - playground broker transactions list
         - playground broker transactions list --state Ongoing
@@ -9893,6 +9897,7 @@ commands:
           help: |-
             🆔 Transactional id (playground broker transactions list)
         - *verbose
+        - *cluster
         examples:
         - playground broker transactions describe --transactional-id my-txn-producer
 
@@ -9922,6 +9927,7 @@ commands:
           help: |-
             🔢 Only this partition (default: all the partitions of the topic)
         - *verbose
+        - *cluster
         examples:
         - playground broker transactions describe-producers --topic orders
         - playground broker transactions describe-producers --topic orders --partition 0
@@ -9970,6 +9976,7 @@ commands:
           help: |-
             ⏱️ transaction.max.timeout.ms of the brokers, in minutes: only the transactions open for longer are checked (default 15)
         - *verbose
+        - *cluster
         examples:
         - playground broker transactions find-hanging
         - playground broker transactions find-hanging --topic orders
@@ -10008,13 +10015,13 @@ commands:
           help: |-
             📍 Start offset of the transaction to abort
         - *verbose
+        - *cluster
         examples:
         - playground broker transactions abort --topic orders --partition 0 --start-offset 1234
 
   - name: describe
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     help: |-
       🗺️ Describe the cluster
@@ -10041,6 +10048,7 @@ commands:
       help: |-
         🖥️ Broker id for --api-versions (default: the first broker)
     - *verbose
+    - *cluster
     examples:
     - playground broker describe
     - playground broker describe --api-versions --broker 2
@@ -10048,7 +10056,6 @@ commands:
   - name: metrics
     group: Kafka
     filters:
-    - not_mdc_environment
     - not_ccloud_environment
     - not_cfk_environment
     help: |-
@@ -10087,6 +10094,7 @@ commands:
       help: |-
         📗 Print the raw values as JSON, one object per broker, and nothing else
     - *verbose
+    - *cluster
     examples:
     - playground broker metrics
     - playground broker metrics --topic orders

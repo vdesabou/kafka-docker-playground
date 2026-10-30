@@ -88,6 +88,16 @@ lab_expect_contains "No"
 lab_run playground consumer-group list --cluster europe
 lab_expect_exit 0
 playground topic delete --topic lab_cluster_selector --cluster europe
+lab_run playground broker health --cluster europe
+lab_expect_exit 0
+lab_expect_contains "cluster is healthy"
+lab_run playground broker stop --cluster europe --broker 1 --kill
+lab_expect_contains "playground broker start --broker 1 --cluster europe"
+lab_run playground broker health --cluster us
+lab_expect_exit 0
+lab_run playground broker start --cluster europe --broker 1
+lab_expect_exit 0
+lab_expect_contains "cluster is healthy"
 
 log "Step 3: Replicator connector, europe to us, with offset translation"
 seq -f "european_sale_%g" 20 | playground container exec -c broker-europe --command "kafka-console-producer --bootstrap-server broker-europe:9092 --topic sales_EUROPE"

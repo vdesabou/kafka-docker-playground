@@ -45,6 +45,9 @@ services:
       - broker-metrics
     environment:
       KAFKA_BROKER_ID: 1
+      # JMX for playground broker metrics (read from inside the container)
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: localhost
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe:2181'
       KAFKA_LISTENERS: PLAINTEXT://broker-europe:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-europe:9092
@@ -92,6 +95,9 @@ services:
       - broker-metrics
     environment:
       KAFKA_BROKER_ID: 1
+      # JMX for playground broker metrics (read from inside the container)
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: localhost
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us:2181'
       KAFKA_LISTENERS: PLAINTEXT://broker-us:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-us:9092
