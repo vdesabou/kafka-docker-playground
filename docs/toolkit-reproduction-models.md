@@ -77,7 +77,7 @@ playground container restart --container connect
 ```
 
 > [!NOTE]
-> The `--source` path is the absolute path of your checkout. When the model is shared with [`playground repro export`](/reusables?id=%f0%9f%93%a6-share-a-reproduction-model), `playground repro import` changes it into the path of the other machine.
+> The `--source` path is the absolute path of your checkout. When the model is shared with [`playground repro export`](/toolkit-reproduction-models?id=%f0%9f%93%a6-share-a-reproduction-model), `playground repro import` changes it into the path of the other machine.
 
 And add the transform config to connector:
 
@@ -87,7 +87,7 @@ And add the transform config to connector:
 ```
 
 > [!TIP]
-> To try the SMT on a record without copying the jar and restarting the worker after each build, use [playground connector smt test](/reusables?id=%f0%9f%a7%aa-testing-smts) with `--smt-jar`:
+> To try the SMT on a record without copying the jar and restarting the worker after each build, use [playground connector smt test](/toolkit-data?id=%f0%9f%a7%aa-testing-smts) with `--smt-jar`:
 > `playground connector smt test --connector <connector> --smt-jar MyCustomSMT-000000/target/MyCustomSMT-1.0.0-SNAPSHOT-jar-with-dependencies.jar`
 
 ### With pipeline (`--pipeline`)
@@ -203,7 +203,7 @@ Any file name works (`playground_repro_export (1).tgz` too), and <kbd>Tab</kbd> 
 
 * extracts the bundle in a temporary folder first, and refuses it if it contains absolute paths, `..`, special files, or a file whose sha256 does not match the manifest;
 * restores the symlinks to the example when your copy of the example file is identical;
-* changes the paths of the exporter's machine into yours, e.g. the jar path that [`--custom-smt`](/reusables?id=with-custom-smt-custom-smt) writes into the script;
+* changes the paths of the exporter's machine into yours, e.g. the jar path that [`--custom-smt`](/toolkit-reproduction-models?id=with-custom-smt-custom-smt) writes into the script;
 * makes the model the current one;
 * prints the `playground run` line to use, and the credentials missing from your [`playground secrets`](/playground%20secrets) profile:
 

@@ -7,17 +7,17 @@ Measure the throughput and the latency of a connector, compare versions, and kee
 
 ## 🏎️ Performance testing
 
-[playground connector benchmark](https://kafka-docker-playground.io/#/playground%20connector%20benchmark) is the way to do performance testing with the playground. On a running example or reproduction model, self managed or [fully managed](/reusables?id=%e2%98%81%ef%b8%8f-fully-managed-connectors), it loads the data, measures the throughput of the connector, tells whether the connector is really the bottleneck, records where its time goes, compares with the previous run or with other versions of the connector, and writes an HTML report to share.
+[playground connector benchmark](https://kafka-docker-playground.io/#/playground%20connector%20benchmark) is the way to do performance testing with the playground. On a running example or reproduction model, self managed or [fully managed](/toolkit-performance?id=%e2%98%81%ef%b8%8f-fully-managed-connectors), it loads the data, measures the throughput of the connector, tells whether the connector is really the bottleneck, records where its time goes, compares with the previous run or with other versions of the connector, and writes an HTML report to share.
 
 | I want to | Use |
 |---|---|
 | measure a connector | `playground connector benchmark`: the load comes with the example (the `playground topic produce` of a sink example is replayed, a source example has a `benchmark-load.bash`) |
 | compare connector versions | `playground connector benchmark --connector-tag A --connector-tag B` |
-| use my own data | [your own load](/reusables?id=your-own-load) (`--load-command`, or a load script, like the Salesforce source example below) |
-| load a table of my own in a reproduction model | [a table of your own](/reusables?id=a-table-of-your-own-reproduction-models) (`BENCHMARK_LOAD_SCRIPT`) |
-| see the broker, the JVM, the connector dashboards | start the example with [JMX Grafana](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%8a-enabling-jmx-grafana) (`--enable-jmx-grafana`): the benchmark [annotates its measure](/reusables?id=%f0%9f%93%8a-grafana) |
-| benchmark a fully managed connector | run its `ccloud/fm-*` example, keep the connector, then `playground connector benchmark`: see [fully managed connectors](/reusables?id=%e2%98%81%ef%b8%8f-fully-managed-connectors) |
-| keep a database busy while I watch | [`--enable-sql-datagen`](/reusables?id=%f0%9f%8c%aa%ef%b8%8f-databases-keep-a-load-running-with-enable-sql-datagen) |
+| use my own data | [your own load](/toolkit-performance?id=your-own-load) (`--load-command`, or a load script, like the Salesforce source example below) |
+| load a table of my own in a reproduction model | [a table of your own](/toolkit-performance?id=a-table-of-your-own-reproduction-models) (`BENCHMARK_LOAD_SCRIPT`) |
+| see the broker, the JVM, the connector dashboards | start the example with [JMX Grafana](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%8a-enabling-jmx-grafana) (`--enable-jmx-grafana`): the benchmark [annotates its measure](/toolkit-performance?id=%f0%9f%93%8a-grafana) |
+| benchmark a fully managed connector | run its `ccloud/fm-*` example, keep the connector, then `playground connector benchmark`: see [fully managed connectors](/toolkit-performance?id=%e2%98%81%ef%b8%8f-fully-managed-connectors) |
+| keep a database busy while I watch | [`--enable-sql-datagen`](/toolkit-performance?id=%f0%9f%8c%aa%ef%b8%8f-databases-keep-a-load-running-with-enable-sql-datagen) |
 
 ### ⏱️ Benchmark a connector
 
@@ -64,7 +64,7 @@ The load comes from the example:
   * Solace (and JMS Solace): messages sent through the REST messaging port of the broker
   * Splunk: events sent to the HTTP event collector of the connector, **steady mode only** (the connector keeps the events received while it is paused in memory)
   * Files: JSON or CSV files of `BENCHMARK_FILE_RECORDS` records (10000, one record per file with `--shape small-txn`), written so that the connector never reads a file being written: spool dir, SFTP and FTPS (in the format of the connector class and its `input.file.pattern`), FilePulse (CSV rows of `csv.sh`), HDFS 2 and HDFS 3 (Avro files in the layout of the HDFS sink), and the generalized mode of the S3, GCS and Azure Blob Storage sources (names that sort after the files already read). FileStream: lines appended to the file of the connector. The cloud storage and HDFS sources reconfigure their task at each poll interval: the benchmark then counts the records in the topics, and says so
-  * Salesforce Bulk API source: Leads created in Salesforce with one Bulk API job (`--shape bulk` drain only, see [the example below](/reusables?id=a-real-life-example-the-salesforce-bulk-api-source))
+  * Salesforce Bulk API source: Leads created in Salesforce with one Bulk API job (`--shape bulk` drain only, see [the example below](/toolkit-performance?id=a-real-life-example-the-salesforce-bulk-api-source))
 * or your own command with `--load-command` (drain) / `--stream-load-command` (steady), for example in a reproduction model (see below)
 
 #### Your own load
@@ -299,7 +299,7 @@ Each result also records the setup it ran on, shown in the **Setup** section of 
 
 #### 🛩️ Where the time goes
 
-The connect workers are recorded with [Java Flight Recorder](/reusables?id=%f0%9f%9b%a9%ef%b8%8f-flight-recorder) during the measure (the drain, or the steady measure after the warm-up). The recording runs over JMX: the Confluent images have no `jcmd`, and nothing is restarted. The summary lists the findings, and the report gets a **Where the time goes** section, the same analysis as [`playground analyze flight-recorder`](/playground%20analyze%20flight-recorder): is it the connector, the system behind it, Kafka, a lock? Which part of the pipeline uses the CPU?
+The connect workers are recorded with [Java Flight Recorder](/toolkit-debugging?id=%f0%9f%9b%a9%ef%b8%8f-flight-recorder) during the measure (the drain, or the steady measure after the warm-up). The recording runs over JMX: the Confluent images have no `jcmd`, and nothing is restarted. The summary lists the findings, and the report gets a **Where the time goes** section, the same analysis as [`playground analyze flight-recorder`](/playground%20analyze%20flight-recorder): is it the connector, the system behind it, Kafka, a lock? Which part of the pipeline uses the CPU?
 
 ```
    flight recorder        🔴 The tasks wait on postgres:5432.
@@ -379,7 +379,7 @@ playground run -f postgres.sh --enable-sql-datagen
 SQL_DATAGEN_DURATION=30 SQL_DATAGEN_SESSIONS=10 playground run -f cdc-oracle19-pdb-table.sh --enable-sql-datagen
 ```
 
-After the example succeeded, `playground run` starts the `benchmark-load.bash` of the example (the load of [playground connector benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector), on the table its connector reads: `CUSTOMERS` for most examples) in stream mode, one row per transaction, in `SQL_DATAGEN_SESSIONS` parallel sessions (default 5: concurrent transactions, as on a busy database), for `SQL_DATAGEN_DURATION` minutes (default 10). It logs the rows inserted every 30 seconds, then stops the sessions at the end of their current batch:
+After the example succeeded, `playground run` starts the `benchmark-load.bash` of the example (the load of [playground connector benchmark](/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector), on the table its connector reads: `CUSTOMERS` for most examples) in stream mode, one row per transaction, in `SQL_DATAGEN_SESSIONS` parallel sessions (default 5: concurrent transactions, as on a busy database), for `SQL_DATAGEN_DURATION` minutes (default 10). It logs the rows inserted every 30 seconds, then stops the sessions at the end of their current batch:
 
 ```
 🌪️ injecting rows with benchmark-load.bash for 1 minute(s): 5 session(s), one row per transaction
@@ -388,7 +388,7 @@ After the example succeeded, `playground run` starts the `benchmark-load.bash` o
 🌪️ done: 63600 rows inserted in 61s by 5 session(s)
 ```
 
-A reproduction model gets the load of its example from `playground repro bootstrap`, and can use a table of its own: see [A table of your own](/reusables?id=a-table-of-your-own-reproduction-models).
+A reproduction model gets the load of its example from `playground repro bootstrap`, and can use a table of its own: see [A table of your own](/toolkit-performance?id=a-table-of-your-own-reproduction-models).
 
 > [!TIP]
-> To measure the connector rather than keep it busy, use [playground connector benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector): same loads, with `--sessions` for parallel sessions.
+> To measure the connector rather than keep it busy, use [playground connector benchmark](/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector): same loads, with `--sessions` for parallel sessions.

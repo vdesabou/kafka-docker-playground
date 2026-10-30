@@ -334,7 +334,7 @@ Just use [CLI](/playground%20debug%20tcp-dump) `playground debug tcp-dump`. It r
 With several `--container`, the captures run at the same time, so both sides of a connection can be compared. For a window of any length, use `--action start`, reproduce, then `--action stop`.
 
 > [!NOTE]
-> On an encrypted listener (SSL, SASL_SSL) you will see the TCP connections and the TLS handshake, but not the content of the requests. To read HTTPS traffic in clear text, use [mitmproxy](/reusables?id=%f0%9f%95%b5%ef%b8%8f%e2%99%82%ef%b8%8f-see-tls-traffic-with-mitmproxy) instead.
+> On an encrypted listener (SSL, SASL_SSL) you will see the TCP connections and the TLS handshake, but not the content of the requests. To read HTTPS traffic in clear text, use [mitmproxy](/toolkit-debugging?id=%f0%9f%95%b5%ef%b8%8f%e2%99%82%ef%b8%8f-see-tls-traffic-with-mitmproxy) instead.
 
 ```bash
 playground debug tcp-dump --container control-center --port 9021 --duration 60
@@ -348,7 +348,7 @@ playground analyze tcp-dump -f customer.pcapng          # a capture a customer s
 
 A [heap dump](https://www.baeldung.com/java-heap-dump-capture) is a snapshot of all the objects in the JVM memory. Take one when a component uses more and more memory, spends its time in garbage collection or fails with `java.lang.OutOfMemoryError`, to find which objects (and which connector, task or client) hold the memory.
 
-Just use [CLI](/playground%20debug%20heap-dump) `playground debug heap-dump`. It saves output to a `.hprof` file that can be read with [VisualVM](https://visualvm.github.io/) or [MAT](https://www.eclipse.org/mat/), or analyzed with [`playground analyze heap-dump`](/playground%20analyze%20heap-dump) (Eclipse MAT leak suspects and an HTML report, see [Analyze what you collected](/reusables?id=%f0%9f%94%8e-analyze-what-you-collected)).
+Just use [CLI](/playground%20debug%20heap-dump) `playground debug heap-dump`. It saves output to a `.hprof` file that can be read with [VisualVM](https://visualvm.github.io/) or [MAT](https://www.eclipse.org/mat/), or analyzed with [`playground analyze heap-dump`](/playground%20analyze%20heap-dump) (Eclipse MAT leak suspects and an HTML report, see [Analyze what you collected](/toolkit-debugging?id=%f0%9f%94%8e-analyze-what-you-collected)).
 
 ```bash
 playground debug heap-dump
@@ -383,7 +383,7 @@ Analyze the dumps with [`playground analyze thread-dump`](/playground%20analyze%
 
 [Java Flight Recorder](https://www.baeldung.com/java-flight-recorder-monitoring) (JFR) records what happens in the JVM over a period of time with a low overhead: CPU usage per method, memory allocations, garbage collections, lock contention, file and socket I/O. Use it for performance problems (slow throughput, latency spikes, high CPU) where a single thread or heap dump is not enough.
 
-Just use [CLI](/playground%20debug%20flight-recorder) `playground debug flight-recorder`: start the recording, reproduce the issue, then stop it. Stopping copies the `.jfr` file to the current directory (or `--output-dir`) and analyzes it with [`playground analyze flight-recorder`](/playground%20analyze%20flight-recorder): where the time of the connector tasks goes, with findings (see [Analyze what you collected](/reusables?id=%f0%9f%94%8e-analyze-what-you-collected)). Open the `.jfr` with [JDK Mission Control](https://jdk.java.net/jmc/) for the details.
+Just use [CLI](/playground%20debug%20flight-recorder) `playground debug flight-recorder`: start the recording, reproduce the issue, then stop it. Stopping copies the `.jfr` file to the current directory (or `--output-dir`) and analyzes it with [`playground analyze flight-recorder`](/playground%20analyze%20flight-recorder): where the time of the connector tasks goes, with findings (see [Analyze what you collected](/toolkit-debugging?id=%f0%9f%94%8e-analyze-what-you-collected)). Open the `.jfr` with [JDK Mission Control](https://jdk.java.net/jmc/) for the details.
 
 ```bash
 playground debug flight-recorder --action start
@@ -404,7 +404,7 @@ The recording is driven over JMX (`FlightRecorderMXBean`): the Confluent images 
 | `all` | every event, with no threshold, for a deep dive in JDK Mission Control | high |
 
 > [!TIP]
-> To record for a fixed time and analyze in one command: `playground analyze flight-recorder -c connect --duration 2m`. On JDK 25+ (cp 8.3.2), `--trace-method <Class::method>` also records every call of a method with its duration and caller. During a benchmark, [playground connector benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) records the workers on its own.
+> To record for a fixed time and analyze in one command: `playground analyze flight-recorder -c connect --duration 2m`. On JDK 25+ (cp 8.3.2), `--trace-method <Class::method>` also records every call of a method with its duration and caller. During a benchmark, [playground connector benchmark](/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) records the workers on its own.
 
 ### 🧰 More debug commands
 

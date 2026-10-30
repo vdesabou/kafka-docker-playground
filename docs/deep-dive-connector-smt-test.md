@@ -92,9 +92,15 @@ Gotchas:
   Give them as a list `[{"key": …, "value": …}]` for several headers with the same key.
 - `--from-topic` reads with the worker's `bootstrap.servers` and security settings, waits up to 15 s for the record,
   and fails with `no record at offset N of partition P of topic T` otherwise.
+- **Sink or source record matters too**: some transforms only accept one kind. `InsertField` with `offset.field` fails
+  on a source record with `Only SinkRecord supported for [field insertion]`, as in a real source connector: use
+  `--type source` for the chain of a source connector given with `--config`.
 - A config without `transforms` is accepted with a warning: the record goes through unchanged.
 - **Fully managed connectors** are refused with `--connector`: their transforms run in Confluent Cloud. Give their
   config with `--config @file`: the result on a self-managed worker is indicative.
+- **`errors.tolerance` and the dead letter queue do not apply**: the chain runs outside of a connector task, so a
+  failing transform is reported as failing, even when the connector would skip the record or send it to its DLQ.
+- Not available on the cfk environment yet.
 
 ---
 
@@ -142,7 +148,13 @@ Gotchas:
 - The output stops at the first error or drop: the steps after it are not run, like in Connect.
 - `--json` prints the harness result as JSON on stdout (`label`, `kafka_version`, `connector_type`, `steps[]` with
   `alias`, `type`, `config`, `predicate`, `predicate_result`, `negate`, `skipped`, `dropped`, `error`, `stack_trace`,
-  `record`), and no report line.
+  `record`), and no report line. To assert the final record in a script (exit 1 when a transform fails, a drop is not
+  an error):
+
+  ```bash
+  playground connector smt test --json --config @transforms.json --record @record.json \
+    | jq -e '[.steps[] | select(.record)] | last | .record.value | fromjson | .email_address == "john@example.com"'
+  ```
 - **The first run is slow**: the harness is compiled in an `eclipse-temurin:17-jdk` container for the Kafka jars of
   the image and cached in `~/.playground-smt-tester`. Later runs take a few seconds.
 
