@@ -2996,8 +2996,15 @@ subcommands:
       keeps some of them, the HTML report has Component / Instance / Connector filters.
       \U0001F512 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default
       (best effort: review before sharing), --no-sanitize for internal bundles only.
-      --logs-only gives the plain log digest instead.\n\n\U0001F512 Passwords and
-      other secrets (password=…, JAAS configs, tokens, keys, credentials in URLs),
+      --logs-only gives the plain log digest instead. \U0001F3AF --problem \"<component,
+      symptom, since when>\" matches the bundle against what the customer reports:
+      the issues that explain it first, a verdict (explained, not explained, not covered
+      by the logs), the changes before the date. \U0001F4E5 A Data to request section
+      says what to ask the customer for next, with why and the command: from the gaps
+      of the bundle (logs that start too late, previous logs of restarted containers,
+      no events, no operator log), from its findings (OOMKilled, Pending pods, TLS,
+      failed connectors) and from the symptoms of --problem.\n\n\U0001F512 Passwords
+      and other secrets (password=…, JAAS configs, tokens, keys, credentials in URLs),
       IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>,
       <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON) by default.
       It is best effort: review the output before sharing it. --no-sanitize keeps
@@ -3117,6 +3124,24 @@ subcommands:
       description: "\U0001F39A️  CFK support bundle: only keep the issues of this
         severity or above (critical | high | medium | low)\n\nAllowed values: critical,
         high, medium, low"
+    - names:
+      - "--problem"
+      - "-p"
+      argument: PROBLEM
+      description: "\U0001F3AF CFK support bundle: the problem the customer reports,
+        in your own words: component, symptom and since when (example: \"connect-0
+        keeps restarting since 14 Oct 08:30, orders-sink failed\")\n\nMatched against
+        the bundle (keywords and dates, no AI): the components and CR / pod names
+        (connect, kafka, kraft, schema registry, operator, connect-0…), the symptoms
+        (roll / upgrade stuck, crash / restarts, pending, memory / OOM, TLS, auth
+        / RBAC, KRaft migration, connector failed, slow / lag / hang, disk, network)
+        and the dates it recognizes (2026-10-14 08:30, 14 Oct, Oct 14, yesterday,
+        3 hours ago). The issues that match come first, marked \U0001F3AF, with a
+        verdict: explained, partly explained, not explained, or not covered (the logs
+        of the bundle do not cover the date), the changes of the CRs before the date
+        and the logs that start after it. Terminal, HTML report and \"problem\" in
+        --json. It also adds what to request for these symptoms to the \U0001F4E5
+        Data to request section"
     - names:
       - "--no-sanitize"
       argument: ''

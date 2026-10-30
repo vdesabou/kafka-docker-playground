@@ -12,6 +12,7 @@ eval "connector_array=(${args[--connector]})"
 with_worker="${args[--with-worker]}"
 show_config="${args[--show-config]}"
 json_sections="${args[--json-sections]}"
+problem="${args[--problem]}"
 
 # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
 if [[ -n "$json_out" ]]
@@ -333,10 +334,12 @@ do
 done
 set -e
 
-if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 ]]
+if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 || -n "$problem" ]]
 then
-    logwarn "⚠️ --component and --severity only apply to a CFK support bundle, and none was found"
+    logwarn "⚠️ --component, --severity and --problem only apply to a CFK support bundle, and none was found"
 fi
+# --problem: matched against each CFK support bundle (cfk-analysis/problem.py)
+CFK_ANALYSIS_PROBLEM="$problem"
 
 # ── CFK support bundles: cfk-analysis (pods, custom resources, events, versions, recent changes, logs) ──
 cfk_exit=0

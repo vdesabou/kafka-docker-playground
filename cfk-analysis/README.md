@@ -95,6 +95,14 @@ scheduling, …) with concrete remediation steps per category:
   instance and message, digits / timestamps / numbered placeholders folded), known CFK issues, KRaft migration phase,
   verdict. Text, `cfk-bundles-comparison-*.html`, `"comparison"` in `--json`. Samples:
   `--sample cfk_rollout --sample cfk_rollout_after` (`make_rollout_bundle.py --after`).
+- Problem statement (`problem.py`, `analyzer_cli.py --problem`, `playground analyze logs --problem`, passed by
+  `analyze_cfk_bundle` from `CFK_ANALYSIS_PROBLEM`): keywords and dates, no AI. `parse()` finds the components
+  (`COMPONENT_WORDS`) and the CR / pod names of the bundle, the symptoms (`SYMPTOMS`: words, categories that explain
+  them, data to request) and the dates, relative to `collected`. `correlate()` sets `problem_match` on the issues of
+  these components with a category of these symptoms (sorted first in the text and the HTML report, 🎯 filter), checks
+  each date against `.coverage.log_windows` and the timeline, and gives a verdict (`explained`, `partly explained`,
+  `not explained`, `not covered`): `"problem"` in `--json`. `data_to_request()` (always, `"data_to_request"`): what to
+  ask the customer for, with why and the command, from the gaps of the bundle, its findings and the symptoms, once per key.
 - Transient pod symptoms: `Unhealthy` (probe failed) and `BackOff` events of a pod that is Running with every
   container ready in the bundle, and fewer than 3 restarts, are `low` with `"transient": true` (a broker not Ready
   while it starts, Connect restarted before Kafka was up). Rows of `Normal` events in kubectl text output (a PVC
@@ -129,6 +137,7 @@ review the output before sharing it.
   file in the editor (`PLAYGROUND_EDITOR`): the file of the bundle folder on the host (`PLAYGROUND_BUNDLE_HOST_DIR`), or
   a copy next to its page for an archive (`PLAYGROUND_REPORT_HOST_DIR`), all passed to the container by
   `analyze_cfk_bundle`.
+- `problem.py` — `--problem` (🎯 matched against the bundle) and the 📥 Data to request section.
 - `analyzer_cli.py` — CLI entrypoint: safe extraction → analyze → sanitize → render.
 - `Dockerfile` / `requirements.txt` — runtime image (`python:3.12-slim` + `PyYAML`). The playground builds it
   once (tag derived from these two files) and mounts the code at run time.
@@ -148,6 +157,7 @@ playground analyze logs -f ./customer-bundle.tar.gz
 playground analyze logs -f ./bundle.tgz --output-dir ./reports      # + HTML report in ./reports
 playground analyze logs -f ./bundle.tar.gz --json > report.json
 playground analyze logs -f ./bundle.tar --component connect          # only the Connect issues
+playground analyze logs -f ./bundle.tgz -p "kafka roll stuck after the upgrade yesterday"   # matched against the problem
 ```
 
 See `playground analyze logs --help` for all flags. For a raw ERROR digest of every log in the

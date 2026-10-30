@@ -6178,6 +6178,11 @@ function analyze_cfk_bundle() {
     then
         cli_args+=(--label "$CFK_ANALYSIS_LABEL")
     fi
+    # playground analyze logs --problem: the problem statement, matched against the bundle (cfk-analysis/problem.py)
+    if [[ -n "${CFK_ANALYSIS_PROBLEM:-}" ]]
+    then
+        cli_args+=(--problem "$CFK_ANALYSIS_PROBLEM")
+    fi
 
     docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
     local exit_code=$?
