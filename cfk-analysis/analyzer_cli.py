@@ -166,7 +166,8 @@ def print_environment(results, timeline_limit: int = 12):
         print(f"Recent changes (newest first, {min(len(timeline), timeline_limit)} of {len(timeline)})")
         print("-" * 72)
         for change in timeline[:timeline_limit]:
-            print(f"  {change['time']}  {change['kind']}/{change['name']}  {change['what']}")
+            print(f"  {change['time']}  {change['kind']}/{change['name']}  {change['what']}"
+                  + (f"  ⚠️ {change['before_failure']}" if change.get("before_failure") else ""))
         print()
 
 
