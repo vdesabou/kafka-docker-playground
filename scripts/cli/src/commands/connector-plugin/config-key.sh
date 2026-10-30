@@ -3,6 +3,14 @@ connector_class_filter="${args[--connector-class]}"
 max_examples="${args[--max-examples]}"
 since_version="${args[--since-version]}"
 since_plugin="${args[--connector-plugin]}"
+json="${args[--json]}"
+
+# with --json, the text goes to stderr and the JSON document to fd 3 (stdout), at the end
+exec 3>&1
+if [[ -n "$json" ]]
+then
+    exec 1>&2
+fi
 
 # prints the entry of $1 (a config-<class>.txt reference) for key $2: group, documentation, type, default...
 function config_key_entry () {
@@ -33,12 +41,9 @@ function config_key_since_version () {
     fi
     if [[ -z "$plugin" ]]
     then
-        # the plugin mounted by the examples that recorded this class (the ones using a single plugin)
-        plugin=$(for f in $(git ls-files -- "*/config-$class.txt")
-        do
-            plugins=$(grep -ohE "confluent-hub-components/[A-Za-z0-9_.-]+" "$(dirname "$f")"/docker-compose*.yml 2>/dev/null | sort -u)
-            [ "$(echo "$plugins" | grep -c .)" == "1" ] && echo "$plugins"
-        done | sort | uniq -c | sort -rn | head -1 | awk '{print $2}' | sed 's#confluent-hub-components/##; s#-#/#')
+        plugin=$(connector_plugin_of_class "$class")
+    else
+        plugin=$(resolve_connector_plugin "$plugin") || return
     fi
     if [[ -z "$plugin" ]]
     then
@@ -321,6 +326,45 @@ else
         | awk -F'|' '{ count[$1]++; if (!($1 in where)) where[$1] = $2 } END { for (v in count) printf "%d|%s|%s\n", count[v], v, where[v] }' \
         | sort -t'|' -k1,1 -rn | head -n "$max_examples" \
         | awk -F'|' '{ printf "   %-30s x%-3d e.g. %s\n", $2, $1, $3 }'
+fi
+
+if [[ -n "$json" ]]
+then
+    connectors_json="[]"
+    for class in $classes
+    do
+        file="${file_by_class[$class]}"
+        entry=$(config_key_entry "$file" "$key")
+        cached=""
+        for c in $(ls "$root_folder"/.connector_config/config-"$class"-*.txt 2>/dev/null | sort -V)
+        do
+            v=$(config_key_class "$c")
+            v="${v##*-}"
+            if grep -q -x -F "🔘 $key" "$c"
+            then
+                cached="$cached$v|1|$(config_key_entry "$c" "$key" | sed -n 's/^[[:space:]]*- Default: //p')"$'\n'
+            else
+                cached="$cached$v|0|"$'\n'
+            fi
+        done
+        connectors_json=$(echo "$connectors_json" | jq --arg class "$class" --arg file "$file" --arg entry "$entry" --arg cached "$cached" '
+            ($entry | split("\n")) as $l
+            | def field($n): ($l | map(select(test("^\\s*- " + $n + ": "))) | first // "" | sub("^\\s*- " + $n + ": "; ""));
+            . + [{
+                connector_class: $class,
+                group: ($l[0] | sub("^group: "; "")),
+                documentation: ([$l[1:][] | select(test("^\\s*- ") | not)] | join(" ") | gsub("^\\s+|\\s+$"; "")),
+                type: field("Type"), default: field("Default"), importance: field("Importance"), required: field("Required"),
+                reference: $file,
+                versions_run_locally: [$cached | split("\n")[] | select(. != "") | split("|") | {version: .[0], has_key: (.[1] == "1"), default: (if .[1] == "1" then (.[2:] | join("|")) else null end)}]
+            }]')
+    done
+    values_json=$(echo "$examples" | grep -v '^$' | sed -E "s/^([^:]+:[0-9]+):.*\"$(echo "$key" | sed 's/[][\.*^$/]/\\&/g')\"[[:space:]]*:[[:space:]]*(\"[^\"]*\"|[^,}]*).*/\2|\1/" \
+        | jq -R -s 'split("\n") | map(select(. != "") | split("|") | {value: (.[0] | gsub("^\"|\"$"; "")), where: .[1]}) | group_by(.value) | map({value: .[0].value, count: length, example: .[0].where}) | sort_by(-.count)')
+    jq -n --arg key "$key" --argjson found "$( [ $key_found -eq 1 ] && echo true || echo false)" \
+        --argjson framework "$( [[ "$key" =~ $framework_key_regex ]] && echo true || echo false)" \
+        --argjson connectors "$connectors_json" --argjson values "${values_json:-[]}" --arg cached_only "$cached_only_classes" \
+        '{key: $key, found: $found, framework_key: $framework, connectors: $connectors, only_in_versions_run_locally: ($cached_only | split(" ") | map(select(. != ""))), values_in_examples: $values}' >&3
 fi
 
 if [ $key_found -eq 0 ] && [ -z "$examples" ] && [[ ! "$key" =~ $framework_key_regex ]]

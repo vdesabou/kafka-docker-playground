@@ -625,9 +625,10 @@ fi
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
 
-if [[ $connector_plugin == *"@"* ]]
+# owner/name, a connector class or a fully managed type
+if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
 then
-  connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+    exit 1
 fi
 
 if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]

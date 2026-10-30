@@ -6,9 +6,10 @@ with_log="${args[--with-log]}"
 json="${args[--json]}"
 force_refresh="${args[--force-refresh]}"
 
-if [[ $connector_plugin == *"@"* ]]
+# owner/name, a connector class or a fully managed type
+if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
 then
-  connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+    exit 1
 fi
 
 # with --json, the logs go to stderr

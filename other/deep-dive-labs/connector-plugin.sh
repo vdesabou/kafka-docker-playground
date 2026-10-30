@@ -29,6 +29,9 @@ lab_expect_not_contains "v10.9.5 -"
 lab_run playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --latest
 lab_expect_exit 0
 lab_expect_equals "$(grep -cE '^[0-9][0-9A-Za-z.-]*$' <<< "$LAB_OUTPUT")" "1" "--latest prints only the version"
+lab_run playground connector-plugin versions -c io.confluent.connect.jdbc.JdbcSinkConnector --latest
+lab_expect_exit 0
+lab_expect_contains "🔌 connector class io.confluent.connect.jdbc.JdbcSinkConnector is in plugin confluentinc/kafka-connect-jdbc"
 lab_run playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --last 2 --json
 lab_expect_exit 0
 lab_expect_equals "$(jq '.versions | length' <<< "$LAB_OUTPUT")" "2" "number of versions in the JSON"
@@ -65,6 +68,8 @@ log "Step 2: a config key, everywhere then for one connector"
 lab_run playground connector-plugin config-key --key flush.size
 lab_expect_contains "connector(s) have key flush.size, use --connector-class to see the details of one"
 lab_expect_contains "io.confluent.connect.s3.S3SinkConnector"
+lab_run bash -c "$playground_cli connector-plugin config-key --key batch.size -c io.confluent.connect.jdbc.JdbcSinkConnector --json 2>/dev/null | jq -r '.connectors[0].default'"
+lab_expect_contains "3000"
 lab_run playground connector-plugin config-key --key batch.size -c io.confluent.connect.jdbc.JdbcSinkConnector
 lab_expect_contains "🔑 batch.size in io.confluent.connect.jdbc.JdbcSinkConnector (group: Writes)"
 lab_expect_contains "- Type: INT"

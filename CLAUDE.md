@@ -89,6 +89,10 @@ out of context.
   under `/tmp/playground-*` (`--output-dir`, `--no-open`; no report with `--json`). `container logs --errors` and
   `container display-error-all` write one only with `--html`. In an interactive terminal the report opens in the
   browser; otherwise only its `file://` path is printed.
+- Every `playground connector-plugin` subcommand takes `--json`, and its `-c` / `--connector-plugin` accepts `owner/name`,
+  a connector class (`io.confluent.connect.jdbc.JdbcSinkConnector`, resolved from the examples) or a fully managed type
+  (`S3_SINK`). The ones that read jars (`search-jar`, `dependencies`, `cve-scan`, `config-diff`) download each version once
+  in `/tmp/connector-plugin-jars` and need Docker, not an environment.
 - `playground connector-plugin sourcecode --only-show-url` prints the GitHub URL at the exact tag, for
   self-managed plugins (`confluentinc/kafka-connect-hdfs`, Hub version) **and fully managed ones**
   (`confluentinc/SalesforceBulkApiV2Sink`, resolved through `cc-docker-connect` to a `v<ver>-cloud`

@@ -32,6 +32,10 @@ run.
 | the first plugin version shipping library X ≥ Y | `playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0` |
 | the classes of the plugin that Connect loads from the worker instead | `playground connector-plugin search-jar -c confluentinc/kafka-connect-replicator --with-worker` |
 
+Every subcommand takes `--json`, and `--connector-plugin` accepts `owner/name`, a connector class
+(`io.confluent.connect.jdbc.JdbcSinkConnector`: its plugin is the one the examples of that class mount) or a fully
+managed type (`S3_SINK` → `confluentinc/S3_SINK`).
+
 ---
 
 ## 1. Mental model (the 3 things to remember)
@@ -627,7 +631,7 @@ playground connector-plugin info -c <owner/name> [--from X] [--max-examples 10] 
 playground connector-plugin versions -c <owner/name> [--last N] [--from X] [--latest] [--with-changelog] [--json] [--force-refresh]
 playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--grep <regex>] [--json]
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>] [--with-changelog] [--json]
-playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10] [--since-version]
+playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10] [--since-version] [--json]
 playground connector-plugin config-diff -c <owner/name> --from X [--to Y] [--connector-class <class>] [--file <config>] [--with-docs] [--json]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
 playground connector-plugin sourcecode -c <owner/name> --connector-tag X --grep <regex> | --connector-tag X --connector-tag Y --log [--grep <regex>] | --files [--path <glob>]
@@ -637,6 +641,7 @@ playground connector-plugin cve-scan -c <owner/name> [--connector-tag X] [--comp
 playground connector-plugin dependencies -c <owner/name> [--connector-tag X [--connector-tag Y]] [--grep <regex>] [--find-first <artifact>:<version>] [--json]
 ```
 
+- `-c` / `--connector-plugin`: `owner/name`, a connector class, or a fully managed type; `--json` everywhere.
 - `versions` = Hub API, cached one day in `/tmp/version_<owner>_<name>.json` (`--force-refresh` after a release); `--from` = how far behind.
 - `changelog` = docs.confluent.io feeds, self-managed Confluent plugins only, `--from` excluded.
 - `config-key` = CI references in git + versions run locally. "Since" = CI date, not a version: `--since-version` for the version.

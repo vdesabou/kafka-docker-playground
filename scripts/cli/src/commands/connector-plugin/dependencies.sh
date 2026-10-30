@@ -6,9 +6,10 @@ json="${args[--json]}"
 force_refresh="${args[--force-refresh]}"
 eval "connector_tags=(${args[--connector-tag]:-})"
 
-if [[ $connector_plugin == *"@"* ]]
+# owner/name, a connector class or a fully managed type
+if ! connector_plugin=$(resolve_connector_plugin "$connector_plugin")
 then
-  connector_plugin=$(echo "$connector_plugin" | cut -d "@" -f 2)
+    exit 1
 fi
 
 if ! command -v python3 > /dev/null 2>&1
