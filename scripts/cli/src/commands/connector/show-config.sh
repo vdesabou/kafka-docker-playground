@@ -5,6 +5,12 @@ no_clipboard="${args[--no-clipboard]}"
 
 connector_type=$(playground state get run.connector_type)
 environment=$(playground state get run.environment)
+# mdc-* environments: the printed command carries the cluster of the connector
+cluster_flag=""
+if [[ "$environment" == mdc* ]]
+then
+    cluster_flag=$(mdc_cluster_flag)
+fi
 
 if [[ ! -n "$connector" ]]
 then
@@ -42,9 +48,9 @@ do
         log "🧰 Current config for $connector_type connector $connector"
         if [[ -n "$no_clipboard" ]]
         then
-            echo "playground connector create-or-update --connector $connector --no-clipboard << 'EOF'"
+            echo "playground connector create-or-update$cluster_flag --connector $connector --no-clipboard << 'EOF'"
         else
-            echo "playground connector create-or-update --connector $connector << 'EOF'"
+            echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'"
         fi
         cat "/tmp/config-$connector" | jq -S .
         echo "EOF"
@@ -66,7 +72,7 @@ do
                 else
                     log "🐛📂 not deleting tmp dir $tmp_dir"
                 fi
-                echo "playground connector create-or-update --connector $connector << 'EOF'" > $tmp_dir/tmp
+                echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'" > $tmp_dir/tmp
                 cat "/tmp/config-$connector" | jq -S . >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
 
@@ -88,9 +94,9 @@ do
 
         if [[ -n "$no_clipboard" ]]
         then
-            echo "playground connector create-or-update --connector $connector --no-clipboard << 'EOF'"
+            echo "playground connector create-or-update$cluster_flag --connector $connector --no-clipboard << 'EOF'"
         else
-            echo "playground connector create-or-update --connector $connector << 'EOF'"
+            echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'"
         fi
         echo "$curl_output" | jq -S .
         echo "EOF"
@@ -112,7 +118,7 @@ do
                 else
                     log "🐛📂 not deleting tmp dir $tmp_dir"
                 fi
-                echo "playground connector create-or-update --connector $connector << 'EOF'" > $tmp_dir/tmp
+                echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'" > $tmp_dir/tmp
                 echo "$curl_output" | jq -S . >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
 

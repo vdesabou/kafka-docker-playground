@@ -1664,6 +1664,11 @@ function wait_container_ready() {
   then
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONTROL_CENTER_CONTAINER} to start"
     playground --output-level WARN container logs --container $CONTROL_CENTER_CONTAINER --wait-for-log "Started NetworkTrafficServerConnector" --max-wait $MAX_WAIT
+  elif [[ $CONNECT_CONTAINER == connect-us ]] || [[ $CONNECT_CONTAINER == connect-europe ]]
+  then
+    # mdc-* environments: the REST API of the worker of that cluster
+    log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
+    PLAYGROUND_CLUSTER="${CONNECT_CONTAINER#connect-}" playground container wait-for-connect-rest-api-ready --max-wait $MAX_WAIT
   elif [[ $CONNECT_CONTAINER == connect* ]]
   then
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
