@@ -202,7 +202,18 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   HTML report also shows the **configuration** of Kafka, ZooKeeper, Schema Registry, Connect and Control Center: the
   properties CFK renders (`kafka.properties`, `connect.properties`… of the `<cr>-shared-config` ConfigMaps,
   `configOverrides`, `jvm.config`, `log4j.properties`, the effective config logged at startup) and the config of each
-  connector (`Connector` CRs, `…ConnectorConfig values:` dumps of the Connect logs), with a key / value filter. It
+  connector (`Connector` CRs, `…ConnectorConfig values:` dumps of the Connect logs), with a key / value filter.
+  **📕 Known CFK issues**: the log messages and events of the CFK triage table of Confluent support (roll blocked by
+  the pre-roll checks, expired certificate, `INCONSISTENT_CLUSTER_ID`, ZooKeeper to KRaft migration, authorizer that
+  doesn't start, license secret, `Could not obtain JAAS context`…) are matched on every issue, and on the INFO lines of
+  the operator logs for the states it logs at INFO (`cluster not rollable from roll pre checks`, `Migration current
+  status …/SubPhase… requeuing`), and listed first, with
+  what they mean and the public KB / docs to read ([`cfk-analysis/runbooks.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/cfk-analysis/runbooks.py)).
+  Confluent support adds the internal runbook of each one with a private file, `PLAYGROUND_CFK_RUNBOOKS_FILE`
+  (default `reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json`): those links are printed in the
+  terminal and in `--json`, never in the HTML report. Probe failures and back-offs of a pod that is Running and Ready
+  in the bundle, with fewer than 3 restarts, are `low` and marked `transient` (a pod not Ready while Kafka starts),
+  and neither the `Normal` events of kubectl output nor the lines of a `…Config values:` dump are issues. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
   `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle.
@@ -417,9 +428,9 @@ playground analyze logs -f /tmp/cfk-support-bundle/support-bundle-ns-confluent-<
 # Filtered on:      --component connect
 ```
 
-Read the full report with a critical eye, as you would a customer's: on this healthy cluster it also lists the
-`BackOff` of connect-0 restarting while Kafka was starting (critical), the `WaitForFirstConsumer` events of the PVCs,
-three `confluent.broker.health.manager.*` lines of the broker configuration dump, and the `Compatibility` issues: the
+Read the full report with a critical eye, as you would a customer's: on this healthy cluster the `BackOff` of
+connect-0 restarting while Kafka was starting is only `low`, marked `[transient: pod connect-0 is Running and Ready in
+the bundle, …]`, and the report also lists the `Compatibility` issues: the
 support matrix of the analyzer
 ([`cfk-analysis/environment.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/cfk-analysis/environment.py))
 gives CP 7.5 to 8.3 for CFK 3.3, and the playground runs its default CP version. `--component connect` keeps the 6

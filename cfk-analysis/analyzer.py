@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 import environment
+import runbooks
 
 # known causes shared with tools/log-analyzer/log_report.py: tools/report-common of the repository, mounted in
 # /tmp/report-common by playground analyze logs (CFK support bundle)
@@ -65,6 +66,13 @@ _RECORD_START_RE = re.compile(r'^\s*[\[{]?\s*(?:\d{4}-\d{2}-\d{2}|\d{2}:\d{2}:\d
 _NOISE_RE = re.compile(r'log4j:WARN|SLF4J:')
 
 _SEVERITY_ORDER = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
+
+# Pod symptoms of events and kubectl output that a pod recovers from (readiness probe failing while Kafka starts,
+# back-off of a container restarted before its dependencies were up): low when the pod is Running and Ready in the
+# bundle with fewer restarts than the "restarted N times" finding
+_TRANSIENT_CATEGORIES = {'Health Check Issues', 'Pod Failures'}
+_TRANSIENT_MAX_RESTARTS = 3
+_EVENT_POD_RE = re.compile(r'\bpod/([a-z0-9][a-z0-9.-]*)', re.IGNORECASE)
 
 # Phases / states that are healthy (or normal transients) on CFK CRs
 _GOOD_CR_STATES = {'RUNNING', 'CREATED', 'SUCCEEDED', 'SUCCESS', 'READY', 'ACTIVE', 'COMPLETED', 'UP', 'HEALTHY'}
@@ -144,6 +152,9 @@ class CFKBundleAnalyzer:
         self.environment = {'components': {}}  # versions and images, see environment.py
         self.timeline = []  # changes (managedFields, pod restarts), newest first after the walk
         self.jvm_truststores = {}  # CR name -> JVM default truststore flags of its configOverrides / envVars
+        self.pod_health = {}  # pod name -> (Running and every container ready, highest restart count)
+        self.statefulset_ready = {}  # StatefulSet name -> every replica ready and updated, for bundles without pod manifests
+        self.runbooks = runbooks.Catalog()  # known CFK issues (runbooks.py + the private file of Confluent support)
         # Kafka / ZooKeeper / Schema Registry / Connect / Control Center CRs (component -> CR name -> ConfigMap files,
         # configOverrides, config dumps of the logs) and connectors (name -> Connector CR and config dumps of the logs),
         # as key=value text so that the sanitizer redacts secrets
@@ -305,6 +316,11 @@ class CFKBundleAnalyzer:
         self._check_jvm_truststores()
         for issue in self.issues:
             self._assign_component(issue)
+        self._mark_transient()
+        for issue in self.issues:
+            names = self.runbooks.match(issue['message'] + ' ' + ' '.join(issue.get('caused_by') or []))
+            if names:
+                issue['runbooks'] = names
         for change in self.timeline:
             found = self._lookup_name(change['name'])
             if found:
@@ -579,6 +595,9 @@ class CFKBundleAnalyzer:
                 self._handle_record(rel, lines, *record)
 
         k8s_screen = self._k8s_screen
+        # states of known CFK issues that the operator logs at INFO (runbooks.py operator_info)
+        operator_info_re = self.runbooks.operator_info_re if rel.split(os.sep)[0] == 'operator' or \
+            '/operator/' in f'/{rel}' else None
         for line_num, line in enumerate(lines, 1):
             if record is not None:
                 cb = _CAUSED_BY_RE.match(line)
@@ -598,12 +617,23 @@ class CFKBundleAnalyzer:
 
             if not line.strip() or _NOISE_RE.search(line):
                 continue
+            # "\tkey = value" of a "…Config values:" dump: configuration, not a record nor kubectl output
+            # (confluent.broker.health.manager.num.samples.before.broker.unhealthy = 180)
+            if line[0] == '\t' and _CONFIG_VALUE_RE.match(line):
+                continue
 
             level = self._detect_level(line)
             if level is None and _EXCEPTION_HEAD_RE.match(line):
                 level = 'ERROR'
             if level is not None:
                 record = (line_num, level, line, [])
+                continue
+            if operator_info_re is not None and operator_info_re.search(line):
+                self._add_issue(
+                    severity='medium', category='Operator Issues', message=f"Operator: {line.strip()[:300]}",
+                    file_path=rel, line_number=line_num,
+                    context='\n'.join(lines[max(0, line_num - 3):min(len(lines), line_num + 2)]),
+                )
                 continue
 
             line_lower = line.lower()
@@ -771,6 +801,10 @@ class CFKBundleAnalyzer:
         is_warning_event = re.search(r'(?:^|\s)Warning\s', line) is not None
         if match is None and not is_warning_event:
             return
+        # row of a Normal event (kubectl get events / describe): "Normal WaitForFirstConsumer … waiting for first
+        # consumer to be created before binding" is how a PVC of a WaitForFirstConsumer storage class starts
+        if not is_warning_event and re.search(r'(?:^|\s)Normal\s', line):
+            return
         if match is not None:
             severity, category, name = match
         else:
@@ -904,6 +938,11 @@ class CFKBundleAnalyzer:
                 self._record_configmap(obj, relative_path)
             elif kind == 'StatefulSet':
                 self.timeline += environment.managed_field_changes(obj, kind, name)
+                replicas = (obj.get('spec') or {}).get('replicas')
+                status = obj.get('status') or {}
+                self.statefulset_ready[name] = bool(replicas) and status.get('readyReplicas') == replicas and \
+                    status.get('updatedReplicas', replicas) == replicas and \
+                    status.get('currentRevision') == status.get('updateRevision')
             elif kind == 'Deployment':
                 for container in ((obj.get('spec') or {}).get('template') or {}).get('spec', {}).get('containers') or []:
                     if 'confluent-operator' in str(container.get('image', '')) or name == 'confluent-operator':
@@ -1010,6 +1049,33 @@ class CFKBundleAnalyzer:
                 resource=name, resource_kind=truststore['kind'],
             )
 
+    def _mark_transient(self):
+        """Probe failures and back-offs of the events / kubectl output of a pod that is Running and Ready in the bundle,
+        with few restarts: low, the pod recovered (a Kafka pod not Ready while it starts, Connect restarted before Kafka
+        was up). Its pod status findings (restarted N times, still waiting) keep their severity."""
+        for issue in self.issues:
+            if issue['category'] not in _TRANSIENT_CATEGORIES or issue.get('line_number') and 'event' not in issue['file'].lower():
+                continue
+            kind, pod = issue.get('_resource') or ('', '')
+            if kind != 'Pod':
+                found = _EVENT_POD_RE.search(issue['message'])
+                pod = found.group(1) if found else ''
+            if issue['message'].startswith('Container '):
+                continue
+            if pod in self.pod_health:
+                ready, restarts = self.pod_health[pod]
+                why = f"pod {pod} is Running and Ready in the bundle, {restarts} restart(s)"
+            else:
+                # no pod manifest (trimmed bundle): its StatefulSet has every replica ready and updated
+                statefulset = _POD_SUFFIX_RES[0].sub('', pod)
+                ready, restarts = self.statefulset_ready.get(statefulset, False), 0
+                why = f"StatefulSet {statefulset} has every replica ready in the bundle"
+            if not ready or restarts >= _TRANSIENT_MAX_RESTARTS:
+                continue
+            issue['severity'] = 'low'
+            issue['transient'] = True
+            issue['message'] += f" [transient: {why}]"
+
     def _check_pod_config(self, pod: Dict, file_path: str):
         """Check pod status for issues"""
         name = (pod.get('metadata') or {}).get('name', '?')
@@ -1039,6 +1105,11 @@ class CFKBundleAnalyzer:
 
         statuses = [(c, True) for c in status.get('initContainerStatuses') or []] + \
                    [(c, False) for c in status.get('containerStatuses') or []]
+        containers = status.get('containerStatuses') or []
+        self.pod_health[name] = (
+            phase == 'Running' and bool(containers) and all(c.get('ready') for c in containers),
+            max([c.get('restartCount', 0) or 0 for c, _ in statuses] or [0]),
+        )
         for container, is_init in statuses:
             cname = f"{name}/{container.get('name', '?')}" + (' (init)' if is_init else '')
             state = container.get('state') or {}

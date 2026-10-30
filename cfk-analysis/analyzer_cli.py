@@ -170,6 +170,35 @@ def print_environment(results, timeline_limit: int = 12):
         print()
 
 
+def _link_lines(hit):
+    """Public links, then the internal ones (private file of Confluent support)"""
+    return ([f"{l.get('title') or l['url']}: {l['url']}" for l in hit.get("links") or []] +
+            [f"🔒 {l.get('title') or l['url']}: {l['url']}" for l in hit.get("internal_links") or []])
+
+
+def print_runbooks(results):
+    """Known CFK issues matched in the bundle, before the issues by category: what they mean and where to read more"""
+    hits = results.get("runbooks") or []
+    if not hits:
+        return
+    print("-" * 72)
+    print(f"Known CFK issues ({len(hits)} matched, see the runbooks before digging into the code)")
+    print("-" * 72)
+    for hit in hits:
+        example = hit.get("example") or {}
+        where = example.get("file", "")
+        if example.get("line_number"):
+            where += f":{example['line_number']}"
+        print(f"  {SEVERITY_GLYPH.get(hit['severity'], '[?   ]')} {hit['title']}  "
+              f"({hit['issues']} issue(s), {hit['occurrences']} occurrence(s), e.g. {where})")
+        print(f"         {hit['advice']}")
+        for line in _link_lines(hit):
+            print(f"         -> {line}")
+    if any(h.get("internal_links") for h in hits):
+        print("  🔒 internal links: for Confluent support only, never in a reply to the customer (not in the HTML report)")
+    print()
+
+
 def print_text_report(results, top: int):
     summary = results["summary"]
     issues = results["issues"]
@@ -210,11 +239,14 @@ def print_text_report(results, top: int):
               f"{len(config.get('connectors') or {})} connector config(s) (in the HTML report and --json .configuration)")
         print()
 
+    print_runbooks(results)
+
     if not issues:
         print("No issues detected in the scanned files.")
         print("Only ERROR/FATAL log records, uncaught exceptions, Warning events, pod and CFK CR status are checked.")
         return
 
+    runbooks_by_name = {h["name"]: h["title"] for h in results.get("runbooks") or []}
     grouped = group_by_category(issues)
     categories_sorted = sorted(
         grouped.keys(),
@@ -254,6 +286,8 @@ def print_text_report(results, top: int):
             for cause in issue.get("caused_by") or []:
                 cause = cause if len(cause) <= 170 else cause[:167] + "..."
                 print(f"           Caused by: {cause}")
+            for name in issue.get("runbooks") or []:
+                print(f"           📕 Known CFK issue: {runbooks_by_name.get(name, name)}")
 
         if len(items) > top:
             print(f"  ... and {len(items) - top} more in this category")
@@ -312,9 +346,13 @@ def run(
         recount(results)
     if components:
         results["summary"]["components"] = components
+    # after the sanitizer: it would redact the hostnames of the links
+    results["runbooks"] = analyzer.runbooks.summarize(results["issues"])
 
     if html_out:
-        rendered = html_report.render(results, bundle_label=os.path.basename(bundle_path))
+        # the HTML report is shared with customers: no internal link in it
+        shared = dict(results, runbooks=[dict(h, internal_links=[]) for h in results["runbooks"]])
+        rendered = html_report.render(shared, bundle_label=os.path.basename(bundle_path))
         os.makedirs(os.path.dirname(os.path.abspath(html_out)), exist_ok=True)
         with open(html_out, "w", encoding="utf-8") as f:
             f.write(rendered)

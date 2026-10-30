@@ -148,6 +148,7 @@ lab_expect_contains "CFK operator: 3.3.0 (image tag 0.1718.10)"
 lab_expect_contains "Connector/filestream-broken has failed tasks"
 lab_expect_contains "Affects 1 task(s): filestream-broken-0"
 lab_expect_contains "outside the range supported by CFK 3.3.0: 7.5 - 8.3"
+lab_expect_not_contains "confluent.broker.health.manager" "a line of the KafkaConfig dump reported as an issue"
 lab_run playground analyze logs -f "$bundle" --component connect --output-dir /tmp/lab-cfk-bundle
 lab_expect_exit 0
 lab_expect_contains "Filtered on: --component connect"

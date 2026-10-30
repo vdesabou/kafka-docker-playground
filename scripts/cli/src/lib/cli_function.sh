@@ -5815,6 +5815,13 @@ function analyze_cfk_bundle() {
         -v "$root_folder/tools/report-common:/tmp/report-common:ro"
         -v "$bundle_abs:$bundle_container:ro"
     )
+    # internal links of the known CFK issues (cfk-analysis/runbooks.py), kept by Confluent support in the private
+    # reproduction-models repository
+    local runbooks_file="${PLAYGROUND_CFK_RUNBOOKS_FILE:-$root_folder/reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json}"
+    if [[ -f "$runbooks_file" ]]
+    then
+        docker_args+=(-v "$runbooks_file:/tmp/cfk-runbooks-private.json:ro" -e CFK_RUNBOOKS_PRIVATE=/tmp/cfk-runbooks-private.json)
+    fi
 
     # the HTML report is always written (not with --json: stdout must stay JSON)
     local html_out=""
