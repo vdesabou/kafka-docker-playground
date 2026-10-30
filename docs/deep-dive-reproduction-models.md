@@ -140,7 +140,9 @@ type, paste or drag the file onto the terminal. `--config <tab>` uses the same l
 3. **Behaviour from the customer, systems from the example.** The keys that say *how* the connector works
    (`insert.mode`, `pk.mode`, transforms, converters, error handling, `tasks.max`…) come from the customer. The keys
    that say *where* (urls, hosts, ports, users, passwords, database / SID / PDB names, buckets, regions, `file`,
-   topics and topic prefixes, replication factors, Kafka authentication of a fully managed connector) keep the value
+   topics and topic prefixes, the tables captured (`table.inclusion.regex`, `table.include.list`…), the topic names
+   the scenario reads (`table.topic.name.template`, `redo.log.topic.name`), replication factors, Kafka
+   authentication of a fully managed connector) keep the value
    of the example, which the producer, the containers and the checks of the scenario use. The customer keys of that
    kind that the example doesn't set are left out (the user and password of a MySQL example that puts them in the
    url), except the values just rewritten for the playground. Both lists are logged and written in a comment above
@@ -152,9 +154,9 @@ type, paste or drag the file onto the terminal. `--config <tab>` uses the same l
 
 Gotchas:
 
-- The customer's topic selection is replaced with the example's (`topics` and `topics.regex` can't be both set): when
-  the regex is the problem, put it back by hand. Table names (`table.include.list`, `table.inclusion.regex`) stay the
-  customer's: create those tables in the scenario, or change the value.
+- The customer's topic and table selection is replaced with the example's (`topics` and `topics.regex` can't be both
+  set, and the scenario creates its own tables and checks its own topics): when the regex or the topic name template
+  is the problem, put it back by hand, and create the matching tables in the scenario.
 - The original file isn't copied in the repository (customer data): keep it next to the case and compare once the
   model runs, `playground connector diff --connector <c> --file <file>`.
 - `--config-connector <name>` picks one connector of a file that holds several (REST dump, several resources).
