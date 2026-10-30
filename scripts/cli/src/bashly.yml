@@ -2507,8 +2507,7 @@ commands:
   x_example_outputs:
   - command: playground get-ci-result --test connect/connect-http-sink
     output: |-
-      17:23:20 ℹ️ 🤖CI status: 🟢 ok
-      🔗test url: https://github.com/vdesabou/kafka-docker-playground/actions/runs/37858925089/job/113589742349
+      17:23:20 ℹ️ 🤖 CI status: 🟢 ok, 🔗 test url: https://github.com/vdesabou/kafka-docker-playground/actions/runs/37858925089/job/113589742349
   - command: playground get-ci-result --test connect/connect-replicator --logs --max-findings 2
     output: |-
       17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054

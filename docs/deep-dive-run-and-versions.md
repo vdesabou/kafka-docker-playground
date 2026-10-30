@@ -96,13 +96,14 @@ What the run prints, in order:
 ####################################################
 …the example's own output…
 ####################################################
-✅ RESULT: SUCCESS for filestream-sink.sh (took: 0min 40sec - )
+✅ RESULT: SUCCESS for filestream-sink.sh (took: 0min 40sec)
 ####################################################
 ```
 
 then the connector versions (for Confluent plugins, the last 5 with their release notes, and the `connector-plugin changelog --from <yours>`
 command when yours is not the latest) and status, a hint when a newer patch of the Confluent Platform version you run is published,
-and the links to the docs and the source code:
+the links to the docs and the source code, and the 🧭 next steps (`connector diagnose`, `repro bootstrap` from this example,
+another `--connector-tag`, `re-run`). The Confluent Platform hint:
 
 ```text
 📢 Confluent Platform 8.3.2 is published (you run 8.3.0): 185 change(s), 19 security related
@@ -221,7 +222,7 @@ Gotchas:
 ```bash
 playground run -f "$PWD/connect/connect-filestream-sink/filestream-sink.sh" --tag 8.2.0
 # ⛳ Flags used are --tag=8.2.0
-# ✅ RESULT: SUCCESS for filestream-sink.sh (took: 0min 40sec - )
+# ✅ RESULT: SUCCESS for filestream-sink.sh (took: 0min 40sec)
 playground status
 # connect              Up 41 seconds   confluentinc/cp-server-connect:8.2.0
 # broker               Up 41 seconds   confluentinc/cp-server:8.2.0

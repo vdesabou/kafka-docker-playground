@@ -78,6 +78,12 @@ do
 	if [ -z "$GITHUB_RUN_NUMBER" ]
 	then
 		mkdir -p $root_folder/.connector_config
+		# files cached before the format 2 have shifted values (empty fields were dropped): generate them again
+		if [ "$(cat $root_folder/.connector_config/.format 2>/dev/null)" != "2" ]
+		then
+			rm -f $root_folder/.connector_config/config-*
+			echo "2" > $root_folder/.connector_config/.format
+		fi
 		filename="$root_folder/.connector_config/config-$connector_class-$version.txt"
 		json_filename="$root_folder/.connector_config/config-$connector_class-$version.json"
 	else
@@ -151,53 +157,24 @@ do
             exit 1
         fi
 
-        current_group=""
-        configs=$(echo "$curl_output" | jq -r '.configs')
-        while IFS= read -r row; do
-            
-            IFS=$'\n'
-            arr=($(echo "$row" | jq -r '.definition.group, .definition.name, .definition.default_value, .definition.type, .definition.required, .definition.importance, .definition.documentation'))
-            group="${arr[0]}"
-                                set +x
-            if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
-                continue
-            fi
-
-            if [ "$group" != "$current_group" ]
-            then
-                echo -e "==========================" >> "$filename"
-                echo -e "$group"                     >> "$filename"
-                echo -e "==========================" >> "$filename"
-                current_group=$group
-            fi
-
-            param="${arr[1]}"
-            default="${arr[2]}"
-            type="${arr[3]}"
-            required="${arr[4]}"
-            importance="${arr[5]}"
-            description="${arr[6]}"
-
-            echo -e "🔘 $param" >> "$filename"
-            echo -e "" >> "$filename"
-            echo -e "$description" >> "$filename"
-            echo -e "" >> "$filename"
-            echo -e "\t - Type: $type" >> "$filename"
-            echo -e "\t - Default: $default" >> "$filename"
-            echo -e "\t - Importance: $importance" >> "$filename"
-            echo -e "\t - Required: $required" >> "$filename"
-            echo -e "" >> "$filename"
-
-            if [ "$default" == "null" ]
-            then
-                default=""
-            fi
-            echo -e "    \"$param\": \"$default\"," >> "$json_filename"
-            sort "$json_filename" -o /tmp/tmp
-            # fix unwanted commits like this one #7231
-            cat /tmp/tmp | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > /tmp/tmp2
-            mv /tmp/tmp2 "$json_filename"
-        done <<< "$(echo "$configs" | jq -c '.[]')"
+        # one jq for all the parameters: splitting the fields with bash dropped the empty ones (an empty default
+        # value shifted the type, importance... of the parameter by one)
+        excluded_groups='["Common","Transforms","Error Handling","Topic Creation","offsets.topic","Predicates","Confluent Licensing"]'
+        echo "$curl_output" | jq -r --argjson excluded "$excluded_groups" '
+            [.configs[].definition | select(.group as $g | $excluded | index($g) | not)]
+            | reduce .[] as $d ({out: "", group: []};
+                (if $d.group != .group then .out += "==========================\n\($d.group)\n==========================\n" | .group = $d.group else . end)
+                | .out += "🔘 \($d.name)\n\n\($d.documentation)\n\n\t - Type: \($d.type)\n\t - Default: \($d.default_value)\n\t - Importance: \($d.importance)\n\t - Required: \($d.required)\n\n")
+            | .out' > "$filename"
+        echo "$curl_output" | jq -r --argjson excluded "$excluded_groups" '
+            .configs[].definition | select(.group as $g | $excluded | index($g) | not)
+            | "    \"\(.name)\": \"\(if .default_value == null then "" else .default_value end)\","' | sort > /tmp/tmp
+        # fix unwanted commits like this one #7231
+        cat /tmp/tmp | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > "$json_filename"
+        if [ ! -s "$filename" ]
+        then
+            rm -f "$filename" "$json_filename"
+        fi
     fi
 
     if [ ! -f $filename ]

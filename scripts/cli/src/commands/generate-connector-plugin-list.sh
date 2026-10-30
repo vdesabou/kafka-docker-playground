@@ -43,4 +43,6 @@ NF == 0 { next }
 ' $tmp_file > $tmp_file2
 mv $tmp_file2 $tmp_file
 
-cp $tmp_file $root_folder/scripts/cli/confluent-hub-plugin-list.txt
+# never seen half written by a command reading it while it is generated
+cp $tmp_file $root_folder/scripts/cli/confluent-hub-plugin-list.txt.tmp
+mv $root_folder/scripts/cli/confluent-hub-plugin-list.txt.tmp $root_folder/scripts/cli/confluent-hub-plugin-list.txt

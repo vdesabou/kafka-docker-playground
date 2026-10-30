@@ -2100,8 +2100,8 @@ fi
 
 if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
 then
-  log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
   playground container kill-all
+  log "🎓 to only stop the playground containers instead: playground config container-kill-all-before-run false"
 else
   playground stop
 fi
@@ -2279,9 +2279,24 @@ function cleanup {
         fi
     fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+  # (the documentation of the connector plugin is in the output of 'playground connector versions')
+
+  if [ -z "$GITHUB_RUN_NUMBER" ]
   then
-    playground connector open-docs --only-show-url
+    log "🧭 next steps:"
+    if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+    then
+      log "   🩺 connector health, lag and errors: playground connector diagnose"
+    fi
+    if [[ "$(basename "$test_file")" != *repro* ]]
+    then
+      log "   🐞 reproduction model from it:       playground repro bootstrap -f $test_file -d \"<case> <symptom>\" --no-run"
+    fi
+    if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+    then
+      log "   🔢 with another connector version:   playground run -f $test_file --connector-tag <version>"
+    fi
+    log "   🔁 run it again:                     playground re-run"
   fi
   run_log_finish "$original_exit_status"
   # 💡 Exit the function (and the script) with the captured status
@@ -2294,6 +2309,12 @@ trap 'exit 143' TERM
 # background jobs must not inherit stdout/stderr: 'playground run | tee' (run-tests.sh) would wait for them to exit
 playground generate-fzf-find-files > /dev/null 2>&1 &
 generate_connector_versions > /dev/null 2>&1 &
+# first run of a clone or worktree: the source code link at the end needs it, and the refresh started after the example
+# would not be over by then
+if [ ! -f $root_folder/scripts/cli/confluent-hub-plugin-list.txt ]
+then
+  playground generate-connector-plugin-list > /dev/null 2>&1 &
+fi
 
 if [[ $test_file == *"aws"* ]]
 then
@@ -2372,7 +2393,7 @@ set -e
 if [ $ret -eq 0 ]
 then
   log "####################################################"
-  log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
+  log "✅ RESULT: SUCCESS for $filename ($ELAPSED)"
   log "####################################################"
   if [ -n "$sql_datagen" ]
   then
@@ -2399,13 +2420,13 @@ then
 elif [ $ret -eq 111 ]
 then
   log "####################################################"
-  log "⏭ RESULT: SKIPPED for $filename ($ELAPSED - $CUMULATED)"
+  log "⏭ RESULT: SKIPPED for $filename ($ELAPSED)"
   log "####################################################"
   
   exit $ret
 else
   logerror "####################################################"
-  logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
+  logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED)"
   logerror "####################################################"
 
   if [[ $test_file != *"fully-managed"* ]]

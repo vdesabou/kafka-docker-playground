@@ -30,8 +30,8 @@ then
 
     if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
     then
-        log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
         playground container kill-all
+        log "🎓 to only stop the playground containers instead: playground config container-kill-all-before-run false"
     else
         playground stop
     fi

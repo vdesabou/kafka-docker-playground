@@ -27,7 +27,7 @@ playground run -f http_no_auth.sh
 
 ## What the script does
 
-1. Downloads `jcl-over-slf4j-2.0.7.jar` and copies it into the HTTP connector `lib` folder.
+1. With `--connector-tag` older than 1.7.14 only: downloads `jcl-over-slf4j-2.0.7.jar` and copies it into the HTTP connector `lib` folder, so that the `org.apache.http` logs show up (1.7.14+ ships it, CC-45231).
 2. Starts the environment with the HTTP service matching the variant (and `nginx-proxy` for the proxy variant).
 3. Produces 10 records to topic `http-messages` (strings, or JSON generated with faker for the no-auth and OAuth2 variants).
 4. Sets `org.apache.http` log level to `TRACE` with `playground debug log-level set`.

@@ -18,7 +18,6 @@ use_terraform=${args[--terraform]}
 dry_run=${args[--dry-run]}
 
 connector_type=$(playground state get run.connector_type)
-connector_type_from_run="$connector_type"
 if [ -z "$connector_type" ]
 then
     # the environment was started with 'playground start-environment', not 'playground run'
@@ -67,13 +66,12 @@ function wait_for_created_connector () {
     fi
 
     local state="${initial_state:-${previous_state:-RUNNING}}"
-    # on failure, 'connector wait' displays the status with the stack trace
+    # on failure, 'connector wait' displays the status with the stack trace (on success, its last line says it all)
     if playground connector wait --connector "$connector" --state "$state" --max-wait "${max_wait:-120}"
     then
-        set +e
-        playground connector status --connector "$connector"
-        set -e
-    elif [ "$wait_mode" == "warn" ]
+        return
+    fi
+    if [ "$wait_mode" == "warn" ]
     then
         logwarn "⚠️ $connector_type connector $connector is not $state, continuing as $(basename "$test_file") is a reproduction model (use --wait to stop here, --no-wait to skip the wait)"
     else
@@ -705,17 +703,18 @@ then
     playground connector show-config --connector "$connector" --no-clipboard
 fi
 
-playground connector show-config-parameters --connector "$connector" --only-show-json
 set +e
-# when waiting, the status is displayed once the wait is over (right after the creation, it can also be a 404)
+# also generates the reference files of the plugin parameters (committed by the CI): only their count here, the full
+# list pushed the status off screen on every run
+parameters_file=$(playground connector show-config-parameters --connector "$connector" --only-show-json-file-path 2>/dev/null | tail -1)
+if [ -f "$parameters_file" ]
+then
+    log "🔩 $(grep -c . "$parameters_file") parameters available for $connector_type connector $connector (with default values): playground connector show-config-parameters --connector $connector"
+fi
+# when waiting, the wait displays the state once it is over (right after the creation, it can also be a 404)
 if [[ -z "$wait_mode" ]]
 then
     playground connector status --connector $connector
-fi
-# the docs of the connector of the example: only with playground run
-if [ -n "$connector_type_from_run" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]; }
-then
-    playground connector open-docs --only-show-url
 fi
 set -e
 

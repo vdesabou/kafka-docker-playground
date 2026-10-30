@@ -11,20 +11,17 @@ then
      exit 111
 fi
 
-cd ../../connect/connect-http-sink/
-if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+# since 1.7.14 (CC-45231), the connector routes the HttpClient logs (org.apache.http) through slf4j and ships jcl-over-slf4j
+if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.7.13"
 then
-     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+     if [ ! -f ${DIR}/jcl-over-slf4j-2.0.7.jar ]
+     then
+          wget -q -P ${DIR} https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+     fi
+     mkdir -p ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
+     cp ${DIR}/jcl-over-slf4j-2.0.7.jar ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
 fi
-cd -
 
-
-cd ../../connect/connect-http-sink
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-http/lib/
-cp ../../connect/connect-http-sink/jcl-over-slf4j-2.0.7.jar ../../confluent-hub/confluentinc-kafka-connect-http/lib/jcl-over-slf4j-2.0.7.jar
-cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
