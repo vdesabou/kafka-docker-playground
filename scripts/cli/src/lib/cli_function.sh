@@ -1072,11 +1072,86 @@ function repro_bundle_denied () {
   return 1
 }
 
-# value of a line '# <key>: <value>' of the header written by repro bootstrap
+# value of a line '# <emoji> <key>: <value>' of the header written by repro bootstrap (empty for a field left to fill in)
 function repro_header_value () {
   local script="$1"
   local key="$2"
-  head -30 "$script" | grep -m1 "^# .*$key: " | sed -e "s/^# .*$key: //"
+  head -30 "$script" | grep -m1 -E "^# [^ ]+ $key:( |$)" | sed -E "s/^# [^ ]+ $key: ?//"
+}
+
+# the fields of the header that say what a model proves and what came out of it, in the order bootstrap writes them
+function repro_header_fields () {
+  echo "expected actual jira status"
+}
+
+function repro_header_emoji () {
+  case "$1" in
+    expected) echo "🎯" ;;
+    actual) echo "💥" ;;
+    jira) echo "🎫" ;;
+    status) echo "🩹" ;;
+  esac
+}
+
+# a Jira key (CC-1234) becomes its link, anything else is kept as is
+function repro_jira_url () {
+  local jira="$1"
+  if [[ "$jira" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]]
+  then
+    echo "https://confluentinc.atlassian.net/browse/$jira"
+  else
+    echo "$jira"
+  fi
+}
+
+# set a field of the header (see repro_header_fields): the line is replaced when it is there, otherwise it is added
+# after '# 💬 comments:' and the fields that come before it (models created before the fields existed)
+function repro_header_set_value () {
+  local script="$1"
+  local key="$2"
+  local value="$3"
+  local line="# $(repro_header_emoji "$key") $key:"
+  if [ -n "$value" ]
+  then
+    line="$line $value"
+  fi
+  local before="comments" field
+  for field in $(repro_header_fields)
+  do
+    [ "$field" == "$key" ] && break
+    before="$before $field"
+  done
+  local tmp_file
+  tmp_file=$(mktemp -t pg-XXXXXXXXXX)
+  # ENVIRON: awk -v would interpret the backslashes of the value
+  if ! REPRO_LINE="$line" REPRO_KEY="$key" REPRO_FIELDS="$before" awk '
+    BEGIN {
+      line = ENVIRON["REPRO_LINE"]; key = ENVIRON["REPRO_KEY"]
+      n = split(ENVIRON["REPRO_FIELDS"], fields, " ")
+    }
+    { lines[NR] = $0 }
+    NR <= 30 && !replaced && $0 ~ ("^# [^ ]+ " key ":( |$)") { replaced = NR }
+    NR <= 30 {
+      for (i = 1; i <= n; i++) if ($0 ~ ("^# [^ ]+ " fields[i] ":( |$)")) after = NR
+      if ($0 ~ /^#####/ && ++banners == 2) closing = NR
+    }
+    END {
+      if (!replaced && !after && !closing) exit 1
+      for (i = 1; i <= NR; i++) {
+        if (i == replaced) { print line; continue }
+        if (!replaced && !after && i == closing) print line
+        print lines[i]
+        if (!replaced && i == after) print line
+      }
+    }' "$script" > "$tmp_file"
+  then
+    rm -f "$tmp_file"
+    logerror "❌ $script has no reproduction model header (the '###…' block written by 'playground repro bootstrap')"
+    return 1
+  fi
+  # in place: keeps the permissions of the script
+  cat "$tmp_file" > "$script"
+  rm -f "$tmp_file"
 }
 
 # normalize a relative path: remove '.' and resolve '..' (prints nothing when it goes above its root)

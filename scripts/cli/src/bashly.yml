@@ -3176,6 +3176,7 @@ commands:
     problem, so that anyone can reproduce it with a single command.
 
       bootstrap   scaffold one from an existing example, then edit it
+      status      show or update what a model proves: expected, actual, jira, status
       export      package one or more models as a self-contained tgz bundle
       import      unpack a bundle someone sent you, and run it
       check       scan models for secrets and customer data before committing them
@@ -3185,7 +3186,8 @@ commands:
     registers the model, which a hand-written file would be missing.
 
     Keep a model minimal and about one issue, state expected versus actual
-    behaviour in its comments header, and never put customer data in it.
+    behaviour in its header (🎯 expected / 💥 actual), and never put customer
+    data in it.
 
     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models
     🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model
@@ -3457,6 +3459,32 @@ commands:
       help: |-
         💭 Description for the reproduction model
 
+    - long: --expected
+      required: false
+      arg: expected
+      help: |-
+        🎯 Expected behaviour, written in the '# 🎯 expected:' line of the header
+
+        Asked after the description in interactive mode. Update it later with
+        'playground repro status --expected'.
+
+    - long: --actual
+      required: false
+      arg: actual
+      help: |-
+        💥 Actual behaviour (the problem), written in the '# 💥 actual:' line of the header
+
+        Asked after the description in interactive mode. Update it later with
+        'playground repro status --actual'.
+
+    - long: --jira
+      required: false
+      arg: jira
+      help: |-
+        🎫 Jira of the problem, written in the '# 🎫 jira:' line of the header
+
+        A key (CC-1234) becomes its https://confluentinc.atlassian.net/browse/ link.
+
     - long: --producer
       private: true
       short: -p
@@ -3549,6 +3577,68 @@ commands:
     examples:
     - playground repro bootstrap (interactive mode)
     - playground repro bootstrap -f "\$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --no-run
+    - playground repro bootstrap -f "\$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --expected "bad records go to the DLQ" --actual "the task fails with Unknown magic byte" --jira CC-1234 --no-run
+
+  - name: status
+    help: |-
+      🩹 Show or update what a reproduction model proves, from its header
+
+      'playground repro bootstrap' writes these fields under '# 💬 comments:'
+      in the header of the model, one line each:
+
+        # 🎯 expected: what should happen
+        # 💥 actual: what happens instead (the problem)
+        # 🎫 jira: the Jira of the problem
+        # 🩹 status: open, fixed in <version>, not a bug, customer config…
+
+      Without flag, prints the fields with the description, case, author and
+      base example (--json for scripts). With --set, --expected, --actual or
+      --jira, updates the lines, then prints them. A model created before the
+      fields existed gets the missing lines added after '# 💬 comments:'.
+
+      'playground repro export' copies the fields into repro-manifest.json,
+      and 'playground repro import' prints them.
+
+      Without --file, the current reproduction model is used.
+    flags:
+      - long: --file
+        short: -f
+        arg: file
+        required: false
+        validate: file_exists_with_trick
+        completions:
+          dynamic:
+          - playground get-examples-list-with-fzf --repro-only "$completion_current"
+        help: |-
+          🔖 Reproduction model script (default: current one)
+      - long: --set
+        arg: status
+        required: false
+        help: |-
+          🩹 New status, for example: open, fixed in 10.8.3, not a bug, customer config, workaround
+      - long: --expected
+        arg: expected
+        required: false
+        help: |-
+          🎯 New expected behaviour
+      - long: --actual
+        arg: actual
+        required: false
+        help: |-
+          💥 New actual behaviour
+      - long: --jira
+        arg: jira
+        required: false
+        help: |-
+          🎫 New Jira (a key like CC-1234 becomes its link)
+      - long: --json
+        required: false
+        help: |-
+          🤖 Print the fields as JSON
+    examples:
+    - playground repro status
+    - playground repro status -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --set "fixed in 10.8.3" --jira CC-1234
+    - playground repro status --actual "the task fails with Unknown magic byte" --json
 
 - name: get-docker-compose
   group: Kafka

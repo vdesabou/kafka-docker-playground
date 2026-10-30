@@ -204,6 +204,11 @@ do
     [ -n "$case_number" ] && log "   🔮 https://confluent.zendesk.com/agent/tickets/$case_number"
     author=$(jq -r '.author // empty' <<< "$model")
     [ -n "$author" ] && log "   👤 $author"
+    for key in $(repro_header_fields)
+    do
+        value=$(jq -r --arg key "$key" '.[$key] // empty' <<< "$model")
+        [ -n "$value" ] && log "   $(repro_header_emoji "$key") $key: $value"
+    done
     base_example=$(jq -r '.base_example // empty' <<< "$model")
     if [ -n "$base_example" ]
     then

@@ -306,7 +306,7 @@ commit holding a secret is refused. Remove the finding (use `${VAR}`), don't byp
 
 **⚠️ Always scaffold a new repro model with `playground repro bootstrap` — never hand-write the `.sh`
 file.** Bootstrap copies the base example, adds the standard header (date, author, description,
-documentation links, `# 💬 comments:` block), copies and renames the docker-compose override, links the
+documentation links, `# 💬 comments:` block with the `🎯 expected` / `💥 actual` / `🎫 jira` / `🩹 status` fields), copies and renames the docker-compose override, links the
 example's support files (`README.md`, `stop.sh`, `benchmark-load.bash`…) into the repro folder, appends the
 CLI cheat-sheet + snippets after `exit 0`, and registers the model in the CLI state/metrics. A hand-written
 file looks almost right but is missing all of that.
@@ -330,8 +330,9 @@ playground repro bootstrap -f "${PWD}/connect/connect-http-sink/http_no_auth.sh"
 
 Then edit the generated file to build the scenario, and run it with `playground run -f <generated file>`.
 
-Keep them minimal and focused on one issue, document expected vs actual in the `# 💬 comments:` header
-block, and never include customer-sensitive data.
+Keep them minimal and focused on one issue, fill in expected vs actual in the header (`--expected` / `--actual` at
+bootstrap, or `playground repro status -f <model> --expected … --actual …`), set the outcome with
+`playground repro status --set "fixed in <version>"` (`--jira CC-…`), and never include customer-sensitive data.
 
 ## Conventions
 

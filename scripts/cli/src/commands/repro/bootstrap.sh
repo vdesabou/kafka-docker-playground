@@ -13,6 +13,28 @@ eval "connector_plugin_array=(${args[--connector-plugin]})"
 no_run="${args[--no-run]}"
 schema_file_key="${args[--producer-schema-key]}"
 schema_file_value="${args[--producer-schema-value]}"
+expected="${args[--expected]}"
+actual="${args[--actual]}"
+jira="${args[--jira]}"
+
+# optional fields of the header, asked right after the description in interactive mode (enter or esc to skip)
+function prompt_header_field () {
+  local header="$1"
+  set +e
+  echo "" | fzf --margin=1%,1%,1%,1% --info=inline --cycle --prompt="💭 " --header="$header (optional, enter to skip)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --print-query 2>/dev/null | head -1
+  set -e
+}
+
+function prompt_header_fields () {
+  if [ -z "$expected" ]
+  then
+    expected=$(prompt_header_field "🎯 expected behaviour, for example: records with a bad schema go to the DLQ")
+  fi
+  if [ -z "$actual" ]
+  then
+    actual=$(prompt_header_field "💥 actual behaviour, for example: the task fails with Unknown magic byte")
+  fi
+}
 
 if [[ ! -n "$test_file" ]]
 then
@@ -134,6 +156,9 @@ then
         continue
       fi
       array_flag_list+=("--description=$description")
+      prompt_header_fields
+      [ -n "$expected" ] && array_flag_list+=("--expected=$expected")
+      [ -n "$actual" ] && array_flag_list+=("--actual=$actual")
     fi
 
     oldifs=$IFS
@@ -206,6 +231,7 @@ then
     logerror "❌ a description is required, use --description (-d)"
     exit 1
   fi
+  prompt_header_fields
 fi
 
 if [[ $test_file == *"@"* ]]
@@ -431,6 +457,14 @@ then
 fi
 echo "# 🐳 playground website: https://kafka-docker-playground.io" >> $tmp_dir/intro
 echo "# 💬 comments:" >> $tmp_dir/intro
+# fields read by 'playground repro status' and 'repro export': fill them in, keep one line each
+expected="${expected//$'\n'/ }"
+actual="${actual//$'\n'/ }"
+echo "# 🎯 expected:${expected:+ $expected}" >> $tmp_dir/intro
+echo "# 💥 actual:${actual:+ $actual}" >> $tmp_dir/intro
+jira=$(repro_jira_url "$jira")
+echo "# 🎫 jira:${jira:+ $jira}" >> $tmp_dir/intro
+echo "# 🩹 status: open" >> $tmp_dir/intro
 echo "#" >> $tmp_dir/intro
 echo "###############################################" >> $tmp_dir/intro
 echo "" >> $tmp_dir/intro

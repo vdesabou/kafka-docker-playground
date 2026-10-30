@@ -1,9 +1,9 @@
 # 🍪 Deep dive: reproduction models (`playground repro`)
 
 A reproduction model is an example rewritten to show **one** problem, so that anyone can reproduce it with a single
-`playground run`. Four commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro check`
-scans it for secrets and customer data before a commit, `repro export` packs it as a self-contained bundle for a
-colleague, and `repro import` unpacks one. Takes about 15 minutes to read and run.
+`playground run`. Five commands cover its life: `repro bootstrap` scaffolds it from an existing example, `repro status`
+records what it proves and what came out of it, `repro check` scans it for secrets and customer data before a commit,
+`repro export` packs it as a self-contained bundle for a colleague, and `repro import` unpacks one. Takes about 15 minutes to read and run.
 
 > [!TIP]
 > 🎬 Short on time? The video session [🧪 The life of a reproduction model](/sessions?id=🧪-the-life-of-a-reproduction-model) shows it in 4 minutes: `repro bootstrap --no-run`, a scenario edited and run, `repro check` catching a key, then `export` and `import` on another machine.
@@ -17,6 +17,7 @@ colleague, and `repro import` unpacks one. Takes about 15 minutes to read and ru
 | --- | --- |
 | a new model from an example, with menus | `playground repro bootstrap` |
 | the same, without menus (scripts, AI agents) | `playground repro bootstrap -f "<absolute path of the example>" -d "<case number> <symptom>" --no-run` |
+| to say what it proves, and what came out of it | `playground repro status --expected "…" --actual "…" --jira CC-1234 --set "fixed in 10.8.3"` |
 | to know whether a model holds a secret | `playground repro check -f <model>` (`--json`) |
 | what a commit would push | `playground repro check --staged` (what the pre-commit hook runs) |
 | to send a model to a colleague | `playground repro export -f <model>` (`--dry-run` first, `--include-artifacts`) |
@@ -31,7 +32,8 @@ colleague, and `repro import` unpacks one. Takes about 15 minutes to read and ru
    `reproduction-models/<folder>-<example folder>/<script>-repro-<description>.sh` and adds what a hand-written copy
    would miss:
    - a header (`🗓️ date`, `👤 author`, `💡 description`, `🔮 ticket` link when the description starts with 6 digits,
-     `🔗 github file url`, `🌐 documentation`, and an empty `💬 comments:` block for expected vs actual),
+     `🔗 github file url`, `🌐 documentation`, and under `💬 comments:` the fields `🎯 expected`, `💥 actual`,
+     `🎫 jira` and `🩹 status` (see "The fields of the header" in section 2),
    - its own copy of the docker compose override, renamed `<override>.repro-<description>.yml`, and the script pointed
      to it,
    - symlinks to the example's support files (`README.md`, `stop.sh`, `config-*`, `benchmark-load.bash`…), so they
@@ -70,6 +72,8 @@ playground repro bootstrap -f "${PWD}/connect/connect-http-sink/http_no_auth.sh"
 playground repro bootstrap -f "…/jdbc-mysql-sink.sh" -d "123456 smt drops field" --custom-smt --no-run    # a no-op SMT to edit, built and wired in
 playground repro bootstrap -f "…/debezium-mysql-source.sh" -d "123456 cdc to s3" --pipeline "…/s3-sink.sh" --no-run
 playground repro bootstrap -f "…/http_no_auth.sh" -d "123456 two plugins" --connector-plugin confluentinc/kafka-connect-jdbc --no-run
+playground repro bootstrap -f "…/http_no_auth.sh" -d "123456 dlq not working" --no-run \
+  --expected "records with a bad schema go to the DLQ" --actual "the task fails with Unknown magic byte" --jira CC-1234
 ```
 
 What the description becomes: spaces → `-`, lower case, only letters, digits and `-` kept.
@@ -94,6 +98,35 @@ Gotchas:
   re-created, never duplicated. Delete a model by deleting its `.sh` and its compose override only.
 - A name containing `perf` also enables Grafana (or SQL datagen for Debezium sources) on the first run.
 - The ticket link is written for any description starting with 6 digits: `000000 test` gets a ticket link too.
+
+### The fields of the header: `repro status`
+
+A model is only useful later if it says what it proves and what came out of it. Bootstrap writes four fields under
+`# 💬 comments:`, one line each:
+
+```bash
+# 💬 comments:
+# 🎯 expected: records with a bad schema go to the DLQ
+# 💥 actual: the task fails with "Unknown magic byte"
+# 🎫 jira: https://confluentinc.atlassian.net/browse/CC-1234
+# 🩹 status: open
+```
+
+- `--expected`, `--actual` and `--jira` fill them at bootstrap (the menus ask for expected and actual after the
+  description, enter skips). A Jira key (`CC-1234`) becomes its link. `🩹 status` starts at `open`.
+- `playground repro status` prints them, with the description, case, author and base example, and suggests the command
+  for the empty ones. `--set`, `--expected`, `--actual` and `--jira` update the lines, without opening the file:
+
+  ```bash
+  playground repro status -f <model> --set "fixed in 10.8.3"     # or: not a bug, customer config, workaround…
+  playground repro status -f <model> --json | jq -r .status
+  ```
+
+- `repro export` copies the fields into `repro-manifest.json`, and `repro import` prints them, so whoever receives the
+  bundle reads expected vs actual before running it.
+- A model created before the fields existed gets the missing lines added after `# 💬 comments:` (in the order above,
+  above the free text) the first time `repro status` sets one. Free text under the fields is kept.
+- One line per field: line breaks in a value become spaces. Write the details as free comments under the fields.
 
 ---
 
@@ -153,7 +186,7 @@ What goes in a bundle:
 | --- | --- |
 | the script, its support files (`README.md`, `stop.sh`, `config-*`, `benchmark-load.bash`, `.gitignore`), and every entry of its folder whose **name appears** in the script or in a compose file it mentions | git-ignored files, `target/`, dumps (`*.hprof`, `*.jfr`), logs, archives, credential files, files over 50 MB |
 | symlinks, **stored as their content** (the bundle doesn't depend on the version of the public example) | files outside the repository (connector zip, `~/Downloads/config.json`): listed only, packed under `<folder>/artifacts/` with `--include-artifacts` |
-| `repro-manifest.json`: per model the last `playground run` line (from `playground-run-history`, without `--cluster-creds`), case number, author, base example, credential **names**, external files; the playground commit; the sha256 of every file | credential values |
+| `repro-manifest.json`: per model the last `playground run` line (from `playground-run-history`, without `--cluster-creds`), case number, author, base example, the header fields (`expected`, `actual`, `jira`, `status`), credential **names**, external files; the playground commit; the sha256 of every file | credential values |
 
 What import does:
 
@@ -205,16 +238,32 @@ playground state get run.test_file      # unchanged: still the example that was 
 
 ```bash
 m=reproduction-models/connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh
-head -16 "$m"
+head -20 "$m"
 # # 💡 description: 000000 deep dive lab
 # # 🔮 ticket: https://confluent.zendesk.com/agent/tickets/000000        <- any 6 leading digits
 # # 💬 comments:
+# # 🎯 expected:
+# # 💥 actual:
+# # 🎫 jira:
+# # 🩹 status: open
 grep -n "docker-compose" "$m"
-# 21:playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000000-deep-dive-lab.yml"
-grep -n "^exit 0" "$m"               # 110:exit 0 — the cheat sheet is above it, the snippets area below
+# 25:playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.repro-000000-deep-dive-lab.yml"
+grep -n "^exit 0" "$m"               # 114:exit 0 — the cheat sheet is above it, the snippets area below
 ls -l reproduction-models/connect-connect-filestream-sink/README.md reproduction-models/connect-connect-filestream-sink/stop.sh
 # README.md -> ../../connect/connect-filestream-sink/README.md
 # stop.sh -> ../../connect/connect-filestream-sink/stop.sh
+playground repro status -f "$PWD/$m" --set "lab only" --jira CC-1234
+# ✏️  updated in the header: jira status
+# 🔖 …/filestream-sink-repro-000000-deep-dive-lab.sh
+#    💡 description: 000000 deep dive lab
+#    🔮 ticket: https://confluent.zendesk.com/agent/tickets/000000
+#    👤 author: you (Fri Oct 30 09:31:17 CET 2026)
+#    🧬 based on: connect/connect-filestream-sink
+# ❗    🎯 expected: (empty)
+# ❗    💥 actual: (empty)
+#    🎫 jira: https://confluentinc.atlassian.net/browse/CC-1234
+#    🩹 status: lab only
+# 💡 fill in the empty fields: playground repro status -f …/filestream-sink-repro-000000-deep-dive-lab.sh --expected "…" --actual "…"
 ```
 
 **Step 3: check it, with and without a secret**
@@ -226,11 +275,11 @@ playground repro check -f "$PWD/$m"
 # ✅ no secret nor customer data found
 echo '# aws_access_key_id = AKIAABCDEFGHIJKLMNOP' >> "$m"          # a fake key, in the AWS format
 playground repro check -f "$PWD/$m"; echo "exit=$?"
-# 🔥    🔐 connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh:118 looks like an AWS access key id
+# 🔥    🔐 connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh:122 looks like an AWS access key id
 # 🔥 ❌ 1 secret finding(s): remove them (use ${VAR} instead of the value)
 # exit=1
 playground repro check -f "$PWD/$m" --json | jq -c '.'
-# {"files":3,"blocks":[{"location":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh:118","message":"looks like an AWS access key id"}],"warnings":[]}
+# {"files":3,"blocks":[{"location":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh:122","message":"looks like an AWS access key id"}],"warnings":[]}
 sed -i '' '/AKIAABCDEFGHIJKLMNOP/d' "$m"                           # remove it (GNU sed: sed -i)
 ```
 
@@ -253,8 +302,8 @@ playground repro export -f "$PWD/$m" --output /tmp/deep-dive-repro --no-clipboar
 # 📥 To import it: playground repro import -f <path>/playground_repro_filestream-sink-repro-000000-deep-dive-lab_2026-10-23.tgz
 tar tzf /tmp/deep-dive-repro/playground_repro_*.tgz
 # repro-manifest.json and the 7 files under connect-connect-filestream-sink/
-tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz repro-manifest.json | jq -c '.models[0] | {script, case, base_example, run_command}'
-# {"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh","case":"000000","base_example":"connect/connect-filestream-sink","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab.sh"}
+tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, run_command}'
+# {"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab.sh"}
 ```
 
 **Step 5: import, with a conflict**
@@ -300,6 +349,7 @@ current one: run an example (or `playground state set run.test_file <script>`) b
 | --- | --- |
 | a new case | `playground find-example "<connector> <feature>"`, then `repro bootstrap -f <best hit> -d "<case> <symptom>" --no-run`; also look for an earlier model of the same symptom in `reproduction-models/` |
 | the customer gave a connector config | paste it in the model, then `playground connector diff --connector <c> --file customer.json` (see the [`create-or-update` deep dive](/deep-dive-connector-create-or-update.md)) |
+| the bug is fixed, or it turned out not to be one | `playground repro status -f <model> --set "fixed in <version>"` (`--jira CC-…`), or `--set "not a bug"` / `--set "customer config"` |
 | the model must fail when the bug is fixed | assert at the end: `playground topic consume --min-expected-messages N --grep …`, or `connector create-or-update --wait` (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
 | hand it to engineering / a colleague | run it once (for the run line), `repro export --dry-run`, then `repro export` (`--include-artifacts` for a custom jar) and attach the bundle |
 | a colleague sent you a bundle | `repro import --dry-run`, then `repro import`, then the printed `playground run` line |
@@ -307,7 +357,7 @@ current one: run an example (or `playground state set run.test_file <script>`) b
 | a secret slipped in | replace it with `${VAR}` and `playground secrets set VAR …`; `repro check -f <model>` until it's clean |
 | the commit is refused for a fake token | check the line it points to, then `git commit --no-verify` (only if it's not a real secret) |
 
-Keep a model about one issue, write expected vs actual in `# 💬 comments:`, use neutral names (topics, tables,
+Keep a model about one issue, fill in `🎯 expected` and `💥 actual` (and `🩹 status` once you know), use neutral names (topics, tables,
 hosts) and never customer data.
 
 ---
@@ -316,7 +366,8 @@ hosts) and never customer data.
 
 ```bash
 playground repro bootstrap [-f "<absolute path of the example>" -d "<case> <symptom>" --no-run] \
-  [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>"]
+  [--expected "…"] [--actual "…"] [--jira CC-1234] [--custom-smt] [--connector-plugin <owner/name>] [--pipeline "<sink example>"]
+playground repro status [-f <model>] [--set "<status>"] [--expected "…"] [--actual "…"] [--jira CC-1234] [--json]
 playground repro check [-f <model> | --staged | --all] [--json] [--skip-secrets-store]
 playground repro export [-f <model> … | --all-uncommitted] [--output <dir>] [--dry-run] [--include-artifacts] [--force] [--no-clipboard]
 playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
@@ -324,16 +375,18 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 
 - Bootstrap = copy + header + own compose override + symlinks + cheat sheet. Scripts and agents: always `-f -d --no-run`.
 - `<script>-repro-<kebab description>.sh`; 6 leading digits = ticket link.
+- Header fields `🎯 expected`, `💥 actual`, `🎫 jira`, `🩹 status`: set at bootstrap, read and updated by `repro status`, carried by the bundle.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.
 - Bundle = files + symlinks as content + manifest (run line, credential names, sha256). Run the model once first.
 - Import: identical skipped, conflicts abort unless `rename` / `overwrite`, first model becomes current.
 - In a model, `create-or-update` warns instead of failing: `--wait` to make it strict.
 - Sources: [`repro/bootstrap.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bootstrap.sh),
+  [`repro/status.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/status.sh),
   [`repro/check.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/check.sh),
   [`repro/export.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/export.sh),
   [`repro/import.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/import.sh),
   [`scripts/repro-git-hooks/pre-commit`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/repro-git-hooks/pre-commit),
-  helpers `repro_bundle_files` / `repro_bundle_scan` / `repro_install_git_hook` in
+  helpers `repro_bundle_files` / `repro_bundle_scan` / `repro_install_git_hook` / `repro_header_set_value` in
   [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh).
 
 ---
@@ -345,5 +398,5 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
   [Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) in the Reproduction toolkit
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the warn-only wait of models),
   [`topic produce`](/deep-dive-topic-produce.md) and [`topic consume`](/deep-dive-topic-consume.md) (data in, assertions out)
-- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro check](/playground%20repro%20check),
+- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro status](/playground%20repro%20status), [playground repro check](/playground%20repro%20check),
   [playground repro export](/playground%20repro%20export), [playground repro import](/playground%20repro%20import)
