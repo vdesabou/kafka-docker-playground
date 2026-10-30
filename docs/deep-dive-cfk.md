@@ -213,10 +213,16 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   (default `reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json`): those links are printed in the
   terminal, the HTML report and `--json`, with a 🔒. Probe failures and back-offs of a pod that is Running and Ready
   in the bundle, with fewer than 3 restarts, are `low` and marked `transient` (a pod not Ready while Kafka starts),
-  and neither the `Normal` events of kubectl output nor the lines of a `…Config values:` dump are issues. It
+  and neither the `Normal` events of kubectl output nor the lines of a `…Config values:` dump are issues.
+  **🚚 ZooKeeper to KRaft migration**: each `KRaftMigrationJob` gets one finding (`KRaft Migration` category) with its
+  phase / sub-phase, how long it has been there (its Warning events and the `Migration current status … requeuing`
+  lines of the operator log), its last error and the next steps of that sub-phase (Kafka roll not complete,
+  KRaftController not Ready, ZooKeeper authentication, znodes to remove for a rollback…), from the operator log alone
+  when the bundle has no `KRaftMigrationJob` CR. `high` when stuck (`InputError` events, or 30 minutes in the same
+  sub-phase), `low` in `DUAL-WRITE`, the expected pause before the finalize or rollback annotation. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
-  `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle.
+  `--severity high`, `--json` (`"type": "cfk-bundle"`); `--sample cfk_bundle` to see a report without a bundle (`--sample cfk_kraft_migration` for a stuck migration).
   `analyze cfk-bundle --bundle <bundle>` still works, as a hidden alias.
 
 ---
@@ -453,6 +459,7 @@ k3d cluster delete playground-cfk    # when you are done with CFK
 
 | Customer setup or symptom | Command |
 | --- | --- |
+| "the ZooKeeper to KRaft migration is stuck" (support bundle) | `playground analyze logs -f <bundle>`: the 🚚 `KRaft Migration` finding gives the sub-phase, since when, the last error and the next steps; `--sample cfk_kraft_migration` to see one |
 | "the connector works with Docker, not on our CFK cluster" | the same example with `--environment cfk`, then `connector create-or-update --dry-run` to compare the `Connector` CR with theirs |
 | "the customer deploys connectors with a `Connector` CR" | the example under `cfk`, `connector status` shows the CR state next to the Connect state; `kubectl -n confluent get connector <c> -o yaml` for the whole resource |
 | "a plugin is missing / the wrong version on our Connect pods" | `--environment cfk --connector-tag <version>`: the plugin comes from `spec.build.onDemand` like on their cluster; `playground connector plugins` lists what the `Connect` CR reports |

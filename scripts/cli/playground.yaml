@@ -2793,22 +2793,25 @@ subcommands:
       to KRaft migration, authorizer timeout, license secret…) are listed first, with
       what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds
       the internal runbook links of Confluent support (\U0001F512 in the terminal,
-      the HTML report and --json). Probe failures and back-offs of a pod that is Running
-      and Ready in the bundle are low and marked transient. Each issue is attributed
-      to a component and an instance (CR name), and to its connector: --component
-      keeps some of them, the HTML report has Component / Instance / Connector filters.
-      \U0001F512 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default
-      (best effort: review before sharing), --no-sanitize for internal bundles only.
-      --logs-only gives the plain log digest instead.\n\n\U0001F512 Passwords and
-      other secrets (password=…, JAAS configs, tokens, keys, credentials in URLs),
-      IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>,
-      <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON) by default.
-      It is best effort: review the output before sharing it. --no-sanitize keeps
-      them, for internal logs only.\n\n\U0001F9ED After the digest of each file, a
-      short summary: time range, occurrences by connector, known causes with what
-      to do, root causes no known cause explains, and the configuration logged at
-      startup (connectors, components, clients) with the keys changed between restarts.
-      --connector keeps one connector, --show-config prints a configuration.\n\n\U0001F310
+      the HTML report and --json). \U0001F69A A ZooKeeper to KRaft migration gets
+      its own finding: phase / sub-phase of the KRaftMigrationJob, how long it has
+      been there (events, operator requeues), its last error and the next steps of
+      that sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe
+      failures and back-offs of a pod that is Running and Ready in the bundle are
+      low and marked transient. Each issue is attributed to a component and an instance
+      (CR name), and to its connector: --component keeps some of them, the HTML report
+      has Component / Instance / Connector filters. \U0001F512 Secrets, IPs, hostnames,
+      emails and LDAP DNs are sanitized by default (best effort: review before sharing),
+      --no-sanitize for internal bundles only. --logs-only gives the plain log digest
+      instead.\n\n\U0001F512 Passwords and other secrets (password=…, JAAS configs,
+      tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are
+      replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest,
+      the report and the JSON) by default. It is best effort: review the output before
+      sharing it. --no-sanitize keeps them, for internal logs only.\n\n\U0001F9ED
+      After the digest of each file, a short summary: time range, occurrences by connector,
+      known causes with what to do, root causes no known cause explains, and the configuration
+      logged at startup (connectors, components, clients) with the keys changed between
+      restarts. --connector keeps one connector, --show-config prints a configuration.\n\n\U0001F310
       Also writes a self-contained HTML report in --output-dir, opened in the browser
       in an interactive terminal: verdict, known causes (task killed, authentication,
       TLS, unknown magic byte, OutOfMemoryError...), occurrences over time, root causes
@@ -2835,8 +2838,10 @@ subcommands:
         bundle: kafka-2 crash-looping on an expired certificate, pending volume,\n
         \                        OOMKilled Connect pod, failed connector task, Schema
         Registry authentication\n                         failure, operator reconcile
-        errors\n\nRepeatable: ✓ Yes\nAllowed values: connect_task_failure, support_bundle,
-        cfk_bundle"
+        errors\n  cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration
+        (KRaftMigrationJob) stuck for 3\n                         days in SETUP, the
+        KRaftController missing inter replication credentials\n\nRepeatable: ✓ Yes\nAllowed
+        values: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration"
     - names:
       - "--include-warnings"
       argument: ''

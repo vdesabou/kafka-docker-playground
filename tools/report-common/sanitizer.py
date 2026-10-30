@@ -53,8 +53,10 @@ _SIMPLE_RULES = [
     # Cloud keys
     (re.compile(r'\bAKIA[0-9A-Z]{16}\b'), '<AWS-KEY-REDACTED>'),
     (re.compile(r'\bAIza[0-9A-Za-z\-_]{35}\b'), '<GCP-KEY-REDACTED>'),
-    # Long base64 blobs (Secret data, keystores). Dotted / slashed identifiers don't match.
-    (re.compile(r'(?<![\w/+=.-])[A-Za-z0-9+/]{40,}={0,2}(?![\w/+=.-])'), '<BASE64-REDACTED>'),
+    # Long base64 blobs (Secret data, keystores). Dotted / slashed identifiers don't match, nor the phase / sub-phase of a
+    # CFK KRaftMigrationJob (SETUP/SubPhaseMoveToKRaftControllerEnsureKRaftControllerMigrationModeRemovalComplete)
+    (re.compile(r'(?<![\w/+=.-])(?![A-Za-z-]*/?SubPhase[A-Za-z]+(?![\w/+=.-]))[A-Za-z0-9+/]{40,}={0,2}(?![\w/+=.-])'),
+     '<BASE64-REDACTED>'),
 ]
 
 # Hostname-looking tokens that are not hostnames
@@ -74,9 +76,11 @@ _GENERIC_TLDS = {
 }
 
 
-# Last label of a file name, not a TLD: connect-distributed.properties:12 is a file and a line number
+# Last label of a file name, not a TLD: connect-distributed.properties:12 is a file and a line number, log/log.go:53 the Go
+# source location of a CFK operator log line
 _FILE_EXTENSIONS = {
-    'properties', 'java', 'scala', 'kt', 'py', 'sh', 'yaml', 'yml', 'json', 'xml', 'log', 'conf', 'cfg', 'txt', 'jar',
+    'properties', 'java', 'scala', 'kt', 'py', 'go', 'js', 'ts', 'rs', 'rb', 'sh', 'yaml', 'yml', 'json', 'xml', 'log',
+    'conf', 'cfg', 'txt', 'jar',
     'html', 'md', 'sql', 'gz', 'zip', 'tar', 'tgz', 'jks', 'pem', 'crt', 'key', 'p12', 'keytab', 'jaas', 'avsc', 'proto',
 }
 # a name in a URL (https://host), with a port (host:9092) or with its IP (host/10.0.0.1:2888, a java InetSocketAddress,
