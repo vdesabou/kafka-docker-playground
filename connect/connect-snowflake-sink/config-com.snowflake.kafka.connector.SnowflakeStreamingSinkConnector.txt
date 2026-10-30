@@ -21,12 +21,12 @@ If true, write/log each error along with details of the failed operation and rec
 
 🔘 errors.deadletterqueue.topic.name
 
+Whether to output conversion errors to the dead letter queue By default messages are not sent to the dead letter queue. Requires property `errors.tolerance=all`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Whether to output conversion errors to the dead letter queue By default messages are not sent to the dead letter queue. Requires property `errors.tolerance=all`.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Snowflake Login Info
@@ -105,12 +105,12 @@ Authenticator for JDBC and streaming ingest SDK. Valid values: snowflake_jwt, oa
 
 🔘 snowflake.oauth.client.id
 
+Client id of target OAuth integration
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Client id of target OAuth integration
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 snowflake.oauth.client.secret
 
@@ -150,51 +150,51 @@ Whether OAuth token requests include a scope parameter. Defaults to false, which
 
 🔘 snowflake.oauth.scope
 
+Explicit OAuth scope to request. Only used when snowflake.oauth.include.scope is true; when it is true and this is unset, the scope defaults to session:role:{role}. Has no effect while snowflake.oauth.include.scope is false (no scope is sent).
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Explicit OAuth scope to request. Only used when snowflake.oauth.include.scope is true; when it is true and this is unset, the scope defaults to session:role:{role}. Has no effect while snowflake.oauth.include.scope is false (no scope is sent).
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Proxy Info
 ==========================
 🔘 jvm.proxy.host
 
+JVM option: https.proxyHost
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JVM option: https.proxyHost
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 jvm.proxy.port
 
+JVM option: https.proxyPort
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JVM option: https.proxyPort
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 jvm.nonProxy.hosts
 
+JVM option: http.nonProxyHosts
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JVM option: http.nonProxyHosts
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 jvm.proxy.username
 
+JVM proxy username
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JVM proxy username
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 jvm.proxy.password
 
@@ -276,12 +276,12 @@ When true (default), the connector validates that all settings required for KC v
 
 🔘 snowflake.topic2table.map
 
+Map of topics to tables (optional). Format : comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,... 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Map of topics to tables (optional). Format : comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,... 
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 snowflake.validation
 
@@ -336,12 +336,12 @@ Connector Config
 ==========================
 🔘 snowflake.streaming.client.provider.override.map
 
+Map of Key value pairs representing Streaming Client Properties to Override. These are optional and recommended to use ONLY after consulting Snowflake Support. Format : comma-separated tuples, e.g.: key1:value1,key2:value2
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Map of Key value pairs representing Streaming Client Properties to Override. These are optional and recommended to use ONLY after consulting Snowflake Support. Format : comma-separated tuples, e.g.: key1:value1,key2:value2
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 enable.mdc.logging
 
@@ -405,12 +405,12 @@ Controls table auto-creation. 'snowflake' (default): auto-create a standard Snow
 
 🔘 snowflake.iceberg.create.table.options
 
+SQL clauses spliced into the auto-created Iceberg table's CREATE statement after the column list (e.g. "EXTERNAL_VOLUME='v' ICEBERG_VERSION=3 CLUSTER BY (id)"). Lets operators set any managed-Iceberg create option without a per-option knob. Only valid when snowflake.autocreate.table.type=iceberg. Do NOT include CATALOG, ENABLE_SCHEMA_EVOLUTION or ERROR_LOGGING -- the connector always supplies those. Ignored if the table already exists.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: SQL clauses spliced into the auto-created Iceberg table's CREATE statement after the column list (e.g. "EXTERNAL_VOLUME='v' ICEBERG_VERSION=3 CLUSTER BY (id)"). Lets operators set any managed-Iceberg create option without a per-option knob. Only valid when snowflake.autocreate.table.type=iceberg. Do NOT include CATALOG, ENABLE_SCHEMA_EVOLUTION or ERROR_LOGGING -- the connector always supplies those. Ignored if the table already exists.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 snowflake.cache.table.exists
 
@@ -456,4 +456,5 @@ When true, table names in snowflake.topic2table.map support regex group replacem
 	 - Default: false
 	 - Importance: LOW
 	 - Required: false
+
 
