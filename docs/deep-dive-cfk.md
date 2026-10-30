@@ -243,7 +243,7 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   occurrences), known CFK issues, KRaft migration phase, and a verdict (`better`, `worse`, `changed`, `no change`,
   `different clusters`), in the terminal, a `cfk-bundles-comparison-*.html` report and `"comparison"` in `--json`.
   `--sample cfk_rollout --sample cfk_rollout_after` shows one. It
-  sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
+  sanitizes secrets, IPs and hostnames with `--sanitize` (off by default, best effort), and writes an HTML report in `--output-dir` (default
   `./log-analysis-output`: pass a `/tmp` folder), with Component / Instance / Connector filters. The location of each
   issue (`confluent/connect/logs/connect-0.log:33`, `pods.yaml`) opens the file at that line (the `name:` of the pod or
   CR for a YAML file) in a page written in `<report>-files/` next to the report, and its ✏️ opens it in the editor of

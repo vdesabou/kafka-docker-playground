@@ -6084,7 +6084,7 @@ function write_ccloud_costs_range_report() {
 # Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
 # HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
-# $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty for --no-sanitize, $4: minimal severity,
+# $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty to not sanitize (no --sanitize), $4: minimal severity,
 # $5: max issues per category in text mode, $6: output dir, $7: non-empty for --include-warnings, then the components
 # Returns the exit code of the analyzer: 0 analysis completed, 64 invalid, unsafe or empty bundle
 function analyze_cfk_bundle() {
@@ -6133,7 +6133,6 @@ function analyze_cfk_bundle() {
     if [[ -n "$no_sanitize" ]]
     then
         cli_args+=(--no-sanitize)
-        logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles." >&2
     fi
     if [[ -n "$severity" ]]
     then

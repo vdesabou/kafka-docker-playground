@@ -7561,7 +7561,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 Secrets, IPs,\n  hostnames, emails and LDAP DNs are sanitized by default (best effort: review\n  before sharing), --no-sanitize for internal bundles only. --logs-only gives\n  the plain log digest instead. 🎯 --problem \"<component, symptom, since when>\"\n  matches the bundle against what the customer reports: the issues that explain\n  it first, a verdict (explained, not explained, not covered by the logs), the\n  changes before the date. 📥 A Data to request section says what to ask the\n  customer for next, with why and the command: from the gaps of the bundle (logs\n  that start too late, previous logs of restarted containers, no events, no\n  operator log), from its findings (OOMKilled, Pending pods, TLS, failed\n  connectors) and from the symptoms of --problem.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 --sanitize\n  replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best\n  effort: review before sharing). --logs-only gives the plain log digest\n  instead. 🎯 --problem \"<component, symptom, since when>\" matches the bundle\n  against what the customer reports: the issues that explain it first, a verdict\n  (explained, not explained, not covered by the logs), the changes before the\n  date. 📥 A Data to request section says what to ask the customer for next, with\n  why and the command: from the gaps of the bundle (logs that start too late,\n  previous logs of restarted containers, no events, no operator log), from its\n  findings (OOMKilled, Pending pods, TLS, failed connectors) and from the\n  symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7653,9 +7653,17 @@ playground_analyze_logs_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--no-sanitize")"
-    printf "    ⚠️  Do not sanitize passwords and other secrets, IPs, hostnames, emails and\n    LDAP DNs (digest, HTML report, JSON, CFK bundle analysis)\n    \n    🚫 NEVER use this for customer logs. Internal/test logs only.\n"
+    printf "  %s\n" "$(magenta "--sanitize")"
+    printf "    🔒 Replace passwords and other secrets, IPs, hostnames, emails and LDAP DNs\n    by placeholders (<REDACTED>, <IP-1>, <HOST-1>…) in the digest, the HTML\n    report, the JSON and the CFK bundle analysis\n    \n    ⚠️ Use it before sharing the output outside Confluent (best effort: review\n    it anyway). Off by default: it can hide evidence (a dump of bytes taken for\n    a secret, the IP of the broker) and doubles the time on large bundles\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-sanitize")"
+      printf "    Kept for compatibility: the output is not sanitized by default, see\n    --sanitize\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -7693,7 +7701,7 @@ playground_analyze_logs_usage() {
     echo
 
     # :command.footer
-    printf "Example output:\n  $ playground analyze logs -f connect.log\n  17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log\n  🔎 1 distinct record(s), 2 occurrence(s), in 12 lines\n\n  🔴 ERROR x2 (first seen line 2, last seen line 10)\n  [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n      org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.\n      Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500\n          at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)\n\n  17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)\n  17:23:19 ℹ️ 🔒 Sanitized (best effort, review before sharing): 0 secret(s), 0 IP(s), 0 hostname(s), 0 email(s), 0 LDAP DN(s), --no-sanitize to keep them\n  17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html\n  17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html\n"
+    printf "Example output:\n  $ playground analyze logs -f connect.log\n  17:23:19 ℹ️ 🔓 Not sanitized: --sanitize replaces secrets, IPs and hostnames by placeholders before sharing the output outside Confluent\n  17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log\n  🔎 1 distinct record(s), 2 occurrence(s), in 12 lines\n\n  🔴 ERROR x2 (first seen line 2, last seen line 10)\n  [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n      org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.\n      Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500\n          at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)\n\n  17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)\n  17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html\n  17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html\n"
     echo
 
   fi
@@ -7902,10 +7910,17 @@ playground_analyze_cfk_bundle_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--no-sanitize")"
-    printf "    ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n    \n    🚫 NEVER use this for customer bundles. Internal/test bundles only.\n"
+    printf "  %s\n" "$(magenta "--sanitize")"
+    printf "    🔒 Replace IPs, hostnames, emails and credentials by placeholders (off by\n    default)\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-sanitize")"
+      printf "    Kept for compatibility: the output is not sanitized by default, see\n    --sanitize\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--severity LEVEL")"
     printf "    🎚️  Filter issues by minimum severity (critical | high | medium | low)\n"
@@ -8756,9 +8771,17 @@ playground_debug_analyze_logs_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--no-sanitize")"
-    printf "    ⚠️  Do not sanitize passwords and other secrets, IPs, hostnames, emails and\n    LDAP DNs (digest, HTML report, JSON, CFK bundle analysis)\n    \n    🚫 NEVER use this for customer logs. Internal/test logs only.\n"
+    printf "  %s\n" "$(magenta "--sanitize")"
+    printf "    🔒 Replace passwords and other secrets, IPs, hostnames, emails and LDAP DNs\n    by placeholders (<REDACTED>, <IP-1>, <HOST-1>…) in the digest, the HTML\n    report, the JSON and the CFK bundle analysis\n    \n    ⚠️ Use it before sharing the output outside Confluent (best effort: review\n    it anyway). Off by default: it can hide evidence (a dump of bytes taken for\n    a secret, the IP of the broker) and doubles the time on large bundles\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-sanitize")"
+      printf "    Kept for compatibility: the output is not sanitized by default, see\n    --sanitize\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -9497,10 +9520,17 @@ playground_debug_cfk_cfk_bundle_analyze_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--no-sanitize")"
-    printf "    ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n    \n    🚫 NEVER use this for customer bundles. Internal/test bundles only.\n"
+    printf "  %s\n" "$(magenta "--sanitize")"
+    printf "    🔒 Replace IPs, hostnames, emails and credentials by placeholders (off by\n    default)\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-sanitize")"
+      printf "    Kept for compatibility: the output is not sanitized by default, see\n    --sanitize\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--severity LEVEL")"
     printf "    🎚️  Filter issues by minimum severity (critical | high | medium | low)\n"
@@ -24124,7 +24154,7 @@ function write_ccloud_costs_range_report() {
 # Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
 # HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
-# $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty for --no-sanitize, $4: minimal severity,
+# $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty to not sanitize (no --sanitize), $4: minimal severity,
 # $5: max issues per category in text mode, $6: output dir, $7: non-empty for --include-warnings, then the components
 # Returns the exit code of the analyzer: 0 analysis completed, 64 invalid, unsafe or empty bundle
 function analyze_cfk_bundle() {
@@ -24173,7 +24203,6 @@ function analyze_cfk_bundle() {
     if [[ -n "$no_sanitize" ]]
     then
         cli_args+=(--no-sanitize)
-        logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles." >&2
     fi
     if [[ -n "$severity" ]]
     then
@@ -49434,7 +49463,7 @@ playground_analyze_logs_command() {
   json_out="${args[--json]}"
   logs_only="${args[--logs-only]}"
   severity="${args[--severity]}"
-  no_sanitize="${args[--no-sanitize]}"
+  want_sanitize="${args[--sanitize]}"
   eval "component_array=(${args[--component]})"
   eval "connector_array=(${args[--connector]})"
   with_worker="${args[--with-worker]}"
@@ -49544,19 +49573,23 @@ playground_analyze_logs_command() {
       return 1
   }
   nb_extracted=0
-  # secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
-  # the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
+  # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
+  # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
   sanitizer="$root_folder/tools/report-common/sanitizer.py"
   sanitize_state="$tmp_dir/sanitize-state.json"
-  sanitize=1
-  if [[ -n "$no_sanitize" ]]
+  sanitize=""
+  no_sanitize=1
+  if [[ -n "$want_sanitize" ]]
   then
-      sanitize=""
-      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer logs."
-  elif ! command -v python3 &>/dev/null
-  then
-      sanitize=""
-      logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+      if command -v python3 &>/dev/null
+      then
+          sanitize=1
+          no_sanitize=""
+      else
+          logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+      fi
+  else
+      log "🔓 Not sanitized: --sanitize replaces secrets, IPs and hostnames by placeholders before sharing the output outside Confluent"
   fi
   # $1: file, sanitized in place
   function sanitize_file () {
@@ -49926,7 +49959,7 @@ playground_analyze_logs_command() {
   if [[ -n "$sanitize" ]]
   then
       redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
-      log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction"), --no-sanitize to keep them"
+      log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction") (--sanitize)"
   fi
   title="${file_array[*]}"
   if [[ ${#sample_array[@]} -gt 0 ]]
@@ -49989,7 +50022,7 @@ playground_analyze_logs_command() {
       jq -r '"Secrets, IPs, hostnames, emails and LDAP DNs of the logs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…), best effort: review the report before sharing it. Redacted: \(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)."' <<< "$redaction" > "$tmp_dir/sanitization.txt"
       report_args+=(--section "🔒 Sanitization" "$tmp_dir/sanitization.txt")
   else
-      echo "Not sanitized (--no-sanitize): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
+      echo "Not sanitized (--sanitize to redact them): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
       report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
   fi
   # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
@@ -50283,7 +50316,9 @@ playground_analyze_cfk_bundle_command() {
   bundle="${args[--bundle]}"
   sample="${args[--sample]}"
   json_out="${args[--json]}"
-  no_sanitize="${args[--no-sanitize]}"
+  # not sanitized by default: --sanitize
+  no_sanitize=1
+  [[ -n "${args[--sanitize]}" ]] && no_sanitize=""
   severity="${args[--severity]}"
   top="${args[--top]}"
   output_dir="${args[--output-dir]}"
@@ -51408,7 +51443,7 @@ playground_debug_analyze_logs_command() {
   json_out="${args[--json]}"
   logs_only="${args[--logs-only]}"
   severity="${args[--severity]}"
-  no_sanitize="${args[--no-sanitize]}"
+  want_sanitize="${args[--sanitize]}"
   eval "component_array=(${args[--component]})"
   eval "connector_array=(${args[--connector]})"
   with_worker="${args[--with-worker]}"
@@ -51518,19 +51553,23 @@ playground_debug_analyze_logs_command() {
       return 1
   }
   nb_extracted=0
-  # secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
-  # the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
+  # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
+  # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
   sanitizer="$root_folder/tools/report-common/sanitizer.py"
   sanitize_state="$tmp_dir/sanitize-state.json"
-  sanitize=1
-  if [[ -n "$no_sanitize" ]]
+  sanitize=""
+  no_sanitize=1
+  if [[ -n "$want_sanitize" ]]
   then
-      sanitize=""
-      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer logs."
-  elif ! command -v python3 &>/dev/null
-  then
-      sanitize=""
-      logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+      if command -v python3 &>/dev/null
+      then
+          sanitize=1
+          no_sanitize=""
+      else
+          logwarn "⚠️ python3 is not on PATH: the output is NOT sanitized (passwords, IPs, hostnames…), review it before sharing"
+      fi
+  else
+      log "🔓 Not sanitized: --sanitize replaces secrets, IPs and hostnames by placeholders before sharing the output outside Confluent"
   fi
   # $1: file, sanitized in place
   function sanitize_file () {
@@ -51900,7 +51939,7 @@ playground_debug_analyze_logs_command() {
   if [[ -n "$sanitize" ]]
   then
       redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
-      log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction"), --no-sanitize to keep them"
+      log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction") (--sanitize)"
   fi
   title="${file_array[*]}"
   if [[ ${#sample_array[@]} -gt 0 ]]
@@ -51963,7 +52002,7 @@ playground_debug_analyze_logs_command() {
       jq -r '"Secrets, IPs, hostnames, emails and LDAP DNs of the logs are replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…), best effort: review the report before sharing it. Redacted: \(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)."' <<< "$redaction" > "$tmp_dir/sanitization.txt"
       report_args+=(--section "🔒 Sanitization" "$tmp_dir/sanitization.txt")
   else
-      echo "Not sanitized (--no-sanitize): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
+      echo "Not sanitized (--sanitize to redact them): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
       report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
   fi
   # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
@@ -53567,7 +53606,9 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
   bundle="${args[--bundle]}"
   sample="${args[--sample]}"
   json_out="${args[--json]}"
-  no_sanitize="${args[--no-sanitize]}"
+  # not sanitized by default: --sanitize
+  no_sanitize=1
+  [[ -n "${args[--sanitize]}" ]] && no_sanitize=""
   severity="${args[--severity]}"
   top="${args[--top]}"
   output_dir="${args[--output-dir]}"
@@ -90971,6 +91012,14 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --sanitize)
+
+        # :flag.case_no_arg
+        args['--sanitize']=1
+        shift
+        ;;
+
+      # :flag.case
       --no-sanitize)
 
         # :flag.case_no_arg
@@ -91527,6 +91576,14 @@ playground_analyze_cfk_bundle_parse_requirements() {
 
         # :flag.case_no_arg
         args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --sanitize)
+
+        # :flag.case_no_arg
+        args['--sanitize']=1
         shift
         ;;
 
@@ -93774,6 +93831,14 @@ playground_debug_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --sanitize)
+
+        # :flag.case_no_arg
+        args['--sanitize']=1
+        shift
+        ;;
+
+      # :flag.case
       --no-sanitize)
 
         # :flag.case_no_arg
@@ -95748,6 +95813,14 @@ playground_debug_cfk_cfk_bundle_analyze_parse_requirements() {
 
         # :flag.case_no_arg
         args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --sanitize)
+
+        # :flag.case_no_arg
+        args['--sanitize']=1
         shift
         ;;
 
@@ -124300,8 +124373,8 @@ playground_analyze_logs_completion() {
         completion_blocked_flags["--problem"]=1
 
         ;;
-      --no-sanitize)
-        completion_blocked_flags["--no-sanitize"]=1
+      --sanitize)
+        completion_blocked_flags["--sanitize"]=1
 
         shift
         ;;
@@ -124327,7 +124400,7 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --problem "$completion_current" --problem -p
-    completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
+    completion_flag_candidates --sanitize "$completion_current" --sanitize
   fi
 
 }
@@ -124590,8 +124663,8 @@ playground_analyze_cfk_bundle_completion() {
 
         shift
         ;;
-      --no-sanitize)
-        completion_blocked_flags["--no-sanitize"]=1
+      --sanitize)
+        completion_blocked_flags["--sanitize"]=1
 
         shift
         ;;
@@ -124670,7 +124743,7 @@ playground_analyze_cfk_bundle_completion() {
     completion_flag_candidates --bundle "$completion_current" --bundle -b
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --json "$completion_current" --json
-    completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
+    completion_flag_candidates --sanitize "$completion_current" --sanitize
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --top "$completion_current" --top
@@ -125774,8 +125847,8 @@ playground_debug_analyze_logs_completion() {
         completion_blocked_flags["--problem"]=1
 
         ;;
-      --no-sanitize)
-        completion_blocked_flags["--no-sanitize"]=1
+      --sanitize)
+        completion_blocked_flags["--sanitize"]=1
 
         shift
         ;;
@@ -125801,7 +125874,7 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --problem "$completion_current" --problem -p
-    completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
+    completion_flag_candidates --sanitize "$completion_current" --sanitize
   fi
 
 }
@@ -126842,8 +126915,8 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
 
         shift
         ;;
-      --no-sanitize)
-        completion_blocked_flags["--no-sanitize"]=1
+      --sanitize)
+        completion_blocked_flags["--sanitize"]=1
 
         shift
         ;;
@@ -126922,7 +126995,7 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
     completion_flag_candidates --bundle "$completion_current" --bundle -b
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --json "$completion_current" --json
-    completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
+    completion_flag_candidates --sanitize "$completion_current" --sanitize
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --top "$completion_current" --top

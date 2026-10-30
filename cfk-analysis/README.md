@@ -31,7 +31,7 @@ scheduling, …) with concrete remediation steps per category:
   `spec.configs` of its `Connector` CR and the `…Config values:` dumps of the Connect logs (`SinkConnectorConfig`,
   the config class of the plugin, the clients of a task), attributed with their `[connector|task-0]` context. A
   connector created with the REST API and started before the logs begin has no config in the bundle. Sanitized
-  like the rest (secrets as `<REDACTED>`, `${file:…}` references kept).
+  like the rest with `--sanitize` (secrets as `<REDACTED>`, `${file:…}` references kept).
 - JVM default truststore: a CR whose `configOverrides.jvm` (or `KAFKA_OPTS` / `JAVA_TOOL_OPTIONS`) sets
   `-Djavax.net.ssl.trustStore` without `-Djavax.net.ssl.trustStorePassword` (nor `trustStoreType=JKS`) is
   reported, high when its logs have `trustAnchors parameter must be non-empty`: a PKCS12 store read without its
@@ -118,8 +118,9 @@ the `platform.confluent.io/type` / `app` pod labels and, for events, the involve
 keeps only the Connect issues (text, JSON and HTML); the HTML report also has Component / Instance buttons, a
 Connector picker when log records have a Connect connector context, and its search filters single issues.
 
-Sensitive values (secrets, IPs, hostnames, emails, LDAP DNs) are sanitized by default. This is best effort:
-review the output before sharing it.
+Sensitive values (secrets, IPs, hostnames, emails, LDAP DNs) are sanitized with `playground analyze logs --sanitize`
+(off by default; `analyzer_cli.py --no-sanitize` when it is not passed). This is best effort: review the output before
+sharing it.
 
 ## Files
 

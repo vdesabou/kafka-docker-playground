@@ -64,8 +64,9 @@ out of context.
   `--errors`, `--no-follow` or `--wait-for-log` when running it non-interactively.
 - `playground analyze logs` is the same digest for offline logs: folders are scanned recursively,
   `.zip` / `.tar(.gz|.bz2|.xz)` / `.7z` (nested too) are extracted to a temporary folder, `.gz` files are read on the fly,
-  binary files are skipped, and only the files with findings are shown. Secrets, IPs, hostnames, emails and LDAP DNs
-  are replaced by placeholders by default (best effort, `--no-sanitize` to keep them). Read its 🧭 summary first;
+  binary files are skipped, and only the files with findings are shown. The output is not sanitized by default:
+  `--sanitize` replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best effort), before sharing it
+  outside Confluent. Read its 🧭 summary first;
   the full `--json` is mostly the configuration, so pass `--json-sections`. It also writes an HTML report (known causes,
   timeline, root causes, every record, configuration logged at startup; its file:line locations open the file in a page
   written in `<report>-files/`, ✏️ in the editor) in `--output-dir`, default `./log-analysis-output`: pass

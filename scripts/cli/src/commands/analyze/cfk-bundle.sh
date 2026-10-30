@@ -2,7 +2,9 @@
 bundle="${args[--bundle]}"
 sample="${args[--sample]}"
 json_out="${args[--json]}"
-no_sanitize="${args[--no-sanitize]}"
+# not sanitized by default: --sanitize
+no_sanitize=1
+[[ -n "${args[--sanitize]}" ]] && no_sanitize=""
 severity="${args[--severity]}"
 top="${args[--top]}"
 output_dir="${args[--output-dir]}"

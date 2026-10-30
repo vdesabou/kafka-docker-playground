@@ -3005,30 +3005,30 @@ subcommands:
       and Ready in the bundle are low and marked transient. Each issue is attributed
       to a component and an instance (CR name), and to its connector: --component
       keeps some of them, the HTML report has Component / Instance / Connector filters.
-      \U0001F512 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default
-      (best effort: review before sharing), --no-sanitize for internal bundles only.
-      --logs-only gives the plain log digest instead. \U0001F3AF --problem \"<component,
-      symptom, since when>\" matches the bundle against what the customer reports:
-      the issues that explain it first, a verdict (explained, not explained, not covered
-      by the logs), the changes before the date. \U0001F4E5 A Data to request section
-      says what to ask the customer for next, with why and the command: from the gaps
-      of the bundle (logs that start too late, previous logs of restarted containers,
-      no events, no operator log), from its findings (OOMKilled, Pending pods, TLS,
-      failed connectors) and from the symptoms of --problem.\n\n\U0001F512 Passwords
-      and other secrets (password=…, JAAS configs, tokens, keys, credentials in URLs),
-      IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>,
-      <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON) by default.
-      It is best effort: review the output before sharing it. --no-sanitize keeps
-      them, for internal logs only.\n\n\U0001F9ED After the digest of each file, a
-      short summary: time range, occurrences by connector, known causes with what
-      to do, root causes no known cause explains, and the configuration logged at
-      startup (connectors, components, clients) with the keys changed between restarts.
-      --connector keeps one connector, --show-config prints a configuration.\n\n\U0001F310
-      Also writes a self-contained HTML report in --output-dir, opened in the browser
-      in an interactive terminal: verdict, known causes (task killed, authentication,
-      TLS, unknown magic byte, OutOfMemoryError...), occurrences over time, root causes
-      (deepest exception of each record), files with findings, and every distinct
-      record.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
+      \U0001F512 --sanitize replaces secrets, IPs, hostnames, emails and LDAP DNs
+      by placeholders (best effort: review before sharing). --logs-only gives the
+      plain log digest instead. \U0001F3AF --problem \"<component, symptom, since
+      when>\" matches the bundle against what the customer reports: the issues that
+      explain it first, a verdict (explained, not explained, not covered by the logs),
+      the changes before the date. \U0001F4E5 A Data to request section says what
+      to ask the customer for next, with why and the command: from the gaps of the
+      bundle (logs that start too late, previous logs of restarted containers, no
+      events, no operator log), from its findings (OOMKilled, Pending pods, TLS, failed
+      connectors) and from the symptoms of --problem.\n\n\U0001F512 With --sanitize,
+      passwords and other secrets (password=…, JAAS configs, tokens, keys, credentials
+      in URLs), IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>,
+      <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON). Off by
+      default: use it before sharing the output outside Confluent, and review it anyway
+      (best effort).\n\n\U0001F9ED After the digest of each file, a short summary:
+      time range, occurrences by connector, known causes with what to do, root causes
+      no known cause explains, and the configuration logged at startup (connectors,
+      components, clients) with the keys changed between restarts. --connector keeps
+      one connector, --show-config prints a configuration.\n\n\U0001F310 Also writes
+      a self-contained HTML report in --output-dir, opened in the browser in an interactive
+      terminal: verdict, known causes (task killed, authentication, TLS, unknown magic
+      byte, OutOfMemoryError...), occurrences over time, root causes (deepest exception
+      of each record), files with findings, and every distinct record.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle"
     usage: playground analyze logs [OPTIONS]
     options:
@@ -3155,11 +3155,14 @@ subcommands:
         --json. It also adds what to request for these symptoms to the \U0001F4E5
         Data to request section"
     - names:
-      - "--no-sanitize"
+      - "--sanitize"
       argument: ''
-      description: "⚠️  Do not sanitize passwords and other secrets, IPs, hostnames,
-        emails and LDAP DNs (digest, HTML report, JSON, CFK bundle analysis)\n\n\U0001F6AB
-        NEVER use this for customer logs. Internal/test logs only."
+      description: "\U0001F512 Replace passwords and other secrets, IPs, hostnames,
+        emails and LDAP DNs by placeholders (<REDACTED>, <IP-1>, <HOST-1>…) in the
+        digest, the HTML report, the JSON and the CFK bundle analysis\n\n⚠️ Use it
+        before sharing the output outside Confluent (best effort: review it anyway).
+        Off by default: it can hide evidence (a dump of bytes taken for a secret,
+        the IP of the broker) and doubles the time on large bundles"
   - name: gc-logs
     description: "\U0001F4C8 Analyze JVM Garbage Collection logs\n\n\U0001F4CA Parses
       GC logs from local files / folders or a running container: pause statistics,
