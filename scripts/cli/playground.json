@@ -1152,9 +1152,66 @@
     },
     {
       "name": "history",
-      "description": "🏰 Get an history of the examples which were run with run command and run it again\n\nOpens a picker over every 'playground run' command you have executed,\nmost recent first and de-duplicated. The command you select is shown for\nediting before it runs, so you can change a --tag or add a flag on the way.\n\nThe runs are kept in playground-run-history (repository root), one\nshell-quoted line each: eval the last line to replay it from a script.\nRuns whose script no longer exists are not shown. --cluster-creds and --cluster-schema-registry-creds are written as\n'<masked>': they are taken from playground.ini when the run used the\ncluster saved there, otherwise replace '<masked>' when editing the line.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags",
-      "usage": "playground history",
-      "options": []
+      "description": "🏰 Get an history of the examples which were run with run command and run it again\n\nOpens a picker over every 'playground run' command you have executed,\nmost recent first and de-duplicated, with the result (✅ ❌ ⏭️ ⏹️) and\nthe date of its last run, and a preview: duration, branch, number of runs,\nREADME title and, for a repro model, its expected / actual / status. The\ncommand you select is shown for editing before it runs, so you can change\na --tag or add a flag on the way (tab completes the flags and their values).\n\nThe runs are kept in playground-run-history (repository root), one\nshell-quoted line each, followed by a comment eval ignores:\ndate=… branch=… result=… duration=… (seconds). Runs whose script no\nlonger exists are not shown (--all to show them, --prune to remove them).\n\n--cluster-creds and --cluster-schema-registry-creds are written as\n'<masked>': they are taken from playground.ini when the run used the\ncluster saved there, otherwise replace '<masked>' when editing the line.\n\n🎓 Tip: --list, --json, --last and --run need no terminal, for scripts and\nAI agents.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags",
+      "usage": "playground history [QUERY] [OPTIONS] [--] [MORE QUERY WORDS...]",
+      "options": [
+        {
+          "names": [
+            "--list"
+          ],
+          "argument": "",
+          "description": "📜 Print the runs, most recent first, without the picker: the command,\nthen its result, date, duration, branch and number of runs\n\nConflicts with: --last, --run, --stats, --prune"
+        },
+        {
+          "names": [
+            "--json"
+          ],
+          "argument": "",
+          "description": "📗 Print the runs as a JSON array, most recent first, and nothing else\n\nEach run has command, script, path (relative to the repository), exists,\ndate, result (SUCCESS, FAILURE, SKIPPED, INTERRUPTED, null for runs\nrecorded before the results were kept), duration_seconds, branch and runs.\nNo run prints [] and exits with code 1.\n\nConflicts with: --last, --run, --stats, --prune"
+        },
+        {
+          "names": [
+            "--limit"
+          ],
+          "argument": "LIMIT",
+          "description": "🔢 Maximum number of runs printed by --list / --json (default 20, 0 for all)\n\nDefault value: 20"
+        },
+        {
+          "names": [
+            "--all"
+          ],
+          "argument": "",
+          "description": "🗑️ Also show the runs whose script no longer exists"
+        },
+        {
+          "names": [
+            "--last"
+          ],
+          "argument": "",
+          "description": "⏮️ Print the most recent command matching the query (the last run\nwithout query), and nothing else\n\nConflicts with: --list, --json, --run, --stats, --prune"
+        },
+        {
+          "names": [
+            "--run"
+          ],
+          "argument": "",
+          "description": "🚀 Run the most recent command matching the query, without the picker\nnor the edit prompt\n\nConflicts with: --list, --json, --last, --stats, --prune"
+        },
+        {
+          "names": [
+            "--stats"
+          ],
+          "argument": "",
+          "description": "📊 Print the most run examples, the most used --tag, --connector-tag and\n--environment, and the results\n\nConflicts with: --list, --json, --last, --run, --prune"
+        },
+        {
+          "names": [
+            "--prune"
+          ],
+          "argument": "",
+          "description": "🧹 Rewrite playground-run-history with one line per command (its last\nrun) and without the runs whose script no longer exists. The previous\nfile is kept as playground-run-history.bak\n\nConflicts with: --list, --json, --last, --run, --stats"
+        }
+      ]
     },
     {
       "name": "find-example",

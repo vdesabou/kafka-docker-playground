@@ -2155,7 +2155,10 @@ do
     *) history_line+=" $(printf '%q' "$flag")" ;;
   esac
 done
-echo "$history_line" >> "$root_folder/playground-run-history"
+# a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
+history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
+history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
+echo "$history_entry" >> "$root_folder/playground-run-history"
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -2193,10 +2196,26 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
+function record_run_in_history {
+  local result="FAILURE" history_file="$root_folder/playground-run-history"
+  case "$1" in
+    0) result="SUCCESS" ;;
+    111) result="SKIPPED" ;;
+    130|143) result="INTERRUPTED" ;;
+  esac
+  [ -f "$history_file" ] || return 0
+  # the last line of this run: other runs of this checkout may have been added since
+  HISTORY_ENTRY="$history_entry" HISTORY_SUFFIX=" result=$result duration=$SECONDS" awk '
+    NR == FNR { if ($0 == ENVIRON["HISTORY_ENTRY"]) last = FNR; next }
+    FNR == last { $0 = $0 ENVIRON["HISTORY_SUFFIX"] }
+    { print }' "$history_file" "$history_file" > "$history_file.tmp" && cat "$history_file.tmp" > "$history_file"
+  rm -f "$history_file.tmp"
+}
 function cleanup {
   # 💡 Capture the original exit status immediately!
   local original_exit_status=$?
   set +e
+  record_run_in_history "$original_exit_status"
   rm /tmp/playground-run-command-used
   echo ""
 

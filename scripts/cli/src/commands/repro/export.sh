@@ -240,6 +240,8 @@ do
     if [ -f "$history_file" ]
     then
         run_line=$(grep -E "^playground run -f [^ ]*/$dir_name/$script_name( |$)" "$history_file" | tail -1)
+        # without the trailing "# date=… result=…" comment of the history
+        run_line="${run_line%% # date=*}"
         run_flags=$(echo "${run_line#playground run -f }" | cut -s -d " " -f 2- | sed -e 's/[[:space:]]*$//')
     fi
     if [ -z "$run_line" ]
