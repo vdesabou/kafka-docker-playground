@@ -23,6 +23,8 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 | the schema behind an id seen in a record | `playground schema get --id <id>` |
 | soft-deleted subjects too | `playground schema get --deleted` |
 | a new version, without producing | `playground schema register --subject <s> << 'EOF' … EOF` |
+| would this schema be accepted? (nothing registered) | `playground schema check-compatibility --subject <s> < new.avsc` (exit 0 / 1, `--compatibility <rule>`) |
+| what changed between two versions, and which rules refuse it | `playground schema diff --subject <s> [--from N] [--to M\|@file]` |
 | the rule that accepts or refuses a new version | `playground schema get-compatibility --subject <s>` (or `--global`) / `set-compatibility --compatibility …` |
 | the same, on the value subject of a topic | `playground topic set-schema-compatibility --topic <t> --compatibility …` |
 | remove a version or a subject | `playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]` |
@@ -175,6 +177,56 @@ playground schema set-compatibility --global --compatibility FULL               
 playground topic set-schema-compatibility --topic orders --compatibility FULL   # the -value subject of the topic (--include-key: -key too)
 playground topic produce -t orders --compatibility NONE …                        # set before producing
 ```
+
+### Before registering: `check-compatibility` and `diff`
+
+```bash
+playground schema check-compatibility --subject orders-value < customer-v2.avsc                      # the registry's verdict, nothing registered
+playground schema check-compatibility --subject orders-value --compatibility FULL < customer-v2.avsc  # under another rule
+playground schema diff --subject orders-value                                  # the latest version vs the one before
+playground schema diff --subject orders-value --to @customer-v2.avsc           # the latest version vs a file
+playground schema diff --from @v1.avsc --to @v2.avsc --no-verdict              # two files, no registry needed
+```
+
+`check-compatibility` asks the registry the question a `register` (or a producer with `auto.register.schemas=true`)
+would, and prints its reasons:
+
+```text
+❌ the schema is not compatible with the versions the rule checks of orders-value under BACKWARD (subject rule): register would refuse it (40901)
+   READER_FIELD_MISSING_DEFAULT_VALUE: The field 'currency' at path '/fields/2' in the new schema has no default value and is missing in the old schema
+```
+
+`diff` explains, field by field, what changed and which rule each change breaks, then asks the registry for the
+verdict of each rule:
+
+```text
+🔀 orders-value v1 (id 1)  →  v2-bad.avsc  (AVRO)
+   ➕ currency: string
+      💡 added without a default: the new schema can't read old data (breaks BACKWARD)
+
+🛡️  Verdict of the Schema Registry for v2-bad.avsc after orders-value v1 (id 1):
+   ❌ BACKWARD
+      READER_FIELD_MISSING_DEFAULT_VALUE: The field 'currency' at path '/fields/2' in the new schema has no default value and is missing in the old schema
+   ✅ FORWARD
+   ❌ FULL
+   ✅ NONE
+```
+
+Gotchas:
+
+- **`check-compatibility` exits 0 (compatible), 1 (not compatible) or 2 (the check couldn't be done)**: an invalid
+  schema (`Undefined schema: nope`) is a 2, like the `42201` a `register` would get. A subject with no version
+  accepts anything: the first version is never checked.
+- Without `--version`, the schema is checked against what the rule says: the latest version, or **every** version
+  with a `*_TRANSITIVE` rule (that's what `register` does). `--version N` checks against that version only.
+- `--compatibility <rule>` and the verdicts of `diff` use a **temporary subject** (`playground-schema-check-…`),
+  permanently deleted afterwards. Its versions are the subject's own schemas, so they keep their ids, but a `--from`
+  **file** that isn't registered yet consumes a schema id: the next real registration gets a higher id.
+- `diff` follows nested records, unions, enums, logical types (Avro), `properties` / `required` /
+  `additionalProperties` (JSON Schema), and field numbers, types and reserved numbers (Protobuf). Referenced types
+  are compared by name only. The hints are rules of thumb; the registry's verdict is the authority.
+
+### The rules
 
 | Rule | A new version must… | Typical change it accepts |
 | --- | --- | --- |
@@ -386,7 +438,8 @@ playground stop
 | Customer symptom | Command |
 | --- | --- |
 | "`Schema not found` / `Error retrieving Avro schema for id N`" after a cleanup | produce, `schema delete --subject <s> --permanent`, consume: the skipped-records warning shows the failure; a soft delete doesn't reproduce it |
-| "the producer gets `Schema being registered is incompatible`" | `set-compatibility` to the customer's rule, `register` v1 then the customer's v2: the 409 is the registry's verdict |
+| "the producer gets `Schema being registered is incompatible`" | `set-compatibility` to the customer's rule, `register` v1, then `check-compatibility` and `diff --to @<customer v2>`: the verdict, its reasons and the field that breaks it, without registering anything |
+| "will the new version of our schema be accepted?" / "which rule should we use?" | `diff --subject <s> --to @<new>` shows the verdict of every rule at once; `check-compatibility --compatibility FULL_TRANSITIVE` for a transitive rule |
 | "consumers broke after someone relaxed compatibility" | `set-compatibility NONE`, `register` the incompatible version, set the rule back, consume old and new records |
 | "which schema is this record using?" | `topic consume -t <t> --last 1` for `ValueSchemaId:`, then `schema get --id <id>` |
 | "the sink reads the wrong subject / subject not found" | the producer's subject name strategy: `schema get` to list the real subjects, `topic consume --value-subject` to read them (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
@@ -414,6 +467,8 @@ playground schema register --subject <s> [--schema @file] [--metadata-property k
 playground schema get-compatibility --subject <s> | --global [--json]
 playground schema set-compatibility --subject <s> | --global --compatibility BACKWARD|FORWARD|FULL|NONE[_TRANSITIVE]
 playground topic set-schema-compatibility --topic <t> --compatibility … [--include-key]
+playground schema check-compatibility --subject <s> [--schema @file] [--version N] [--compatibility <rule>] [--json] < new.avsc
+playground schema diff [--subject <s>] [--from N|latest|id:<id>|@file] [--to …] [--no-verdict] [--json]
 playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]
 playground schema derive-schema [--schema-type AVRO|JSON|PROTOBUF] [--payload '<json>'|@file] << 'EOF' … EOF
 playground schema get-mode|set-mode --subject <s> | --global [--mode READWRITE|READONLY|IMPORT]

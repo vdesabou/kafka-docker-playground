@@ -2048,7 +2048,7 @@
     },
     {
       "name": "schema",
-      "description": "🔰 Schema commands\n\nTalk to the Schema Registry of the running environment, whether it is the\nlocal container or the one in Confluent Cloud, without building the urls\nand the credentials yourself.\n\n🔍 Read\n  list                 every subject: versions, latest id, type, rule, mode\n  get                  every version of a subject, or of all subjects\n  get-compatibility    the compatibility rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register             add a new version to a subject\n  delete               a version, or the whole subject\n  set-compatibility    relax or tighten the evolution rule (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point one subject name at another\n\n🪄 derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup",
+      "description": "🔰 Schema commands\n\nTalk to the Schema Registry of the running environment, whether it is the\nlocal container or the one in Confluent Cloud, without building the urls\nand the credentials yourself.\n\n🔍 Read\n  list                 every subject: versions, latest id, type, rule, mode\n  get                  every version of a subject, or of all subjects\n  get-compatibility    the compatibility rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register             add a new version to a subject\n  check-compatibility  would this schema be accepted? (nothing registered)\n  delete               a version, or the whole subject\n  set-compatibility    relax or tighten the evolution rule (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point one subject name at another\n\n🔀 diff compares two versions (or a version and a file) field by field,\nwith the verdict of each compatibility rule.\n\n🪄 derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup",
       "usage": "playground schema COMMAND",
       "options": [],
       "subcommands": [
@@ -2206,6 +2206,120 @@
               ],
               "argument": "",
               "description": "🫧 Add ?normalize=true at the end of the request to normalize the schema. The default is false."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+            }
+          ]
+        },
+        {
+          "name": "check-compatibility",
+          "description": "🧪 Check whether a schema would be accepted, without registering it\n\nAsks the registry the same question as a register (or a producer with\nauto.register.schemas=true) would, and prints its verdict with the\nreasons (READER_FIELD_MISSING_DEFAULT_VALUE, TYPE_MISMATCH…). Nothing\nis registered.\n\nWithout --version, the schema is checked against what the rule of the\nsubject says: the latest version, or every version with a\n*_TRANSITIVE rule. --compatibility evaluates it under another rule\n(in a temporary copy of the subject, permanently deleted afterwards).\n\nExit code: 0 compatible, 1 not compatible, 2 the check could not be\ndone (invalid schema, unknown version…).\n\n🎓 Tip: 'playground schema diff --subject <s> --to @<file>' shows\nfield by field what changed and why a rule refuses it.",
+          "usage": "playground schema check-compatibility [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject name\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--schema"
+              ],
+              "argument": "SCHEMA",
+              "description": "🔥 The schema to check (avro, json schema, protobuf): on stdin (default), @<file>, a file path, or the schema itself\n\nDefault value: -"
+            },
+            {
+              "names": [
+                "--version"
+              ],
+              "argument": "VERSION",
+              "description": "🔢 Check against this version only (a number, or latest), instead of what the rule of the subject checks"
+            },
+            {
+              "names": [
+                "--compatibility"
+              ],
+              "argument": "COMPATIBILITY",
+              "description": "🛡️ Evaluate under this rule instead of the one of the subject\n\nAllowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "📗 Print the result as JSON, and nothing else"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+            }
+          ]
+        },
+        {
+          "name": "diff",
+          "description": "🔀 Compare two schemas field by field, with the verdict of each compatibility rule\n\nShows what changed between two versions of a subject, a version and a\nfile, or two files: ➕ added and ➖ removed fields (with or without a\ndefault), ✏️ type, default, enum symbol, field number or required\nchanges, each with a hint on the rule it breaks. Avro (nested records,\nunions, enums, logical types), JSON Schema and Protobuf are supported.\n\nThen, when a Schema Registry is running, its verdict for BACKWARD,\nFORWARD and FULL (asked in a temporary subject, permanently deleted\nafterwards; a --from file not registered yet consumes a schema id).\n\n--from and --to take a version number, latest, id:<schema id>, or\n@<file>. Defaults: --to the latest version of --subject, --from the\nversion before it (the latest one when --to is a file).",
+          "usage": "playground schema diff [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject of the versions to compare (not needed for id:<n> and @<file>)"
+            },
+            {
+              "names": [
+                "--from"
+              ],
+              "argument": "FROM",
+              "description": "⬅️ The old schema: a version number, latest, id:<schema id> or @<file>"
+            },
+            {
+              "names": [
+                "--to"
+              ],
+              "argument": "TO",
+              "description": "➡️ The new schema: a version number, latest, id:<schema id> or @<file>"
+            },
+            {
+              "names": [
+                "--no-verdict"
+              ],
+              "argument": "",
+              "description": "🙅 Only the field-level diff, don't ask the registry for the compatibility verdicts"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "📗 Print the result as JSON, and nothing else"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
             },
             {
               "names": [

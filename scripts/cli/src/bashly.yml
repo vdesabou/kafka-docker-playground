@@ -4146,11 +4146,15 @@ commands:
 
      ✍️ Write
        register             add a new version to a subject
+       check-compatibility  would this schema be accepted? (nothing registered)
        delete               a version, or the whole subject
        set-compatibility    relax or tighten the evolution rule (subject or global)
        set-mode             READWRITE, READONLY or IMPORT (subject or global)
        set-normalize, validate-new-schemas   registry-wide behaviour
        set-alias            point one subject name at another
+
+     🔀 diff compares two versions (or a version and a file) field by field,
+     with the verdict of each compatibility rule.
 
      🪄 derive-schema turns a sample payload into an avro, json schema or
      protobuf schema, which saves writing one by hand.
@@ -4408,6 +4412,116 @@ commands:
           ]
       }
       EOF
+
+  - name: check-compatibility
+    group: Schema
+    filters:
+    - schema_registry_running
+    help: |-
+      🧪 Check whether a schema would be accepted, without registering it
+
+      Asks the registry the same question as a register (or a producer with
+      auto.register.schemas=true) would, and prints its verdict with the
+      reasons (READER_FIELD_MISSING_DEFAULT_VALUE, TYPE_MISMATCH…). Nothing
+      is registered.
+
+      Without --version, the schema is checked against what the rule of the
+      subject says: the latest version, or every version with a
+      *_TRANSITIVE rule. --compatibility evaluates it under another rule
+      (in a temporary copy of the subject, permanently deleted afterwards).
+
+      Exit code: 0 compatible, 1 not compatible, 2 the check could not be
+      done (invalid schema, unknown version…).
+
+      🎓 Tip: 'playground schema diff --subject <s> --to @<file>' shows
+      field by field what changed and why a rule refuses it.
+    flags:
+    - *subject_required
+    - long: --schema
+      arg: schema
+      completions:
+        dynamic:
+        - playground get-predefined-schemas "$completion_current"
+      default: "-"
+      required: false
+      help: |-
+        🔥 The schema to check (avro, json schema, protobuf): on stdin (default), @<file>, a file path, or the schema itself
+    - long: --version
+      arg: version
+      required: false
+      help: |-
+        🔢 Check against this version only (a number, or latest), instead of what the rule of the subject checks
+    - long: --compatibility
+      arg: compatibility
+      allowed:
+        - BACKWARD
+        - BACKWARD_TRANSITIVE
+        - FORWARD
+        - FORWARD_TRANSITIVE
+        - FULL
+        - FULL_TRANSITIVE
+        - NONE
+      required: false
+      help: |-
+        🛡️ Evaluate under this rule instead of the one of the subject
+    - *json
+    - *verbose
+    - *cluster
+    examples: |
+      playground schema check-compatibility --subject orders-value < customer-v2.avsc
+      playground schema check-compatibility --subject orders-value --schema @customer-v2.avsc --compatibility FULL_TRANSITIVE
+      playground schema check-compatibility --subject orders-value --version 1 --json < customer-v2.avsc
+
+  - name: diff
+    group: Schema
+    help: |-
+      🔀 Compare two schemas field by field, with the verdict of each compatibility rule
+
+      Shows what changed between two versions of a subject, a version and a
+      file, or two files: ➕ added and ➖ removed fields (with or without a
+      default), ✏️ type, default, enum symbol, field number or required
+      changes, each with a hint on the rule it breaks. Avro (nested records,
+      unions, enums, logical types), JSON Schema and Protobuf are supported.
+
+      Then, when a Schema Registry is running, its verdict for BACKWARD,
+      FORWARD and FULL (asked in a temporary subject, permanently deleted
+      afterwards; a --from file not registered yet consumes a schema id).
+
+      --from and --to take a version number, latest, id:<schema id>, or
+      @<file>. Defaults: --to the latest version of --subject, --from the
+      version before it (the latest one when --to is a file).
+    flags:
+    - long: --subject
+      required: false
+      arg: subject
+      completions:
+        dynamic:
+        - playground get-subject-list
+      help: |-
+        📛 Subject of the versions to compare (not needed for id:<n> and @<file>)
+    - long: --from
+      arg: from
+      required: false
+      help: |-
+        ⬅️ The old schema: a version number, latest, id:<schema id> or @<file>
+    - long: --to
+      arg: to
+      required: false
+      help: |-
+        ➡️ The new schema: a version number, latest, id:<schema id> or @<file>
+    - long: --no-verdict
+      required: false
+      help: |-
+        🙅 Only the field-level diff, don't ask the registry for the compatibility verdicts
+    - *json
+    - *verbose
+    - *cluster
+    examples: |
+      playground schema diff --subject orders-value
+      playground schema diff --subject orders-value --from 1 --to 3
+      playground schema diff --subject orders-value --to @customer-v4.avsc
+      playground schema diff --from @v1.avsc --to @v2.avsc --no-verdict
+      playground schema diff --from id:12 --to id:15 --json
 
   - name: get-compatibility
     filters:
