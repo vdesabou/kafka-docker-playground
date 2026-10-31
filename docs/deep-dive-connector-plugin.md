@@ -282,7 +282,7 @@ Gotchas:
   it in `🗂️ versions run locally` (dated in the past, so that `connector diff` keeps using the reference of the running
   version).
 
-## 4. Source code: `sourcecode`
+## 4. Source code: `sourcecode`, `fm-versions`
 
 ```bash
 # the GitHub tree at the exact tag (no browser with --only-show-url)
@@ -335,6 +335,47 @@ Gotchas:
 - Some repositories hold several connectors: `confluentinc/kafka-connect-s3` is in `kafka-connect-storage-cloud`, the
   fully managed Salesforce types in `kafka-connect-salesforce`. The URL is the repository at the tag: find the
   connector's module inside.
+
+### Fully managed connector versions: `fm-versions`
+
+Fully managed connectors have no Hub versions: each image of the cc-connect service (a tag of the private
+`confluentinc/cc-docker-connect` repository) pins one version of every connector in `cc-connect/cache-versions.env`.
+`fm-versions` reads that file over the tags (Confluent employees):
+
+```bash
+# the last 10 cc-connect versions (--last N), grouped by connector version, newest first
+playground connector-plugin fm-versions -c confluentinc/SalesforceBulkApiV2Sink
+# the same, with the commits between two connector versions (sourcecode --log under the hood)
+playground connector-plugin fm-versions -c confluentinc/SalesforceBulkApiV2Sink --last 50 --with-log
+# the connector version one image ships
+playground connector-plugin fm-versions -c confluentinc/S3_SINK --cc-connect-version 0.3780.0
+# the first image shipping at least a connector version: "is the fix of 3.2.1 in an image yet?"
+playground connector-plugin fm-versions -c confluentinc/SalesforceBulkApiV2Sink --find-first 3.2.1
+```
+
+What it prints (from the lab, step 6):
+
+```text
+☁️ confluentinc/SalesforceBulkApiV2Sink (SALESFORCE_CONNECTOR_VERSION) in the last 250 cc-connect versions, newest first
+   0.3730.0 … 0.3785.0  →  3.2.0-rc-4be74dd8-cloud
+   0.3710.0 … 0.3729.0  →  3.2.0-rc-7b0f5ae9-cloud
+   0.3683.0 … 0.3709.0  →  3.2.0-rc-6f27adbb-cloud
+   0.3682.5 … 0.3682.7  →  3.2.0-rc-7b0f5ae9-cloud      <- a rollback
+```
+
+Gotchas:
+
+- **Needs `gh` logged in (or `GH_TOKEN`), the VPN, and the employee plugin list** (it maps the type to its variable in
+  `cache-versions.env`, `SALESFORCE_CONNECTOR_VERSION`; `playground generate-connector-plugin-list` with AWS
+  credentials). `-c` also takes a fully managed type (`S3_SINK`) or a connector class.
+- The tags are listed once a day (about 30 s); each version's `cache-versions.env` is cached forever in
+  `/tmp/connector-plugin-fm` (a tag doesn't move): a first `--last 250` takes about a minute.
+- `--find-first 3.2.1` compares the numeric part of the connector versions (`3.2.0-rc-4be74dd8-cloud` → `3.2.0`), by
+  binary search: rollbacks between rc builds of the same version don't change the answer.
+- **An image version is not a deployment**: which cc-connect version a cluster runs is in its connect logs (chewie).
+  `fm-versions` says which image has the fix, not whether the customer's cluster runs it.
+- To read the code of the connector version an image ships: `sourcecode -c confluentinc/<Type> --connector-tag <cc-connect
+  version> --only-show-url` (see above).
 
 ---
 
@@ -603,15 +644,7 @@ playground connector-plugin fm-versions -c confluentinc/S3_SINK --cc-connect-ver
 # ☁️ cc-connect 0.3780.0 ships confluentinc/S3_SINK 0.139.0
 ```
 
-`fm-versions` gotchas:
-
-- Needs `gh` logged in (or `GH_TOKEN`), the VPN, and the employee plugin list (it maps the type to its variable in
-  `cache-versions.env`, `SALESFORCE_CONNECTOR_VERSION`). The tags are listed once a day (about 30 s); each version's
-  `cache-versions.env` is cached forever in `/tmp/connector-plugin-fm` (a tag doesn't move): a first `--last 250` takes
-  about a minute.
-- `--find-first 3.2.1` compares the numeric part of the connector versions (`3.2.0-rc-4be74dd8-cloud` → `3.2.0`), by
-  binary search: rollbacks between rc builds of the same version don't change the answer.
-- **An image version is not a deployment**: which cc-connect version a cluster runs is in its connect logs (chewie).
+The gotchas of `fm-versions` are in [section 4](/deep-dive-connector-plugin?id=fully-managed-connector-versions-fm-versions).
 
 ---
 

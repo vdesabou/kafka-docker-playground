@@ -2473,13 +2473,13 @@
     },
     {
       "name": "tcp-proxy",
-      "description": "🏚 Zazkia TCP Proxy commands\n\nSimulate TCP connection issues (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy\n\nSlips a controllable proxy between a connector and the system it talks to,\nso you can break the connection on purpose and watch what the connector\ndoes: does it retry, does it lose records, does it fail the task.\n\n  start        put the proxy in the path, rewriting the connector config\n  delay        add latency to the responses\n  break        drop a percentage of the responses\n  close-connection, close-all-connection-with-error\n  toggle-*     cut reads or writes in one direction only\n  get-connections   the live connections and their statistics\n  open-ui      drive all of the above from the Zazkia web UI\n\n🎓 Tip: start with 'playground tcp-proxy open-ui' to see what is\nhappening, then reproduce the same actions from the CLI in a script.",
+      "description": "🏚 Zazkia TCP Proxy commands\n\nSimulate TCP connection issues (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy\n\nSlips a controllable proxy between a connector and the system it talks to,\nso you can break the connection on purpose and watch what the connector\ndoes: does it retry, does it lose records, does it fail the task.\n\n  start        put the proxy in the path, rewriting the connector config\n  delay        add latency to the responses\n  break        drop a percentage of the responses\n  close-connection, close-all-connection-with-error\n  toggle-*     cut reads or writes in one direction only\n  get-connections   the live connections and their statistics\n  open-ui      drive all of the above from the Zazkia web UI\n\n🎓 Tip: start with 'playground tcp-proxy open-ui' to see what is\nhappening, then reproduce the same actions from the CLI in a script.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-tcp-proxy",
       "usage": "playground tcp-proxy COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "start",
-          "description": "💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n\nStarts the proxy in front of --hostname and --port, then rewrites the\nrunning connector configuration so its traffic goes through it. Nothing\nelse to change on your side.",
+          "description": "💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n\nStarts the proxy in front of --hostname and --port, then rewrites the\nrunning connector configuration so its traffic goes through it. Nothing\nelse to change on your side.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-tcp-proxy",
           "usage": "playground tcp-proxy start [OPTIONS]",
           "options": [
             {
@@ -3391,7 +3391,7 @@
       "subcommands": [
         {
           "name": "enable-remote-debugging",
-          "description": "✨ Enable java remote debugging for container\n\n👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging\n\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging",
+          "description": "✨ Enable java remote debugging for container\n\n👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging\n\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging",
           "usage": "playground debug enable-remote-debugging [OPTIONS]",
           "options": [
             {
@@ -3408,7 +3408,7 @@
         },
         {
           "name": "disable-remote-debugging",
-          "description": "🛑 Disable java remote debugging for container",
+          "description": "🛑 Disable java remote debugging for container\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging",
           "usage": "playground debug disable-remote-debugging [OPTIONS]",
           "options": [
             {
@@ -3425,7 +3425,7 @@
         },
         {
           "name": "testssl",
-          "description": "🔐 Testing TLS/SSL encryption using https://testssl.sh/",
+          "description": "🔐 Testing TLS/SSL encryption using https://testssl.sh/\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging",
           "usage": "playground debug testssl [OPTIONS] [--] [TESTSSL ARGUMENTS...]",
           "options": [
             {
@@ -3439,7 +3439,7 @@
         },
         {
           "name": "generate-diagnostics",
-          "description": "⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n\n⚠️ only connect and broker containers are supported for now\n\nsee https://docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics",
+          "description": "⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n\n⚠️ only connect and broker containers are supported for now\n\nsee https://docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging",
           "usage": "playground debug generate-diagnostics [OPTIONS]",
           "options": [
             {
@@ -3702,7 +3702,7 @@
         },
         {
           "name": "java-debug",
-          "description": "🤎 JVM arguments for SSL, Kerberos or Class Loading\n\nTurns on the JVM's own diagnostic traces in a container and restarts it.\nThis is how you find out why a TLS handshake fails, why a Kerberos\nlogin is refused, or which jar a class was loaded from when two\nversions collide.\n\n❗ These traces are extremely verbose. Turn them back off with\n   --action disable once you have what you need.",
+          "description": "🤎 JVM arguments for SSL, Kerberos or Class Loading\n\nTurns on the JVM's own diagnostic traces in a container and restarts it.\nThis is how you find out why a TLS handshake fails, why a Kerberos\nlogin is refused, or which jar a class was loaded from when two\nversions collide.\n\n❗ These traces are extremely verbose. Turn them back off with\n   --action disable once you have what you need.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging",
           "usage": "playground debug java-debug [OPTIONS]",
           "options": [
             {
@@ -6831,13 +6831,13 @@
     },
     {
       "name": "flink",
-      "description": "🐿️ Flink commands\n\nRun Flink SQL and manage the jobs of the Flink cluster started with\n'playground run --enable-flink' (jobmanager REST API on port 18081).\n\n  sql         run Flink SQL statements (stdin or --file) with the SQL client\n  list-jobs   jobs of the cluster with their state, start time and duration\n  cancel      cancel a job, or all running jobs\n\n🎓 Tip: the Flink UI is served on the same port as the REST API:\nhttp://localhost:18081. See the flink/flink-sql-kafka example.",
+      "description": "🐿️ Flink commands\n\nRun Flink SQL and manage the jobs of the Flink cluster started with\n'playground run --enable-flink' (jobmanager REST API on port 18081).\n\n  sql         run Flink SQL statements (stdin or --file) with the SQL client\n  list-jobs   jobs of the cluster with their state, start time and duration\n  cancel      cancel a job, or all running jobs\n\n🎓 Tip: the Flink UI is served on the same port as the REST API:\nhttp://localhost:18081. See the flink/flink-sql-kafka example.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink",
       "usage": "playground flink COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "sql",
-          "description": "🐿️ Run Flink SQL statements with the SQL client\n\nThe statements are read from stdin (heredoc) or --file, and run in\none SQL client session (bin/sql-client.sh -f) in the sql-client\ncontainer, or in the jobmanager container when sql-client is stopped. So\nCREATE TABLE and the INSERT INTO that uses it must be sent in the\nsame call.\n\nResults are printed as tables (tableau result mode). An INSERT INTO\nsubmits a job to the cluster and returns right away: its job id is\nprinted, follow it with 'playground flink list-jobs'.\n\nThe client stops at the first failing statement, and the command\nthen exits with code 1.\n\n🎓 Tip: a SELECT on an unbounded table (Kafka, datagen) never ends in\nstreaming mode: add a LIMIT, or SET 'execution.runtime-mode' = 'batch'\non a bounded source. Otherwise the client is stopped after\n--max-wait seconds.",
+          "description": "🐿️ Run Flink SQL statements with the SQL client\n\nThe statements are read from stdin (heredoc) or --file, and run in\none SQL client session (bin/sql-client.sh -f) in the sql-client\ncontainer, or in the jobmanager container when sql-client is stopped. So\nCREATE TABLE and the INSERT INTO that uses it must be sent in the\nsame call.\n\nResults are printed as tables (tableau result mode). An INSERT INTO\nsubmits a job to the cluster and returns right away: its job id is\nprinted, follow it with 'playground flink list-jobs'.\n\nThe client stops at the first failing statement, and the command\nthen exits with code 1.\n\n🎓 Tip: a SELECT on an unbounded table (Kafka, datagen) never ends in\nstreaming mode: add a LIMIT, or SET 'execution.runtime-mode' = 'batch'\non a bounded source. Otherwise the client is stopped after\n--max-wait seconds.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink",
           "usage": "playground flink sql [OPTIONS]",
           "options": [
             {
@@ -6868,7 +6868,7 @@
         },
         {
           "name": "list-jobs",
-          "description": "📋 List the jobs of the Flink cluster\n\nJob id, state, name, start time and duration of every job, most\nrecent first. For a FAILED job, the root exception is also printed.",
+          "description": "📋 List the jobs of the Flink cluster\n\nJob id, state, name, start time and duration of every job, most\nrecent first. For a FAILED job, the root exception is also printed.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink",
           "usage": "playground flink list-jobs [OPTIONS]",
           "options": [
             {
@@ -6897,7 +6897,7 @@
         },
         {
           "name": "cancel",
-          "description": "🛑 Cancel a Flink job\n\nCancels --job, or every running job with --all, and waits until the\njob is CANCELED (30 seconds at most). Without --job and --all, the\nrunning job is cancelled when there is only one.",
+          "description": "🛑 Cancel a Flink job\n\nCancels --job, or every running job with --all, and waits until the\njob is CANCELED (30 seconds at most). Without --job and --all, the\nrunning job is cancelled when there is only one.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink",
           "usage": "playground flink cancel [OPTIONS]",
           "options": [
             {
@@ -8634,7 +8634,7 @@
         },
         {
           "name": "enable-remote-debugging",
-          "description": "✨ Enable java remote debugging for the connector.\n\n👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging\n\n🏗️ It will checkout (you need git installed) and compile code for the connector (required for remote debugging).\n\n💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.\n\n⚠️ This does not work for fully and custom connectors.",
+          "description": "✨ Enable java remote debugging for the connector.\n\n👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging\n\n🏗️ It will checkout (you need git installed) and compile code for the connector (required for remote debugging).\n\n💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.\n\n⚠️ This does not work for fully and custom connectors.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging",
           "usage": "playground connector enable-remote-debugging",
           "options": []
         },
@@ -9785,13 +9785,13 @@
     },
     {
       "name": "ec2",
-      "description": "✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n\nRun the playground on a remote machine instead of your laptop, which is\nwhat you want for an example that needs far more CPU or memory than you\nhave, or one that must run for hours.\n\n  create              provision the instance with Cloud Formation\n  open                open it in VS Code over SSH, as if it were local\n  push-secrets        send your credentials to it, over ssh\n  sync-repro-folder   keep reproduction-models in step, both directions\n  list / status / start / stop / delete\n\n💰 The instance is billed while it runs. Use 'playground ec2 stop' when\n   you pause, and 'playground ec2 delete' when you are done;\n   'playground status' reminds you when one is still up.\n\n🔐 A pem file is created at the root of the repository when the instance\n   is created. Back it up, it is the only way in, and only your current\n   ip address is allowed to connect.",
+      "description": "✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n\nRun the playground on a remote machine instead of your laptop, which is\nwhat you want for an example that needs far more CPU or memory than you\nhave, or one that must run for hours.\n\n  create              provision the instance with Cloud Formation\n  open                open it in VS Code over SSH, as if it were local\n  push-secrets        send your credentials to it, over ssh\n  sync-repro-folder   keep reproduction-models in step, both directions\n  list / status / start / stop / delete\n\n💰 The instance is billed while it runs. Use 'playground ec2 stop' when\n   you pause, and 'playground ec2 delete' when you are done;\n   'playground status' reminds you when one is still up.\n\n🔐 A pem file is created at the root of the repository when the instance\n   is created. Back it up, it is the only way in, and only your current\n   ip address is allowed to connect.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2",
       "usage": "playground ec2 COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "create",
-          "description": "👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n\nOne command does the whole thing: a Cloud Formation stack, an instance\nwith docker and the playground repository already installed, a key pair,\na security group opened to your ip only. Your credentials are pushed to\nit over ssh, then VS Code opens on it.\n\nCreation takes a few minutes, and Cloud Formation keeps installing in the\nbackground for about ten more. Follow output.log in the root folder of\nthe instance to see where it is.\n\n🔐 AWS EC2 pem file for the ec2 instance will be created and stored in the\nroot folder of the repository (make sure to do a backup, it is the only\nway in).\n\n🌍 Region being used will be the one set in your environment\n(aws configure get region) either by the AWS_REGION environment variable\nor ~/.aws/config.\n\n💰 The instance is billed from now on. Stop it when you pause and delete\nit when you are done.\n\n🐚 Use zsh on the instance to have everything working out of the box.",
+          "description": "👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n\nOne command does the whole thing: a Cloud Formation stack, an instance\nwith docker and the playground repository already installed, a key pair,\na security group opened to your ip only. Your credentials are pushed to\nit over ssh, then VS Code opens on it.\n\nCreation takes a few minutes, and Cloud Formation keeps installing in the\nbackground for about ten more. Follow output.log in the root folder of\nthe instance to see where it is.\n\n🔐 AWS EC2 pem file for the ec2 instance will be created and stored in the\nroot folder of the repository (make sure to do a backup, it is the only\nway in).\n\n🌍 Region being used will be the one set in your environment\n(aws configure get region) either by the AWS_REGION environment variable\nor ~/.aws/config.\n\n💰 The instance is billed from now on. Stop it when you pause and delete\nit when you are done.\n\n🐚 Use zsh on the instance to have everything working out of the box.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2",
           "usage": "playground ec2 create [OPTIONS]",
           "options": [
             {

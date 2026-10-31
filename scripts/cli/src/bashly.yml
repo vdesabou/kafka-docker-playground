@@ -4651,6 +4651,8 @@ commands:
 
     🎓 Tip: start with 'playground tcp-proxy open-ui' to see what is
     happening, then reproduce the same actions from the CLI in a script.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-tcp-proxy
   commands:
 
   - name: start
@@ -4660,6 +4662,8 @@ commands:
       Starts the proxy in front of --hostname and --port, then rewrites the
       running connector configuration so its traffic goes through it. Nothing
       else to change on your side.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-tcp-proxy
     flags:
       - long: --hostname
         arg: hostname
@@ -6076,6 +6080,8 @@ commands:
       👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging
 
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
     flags:
       - &container
         long: --container
@@ -6105,12 +6111,16 @@ commands:
   - name: disable-remote-debugging
     help: |-
       🛑 Disable java remote debugging for container
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
     flags:
       - *container
 
   - name: testssl
     help: |-
       🔐 Testing TLS/SSL encryption using https://testssl.sh/
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
     flags:
       - long: --uri
         arg: uri
@@ -6131,6 +6141,8 @@ commands:
       ⚠️ only connect and broker containers are supported for now
 
       see https://docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
     flags:
       - *container
     examples:
@@ -6452,6 +6464,8 @@ commands:
 
       ❗ These traces are extremely verbose. Turn them back off with
          --action disable once you have what you need.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
     flags:
       - *container
       - long: --type
@@ -10477,6 +10491,8 @@ commands:
 
     🎓 Tip: the Flink UI is served on the same port as the REST API:
     http://localhost:18081. See the flink/flink-sql-kafka example.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
   commands:
 
     - name: sql
@@ -10501,6 +10517,8 @@ commands:
         streaming mode: add a LIMIT, or SET 'execution.runtime-mode' = 'batch'
         on a bounded source. Otherwise the client is stopped after
         --max-wait seconds.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
       flags:
       - long: --file
         short: -f
@@ -10551,6 +10569,8 @@ commands:
 
         Job id, state, name, start time and duration of every job, most
         recent first. For a FAILED job, the root exception is also printed.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
       flags:
       - long: --state
         required: false
@@ -10593,6 +10613,8 @@ commands:
         Cancels --job, or every running job with --all, and waits until the
         job is CANCELED (30 seconds at most). Without --job and --all, the
         running job is cancelled when there is only one.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
       flags:
       - long: --job
         short: -j
@@ -12725,6 +12747,8 @@ commands:
 
       ⚠️ This does not work for fully and custom connectors.
 
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
+
   - name: disable-remote-debugging
     help: |-
       🛑 Disable java remote debugging for the connector.
@@ -14115,6 +14139,8 @@ commands:
     🔐 A pem file is created at the root of the repository when the instance
        is created. Back it up, it is the only way in, and only your current
        ip address is allowed to connect.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2
   commands:
   - name: create
     help: |-
@@ -14141,6 +14167,8 @@ commands:
       it when you are done.
 
       🐚 Use zsh on the instance to have everything working out of the box.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2
     flags:
     - long: --instance-type
       required: false

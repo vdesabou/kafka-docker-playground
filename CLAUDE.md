@@ -137,6 +137,10 @@ behave like this" question, read the matching page first:
 | fully managed connectors, Confluent Cloud | `docs/deep-dive-fully-managed.md` |
 | credentials, `playground secrets`, 1Password | `docs/deep-dive-secrets.md` |
 | Oracle CDC (LogMiner) and XStream, `orclcdc_diag` reports | `docs/deep-dive-oracle-cdc.md` |
+| remote debugger, SSL / Kerberos / class loading JVM traces, testssl, diagnostics bundle | `docs/deep-dive-java-debugging.md` |
+| a TCP proxy between a connector and its database / API (Zazkia: delay, break, close or cut one connection) | `docs/deep-dive-tcp-proxy.md` |
+| Flink SQL (`--enable-flink`, `flink sql`, jobs, missing connector jars) | `docs/deep-dive-flink.md` |
+| running the playground on an AWS EC2 instance (create, open in VS Code, sync repro models, push secrets, costs) | `docs/deep-dive-ec2.md` |
 
 Each page has a lab in `other/deep-dive-labs/<page>.sh` (run nightly by CI) that asserts the outputs the page quotes:
 when a change alters what a command prints or how it behaves, update the page **and** its lab in the same PR.

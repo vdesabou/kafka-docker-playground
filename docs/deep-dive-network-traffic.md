@@ -249,5 +249,7 @@ playground debug degrade-traffic -c <c> [-c <c2>] [--destination <d> [--port N]]
 - 🎬 Video session: [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose)
 - 📖 [Blocking traffic](/toolkit-network?id=🚫-blocking-traffic) and [Degrade traffic](/toolkit-network?id=🐌-degrade-traffic-add-latency-packet-loss-or-corruption)
   in the Reproduction toolkit
+- 🍪 Deep dive: [`playground tcp-proxy` (Zazkia)](/deep-dive-tcp-proxy.md) to act on one TCP connection of a connector
+  (delay, break, close, cut one direction) instead of the whole container's network
 - 🧠 CLI reference: [playground debug degrade-traffic](/playground%20debug%20degrade-traffic),
   [playground debug block-traffic](/playground%20debug%20block-traffic), [playground connector wait](/playground%20connector%20wait)
