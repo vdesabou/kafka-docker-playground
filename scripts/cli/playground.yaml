@@ -2210,13 +2210,15 @@ subcommands:
     the whole subject\n  set-compatibility    relax or tighten the evolution rule
     (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject
     or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n
-    \ set-alias            point one subject name at another\n\n\U0001F500 diff compares
-    two versions (or a version and a file) field by field,\nwith the verdict of each
-    compatibility rule.\n\n\U0001FA84 derive-schema turns a sample payload into an
-    avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject
-    is normally named after the topic: <topic>-key and\n<topic>-value. 'playground
-    topic delete' removes both along with the\ntopic.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n\U0001F3AC
-    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup"
+    \ set-alias            point one subject name at another\n\n\U0001F4E6 Move\n
+    \ export / import      a registry to a folder and back, keeping the ids\n\n\U0001F500
+    diff compares two versions (or a version and a file) field by field,\nwith the
+    verdict of each compatibility rule.\n\n\U0001FA84 derive-schema turns a sample
+    payload into an avro, json schema or\nprotobuf schema, which saves writing one
+    by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value.
+    'playground topic delete' removes both along with the\ntopic.\n\n\U0001F36A Deep
+    dive: https://kafka-docker-playground.io/#/deep-dive-schema\n\U0001F3AC Bite size
+    session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup"
   usage: playground schema COMMAND
   options: []
   subcommands:
@@ -2551,6 +2553,96 @@ subcommands:
       - "--json"
       argument: ''
       description: "\U0001F4D7 Print the result as JSON, and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
+  - name: export
+    description: "\U0001F4E6 Export the subjects of the registry to a folder\n\nOne
+      file per version (<subject>/v<n>.avsc|json|proto, pretty-printed)\nand a manifest.json
+      with the ids, versions, references, metadata, rule\nsets, and the subject-level
+      compatibility, mode and alias. 'playground\nschema import' loads it into another
+      registry with the same ids, so\nrecords copied from the source still decode.\n\n\U0001F393
+      Tip: export into the folder of a reproduction model and add\n'playground schema
+      import -f <the model folder>/schemas' before\ncreating the connector: the model
+      ships the customer's schemas."
+    usage: playground schema export [OPTIONS]
+    options:
+    - names:
+      - "--subject-prefix"
+      argument: PREFIX
+      description: "\U0001F50E Only the subjects starting with this prefix"
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: FOLDER
+      description: "\U0001F4C1 Folder to write (created if needed, files of the same
+        name are overwritten)\n\nDefault value: schemas-export"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
+  - name: import
+    description: "\U0001F4E5 Import schemas into the registry, keeping their ids\n\nLoads
+      what a customer can send about their registry:\n\n  - a folder (or .tgz / .zip)
+      written by 'playground schema export'\n  - a JSON array of versions: curl <registry>/schemas,
+      or\n    'playground schema get --json'\n  - a dump of the _schemas topic ('playground
+      topic consume -t _schemas\n    --json', or kafka-console-consumer with print.key=true
+      and\n    print.timestamp=true): the last state of every live version\n\nEvery
+      version is registered in IMPORT mode with its original id and\nversion number
+      (in id order, so references exist first), then the\nsubject goes back to its
+      normal mode and gets the compatibility, mode\nand alias of the source. Records
+      written with those ids decode here.\n\n⚠️ IMPORT mode needs mode.mutability=true
+      on the registry (the\nplayground's has it), and an id already used by another
+      schema here is\nrefused (42205): import into a fresh registry, or use --new-ids."
+    usage: playground schema import [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F4C4 Export folder, .tgz / .zip of one, JSON array of versions,
+        or _schemas dump\n\nRequired: ✓ Yes"
+    - names:
+      - "--on-conflict"
+      argument: ACTION
+      description: "\U0001F91D What to do with a subject that already exists: skip
+        it, overwrite it (permanently deleted first), or merge (versions added to
+        it)\n\nDefault value: skip\nAllowed values: skip, overwrite, merge"
+    - names:
+      - "--new-ids"
+      argument: ''
+      description: "\U0001F195 Let the registry assign new ids (no IMPORT mode): the
+        schemas are the same, the ids in old records don't match"
+    - names:
+      - "--with-global-settings"
+      argument: ''
+      description: "\U0001F30D Also apply the global compatibility of the source"
+    - names:
+      - "--subject-prefix"
+      argument: PREFIX
+      description: "\U0001F50E Only the subjects starting with this prefix"
+    - names:
+      - "--dry-run"
+      argument: ''
+      description: "\U0001F9EA Show what would be imported, and the conflicts, without
+        changing anything"
     - names:
       - "--verbose"
       - "-v"

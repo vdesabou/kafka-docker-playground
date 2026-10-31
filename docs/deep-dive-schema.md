@@ -34,6 +34,7 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 | freeze or migrate a subject (or the registry) | `playground schema set-mode --subject <s> \| --global --mode READONLY\|IMPORT\|READWRITE` |
 | registry-wide behaviour | `playground schema set-normalize --value true` / `validate-new-schemas --value false` |
 | one subject name pointing at another | `playground schema set-alias --subject <s> --alias <a>` (CP 7.4.1+) |
+| the customer's schemas in the playground, with their ids | `playground schema export -o <folder>` / `playground schema import -f <folder \| /schemas JSON \| _schemas dump>` |
 
 ---
 
@@ -389,6 +390,37 @@ These commands work with every environment the playground starts: plain http on 
 client certificates on `sasl-ssl` / `2way-ssl`, basic auth `superUser` on RBAC, and the API key of `.ccloud/` on
 Confluent Cloud. They're not available on multi data center environments.
 
+### Moving a registry: `export` and `import`
+
+```bash
+playground schema export -o ./schemas                         # manifest.json + <subject>/v<n>.avsc|json|proto
+playground schema import -f ./schemas --dry-run               # what would be imported, and the conflicts
+playground schema import -f ./schemas                         # same subjects, versions and ids
+playground schema import -f customer-schemas.json             # curl <registry>/schemas, or schema get --json
+playground schema import -f customer-schemas-dump.txt         # a _schemas dump (kafka-console-consumer, print.key + print.timestamp)
+```
+
+```text
+📦 playground schema export: 3 subject(s), 3 version(s)
+➕ orders-value: v1 id 3
+➕ imp-value: v3 id 100
+🛡️ orders-value: compatibility FULL
+✅ 3 version(s) imported with their ids, 0 skipped: records written with them decode in this registry
+```
+
+Gotchas:
+
+- **The ids are kept** (IMPORT mode, versions registered in id order so references exist first): records copied from
+  the customer's topics decode in the playground. An id already used by another schema is refused
+  (`42205 Overwrite new schema with id 3 … is not permitted`): import into a fresh registry, or `--new-ids` (same
+  schemas, new ids, old records don't decode).
+- **A subject that already exists is skipped** by default: `--on-conflict overwrite` deletes it permanently first,
+  `merge` adds the versions to it.
+- The subject-level compatibility, mode and alias of the source are applied after the versions; the global rule only
+  with `--with-global-settings`.
+- In a reproduction model, export the customer's schemas into the model folder and start the scenario with
+  `playground schema import -f "${DIR}/schemas"`: the model ships them.
+
 ---
 
 ## 8. Hands-on lab (≈10 min)
@@ -511,7 +543,8 @@ playground stop
 | "the sink reads the wrong subject / subject not found" | the producer's subject name strategy: `schema get` to list the real subjects, `topic consume --value-subject` to read them (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
 | "the same schema keeps creating new versions" | register twice with a whitespace change, then `set-normalize --value true` and again |
 | "a schema registered years ago is refused after an upgrade" | `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
-| "we migrated subjects and the ids changed" | `register --id <id>` on the target registry (IMPORT mode under the hood) |
+| "we migrated subjects and the ids changed" | `export` on the source, `import` on the target: same ids (or `register --id <id>` for one schema) |
+| "here are our schemas" (a `/schemas` dump, a `_schemas` dump, an export) | `import -f <file>` before the connector: the repro uses the customer's schemas and ids |
 | "we only have a sample message" | `derive-schema`, review, then `register` or `topic produce --derive-value-schema-as` |
 
 In a repro model, register the customer's schemas **before** creating the connector, and fail fast when the registry
@@ -535,6 +568,8 @@ playground schema set-compatibility --subject <s> | --global --compatibility BAC
 playground topic set-schema-compatibility --topic <t> --compatibility … [--include-key]
 playground schema describe --subject <s> | --id <id> [--json]
 playground schema history [--subject <s>] [--since 12h|2d|<date>] [-f <_schemas dump>] [--json]
+playground schema export [--subject-prefix <p>] [-o <folder>]
+playground schema import -f <folder|.tgz|JSON array|_schemas dump> [--on-conflict skip|overwrite|merge] [--new-ids] [--dry-run]
 playground schema check-compatibility --subject <s> [--schema @file] [--version N] [--compatibility <rule>] [--json] < new.avsc
 playground schema diff [--subject <s>] [--from N|latest|id:<id>|@file] [--to …] [--no-verdict] [--json]
 playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]

@@ -140,6 +140,20 @@ then
 fi
 log "✅ new id $new_id after a permanent delete"
 
+log "Step 4b: export and import keep the ids"
+lab_run playground schema export -o "$schema_dir/export"
+lab_expect_exit 0
+lab_expect_contains "exported to $schema_dir/export"
+lab_run playground schema delete --subject orders-value --permanent
+lab_expect_exit 0
+lab_run playground schema import -f "$schema_dir/export"
+lab_expect_exit 0
+lab_expect_contains "➕ orders-value: v1 id $new_id"
+lab_expect_contains "imported with their ids"
+lab_run playground schema get --id "$new_id" --schema-only
+lab_expect_exit 0
+lab_expect_contains '"name": "Order",'
+
 lab_run playground schema history --subject orders-value
 lab_expect_exit 0
 lab_expect_contains "⏺️ orders-value: registered v1 (id 1, AVRO)"
