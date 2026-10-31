@@ -2200,23 +2200,62 @@ subcommands:
   description: "\U0001F530 Schema commands\n\nTalk to the Schema Registry of the running
     environment, whether it is the\nlocal container or the one in Confluent Cloud,
     without building the urls\nand the credentials yourself.\n\n\U0001F50D Read\n
+    \ list                 every subject: versions, latest id, type, rule, mode\n
     \ get                  every version of a subject, or of all subjects\n  get-compatibility
-    \   the compatibility rule in force\n  get-mode / get-alias\n\n✍️ Write\n  register
-    \            add a new version to a subject\n  delete               a version,
-    or the whole subject\n  set-compatibility    relax or tighten the evolution rule\n
-    \ set-mode             READWRITE, READONLY or IMPORT\n  set-normalize, validate-new-schemas
-    \  registry-wide behaviour\n  set-alias            point one subject name at another\n\n\U0001FA84
-    derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema,
-    which saves writing one by hand.\n\nA subject is normally named after the topic:
-    <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with
-    the\ntopic.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n\U0001F3AC
-    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup"
+    \   the compatibility rule in force (subject or global)\n  get-mode / get-alias\n\n✍️
+    Write\n  register             add a new version to a subject\n  delete               a
+    version, or the whole subject\n  set-compatibility    relax or tighten the evolution
+    rule (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT
+    (subject or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n
+    \ set-alias            point one subject name at another\n\n\U0001FA84 derive-schema
+    turns a sample payload into an avro, json schema or\nprotobuf schema, which saves
+    writing one by hand.\n\nA subject is normally named after the topic: <topic>-key
+    and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n\U0001F3AC Bite
+    size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup"
   usage: playground schema COMMAND
   options: []
   subcommands:
+  - name: list
+    description: "\U0001F4CB List the subjects of the registry\n\nOne line per subject:
+      number of versions, latest version and its schema\nid, schema type, and the
+      compatibility rule and mode in force. A \U0001F30D\nmarks a value inherited
+      from the global setting of the registry\n(no subject-level rule), which is what
+      applies when a producer\nregisters a new version.\n\n\U0001F393 Tip: the subject
+      names tell you the subject name strategy of the\nproducers: <topic>-value (TopicNameStrategy),
+      <record name>\n(RecordNameStrategy) or <topic>-<record name> (TopicRecordNameStrategy)."
+    usage: playground schema list [OPTIONS]
+    options:
+    - names:
+      - "--prefix"
+      argument: PREFIX
+      description: "\U0001F50E Only the subjects starting with this prefix"
+    - names:
+      - "--deleted"
+      argument: ''
+      description: "\U0001F9DF Include soft deleted subjects"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: get
     description: "\U0001F530 Get all schemas versions for specified subject (if --subject
-      is not specified, all subjects will be used)"
+      is not specified, all subjects will be used)\n\n\U0001F393 Tip: --schema-only
+      prints the schema alone (latest version, or\n--version), ready to be redirected
+      to a file:\n\n  playground schema get --subject orders-value --version 2 --schema-only
+      > v2.avsc"
     usage: playground schema get [OPTIONS]
     options:
     - names:
@@ -2226,7 +2265,25 @@ subcommands:
     - names:
       - "--id"
       argument: ID
-      description: "\U0001F4AF Schema id\n\nConflicts with: subject, deleted"
+      description: "\U0001F4AF Schema id\n\nWith --json, the subjects and versions
+        using this id are added.\n\nConflicts with: subject, deleted, --version"
+    - names:
+      - "--version"
+      argument: VERSION
+      description: "\U0001F522 Only this version of --subject: a number, or latest\n\nConflicts
+        with: --id"
+    - names:
+      - "--schema-only"
+      argument: ''
+      description: "\U0001F4C4 Print only the schema (pretty-printed avro / json schema,
+        protobuf as is), without the log lines\n\nNeeds --subject (latest version
+        unless --version is set) or --id.\n\nConflicts with: --json"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the versions as a JSON array (subject, version,
+        id, schemaType, schema, references, metadata, ruleSet, deleted), and nothing
+        else\n\nConflicts with: --schema-only"
     - names:
       - "--verbose"
       - "-v"
@@ -2307,16 +2364,27 @@ subcommands:
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
   - name: get-compatibility
-    description: "\U0001F6E1️ Get subject-level compatibility\n\nThe rule that decides
-      whether a new schema version is accepted. When a\nproducer fails with \"Schema
-      being registered is incompatible with an\nearlier schema\", this is what rejected
-      it."
+    description: "\U0001F6E1️ Get the compatibility rule in force\n\nThe rule that
+      decides whether a new schema version is accepted. When a\nproducer fails with
+      \"Schema being registered is incompatible with an\nearlier schema\", this is
+      what rejected it.\n\nWith --subject, the subject-level rule, or the global rule
+      of the\nregistry when the subject has none (the command says which one\napplies).
+      With --global, the global rule."
     usage: playground schema get-compatibility [OPTIONS]
     options:
     - names:
       - "--subject"
       argument: SUBJECT
-      description: "\U0001F4DB Subject name\n\nRequired: ✓ Yes"
+      description: "\U0001F4DB Subject name\n\nConflicts with: --global"
+    - names:
+      - "--global"
+      argument: ''
+      description: "\U0001F30D The global setting of the registry, instead of one
+        subject\n\nConflicts with: --subject"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
     - names:
       - "--verbose"
       - "-v"
@@ -2330,19 +2398,25 @@ subcommands:
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
   - name: set-compatibility
-    description: "\U0001F6E1️ Set subject-level compatibility\n\nOverrides the rule
-      for one subject:\n\n  BACKWARD     new schema can read data written with the
-      previous one\n  FORWARD      previous schema can read data written with the
-      new one\n  FULL         both\n  NONE         anything is accepted\n  *_TRANSITIVE
-      checked against all past versions, not just the last\n\nSet it to NONE when
-      you deliberately want to register an incompatible\nschema, typically to reproduce
-      what it does to consumers downstream."
+    description: "\U0001F6E1️ Set the compatibility rule of a subject (--subject),
+      or of the whole registry (--global)\n\nOverrides the rule for one subject, or
+      changes the default of every\nsubject without a rule of its own:\n\n  BACKWARD
+      \    new schema can read data written with the previous one\n  FORWARD      previous
+      schema can read data written with the new one\n  FULL         both\n  NONE         anything
+      is accepted\n  *_TRANSITIVE checked against all past versions, not just the
+      last\n\nSet it to NONE when you deliberately want to register an incompatible\nschema,
+      typically to reproduce what it does to consumers downstream."
     usage: playground schema set-compatibility [OPTIONS]
     options:
     - names:
       - "--subject"
       argument: SUBJECT
-      description: "\U0001F4DB Subject name\n\nRequired: ✓ Yes"
+      description: "\U0001F4DB Subject name\n\nConflicts with: --global"
+    - names:
+      - "--global"
+      argument: ''
+      description: "\U0001F30D The global setting of the registry, instead of one
+        subject\n\nConflicts with: --subject"
     - names:
       - "--verbose"
       - "-v"
@@ -2364,15 +2438,26 @@ subcommands:
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
   - name: get-mode
-    description: "\U0001F50F Get subject-level mode\n\nREADWRITE normally; READONLY
+    description: "\U0001F50F Get the mode in force\n\nREADWRITE normally; READONLY
       if registration has been frozen; IMPORT\nwhile schemas are being migrated with
-      their original ids and versions."
+      their original ids and versions.\n\nWith --subject, the subject-level mode,
+      or the global mode when the\nsubject has none. With --global, the global mode
+      of the registry."
     usage: playground schema get-mode [OPTIONS]
     options:
     - names:
       - "--subject"
       argument: SUBJECT
-      description: "\U0001F4DB Subject name\n\nRequired: ✓ Yes"
+      description: "\U0001F4DB Subject name\n\nConflicts with: --global"
+    - names:
+      - "--global"
+      argument: ''
+      description: "\U0001F30D The global setting of the registry, instead of one
+        subject\n\nConflicts with: --subject"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
     - names:
       - "--verbose"
       - "-v"
@@ -2386,19 +2471,25 @@ subcommands:
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
   - name: set-mode
-    description: "\U0001F50F Set subject-level mode\n\n  READWRITE   the normal mode,
-      schemas can be read and registered\n  READONLY    freeze the subject, registration
-      is refused\n  IMPORT      allow registering schemas at a chosen id and version,\n
-      \             which is what a migration between registries needs\n\n⚠️ To enable
-      mode changes on a Schema Registry cluster, you must also set\nmode.mutability=true
-      in the Schema Registry properties file before\nstarting Schema Registry, otherwise
-      this command is rejected."
+    description: "\U0001F50F Set the mode of a subject (--subject), or of the whole
+      registry (--global)\n\n  READWRITE   the normal mode, schemas can be read and
+      registered\n  READONLY    freeze the subject, registration is refused\n  IMPORT
+      \     allow registering schemas at a chosen id and version,\n              which
+      is what a migration between registries needs\n\n⚠️ To enable mode changes on
+      a Schema Registry cluster, you must also set\nmode.mutability=true in the Schema
+      Registry properties file before\nstarting Schema Registry, otherwise this command
+      is rejected."
     usage: playground schema set-mode [OPTIONS]
     options:
     - names:
       - "--subject"
       argument: SUBJECT
-      description: "\U0001F4DB Subject name\n\nRequired: ✓ Yes"
+      description: "\U0001F4DB Subject name\n\nConflicts with: --global"
+    - names:
+      - "--global"
+      argument: ''
+      description: "\U0001F30D The global setting of the registry, instead of one
+        subject\n\nConflicts with: --subject"
     - names:
       - "--verbose"
       - "-v"
@@ -2484,7 +2575,12 @@ subcommands:
       but its id and version\nnumber stay taken, so re-registering does not reuse
       them. Add\n--permanent to really remove it, which is what you need before\nre-creating
       the same subject from scratch.\n\n❕ The registry requires a soft delete before
-      a permanent one; with\n   --permanent the command does both for you."
+      a permanent one; with\n   --permanent the command does both for you.\n\nThe
+      command fails (exit 1) when the registry refuses the delete, and\nlists the
+      schemas that reference a version it can't delete (42206).\n\n\U0001F393 Tip:
+      --dry-run shows the versions and ids that would be deleted, and\nwhich ids would
+      stop resolving after a permanent delete (old records\nwritten with them could
+      not be deserialized any more)."
     usage: playground schema delete [OPTIONS]
     options:
     - names:
@@ -2492,7 +2588,7 @@ subcommands:
       argument: SUBJECT
       description: "\U0001F4DB Subject name to delete:\n  \n  if --version is provided,
         only that version will be deleted. Otherwise the complete subject will be
-        deleted"
+        deleted\n\nRequired: ✓ Yes"
     - names:
       - "--version"
       argument: VERSION
@@ -2502,6 +2598,11 @@ subcommands:
       - "--permanent"
       argument: ''
       description: "\U0001F480 Hard delete (default is soft delete)"
+    - names:
+      - "--dry-run"
+      argument: ''
+      description: "\U0001F9EA Show what would be deleted, and its effect on the schema
+        ids, without deleting anything"
     - names:
       - "--verbose"
       - "-v"
@@ -2570,6 +2671,10 @@ subcommands:
       - "--alias"
       argument: ALIAS
       description: "\U0001F52F Alias name\n\nRequired: ✓ Yes"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
     - names:
       - "--verbose"
       - "-v"
@@ -5165,8 +5270,9 @@ subcommands:
       description: "\U0001F41E Show command being ran."
   - name: set-schema-compatibility
     description: "\U0001F6E1️ Change topic's schema compatibility\n\nSets the compatibility
-      level on the subjects of the topic, which is\nwhat you relax to let an otherwise
-      rejected schema evolution through,\nfor instance to reproduce a schema compatibility
+      level on the value subject of the topic\n(<topic>-value), and on its key subject
+      too with --include-key. That\nis what you relax to let an otherwise rejected
+      schema evolution\nthrough, for instance to reproduce a schema compatibility
       issue."
     usage: playground topic set-schema-compatibility [OPTIONS]
     options:
@@ -5183,6 +5289,10 @@ subcommands:
 
         Required: ✓ Yes
         Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
+    - names:
+      - "--include-key"
+      argument: ''
+      description: "\U0001F511 Also set it on the key subject (<topic>-key)"
     - names:
       - "--verbose"
       - "-v"

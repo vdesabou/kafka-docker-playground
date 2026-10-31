@@ -4139,15 +4139,16 @@ commands:
      and the credentials yourself.
 
      🔍 Read
+       list                 every subject: versions, latest id, type, rule, mode
        get                  every version of a subject, or of all subjects
-       get-compatibility    the compatibility rule in force
+       get-compatibility    the compatibility rule in force (subject or global)
        get-mode / get-alias
 
      ✍️ Write
        register             add a new version to a subject
        delete               a version, or the whole subject
-       set-compatibility    relax or tighten the evolution rule
-       set-mode             READWRITE, READONLY or IMPORT
+       set-compatibility    relax or tighten the evolution rule (subject or global)
+       set-mode             READWRITE, READONLY or IMPORT (subject or global)
        set-normalize, validate-new-schemas   registry-wide behaviour
        set-alias            point one subject name at another
 
@@ -4162,12 +4163,66 @@ commands:
      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup
   commands:
 
+  - name: list
+    group: Schema
+    filters:
+    - schema_registry_running
+    help: |-
+      📋 List the subjects of the registry
+
+      One line per subject: number of versions, latest version and its schema
+      id, schema type, and the compatibility rule and mode in force. A 🌍
+      marks a value inherited from the global setting of the registry
+      (no subject-level rule), which is what applies when a producer
+      registers a new version.
+
+      🎓 Tip: the subject names tell you the subject name strategy of the
+      producers: <topic>-value (TopicNameStrategy), <record name>
+      (RecordNameStrategy) or <topic>-<record name> (TopicRecordNameStrategy).
+    flags:
+    - long: --prefix
+      arg: prefix
+      required: false
+      help: |-
+        🔎 Only the subjects starting with this prefix
+    - long: --deleted
+      required: false
+      help: |-
+        🧟 Include soft deleted subjects
+    - &json
+      long: --json
+      required: false
+      help: |-
+        📗 Print the result as JSON, and nothing else
+    - &verbose
+      long: --verbose
+      short: -v
+      help: 🐞 Show command being ran.
+    - &cluster
+      long: --cluster
+      arg: cluster
+      allowed: [us, europe]
+      required: false
+      help: |-
+        🌍 Cluster to use in an mdc-* environment (us or europe)
+    
+        Default: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.
+    examples:
+    - playground schema list
+    - playground schema list --prefix orders --deleted
+    - playground schema list --json | jq -r '.subjects[] | select(.compatibility_source == "subject") | .subject'
+
   - name: get
     group: Schema
     filters:
     - schema_registry_running
     help: |-
       🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)
+
+      🎓 Tip: --schema-only prints the schema alone (latest version, or
+      --version), ready to be redirected to a file:
+
+        playground schema get --subject orders-value --version 2 --schema-only > v2.avsc
     flags:
       - &subject
         long: --subject
@@ -4188,13 +4243,37 @@ commands:
         conflicts:
           - "subject"
           - "deleted"
+          - "--version"
         help: |-
            💯 Schema id
 
-      - &verbose
-        long: --verbose
-        short: -v
-        help: 🐞 Show command being ran.
+           With --json, the subjects and versions using this id are added.
+
+      - long: --version
+        required: false
+        arg: version
+        conflicts:
+          - "--id"
+        help: |-
+          🔢 Only this version of --subject: a number, or latest
+
+      - long: --schema-only
+        required: false
+        conflicts:
+          - "--json"
+        help: |-
+          📄 Print only the schema (pretty-printed avro / json schema, protobuf as is), without the log lines
+
+          Needs --subject (latest version unless --version is set) or --id.
+
+      - long: --json
+        required: false
+        conflicts:
+          - "--schema-only"
+        help: |-
+          📗 Print the versions as a JSON array (subject, version, id, schemaType, schema, references, metadata, ruleSet, deleted), and nothing else
+
+      - *verbose
 
       - long: --deleted
         required: false
@@ -4207,18 +4286,12 @@ commands:
         help: store in /tmp folder
         arg: folder
         private: true
-      - &cluster
-        long: --cluster
-        arg: cluster
-        allowed: [us, europe]
-        required: false
-        help: |-
-          🌍 Cluster to use in an mdc-* environment (us or europe)
-      
-          Default: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.
+      - *cluster
     examples:
     - playground schema get
     - playground schema get --subject <SUBJECT>
+    - playground schema get --subject <SUBJECT> --version latest --schema-only > schema.avsc
+    - playground schema get --id 3 --json
     - playground schema get --deleted
 
   - name: register
@@ -4341,24 +4414,51 @@ commands:
     - schema_registry_running
     group: Schema
     help: |-
-      🛡️ Get subject-level compatibility
+      🛡️ Get the compatibility rule in force
 
       The rule that decides whether a new schema version is accepted. When a
       producer fails with "Schema being registered is incompatible with an
       earlier schema", this is what rejected it.
+
+      With --subject, the subject-level rule, or the global rule of the
+      registry when the subject has none (the command says which one
+      applies). With --global, the global rule.
     flags:
-    - *subject_required
+    - &subject_or_global
+      long: --subject
+      required: false
+      arg: subject
+      conflicts:
+        - "--global"
+      completions:
+        dynamic:
+        - playground get-subject-list
+      help: |-
+        📛 Subject name
+    - &global
+      long: --global
+      required: false
+      conflicts:
+        - "--subject"
+      help: |-
+        🌍 The global setting of the registry, instead of one subject
+    - *json
     - *verbose
     - *cluster
+    examples:
+    - playground schema get-compatibility --subject orders-value
+    - playground schema get-compatibility --global
+    - playground schema get-compatibility --subject orders-value --json
 
   - name: set-compatibility
     filters:
     - schema_registry_running
     group: Schema
     help: |-
-      🛡️ Set subject-level compatibility
+      🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)
 
-      Overrides the rule for one subject:
+      Overrides the rule for one subject, or changes the default of every
+      subject without a rule of its own:
 
         BACKWARD     new schema can read data written with the previous one
         FORWARD      previous schema can read data written with the new one
@@ -4369,7 +4469,8 @@ commands:
       Set it to NONE when you deliberately want to register an incompatible
       schema, typically to reproduce what it does to consumers downstream.
     flags:
-    - *subject_required
+    - *subject_or_global
+    - *global
     - *verbose
     - &compatibility-required
       long: --compatibility
@@ -4392,12 +4493,17 @@ commands:
     - schema_registry_running
     group: Schema
     help: |-
-      🔏 Get subject-level mode
+      🔏 Get the mode in force
 
       READWRITE normally; READONLY if registration has been frozen; IMPORT
       while schemas are being migrated with their original ids and versions.
+
+      With --subject, the subject-level mode, or the global mode when the
+      subject has none. With --global, the global mode of the registry.
     flags:
-    - *subject_required
+    - *subject_or_global
+    - *global
+    - *json
     - *verbose
     - *cluster
 
@@ -4406,7 +4512,7 @@ commands:
     - schema_registry_running
     group: Schema
     help: |-
-      🔏 Set subject-level mode
+      🔏 Set the mode of a subject (--subject), or of the whole registry (--global)
 
         READWRITE   the normal mode, schemas can be read and registered
         READONLY    freeze the subject, registration is refused
@@ -4417,7 +4523,8 @@ commands:
       mode.mutability=true in the Schema Registry properties file before
       starting Schema Registry, otherwise this command is rejected.
     flags:
-    - *subject_required
+    - *subject_or_global
+    - *global
     - *verbose
     - long: --mode
       arg: mode
@@ -4504,10 +4611,16 @@ commands:
 
       ❕ The registry requires a soft delete before a permanent one; with
          --permanent the command does both for you.
+
+      The command fails (exit 1) when the registry refuses the delete, and
+      lists the schemas that reference a version it can't delete (42206).
+
+      🎓 Tip: --dry-run shows the versions and ids that would be deleted, and
+      which ids would stop resolving after a permanent delete (old records
+      written with them could not be deserialized any more).
     flags:
-    - &subject_not_required
-      long: --subject
-      required: false
+    - long: --subject
+      required: true
       arg: subject
       completions:
         dynamic:
@@ -4528,8 +4641,16 @@ commands:
       required: false
       help: |-
         💀 Hard delete (default is soft delete)
+    - long: --dry-run
+      required: false
+      help: |-
+        🧪 Show what would be deleted, and its effect on the schema ids, without deleting anything
     - *verbose
     - *cluster
+    examples:
+    - playground schema delete --subject orders-value --version 2
+    - playground schema delete --subject orders-value --permanent --dry-run
+    - playground schema delete --subject orders-value --permanent
 
   - name: derive-schema
     group: Schema
@@ -4626,6 +4747,7 @@ commands:
         - playground get-subject-list
       help: |-
         🔯 Alias name
+    - *json
     - *verbose
     - *cluster
 
@@ -7939,12 +8061,17 @@ commands:
       help: |-
         🛡️ Change topic's schema compatibility
 
-        Sets the compatibility level on the subjects of the topic, which is
-        what you relax to let an otherwise rejected schema evolution through,
-        for instance to reproduce a schema compatibility issue.
+        Sets the compatibility level on the value subject of the topic
+        (<topic>-value), and on its key subject too with --include-key. That
+        is what you relax to let an otherwise rejected schema evolution
+        through, for instance to reproduce a schema compatibility issue.
       flags:
       - *topic
       - *compatibility-required
+      - long: --include-key
+        required: false
+        help: |-
+          🔑 Also set it on the key subject (<topic>-key)
       - *verbose
       - *cluster
 

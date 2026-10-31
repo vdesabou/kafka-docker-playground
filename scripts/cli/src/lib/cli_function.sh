@@ -801,6 +801,65 @@ function get_sr_url_and_security() {
   fi
 }
 
+# sr_request <method> <path> [<json body>]: one call to the Schema Registry of the running environment
+# (get_sr_url_and_security must have been called). Sets:
+#   sr_response       the body
+#   sr_error_code     the registry's error_code (40401, 40408…), "curl" when curl failed, empty on success
+#   sr_error_message  the registry's message
+# returns 0 on success, 1 otherwise. Prints the curl command when $verbose is set.
+function sr_request() {
+  local method="$1"
+  local path="$2"
+  local data="$3"
+  local ret
+  sr_response=""
+  sr_error_code=""
+  sr_error_message=""
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    if [ -n "$data" ]
+    then
+      echo "curl $sr_security -s -X $method -H \"Content-Type: application/vnd.schemaregistry.v1+json\" --data '$data' \"${sr_url}${path}\""
+    else
+      echo "curl $sr_security -s -X $method \"${sr_url}${path}\""
+    fi
+  fi
+  if [ -n "$data" ]
+  then
+    sr_response=$(curl $sr_security -s -X "$method" -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "$data" "${sr_url}${path}")
+  else
+    sr_response=$(curl $sr_security -s -X "$method" "${sr_url}${path}")
+  fi
+  ret=$?
+  if [ $ret -ne 0 ]
+  then
+    sr_error_code="curl"
+    sr_error_message="curl request to ${sr_url}${path} failed with error code $ret"
+    return 1
+  fi
+  sr_error_code=$(echo "$sr_response" | jq -r 'if type == "object" and has("error_code") then .error_code else empty end' 2> /dev/null)
+  if [ -n "$sr_error_code" ]
+  then
+    sr_error_message=$(echo "$sr_response" | jq -r '.message // empty' 2> /dev/null)
+    return 1
+  fi
+  return 0
+}
+
+# sr_exit_on_error [<context>]: after a failed sr_request, print the registry's error and exit 1
+function sr_exit_on_error() {
+  local context="$1"
+  if [ "$sr_error_code" == "curl" ]
+  then
+    logerror "❌ $sr_error_message"
+  else
+    logerror "❌ ${context:+$context: }Command failed with error code $sr_error_code"
+    logerror "$sr_error_message"
+  fi
+  exit 1
+}
+
 function get_broker_container() {
   if is_mdc_environment
   then

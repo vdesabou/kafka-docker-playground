@@ -1,5 +1,6 @@
 topic="${args[--topic]}"
 compatibility="${args[--compatibility]}"
+include_key="${args[--include-key]}"
 verbose="${args[--verbose]}"
 
 get_environment_used
@@ -17,15 +18,27 @@ then
     fi
 fi
 
+suffixes="value"
+if [[ -n "$include_key" ]]
+then
+    suffixes="key value"
+fi
+
+failed=0
 items=($topic)
 for topic in ${items[@]}
 do
-  log "🛡️ Set compatibility for subject ${topic}-value to $compatibility"
-  if [[ -n "$verbose" ]]
-  then
-      log "🐞 curl command used"
-      echo "curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value""
-  fi
-  curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
-  echo
+    for suffix in $suffixes
+    do
+        log "🛡️ Set compatibility for subject ${topic}-${suffix} to $compatibility"
+        if sr_request PUT "/config/$(urlencode "${topic}-${suffix}")" "{\"compatibility\": \"$compatibility\"}"
+        then
+            echo "$sr_response"
+        else
+            logerror "❌ subject ${topic}-${suffix}: Command failed with error code $sr_error_code"
+            logerror "$sr_error_message"
+            failed=1
+        fi
+    done
 done
+exit $failed
