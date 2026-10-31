@@ -180,6 +180,7 @@ playground_usage() {
   printf "  %s   🗂️ List the contexts of the registry, with their number of subjects and mode\n" "$(green "schema contexts")                           "
   printf "  %s   🔀 Compare the subjects of two registries (or two contexts)\n" "$(green "schema compare")                            "
   printf "  %s   🔗 Schema Linking: exporters that copy subjects to another registry\n" "$(green "schema exporter")                           "
+  printf "  %s   🧪 Register schemas in a throwaway Schema Registry of each CP version, and compare the verdicts\n" "$(green "schema validate")                           "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "schema get-compatibility")                  "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "schema set-compatibility")                  "
   printf "  %s   🔏 Get the mode in force\n" "$(green "schema get-mode")                           "
@@ -6175,7 +6176,7 @@ playground_get_docker_compose_usage() {
 playground_schema_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema\n\n"
-    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    test-rules           do these records pass the data contract rules?\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n    compare              two registries (mdc clusters) or two contexts\n    exporter             Schema Linking: create, list, status, pause…\n    contexts             the contexts of the registry (--context on the\n  commands)\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
+    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    test-rules           do these records pass the data contract rules?\n    validate             accepted by Schema Registry X, refused by Y? (throwaway\n  registries)\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n    compare              two registries (mdc clusters) or two contexts\n    exporter             Schema Linking: create, list, status, pause…\n    contexts             the contexts of the registry (--context on the\n  commands)\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
   else
     printf "playground schema - 🔰 Schema commands\n\n"
   fi
@@ -6199,6 +6200,7 @@ playground_schema_usage() {
   printf "  %s   🗂️ List the contexts of the registry, with their number of subjects and mode\n" "$(green "contexts")            "
   printf "  %s   🔀 Compare the subjects of two registries (or two contexts)\n" "$(green "compare")             "
   printf "  %s   🔗 Schema Linking: exporters that copy subjects to another registry\n" "$(green "exporter")            "
+  printf "  %s   🧪 Register schemas in a throwaway Schema Registry of each CP version, and compare the verdicts\n" "$(green "validate")            "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "get-compatibility")   "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "set-compatibility")   "
   printf "  %s   🔏 Get the mode in force\n" "$(green "get-mode")            "
@@ -7447,6 +7449,70 @@ playground_schema_exporter_delete_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_validate_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema validate\n\n"
+    printf "  🧪 Register schemas in a throwaway Schema Registry of each CP version, and\n  compare the verdicts\n  \n  Answers \"a schema registered years ago is refused after the upgrade\"\n  without upgrading anything: for each --cp-version, a Schema Registry\n  container of that version starts next to the broker of the running\n  environment (its own kafkastore topic, both deleted afterwards), and\n  the schemas are registered in --subject in the order given, so a\n  v1 then v2 also shows the compatibility checks of each version.\n  \n  Each registry starts empty with the default settings of its version\n  (validation of new schemas is on since CP 8.2.0, with the stricter\n  namespaces of Avro 1.12).\n  \n  Exit code: 0 when every schema is accepted by every version, 1\n  otherwise. Needs a running docker environment (not ccloud / cfk). CP\n  5.x / 6.0 registries can't talk to a CP 8 broker.\n\n"
+  else
+    printf "playground schema validate - 🧪 Register schemas in a throwaway Schema Registry of each CP version, and compare the verdicts\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema validate [OPTIONS]\n"
+  printf "  playground schema validate --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cp-version VERSION (required) (repeatable)")"
+    printf "    🏷️ CP version of a Schema Registry to try (repeat it: --cp-version 7.9.2\n    --cp-version 8.2.0)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--schema SCHEMA (repeatable)")"
+    printf "    🔥 A schema: @<file>, a file path or the schema itself (repeatable,\n    registered in that order); default: stdin\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT")"
+    printf "    📛 Subject to register in (default validate-value)\n"
+    printf "    %s\n" "Default: validate-value"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keep")"
+    printf "    🐳 Keep the Schema Registry containers and their topics (to look at their\n    logs or settings)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema validate --cp-version 7.9.2 --cp-version 8.2.0 < legacy.avsc\n  \n  playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 --schema\n  @v1.avsc --schema @v2.avsc --json\n"
     echo
 
   fi
@@ -53000,6 +53066,182 @@ playground_schema_exporter_delete_command() {
 }
 
 # :command.function
+playground_schema_validate_command() {
+
+  # src/commands/schema/validate.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  subject="${args[--subject]}"
+  json="${args[--json]}"
+  keep="${args[--keep]}"
+  verbose="${args[--verbose]}"
+  eval "cp_versions=(${args[--cp-version]})"
+  eval "schemas=(${args[--schema]})"
+
+  get_environment_used
+  if [[ "$environment" == "ccloud" ]] || [[ "$environment" == cfk* ]]
+  then
+      logerror "❌ schema validate starts Schema Registry containers next to the broker of a docker environment (running: $environment)"
+      exit 1
+  fi
+  get_broker_container
+  if [ -z "$broker_container" ] || ! docker inspect "$broker_container" > /dev/null 2>&1
+  then
+      logerror "❌ no broker running: schema validate needs a running environment (its Schema Registry containers store their schemas in it)"
+      exit 1
+  fi
+  network=$(docker inspect "$broker_container" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' | awk '{print $1}')
+  bootstrap="${broker_container}:9092"
+  image="${CP_SCHEMA_REGISTRY_IMAGE:-confluentinc/cp-schema-registry}"
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  containers=()
+  topics=()
+  function cleanup_validate() {
+      local rc=$?
+      local c t
+      if [[ ! -n "$keep" ]]
+      then
+          for c in "${containers[@]}"
+          do
+              docker rm -f "$c" > /dev/null 2>&1
+          done
+          for t in "${topics[@]}"
+          do
+              playground topic delete --topic "$t" --skip-delete-schema > /dev/null 2>&1
+          done
+      fi
+      rm -rf "$tmp_dir"
+      return $rc
+  }
+  trap cleanup_validate EXIT
+
+  # the schemas: --schema (repeatable, registered in that order), else stdin
+  schema_files=()
+  if [ "${#schemas[@]}" -eq 0 ]
+  then
+      schemas=("-")
+  fi
+  i=0
+  for schema in "${schemas[@]}"
+  do
+      i=$((i+1))
+      f="$tmp_dir/schema-$i"
+      sr_read_schema_arg "$schema" "$f" || exit 1
+      if ! sr_schema_request_body "$f"
+      then
+          logerror "❌ no known schema could be identified in ${schema}"
+          exit 1
+      fi
+      echo "$sr_body" > "$f.body"
+      if [[ $schema == @* ]] || [ -f "$schema" ]
+      then
+          echo "$(basename "${schema#@}")" > "$f.label"
+      else
+          echo "schema $i" > "$f.label"
+      fi
+      schema_files+=("$f")
+  done
+
+  results="$tmp_dir/results.jsonl"
+  : > "$results"
+  for version in "${cp_versions[@]}"
+  do
+      name="playground-schema-validate-$(echo "$version" | tr -c 'a-zA-Z0-9\n' '-')-$$"
+      topic="_schemas_$(echo "$name" | tr '-' '_')"
+      [[ -n "$json" ]] || log "🐳 Schema Registry ${version}: starting ${image}:${version}"
+      if ! docker image inspect "${image}:${version}" > /dev/null 2>&1
+      then
+          if ! docker pull "${image}:${version}" > "$tmp_dir/pull-$version.log" 2>&1
+          then
+              logerror "❌ can't pull ${image}:${version}"
+              tail -3 "$tmp_dir/pull-$version.log"
+              jq -cn --arg v "$version" '{cp_version: $v, error: "image not found"}' >> "$results"
+              continue
+          fi
+      fi
+      containers+=("$name")
+      topics+=("$topic")
+      docker run -d --name "$name" --network "$network" -p 127.0.0.1::8081 \
+          -e SCHEMA_REGISTRY_HOST_NAME="$name" \
+          -e SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:8081 \
+          -e SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS="$bootstrap" \
+          -e SCHEMA_REGISTRY_KAFKASTORE_TOPIC="$topic" \
+          -e SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR=1 \
+          -e SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID="$name" \
+          "${image}:${version}" > /dev/null || { logerror "❌ can't start ${image}:${version}"; continue; }
+      port=$(docker port "$name" 8081 | head -1 | awk -F: '{print $NF}')
+      url="http://127.0.0.1:${port}"
+      ready=0
+      for i in $(seq 1 60)
+      do
+          if curl -s "${url}/subjects" 2> /dev/null | jq -e 'type == "array"' > /dev/null 2>&1
+          then
+              ready=1
+              break
+          fi
+          if [ "$(docker inspect -f '{{.State.Running}}' "$name" 2> /dev/null)" != "true" ]
+          then
+              break
+          fi
+          sleep 2
+      done
+      if [ $ready -eq 0 ]
+      then
+          logerror "❌ Schema Registry ${version} did not start (old clients can't talk to a newer broker: CP 5.x / 6.0 with a CP 8 environment)"
+          docker logs "$name" 2>&1 | grep -E "ERROR|Exception" | head -3
+          jq -cn --arg v "$version" '{cp_version: $v, error: "did not start"}' >> "$results"
+          continue
+      fi
+      for f in "${schema_files[@]}"
+      do
+          label=$(cat "$f.label")
+          response=$(curl -s -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data @"$f.body" "${url}/subjects/$(urlencode "$subject")/versions")
+          if echo "$response" | jq -e 'has("id")' > /dev/null 2>&1
+          then
+              jq -cn --arg v "$version" --arg s "$label" --argjson r "$response" '{cp_version: $v, schema: $s, accepted: true, version: $r.version, id: $r.id}' >> "$results"
+              [[ -n "$json" ]] || log "   ✅ ${label}: accepted (id $(echo "$response" | jq -r .id))"
+          else
+              code=$(echo "$response" | jq -r '.error_code // "?"' 2> /dev/null)
+              message=$(echo "$response" | jq -r '.message // .' 2> /dev/null)
+              jq -cn --arg v "$version" --arg s "$label" --arg c "$code" --arg m "$message" '{cp_version: $v, schema: $s, accepted: false, error_code: $c, message: $m}' >> "$results"
+              # the reason is after the last "details: " (the registry repeats the whole schema before it)
+              [[ -n "$json" ]] || logerror "   ❌ ${label}: ${code} $(echo "$message" | sed -e 's/.*details: //' | cut -c1-250)"
+          fi
+      done
+  done
+
+  if [[ -n "$json" ]]
+  then
+      jq -s '{results: .}' "$results"
+  else
+      echo ""
+      log "🧭 Verdict per CP version (each version starts with an empty registry and its default settings)"
+      {
+          echo -e "SCHEMA\t$(printf '%s\t' "${cp_versions[@]}")"
+          for f in "${schema_files[@]}"
+          do
+              label=$(cat "$f.label")
+              row="$label"
+              for version in "${cp_versions[@]}"
+              do
+                  cell=$(jq -r --arg v "$version" --arg s "$label" 'select(.cp_version == $v and (.schema == $s or .error != null)) | if .error then "⚠️ " + .error elif .accepted then "✅" else "❌ " + .error_code end' "$results" | head -1)
+                  row="${row}\t${cell:-?}"
+              done
+              echo -e "$row"
+          done
+      } | column -t -s $'\t'
+      [[ -n "$keep" ]] && log "🐳 kept: ${containers[*]} (docker rm -f them, and delete the topics ${topics[*]})"
+  fi
+  if jq -e 'select(.accepted == false)' "$results" > /dev/null 2>&1 && [ -n "$(jq -c 'select(.accepted == false)' "$results")" ]
+  then
+      exit 1
+  fi
+  exit 0
+
+}
+
+# :command.function
 playground_schema_get_compatibility_command() {
 
   # src/commands/schema/get-compatibility.sh
@@ -93882,6 +94124,13 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    validate)
+      action="validate"
+      shift
+      playground_schema_validate_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-compatibility)
       action="get-compatibility"
       shift
@@ -97016,6 +97265,150 @@ playground_schema_exporter_delete_parse_requirements() {
     echo "$filter_error" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_schema_validate_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_validate_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema validate"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --cp-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--cp-version']+x} ]]; then
+            args['--cp-version']="$escaped"
+          else
+            args['--cp-version']="${args['--cp-version']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--cp-version requires an argument: --cp-version VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --schema)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--schema']+x} ]]; then
+            args['--schema']="$escaped"
+          else
+            args['--schema']="${args['--schema']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--schema requires an argument: --schema SCHEMA" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --keep)
+
+        # :flag.case_no_arg
+        args['--keep']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--cp-version']+x} ]]; then
+    printf "missing required flag: --cp-version VERSION\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--subject']:-} ]] || args['--subject']="validate-value"
 
 }
 
@@ -135279,6 +135672,11 @@ playground_schema_completion() {
         playground_schema_exporter_completion "$completion_current" "$@"
         return
         ;;
+      validate)
+        shift
+        playground_schema_validate_completion "$completion_current" "$@"
+        return
+        ;;
       get-compatibility)
         shift
         playground_schema_get_compatibility_completion "$completion_current" "$@"
@@ -135338,7 +135736,7 @@ playground_schema_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import test-rules contexts compare exporter get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
+  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import test-rules contexts compare exporter validate get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -137048,6 +137446,78 @@ playground_schema_exporter_delete_completion() {
     completion_flag_candidates --name "$completion_current" --name
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_validate_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --cp-version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --schema)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --subject)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subject"]=1
+
+        ;;
+      --keep)
+        completion_blocked_flags["--keep"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --cp-version "$completion_current" --cp-version
+    completion_flag_candidates --schema "$completion_current" --schema
+    completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --keep "$completion_current" --keep
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
 }
@@ -153797,6 +154267,7 @@ run() {
     "schema exporter resume") playground_schema_exporter_resume_command ;;
     "schema exporter reset") playground_schema_exporter_reset_command ;;
     "schema exporter delete") playground_schema_exporter_delete_command ;;
+    "schema validate") playground_schema_validate_command ;;
     "schema get-compatibility") playground_schema_get_compatibility_command ;;
     "schema set-compatibility") playground_schema_set_compatibility_command ;;
     "schema get-mode") playground_schema_get_mode_command ;;
