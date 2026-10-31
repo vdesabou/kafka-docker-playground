@@ -31,6 +31,12 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 🔘 behavior.on.error
 
 Error handling behavior setting for handling response from HTTP requests. Must be configured to one of the following:
+``fail``
+Stops the connector when an error occurs.
+``ignore``
+Continues to process next set of records. when error occurs.
+``log``
+Logs the error message when error occurs and continues to process next set of records, available in ``${connector-name}-error`` topic
 
 	 - Type: STRING
 	 - Default: fail
@@ -39,12 +45,12 @@ Error handling behavior setting for handling response from HTTP requests. Must b
 
 🔘 headers
 
+HTTP headers to be included in all requests. Individual headers should be separated by the ``header.separator``
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in all requests. Individual headers should be separated by the ``header.separator``
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 header.separator
 
@@ -57,12 +63,12 @@ Separator character used in headers property.
 
 🔘 http.proxy.host
 
+The host or ip of the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The host or ip of the http proxy.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.proxy.port
 
@@ -75,12 +81,12 @@ The port number of the http proxy.
 
 🔘 http.proxy.user
 
+The username to be used when authenticating with the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used when authenticating with the http proxy.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.proxy.password
 
@@ -141,21 +147,21 @@ Disallow Class E IP addresses after DNS resolution.
 
 🔘 connection.disallow.cidr.ranges
 
+Disallow IP addresses from the configured CIDR ranges after DNS resolution.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Disallow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 connection.allow.cidr.ranges
 
+Allow IP addresses from the configured CIDR ranges after DNS resolution.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Allow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 deletes.send.in.order
 
@@ -180,12 +186,12 @@ Authentication type of the endpoint. Valid values  are ``NONE``, ``BASIC``, ``OA
 
 🔘 connection.user
 
+The username to be used with an endpoint requiring authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connection.password
 
@@ -198,21 +204,21 @@ The password to be used with an endpoint requiring authentication.
 
 🔘 oauth2.token.url
 
+The URL to be used for fetching OAuth2 token. Client Credentials is the only supported grant type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching OAuth2 token. Client Credentials is the only supported grant type.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.id
 
+The client id used when fetching OAuth2 token
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client id used when fetching OAuth2 token
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.secret
 
@@ -252,12 +258,12 @@ The scope used when fetching OAuth2 token
 
 🔘 oauth2.client.headers
 
+HTTP headers to be included in each request to the OAuth2 client endpoint. Individual headers should be separated by `oauth2.client.header.separator`. Note: 'Content-Type` header if added will be overridden by the connector with value 'application/x-www-form-urlencoded'
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request to the OAuth2 client endpoint. Individual headers should be separated by `oauth2.client.header.separator`. Note: 'Content-Type` header if added will be overridden by the connector with value 'application/x-www-form-urlencoded'
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 oauth2.client.header.separator
 
@@ -279,12 +285,12 @@ Whether to generate and add jwt token to request. If selected, jwt token will be
 
 🔘 oauth2.jwt.keystore.path
 
+Path to keystore containing key to use to generate JWT.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path to keystore containing key to use to generate JWT.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.jwt.keystore.password
 
@@ -306,12 +312,12 @@ JWT Keystore type
 
 🔘 oauth2.jwt.claimset
 
+JSON containing JWT claims
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON containing JWT claims
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.jwt.signature.algorithm
 
@@ -357,21 +363,21 @@ Regex
 ==========================
 🔘 regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 regex.separator
 
@@ -423,21 +429,21 @@ The number of records accumulated in a batch before the HTTP API is invoked.
 
 🔘 batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 batch.separator
 
@@ -460,6 +466,8 @@ Separator for records in a batch.
 🔘 json.decimal.format
 
 Specify the Request Body JSON serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON Request Body as a number representing the decimal value. Applicable when `request.body.format` is `json`
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -484,6 +492,9 @@ On Failure
 🔘 report.errors.as
 
 Dictates the content of records produced to the error topic. If set to ``error_string``, the value would be a human readable string describing the failure. The value will include some or all of the following information if available: http response code, reason phrase, submitted payload, url, response content, exception and error message.
+If set to http_response, the value would be the plain response content for the request which failed to write the record. 
+In both modes, any information about the failure will also be included in the error records headers. 
+
 
 	 - Type: STRING
 	 - Default: error_string
@@ -612,12 +623,12 @@ The file format of the trust store file. The values currently supported by the d
 
 🔘 https.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 https.ssl.endpoint.identification.algorithm
 
@@ -665,40 +676,34 @@ The algorithm used by trust manager factory for SSL connections. Default value i
 	 - Required: false
 
 ==========================
-reporter.result.topic.name
-==========================
-🔘 ${connector}-success
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
-	 - Required: MEDIUM
 
 ==========================
-reporter.result.topic.replication.factor
-==========================
-🔘 3
+🔘 reporter.result.topic.name
 
+The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
+	 - Type: STRING
+	 - Default: ${connector}-success
+	 - Importance: MEDIUM
+	 - Required: false
 
-	 - Type: false
-	 - Default: SHORT
-	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
-	 - Required: MEDIUM
+🔘 reporter.result.topic.replication.factor
 
-==========================
-reporter.result.topic.partitions
-==========================
-🔘 1
+The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
+	 - Type: SHORT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
 
+🔘 reporter.result.topic.partitions
 
-	 - Type: false
-	 - Default: INT
-	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
-	 - Required: MEDIUM
+The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Formatter
@@ -785,40 +790,34 @@ Controls which format this converter will serialize decimals in. This value is c
 	 - Required: false
 
 ==========================
-reporter.error.topic.name
-==========================
-🔘 ${connector}-error
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
-	 - Required: MEDIUM
 
 ==========================
-reporter.error.topic.replication.factor
-==========================
-🔘 3
+🔘 reporter.error.topic.name
 
+The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
+	 - Type: STRING
+	 - Default: ${connector}-error
+	 - Importance: MEDIUM
+	 - Required: false
 
-	 - Type: false
-	 - Default: SHORT
-	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
-	 - Required: MEDIUM
+🔘 reporter.error.topic.replication.factor
 
-==========================
-reporter.error.topic.partitions
-==========================
-🔘 1
+The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
+	 - Type: SHORT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
 
+🔘 reporter.error.topic.partitions
 
-	 - Type: false
-	 - Default: INT
-	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
-	 - Required: MEDIUM
+The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Formatter
@@ -905,16 +904,16 @@ Controls which format this converter will serialize decimals in. This value is c
 	 - Required: false
 
 ==========================
-reporter.bootstrap.servers
+
 ==========================
-🔘 LIST
+🔘 reporter.bootstrap.servers
 
+A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
 
-
-	 - Type: MEDIUM
-	 - Default: false
-	 - Importance: 
-	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 null
@@ -1005,4 +1004,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 
