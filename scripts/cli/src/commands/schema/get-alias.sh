@@ -1,4 +1,5 @@
 alias="${args[--alias]}"
+json="${args[--json]}"
 verbose="${args[--verbose]}"
 
 if [[ "$environment" != "ccloud" ]]
@@ -14,28 +15,17 @@ fi
 
 get_sr_url_and_security
 
-log "🔯 Get alias for alias ${alias}"
-if [[ -n "$verbose" ]]
+[[ -n "$json" ]] || log "🔯 Get alias for alias ${alias}"
+sr_request GET "/config/$(urlencode "${alias}")" || sr_exit_on_error
+target=$(echo "$sr_response" | jq -r '.alias // empty')
+if [[ -n "$json" ]]
 then
-    log "🐞 curl command used"
-    echo "curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${alias}""
+    jq -n --arg alias "$alias" --arg subject "$target" '{alias: $alias, subject: (if $subject == "" then null else $subject end)}'
+    exit 0
 fi
-curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${alias}")
-ret=$?
-if [ $ret -eq 0 ]
+if [ -z "$target" ]
 then
-    if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
-    then
-        error_code=$(echo "$curl_output" | jq -r .error_code)
-        message=$(echo "$curl_output" | jq -r .message)
-        logerror "Command failed with error code $error_code"
-        logerror "$message"
-        exit 1
-    else
-        alias=$(echo "$curl_output" | jq -r .alias)
-        echo "$alias"
-    fi
-else
-    logerror "❌ curl request failed with error code $ret!"
+    logerror "❌ ${alias} is not an alias"
     exit 1
 fi
+echo "$target"

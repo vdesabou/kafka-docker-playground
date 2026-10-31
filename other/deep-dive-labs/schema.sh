@@ -36,12 +36,24 @@ lab_expect_contains '"id": 1,'
 lab_expect_contains '"version": 1,' "no new version"
 lab_run playground schema get --subject orders-value
 lab_expect_contains "🔰 subject orders-value 💯 version 1 (id 1)"
+lab_run playground schema get --subject orders-value --schema-only
+lab_expect_exit 0
+lab_expect_contains '"name": "Order",'
+lab_expect_not_contains "🔰 subject"
+lab_run bash -c "playground schema get --subject orders-value --json | jq -r '.[0].id'"
+lab_expect_equals "$LAB_OUTPUT" "1" "id of version 1 in --json"
+lab_run playground schema list
+lab_expect_exit 0
+lab_expect_contains "SUBJECT"
+lab_expect_contains "orders-value"
 
 log "Step 2: compatibility refuses, then accepts"
 lab_run playground schema get-compatibility --subject orders-value
-lab_expect_exit 1
-lab_expect_contains "Command failed with error code 40408"
-lab_expect_contains "Subject 'orders-value' does not have subject-level compatibility configured"
+lab_expect_exit 0
+lab_expect_contains "🌍 subject orders-value has no subject-level rule: the global rule of the registry applies"
+lab_expect_contains "BACKWARD"
+lab_run bash -c "playground schema get-compatibility --subject orders-value --json | jq -r .source"
+lab_expect_equals "$LAB_OUTPUT" "global" "source of the rule"
 lab_run playground schema set-compatibility --subject orders-value --compatibility BACKWARD
 lab_expect_contains "BACKWARD"
 lab_expect_not_contains "null"
@@ -83,6 +95,14 @@ lab_expect_contains '"id": 2,'
 lab_expect_contains '"version": 3,'
 
 log "Step 4: a permanent delete"
+lab_run playground schema delete --subject orders-value --version 9
+lab_expect_exit 1
+lab_expect_contains "❌ subject orders-value has no version 9"
+lab_run playground schema delete --subject orders-value --permanent --dry-run
+lab_expect_exit 0
+lab_expect_contains "💀 version 3 (id 2): permanent delete, ❌ id 2 will stop resolving"
+lab_run playground schema get --id 2
+lab_expect_exit 0 "a dry run deletes nothing"
 lab_run playground schema delete --subject orders-value --permanent
 lab_expect_contains "💀 Hard deleting subject 🔰 orders-value"
 lab_run playground schema get --id 2

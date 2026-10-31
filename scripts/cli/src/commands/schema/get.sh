@@ -1,8 +1,35 @@
 subject="${args[--subject]}"
 id="${args[--id]}"
+version="${args[--version]}"
 deleted="${args[--deleted]}"
+schema_only="${args[--schema-only]}"
+json="${args[--json]}"
 verbose="${args[--verbose]}"
 store_in_tmp="${args[--store-in-tmp]}"
+
+if [[ -n "$version" ]]
+then
+    if [[ ! -n "$subject" ]]
+    then
+        logerror "❌ --version is set without --subject being set"
+        exit 1
+    fi
+    if [[ ! "$version" =~ ^([0-9]+|latest|-1)$ ]]
+    then
+        logerror "❌ --version must be a version number or latest"
+        exit 1
+    fi
+fi
+if [[ -n "$schema_only" ]] && [[ ! -n "$subject" ]] && [[ ! -n "$id" ]]
+then
+    logerror "❌ --schema-only needs --subject (latest version, or --version) or --id"
+    exit 1
+fi
+if [[ -n "$schema_only" ]] && [[ -n "$json" ]]
+then
+    logerror "❌ --schema-only and --json are mutually exclusive"
+    exit 1
+fi
 
 get_sr_url_and_security
 
@@ -13,46 +40,53 @@ then
 else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
-#log "tmp_dir is $tmp_dir"
+
+# print a schema string: avro and json schema pretty-printed, protobuf as is
+function print_schema() {
+    local schema_type="$1"
+    local schema="$2"
+    if [ "$schema_type" == "PROTOBUF" ]
+    then
+        echo "$schema"
+    else
+        echo "$schema" | jq . 2> /dev/null || echo "$schema"
+    fi
+}
 
 if [[ -n "$id" ]]
 then
-    if [[ -n "$verbose" ]]
+    sr_request GET "/schemas/ids/${id}" || sr_exit_on_error
+    if [[ -n "$schema_only" ]]
     then
-        log "🐞 curl command used"
-        echo "curl $sr_security -s "${sr_url}/schemas/ids/${id}""
-    fi
-
-    curl_output=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
-    ret=$?
-    if [ $ret -eq 0 ]
+        print_schema "$(echo "$sr_response" | jq -r '.schemaType // "AVRO"')" "$(echo "$sr_response" | jq -r .schema)"
+    elif [[ -n "$json" ]]
     then
-        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        response="$sr_response"
+        subjects="[]"
+        if sr_request GET "/schemas/ids/${id}/versions?deleted=true"
         then
-            error_code=$(echo "$curl_output" | jq -r .error_code)
-            message=$(echo "$curl_output" | jq -r .message)
-            logerror "❌ Command failed with error code $error_code"
-            logerror "$message"
-            exit 1
-        else
-            versions=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
+            subjects="$sr_response"
         fi
+        echo "$response" | jq --argjson id "$id" --argjson subjects "$subjects" '{id: $id, schemaType: (.schemaType // "AVRO")} + . + {subjects: $subjects}'
     else
-        logerror "❌ curl request failed with error code $ret!"
-        exit 1
+        echo "$sr_response" | jq .
     fi
-    echo "$curl_output" | jq .
     exit 0
+fi
+
+if [[ -n "$schema_only" ]] && [[ ! -n "$version" ]]
+then
+    version="latest"
 fi
 
 if [[ ! -n "$subject" ]]
 then
-    log "✨ --subject flag was not provided, applying command to all subjects"
+    [[ -n "$json" ]] || log "✨ --subject flag was not provided, applying command to all subjects"
     if [[ -n "$deleted" ]]
     then
         subject=$(playground get-subject-list)
         echo "$subject" > $tmp_dir/subjects-all
-        log "🧟 deleted subjects are included"
+        [[ -n "$json" ]] || log "🧟 deleted subjects are included"
         subject=$(playground get-subject-list --deleted)
         echo "$subject" > $tmp_dir/subjects-deleted-tmp
 
@@ -62,6 +96,11 @@ then
     fi
     if [ "$subject" == "" ]
     then
+        if [[ -n "$json" ]]
+        then
+            echo "[]"
+            exit 0
+        fi
         logerror "❌ No subject found !"
         exit 1
     fi
@@ -74,75 +113,84 @@ then
 fi
 
 found=0
+json_file=$tmp_dir/schemas.jsonl
+: > $json_file
 items=($subject)
 for subject in ${items[@]}
 do
-    if [[ -n "$verbose" ]]
+    encoded_subject=$(urlencode "${subject}")
+    if [[ -n "$version" ]]
     then
-        log "🐞 curl command used"
-        echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted""
-    fi
-
-    curl_output=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
-    ret=$?
-    if [ $ret -eq 0 ]
-    then
-        if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+        versions="$version"
+    else
+        if ! sr_request GET "/subjects/${encoded_subject}/versions$maybe_include_deleted"
         then
-            error_code=$(echo "$curl_output" | jq -r .error_code)
-            message=$(echo "$curl_output" | jq -r .message)
-            if [ "$error_code" == "40401" ]
+            if [ "$sr_error_code" == "40401" ]
             then
                 continue
             fi
-        else
-            versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+            sr_exit_on_error
         fi
-    else
-        logerror "❌ curl request failed with error code $ret!"
-        exit 1
+        versions=$(echo "${sr_response}" | jq -r '.[]')
     fi
 
-    for version in $(echo "${versions}" | jq -r '.[]')
+    for v in $versions
     do
-        schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .schemaType)
-        id=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .id)
-        case "${schema_type}" in
-        JSON|AVRO|null)
-            schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted" | jq .)
-        ;;
-        PROTOBUF)
-            schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted")
-        ;;
-        esac
-
-        if [ -f $tmp_dir/subjects-deleted ] && grep "${subject}" $tmp_dir/subjects-deleted
+        if ! sr_request GET "/subjects/${encoded_subject}/versions/${v}$maybe_include_deleted"
         then
-            log "🧟 (deleted) subject ${subject} 💯 version ${version} (id $id)"
-        else
-            log "🔰 subject ${subject} 💯 version ${version} (id $id)"
+            if [ "$sr_error_code" == "40401" ] || [ "$sr_error_code" == "40402" ]
+            then
+                [[ -n "$version" ]] && sr_exit_on_error "subject ${subject}"
+                continue
+            fi
+            sr_exit_on_error
+        fi
+        object="$sr_response"
+        schema_type=$(echo "$object" | jq -r '.schemaType // "AVRO"')
+        id=$(echo "$object" | jq -r .id)
+        real_version=$(echo "$object" | jq -r .version)
+        schema=$(echo "$object" | jq -r .schema)
+        subject_deleted=false
+        if [ -f $tmp_dir/subjects-deleted ] && grep -qx "${subject}" $tmp_dir/subjects-deleted
+        then
+            subject_deleted=true
         fi
         found=1
 
-        if [[ -n "$verbose" ]]
+        if [[ -n "$schema_only" ]]
         then
-            log "🐞 curl command used"
-            echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted""
+            print_schema "$schema_type" "$schema"
+            continue
         fi
-        echo "${schema}"
+        if [[ -n "$json" ]]
+        then
+            echo "$object" | jq -c --arg t "$schema_type" --argjson d "$subject_deleted" '. + {schemaType: $t, deleted: ((.deleted // false) or $d)}' >> $json_file
+            continue
+        fi
+
+        if [ "$subject_deleted" == "true" ]
+        then
+            log "🧟 (deleted) subject ${subject} 💯 version ${real_version} (id $id)"
+        else
+            log "🔰 subject ${subject} 💯 version ${real_version} (id $id)"
+        fi
+        print_schema "$schema_type" "$schema"
 
         if [[ -n "$store_in_tmp" ]] && [ "$store_in_tmp" != "" ]
         then
-            echo "${schema}" > $store_in_tmp/schema_$id.txt
+            print_schema "$schema_type" "$schema" > $store_in_tmp/schema_$id.txt
         fi
     done
 done
 
-if [[ -n "$subject" ]]
+if [[ -n "$json" ]]
 then
-    if [ $found -eq 0 ]
-    then
-        logerror "❌ No schema found !"
-        exit 1
-    fi
+    jq -s . $json_file
+    exit 0
+fi
+
+if [ $found -eq 0 ]
+then
+    logerror "❌ No schema found !"
+    exit 1
 fi

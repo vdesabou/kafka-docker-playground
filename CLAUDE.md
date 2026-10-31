@@ -182,7 +182,7 @@ environments where the raw command only works on `plaintext`.
 | `docker exec broker-us kafka-…`, `curl localhost:8283/connectors` in an `mdc-*` environment (two clusters) | `playground topic\|consumer-group\|connector\|schema\|broker\|quota … --cluster us\|europe` (or `export PLAYGROUND_CLUSTER=us`) |
 | `GetOffsetShell` / counting records | `playground topic get-number-records --topic <t>` |
 | `kafka-console-consumer` on `__consumer_offsets` | `playground topic display-consumer-offsets` |
-| `curl localhost:8081/subjects/...` | `playground schema get\|register\|get-compatibility\|set-compatibility` |
+| `curl localhost:8081/subjects/...` | `playground schema list\|get\|register\|get-compatibility\|set-compatibility\|delete` (`--json`, `get --schema-only`, `--global` for the registry-wide rule, `delete --dry-run`) |
 | `jstack`, `jmap`, `jcmd`, `tcpdump`, JFR, a java agent | `playground debug thread-dump\|heap-dump\|tcp-dump\|flight-recorder\|jscissors`, then `playground analyze thread-dump\|heap-dump\|gc-logs\|flight-recorder\|tcp-dump\|jscissors` |
 | `tc` / `iptables` in a container to slow down or cut its network (`add_latency`…) | `playground debug degrade-traffic` (`--latency`, `--jitter`, `--loss`, `--corruption`, `--rate`, `--action start\|stop\|status`) / `playground debug block-traffic` |
 | editing `log4j.properties` to raise a log level | `playground debug log-level set --package <pkg> --level TRACE` |

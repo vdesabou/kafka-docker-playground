@@ -17,15 +17,17 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 
 | You want | Command |
 | --- | --- |
+| every subject at a glance: versions, latest id, type, rule, mode | `playground schema list [--prefix <p>] [--deleted] [--json]` |
 | every version of a subject (or of all subjects) | `playground schema get [--subject <s>]` |
+| one version as a plain schema file | `playground schema get --subject <s> --version N --schema-only > vN.avsc` |
 | the schema behind an id seen in a record | `playground schema get --id <id>` |
 | soft-deleted subjects too | `playground schema get --deleted` |
 | a new version, without producing | `playground schema register --subject <s> << 'EOF' … EOF` |
-| the rule that accepts or refuses a new version | `playground schema get-compatibility --subject <s>` / `set-compatibility --compatibility …` |
+| the rule that accepts or refuses a new version | `playground schema get-compatibility --subject <s>` (or `--global`) / `set-compatibility --compatibility …` |
 | the same, on the value subject of a topic | `playground topic set-schema-compatibility --topic <t> --compatibility …` |
-| remove a version or a subject | `playground schema delete --subject <s> [--version N] [--permanent]` |
+| remove a version or a subject | `playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]` |
 | a schema from a sample JSON record | `playground schema derive-schema --schema-type AVRO\|JSON\|PROTOBUF << 'EOF' … EOF` |
-| freeze or migrate a subject | `playground schema set-mode --subject <s> --mode READONLY\|IMPORT\|READWRITE` |
+| freeze or migrate a subject (or the registry) | `playground schema set-mode --subject <s> \| --global --mode READONLY\|IMPORT\|READWRITE` |
 | registry-wide behaviour | `playground schema set-normalize --value true` / `validate-new-schemas --value false` |
 | one subject name pointing at another | `playground schema set-alias --subject <s> --alias <a>` (CP 7.4.1+) |
 
@@ -54,19 +56,32 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 3. **Compatibility is checked against the subject's rule, only when a new version is registered.** The rule is
    per subject when one was set (`set-compatibility`), otherwise the registry's global one (`BACKWARD` by default).
    It decides whether `register` (or a producer with `auto.register.schemas=true`) is accepted; it never affects
-   reading. `get-compatibility` reads the **subject-level** rule only: on a subject that has none, the registry answers
-   an error (`40408`), not the global value.
+   reading. `get-compatibility --subject` shows the rule in force and where it comes from: the subject-level rule, or
+   `🌍 … the global rule of the registry applies` when the subject has none (`--global` reads the global one).
 
 ---
 
-## 2. Reading: `get`, `get --id`, `get --deleted`
+## 2. Reading: `list`, `get`, `get --id`, `get --deleted`
 
 ```bash
+playground schema list                              # one line per subject: versions, latest id, type, rule, mode
 playground schema get                               # every version of every subject
 playground schema get --subject orders-value        # one subject
 playground schema get --id 3                        # the schema behind an id
 playground schema get --deleted                     # soft-deleted subjects too, flagged 🧟
 playground schema get --subject orders-value --verbose   # also prints the curl commands
+playground schema get --subject orders-value --version 2 --schema-only > v2.avsc   # the schema alone (latest without --version)
+playground schema get --subject orders-value --json | jq '.[].id'                   # machine-readable, nothing else on stdout
+playground schema get --id 3 --json | jq .subjects  # which subjects and versions use this id
+```
+
+`schema list` prints one line per subject. A 🌍 marks a compatibility rule or mode inherited from the global setting
+of the registry:
+
+```text
+SUBJECT       VERSIONS  LATEST  ID  TYPE  COMPATIBILITY  MODE
+order-ref     1         v1      4   AVRO  BACKWARD 🌍    READWRITE 🌍
+orders-value  2         v2      3   AVRO  FULL           READWRITE 🌍
 ```
 
 What it prints, per version:
@@ -84,8 +99,10 @@ Gotchas:
 
 - **A subject with no live version is "not found"**: after a soft delete, `schema get --subject <s>` ends with
   `❌ No schema found !` (exit 1). Add `--deleted` to see it: `🧟 (deleted) subject orders-value 💯 version 1 (id 1)`.
-- `--id` prints the raw REST answer (`{"schema": "…", …}`, the schema as an escaped string), not a pretty schema.
-  `--id` can't be combined with `--subject` or `--deleted`.
+- `--id` prints the raw REST answer (`{"schema": "…", …}`, the schema as an escaped string), not a pretty schema:
+  add `--schema-only` for the schema itself, `--json` to also get the subjects and versions that use the id.
+  `--id` can't be combined with `--subject`, `--version` or `--deleted`.
+- The log lines go to stdout: `get | jq` doesn't parse. Use `--json` (nothing else is printed) or `--schema-only`.
 - Protobuf schemas are printed as text, Avro and JSON Schema as pretty JSON.
 - Without `--subject`, every subject is read one by one (several REST calls per version): slow on a registry with
   hundreds of subjects. Use `--subject` in scripts.
@@ -151,9 +168,11 @@ Gotchas:
 ## 4. Compatibility: `get-compatibility`, `set-compatibility`, `topic set-schema-compatibility`
 
 ```bash
-playground schema get-compatibility --subject orders-value
+playground schema get-compatibility --subject orders-value                      # the rule in force, and where it comes from
+playground schema get-compatibility --global                                    # the default of the registry
 playground schema set-compatibility --subject orders-value --compatibility NONE
-playground topic set-schema-compatibility --topic orders --compatibility FULL   # the -value subject of the topic
+playground schema set-compatibility --global --compatibility FULL               # every subject without its own rule
+playground topic set-schema-compatibility --topic orders --compatibility FULL   # the -value subject of the topic (--include-key: -key too)
 playground topic produce -t orders --compatibility NONE …                        # set before producing
 ```
 
@@ -167,13 +186,15 @@ playground topic produce -t orders --compatibility NONE …                     
 
 Gotchas:
 
-- **`get-compatibility` only reads a subject-level rule.** On a subject where none was set, it fails with the
-  registry's error (`Subject … does not have subject-level compatibility configured`) instead of showing the global
-  `BACKWARD` (`Command failed with error code 40408`, exit 1). The CLI has no command for the global level.
+- **`get-compatibility` says where the rule comes from.** On a subject where none was set, it prints
+  `🌍 subject orders-value has no subject-level rule: the global rule of the registry applies` and the global value
+  (`BACKWARD` by default). `--json` gives `{"subject": …, "compatibility": …, "source": "subject"|"global"}`.
+  `get-mode` works the same way.
 - **The rule is checked at registration only.** Relaxing it to `NONE`, registering, then setting it back leaves the
   incompatible version in place: consumers with the old schema fail, and that's often what the customer did.
-- `topic set-schema-compatibility` sets the **value** subject only (`<topic>-value`), not `<topic>-key`, and prints
-  the raw REST answer. Without `--topic` it asks for confirmation and applies to every topic.
+- `topic set-schema-compatibility` sets the **value** subject only (`<topic>-value`), add `--include-key` for
+  `<topic>-key`. It prints the raw REST answer and exits 1 if the registry refused one of them. Without `--topic` it
+  asks for confirmation and applies to every topic.
 - A subject name strategy other than `TopicNameStrategy` means other subject names
   (`<topic>-<record name>` with `TopicRecordNameStrategy`): set the rule on those, `topic set-schema-compatibility`
   won't find them.
@@ -186,6 +207,7 @@ Gotchas:
 playground schema delete --subject orders-value --version 2                 # soft-delete one version
 playground schema delete --subject orders-value                             # soft-delete every version
 playground schema delete --subject orders-value --permanent                 # soft, then hard: gone for good
+playground schema delete --subject orders-value --permanent --dry-run       # what would go, and which ids would stop resolving
 playground topic delete --topic orders                                      # the topic, and both subjects, permanently
 ```
 
@@ -196,11 +218,14 @@ playground topic delete --topic orders                                      # th
 
 Gotchas:
 
-- **`schema delete` without `--subject` does nothing** (and says nothing): there is no "delete everything".
-- **`--version` needs `--subject`**: `❌ --version is set without --subject being set`.
-- The command prints the registry's answer (the list of deleted versions, or an error JSON) and doesn't check it:
-  `delete --subject orders-value --version 9` prints `"error_code": 40402, "message": "Version 9 not found."` and
-  exits 0.
+- **`--subject` is required**: there is no "delete everything".
+- **A refused delete fails the command** (exit 1): `delete --subject orders-value --version 9` prints
+  `❌ subject orders-value has no version 9 (versions: 1,2)`. A version used as a reference by another schema can't be
+  deleted (`42206`): the command lists who references it, `🔗 version 1 is referenced by schema id 4: order-ref v1`.
+- **`--dry-run` deletes nothing** and tells, per version, whether its id keeps resolving:
+  `💀 version 1 (id 2): permanent delete, ❌ id 2 will stop resolving: old records written with it can't be
+  deserialized any more` (unless another subject uses the same id).
+- `--permanent` on a subject that is already soft-deleted skips the soft delete (`🧟 already soft deleted`).
 - `playground topic delete` deletes `<topic>-key` and `<topic>-value` **permanently** (unless
   `--skip-delete-schema`): deleting a topic to "start over" in a repro also wipes its schema history.
 
@@ -275,8 +300,8 @@ playground schema get --subject orders-value
 
 ```bash
 playground schema get-compatibility --subject orders-value
-# 🔥 Command failed with error code 40408
-# 🔥 Subject 'orders-value' does not have subject-level compatibility configured
+# 🌍 subject orders-value has no subject-level rule: the global rule of the registry applies
+# BACKWARD
 playground schema set-compatibility --subject orders-value --compatibility BACKWARD
 # BACKWARD
 # a required field without default: not BACKWARD compatible
@@ -320,6 +345,8 @@ playground topic consume -t orders --min-expected-messages 2 --timeout 30
 **Step 4: a permanent delete**
 
 ```bash
+playground schema delete --subject orders-value --permanent --dry-run
+# 💀 version 3 (id 2): permanent delete, ❌ id 2 will stop resolving: old records written with it can't be deserialized any more
 playground schema delete --subject orders-value --permanent
 playground schema get --id 2
 # 🔥 ❌ Command failed with error code 40403
@@ -381,14 +408,15 @@ playground schema set-compatibility --subject orders-value --compatibility FULL
 ## 10. Cheat sheet
 
 ```bash
-playground schema get [--subject <s> | --id <id>] [--deleted] [--verbose]
+playground schema list [--prefix <p>] [--deleted] [--json]
+playground schema get [--subject <s> [--version N|latest] | --id <id>] [--deleted] [--schema-only | --json] [--verbose]
 playground schema register --subject <s> [--schema @file] [--metadata-property k=v]... [--normalize] [--id <id>] << 'EOF' … EOF
-playground schema get-compatibility --subject <s>
-playground schema set-compatibility --subject <s> --compatibility BACKWARD|FORWARD|FULL|NONE[_TRANSITIVE]
-playground topic set-schema-compatibility --topic <t> --compatibility …       # <topic>-value only
-playground schema delete --subject <s> [--version N] [--permanent]
+playground schema get-compatibility --subject <s> | --global [--json]
+playground schema set-compatibility --subject <s> | --global --compatibility BACKWARD|FORWARD|FULL|NONE[_TRANSITIVE]
+playground topic set-schema-compatibility --topic <t> --compatibility … [--include-key]
+playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]
 playground schema derive-schema [--schema-type AVRO|JSON|PROTOBUF] [--payload '<json>'|@file] << 'EOF' … EOF
-playground schema get-mode|set-mode --subject <s> [--mode READWRITE|READONLY|IMPORT]
+playground schema get-mode|set-mode --subject <s> | --global [--mode READWRITE|READONLY|IMPORT]
 playground schema set-normalize|validate-new-schemas --value true|false
 playground schema get-alias|set-alias --subject <s> [--alias <a>]
 ```
@@ -396,7 +424,7 @@ playground schema get-alias|set-alias --subject <s> [--alias <a>]
 - Subject = name, version = position in the subject, id = global, in every record.
 - Soft delete: hidden, ids still resolve. `--permanent`: gone, old records fail.
 - Compatibility: per subject (else global `BACKWARD`), checked at registration only.
-- `register` exits 1 when the registry refuses the schema. `delete` prints the registry's answer without checking it.
+- `register` and `delete` exit 1 when the registry refuses the request.
 - Sources: [`commands/schema/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/schema),
   [`topic/set-schema-compatibility.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/topic/set-schema-compatibility.sh),
   `get_sr_url_and_security` in

@@ -167,12 +167,13 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "Schema commands:")"
   printf "  %s   🔰 Schema commands\n" "$(green "schema")                                    "
+  printf "  %s   📋 List the subjects of the registry\n" "$(green "schema list")                               "
   printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "schema get")                                "
   printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                           "
-  printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "schema get-compatibility")                  "
-  printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "schema set-compatibility")                  "
-  printf "  %s   🔏 Get subject-level mode\n" "$(green "schema get-mode")                           "
-  printf "  %s   🔏 Set subject-level mode\n" "$(green "schema set-mode")                           "
+  printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "schema get-compatibility")                  "
+  printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "schema set-compatibility")                  "
+  printf "  %s   🔏 Get the mode in force\n" "$(green "schema get-mode")                           "
+  printf "  %s   🔏 Set the mode of a subject (--subject), or of the whole registry (--global)\n" "$(green "schema set-mode")                           "
   printf "  %s   🧽 Set normalize at schema registry level\n" "$(green "schema set-normalize")                      "
   printf "  %s   🩺 Validate new schemas (default is true since CP 8.2.0)\n" "$(green "schema validate-new-schemas")               "
   printf "  %s   🧟 Delete schema\n" "$(green "schema delete")                             "
@@ -6164,7 +6165,7 @@ playground_get_docker_compose_usage() {
 playground_schema_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema\n\n"
-    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule\n    set-mode             READWRITE, READONLY or IMPORT\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
+    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
   else
     printf "playground schema - 🔰 Schema commands\n\n"
   fi
@@ -6175,12 +6176,13 @@ playground_schema_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Schema commands:")"
+  printf "  %s   📋 List the subjects of the registry\n" "$(green "list")                "
   printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "get")                 "
   printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "register")            "
-  printf "  %s   🛡️ Get subject-level compatibility\n" "$(green "get-compatibility")   "
-  printf "  %s   🛡️ Set subject-level compatibility\n" "$(green "set-compatibility")   "
-  printf "  %s   🔏 Get subject-level mode\n" "$(green "get-mode")            "
-  printf "  %s   🔏 Set subject-level mode\n" "$(green "set-mode")            "
+  printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "get-compatibility")   "
+  printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "set-compatibility")   "
+  printf "  %s   🔏 Get the mode in force\n" "$(green "get-mode")            "
+  printf "  %s   🔏 Set the mode of a subject (--subject), or of the whole registry (--global)\n" "$(green "set-mode")            "
   printf "  %s   🧽 Set normalize at schema registry level\n" "$(green "set-normalize")       "
   printf "  %s   🩺 Validate new schemas (default is true since CP 8.2.0)\n" "$(green "validate-new-schemas")"
   printf "  %s   🧟 Delete schema\n" "$(green "delete")              "
@@ -6203,8 +6205,74 @@ playground_schema_usage() {
 }
 
 # :command.usage
+playground_schema_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema list\n\n"
+    printf "  📋 List the subjects of the registry\n  \n  One line per subject: number of versions, latest version and its schema\n  id, schema type, and the compatibility rule and mode in force. A 🌍\n  marks a value inherited from the global setting of the registry\n  (no subject-level rule), which is what applies when a producer\n  registers a new version.\n  \n  🎓 Tip: the subject names tell you the subject name strategy of the\n  producers: <topic>-value (TopicNameStrategy), <record name>\n  (RecordNameStrategy) or <topic>-<record name> (TopicRecordNameStrategy).\n\n"
+  else
+    printf "playground schema list - 📋 List the subjects of the registry\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema list [OPTIONS]\n"
+  printf "  playground schema list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--prefix PREFIX")"
+    printf "    🔎 Only the subjects starting with this prefix\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--deleted")"
+    printf "    🧟 Include soft deleted subjects\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema list\n"
+    printf "  playground schema list --prefix orders --deleted\n"
+    printf "  playground schema list --json | jq -r '.subjects[] |\n  select(.compatibility_source == \"subject\") | .subject'\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_schema_get_usage() {
-  printf "playground schema get - 🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n\n"
+  if [[ -n $long_usage ]]; then
+    printf "playground schema get\n\n"
+    printf "  🔰 Get all schemas versions for specified subject (if --subject is not\n  specified, all subjects will be used)\n  \n  🎓 Tip: --schema-only prints the schema alone (latest version, or\n  --version), ready to be redirected to a file:\n  \n    playground schema get --subject orders-value --version 2 --schema-only >\n  v2.avsc\n\n"
+  else
+    printf "playground schema get - 🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n\n"
+  fi
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground schema get [OPTIONS]\n"
@@ -6225,8 +6293,26 @@ playground_schema_get_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--id ID")"
-    printf "    💯 Schema id\n"
-    printf "    %s\n" "Conflicts: subject, deleted"
+    printf "    💯 Schema id\n    \n    With --json, the subjects and versions using this id are added.\n"
+    printf "    %s\n" "Conflicts: subject, deleted, --version"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--version VERSION")"
+    printf "    🔢 Only this version of --subject: a number, or latest\n"
+    printf "    %s\n" "Conflicts: --id"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--schema-only")"
+    printf "    📄 Print only the schema (pretty-printed avro / json schema, protobuf as is),\n    without the log lines\n    \n    Needs --subject (latest version unless --version is set) or --id.\n"
+    printf "    %s\n" "Conflicts: --json"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the versions as a JSON array (subject, version, id, schemaType,\n    schema, references, metadata, ruleSet, deleted), and nothing else\n"
+    printf "    %s\n" "Conflicts: --schema-only"
     echo
 
     # :flag.usage
@@ -6262,6 +6348,8 @@ playground_schema_get_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground schema get\n"
     printf "  playground schema get --subject <SUBJECT>\n"
+    printf "  playground schema get --subject <SUBJECT> --version latest --schema-only >\n  schema.avsc\n"
+    printf "  playground schema get --id 3 --json\n"
     printf "  playground schema get --deleted\n"
     echo
 
@@ -6342,9 +6430,9 @@ fi
 playground_schema_get_compatibility_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema get-compatibility\n\n"
-    printf "  🛡️ Get subject-level compatibility\n  \n  The rule that decides whether a new schema version is accepted. When a\n  producer fails with \"Schema being registered is incompatible with an\n  earlier schema\", this is what rejected it.\n\n"
+    printf "  🛡️ Get the compatibility rule in force\n  \n  The rule that decides whether a new schema version is accepted. When a\n  producer fails with \"Schema being registered is incompatible with an\n  earlier schema\", this is what rejected it.\n  \n  With --subject, the subject-level rule, or the global rule of the\n  registry when the subject has none (the command says which one\n  applies). With --global, the global rule.\n\n"
   else
-    printf "playground schema get-compatibility - 🛡️ Get subject-level compatibility\n\n"
+    printf "playground schema get-compatibility - 🛡️ Get the compatibility rule in force\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6359,8 +6447,20 @@ playground_schema_get_compatibility_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "  %s\n" "$(magenta "--subject SUBJECT")"
     printf "    📛 Subject name\n"
+    printf "    %s\n" "Conflicts: --global"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--global")"
+    printf "    🌍 The global setting of the registry, instead of one subject\n"
+    printf "    %s\n" "Conflicts: --subject"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
     echo
 
     # :flag.usage
@@ -6379,6 +6479,13 @@ playground_schema_get_compatibility_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema get-compatibility --subject orders-value\n"
+    printf "  playground schema get-compatibility --global\n"
+    printf "  playground schema get-compatibility --subject orders-value --json\n"
+    echo
+
   fi
 }
 
@@ -6386,9 +6493,9 @@ playground_schema_get_compatibility_usage() {
 playground_schema_set_compatibility_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema set-compatibility\n\n"
-    printf "  🛡️ Set subject-level compatibility\n  \n  Overrides the rule for one subject:\n  \n    BACKWARD     new schema can read data written with the previous one\n    FORWARD      previous schema can read data written with the new one\n    FULL         both\n    NONE         anything is accepted\n    *_TRANSITIVE checked against all past versions, not just the last\n  \n  Set it to NONE when you deliberately want to register an incompatible\n  schema, typically to reproduce what it does to consumers downstream.\n\n"
+    printf "  🛡️ Set the compatibility rule of a subject (--subject), or of the whole\n  registry (--global)\n  \n  Overrides the rule for one subject, or changes the default of every\n  subject without a rule of its own:\n  \n    BACKWARD     new schema can read data written with the previous one\n    FORWARD      previous schema can read data written with the new one\n    FULL         both\n    NONE         anything is accepted\n    *_TRANSITIVE checked against all past versions, not just the last\n  \n  Set it to NONE when you deliberately want to register an incompatible\n  schema, typically to reproduce what it does to consumers downstream.\n\n"
   else
-    printf "playground schema set-compatibility - 🛡️ Set subject-level compatibility\n\n"
+    printf "playground schema set-compatibility - 🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6403,8 +6510,15 @@ playground_schema_set_compatibility_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "  %s\n" "$(magenta "--subject SUBJECT")"
     printf "    📛 Subject name\n"
+    printf "    %s\n" "Conflicts: --global"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--global")"
+    printf "    🌍 The global setting of the registry, instead of one subject\n"
+    printf "    %s\n" "Conflicts: --subject"
     echo
 
     # :flag.usage
@@ -6436,9 +6550,9 @@ playground_schema_set_compatibility_usage() {
 playground_schema_get_mode_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema get-mode\n\n"
-    printf "  🔏 Get subject-level mode\n  \n  READWRITE normally; READONLY if registration has been frozen; IMPORT\n  while schemas are being migrated with their original ids and versions.\n\n"
+    printf "  🔏 Get the mode in force\n  \n  READWRITE normally; READONLY if registration has been frozen; IMPORT\n  while schemas are being migrated with their original ids and versions.\n  \n  With --subject, the subject-level mode, or the global mode when the\n  subject has none. With --global, the global mode of the registry.\n\n"
   else
-    printf "playground schema get-mode - 🔏 Get subject-level mode\n\n"
+    printf "playground schema get-mode - 🔏 Get the mode in force\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6453,8 +6567,20 @@ playground_schema_get_mode_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "  %s\n" "$(magenta "--subject SUBJECT")"
     printf "    📛 Subject name\n"
+    printf "    %s\n" "Conflicts: --global"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--global")"
+    printf "    🌍 The global setting of the registry, instead of one subject\n"
+    printf "    %s\n" "Conflicts: --subject"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
     echo
 
     # :flag.usage
@@ -6480,9 +6606,9 @@ playground_schema_get_mode_usage() {
 playground_schema_set_mode_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema set-mode\n\n"
-    printf "  🔏 Set subject-level mode\n  \n    READWRITE   the normal mode, schemas can be read and registered\n    READONLY    freeze the subject, registration is refused\n    IMPORT      allow registering schemas at a chosen id and version,\n                which is what a migration between registries needs\n  \n  ⚠️ To enable mode changes on a Schema Registry cluster, you must also set\n  mode.mutability=true in the Schema Registry properties file before\n  starting Schema Registry, otherwise this command is rejected.\n\n"
+    printf "  🔏 Set the mode of a subject (--subject), or of the whole registry (--global)\n  \n    READWRITE   the normal mode, schemas can be read and registered\n    READONLY    freeze the subject, registration is refused\n    IMPORT      allow registering schemas at a chosen id and version,\n                which is what a migration between registries needs\n  \n  ⚠️ To enable mode changes on a Schema Registry cluster, you must also set\n  mode.mutability=true in the Schema Registry properties file before\n  starting Schema Registry, otherwise this command is rejected.\n\n"
   else
-    printf "playground schema set-mode - 🔏 Set subject-level mode\n\n"
+    printf "playground schema set-mode - 🔏 Set the mode of a subject (--subject), or of the whole registry (--global)\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -6497,8 +6623,15 @@ playground_schema_set_mode_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "  %s\n" "$(magenta "--subject SUBJECT")"
     printf "    📛 Subject name\n"
+    printf "    %s\n" "Conflicts: --global"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--global")"
+    printf "    🌍 The global setting of the registry, instead of one subject\n"
+    printf "    %s\n" "Conflicts: --subject"
     echo
 
     # :flag.usage
@@ -6620,7 +6753,7 @@ playground_schema_validate_new_schemas_usage() {
 playground_schema_delete_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema delete\n\n"
-    printf "  🧟 Delete schema\n  \n  Without --version the whole subject goes; with it, only that version.\n  \n  A plain delete is soft: the schema is hidden but its id and version\n  number stay taken, so re-registering does not reuse them. Add\n  --permanent to really remove it, which is what you need before\n  re-creating the same subject from scratch.\n  \n  ❕ The registry requires a soft delete before a permanent one; with\n     --permanent the command does both for you.\n\n"
+    printf "  🧟 Delete schema\n  \n  Without --version the whole subject goes; with it, only that version.\n  \n  A plain delete is soft: the schema is hidden but its id and version\n  number stay taken, so re-registering does not reuse them. Add\n  --permanent to really remove it, which is what you need before\n  re-creating the same subject from scratch.\n  \n  ❕ The registry requires a soft delete before a permanent one; with\n     --permanent the command does both for you.\n  \n  The command fails (exit 1) when the registry refuses the delete, and\n  lists the schemas that reference a version it can't delete (42206).\n  \n  🎓 Tip: --dry-run shows the versions and ids that would be deleted, and\n  which ids would stop resolving after a permanent delete (old records\n  written with them could not be deserialized any more).\n\n"
   else
     printf "playground schema delete - 🧟 Delete schema\n\n"
   fi
@@ -6637,7 +6770,7 @@ playground_schema_delete_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--subject SUBJECT")"
+    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
     printf "    📛 Subject name to delete:\n      \n      if --version is provided, only that version will be deleted. Otherwise the\n    complete subject will be deleted\n"
     echo
 
@@ -6649,6 +6782,11 @@ playground_schema_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--permanent")"
     printf "    💀 Hard delete (default is soft delete)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🧪 Show what would be deleted, and its effect on the schema ids, without\n    deleting anything\n"
     echo
 
     # :flag.usage
@@ -6665,6 +6803,13 @@ playground_schema_delete_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema delete --subject orders-value --version 2\n"
+    printf "  playground schema delete --subject orders-value --permanent --dry-run\n"
+    printf "  playground schema delete --subject orders-value --permanent\n"
     echo
 
   fi
@@ -6788,6 +6933,11 @@ playground_schema_get_alias_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--alias ALIAS (required)")"
     printf "    🔯 Alias name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
     echo
 
     # :flag.usage
@@ -11372,7 +11522,7 @@ playground_topic_elect_leader_usage() {
 playground_topic_set_schema_compatibility_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic set-schema-compatibility\n\n"
-    printf "  🛡️ Change topic's schema compatibility\n  \n  Sets the compatibility level on the subjects of the topic, which is\n  what you relax to let an otherwise rejected schema evolution through,\n  for instance to reproduce a schema compatibility issue.\n\n"
+    printf "  🛡️ Change topic's schema compatibility\n  \n  Sets the compatibility level on the value subject of the topic\n  (<topic>-value), and on its key subject too with --include-key. That\n  is what you relax to let an otherwise rejected schema evolution\n  through, for instance to reproduce a schema compatibility issue.\n\n"
   else
     printf "playground topic set-schema-compatibility - 🛡️ Change topic's schema compatibility\n\n"
   fi
@@ -11397,6 +11547,11 @@ playground_topic_set_schema_compatibility_usage() {
     printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY (required)")"
     printf "    Schema Registry compatibility rule\n"
     printf "    %s\n" "Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-key")"
+    printf "    🔑 Also set it on the key subject (<topic>-key)\n"
     echo
 
     # :flag.usage
@@ -19916,6 +20071,65 @@ function get_sr_url_and_security() {
     sr_url=$SCHEMA_REGISTRY_URL
     sr_security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
+}
+
+# sr_request <method> <path> [<json body>]: one call to the Schema Registry of the running environment
+# (get_sr_url_and_security must have been called). Sets:
+#   sr_response       the body
+#   sr_error_code     the registry's error_code (40401, 40408…), "curl" when curl failed, empty on success
+#   sr_error_message  the registry's message
+# returns 0 on success, 1 otherwise. Prints the curl command when $verbose is set.
+function sr_request() {
+  local method="$1"
+  local path="$2"
+  local data="$3"
+  local ret
+  sr_response=""
+  sr_error_code=""
+  sr_error_message=""
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    if [ -n "$data" ]
+    then
+      echo "curl $sr_security -s -X $method -H \"Content-Type: application/vnd.schemaregistry.v1+json\" --data '$data' \"${sr_url}${path}\""
+    else
+      echo "curl $sr_security -s -X $method \"${sr_url}${path}\""
+    fi
+  fi
+  if [ -n "$data" ]
+  then
+    sr_response=$(curl $sr_security -s -X "$method" -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "$data" "${sr_url}${path}")
+  else
+    sr_response=$(curl $sr_security -s -X "$method" "${sr_url}${path}")
+  fi
+  ret=$?
+  if [ $ret -ne 0 ]
+  then
+    sr_error_code="curl"
+    sr_error_message="curl request to ${sr_url}${path} failed with error code $ret"
+    return 1
+  fi
+  sr_error_code=$(echo "$sr_response" | jq -r 'if type == "object" and has("error_code") then .error_code else empty end' 2> /dev/null)
+  if [ -n "$sr_error_code" ]
+  then
+    sr_error_message=$(echo "$sr_response" | jq -r '.message // empty' 2> /dev/null)
+    return 1
+  fi
+  return 0
+}
+
+# sr_exit_on_error [<context>]: after a failed sr_request, print the registry's error and exit 1
+function sr_exit_on_error() {
+  local context="$1"
+  if [ "$sr_error_code" == "curl" ]
+  then
+    logerror "❌ $sr_error_message"
+  else
+    logerror "❌ ${context:+$context: }Command failed with error code $sr_error_code"
+    logerror "$sr_error_message"
+  fi
+  exit 1
 }
 
 function get_broker_container() {
@@ -49606,14 +49820,142 @@ playground_get_docker_compose_command() {
 }
 
 # :command.function
+playground_schema_list_command() {
+
+  # src/commands/schema/list.sh
+  prefix="${args[--prefix]}"
+  deleted="${args[--deleted]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+
+  sr_request GET "/subjects" || sr_exit_on_error
+  active_subjects=$(echo "$sr_response" | jq -r '.[]')
+  subjects="$active_subjects"
+  if [[ -n "$deleted" ]]
+  then
+      sr_request GET "/subjects?deleted=true" || sr_exit_on_error
+      subjects=$(echo "$sr_response" | jq -r '.[]')
+  fi
+
+  global_compatibility="BACKWARD"
+  if sr_request GET "/config"
+  then
+      global_compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+  fi
+  global_mode="READWRITE"
+  if sr_request GET "/mode"
+  then
+      global_mode=$(echo "$sr_response" | jq -r '.mode')
+  fi
+
+  rows_file=$(mktemp -t pg-XXXXXXXXXX)
+  trap 'rm -f $rows_file' EXIT
+  for subject in $subjects
+  do
+      if [ -n "$prefix" ] && [[ "$subject" != "$prefix"* ]]
+      then
+          continue
+      fi
+      encoded_subject=$(urlencode "$subject")
+      is_deleted=true
+      maybe_deleted="?deleted=true"
+      if echo "$active_subjects" | grep -qxF "$subject"
+      then
+          is_deleted=false
+          maybe_deleted=""
+      fi
+      sr_request GET "/subjects/${encoded_subject}/versions${maybe_deleted}" || continue
+      versions=$(echo "$sr_response" | jq -c '.')
+      latest_version=$(echo "$versions" | jq -r 'max')
+      sr_request GET "/subjects/${encoded_subject}/versions/${latest_version}${maybe_deleted}" || continue
+      latest_id=$(echo "$sr_response" | jq -r '.id')
+      schema_type=$(echo "$sr_response" | jq -r '.schemaType // "AVRO"')
+
+      compatibility="$global_compatibility"
+      compatibility_source="global"
+      if sr_request GET "/config/${encoded_subject}"
+      then
+          compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+          compatibility_source="subject"
+      fi
+      mode="$global_mode"
+      mode_source="global"
+      if sr_request GET "/mode/${encoded_subject}"
+      then
+          mode=$(echo "$sr_response" | jq -r '.mode')
+          mode_source="subject"
+      fi
+      jq -cn --arg subject "$subject" --argjson versions "$versions" --argjson latest_version "$latest_version" \
+          --argjson latest_id "$latest_id" --arg schema_type "$schema_type" --arg compatibility "$compatibility" \
+          --arg compatibility_source "$compatibility_source" --arg mode "$mode" --arg mode_source "$mode_source" \
+          --argjson deleted "$is_deleted" \
+          '{subject: $subject, versions: $versions, latest_version: $latest_version, latest_id: $latest_id, schema_type: $schema_type, compatibility: $compatibility, compatibility_source: $compatibility_source, mode: $mode, mode_source: $mode_source, deleted: $deleted}' >> $rows_file
+  done
+
+  if [[ -n "$json" ]]
+  then
+      jq -s '{global_compatibility: "'"$global_compatibility"'", global_mode: "'"$global_mode"'", subjects: .}' $rows_file
+      exit 0
+  fi
+
+  if [ ! -s $rows_file ]
+  then
+      logwarn "no subject found${prefix:+ with prefix $prefix}"
+      exit 0
+  fi
+
+  log "🔰 Subjects (🌍 = inherited from the global setting of the registry: compatibility $global_compatibility, mode $global_mode)"
+  {
+      echo -e "SUBJECT\tVERSIONS\tLATEST\tID\tTYPE\tCOMPATIBILITY\tMODE"
+      jq -r '[ (if .deleted then "🧟 " else "" end) + .subject,
+               (.versions | length | tostring),
+               ("v" + (.latest_version | tostring)),
+               (.latest_id | tostring),
+               .schema_type,
+               .compatibility + (if .compatibility_source == "global" then " 🌍" else "" end),
+               .mode + (if .mode_source == "global" then " 🌍" else "" end) ] | @tsv' $rows_file
+  } | column -t -s $'\t'
+
+}
+
+# :command.function
 playground_schema_get_command() {
 
   # src/commands/schema/get.sh
   subject="${args[--subject]}"
   id="${args[--id]}"
+  version="${args[--version]}"
   deleted="${args[--deleted]}"
+  schema_only="${args[--schema-only]}"
+  json="${args[--json]}"
   verbose="${args[--verbose]}"
   store_in_tmp="${args[--store-in-tmp]}"
+
+  if [[ -n "$version" ]]
+  then
+      if [[ ! -n "$subject" ]]
+      then
+          logerror "❌ --version is set without --subject being set"
+          exit 1
+      fi
+      if [[ ! "$version" =~ ^([0-9]+|latest|-1)$ ]]
+      then
+          logerror "❌ --version must be a version number or latest"
+          exit 1
+      fi
+  fi
+  if [[ -n "$schema_only" ]] && [[ ! -n "$subject" ]] && [[ ! -n "$id" ]]
+  then
+      logerror "❌ --schema-only needs --subject (latest version, or --version) or --id"
+      exit 1
+  fi
+  if [[ -n "$schema_only" ]] && [[ -n "$json" ]]
+  then
+      logerror "❌ --schema-only and --json are mutually exclusive"
+      exit 1
+  fi
 
   get_sr_url_and_security
 
@@ -49624,47 +49966,53 @@ playground_schema_get_command() {
   else
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
-  #log "tmp_dir is $tmp_dir"
+
+  # print a schema string: avro and json schema pretty-printed, protobuf as is
+  function print_schema() {
+      local schema_type="$1"
+      local schema="$2"
+      if [ "$schema_type" == "PROTOBUF" ]
+      then
+          echo "$schema"
+      else
+          echo "$schema" | jq . 2> /dev/null || echo "$schema"
+      fi
+  }
 
   if [[ -n "$id" ]]
   then
-      if [[ -n "$verbose" ]]
+      sr_request GET "/schemas/ids/${id}" || sr_exit_on_error
+      if [[ -n "$schema_only" ]]
       then
-          log "🐞 curl command used"
-          echo "curl $sr_security -s "${sr_url}/schemas/ids/${id}""
-      fi
-
-      curl_output=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
-      ret=$?
-      if [ $ret -eq 0 ]
+          print_schema "$(echo "$sr_response" | jq -r '.schemaType // "AVRO"')" "$(echo "$sr_response" | jq -r .schema)"
+      elif [[ -n "$json" ]]
       then
-          if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
+          response="$sr_response"
+          subjects="[]"
+          if sr_request GET "/schemas/ids/${id}/versions?deleted=true"
           then
-              error_code=$(echo "$curl_output" | jq -r .error_code)
-              message=$(echo "$curl_output" | jq -r .message)
-              logerror "❌ Command failed with error code $error_code"
-              logerror "$message"
-              exit 1
-          else
-              versions=$(curl $sr_security -s "${sr_url}/schemas/ids/${id}")
+              subjects="$sr_response"
           fi
+          echo "$response" | jq --argjson id "$id" --argjson subjects "$subjects" '{id: $id, schemaType: (.schemaType // "AVRO")} + . + {subjects: $subjects}'
       else
-          logerror "❌ curl request failed with error code $ret!"
-          exit 1
+          echo "$sr_response" | jq .
       fi
-      echo "$curl_output" | jq .
       exit 0
+  fi
+
+  if [[ -n "$schema_only" ]] && [[ ! -n "$version" ]]
+  then
+      version="latest"
   fi
 
   if [[ ! -n "$subject" ]]
   then
-      log "✨ --subject flag was not provided, applying command to all subjects"
+      [[ -n "$json" ]] || log "✨ --subject flag was not provided, applying command to all subjects"
       if [[ -n "$deleted" ]]
       then
           subject=$(playground get-subject-list)
           echo "$subject" > $tmp_dir/subjects-all
-          log "🧟 deleted subjects are included"
+          [[ -n "$json" ]] || log "🧟 deleted subjects are included"
           subject=$(playground get-subject-list --deleted)
           echo "$subject" > $tmp_dir/subjects-deleted-tmp
 
@@ -49674,6 +50022,11 @@ playground_schema_get_command() {
       fi
       if [ "$subject" == "" ]
       then
+          if [[ -n "$json" ]]
+          then
+              echo "[]"
+              exit 0
+          fi
           logerror "❌ No subject found !"
           exit 1
       fi
@@ -49686,79 +50039,88 @@ playground_schema_get_command() {
   fi
 
   found=0
+  json_file=$tmp_dir/schemas.jsonl
+  : > $json_file
   items=($subject)
   for subject in ${items[@]}
   do
-      if [[ -n "$verbose" ]]
+      encoded_subject=$(urlencode "${subject}")
+      if [[ -n "$version" ]]
       then
-          log "🐞 curl command used"
-          echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted""
-      fi
-
-      curl_output=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
-      ret=$?
-      if [ $ret -eq 0 ]
-      then
-          if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
+          versions="$version"
+      else
+          if ! sr_request GET "/subjects/${encoded_subject}/versions$maybe_include_deleted"
           then
-              error_code=$(echo "$curl_output" | jq -r .error_code)
-              message=$(echo "$curl_output" | jq -r .message)
-              if [ "$error_code" == "40401" ]
+              if [ "$sr_error_code" == "40401" ]
               then
                   continue
               fi
-          else
-              versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions$maybe_include_deleted")
+              sr_exit_on_error
           fi
-      else
-          logerror "❌ curl request failed with error code $ret!"
-          exit 1
+          versions=$(echo "${sr_response}" | jq -r '.[]')
       fi
 
-      for version in $(echo "${versions}" | jq -r '.[]')
+      for v in $versions
       do
-          schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .schemaType)
-          id=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted" | jq -r .id)
-          case "${schema_type}" in
-          JSON|AVRO|null)
-              schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted" | jq .)
-          ;;
-          PROTOBUF)
-              schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema$maybe_include_deleted")
-          ;;
-          esac
-
-          if [ -f $tmp_dir/subjects-deleted ] && grep "${subject}" $tmp_dir/subjects-deleted
+          if ! sr_request GET "/subjects/${encoded_subject}/versions/${v}$maybe_include_deleted"
           then
-              log "🧟 (deleted) subject ${subject} 💯 version ${version} (id $id)"
-          else
-              log "🔰 subject ${subject} 💯 version ${version} (id $id)"
+              if [ "$sr_error_code" == "40401" ] || [ "$sr_error_code" == "40402" ]
+              then
+                  [[ -n "$version" ]] && sr_exit_on_error "subject ${subject}"
+                  continue
+              fi
+              sr_exit_on_error
+          fi
+          object="$sr_response"
+          schema_type=$(echo "$object" | jq -r '.schemaType // "AVRO"')
+          id=$(echo "$object" | jq -r .id)
+          real_version=$(echo "$object" | jq -r .version)
+          schema=$(echo "$object" | jq -r .schema)
+          subject_deleted=false
+          if [ -f $tmp_dir/subjects-deleted ] && grep -qx "${subject}" $tmp_dir/subjects-deleted
+          then
+              subject_deleted=true
           fi
           found=1
 
-          if [[ -n "$verbose" ]]
+          if [[ -n "$schema_only" ]]
           then
-              log "🐞 curl command used"
-              echo "curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}$maybe_include_deleted""
+              print_schema "$schema_type" "$schema"
+              continue
           fi
-          echo "${schema}"
+          if [[ -n "$json" ]]
+          then
+              echo "$object" | jq -c --arg t "$schema_type" --argjson d "$subject_deleted" '. + {schemaType: $t, deleted: ((.deleted // false) or $d)}' >> $json_file
+              continue
+          fi
+
+          if [ "$subject_deleted" == "true" ]
+          then
+              log "🧟 (deleted) subject ${subject} 💯 version ${real_version} (id $id)"
+          else
+              log "🔰 subject ${subject} 💯 version ${real_version} (id $id)"
+          fi
+          print_schema "$schema_type" "$schema"
 
           if [[ -n "$store_in_tmp" ]] && [ "$store_in_tmp" != "" ]
           then
-              echo "${schema}" > $store_in_tmp/schema_$id.txt
+              print_schema "$schema_type" "$schema" > $store_in_tmp/schema_$id.txt
           fi
       done
   done
 
-  if [[ -n "$subject" ]]
+  if [[ -n "$json" ]]
   then
-      if [ $found -eq 0 ]
-      then
-          logerror "❌ No schema found !"
-          exit 1
-      fi
+      jq -s . $json_file
+      exit 0
   fi
+
+  if [ $found -eq 0 ]
+  then
+      logerror "❌ No schema found !"
+      exit 1
+  fi
+
 }
 
 # :command.function
@@ -50003,36 +50365,64 @@ playground_schema_get_compatibility_command() {
 
   # src/commands/schema/get-compatibility.sh
   subject="${args[--subject]}"
+  global="${args[--global]}"
+  json="${args[--json]}"
   verbose="${args[--verbose]}"
+
+  if [[ -n "$subject" ]] && [[ -n "$global" ]]
+  then
+      logerror "❌ --subject and --global are mutually exclusive"
+      exit 1
+  fi
+  if [[ ! -n "$subject" ]] && [[ ! -n "$global" ]]
+  then
+      logerror "❌ set --subject <subject>, or --global for the rule of the whole registry"
+      exit 1
+  fi
 
   get_sr_url_and_security
 
-  log "🛡️ Get compatibility for subject ${subject}"
-  if [[ -n "$verbose" ]]
+  source="subject"
+  if [[ -n "$subject" ]]
   then
-      log "🐞 curl command used"
-      echo "curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}""
-  fi
-  curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}")
-  ret=$?
-  if [ $ret -eq 0 ]
-  then
-      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
+      [[ -n "$json" ]] || log "🛡️ Get compatibility for subject ${subject}"
+      if ! sr_request GET "/config/$(urlencode "${subject}")"
       then
-          error_code=$(echo "$curl_output" | jq -r .error_code)
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-          exit 1
-      else
-          compatibilityLevel=$(echo "$curl_output" | jq -r .compatibilityLevel)
-          echo "$compatibilityLevel"
+          # 40408: no subject-level rule, 40401: unknown subject: the global rule applies
+          if [ "$sr_error_code" != "40408" ] && [ "$sr_error_code" != "40401" ]
+          then
+              sr_exit_on_error
+          fi
+          source="global"
       fi
   else
-      logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      source="global"
   fi
+
+  if [ "$source" == "global" ]
+  then
+      sr_request GET "/config" || sr_exit_on_error
+  fi
+  compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+
+  if [[ -n "$json" ]]
+  then
+      jq -n --arg subject "$subject" --arg compatibility "$compatibility" --arg source "$source" \
+          '{subject: (if $subject == "" then null else $subject end), compatibility: $compatibility, source: $source}'
+      exit 0
+  fi
+
+  if [[ -n "$subject" ]] && [ "$source" == "global" ]
+  then
+      log "🌍 subject ${subject} has no subject-level rule: the global rule of the registry applies"
+  elif [[ -n "$subject" ]]
+  then
+      log "🔰 subject-level rule of ${subject}"
+  else
+      log "🌍 global rule of the registry"
+  fi
+  echo "$compatibility"
+
 }
 
 # :command.function
@@ -50040,37 +50430,35 @@ playground_schema_set_compatibility_command() {
 
   # src/commands/schema/set-compatibility.sh
   subject="${args[--subject]}"
+  global="${args[--global]}"
   compatibility="${args[--compatibility]}"
   verbose="${args[--verbose]}"
 
-  get_sr_url_and_security
-
-  log "🛡️ Set compatibility for subject ${subject} to $compatibility"
-  if [[ -n "$verbose" ]]
+  if [[ -n "$subject" ]] && [[ -n "$global" ]]
   then
-      log "🐞 curl command used"
-      echo "curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}""
-  fi
-  curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${subject}" | jq .)
-  ret=$?
-  if [ $ret -eq 0 ]
-  then
-      error_code=$(echo "$curl_output" | jq -r .error_code)
-      if [ "$error_code" != "null" ]
-      then
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-          exit 1
-      else
-          # PUT /config answers {"compatibility": …} (GET answers compatibilityLevel)
-          compatibilityLevel=$(echo "$curl_output" | jq -r '.compatibility // .compatibilityLevel')
-          echo "$compatibilityLevel"
-      fi
-  else
-      logerror "❌ curl request failed with error code $ret!"
+      logerror "❌ --subject and --global are mutually exclusive"
       exit 1
   fi
+  if [[ ! -n "$subject" ]] && [[ ! -n "$global" ]]
+  then
+      logerror "❌ set --subject <subject>, or --global for the rule of the whole registry"
+      exit 1
+  fi
+
+  get_sr_url_and_security
+
+  path="/config"
+  if [[ -n "$subject" ]]
+  then
+      log "🛡️ Set compatibility for subject ${subject} to $compatibility"
+      path="/config/$(urlencode "${subject}")"
+  else
+      log "🌍 Set the global compatibility of the registry to $compatibility"
+  fi
+  sr_request PUT "$path" "{\"compatibility\": \"$compatibility\"}" || sr_exit_on_error
+  # PUT /config answers {"compatibility": …} (GET answers compatibilityLevel)
+  echo "$sr_response" | jq -r '.compatibility // .compatibilityLevel'
+
 }
 
 # :command.function
@@ -50078,36 +50466,59 @@ playground_schema_get_mode_command() {
 
   # src/commands/schema/get-mode.sh
   subject="${args[--subject]}"
+  global="${args[--global]}"
+  json="${args[--json]}"
   verbose="${args[--verbose]}"
+
+  if [[ -n "$subject" ]] && [[ -n "$global" ]]
+  then
+      logerror "❌ --subject and --global are mutually exclusive"
+      exit 1
+  fi
+  if [[ ! -n "$subject" ]] && [[ ! -n "$global" ]]
+  then
+      logerror "❌ set --subject <subject>, or --global for the mode of the whole registry"
+      exit 1
+  fi
 
   get_sr_url_and_security
 
-  log "🔏 Get mode for subject ${subject}"
-  if [[ -n "$verbose" ]]
+  source="subject"
+  if [[ -n "$subject" ]]
   then
-      log "🐞 curl command used"
-      echo "curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/mode/${subject}""
-  fi
-  curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/mode/${subject}")
-  ret=$?
-  if [ $ret -eq 0 ]
-  then
-      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
+      [[ -n "$json" ]] || log "🔏 Get mode for subject ${subject}"
+      if ! sr_request GET "/mode/$(urlencode "${subject}")"
       then
-          error_code=$(echo "$curl_output" | jq -r .error_code)
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-          exit 1
-      else
-          mode=$(echo "$curl_output" | jq -r .mode)
-          echo "$mode"
+          # 40409: no subject-level mode (older registries answer 40401): the global mode applies
+          if [ "$sr_error_code" != "40409" ] && [ "$sr_error_code" != "40401" ]
+          then
+              sr_exit_on_error
+          fi
+          source="global"
       fi
   else
-      logerror "❌ curl request failed with error code $ret!"
-      exit 1
+      source="global"
   fi
+
+  if [ "$source" == "global" ]
+  then
+      sr_request GET "/mode" || sr_exit_on_error
+  fi
+  mode=$(echo "$sr_response" | jq -r '.mode')
+
+  if [[ -n "$json" ]]
+  then
+      jq -n --arg subject "$subject" --arg mode "$mode" --arg source "$source" \
+          '{subject: (if $subject == "" then null else $subject end), mode: $mode, source: $source}'
+      exit 0
+  fi
+
+  if [[ -n "$subject" ]] && [ "$source" == "global" ]
+  then
+      log "🌍 subject ${subject} has no subject-level mode: the global mode of the registry applies"
+  fi
+  echo "$mode"
+
 }
 
 # :command.function
@@ -50115,37 +50526,34 @@ playground_schema_set_mode_command() {
 
   # src/commands/schema/set-mode.sh
   subject="${args[--subject]}"
+  global="${args[--global]}"
   mode="${args[--mode]}"
   verbose="${args[--verbose]}"
 
-  get_sr_url_and_security
-
-  log "🔏 Set mode for subject ${subject} to $mode"
-  if [[ -n "$verbose" ]]
+  if [[ -n "$subject" ]] && [[ -n "$global" ]]
   then
-      log "🐞 curl command used"
-      echo "curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}""
-  fi
-  curl_output=$(curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"mode\": \"$mode\"}" "${sr_url}/mode/${subject}" | jq .)
-  ret=$?
-  if [ $ret -eq 0 ]
-  then
-      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
-      then
-          error_code=$(echo "$curl_output" | jq -r .error_code)
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-          exit 1
-      else
-          mode=$(echo "$curl_output" | jq -r .mode)
-          echo "$mode"
-      fi
-  else
-      logerror "❌ curl request failed with error code $ret!"
+      logerror "❌ --subject and --global are mutually exclusive"
       exit 1
   fi
+  if [[ ! -n "$subject" ]] && [[ ! -n "$global" ]]
+  then
+      logerror "❌ set --subject <subject>, or --global for the mode of the whole registry"
+      exit 1
+  fi
+
+  get_sr_url_and_security
+
+  path="/mode"
+  if [[ -n "$subject" ]]
+  then
+      log "🔏 Set mode for subject ${subject} to $mode"
+      path="/mode/$(urlencode "${subject}")"
+  else
+      log "🌍 Set the global mode of the registry to $mode"
+  fi
+  sr_request PUT "$path" "{\"mode\": \"$mode\"}" || sr_exit_on_error
+  echo "$sr_response" | jq -r '.mode'
+
 }
 
 # :command.function
@@ -50229,66 +50637,123 @@ playground_schema_delete_command() {
   subject="${args[--subject]}"
   version="${args[--version]}"
   permanent="${args[--permanent]}"
+  dry_run="${args[--dry-run]}"
   verbose="${args[--verbose]}"
 
   get_sr_url_and_security
 
+  encoded_subject=$(urlencode "${subject}")
+
+  # the versions that will be deleted, with their ids (soft-deleted versions are included: a permanent delete removes them too)
+  sr_request GET "/subjects/${encoded_subject}/versions?deleted=true" || sr_exit_on_error "subject ${subject}"
+  all_versions=$(echo "$sr_response" | jq -r '.[]')
   if [[ -n "$version" ]]
   then
-      if [[ ! -n "$subject" ]]
+      if ! echo "$all_versions" | grep -qx "$version"
       then
-          logerror "❌ --version is set without --subject being set"
+          logerror "❌ subject ${subject} has no version ${version} (versions: $(echo $all_versions | tr ' ' ','))"
           exit 1
       fi
+      target_versions="$version"
+  else
+      target_versions="$all_versions"
   fi
 
-  # https://docs.confluent.io/platform/current/schema-registry/develop/api.html#delete--subjects-(string-%20subject)-versions-(versionId-%20version)
-  if [[ -n "$subject" ]]
+  # explain a refused delete: the version is used as a reference by other schemas
+  function explain_references() {
+      local v
+      for v in $target_versions
+      do
+          if sr_request GET "/subjects/${encoded_subject}/versions/${v}/referencedby" && [ "$(echo "$sr_response" | jq 'length')" != "0" ]
+          then
+              for ref_id in $(echo "$sr_response" | jq -r '.[]')
+              do
+                  if sr_request GET "/schemas/ids/${ref_id}/versions"
+                  then
+                      logerror "   🔗 version ${v} is referenced by schema id ${ref_id}: $(echo "$sr_response" | jq -r 'map("\(.subject) v\(.version)") | join(", ")')"
+                  fi
+              done
+          fi
+      done
+      logerror "   delete the referencing schemas first, or keep this version"
+  }
+
+  if [[ -n "$dry_run" ]]
   then
-      if [[ -n "$version" ]]
-      then
-          log "🧟 Soft deleting 💯 version ${version} from subject 🔰 ${subject}"
-          #url encode subject
-          subject=$(urlencode "${subject}")
-          if [[ -n "$verbose" ]]
+      log "🧪 dry run: nothing is deleted"
+      for v in $target_versions
+      do
+          if sr_request GET "/subjects/${encoded_subject}/versions/${v}?deleted=true"
           then
-              log "🐞 curl command used"
-              echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}""
-          fi
-          curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}" | jq .
-          if [[ -n "$permanent" ]]
-          then
-              log "💀 Hard deleting 💯 version ${version} from subject 🔰 ${subject}"
-              if [[ -n "$verbose" ]]
+              id=$(echo "$sr_response" | jq -r .id)
+              deleted=$(echo "$sr_response" | jq -r '.deleted // false')
+              used_by=""
+              if sr_request GET "/schemas/ids/${id}/versions?deleted=true"
               then
-                  log "🐞 curl command used"
-                  echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}?permanent=true""
+                  used_by=$(echo "$sr_response" | jq -r --arg s "$subject" 'map(select(.subject != $s)) | map("\(.subject) v\(.version)") | join(", ")')
               fi
-              curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}/versions/${version}?permanent=true" | jq .
-          fi
-      else
-          logwarn "--version is not set, deleting all versions !"
-          log "🧟 Soft deleting subject 🔰 ${subject}"
-          #url encode subject
-          subject=$(urlencode "${subject}")
-          if [[ -n "$verbose" ]]
-          then
-              log "🐞 curl command used"
-              echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}""
-          fi
-          curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}" | jq .
-          if [[ -n "$permanent" ]]
-          then
-              log "💀 Hard deleting subject 🔰 ${subject}"
-              if [[ -n "$verbose" ]]
+              if [ "$deleted" == "true" ]
               then
-                  log "🐞 curl command used"
-                  echo "curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true""
+                  state="🧟 already soft deleted"
+              else
+                  state="🧟 soft delete"
               fi
-              curl $sr_security -X DELETE -s "${sr_url}/subjects/${subject}?permanent=true" | jq .
+              if [[ -n "$permanent" ]]
+              then
+                  if [ -n "$used_by" ]
+                  then
+                      log "💀 version ${v} (id ${id}): permanent delete, the id still resolves (also used by ${used_by})"
+                  else
+                      log "💀 version ${v} (id ${id}): permanent delete, ❌ id ${id} will stop resolving: old records written with it can't be deserialized any more"
+                  fi
+              else
+                  log "${state} of version ${v} (id ${id}): the id still resolves, existing records still deserialize"
+              fi
           fi
-      fi
+      done
+      exit 0
   fi
+
+  if [[ -n "$version" ]]
+  then
+      path="/subjects/${encoded_subject}/versions/${version}"
+      what="💯 version ${version} from subject 🔰 ${subject}"
+  else
+      logwarn "--version is not set, deleting all versions !"
+      path="/subjects/${encoded_subject}"
+      what="subject 🔰 ${subject}"
+  fi
+
+  log "🧟 Soft deleting ${what}"
+  if ! sr_request DELETE "$path"
+  then
+      # 40404 / 40406: already soft deleted, fine when a permanent delete follows
+      if [[ -n "$permanent" ]] && { [ "$sr_error_code" == "40404" ] || [ "$sr_error_code" == "40406" ]; }
+      then
+          log "🧟 already soft deleted"
+      else
+          logerror "❌ Command failed with error code $sr_error_code"
+          logerror "$sr_error_message"
+          [ "$sr_error_code" == "42206" ] && explain_references
+          exit 1
+      fi
+  else
+      echo "$sr_response" | jq .
+  fi
+
+  if [[ -n "$permanent" ]]
+  then
+      log "💀 Hard deleting ${what}"
+      if ! sr_request DELETE "${path}?permanent=true"
+      then
+          logerror "❌ Command failed with error code $sr_error_code"
+          logerror "$sr_error_message"
+          [ "$sr_error_code" == "42206" ] && explain_references
+          exit 1
+      fi
+      echo "$sr_response" | jq .
+  fi
+
 }
 
 # :command.function
@@ -50455,6 +50920,7 @@ playground_schema_get_alias_command() {
 
   # src/commands/schema/get-alias.sh
   alias="${args[--alias]}"
+  json="${args[--json]}"
   verbose="${args[--verbose]}"
 
   if [[ "$environment" != "ccloud" ]]
@@ -50470,32 +50936,21 @@ playground_schema_get_alias_command() {
 
   get_sr_url_and_security
 
-  log "🔯 Get alias for alias ${alias}"
-  if [[ -n "$verbose" ]]
+  [[ -n "$json" ]] || log "🔯 Get alias for alias ${alias}"
+  sr_request GET "/config/$(urlencode "${alias}")" || sr_exit_on_error
+  target=$(echo "$sr_response" | jq -r '.alias // empty')
+  if [[ -n "$json" ]]
   then
-      log "🐞 curl command used"
-      echo "curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${alias}""
+      jq -n --arg alias "$alias" --arg subject "$target" '{alias: $alias, subject: (if $subject == "" then null else $subject end)}'
+      exit 0
   fi
-  curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${alias}")
-  ret=$?
-  if [ $ret -eq 0 ]
+  if [ -z "$target" ]
   then
-      if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
-
-      then
-          error_code=$(echo "$curl_output" | jq -r .error_code)
-          message=$(echo "$curl_output" | jq -r .message)
-          logerror "Command failed with error code $error_code"
-          logerror "$message"
-          exit 1
-      else
-          alias=$(echo "$curl_output" | jq -r .alias)
-          echo "$alias"
-      fi
-  else
-      logerror "❌ curl request failed with error code $ret!"
+      logerror "❌ ${alias} is not an alias"
       exit 1
   fi
+  echo "$target"
+
 }
 
 # :command.function
@@ -59175,6 +59630,7 @@ playground_topic_set_schema_compatibility_command() {
   # src/commands/topic/set-schema-compatibility.sh
   topic="${args[--topic]}"
   compatibility="${args[--compatibility]}"
+  include_key="${args[--include-key]}"
   verbose="${args[--verbose]}"
 
   get_environment_used
@@ -59192,18 +59648,31 @@ playground_topic_set_schema_compatibility_command() {
       fi
   fi
 
+  suffixes="value"
+  if [[ -n "$include_key" ]]
+  then
+      suffixes="key value"
+  fi
+
+  failed=0
   items=($topic)
   for topic in ${items[@]}
   do
-    log "🛡️ Set compatibility for subject ${topic}-value to $compatibility"
-    if [[ -n "$verbose" ]]
-    then
-        log "🐞 curl command used"
-        echo "curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value""
-    fi
-    curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
-    echo
+      for suffix in $suffixes
+      do
+          log "🛡️ Set compatibility for subject ${topic}-${suffix} to $compatibility"
+          if sr_request PUT "/config/$(urlencode "${topic}-${suffix}")" "{\"compatibility\": \"$compatibility\"}"
+          then
+              echo "$sr_response"
+          else
+              logerror "❌ subject ${topic}-${suffix}: Command failed with error code $sr_error_code"
+              logerror "$sr_error_message"
+              failed=1
+          fi
+      done
   done
+  exit $failed
+
 }
 
 # :command.function
@@ -90583,6 +91052,13 @@ playground_schema_parse_requirements() {
   case $action in
     -*) ;;
 
+    list)
+      action="list"
+      shift
+      playground_schema_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get)
       action="get"
       shift
@@ -90717,6 +91193,130 @@ playground_schema_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_schema_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --prefix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--prefix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--prefix requires an argument: --prefix PREFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --deleted)
+
+        # :flag.case_no_arg
+        args['--deleted']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_schema_get_parse_requirements() {
   local key
 
@@ -90766,7 +91366,7 @@ playground_schema_get_parse_requirements() {
       # :flag.case
       --id)
         # :flag.conflicts
-        for conflict in subject deleted; do
+        for conflict in subject deleted --version; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -90782,6 +91382,51 @@ playground_schema_get_parse_requirements() {
           printf "%s\n" "--id requires an argument: --id ID" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --version)
+        # :flag.conflicts
+        if [[ -n "${args['--id']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--id" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--version requires an argument: --version VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --schema-only)
+        # :flag.conflicts
+        if [[ -n "${args['--json']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--json" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--schema-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+        # :flag.conflicts
+        if [[ -n "${args['--schema-only']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--schema-only" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
         ;;
 
       # :flag.case
@@ -91099,6 +91744,11 @@ playground_schema_get_compatibility_parse_requirements() {
     case "$key" in
       # :flag.case
       --subject)
+        # :flag.conflicts
+        if [[ -n "${args['--global']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--global" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -91109,6 +91759,27 @@ playground_schema_get_compatibility_parse_requirements() {
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --global)
+        # :flag.conflicts
+        if [[ -n "${args['--subject']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--subject" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--global']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
         ;;
 
       # :flag.case
@@ -91162,12 +91833,6 @@ playground_schema_get_compatibility_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--subject']+x} ]]; then
-    printf "missing required flag: --subject SUBJECT\n" >&2
-    exit 1
-  fi
-
   # :command.whitelist_filter
   if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
     printf "%s\n" "--cluster must be one of: us, europe" >&2
@@ -91213,6 +91878,11 @@ playground_schema_set_compatibility_parse_requirements() {
     case "$key" in
       # :flag.case
       --subject)
+        # :flag.conflicts
+        if [[ -n "${args['--global']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--global" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -91223,6 +91893,19 @@ playground_schema_set_compatibility_parse_requirements() {
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --global)
+        # :flag.conflicts
+        if [[ -n "${args['--subject']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--subject" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--global']=1
+        shift
         ;;
 
       # :flag.case
@@ -91291,10 +91974,6 @@ playground_schema_set_compatibility_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--subject']+x} ]]; then
-    printf "missing required flag: --subject SUBJECT\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--compatibility']+x} ]]; then
     printf "missing required flag: --compatibility COMPATIBILITY\n" >&2
     exit 1
@@ -91349,6 +92028,11 @@ playground_schema_get_mode_parse_requirements() {
     case "$key" in
       # :flag.case
       --subject)
+        # :flag.conflicts
+        if [[ -n "${args['--global']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--global" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -91359,6 +92043,27 @@ playground_schema_get_mode_parse_requirements() {
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --global)
+        # :flag.conflicts
+        if [[ -n "${args['--subject']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--subject" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--global']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
         ;;
 
       # :flag.case
@@ -91412,12 +92117,6 @@ playground_schema_get_mode_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--subject']+x} ]]; then
-    printf "missing required flag: --subject SUBJECT\n" >&2
-    exit 1
-  fi
-
   # :command.whitelist_filter
   if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
     printf "%s\n" "--cluster must be one of: us, europe" >&2
@@ -91463,6 +92162,11 @@ playground_schema_set_mode_parse_requirements() {
     case "$key" in
       # :flag.case
       --subject)
+        # :flag.conflicts
+        if [[ -n "${args['--global']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--global" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -91473,6 +92177,19 @@ playground_schema_set_mode_parse_requirements() {
           printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --global)
+        # :flag.conflicts
+        if [[ -n "${args['--subject']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--subject" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--global']=1
+        shift
         ;;
 
       # :flag.case
@@ -91541,10 +92258,6 @@ playground_schema_set_mode_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--subject']+x} ]]; then
-    printf "missing required flag: --subject SUBJECT\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--mode']+x} ]]; then
     printf "missing required flag: --mode MODE\n" >&2
     exit 1
@@ -91870,6 +92583,14 @@ playground_schema_delete_parse_requirements() {
         ;;
 
       # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
       --verbose | -v)
 
         # :flag.case_no_arg
@@ -91919,6 +92640,12 @@ playground_schema_delete_parse_requirements() {
 
     esac
   done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--subject']+x} ]]; then
+    printf "missing required flag: --subject SUBJECT\n" >&2
+    exit 1
+  fi
 
   # :command.validations
   # :flag.validations
@@ -92214,6 +92941,14 @@ playground_schema_get_alias_parse_requirements() {
           printf "%s\n" "--alias requires an argument: --alias ALIAS" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
         ;;
 
       # :flag.case
@@ -103878,6 +104613,14 @@ playground_topic_set_schema_compatibility_parse_requirements() {
           printf "%s\n" "--compatibility requires an argument: --compatibility COMPATIBILITY" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --include-key)
+
+        # :flag.case_no_arg
+        args['--include-key']=1
+        shift
         ;;
 
       # :flag.case
@@ -129004,6 +129747,11 @@ playground_schema_completion() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      list)
+        shift
+        playground_schema_list_completion "$completion_current" "$@"
+        return
+        ;;
       get)
         shift
         playground_schema_get_completion "$completion_current" "$@"
@@ -129073,10 +129821,78 @@ playground_schema_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" get register get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
+  completion_candidates "$completion_current" list get register get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_list_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --prefix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--prefix"]=1
+
+        ;;
+      --deleted)
+        completion_blocked_flags["--deleted"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --prefix "$completion_current" --prefix
+    completion_flag_candidates --deleted "$completion_current" --deleted
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -129116,7 +129932,31 @@ playground_schema_get_completion() {
         completion_blocked_flags["--id"]=1
         completion_blocked_flags["subject"]=1
         completion_blocked_flags["deleted"]=1
+        completion_blocked_flags["--version"]=1
 
+        ;;
+      --version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--version"]=1
+        completion_blocked_flags["--id"]=1
+
+        ;;
+      --schema-only)
+        completion_blocked_flags["--schema-only"]=1
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--schema-only"]=1
+
+        shift
         ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
@@ -129154,6 +129994,9 @@ playground_schema_get_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --id "$completion_current" --id
+    completion_flag_candidates --version "$completion_current" --version
+    completion_flag_candidates --schema-only "$completion_current" --schema-only
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --deleted "$completion_current" --deleted
     completion_flag_candidates --cluster "$completion_current" --cluster
@@ -129283,7 +130126,19 @@ playground_schema_get_compatibility_completion() {
         fi
         shift
         completion_blocked_flags["--subject"]=1
+        completion_blocked_flags["--global"]=1
 
+        ;;
+      --global)
+        completion_blocked_flags["--global"]=1
+        completion_blocked_flags["--subject"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
         ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
@@ -129314,6 +130169,8 @@ playground_schema_get_compatibility_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --global "$completion_current" --global
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -129342,7 +130199,14 @@ playground_schema_set_compatibility_completion() {
         fi
         shift
         completion_blocked_flags["--subject"]=1
+        completion_blocked_flags["--global"]=1
 
+        ;;
+      --global)
+        completion_blocked_flags["--global"]=1
+        completion_blocked_flags["--subject"]=1
+
+        shift
         ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
@@ -129393,6 +130257,7 @@ playground_schema_set_compatibility_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --global "$completion_current" --global
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --compatibility "$completion_current" --compatibility
     completion_flag_candidates --cluster "$completion_current" --cluster
@@ -129422,7 +130287,19 @@ playground_schema_get_mode_completion() {
         fi
         shift
         completion_blocked_flags["--subject"]=1
+        completion_blocked_flags["--global"]=1
 
+        ;;
+      --global)
+        completion_blocked_flags["--global"]=1
+        completion_blocked_flags["--subject"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
         ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
@@ -129453,6 +130330,8 @@ playground_schema_get_mode_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --global "$completion_current" --global
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -129481,7 +130360,14 @@ playground_schema_set_mode_completion() {
         fi
         shift
         completion_blocked_flags["--subject"]=1
+        completion_blocked_flags["--global"]=1
 
+        ;;
+      --global)
+        completion_blocked_flags["--global"]=1
+        completion_blocked_flags["--subject"]=1
+
+        shift
         ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
@@ -129528,6 +130414,7 @@ playground_schema_set_mode_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --global "$completion_current" --global
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --mode "$completion_current" --mode
     completion_flag_candidates --cluster "$completion_current" --cluster
@@ -129696,6 +130583,11 @@ playground_schema_delete_completion() {
 
         shift
         ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
 
@@ -129727,6 +130619,7 @@ playground_schema_delete_completion() {
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --version "$completion_current" --version
     completion_flag_candidates --permanent "$completion_current" --permanent
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -129878,6 +130771,11 @@ playground_schema_get_alias_completion() {
         completion_blocked_flags["--alias"]=1
 
         ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
 
@@ -129907,6 +130805,7 @@ playground_schema_get_alias_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --alias "$completion_current" --alias
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -135779,6 +136678,11 @@ playground_topic_set_schema_compatibility_completion() {
         completion_blocked_flags["--compatibility"]=1
 
         ;;
+      --include-key)
+        completion_blocked_flags["--include-key"]=1
+
+        shift
+        ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
 
@@ -135809,6 +136713,7 @@ playground_topic_set_schema_compatibility_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --compatibility "$completion_current" --compatibility
+    completion_flag_candidates --include-key "$completion_current" --include-key
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -145797,6 +146702,7 @@ run() {
     "repro bisect") playground_repro_bisect_command ;;
     "get-docker-compose") playground_get_docker_compose_command ;;
     "schema") playground_schema_command ;;
+    "schema list") playground_schema_list_command ;;
     "schema get") playground_schema_get_command ;;
     "schema register") playground_schema_register_command ;;
     "schema get-compatibility") playground_schema_get_compatibility_command ;;

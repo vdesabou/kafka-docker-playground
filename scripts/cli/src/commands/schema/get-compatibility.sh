@@ -1,30 +1,58 @@
 subject="${args[--subject]}"
+global="${args[--global]}"
+json="${args[--json]}"
 verbose="${args[--verbose]}"
+
+if [[ -n "$subject" ]] && [[ -n "$global" ]]
+then
+    logerror "❌ --subject and --global are mutually exclusive"
+    exit 1
+fi
+if [[ ! -n "$subject" ]] && [[ ! -n "$global" ]]
+then
+    logerror "❌ set --subject <subject>, or --global for the rule of the whole registry"
+    exit 1
+fi
 
 get_sr_url_and_security
 
-log "🛡️ Get compatibility for subject ${subject}"
-if [[ -n "$verbose" ]]
+source="subject"
+if [[ -n "$subject" ]]
 then
-    log "🐞 curl command used"
-    echo "curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}""
-fi
-curl_output=$(curl $sr_security -s -H "Content-Type: application/vnd.schemaregistry.v1+json" "${sr_url}/config/${subject}")
-ret=$?
-if [ $ret -eq 0 ]
-then
-    if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
+    [[ -n "$json" ]] || log "🛡️ Get compatibility for subject ${subject}"
+    if ! sr_request GET "/config/$(urlencode "${subject}")"
     then
-        error_code=$(echo "$curl_output" | jq -r .error_code)
-        message=$(echo "$curl_output" | jq -r .message)
-        logerror "Command failed with error code $error_code"
-        logerror "$message"
-        exit 1
-    else
-        compatibilityLevel=$(echo "$curl_output" | jq -r .compatibilityLevel)
-        echo "$compatibilityLevel"
+        # 40408: no subject-level rule, 40401: unknown subject: the global rule applies
+        if [ "$sr_error_code" != "40408" ] && [ "$sr_error_code" != "40401" ]
+        then
+            sr_exit_on_error
+        fi
+        source="global"
     fi
 else
-    logerror "❌ curl request failed with error code $ret!"
-    exit 1
+    source="global"
 fi
+
+if [ "$source" == "global" ]
+then
+    sr_request GET "/config" || sr_exit_on_error
+fi
+compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+
+if [[ -n "$json" ]]
+then
+    jq -n --arg subject "$subject" --arg compatibility "$compatibility" --arg source "$source" \
+        '{subject: (if $subject == "" then null else $subject end), compatibility: $compatibility, source: $source}'
+    exit 0
+fi
+
+if [[ -n "$subject" ]] && [ "$source" == "global" ]
+then
+    log "🌍 subject ${subject} has no subject-level rule: the global rule of the registry applies"
+elif [[ -n "$subject" ]]
+then
+    log "🔰 subject-level rule of ${subject}"
+else
+    log "🌍 global rule of the registry"
+fi
+echo "$compatibility"
