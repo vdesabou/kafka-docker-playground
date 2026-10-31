@@ -222,12 +222,12 @@ Time to start fetching all updates/creation. Default uses the time connector lau
 
 🔘 servicenow.view.variable.prefix
 
+Prefix to be used for Service Now Database Views for timestamp and id columns. The prefix will be pre-appended to the columns `sys_updated_on` and `sys_id` i.e. `{servicenow.view.variable.prefix}_sys_updated_on` and `{servicenow.view.variable.prefix}_sys_id` to support sourcing data from views with prefix on these columns.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix to be used for Service Now Database Views for timestamp and id columns. The prefix will be pre-appended to the columns `sys_updated_on` and `sys_id` i.e. `{servicenow.view.variable.prefix}_sys_updated_on` and `{servicenow.view.variable.prefix}_sys_id` to support sourcing data from views with prefix on these columns.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Kafka
@@ -390,4 +390,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 

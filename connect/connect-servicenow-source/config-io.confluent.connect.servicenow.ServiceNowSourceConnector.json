@@ -23,7 +23,7 @@
     "servicenow.table": "",
     "servicenow.url": "",
     "servicenow.user": "",
-    "servicenow.view.variable.prefix": "STRING",
+    "servicenow.view.variable.prefix": "",
     "task.parallel.transform.chunk.size": "10000",
     "task.parallel.transform.enabled": "false",
     "task.parallel.transform.threads": "2",
