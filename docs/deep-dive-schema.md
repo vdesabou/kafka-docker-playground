@@ -528,6 +528,10 @@ Gotchas:
   `exporter create --destination-url <url> [--destination-auth user:password]` exports to any registry the source
   can reach (Confluent Cloud included).
 - `pause` before `reset` or `delete`; deleting an exporter leaves the exported schemas in the destination.
+- **A `NONE` exporter needs a destination without subjects, in any context**: otherwise it stops at once,
+  `PAUSED` with `42205 Cannot import since found existing subjects` (`exporter create` and `status` exit 1). Delete
+  the subjects of the other contexts first (`schema delete --context <c> --subject <s> --permanent`), as
+  `multi-data-center/schema-linking` does.
 - `compare` exports both sides (`schema export` under the hood) and ignores the context prefix of the names
   (`:.europe:orders-value` = `orders-value`); exit 1 when they differ. Outside `mdc-*` it compares two contexts of the
   registry (`--from-context`, `--to-context`).
@@ -656,12 +660,12 @@ playground stop
 | "the sink reads the wrong subject / subject not found" | the producer's subject name strategy: `schema get` to list the real subjects, `topic consume --value-subject` to read them (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
 | "the same schema keeps creating new versions" | register twice with a whitespace change, then `set-normalize --value true` and again |
 | "a schema registered years ago is refused after an upgrade" | `validate --cp-version <theirs> --cp-version <target> < schema.avsc` shows which version refuses it and why; then `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
-| "after Schema Linking, the consumers in DR fail with `Schema not found`" | `mdc-plaintext` with the lab override, `exporter create … --destination-context <c>`, then `schema get --id <id> --cluster us` (40403) vs `--context <c>` (found): the ids are in the context |
+| "after Schema Linking, the consumers in DR fail with `Schema not found`" | start from [`multi-data-center/schema-linking`](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/schema-linking) (Cluster Linking + Schema Linking: the records don't decode with a context, they do with `--context-type NONE`), or `mdc-plaintext` with the lab override, `exporter create … --destination-context <c>`, then `schema get --id <id> --cluster us` (40403) vs `--context <c>` (found): the ids are in the context |
 | "is everything linked? the destination misses subjects" | `schema compare --from <source> --to <destination> --to-context .<c>`, and `schema exporter status --name <n>` (ERROR + trace) |
 | "we migrated subjects and the ids changed" | `export` on the source, `import` on the target: same ids (or `register --id <id>` for one schema) |
 | "here are our schemas" (a `/schemas` dump, a `_schemas` dump, an export) | `import -f <file>` before the connector: the repro uses the customer's schemas and ids |
 | "we only have a sample message" | `derive-schema --name <record> -o <file>`, review (and the 💡 hints), then `register` or `topic produce --derive-value-schema-as` |
-| "the producer fails with `Rule failed: …` / records end up in the DLQ of a data contract" | `register --rule` (or `--rule-set` with the customer's ruleSet) on a registry with the rule set extension, then `test-rules --record` with their records: which rule fails and its expression |
+| "the producer fails with `Rule failed: …` / records end up in the DLQ of a data contract" | start from [`schema-registry/data-contracts`](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/data-contracts) (rule set extension enabled), or `register --rule` (or `--rule-set` with the customer's ruleSet) on a registry with the rule set extension, then `test-rules --record` with their records: which rule fails and its expression |
 
 In a repro model, register the customer's schemas **before** creating the connector, and fail fast when the registry
 refuses them:

@@ -1,0 +1,19 @@
+---
+services:
+  # Cluster Linking: the link europe -> us is created on the destination (us)
+  broker-us:
+    environment:
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE: "true"
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: "1"
+
+  broker-europe:
+    environment:
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: "1"
+
+  # Schema Linking: the exporter extension in the source registry (europe)
+  # https://docs.confluent.io/platform/current/schema-registry/schema-linking-cp.html
+  schema-registry-europe:
+    environment:
+      SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.schema.exporter.SchemaExporterResourceExtension
+      SCHEMA_REGISTRY_KAFKASTORE_UPDATE_HANDLERS: io.confluent.schema.exporter.storage.SchemaExporterUpdateHandler
+      SCHEMA_REGISTRY_PASSWORD_ENCODER_SECRET: playground-secret

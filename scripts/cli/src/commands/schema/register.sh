@@ -64,8 +64,8 @@ then
         logerror "❌ --rule-set is not valid json"
         exit 1
     fi
-    # a bare array of rules is taken as domainRules
-    rule_set_json=$(echo "$rule_set_json" | jq -c 'if type == "array" then {domainRules: .} else . end')
+    # a bare array of rules is taken as domainRules, a {"ruleSet": …} wrapper (a request body) is unwrapped
+    rule_set_json=$(echo "$rule_set_json" | jq -c 'if type == "array" then {domainRules: .} elif has("ruleSet") then .ruleSet else . end')
 fi
 if [ "${#rules[@]}" -gt 0 ]
 then

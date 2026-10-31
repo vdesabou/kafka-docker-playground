@@ -23,4 +23,10 @@ then
 else
     echo "$sr_response" | jq -r '"🔗 exporter \(.name): \(.state), offset \(.offset), \(.objectsExported // 0) object(s) exported\(if .trace and .trace != "" then "\n   🔥 " + .trace else "" end)"'
 fi
-[ "$state" != "ERROR" ] || exit 1
+# ERROR, or PAUSED with a trace: the exporter stopped on a failure (a destination that refuses the IMPORT mode…)
+trace=$(echo "$sr_response" | jq -r '.trace // empty')
+if [ "$state" == "ERROR" ] || { [ "$state" == "PAUSED" ] && [ -n "$trace" ]; }
+then
+    exit 1
+fi
+exit 0

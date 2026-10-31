@@ -2226,7 +2226,7 @@
                 "--rule-set"
               ],
               "argument": "RULE-SET",
-              "description": "📏 Data contract rules: a ruleSet json ({\"domainRules\": [...], \"migrationRules\": [...]}, or a bare array of domain rules), as @<file>, a file path or inline json\n\nSee docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules"
+              "description": "📏 Data contract rules: a ruleSet json ({\"domainRules\": [...], \"migrationRules\": [...]}, a bare array of domain rules, or a {\"ruleSet\": {...}} request body), as @<file>, a file path or inline json\n\nSee docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules"
             },
             {
               "names": [
@@ -2854,7 +2854,7 @@
             },
             {
               "name": "status",
-              "description": "🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported\n\nExit code 1 when the exporter is in ERROR.",
+              "description": "🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported\n\nExit code 1 when the exporter is in ERROR, or PAUSED with a trace (it stopped on a failure: 'exporter create' fails then too).",
               "usage": "playground schema exporter status [OPTIONS]",
               "options": [
                 {

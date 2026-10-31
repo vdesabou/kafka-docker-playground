@@ -4390,7 +4390,7 @@ commands:
         arg: rule-set
         required: false
         help: |-
-          📏 Data contract rules: a ruleSet json ({"domainRules": [...], "migrationRules": [...]}, or a bare array of domain rules), as @<file>, a file path or inline json
+          📏 Data contract rules: a ruleSet json ({"domainRules": [...], "migrationRules": [...]}, a bare array of domain rules, or a {"ruleSet": {...}} request body), as @<file>, a file path or inline json
 
           See docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules
       - long: --rule
@@ -4824,6 +4824,9 @@ commands:
     - *json
     - *verbose
     - *cluster
+    examples:
+    - playground schema contexts
+    - playground schema contexts --cluster us --json
 
   - name: compare
     group: Schema
@@ -4961,13 +4964,16 @@ commands:
       - *json
       - *verbose
       - *cluster
+      examples:
+      - playground schema exporter list --cluster europe
+      - playground schema exporter list --json
     - name: status
       filters:
       - schema_registry_running
       help: |-
         🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported
 
-        Exit code 1 when the exporter is in ERROR.
+        Exit code 1 when the exporter is in ERROR, or PAUSED with a trace (it stopped on a failure: 'exporter create' fails then too).
       flags:
       - *exporter_name
       - long: --wait
@@ -4977,6 +4983,9 @@ commands:
       - *json
       - *verbose
       - *cluster
+      examples:
+      - playground schema exporter status --name eu-to-us --cluster europe
+      - playground schema exporter status --name eu-to-us --wait --json
     - name: pause
       filters:
       - schema_registry_running
@@ -4986,6 +4995,8 @@ commands:
       - *exporter_name
       - *verbose
       - *cluster
+      examples:
+      - playground schema exporter pause --name eu-to-us --cluster europe
     - name: resume
       filters:
       - schema_registry_running
@@ -4995,6 +5006,8 @@ commands:
       - *exporter_name
       - *verbose
       - *cluster
+      examples:
+      - playground schema exporter resume --name eu-to-us --cluster europe
     - name: reset
       filters:
       - schema_registry_running
@@ -5004,6 +5017,8 @@ commands:
       - *exporter_name
       - *verbose
       - *cluster
+      examples:
+      - playground schema exporter reset --name eu-to-us --cluster europe
     - name: delete
       filters:
       - schema_registry_running
@@ -5013,6 +5028,8 @@ commands:
       - *exporter_name
       - *verbose
       - *cluster
+      examples:
+      - playground schema exporter delete --name eu-to-us --cluster europe
 
   - name: validate
     group: Schema
@@ -5143,6 +5160,9 @@ commands:
         Schema Registry compatibility rule
     - *context
     - *cluster
+    examples:
+    - playground schema set-compatibility --subject orders-value --compatibility NONE
+    - playground schema set-compatibility --global --compatibility FULL
 
   - name: get-mode
     filters:
@@ -5163,6 +5183,9 @@ commands:
     - *verbose
     - *context
     - *cluster
+    examples:
+    - playground schema get-mode --subject orders-value
+    - playground schema get-mode --global --json
 
   - name: set-mode
     filters:
@@ -5194,6 +5217,9 @@ commands:
         Schema Registry mode
     - *context
     - *cluster
+    examples:
+    - playground schema set-mode --subject orders-value --mode READONLY
+    - playground schema set-mode --global --mode READWRITE
 
   - name: set-normalize
     filters:
@@ -5222,6 +5248,8 @@ commands:
       help: |-
         true or false
     - *cluster
+    examples:
+    - playground schema set-normalize --value true
 
 
   - name: validate-new-schemas
@@ -5251,6 +5279,8 @@ commands:
       help: |-
         true or false
     - *cluster
+    examples:
+    - playground schema validate-new-schemas --value false
 
 
   - name: delete
@@ -5423,6 +5453,8 @@ commands:
     - *verbose
     - *context
     - *cluster
+    examples:
+    - playground schema set-alias --subject orders-value --alias legacy-orders-value
 
   - name: get-alias
     filters:
@@ -5449,6 +5481,9 @@ commands:
     - *verbose
     - *context
     - *cluster
+    examples:
+    - playground schema get-alias --alias legacy-orders-value
+    - playground schema get-alias --alias legacy-orders-value --json
 
 - name: tcp-proxy
   expose: always
@@ -8773,6 +8808,9 @@ commands:
           🔑 Also set it on the key subject (<topic>-key)
       - *verbose
       - *cluster
+      examples:
+      - playground topic set-schema-compatibility --topic orders --compatibility NONE
+      - playground topic set-schema-compatibility --topic orders --compatibility FULL --include-key
 
     - name: consume
       filters:
