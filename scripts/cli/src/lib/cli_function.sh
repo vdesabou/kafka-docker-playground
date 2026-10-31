@@ -860,6 +860,119 @@ function sr_exit_on_error() {
   exit 1
 }
 
+# sr_read_schema_arg <schema argument> <destination file>: the --schema value of the schema commands to a file:
+# "-" reads stdin, "@file" or an existing path is copied, anything else is the schema itself
+function sr_read_schema_arg() {
+  local schema="$1"
+  local dest="$2"
+  if [ "$schema" = "-" ]
+  then
+    cat > "$dest"
+  elif [[ $schema == @* ]]
+  then
+    cp "${schema#@}" "$dest" || return 1
+  elif [ -f "$schema" ]
+  then
+    cp "$schema" "$dest" || return 1
+  else
+    echo "$schema" > "$dest"
+  fi
+  if [ ! -s "$dest" ]
+  then
+    logerror "❌ the schema is empty"
+    return 1
+  fi
+}
+
+# sr_detect_schema_type <file>: sets sr_schema_type to AVRO, JSON or PROTOBUF ("REQUEST" when the file is already a
+# full request body with "references"), returns 1 when no known schema could be identified
+function sr_detect_schema_type() {
+  local schema_file="$1"
+  sr_schema_type=""
+  if grep -q "\"references\"\s*:" "$schema_file"
+  then
+    sr_schema_type=REQUEST
+  elif grep -q "proto3\|proto2" "$schema_file"
+  then
+    sr_schema_type=PROTOBUF
+  elif grep -q "\"type\"\s*:\s*\"object\"" "$schema_file" || grep -q "\"\\\$schema\"\s*:" "$schema_file"
+  then
+    sr_schema_type=JSON
+  elif grep -q "\"type\"\s*:\s*\"record\"" "$schema_file"
+  then
+    sr_schema_type=AVRO
+  elif grep -xq "\s*\"[a-z]*\"\s*" "$schema_file" || { grep -qE "\"type\"\s*:\s*\"(enum|array|map|fixed|string|bytes|int|long|float|double|boolean|null)\"" "$schema_file" && ! grep -qE "\"\\\$schema\"|\"properties\"" "$schema_file"; }
+  then
+    # the other avro schemas: a primitive alone ("string") or an enum, array, map, fixed or primitive type
+    sr_schema_type=AVRO
+  else
+    return 1
+  fi
+}
+
+# sr_schema_request_body <file>: the body of a register / compatibility request for the schema in <file>
+# (detects the type, wraps the schema in {"schemaType", "schema"}; a full request with "references" is sent as is).
+# Sets sr_schema_type and sr_body, returns 1 when the schema type can't be identified.
+function sr_schema_request_body() {
+  local schema_file="$1"
+  local content
+  sr_body=""
+  sr_detect_schema_type "$schema_file" || return 1
+  if [ "$sr_schema_type" == "REQUEST" ]
+  then
+    sr_body=$(cat "$schema_file" | tr -d '\n' | tr -s ' ')
+    sr_schema_type=$(echo "$sr_body" | jq -r '.schemaType // "AVRO"' 2> /dev/null)
+    return 0
+  fi
+  content=$(cat "$schema_file" | tr -d '\n' | tr -s ' ')
+  sr_body=$(jq -cn --arg t "$sr_schema_type" --arg content "$content" '{schemaType: $t, schema: $content}')
+}
+
+# sr_compatibility_verdicts <from request body> <to request body> <result file>: asks the registry whether <to> can
+# follow <from> under BACKWARD, FORWARD and FULL, in a temporary subject (registered then permanently deleted:
+# <from> gets a new schema id if it isn't registered yet). Writes {"BACKWARD": {"compatible": …, "messages": […]}, …}.
+# returns 1 when the registry refused the temporary subject (READONLY / IMPORT mode, invalid schema…)
+function sr_compatibility_verdicts() {
+  local from_body="$1"
+  local to_body="$2"
+  local result_file="$3"
+  local tmp_subject="playground-schema-check-$$-$RANDOM"
+  local rule
+  local ret=0
+  echo "{}" > "$result_file"
+  if ! sr_request POST "/subjects/${tmp_subject}/versions" "$from_body"
+  then
+    logwarn "❌ can't register the temporary subject ${tmp_subject} for the verdicts: $sr_error_code $sr_error_message"
+    return 1
+  fi
+  for rule in BACKWARD FORWARD FULL
+  do
+    sr_request PUT "/config/${tmp_subject}" "{\"compatibility\": \"$rule\"}" || { ret=1; break; }
+    if sr_request POST "/compatibility/subjects/${tmp_subject}/versions/latest?verbose=true" "$to_body"
+    then
+      jq --arg rule "$rule" --argjson r "$sr_response" '. + {($rule): {compatible: ($r.is_compatible // false), messages: ($r.messages // [])}}' "$result_file" > "${result_file}.tmp" && mv "${result_file}.tmp" "$result_file"
+    else
+      logwarn "❌ the registry refused the schema: $sr_error_code $sr_error_message"
+      ret=1
+      break
+    fi
+  done
+  sr_request DELETE "/config/${tmp_subject}" > /dev/null
+  sr_request DELETE "/subjects/${tmp_subject}" > /dev/null
+  sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null
+  return $ret
+}
+
+# sr_format_compatibility_messages <messages json array>: the reasons of a compatibility verdict, one per line
+# ("READER_FIELD_MISSING_DEFAULT_VALUE: The field 'currency' … has no default value…"), without the oldSchema,
+# oldSchemaVersion and validateFields entries the registry adds
+function sr_format_compatibility_messages() {
+  echo "$1" | jq -r '.[]
+    | select((startswith("{oldSchema") or startswith("{validateFields")) | not)
+    | (capture("errorType:\"(?<t>[^\"]+)\", description:\"(?<d>[^\"]*)\"")? // null) as $m
+    | if $m then "   \($m.t): \($m.d)" else "   \(.)" end'
+}
+
 function get_broker_container() {
   if is_mdc_environment
   then

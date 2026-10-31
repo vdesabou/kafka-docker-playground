@@ -170,6 +170,8 @@ playground_usage() {
   printf "  %s   📋 List the subjects of the registry\n" "$(green "schema list")                               "
   printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "schema get")                                "
   printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "schema register")                           "
+  printf "  %s   🧪 Check whether a schema would be accepted, without registering it\n" "$(green "schema check-compatibility")                "
+  printf "  %s   🔀 Compare two schemas field by field, with the verdict of each compatibility rule\n" "$(green "schema diff")                               "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "schema get-compatibility")                  "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "schema set-compatibility")                  "
   printf "  %s   🔏 Get the mode in force\n" "$(green "schema get-mode")                           "
@@ -6165,7 +6167,7 @@ playground_get_docker_compose_usage() {
 playground_schema_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema\n\n"
-    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
+    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
   else
     printf "playground schema - 🔰 Schema commands\n\n"
   fi
@@ -6179,6 +6181,8 @@ playground_schema_usage() {
   printf "  %s   📋 List the subjects of the registry\n" "$(green "list")                "
   printf "  %s   🔰 Get all schemas versions for specified subject (if --subject is not specified, all subjects will be used)\n" "$(green "get")                 "
   printf "  %s   ⏺️ Register a schema in specified subject\n" "$(green "register")            "
+  printf "  %s   🧪 Check whether a schema would be accepted, without registering it\n" "$(green "check-compatibility") "
+  printf "  %s   🔀 Compare two schemas field by field, with the verdict of each compatibility rule\n" "$(green "diff")                "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "get-compatibility")   "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "set-compatibility")   "
   printf "  %s   🔏 Get the mode in force\n" "$(green "get-mode")            "
@@ -6424,6 +6428,146 @@ playground_schema_register_usage() {
 echo
 
 fi
+}
+
+# :command.usage
+playground_schema_check_compatibility_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema check-compatibility\n\n"
+    printf "  🧪 Check whether a schema would be accepted, without registering it\n  \n  Asks the registry the same question as a register (or a producer with\n  auto.register.schemas=true) would, and prints its verdict with the\n  reasons (READER_FIELD_MISSING_DEFAULT_VALUE, TYPE_MISMATCH…). Nothing\n  is registered.\n  \n  Without --version, the schema is checked against what the rule of the\n  subject says: the latest version, or every version with a\n  *_TRANSITIVE rule. --compatibility evaluates it under another rule\n  (in a temporary copy of the subject, permanently deleted afterwards).\n  \n  Exit code: 0 compatible, 1 not compatible, 2 the check could not be\n  done (invalid schema, unknown version…).\n  \n  🎓 Tip: 'playground schema diff --subject <s> --to @<file>' shows\n  field by field what changed and why a rule refuses it.\n\n"
+  else
+    printf "playground schema check-compatibility - 🧪 Check whether a schema would be accepted, without registering it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema check-compatibility [OPTIONS]\n"
+  printf "  playground schema check-compatibility --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "    📛 Subject name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--schema SCHEMA")"
+    printf "    🔥 The schema to check (avro, json schema, protobuf): on stdin (default),\n    @<file>, a file path, or the schema itself\n"
+    printf "    %s\n" "Default: -"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--version VERSION")"
+    printf "    🔢 Check against this version only (a number, or latest), instead of what the\n    rule of the subject checks\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY")"
+    printf "    🛡️ Evaluate under this rule instead of the one of the subject\n"
+    printf "    %s\n" "Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema check-compatibility --subject orders-value <\n  customer-v2.avsc\n  playground schema check-compatibility --subject orders-value --schema\n  @customer-v2.avsc --compatibility FULL_TRANSITIVE\n  playground schema check-compatibility --subject orders-value --version 1\n  --json < customer-v2.avsc\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_diff_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema diff\n\n"
+    printf "  🔀 Compare two schemas field by field, with the verdict of each compatibility\n  rule\n  \n  Shows what changed between two versions of a subject, a version and a\n  file, or two files: ➕ added and ➖ removed fields (with or without a\n  default), ✏️ type, default, enum symbol, field number or required\n  changes, each with a hint on the rule it breaks. Avro (nested records,\n  unions, enums, logical types), JSON Schema and Protobuf are supported.\n  \n  Then, when a Schema Registry is running, its verdict for BACKWARD,\n  FORWARD and FULL (asked in a temporary subject, permanently deleted\n  afterwards; a --from file not registered yet consumes a schema id).\n  \n  --from and --to take a version number, latest, id:<schema id>, or\n  @<file>. Defaults: --to the latest version of --subject, --from the\n  version before it (the latest one when --to is a file).\n\n"
+  else
+    printf "playground schema diff - 🔀 Compare two schemas field by field, with the verdict of each compatibility rule\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema diff [OPTIONS]\n"
+  printf "  playground schema diff --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT")"
+    printf "    📛 Subject of the versions to compare (not needed for id:<n> and @<file>)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from FROM")"
+    printf "    ⬅️ The old schema: a version number, latest, id:<schema id> or @<file>\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to TO")"
+    printf "    ➡️ The new schema: a version number, latest, id:<schema id> or @<file>\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-verdict")"
+    printf "    🙅 Only the field-level diff, don't ask the registry for the compatibility\n    verdicts\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema diff --subject orders-value\n  playground schema diff --subject orders-value --from 1 --to 3\n  playground schema diff --subject orders-value --to @customer-v4.avsc\n  playground schema diff --from @v1.avsc --to @v2.avsc --no-verdict\n  playground schema diff --from id:12 --to id:15 --json\n"
+    echo
+
+  fi
 }
 
 # :command.usage
@@ -20130,6 +20274,119 @@ function sr_exit_on_error() {
     logerror "$sr_error_message"
   fi
   exit 1
+}
+
+# sr_read_schema_arg <schema argument> <destination file>: the --schema value of the schema commands to a file:
+# "-" reads stdin, "@file" or an existing path is copied, anything else is the schema itself
+function sr_read_schema_arg() {
+  local schema="$1"
+  local dest="$2"
+  if [ "$schema" = "-" ]
+  then
+    cat > "$dest"
+  elif [[ $schema == @* ]]
+  then
+    cp "${schema#@}" "$dest" || return 1
+  elif [ -f "$schema" ]
+  then
+    cp "$schema" "$dest" || return 1
+  else
+    echo "$schema" > "$dest"
+  fi
+  if [ ! -s "$dest" ]
+  then
+    logerror "❌ the schema is empty"
+    return 1
+  fi
+}
+
+# sr_detect_schema_type <file>: sets sr_schema_type to AVRO, JSON or PROTOBUF ("REQUEST" when the file is already a
+# full request body with "references"), returns 1 when no known schema could be identified
+function sr_detect_schema_type() {
+  local schema_file="$1"
+  sr_schema_type=""
+  if grep -q "\"references\"\s*:" "$schema_file"
+  then
+    sr_schema_type=REQUEST
+  elif grep -q "proto3\|proto2" "$schema_file"
+  then
+    sr_schema_type=PROTOBUF
+  elif grep -q "\"type\"\s*:\s*\"object\"" "$schema_file" || grep -q "\"\\\$schema\"\s*:" "$schema_file"
+  then
+    sr_schema_type=JSON
+  elif grep -q "\"type\"\s*:\s*\"record\"" "$schema_file"
+  then
+    sr_schema_type=AVRO
+  elif grep -xq "\s*\"[a-z]*\"\s*" "$schema_file" || { grep -qE "\"type\"\s*:\s*\"(enum|array|map|fixed|string|bytes|int|long|float|double|boolean|null)\"" "$schema_file" && ! grep -qE "\"\\\$schema\"|\"properties\"" "$schema_file"; }
+  then
+    # the other avro schemas: a primitive alone ("string") or an enum, array, map, fixed or primitive type
+    sr_schema_type=AVRO
+  else
+    return 1
+  fi
+}
+
+# sr_schema_request_body <file>: the body of a register / compatibility request for the schema in <file>
+# (detects the type, wraps the schema in {"schemaType", "schema"}; a full request with "references" is sent as is).
+# Sets sr_schema_type and sr_body, returns 1 when the schema type can't be identified.
+function sr_schema_request_body() {
+  local schema_file="$1"
+  local content
+  sr_body=""
+  sr_detect_schema_type "$schema_file" || return 1
+  if [ "$sr_schema_type" == "REQUEST" ]
+  then
+    sr_body=$(cat "$schema_file" | tr -d '\n' | tr -s ' ')
+    sr_schema_type=$(echo "$sr_body" | jq -r '.schemaType // "AVRO"' 2> /dev/null)
+    return 0
+  fi
+  content=$(cat "$schema_file" | tr -d '\n' | tr -s ' ')
+  sr_body=$(jq -cn --arg t "$sr_schema_type" --arg content "$content" '{schemaType: $t, schema: $content}')
+}
+
+# sr_compatibility_verdicts <from request body> <to request body> <result file>: asks the registry whether <to> can
+# follow <from> under BACKWARD, FORWARD and FULL, in a temporary subject (registered then permanently deleted:
+# <from> gets a new schema id if it isn't registered yet). Writes {"BACKWARD": {"compatible": …, "messages": […]}, …}.
+# returns 1 when the registry refused the temporary subject (READONLY / IMPORT mode, invalid schema…)
+function sr_compatibility_verdicts() {
+  local from_body="$1"
+  local to_body="$2"
+  local result_file="$3"
+  local tmp_subject="playground-schema-check-$$-$RANDOM"
+  local rule
+  local ret=0
+  echo "{}" > "$result_file"
+  if ! sr_request POST "/subjects/${tmp_subject}/versions" "$from_body"
+  then
+    logwarn "❌ can't register the temporary subject ${tmp_subject} for the verdicts: $sr_error_code $sr_error_message"
+    return 1
+  fi
+  for rule in BACKWARD FORWARD FULL
+  do
+    sr_request PUT "/config/${tmp_subject}" "{\"compatibility\": \"$rule\"}" || { ret=1; break; }
+    if sr_request POST "/compatibility/subjects/${tmp_subject}/versions/latest?verbose=true" "$to_body"
+    then
+      jq --arg rule "$rule" --argjson r "$sr_response" '. + {($rule): {compatible: ($r.is_compatible // false), messages: ($r.messages // [])}}' "$result_file" > "${result_file}.tmp" && mv "${result_file}.tmp" "$result_file"
+    else
+      logwarn "❌ the registry refused the schema: $sr_error_code $sr_error_message"
+      ret=1
+      break
+    fi
+  done
+  sr_request DELETE "/config/${tmp_subject}" > /dev/null
+  sr_request DELETE "/subjects/${tmp_subject}" > /dev/null
+  sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null
+  return $ret
+}
+
+# sr_format_compatibility_messages <messages json array>: the reasons of a compatibility verdict, one per line
+# ("READER_FIELD_MISSING_DEFAULT_VALUE: The field 'currency' … has no default value…"), without the oldSchema,
+# oldSchemaVersion and validateFields entries the registry adds
+function sr_format_compatibility_messages() {
+  echo "$1" | jq -r '.[]
+    | select((startswith("{oldSchema") or startswith("{validateFields")) | not)
+    | (capture("errorType:\"(?<t>[^\"]+)\", description:\"(?<d>[^\"]*)\"")? // null) as $m
+    | if $m then "   \($m.t): \($m.d)" else "   \(.)" end'
 }
 
 function get_broker_container() {
@@ -50146,58 +50403,23 @@ playground_schema_register_command() {
   #log "tmp_dir is $tmp_dir"
   schema_file=$tmp_dir/value_schema
 
-  if [ "$schema" = "-" ]
-  then
-      schema_content=$(cat "$schema")
-      echo "$schema_content" > $schema_file
-  else
-      if [[ $schema == @* ]]
-      then
-          # this is a schema file
-          argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
-          cp $argument_schema_file $schema_file
-      elif [ -f "$schema" ]
-      then
-          cp $schema $schema_file
-      else
-          schema_content=$schema
-          echo "$schema_content" > $schema_file
-      fi
-  fi
+  sr_read_schema_arg "$schema" "$schema_file" || exit 1
 
-  if grep -q "\"references\"\s*:" $schema_file
+  if ! sr_schema_request_body "$schema_file"
   then
-      :
-  elif grep -q "proto3" $schema_file
-  then
-      log "🔮 schema was identified as protobuf"
-      schema_type=PROTOBUF
-  elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file || grep -q "\"\\\$schema\"\s*:" $schema_file
-  then
-      log "🔮 schema was identified as json schema"
-      schema_type=JSON
-  elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
-  then
-      log "🔮 schema was identified as avro"
-      schema_type=AVRO
-  elif grep -xq "\s*\"[a-z]*\"\s*" $schema_file || { grep -qE "\"type\"\s*:\s*\"(enum|array|map|fixed|string|bytes|int|long|float|double|boolean|null)\"" $schema_file && ! grep -qE "\"\\\$schema\"|\"properties\"" $schema_file; }
-  then
-      # the other avro schemas: a primitive alone ("string") or an enum, array, map, fixed or primitive type
-      log "🔮 schema was identified as avro"
-      schema_type=AVRO
-  else
       logerror "❌ no known schema could be identified"
       exit 1
   fi
-
+  json_new="$sr_body"
   if grep -q "\"references\"\s*:" $schema_file
   then
       log "🔮 schema was identified with references, sending as is"
-      json_new=$(cat $schema_file | tr -d '\n' | tr -s ' ')
   else
-      json="{\"schemaType\":\"$schema_type\"}"
-      content=$(cat $schema_file | tr -d '\n' | tr -s ' ')
-      json_new=$(echo $json | jq --arg content "$content" '. + { "schema": $content }')
+      case "$sr_schema_type" in
+          PROTOBUF) log "🔮 schema was identified as protobuf" ;;
+          JSON) log "🔮 schema was identified as json schema" ;;
+          AVRO) log "🔮 schema was identified as avro" ;;
+      esac
   fi
 
   # Check if the array contains multiple results
@@ -50357,6 +50579,348 @@ playground_schema_register_command() {
       logerror "❌ schema registry refused the schema for subject ${subject} (error code $(echo "$curl_output" | jq -r .error_code))"
       exit 1
   fi
+
+}
+
+# :command.function
+playground_schema_check_compatibility_command() {
+
+  # src/commands/schema/check-compatibility.sh
+  subject="${args[--subject]}"
+  schema="${args[--schema]}"
+  version="${args[--version]}"
+  compatibility="${args[--compatibility]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  # exit codes: 0 compatible, 1 not compatible, 2 the check could not be done
+  if [[ -n "$version" ]] && [[ ! "$version" =~ ^([0-9]+|latest)$ ]]
+  then
+      logerror "❌ --version must be a version number or latest"
+      exit 2
+  fi
+
+  get_sr_url_and_security
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+  schema_file=$tmp_dir/schema
+  sr_read_schema_arg "$schema" "$schema_file" || exit 2
+  if ! sr_schema_request_body "$schema_file"
+  then
+      logerror "❌ no known schema could be identified"
+      exit 2
+  fi
+  body="$sr_body"
+  encoded_subject=$(urlencode "$subject")
+
+  # the rule in force on the subject
+  if sr_request GET "/config/${encoded_subject}"
+  then
+      subject_rule=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+      subject_rule_source="subject"
+  else
+      sr_request GET "/config" || sr_exit_on_error
+      subject_rule=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+      subject_rule_source="global"
+  fi
+
+  # what the new schema is checked against: one version, or what the rule says (the latest version, all of them with *_TRANSITIVE)
+  if [[ -n "$version" ]]
+  then
+      against="version ${version}"
+      check_path_suffix="/versions/${version}?verbose=true"
+  else
+      against="the versions the rule checks"
+      check_path_suffix="/versions?verbose=true"
+  fi
+
+  rule="$subject_rule"
+  rule_source="$subject_rule_source"
+  check_subject="$encoded_subject"
+  tmp_subject=""
+  function cleanup_tmp_subject() {
+      if [ -n "$tmp_subject" ]
+      then
+          sr_request DELETE "/config/${tmp_subject}" > /dev/null
+          sr_request DELETE "/subjects/${tmp_subject}" > /dev/null
+          sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null
+      fi
+      rm -rf $tmp_dir
+      # the status of the last command of an EXIT trap would become the exit code of the command
+      return 0
+  }
+
+  if [[ -n "$compatibility" ]] && [ "$compatibility" != "$subject_rule" ]
+  then
+      # another rule than the subject's: copy its versions to a temporary subject with that rule (same schemas, so same ids)
+      rule="$compatibility"
+      rule_source="--compatibility"
+      if sr_request GET "/subjects/${encoded_subject}/versions"
+      then
+          versions=$(echo "$sr_response" | jq -r '.[]')
+          tmp_subject="playground-schema-check-$$-$RANDOM"
+          trap cleanup_tmp_subject EXIT
+          sr_request PUT "/config/${tmp_subject}" '{"compatibility": "NONE"}' || sr_exit_on_error "temporary subject"
+          for v in $versions
+          do
+              if [[ -n "$version" ]] && [ "$version" != "latest" ] && [ "$v" -gt "$version" ]
+              then
+                  break
+              fi
+              sr_request GET "/subjects/${encoded_subject}/versions/${v}" || sr_exit_on_error
+              copy_body=$(echo "$sr_response" | jq -c '{schema, schemaType: (.schemaType // "AVRO"), references: (.references // [])}')
+              sr_request POST "/subjects/${tmp_subject}/versions" "$copy_body" || { logerror "❌ can't copy version ${v} to the temporary subject: $sr_error_message"; exit 2; }
+          done
+          sr_request PUT "/config/${tmp_subject}" "{\"compatibility\": \"$rule\"}" || sr_exit_on_error "temporary subject"
+          check_subject="$tmp_subject"
+          if [[ -n "$version" ]]
+          then
+              check_path_suffix="/versions/latest?verbose=true"
+          fi
+      fi
+  fi
+
+  compatible=""
+  messages="[]"
+  if sr_request POST "/compatibility/subjects/${check_subject}${check_path_suffix}" "$body"
+  then
+      compatible=$(echo "$sr_response" | jq -r '.is_compatible')
+      messages=$(echo "$sr_response" | jq -c '.messages // []')
+      invalid=$(echo "$messages" | jq -r '.[] | select(startswith("Invalid schema"))' | head -1)
+      if [ "$compatible" != "true" ] && [ -n "$invalid" ]
+      then
+          if [[ -n "$json" ]]
+          then
+              jq -n --arg s "$subject" --arg m "$invalid" '{subject: $s, compatible: null, error_code: "invalid-schema", message: $m}'
+              exit 2
+          fi
+          logerror "❌ the schema itself is invalid (register would refuse it too, 42201)"
+          logerror "$(echo "$invalid" | sed -e 's/.*details: //')"
+          exit 2
+      fi
+  else
+      case "$sr_error_code" in
+          40401)
+              # no version yet: the first version is always accepted
+              compatible="true"
+              against="nothing (subject ${subject} has no version yet, the first version is always accepted)"
+              ;;
+          *)
+              if [[ -n "$json" ]]
+              then
+                  jq -n --arg s "$subject" --arg code "$sr_error_code" --arg m "$sr_error_message" '{subject: $s, compatible: null, error_code: $code, message: $m}'
+                  exit 2
+              fi
+              logerror "❌ the registry could not check the schema: error code $sr_error_code"
+              logerror "$sr_error_message"
+              [ "$sr_error_code" == "42201" ] && logerror "   the schema itself is invalid (it would be refused by register too)"
+              exit 2
+              ;;
+      esac
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      jq -n --arg s "$subject" --arg against "$against" --arg rule "$rule" --arg source "$rule_source" \
+          --argjson compatible "$compatible" --argjson messages "$messages" --arg type "$sr_schema_type" \
+          '{subject: $s, schema_type: $type, against: $against, compatibility: $rule, compatibility_source: $source, compatible: $compatible, messages: $messages}'
+  else
+      if [ "$compatible" == "true" ]
+      then
+          log "✅ the schema is compatible with ${against} of ${subject} under ${rule} (${rule_source} rule): register would accept it"
+      else
+          logerror "❌ the schema is not compatible with ${against} of ${subject} under ${rule} (${rule_source} rule): register would refuse it (40901)"
+          sr_format_compatibility_messages "$messages"
+      fi
+      if [ "$rule_source" != "--compatibility" ] && [ "$rule" != "NONE" ]
+      then
+          log "🎓 nothing was registered. --compatibility <rule> evaluates it under another rule, 'playground schema diff --subject ${subject} --to @<file>' shows what changed"
+      fi
+  fi
+
+  if [ "$compatible" == "true" ]
+  then
+      exit 0
+  fi
+  exit 1
+
+}
+
+# :command.function
+playground_schema_diff_command() {
+
+  # src/commands/schema/diff.sh
+  subject="${args[--subject]}"
+  from="${args[--from]}"
+  to="${args[--to]}"
+  no_verdict="${args[--no-verdict]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  function is_file_side() {
+      [[ "$1" == @* ]] || [ -f "$1" ]
+  }
+
+  registry_needed=0
+  for side in "$from" "$to"
+  do
+      if [ -z "$side" ] || ! is_file_side "$side"
+      then
+          registry_needed=1
+      fi
+  done
+  if [ $registry_needed -eq 1 ] && [[ ! -n "$subject" ]]
+  then
+      for side in "$from" "$to"
+      do
+          if [[ -n "$side" ]] && ! is_file_side "$side" && [[ ! "$side" =~ ^id:[0-9]+$ ]]
+          then
+              logerror "❌ --subject is required to compare versions (or use id:<schema id> or @<file> for --from and --to)"
+              exit 1
+          fi
+      done
+      if [ -z "$from" ] || [ -z "$to" ]
+      then
+          logerror "❌ --subject is required when --from or --to is not set"
+          exit 1
+      fi
+  fi
+
+  registry_ok=0
+  if [ $registry_needed -eq 1 ] || [[ ! -n "$no_verdict" ]]
+  then
+      get_sr_url_and_security
+      if sr_request GET "/config"
+      then
+          registry_ok=1
+      elif [ $registry_needed -eq 1 ]
+      then
+          logerror "❌ the Schema Registry is not reachable at ${sr_url}: $sr_error_message"
+          exit 1
+      fi
+  fi
+
+  encoded_subject=$(urlencode "$subject")
+
+  # defaults: --to the latest version, --from the version before it (or the latest one when --to is a file)
+  if [[ -n "$subject" ]] && { [ -z "$from" ] || [ -z "$to" ]; }
+  then
+      sr_request GET "/subjects/${encoded_subject}/versions" || sr_exit_on_error "subject ${subject}"
+      versions=$(echo "$sr_response" | jq -r '.[]')
+      latest=$(echo "$versions" | tail -1)
+      previous=$(echo "$versions" | tail -2 | head -1)
+      if [ -z "$to" ]
+      then
+          to="$latest"
+      fi
+      if [ -z "$from" ]
+      then
+          if is_file_side "$to"
+          then
+              from="$latest"
+          else
+              from="$previous"
+          fi
+      fi
+      if [ "$from" == "$to" ] && ! is_file_side "$to"
+      then
+          logerror "❌ subject ${subject} has only one version (${latest}): set --to @<file> to compare it with a file"
+          exit 1
+      fi
+  fi
+
+  # resolve one side to <prefix>.schema (the schema), <prefix>.type, <prefix>.label and <prefix>.body (request body)
+  function resolve_side() {
+      local value="$1"
+      local prefix="$2"
+      local response
+      if is_file_side "$value"
+      then
+          local file="${value#@}"
+          if [ ! -f "$file" ]
+          then
+              logerror "❌ file $file not found"
+              return 1
+          fi
+          cp "$file" "$prefix.schema"
+          if ! sr_schema_request_body "$prefix.schema"
+          then
+              logerror "❌ no known schema could be identified in $file"
+              return 1
+          fi
+          if echo "$sr_body" | jq -e '.references | length > 0' > /dev/null 2>&1
+          then
+              echo "$sr_body" | jq -r .schema > "$prefix.schema"
+          fi
+          echo "$sr_schema_type" > "$prefix.type"
+          echo "$(basename "$file")" > "$prefix.label"
+          echo "$sr_body" > "$prefix.body"
+          return 0
+      fi
+      if [[ "$value" =~ ^id:([0-9]+)$ ]]
+      then
+          sr_request GET "/schemas/ids/${BASH_REMATCH[1]}" || { logerror "❌ schema id ${BASH_REMATCH[1]}: $sr_error_message"; return 1; }
+          response="$sr_response"
+          echo "id ${BASH_REMATCH[1]}" > "$prefix.label"
+      else
+          if [[ ! "$value" =~ ^([0-9]+|latest)$ ]]
+          then
+              logerror "❌ '$value' is not a version number, latest, id:<schema id> or @<file>"
+              return 1
+          fi
+          sr_request GET "/subjects/${encoded_subject}/versions/${value}" || { logerror "❌ subject ${subject} version ${value}: $sr_error_message"; return 1; }
+          response="$sr_response"
+          echo "${subject} v$(echo "$response" | jq -r .version) (id $(echo "$response" | jq -r .id))" > "$prefix.label"
+      fi
+      echo "$response" | jq -r '.schemaType // "AVRO"' > "$prefix.type"
+      if [ "$(cat "$prefix.type")" == "PROTOBUF" ]
+      then
+          echo "$response" | jq -r .schema > "$prefix.schema"
+      else
+          echo "$response" | jq -r .schema | jq . > "$prefix.schema"
+      fi
+      echo "$response" | jq -c '{schema, schemaType: (.schemaType // "AVRO"), references: (.references // [])}' > "$prefix.body"
+      if echo "$response" | jq -e '(.references // []) | length > 0' > /dev/null
+      then
+          [[ -n "$json" ]] || logwarn "$(cat "$prefix.label") uses references: the referenced types are compared by name, not field by field"
+      fi
+  }
+
+  resolve_side "$from" "$tmp_dir/from" || exit 1
+  resolve_side "$to" "$tmp_dir/to" || exit 1
+
+  verdict_args=()
+  if [[ ! -n "$no_verdict" ]]
+  then
+      if [ $registry_ok -eq 1 ]
+      then
+          if [ "$(cat $tmp_dir/from.type)" == "$(cat $tmp_dir/to.type)" ]
+          then
+              if sr_compatibility_verdicts "$(cat $tmp_dir/from.body)" "$(cat $tmp_dir/to.body)" "$tmp_dir/verdicts.json"
+              then
+                  verdict_args=(--verdicts "$tmp_dir/verdicts.json")
+              fi
+          fi
+      else
+          [[ -n "$json" ]] || logwarn "the Schema Registry is not reachable: no compatibility verdict (field-level diff only)"
+      fi
+  fi
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required by 'playground schema diff'"
+      exit 1
+  fi
+  json_args=()
+  [[ -n "$json" ]] && json_args=(--json)
+  python3 -I "$root_folder/tools/schema-tool/schema_diff.py" \
+      --left "$tmp_dir/from.schema" --left-type "$(cat $tmp_dir/from.type)" --left-label "$(cat $tmp_dir/from.label)" \
+      --right "$tmp_dir/to.schema" --right-type "$(cat $tmp_dir/to.type)" --right-label "$(cat $tmp_dir/to.label)" \
+      "${verdict_args[@]}" "${json_args[@]}"
 
 }
 
@@ -91073,6 +91637,20 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    check-compatibility)
+      action="check-compatibility"
+      shift
+      playground_schema_check_compatibility_parse_requirements "$@"
+      shift $#
+      ;;
+
+    diff)
+      action="diff"
+      shift
+      playground_schema_diff_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-compatibility)
       action="get-compatibility"
       shift
@@ -91709,6 +92287,322 @@ playground_schema_register_parse_requirements() {
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_check_compatibility_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_check_compatibility_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema check-compatibility"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --schema)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--schema']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--schema requires an argument: --schema SCHEMA" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--version requires an argument: --version VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --compatibility)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compatibility']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compatibility requires an argument: --compatibility COMPATIBILITY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--subject']+x} ]]; then
+    printf "missing required flag: --subject SUBJECT\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--schema']:-} ]] || args['--schema']="-"
+
+  # :command.whitelist_filter
+  if [[ ${args['--compatibility']:-} ]] && [[ ! ${args['--compatibility']:-} =~ ^(BACKWARD|BACKWARD_TRANSITIVE|FORWARD|FORWARD_TRANSITIVE|FULL|FULL_TRANSITIVE|NONE)$ ]]; then
+    printf "%s\n" "--compatibility must be one of: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_diff_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_diff_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema diff"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --from)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from requires an argument: --from FROM" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to TO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-verdict)
+
+        # :flag.case_no_arg
+        args['--no-verdict']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -129762,6 +130656,16 @@ playground_schema_completion() {
         playground_schema_register_completion "$completion_current" "$@"
         return
         ;;
+      check-compatibility)
+        shift
+        playground_schema_check_compatibility_completion "$completion_current" "$@"
+        return
+        ;;
+      diff)
+        shift
+        playground_schema_diff_completion "$completion_current" "$@"
+        return
+        ;;
       get-compatibility)
         shift
         playground_schema_get_compatibility_completion "$completion_current" "$@"
@@ -129821,7 +130725,7 @@ playground_schema_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" list get register get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
+  completion_candidates "$completion_current" list get register check-compatibility diff get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -130099,6 +131003,210 @@ playground_schema_register_completion() {
     completion_flag_candidates --id "$completion_current" --id
     completion_flag_candidates --metadata-property "$completion_current" --metadata-property
     completion_flag_candidates --normalize "$completion_current" --normalize
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_check_compatibility_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --subject)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-subject-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subject"]=1
+
+        ;;
+      --schema)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-predefined-schemas "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--schema"]=1
+
+        ;;
+      --version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--version"]=1
+
+        ;;
+      --compatibility)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "BACKWARD"
+            "BACKWARD_TRANSITIVE"
+            "FORWARD"
+            "FORWARD_TRANSITIVE"
+            "FULL"
+            "FULL_TRANSITIVE"
+            "NONE"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compatibility"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --schema "$completion_current" --schema
+    completion_flag_candidates --version "$completion_current" --version
+    completion_flag_candidates --compatibility "$completion_current" --compatibility
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_diff_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --subject)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-subject-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subject"]=1
+
+        ;;
+      --from)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --no-verdict)
+        completion_blocked_flags["--no-verdict"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --from "$completion_current" --from
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --no-verdict "$completion_current" --no-verdict
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -146705,6 +147813,8 @@ run() {
     "schema list") playground_schema_list_command ;;
     "schema get") playground_schema_get_command ;;
     "schema register") playground_schema_register_command ;;
+    "schema check-compatibility") playground_schema_check_compatibility_command ;;
+    "schema diff") playground_schema_diff_command ;;
     "schema get-compatibility") playground_schema_get_compatibility_command ;;
     "schema set-compatibility") playground_schema_set_compatibility_command ;;
     "schema get-mode") playground_schema_get_mode_command ;;

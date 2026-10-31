@@ -57,6 +57,21 @@ lab_expect_equals "$LAB_OUTPUT" "global" "source of the rule"
 lab_run playground schema set-compatibility --subject orders-value --compatibility BACKWARD
 lab_expect_contains "BACKWARD"
 lab_expect_not_contains "null"
+lab_run playground schema check-compatibility --subject orders-value < "$schema_dir/v2-bad.avsc"
+lab_expect_exit 1
+lab_expect_contains "❌ the schema is not compatible with the versions the rule checks of orders-value under BACKWARD (subject rule)"
+lab_expect_contains "READER_FIELD_MISSING_DEFAULT_VALUE: The field 'currency'"
+lab_run playground schema check-compatibility --subject orders-value --compatibility FORWARD < "$schema_dir/v2-bad.avsc"
+lab_expect_exit 0
+lab_expect_contains "✅ the schema is compatible"
+lab_run playground schema diff --subject orders-value --to @"$schema_dir/v2-bad.avsc"
+lab_expect_exit 0
+lab_expect_contains "➕ currency: string"
+lab_expect_contains "added without a default: the new schema can't read old data (breaks BACKWARD)"
+lab_expect_contains "❌ BACKWARD"
+lab_expect_contains "✅ FORWARD"
+lab_run bash -c "playground schema list --json | jq -r '.subjects[].subject' | grep -c playground-schema-check || true"
+lab_expect_equals "$LAB_OUTPUT" "0" "temporary subjects are deleted"
 lab_run playground schema register --subject orders-value < "$schema_dir/v2-bad.avsc"
 lab_expect_exit 1
 lab_expect_contains '"error_code": 40901,'
