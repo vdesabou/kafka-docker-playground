@@ -117,6 +117,11 @@ lab_expect_contains "public class io.confluent.connect.jdbc.dialect.PostgreSqlDa
 lab_run playground connector-plugin search-jar -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --with-worker
 lab_expect_exit 0
 lab_expect_contains "slf4j-api-1.7.36.jar"
+lab_expect_not_contains "💥"
+lab_run playground connector-plugin search-jar -c confluentinc/kafka-connect-replicator --connector-tag 8.3.2 --with-worker
+lab_expect_exit 0
+lab_expect_contains "💥 io.confluent.telemetry.*: 140 class(es), set by metric.reporters (Confluent Telemetry Reporter)"
+lab_expect_contains "telemetry-events-8.3.2-ce.jar ↔ worker ce-events_ce-events-project.jar"
 lab_run playground connector-plugin dependencies -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --connector-tag 10.9.9
 lab_expect_exit 0
 lab_expect_contains "📚 confluentinc/kafka-connect-jdbc:10.8.4 → confluentinc/kafka-connect-jdbc:10.9.9:"

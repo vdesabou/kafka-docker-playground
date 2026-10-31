@@ -14901,7 +14901,7 @@ playground_connector_plugin_usage() {
 playground_connector_plugin_search_jar_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin search-jar\n\n"
-    printf "  ☕ List jars for a connector plugin from confluent hub\n  https://www.confluent.io/hub/\n  \n  Downloads the plugin and lists the jars it ships. With --class it also\n  finds which jar contains that class and prints its method signatures\n  with javap.\n  \n  That answers the two questions a NoClassDefFoundError or a\n  NoSuchMethodError raises: is the class actually shipped, and does the\n  bundled version have the signature the code is calling. Run it again\n  with another --connector-tag to see when a dependency changed.\n  \n  With --with-worker, the classes of the worker classpath (Kafka, Connect,\n  Confluent libraries of the connect image) are compared with the plugin:\n  a class of the plugin that Connect always loads from the worker\n  (org.apache.kafka.*, org.slf4j.*, java*…: the plugin isolation rules of\n  that worker) is flagged, its copy in the plugin is ignored.\n  \n  The jars are kept in /tmp/connector-plugin-jars, one folder per plugin\n  version, and reused on the next call (--force-refresh).\n\n"
+    printf "  ☕ List jars for a connector plugin from confluent hub\n  https://www.confluent.io/hub/\n  \n  Downloads the plugin and lists the jars it ships. With --class it also\n  finds which jar contains that class and prints its method signatures\n  with javap.\n  \n  That answers the two questions a NoClassDefFoundError or a\n  NoSuchMethodError raises: is the class actually shipped, and does the\n  bundled version have the signature the code is calling. Run it again\n  with another --connector-tag to see when a dependency changed.\n  \n  With --with-worker, the classes of the worker classpath (Kafka, Connect,\n  Confluent libraries of the connect image) are compared with the plugin:\n  a class of the plugin that Connect always loads from the worker\n  (org.apache.kafka.*, org.slf4j.*, java*…: the plugin isolation rules of\n  that worker) is flagged, its copy in the plugin is ignored. So is a\n  class on both sides in a package that the worker config hands to the\n  Kafka clients of the tasks (io.confluent.telemetry.* of metric.reporters,\n  interceptors, RBAC login handlers): the client mixes both copies, \"class\n  X is not an instance of Y\" / ClassCastException.\n  \n  The jars are kept in /tmp/connector-plugin-jars, one folder per plugin\n  version, and reused on the next call (--force-refresh).\n\n"
   else
     printf "playground connector-plugin search-jar - ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n\n"
   fi
@@ -14941,7 +14941,7 @@ playground_connector_plugin_search_jar_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--with-worker")"
-    printf "    🧱 Also look at the worker classpath of the connect image\n    \n    Flags the classes of the plugin that Connect loads from the worker\n    instead (their copy in the plugin is ignored), and with --class shows the\n    worker's copy of the class, with its signatures. The image is the one of\n    the running connect container, else the default one (--tag of the run).\n"
+    printf "    🧱 Also look at the worker classpath of the connect image\n    \n    Flags the classes of the plugin that Connect loads from the worker\n    instead (their copy in the plugin is ignored), and the ones the worker\n    config puts in the clients of the tasks (💥: metric.reporters,\n    interceptors…, two copies mixed), and with --class shows the worker's\n    copy of the class, with its signatures. The image is the one of\n    the running connect container, else the default one (--tag of the run).\n"
     echo
 
     # :flag.usage
@@ -64561,7 +64561,7 @@ playground_connector_plugin_search_jar_command() {
           else
               log "🔎 no class named exactly $class: $nb_matches class(es) contain it (case insensitive)"
           fi
-          jq -r '.matches[] | "   👉 \(.class) in \(.jar)" + (if .loaded_from_worker == true then "   ⚠️ ignored: Connect loads this class from the worker" else "" end)' $r
+          jq -r '.matches[] | "   👉 \(.class) in \(.jar)" + (if .loaded_from_worker == true then "   ⚠️ ignored: Connect loads this class from the worker" elif .worker_config_conflict then "   💥 also on the worker, and handed to the clients of the tasks by the worker config: \(.worker_config_conflict)" else "" end)' $r
           if [ "$nb_matches" -gt 5 ]
           then
               log "💡 method signatures are shown for 5 classes at most: give the simple name or the fully qualified name"
@@ -64593,6 +64593,13 @@ playground_connector_plugin_search_jar_command() {
           jq -r '.worker.shadowed[] | select(.same_jar | not) | "   ⚠️ \(.plugin_jar) ↔ worker \(.worker_jar | split("/") | last): \(.nb_classes) class(es), e.g. \(.example)"' $r
       fi
       jq -r '.worker.shadowed[] | select(.same_jar) | "   ✅ \(.plugin_jar): \(.nb_classes) class(es) loaded from the same jar of the worker"' $r
+      nb_conflicts=$(jq '.worker.worker_config_conflicts // [] | map(.nb_classes) | add // 0' $r)
+      if [ "$nb_conflicts" != "0" ]
+      then
+          logwarn "💥 $nb_conflicts class(es) of the plugin are also on the worker, in packages that the worker config hands to the producer / consumer / admin clients of the tasks: when the worker sets them, a client mixes both copies (\"class X is not an instance of Y\", ClassCastException, LinkageError)"
+          jq -r '.worker.worker_config_conflicts[] | "   💥 \(.package): \(.nb_classes) class(es), set by \(.settings)", (.jars[0:5][] | "      • \(.plugin_jar) ↔ worker \(.worker_jar | split("/") | last): \(.nb_classes) class(es), e.g. \(.example)")' $r
+          log "💡 check the worker config (playground container get-properties -c connect): if it sets one of them, unset it on the worker, override it for the connector (producer.override.* / consumer.override.*, with connector.client.config.override.policy=All), or remove those jars from the plugin lib/"
+      fi
       nb_isolated=$(jq .worker.nb_isolated_duplicate_classes $r)
       if [ "$nb_isolated" != "0" ]
       then

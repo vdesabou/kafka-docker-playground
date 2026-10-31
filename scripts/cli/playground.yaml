@@ -7346,7 +7346,11 @@ subcommands:
       Confluent libraries of the connect image) are compared with the plugin:
       a class of the plugin that Connect always loads from the worker
       (org.apache.kafka.*, org.slf4j.*, java*…: the plugin isolation rules of
-      that worker) is flagged, its copy in the plugin is ignored.
+      that worker) is flagged, its copy in the plugin is ignored. So is a
+      class on both sides in a package that the worker config hands to the
+      Kafka clients of the tasks (io.confluent.telemetry.* of metric.reporters,
+      interceptors, RBAC login handlers): the client mixes both copies, "class
+      X is not an instance of Y" / ClassCastException.
 
       The jars are kept in /tmp/connector-plugin-jars, one folder per plugin
       version, and reused on the next call (--force-refresh).
@@ -7391,9 +7395,11 @@ subcommands:
       argument: ''
       description: "\U0001F9F1 Also look at the worker classpath of the connect image\n\nFlags
         the classes of the plugin that Connect loads from the worker\ninstead (their
-        copy in the plugin is ignored), and with --class shows the\nworker's copy
-        of the class, with its signatures. The image is the one of\nthe running connect
-        container, else the default one (--tag of the run)."
+        copy in the plugin is ignored), and the ones the worker\nconfig puts in the
+        clients of the tasks (\U0001F4A5: metric.reporters,\ninterceptors…, two copies
+        mixed), and with --class shows the worker's\ncopy of the class, with its signatures.
+        The image is the one of\nthe running connect container, else the default one
+        (--tag of the run)."
     - names:
       - "--json"
       argument: ''

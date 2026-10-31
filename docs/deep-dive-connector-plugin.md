@@ -381,7 +381,20 @@ container, else the default image), indexed once per image in `/tmp/connector-pl
 | --- | --- |
 | `⚠️ … ignored: Connect loads them from the worker` | classes matching the parent-first rules of the worker's plugin isolation (`org.apache.kafka.*` except the transforms, converters…, `org.slf4j.*`, `java*`): the plugin's copy is never used. When the plugin was built against another version, that's a `NoSuchMethodError` / `NoClassDefFoundError` / `LinkageError` |
 | `✅ … loaded from the same jar of the worker` | same jar on both sides (often `slf4j-api`): harmless |
+| `💥 … also on the worker, in packages that the worker config hands to the … clients of the tasks` | classes the plugin keeps in isolation, but that the **worker config** puts into the producer / consumer / admin clients the task builds inside the plugin classloader: `io.confluent.telemetry.*` (`metric.reporters` with the Confluent Telemetry Reporter), `io.confluent.metrics.reporter.*`, the monitoring interceptors, `io.confluent.kafka.clients.plugins.*` / `io.confluent.security.auth.client.*` (`sasl.login.callback.handler.class`). When the worker sets that config, the client gets one class from each loader: `class X is not an instance of Y`, `ClassCastException`, `LinkageError`, even with identical signatures |
 | `ℹ️ … other class(es) are on both sides` | the plugin uses its own copy, isolated from the worker's: no conflict, listed for information |
+
+For example, the replicator plugin ships its own `telemetry-events` jar, so its tasks fail as soon as the worker
+enables the Telemetry Reporter
+([#9256](https://github.com/vdesabou/kafka-docker-playground/issues/9256)):
+
+```text
+💥 140 class(es) of the plugin are also on the worker, in packages that the worker config hands to the producer / consumer / admin clients of the tasks: …
+   💥 io.confluent.telemetry.*: 140 class(es), set by metric.reporters (Confluent Telemetry Reporter), confluent.telemetry.*
+      • telemetry-events-8.3.2-ce.jar ↔ worker ce-events_ce-events-project.jar: 42 class(es), e.g. io.confluent.telemetry.NamedConfigUtils
+```
+
+With `--class`, such a class gets `💥 also on the worker, and handed to the clients of the tasks by the worker config`.
 
 The rules are read from `PluginUtils` in the image itself, so they follow the CP version. With `--class`, the worker's
 copies of the class are listed too, with their signatures: compare them with the plugin's.
@@ -396,7 +409,8 @@ Gotchas:
 - Without `--with-worker`, it's the plugin's own `lib/` only: classes that come from the worker (Kafka, Connect API,
   the converters of the image) are not there.
 - `--json` gives `jars`, `matches` (`class`, `jar`, `signatures`, `loaded_from_worker`), `worker_matches` and
-  `worker` (`shadowed`, `isolated_duplicates`, with `same_jar`).
+  `worker` (`shadowed`, `isolated_duplicates`, with `same_jar`, and `worker_config_conflicts`: `package`, `settings`,
+  `nb_classes`, `jars`); a match of `--class` in one of those packages has `worker_config_conflict`.
 
 ---
 
@@ -614,6 +628,7 @@ playground connector-plugin fm-versions -c confluentinc/S3_SINK --cc-connect-ver
 | "what value do people use?" | the `🧪 values used` part of `config-key`, with one example file per value |
 | "our scanner reports CVEs in the connector: are they real, which version fixes them?" | `cve-scan --connector-tag <theirs> --compare-with <latest>` (HTML report to share internally), then `changelog --grep CVE` |
 | "our scanner flags jackson / netty 2.x in the connector: which version do we ship, which plugin version upgrades it?" | `dependencies --connector-tag <theirs> --grep <lib>`, then `--find-first <artifact>:<fixed version>` and `changelog --grep <lib>` |
+| "`class X is not an instance of Y` / `ClassCastException` when the task starts its producer or consumer" | `search-jar --connector-tag <theirs> --with-worker` (`--class <X>`): a `💥` line means the plugin ships its own copy of a class the worker config (metric reporter, interceptor, login handler) puts in the clients; check that config in their worker properties |
 | "NoSuchMethodError / ClassNotFoundException" | `search-jar --class <Class> --connector-tag <theirs> --with-worker`: is the class shipped, with which signature, is the worker's copy used instead (and its signature) |
 | "read the code of the version that fails" | `sourcecode --connector-tag <theirs> --checkout-only`, then grep the folder it prints |
 | "is the fix of the fully managed connector deployed? which cc-connect image has it?" | `fm-versions -c confluentinc/<Type> --find-first <connector version>` (the image, not the deployment: the cc-connect version of the cluster is in its connect logs) |
