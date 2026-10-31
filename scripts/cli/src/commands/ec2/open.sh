@@ -23,6 +23,8 @@ then
 fi
 
 username=$(whoami)
+ec2_resolve_instances "$instance" || exit 1
+instance="$ec2_resolved_instances"
 items=($instance)
 length=${#items[@]}
 if ((length > 1))

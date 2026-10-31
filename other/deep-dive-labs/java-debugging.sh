@@ -5,7 +5,7 @@ source ${DIR}/../../scripts/utils.sh
 source ${DIR}/lab-utils.bash
 
 # lab of https://kafka-docker-playground.io/#/deep-dive-java-debugging
-# testssl (needs a TTY) and generate-diagnostics (downloads a jar from packages.confluent.io) are not replayed
+# testssl (needs a TLS endpoint reachable from outside the playground network) and generate-diagnostics (downloads a jar from packages.confluent.io) are not replayed
 lab_require_plaintext
 playground start-environment --environment plaintext --docker-compose-override-file "${DIR}/docker-compose.plaintext.yml"
 
@@ -14,7 +14,7 @@ lab_run playground container logs -c connect --grep "dt_socket" --no-follow
 lab_expect_contains "Listening for transport dt_socket at address:" "JDWP agent of connect"
 lab_run playground debug enable-remote-debugging
 lab_expect_exit 0
-lab_expect_contains "enable-remote-debugging is already enabled for connect container connect"
+lab_expect_contains "remote debugging is already enabled for connect container connect"
 lab_expect_not_contains "enable remote debugging for connect" "connect is not recreated"
 
 log "Step 2: a debugger on the broker"
@@ -38,7 +38,7 @@ lab_expect_not_contains "Listening for transport dt_socket" "a new broker contai
 log "Step 4: which jar a class comes from"
 lab_run playground debug java-debug -c connect --type class_loading
 lab_expect_exit 0
-lab_expect_contains "enabling containers connect with environment variables KAFKA_OPTS: -verbose:class"
+lab_expect_contains "☕ KAFKA_OPTS of connect: -Ddynamic.worker.config.file=/dev/null -verbose:class" "java-debug keeps the KAFKA_OPTS of the environment"
 lab_create_filestream_sink
 MAX_WAIT=60
 CUR_WAIT=0
@@ -47,7 +47,9 @@ do
     lab_run playground container logs -c connect --grep "FileStreamSinkTask source:" --no-follow
     if grep -qF "FileStreamSinkTask source:" <<< "$LAB_OUTPUT"
     then
-        lab_expect_contains "[class,load] org.apache.kafka.connect.file.FileStreamSinkTask source:"
+        # the JVM pads the tags column ([class,load  ]) depending on the tags logged before
+        lab_expect_contains "[class,load"
+        lab_expect_contains "] org.apache.kafka.connect.file.FileStreamSinkTask source:"
         lab_expect_contains "/usr/share/filestream-connectors/" "the jar of the plugin path"
         break
     fi
@@ -68,6 +70,17 @@ lab_expect_exit 0
 lab_expect_contains "restore back original values before any changes was made for containers connect"
 lab_run playground container logs -c connect --grep "class,load" --no-follow
 lab_expect_not_contains "[class,load]" "no class loading trace in the new connect container"
+
+log "Step 6: the debugger of connect off, then on again"
+lab_run playground debug disable-remote-debugging -c connect
+lab_expect_exit 0
+lab_run playground container logs -c connect --grep "dt_socket" --no-follow
+lab_expect_not_contains "Listening for transport dt_socket" "KAFKA_DEBUG empty: no JDWP agent"
+lab_run playground debug enable-remote-debugging -c connect --skip-vs-code-config-display
+lab_expect_exit 0
+lab_expect_contains "enable remote debugging for connect"
+lab_run playground container logs -c connect --grep "dt_socket" --no-follow
+lab_expect_contains "Listening for transport dt_socket at address:" "JDWP agent of connect again"
 playground connector wait --connector filestream-sink --max-wait 180
 
 log "✅ all the outputs of the page are as expected"

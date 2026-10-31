@@ -25,7 +25,7 @@ container (most of them recreate it) and how to read what they print. Takes abou
 | why the Kerberos login is refused | `playground debug java-debug -c <c> --type kerberos` |
 | which jar a class is loaded from (`ClassNotFoundException`, `NoSuchMethodError`) | `playground debug java-debug -c connect --type class_loading` |
 | the traces off again | `playground debug java-debug -c <c> --type <type> --action disable` |
-| the protocols, ciphers and certificate of a TLS endpoint | `playground debug testssl --uri <host:port>` (interactive terminal) |
+| the protocols, ciphers and certificate of a TLS endpoint | `playground debug testssl --uri <host:port>` |
 | a Diagnostics Bundle Tool zip for support | `playground debug generate-diagnostics -c connect` (or `-c broker`) |
 
 ---
@@ -36,9 +36,10 @@ container (most of them recreate it) and how to read what they print. Takes abou
    service of every environment (they all start from `environment/plaintext/docker-compose.yml`) sets
    `KAFKA_DEBUG: 'true'` and `JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'`,
    and publishes port `5005` (`connect2` on `5205`, `connect3` on `5305`). `kafka-run-class`, the launcher of every CP
-   JVM, sees `KAFKA_DEBUG` and puts `JAVA_DEBUG_OPTS` in front of `KAFKA_OPTS`. `enable-remote-debugging` sets the
-   same two variables on another container; for a container whose name starts with `connect` it does nothing:
-   `💫 enable-remote-debugging is already enabled for connect container connect`.
+   JVM, sees a non-empty `KAFKA_DEBUG` and puts `JAVA_DEBUG_OPTS` in front of `KAFKA_OPTS`. `enable-remote-debugging`
+   sets the same two variables on another container; on a `connect*` container that already has `KAFKA_DEBUG` it does
+   nothing: `💫 remote debugging is already enabled for connect container connect (KAFKA_DEBUG in the base compose)`.
+   `disable-remote-debugging -c connect` sets `KAFKA_DEBUG` to an empty value, which switches JDWP off.
 
 2. **Everything except `testssl` recreates the container.** `enable-remote-debugging`, `disable-remote-debugging` and
    `java-debug` are `playground container set-environment-variables`: a temporary compose override with the variables
@@ -53,8 +54,8 @@ container (most of them recreate it) and how to read what they print. Takes abou
 
    `generate-diagnostics` doesn't recreate anything, but it downloads and runs a jar **inside** the container.
 
-3. **`java-debug` replaces `KAFKA_OPTS`, it doesn't add to it.** The four types are one JVM option each, written as
-   `KAFKA_OPTS: <option>`:
+3. **`java-debug` adds its option to the `KAFKA_OPTS` of the container.** The four types are one JVM option each,
+   appended to what the environment already has (`☕ KAFKA_OPTS of connect: -Ddynamic.worker.config.file=/dev/null -verbose:class`):
 
    | `--type` | `KAFKA_OPTS` | What you read in the container logs |
    | --- | --- | --- |
@@ -63,10 +64,10 @@ container (most of them recreate it) and how to read what they print. Takes abou
    | `kerberos` | `-Dsun.security.krb5.debug=true` | `krb5.conf` read, KDC requests and errors, the keytab entries |
    | `class_loading` | `-verbose:class` | one line per class loaded, with the jar it came from |
 
-   What the environment had in `KAFKA_OPTS` is gone while the trace is on: `-Ddynamic.worker.config.file=/dev/null` on
-   `connect`, and **the JAAS file of the brokers** (`-Djava.security.auth.login.config=…`) in the `sasl-plain`,
-   `sasl-scram`, `sasl-ssl`, `kerberos` and `ssl_kerberos` environments. The JDWP agent is not affected: it comes from
-   `JAVA_DEBUG_OPTS`.
+   So `-Ddynamic.worker.config.file=/dev/null` on `connect`, and **the JAAS file of the brokers**
+   (`-Djava.security.auth.login.config=…`) in the `sasl-plain`, `sasl-scram`, `sasl-ssl`, `kerberos` and
+   `ssl_kerberos` environments, stay. An option already there isn't added twice. The JDWP agent is not affected: it
+   comes from `JAVA_DEBUG_OPTS`.
 
 ---
 
@@ -144,16 +145,15 @@ Gotchas:
   playground container set-environment-variables -c connect --env "JAVA_DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:5005"
   ```
 
-- **`disable-remote-debugging -c connect` doesn't switch the debugger off**: it restores the original definition, which
-  has JDWP on. Its only effect is a recreated `connect` without the variables you set with `java-debug` or
-  `set-environment-variables`.
+- **`disable-remote-debugging -c connect` switches the debugger off with `KAFKA_DEBUG: ''`** (the base compose has
+  JDWP on, so restoring the original definition wouldn't); `enable-remote-debugging -c connect` turns it back on. On
+  the other containers, `disable` restores the original definition.
 - **A breakpoint suspends every thread** of the worker by default (`jdb`, VS Code): heartbeats stop, the consumer group
   of a sink rebalances after `session.timeout.ms`, the worker can leave the Connect group. Keep the pause short, or
   suspend only the thread (IntelliJ: "Suspend: Thread").
-- The VS Code entry printed by the command is named `"Debug  container"` (an empty name): rename it.
-- `enable-remote-debugging` skips every container or pod whose name starts with `connect`, also on `cfk`, where Connect
-  pods don't listen by default: there, set the variables with `playground container set-environment-variables -c <pod>`
-  and port-forward `5005`.
+- The VS Code entry printed by the command is named after the container (`"Debug broker container"`).
+- On `cfk`, Connect pods don't listen by default: `enable-remote-debugging -c <connect pod>` sets the variables (it only
+  skips a `connect*` container that already has `KAFKA_DEBUG`); port-forward `5005` to attach.
 
 ---
 
@@ -167,10 +167,12 @@ playground debug java-debug -c connect --type class_loading
 playground debug java-debug -c connect --type class_loading --action disable   # --type is required, even to disable
 ```
 
-It prints the line of `set-environment-variables`, then waits for Connect:
+It prints the new `KAFKA_OPTS` (the environment's value plus the option), the line of `set-environment-variables`,
+then waits for Connect:
 
 ```text
-📦 enabling containers connect with environment variables KAFKA_OPTS: -verbose:class
+☕ KAFKA_OPTS of connect: -Ddynamic.worker.config.file=/dev/null -verbose:class
+📦 enabling containers connect with environment variables KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null -verbose:class
 ⌛ Waiting up to 300 seconds for connect to start
 🚦 containers have started! (took … seconds)
 ```
@@ -200,15 +202,8 @@ Java config name: /etc/krb5.conf
 
 Gotchas:
 
-- **The broker of a SASL or Kerberos environment loses its JAAS file** (mental model, point 3): `java-debug -c broker`
-  there makes the broker fail its authentication or not start. Set the whole value yourself instead, with the
-  environment's `KAFKA_OPTS` (read it in `environment/<env>/docker-compose.yml`) plus the option:
-
-  ```bash
-  playground container set-environment-variables -c broker --env "KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config -Dsun.security.krb5.debug=true"
-  ```
-
-  `connect` is safe: in these environments its credentials are in `CONNECT_*` variables, not in `KAFKA_OPTS`.
+- **The broker of a SASL or Kerberos environment keeps its JAAS file** (mental model, point 3): `java-debug -c broker
+  --type kerberos` gives `KAFKA_OPTS: -Djava.security.auth.login.config=… -Dsun.security.krb5.debug=true`.
 - **Turn on the trace on the side that fails.** A sink connector that can't reach a TLS database: `-c connect`. A
   client refused by the broker: the broker sees the alert too, but the reason (an untrusted certificate, no common
   cipher) is on the side that sends the alert.
@@ -217,9 +212,8 @@ Gotchas:
   startup: always grep, never scroll, and `--action disable` when done.
 - `ssl_all` prints key material and the content of the records: don't share those logs outside.
 - Two traces at once: one call with both options, `set-environment-variables -c connect --env "KAFKA_OPTS: -Djavax.net.debug=ssl:handshake -verbose:class"`.
-  Two `java-debug` calls keep only the last one.
-- The help example `playground debug java-debug --container broker --action start` is rejected: `--type` is required
-  and `--action` takes `enable` or `disable`.
+  Two `java-debug` calls keep only the last one (each call starts from the original `KAFKA_OPTS`).
+- `--type` is required, also with `--action disable`.
 - The traces are lost on the next `recreate`, `re-run` or `disable`, and kept by `playground container restart`.
 
 ---
@@ -239,14 +233,12 @@ then compare with what the client JVM accepts (`ssl_handshake` trace above).
 
 Gotchas:
 
-- **Interactive terminal only**: the image runs with `docker run -ti`, which fails without a TTY (an agent, a CI job,
-  a repro model).
+- It works without a terminal too (an agent, a CI job, a repro model): `-ti` is only passed when there is one.
 - **It runs outside the playground network**: `broker:9092` doesn't resolve. For a listener of the playground, use the
   port published on your machine through `host.docker.internal` (Docker Desktop), for example
   `--uri host.docker.internal:9092` on the `2way-ssl` or `sasl-ssl` environment. Cloud endpoints and the customer's
   hosts reachable from your machine work as they are.
-- **Only one extra testssl option**: everything after `--uri` is passed as a single argument, so `--fast --quiet`
-  reaches testssl as one unknown option. Pass one option, or run the image yourself for more.
+- Every extra option is passed as is, one argument each: `--uri <host:port> --fast --quiet --protocols`.
 - A Kafka listener is plain TLS (no STARTTLS): `host:port` is enough. For protocols that start in clear text (PostgreSQL,
   SMTP, LDAP…), add `--starttls=<protocol>`: the `=` form keeps it one argument.
 
@@ -332,7 +324,7 @@ playground container logs -c broker --grep "dt_socket" --no-follow
 
 ```bash
 playground debug java-debug -c connect --type class_loading
-# 📦 enabling containers connect with environment variables KAFKA_OPTS: -verbose:class
+# ☕ KAFKA_OPTS of connect: -Ddynamic.worker.config.file=/dev/null -verbose:class
 playground connector create-or-update --connector filestream-sink << 'EOF'
 {
      "tasks.max": "1",
@@ -361,10 +353,22 @@ playground connector wait --connector filestream-sink
 #   <- RUNNING again: a recreated worker, the same connector (its config is in Kafka)
 ```
 
-**Step 6 (not replayed by the lab): testssl and the diagnostics bundle**
+**Step 6: the debugger of connect off, then on again**
 
 ```bash
-# in your terminal (needs a TTY and internet access)
+playground debug disable-remote-debugging -c connect
+playground container logs -c connect --grep "dt_socket" --no-follow
+#   <- nothing: KAFKA_DEBUG is empty
+playground debug enable-remote-debugging -c connect --skip-vs-code-config-display
+# ✨ enable remote debugging for connect
+playground container logs -c connect --grep "dt_socket" --no-follow
+# Listening for transport dt_socket at address: 5005
+```
+
+**Step 7 (not replayed by the lab): testssl and the diagnostics bundle**
+
+```bash
+# needs internet access
 playground debug testssl --uri "https://google.com" --fast
 # 🔐 Testing TLS/SSL encryption with uri https://google.com and arguments --fast
 cd /tmp && playground debug generate-diagnostics -c connect

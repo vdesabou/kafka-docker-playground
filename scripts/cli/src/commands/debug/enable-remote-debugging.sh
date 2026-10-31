@@ -6,9 +6,9 @@ IFS=' ' read -ra container_array <<< "$containers"
 
 for container in "${container_array[@]}"
 do
-    if [[ "$container" == connect* ]]
+    if [[ "$container" == connect* ]] && [ "$(get_container_env_value "${container}" KAFKA_DEBUG)" != "" ]
     then
-        log "💫 enable-remote-debugging is already enabled for connect container $container"
+        log "💫 remote debugging is already enabled for connect container $container (KAFKA_DEBUG in the base compose)"
         continue
     fi
     log "✨ enable remote debugging for $container"
@@ -26,7 +26,7 @@ do
             
                 {
                     \"type\": \"java\",
-                    \"name\": \"Debug $component container\",
+                    \"name\": \"Debug $container container\",
                     \"request\": \"attach\",
                     \"hostName\": \"127.0.0.1\",
                     \"port\": 5005,

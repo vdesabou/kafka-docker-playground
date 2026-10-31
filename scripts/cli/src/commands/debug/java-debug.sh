@@ -24,7 +24,17 @@ do
 			;;
 		esac
 		
-		playground container set-environment-variables --container "${container}" --env "KAFKA_OPTS: ${OPTS}"
+		# append to the KAFKA_OPTS the container already has: the brokers of the SASL / Kerberos environments need their
+		# -Djava.security.auth.login.config, connect its -Ddynamic.worker.config.file=/dev/null
+		current_opts=$(get_container_env_value "${container}" KAFKA_OPTS)
+		if [[ " ${current_opts} " == *" ${OPTS} "* ]]
+		then
+			log "💫 ${OPTS} is already in KAFKA_OPTS of ${container}"
+			continue
+		fi
+		new_opts=$(echo "${current_opts} ${OPTS}" | sed -e 's/^ *//')
+		log "☕ KAFKA_OPTS of ${container}: ${new_opts}"
+		playground container set-environment-variables --container "${container}" --env "KAFKA_OPTS: ${new_opts}"
 	else
 		playground container set-environment-variables --container "${container}" --restore-original-values
 	fi

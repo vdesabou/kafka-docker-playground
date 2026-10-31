@@ -10675,7 +10675,8 @@ playground_debug_java_debug_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug java-debug --type class_loading\n"
-    printf "  playground debug java-debug --container broker --action start\n"
+    printf "  playground debug java-debug --container broker --type ssl_handshake --action\n  enable\n"
+    printf "  playground debug java-debug --container broker --type ssl_handshake --action\n  disable\n"
     echo
 
   fi
@@ -20386,7 +20387,7 @@ playground_ec2_sync_repro_folder_ec2_to_local_usage() {
 playground_ec2_push_secrets_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ec2 push-secrets\n\n"
-    printf "  🔐 Send the secrets store to an ec2 instance\n  \n  Writes ~/.playground-secrets.properties (mode 0600) on the instance, which\n  the playground .zshrc sources on login. This replaces the encrypted\n  secrets.tar.gpg committed in the repository.\n  \n  The file is piped over ssh, so no clear text copy is ever written locally\n  and the values never appear in 'ps'.\n  \n  The credentials that cannot be stored as name=value pairs are sent too,\n  when they exist at the root of the repository:\n  \n    aws_credentials_with_assuming_iam_role       ->\n  ~/.aws/credentials-with-assuming-iam-role\n    aws_credentials_aws_account_with_assume_role ->\n  ~/.aws/credentials_aws_account_with_assume_role\n    github_ssh_key_file                          -> ~/.ssh/id_rsa\n\n"
+    printf "  🔐 Send the secrets store to an ec2 instance\n  \n  Writes ~/.playground-secrets.properties (mode 0600) on the instance. The\n  playground .zshrc doesn't load it by itself: a new shell prints a hint,\n  and the pgenv alias exports the variables (run it before an example\n  that expects them). This replaces the encrypted secrets.tar.gpg\n  committed in the repository.\n  \n  The file is piped over ssh, so no clear text copy is ever written locally\n  and the values never appear in 'ps'.\n  \n  The credentials that cannot be stored as name=value pairs are sent too,\n  when they exist at the root of the repository:\n  \n    aws_credentials_with_assuming_iam_role       ->\n  ~/.aws/credentials-with-assuming-iam-role\n    aws_credentials_aws_account_with_assume_role ->\n  ~/.aws/credentials_aws_account_with_assume_role\n    github_ssh_key_file                          -> ~/.ssh/id_rsa\n\n"
   else
     printf "playground ec2 push-secrets - 🔐 Send the secrets store to an ec2 instance\n\n"
   fi
@@ -23007,6 +23008,50 @@ function get_confluent_kafka_region_list_with_fzf() {
   fi
 
   res=$(cat $root_folder/scripts/cli/confluent-kafka-region-list.txt | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🌍" --header="select region" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+}
+
+# get_container_env_value <container> <variable>: the value of an environment variable of a running container (a pod
+# on cfk), empty when it isn't set
+function get_container_env_value() {
+  local container="$1"
+  local variable="$2"
+  get_environment_used
+  if [[ "$environment" == cfk* ]]
+  then
+    kubectl -n confluent exec "$container" -- printenv "$variable" 2> /dev/null
+    return 0
+  fi
+  docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | sed -n "s/^${variable}=//p" | head -1
+  return 0
+}
+
+# ec2_resolve_instances "<instances>": --instance of the ec2 commands can be a bare name (pg-user-xxx) or the
+# name/state/dns/id form of 'playground ec2 list' (what the completion gives): sets ec2_resolved_instances to the
+# name/state/dns/id form of each one, returns 1 when a name is not one of your instances
+function ec2_resolve_instances() {
+  local instances="$1"
+  local item
+  local list=""
+  local found
+  ec2_resolved_instances=""
+  for item in $instances
+  do
+    if [[ "$item" == */* ]]
+    then
+      ec2_resolved_instances="${ec2_resolved_instances} ${item}"
+      continue
+    fi
+    [ -z "$list" ] && list=$(ec2_instance_list)
+    found=$(echo "$list" | awk -F/ -v n="$item" '$1 == n' | head -1)
+    if [ -z "$found" ]
+    then
+      logerror "❌ ec2 instance $item not found (playground ec2 list shows your instances)"
+      return 1
+    fi
+    ec2_resolved_instances="${ec2_resolved_instances} ${found}"
+  done
+  ec2_resolved_instances="${ec2_resolved_instances# }"
+  return 0
 }
 
 function ec2_instance_list() {
@@ -56327,9 +56372,9 @@ playground_debug_enable_remote_debugging_command() {
 
   for container in "${container_array[@]}"
   do
-      if [[ "$container" == connect* ]]
+      if [[ "$container" == connect* ]] && [ "$(get_container_env_value "${container}" KAFKA_DEBUG)" != "" ]
       then
-          log "💫 enable-remote-debugging is already enabled for connect container $container"
+          log "💫 remote debugging is already enabled for connect container $container (KAFKA_DEBUG in the base compose)"
           continue
       fi
       log "✨ enable remote debugging for $container"
@@ -56347,7 +56392,7 @@ playground_debug_enable_remote_debugging_command() {
 
                   {
                       \"type\": \"java\",
-                      \"name\": \"Debug $component container\",
+                      \"name\": \"Debug $container container\",
                       \"request\": \"attach\",
                       \"hostName\": \"127.0.0.1\",
                       \"port\": 5005,
@@ -56374,7 +56419,14 @@ playground_debug_disable_remote_debugging_command() {
   for container in "${container_array[@]}"
   do
       log "🛑 disable remote debugging for $container"
-      playground container set-environment-variables --container "${container}" --restore-original-values
+      if [[ "$container" == connect* ]]
+      then
+          # connect has KAFKA_DEBUG in the base compose: restoring the original values would keep JDWP on, and
+          # kafka-run-class enables it for any non-empty value
+          playground container set-environment-variables --container "${container}" --env "KAFKA_DEBUG: ''"
+      else
+          playground container set-environment-variables --container "${container}" --restore-original-values
+      fi
   done
 }
 
@@ -56384,13 +56436,20 @@ playground_debug_testssl_command() {
   # src/commands/debug/testssl.sh
   uri="${args[--uri]}"
 
+  # -ti only with a terminal (docker refuses -t in scripts and CI)
+  tty_flags=()
+  if [ -t 0 ] && [ -t 1 ]
+  then
+  	tty_flags=(-ti)
+  fi
+
   if [[ ${#other_args[@]} -gt 0 ]]
   then
   	log "🔐 Testing TLS/SSL encryption with uri $uri and arguments ${other_args[*]}"
-  	docker run --quiet --rm -ti  drwetter/testssl.sh "${other_args[*]}" "$uri"
+  	docker run --quiet --rm "${tty_flags[@]}" drwetter/testssl.sh "${other_args[@]}" "$uri"
   else
   	log "🔐 Testing TLS/SSL encryption with uri $uri"
-  	docker run --quiet --rm -ti  drwetter/testssl.sh "$uri"
+  	docker run --quiet --rm "${tty_flags[@]}" drwetter/testssl.sh "$uri"
   fi
 
 }
@@ -58586,7 +58645,17 @@ playground_debug_java_debug_command() {
   			;;
   		esac
 
-  		playground container set-environment-variables --container "${container}" --env "KAFKA_OPTS: ${OPTS}"
+  		# append to the KAFKA_OPTS the container already has: the brokers of the SASL / Kerberos environments need their
+  		# -Djava.security.auth.login.config, connect its -Ddynamic.worker.config.file=/dev/null
+  		current_opts=$(get_container_env_value "${container}" KAFKA_OPTS)
+  		if [[ " ${current_opts} " == *" ${OPTS} "* ]]
+  		then
+  			log "💫 ${OPTS} is already in KAFKA_OPTS of ${container}"
+  			continue
+  		fi
+  		new_opts=$(echo "${current_opts} ${OPTS}" | sed -e 's/^ *//')
+  		log "☕ KAFKA_OPTS of ${container}: ${new_opts}"
+  		playground container set-environment-variables --container "${container}" --env "KAFKA_OPTS: ${new_opts}"
   	else
   		playground container set-environment-variables --container "${container}" --restore-original-values
   	fi
@@ -79457,6 +79526,8 @@ playground_ec2_delete_command() {
       fi
   fi
 
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
@@ -79514,6 +79585,8 @@ playground_ec2_open_command() {
   fi
 
   username=$(whoami)
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
@@ -79567,6 +79640,8 @@ playground_ec2_allow_my_ip_command() {
       fi
   fi
 
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
@@ -79672,6 +79747,8 @@ playground_ec2_stop_command() {
       fi
   fi
 
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
@@ -79722,6 +79799,8 @@ playground_ec2_start_command() {
       fi
   fi
 
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
@@ -79795,6 +79874,8 @@ playground_ec2_sync_repro_folder_local_to_ec2_command() {
       fi
   fi
 
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
@@ -79852,6 +79933,8 @@ playground_ec2_sync_repro_folder_ec2_to_local_command() {
       fi
   fi
 
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
@@ -80001,6 +80084,8 @@ playground_ec2_push_secrets_command() {
       exit 0
   fi
 
+  ec2_resolve_instances "$instance" || exit 1
+  instance="$ec2_resolved_instances"
   items=($instance)
   length=${#items[@]}
   if ((length > 1))
