@@ -7363,7 +7363,7 @@
       "subcommands": [
         {
           "name": "search-jar",
-          "description": "☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n\nDownloads the plugin and lists the jars it ships. With --class it also\nfinds which jar contains that class and prints its method signatures\nwith javap.\n\nThat answers the two questions a NoClassDefFoundError or a\nNoSuchMethodError raises: is the class actually shipped, and does the\nbundled version have the signature the code is calling. Run it again\nwith another --connector-tag to see when a dependency changed.\n\nWith --with-worker, the classes of the worker classpath (Kafka, Connect,\nConfluent libraries of the connect image) are compared with the plugin:\na class of the plugin that Connect always loads from the worker\n(org.apache.kafka.*, org.slf4j.*, java*…: the plugin isolation rules of\nthat worker) is flagged, its copy in the plugin is ignored.\n\nThe jars are kept in /tmp/connector-plugin-jars, one folder per plugin\nversion, and reused on the next call (--force-refresh).",
+          "description": "☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n\nDownloads the plugin and lists the jars it ships. With --class it also\nfinds which jar contains that class and prints its method signatures\nwith javap.\n\nThat answers the two questions a NoClassDefFoundError or a\nNoSuchMethodError raises: is the class actually shipped, and does the\nbundled version have the signature the code is calling. Run it again\nwith another --connector-tag to see when a dependency changed.\n\nWith --with-worker, the classes of the worker classpath (Kafka, Connect,\nConfluent libraries of the connect image) are compared with the plugin:\na class of the plugin that Connect always loads from the worker\n(org.apache.kafka.*, org.slf4j.*, java*…: the plugin isolation rules of\nthat worker) is flagged, its copy in the plugin is ignored. So is a\nclass on both sides in a package that the worker config hands to the\nKafka clients of the tasks (io.confluent.telemetry.* of metric.reporters,\ninterceptors, RBAC login handlers): the client mixes both copies, \"class\nX is not an instance of Y\" / ClassCastException.\n\nThe jars are kept in /tmp/connector-plugin-jars, one folder per plugin\nversion, and reused on the next call (--force-refresh).",
           "usage": "playground connector-plugin search-jar [OPTIONS]",
           "options": [
             {
@@ -7400,7 +7400,7 @@
                 "--with-worker"
               ],
               "argument": "",
-              "description": "🧱 Also look at the worker classpath of the connect image\n\nFlags the classes of the plugin that Connect loads from the worker\ninstead (their copy in the plugin is ignored), and with --class shows the\nworker's copy of the class, with its signatures. The image is the one of\nthe running connect container, else the default one (--tag of the run)."
+              "description": "🧱 Also look at the worker classpath of the connect image\n\nFlags the classes of the plugin that Connect loads from the worker\ninstead (their copy in the plugin is ignored), and the ones the worker\nconfig puts in the clients of the tasks (💥: metric.reporters,\ninterceptors…, two copies mixed), and with --class shows the worker's\ncopy of the class, with its signatures. The image is the one of\nthe running connect container, else the default one (--tag of the run)."
             },
             {
               "names": [

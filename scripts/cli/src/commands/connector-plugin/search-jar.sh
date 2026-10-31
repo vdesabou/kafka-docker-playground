@@ -163,7 +163,7 @@ then
         else
             log "🔎 no class named exactly $class: $nb_matches class(es) contain it (case insensitive)"
         fi
-        jq -r '.matches[] | "   👉 \(.class) in \(.jar)" + (if .loaded_from_worker == true then "   ⚠️ ignored: Connect loads this class from the worker" else "" end)' $r
+        jq -r '.matches[] | "   👉 \(.class) in \(.jar)" + (if .loaded_from_worker == true then "   ⚠️ ignored: Connect loads this class from the worker" elif .worker_config_conflict then "   💥 also on the worker, and handed to the clients of the tasks by the worker config: \(.worker_config_conflict)" else "" end)' $r
         if [ "$nb_matches" -gt 5 ]
         then
             log "💡 method signatures are shown for 5 classes at most: give the simple name or the fully qualified name"
@@ -195,6 +195,13 @@ then
         jq -r '.worker.shadowed[] | select(.same_jar | not) | "   ⚠️ \(.plugin_jar) ↔ worker \(.worker_jar | split("/") | last): \(.nb_classes) class(es), e.g. \(.example)"' $r
     fi
     jq -r '.worker.shadowed[] | select(.same_jar) | "   ✅ \(.plugin_jar): \(.nb_classes) class(es) loaded from the same jar of the worker"' $r
+    nb_conflicts=$(jq '.worker.worker_config_conflicts // [] | map(.nb_classes) | add // 0' $r)
+    if [ "$nb_conflicts" != "0" ]
+    then
+        logwarn "💥 $nb_conflicts class(es) of the plugin are also on the worker, in packages that the worker config hands to the producer / consumer / admin clients of the tasks: when the worker sets them, a client mixes both copies (\"class X is not an instance of Y\", ClassCastException, LinkageError)"
+        jq -r '.worker.worker_config_conflicts[] | "   💥 \(.package): \(.nb_classes) class(es), set by \(.settings)", (.jars[0:5][] | "      • \(.plugin_jar) ↔ worker \(.worker_jar | split("/") | last): \(.nb_classes) class(es), e.g. \(.example)")' $r
+        log "💡 check the worker config (playground container get-properties -c connect): if it sets one of them, unset it on the worker, override it for the connector (producer.override.* / consumer.override.*, with connector.client.config.override.policy=All), or remove those jars from the plugin lib/"
+    fi
     nb_isolated=$(jq .worker.nb_isolated_duplicate_classes $r)
     if [ "$nb_isolated" != "0" ]
     then

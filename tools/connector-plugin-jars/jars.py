@@ -10,6 +10,11 @@ Reads the lib/ folder of a plugin (already downloaded by the playground) and ans
   loads. A class of the plugin matching the worker's parent-first patterns (org.apache.kafka.*,
   org.slf4j.*, java*...) is always loaded from the worker: the plugin's copy is ignored, the classic
   cause of NoSuchMethodError / NoClassDefFoundError.
+- among the classes on both sides that the plugin keeps in isolation, the ones of packages that the
+  worker configuration puts into the Kafka clients the task builds inside the plugin classloader
+  (metric.reporters, interceptor.classes, sasl.login.callback.handler.class...): the client then mixes
+  the worker's copy and the plugin's copy, the cause of "class X is not an instance of Y",
+  ClassCastException and LinkageError (#9256: the replicator plugin and the Telemetry Reporter).
 
 Prints a JSON document on stdout; method signatures are added by --javap (a command prefix).
 """
@@ -22,6 +27,23 @@ import sys
 import zipfile
 
 MAX_SIGNATURES = 5
+
+# packages whose classes the worker configuration hands to the producer / consumer / admin clients of the
+# tasks (producer.* / consumer.* / admin.* overrides inherit them), built inside the plugin classloader
+WORKER_CONFIG_PACKAGES = [
+    ("io.confluent.telemetry.", "metric.reporters (Confluent Telemetry Reporter), confluent.telemetry.*"),
+    ("io.confluent.metrics.reporter.", "metric.reporters (Confluent Metrics Reporter)"),
+    ("io.confluent.monitoring.clients.interceptor.", "producer.interceptor.classes / consumer.interceptor.classes (monitoring interceptors)"),
+    ("io.confluent.kafka.clients.plugins.", "sasl.login.callback.handler.class (RBAC / OAuth token login)"),
+    ("io.confluent.security.auth.client.", "sasl.login.callback.handler.class, RBAC clients"),
+]
+
+
+def worker_config_package(cls):
+    for prefix, settings in WORKER_CONFIG_PACKAGES:
+        if cls.startswith(prefix):
+            return prefix, settings
+    return None
 
 
 def classes_of_jar(path):
@@ -124,6 +146,8 @@ def main():
         if not patterns:
             print("⚠️ plugin isolation patterns not found in the worker image: which copy wins is not shown", file=sys.stderr)
 
+    worker_classes = {c for c, _ in worker_index}
+
     if a.cls:
         mode, matches = find(a.cls, plugin_index)
         result["class_query"] = a.cls
@@ -133,6 +157,9 @@ def main():
             m = {"class": c, "jar": j}
             if worker_index:
                 m["loaded_from_worker"] = loaded_from_worker(c, patterns)
+                injected = worker_config_package(c)
+                if injected and not m["loaded_from_worker"] and c in worker_classes:
+                    m["worker_config_conflict"] = injected[1]
             out.append(m)
         if a.javap is not None and 0 < len(out) <= MAX_SIGNATURES:
             for m in out:
@@ -154,13 +181,18 @@ def main():
         worker_jar_of = {}
         for c, j in worker_index:
             worker_jar_of.setdefault(c, j)
-        shadowed, isolated = {}, {}
+        shadowed, isolated, injected = {}, {}, {}
         for c, j in plugin_index:
             if c not in worker_jar_of:
                 continue
             key = (j, worker_jar_of[c])
-            target = shadowed if loaded_from_worker(c, patterns) else isolated
-            target.setdefault(key, []).append(c)
+            if loaded_from_worker(c, patterns):
+                shadowed.setdefault(key, []).append(c)
+            else:
+                isolated.setdefault(key, []).append(c)
+                pkg = worker_config_package(c)
+                if pkg and j != os.path.basename(worker_jar_of[c]):
+                    injected.setdefault(pkg, {}).setdefault(key, []).append(c)
 
         def summarize(groups, limit):
             rows = [{"plugin_jar": pj, "worker_jar": wj, "same_jar": pj == os.path.basename(wj),
@@ -179,6 +211,12 @@ def main():
             "nb_shadowed_classes": sum(len(v) for v in shadowed.values()),
             "isolated_duplicates": summarize(isolated, a.max_shadowed),
             "nb_isolated_duplicate_classes": sum(len(v) for v in isolated.values()),
+            "worker_config_conflicts": [
+                {"package": prefix + "*", "settings": settings,
+                 "nb_classes": sum(len(cs) for cs in groups.values()),
+                 "jars": summarize(groups, 0)}
+                for (prefix, settings), groups in injected.items()
+            ],
         }
 
     json.dump(result, sys.stdout, indent=2)
