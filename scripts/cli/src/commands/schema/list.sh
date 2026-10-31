@@ -16,11 +16,8 @@ then
     subjects=$(echo "$sr_response" | jq -r '.[]')
 fi
 
-global_compatibility="BACKWARD"
-if sr_request GET "/config"
-then
-    global_compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
-fi
+sr_global_compatibility
+global_compatibility="$sr_global_compatibility_value"
 global_mode="READWRITE"
 if sr_request GET "/mode"
 then

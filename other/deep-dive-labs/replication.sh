@@ -238,4 +238,28 @@ lab_expect_not_contains "us_sale_5"
 lab_run playground container exec -c broker-europe --command "kafka-cluster-links --bootstrap-server broker-europe:9092 --delete --link us-to-europe"
 lab_expect_contains "Cluster link 'us-to-europe' deletion successfully completed."
 
+log "Step 6: Schema Linking, europe to us, into a context"
+cat > /tmp/schema-linking-order.avsc << 'EOT'
+{ "type": "record", "name": "Order", "namespace": "com.example", "fields": [ {"name": "id", "type": "int"} ] }
+EOT
+lab_run playground schema register --subject linked-orders-value --cluster europe --schema @/tmp/schema-linking-order.avsc
+lab_expect_exit 0
+linked_id=$(grep -oE '"id": [0-9]+' <<< "$LAB_OUTPUT" | head -1 | grep -oE '[0-9]+')
+lab_run playground schema exporter create --name eu-to-us --cluster europe --subjects "linked-*" --destination-context europe
+lab_expect_exit 0
+lab_expect_contains "🔗 exporter eu-to-us: RUNNING"
+lab_run playground schema compare --from europe --to us --to-context .europe --subject-prefix linked-
+lab_expect_exit 0
+lab_expect_contains "✅ linked-orders-value: 1 version(s), same schemas and ids"
+lab_run playground schema get --id "$linked_id" --cluster us
+lab_expect_exit 1
+lab_expect_contains "Schema $linked_id not found"
+lab_run playground schema get --id "$linked_id" --cluster us --context europe
+lab_expect_exit 0
+lab_expect_contains ':.europe:linked-orders-value'
+lab_run playground schema exporter pause --name eu-to-us --cluster europe
+lab_expect_exit 0
+lab_run playground schema exporter delete --name eu-to-us --cluster europe
+lab_expect_exit 0
+
 log "✅ all the outputs of the page are as expected"

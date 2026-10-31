@@ -2048,7 +2048,7 @@
     },
     {
       "name": "schema",
-      "description": "🔰 Schema commands\n\nTalk to the Schema Registry of the running environment, whether it is the\nlocal container or the one in Confluent Cloud, without building the urls\nand the credentials yourself.\n\n🔍 Read\n  list                 every subject: versions, latest id, type, rule, mode\n  describe             everything about a subject or a schema id\n  history              timeline from _schemas: registrations, deletes, rule changes\n  get                  every version of a subject, or of all subjects\n  get-compatibility    the compatibility rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register             add a new version to a subject\n  check-compatibility  would this schema be accepted? (nothing registered)\n  test-rules           do these records pass the data contract rules?\n  delete               a version, or the whole subject\n  set-compatibility    relax or tighten the evolution rule (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point one subject name at another\n\n📦 Move\n  export / import      a registry to a folder and back, keeping the ids\n\n🔀 diff compares two versions (or a version and a file) field by field,\nwith the verdict of each compatibility rule.\n\n🪄 derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup",
+      "description": "🔰 Schema commands\n\nTalk to the Schema Registry of the running environment, whether it is the\nlocal container or the one in Confluent Cloud, without building the urls\nand the credentials yourself.\n\n🔍 Read\n  list                 every subject: versions, latest id, type, rule, mode\n  describe             everything about a subject or a schema id\n  history              timeline from _schemas: registrations, deletes, rule changes\n  get                  every version of a subject, or of all subjects\n  get-compatibility    the compatibility rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register             add a new version to a subject\n  check-compatibility  would this schema be accepted? (nothing registered)\n  test-rules           do these records pass the data contract rules?\n  delete               a version, or the whole subject\n  set-compatibility    relax or tighten the evolution rule (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point one subject name at another\n\n📦 Move\n  export / import      a registry to a folder and back, keeping the ids\n  compare              two registries (mdc clusters) or two contexts\n  exporter             Schema Linking: create, list, status, pause…\n  contexts             the contexts of the registry (--context on the commands)\n\n🔀 diff compares two versions (or a version and a file) field by field,\nwith the verdict of each compatibility rule.\n\n🪄 derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup",
       "usage": "playground schema COMMAND",
       "options": [],
       "subcommands": [
@@ -2085,6 +2085,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
             },
             {
               "names": [
@@ -2149,6 +2156,13 @@
               ],
               "argument": "",
               "description": "🧟 Include soft deleted subjects\n\nConflicts with: id"
+            },
+            {
+              "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
             },
             {
               "names": [
@@ -2223,6 +2237,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2277,6 +2298,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
             },
             {
               "names": [
@@ -2337,6 +2365,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2377,6 +2412,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
             },
             {
               "names": [
@@ -2482,6 +2524,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2547,6 +2596,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2598,6 +2654,366 @@
           ]
         },
         {
+          "name": "contexts",
+          "description": "🗂️ List the contexts of the registry, with their number of subjects and mode\n\nContexts are separate namespaces of subjects and schema ids in one\nregistry. Schema Linking exports into one (.<name>) on the\ndestination: a consumer of the default context doesn't find those ids.",
+          "usage": "playground schema contexts [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "📗 Print the result as JSON, and nothing else"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+            }
+          ]
+        },
+        {
+          "name": "compare",
+          "description": "🔀 Compare the subjects of two registries (or two contexts)\n\nIn an mdc-* environment, --from and --to are the clusters (europe and\nus by default); --from-context / --to-context pick a context on each\nside (the destination context of a Schema Linking exporter, typically).\nElsewhere, compare two contexts of the registry.\n\nFor each subject: ✅ same versions, schemas and ids; ⬅️ / ➡️ only on one\nside; ❌ missing versions, different schemas, or the same schema with\nanother id (records written on one side don't decode on the other) and\na different subject-level compatibility.\n\nExit code: 0 identical, 1 different.",
+          "usage": "playground schema compare [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--from"
+              ],
+              "argument": "CLUSTER",
+              "description": "⬅️ Cluster of the left side (mdc-* environments, default europe)\n\nAllowed values: us, europe"
+            },
+            {
+              "names": [
+                "--to"
+              ],
+              "argument": "CLUSTER",
+              "description": "➡️ Cluster of the right side (mdc-* environments, default us)\n\nAllowed values: us, europe"
+            },
+            {
+              "names": [
+                "--from-context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Context of the left side (default: the default context)"
+            },
+            {
+              "names": [
+                "--to-context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Context of the right side (default: the default context)"
+            },
+            {
+              "names": [
+                "--subject-prefix"
+              ],
+              "argument": "PREFIX",
+              "description": "🔎 Only the subjects starting with this prefix"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "📗 Print the result as JSON, and nothing else"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            }
+          ]
+        },
+        {
+          "name": "exporter",
+          "description": "🔗 Schema Linking: exporters that copy subjects to another registry\n\nAn exporter runs in the source registry and copies the subjects it\nmatches (with their ids) to the destination, continuously. With context\ntype AUTO they land in the context .<exporter name>, with CUSTOM in\n--destination-context, with NONE in the default context.\n\nIn an mdc-* environment, --cluster is the source and --to the\ndestination (the other cluster by default). Elsewhere, set\n--destination-url (and --destination-auth).\n\n⚠️ The source registry needs the exporter extension (resource.extension\n.class, kafkastore.update.handlers, password.encoder.secret): the\ncommands say what to add when it is missing, and\nother/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml\nenables it on both registries of mdc-plaintext.\n\nSee https://docs.confluent.io/platform/current/schema-registry/schema-linking-cp.html",
+          "usage": "playground schema exporter COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "create",
+              "description": "🔗 Create an exporter, then wait until it runs",
+              "usage": "playground schema exporter create [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--name"
+                  ],
+                  "argument": "NAME",
+                  "description": "📛 Exporter name\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--to"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "➡️ Destination cluster in an mdc-* environment (default: the other one)\n\nAllowed values: us, europe"
+                },
+                {
+                  "names": [
+                    "--destination-url"
+                  ],
+                  "argument": "URL",
+                  "description": "🌐 Url of the destination registry, as seen from the source registry"
+                },
+                {
+                  "names": [
+                    "--destination-auth"
+                  ],
+                  "argument": "USER-INFO",
+                  "description": "🔑 <user>:<password> (or API key:secret) of the destination registry"
+                },
+                {
+                  "names": [
+                    "--context-type"
+                  ],
+                  "argument": "TYPE",
+                  "description": "🗂️ Where the subjects land: AUTO (.<exporter name>), CUSTOM (--destination-context) or NONE (default context). Default: CUSTOM with --destination-context, else AUTO\n\nAllowed values: AUTO, CUSTOM, NONE"
+                },
+                {
+                  "names": [
+                    "--destination-context"
+                  ],
+                  "argument": "CONTEXT",
+                  "description": "🗂️ Destination context for --context-type CUSTOM"
+                },
+                {
+                  "names": [
+                    "--subjects"
+                  ],
+                  "argument": "SUBJECTS",
+                  "description": "🔰 Comma separated subjects or patterns to export (default: *)"
+                },
+                {
+                  "names": [
+                    "--subject-rename-format"
+                  ],
+                  "argument": "FORMAT",
+                  "description": "✏️ Rename the subjects in the destination, e.g. dc_${subject} (${subject} is replaced by the subject name)"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+                }
+              ]
+            },
+            {
+              "name": "list",
+              "description": "📋 List the exporters of the registry, with their state",
+              "usage": "playground schema exporter list [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--json"
+                  ],
+                  "argument": "",
+                  "description": "📗 Print the result as JSON, and nothing else"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+                }
+              ]
+            },
+            {
+              "name": "status",
+              "description": "🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported\n\nExit code 1 when the exporter is in ERROR.",
+              "usage": "playground schema exporter status [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--name"
+                  ],
+                  "argument": "NAME",
+                  "description": "📛 Exporter name\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--wait"
+                  ],
+                  "argument": "",
+                  "description": "⏳ Wait (30 seconds at most) until the exporter is RUNNING, PAUSED or ERROR"
+                },
+                {
+                  "names": [
+                    "--json"
+                  ],
+                  "argument": "",
+                  "description": "📗 Print the result as JSON, and nothing else"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+                }
+              ]
+            },
+            {
+              "name": "pause",
+              "description": "⏸️ Pause an exporter",
+              "usage": "playground schema exporter pause [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--name"
+                  ],
+                  "argument": "NAME",
+                  "description": "📛 Exporter name\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+                }
+              ]
+            },
+            {
+              "name": "resume",
+              "description": "▶️ Resume a paused exporter",
+              "usage": "playground schema exporter resume [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--name"
+                  ],
+                  "argument": "NAME",
+                  "description": "📛 Exporter name\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+                }
+              ]
+            },
+            {
+              "name": "reset",
+              "description": "⏮️ Reset a paused exporter: it exports everything again",
+              "usage": "playground schema exporter reset [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--name"
+                  ],
+                  "argument": "NAME",
+                  "description": "📛 Exporter name\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+                }
+              ]
+            },
+            {
+              "name": "delete",
+              "description": "🗑️ Delete a paused exporter (the exported schemas stay in the destination)",
+              "usage": "playground schema exporter delete [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--name"
+                  ],
+                  "argument": "NAME",
+                  "description": "📛 Exporter name\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--cluster"
+                  ],
+                  "argument": "CLUSTER",
+                  "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "name": "get-compatibility",
           "description": "🛡️ Get the compatibility rule in force\n\nThe rule that decides whether a new schema version is accepted. When a\nproducer fails with \"Schema being registered is incompatible with an\nearlier schema\", this is what rejected it.\n\nWith --subject, the subject-level rule, or the global rule of the\nregistry when the subject has none (the command says which one\napplies). With --global, the global rule.",
           "usage": "playground schema get-compatibility [OPTIONS]",
@@ -2630,6 +3046,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
             },
             {
               "names": [
@@ -2676,6 +3099,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2719,6 +3149,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2759,6 +3196,13 @@
               ],
               "argument": "MODE",
               "description": "Schema Registry mode\n\nRequired: ✓ Yes\nAllowed values: IMPORT, READONLY, READWRITE"
+            },
+            {
+              "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
             },
             {
               "names": [
@@ -2870,6 +3314,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2963,6 +3414,13 @@
             },
             {
               "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -2996,6 +3454,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--context"
+              ],
+              "argument": "CONTEXT",
+              "description": "🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking land in a context of the destination registry. Default: the default context."
             },
             {
               "names": [

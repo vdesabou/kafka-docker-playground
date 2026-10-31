@@ -177,6 +177,9 @@ playground_usage() {
   printf "  %s   📦 Export the subjects of the registry to a folder\n" "$(green "schema export")                             "
   printf "  %s   📥 Import schemas into the registry, keeping their ids\n" "$(green "schema import")                             "
   printf "  %s   📏 Test the data contract rules of a subject against records\n" "$(green "schema test-rules")                         "
+  printf "  %s   🗂️ List the contexts of the registry, with their number of subjects and mode\n" "$(green "schema contexts")                           "
+  printf "  %s   🔀 Compare the subjects of two registries (or two contexts)\n" "$(green "schema compare")                            "
+  printf "  %s   🔗 Schema Linking: exporters that copy subjects to another registry\n" "$(green "schema exporter")                           "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "schema get-compatibility")                  "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "schema set-compatibility")                  "
   printf "  %s   🔏 Get the mode in force\n" "$(green "schema get-mode")                           "
@@ -6172,7 +6175,7 @@ playground_get_docker_compose_usage() {
 playground_schema_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema\n\n"
-    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    test-rules           do these records pass the data contract rules?\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
+    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    test-rules           do these records pass the data contract rules?\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n    compare              two registries (mdc clusters) or two contexts\n    exporter             Schema Linking: create, list, status, pause…\n    contexts             the contexts of the registry (--context on the\n  commands)\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
   else
     printf "playground schema - 🔰 Schema commands\n\n"
   fi
@@ -6193,6 +6196,9 @@ playground_schema_usage() {
   printf "  %s   📦 Export the subjects of the registry to a folder\n" "$(green "export")              "
   printf "  %s   📥 Import schemas into the registry, keeping their ids\n" "$(green "import")              "
   printf "  %s   📏 Test the data contract rules of a subject against records\n" "$(green "test-rules")          "
+  printf "  %s   🗂️ List the contexts of the registry, with their number of subjects and mode\n" "$(green "contexts")            "
+  printf "  %s   🔀 Compare the subjects of two registries (or two contexts)\n" "$(green "compare")             "
+  printf "  %s   🔗 Schema Linking: exporters that copy subjects to another registry\n" "$(green "exporter")            "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "get-compatibility")   "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "set-compatibility")   "
   printf "  %s   🔏 Get the mode in force\n" "$(green "get-mode")            "
@@ -6256,6 +6262,11 @@ playground_schema_list_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -6348,6 +6359,11 @@ playground_schema_get_usage() {
 
     fi
     # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -6432,6 +6448,11 @@ playground_schema_register_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -6500,6 +6521,11 @@ playground_schema_check_compatibility_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -6572,6 +6598,11 @@ playground_schema_diff_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -6630,6 +6661,11 @@ playground_schema_describe_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -6766,6 +6802,11 @@ playground_schema_export_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -6840,6 +6881,11 @@ playground_schema_import_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -6923,6 +6969,490 @@ playground_schema_test_rules_usage() {
 }
 
 # :command.usage
+playground_schema_contexts_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema contexts\n\n"
+    printf "  🗂️ List the contexts of the registry, with their number of subjects and mode\n  \n  Contexts are separate namespaces of subjects and schema ids in one\n  registry. Schema Linking exports into one (.<name>) on the\n  destination: a consumer of the default context doesn't find those ids.\n\n"
+  else
+    printf "playground schema contexts - 🗂️ List the contexts of the registry, with their number of subjects and mode\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema contexts [OPTIONS]\n"
+  printf "  playground schema contexts --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_compare_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema compare\n\n"
+    printf "  🔀 Compare the subjects of two registries (or two contexts)\n  \n  In an mdc-* environment, --from and --to are the clusters (europe and\n  us by default); --from-context / --to-context pick a context on each\n  side (the destination context of a Schema Linking exporter, typically).\n  Elsewhere, compare two contexts of the registry.\n  \n  For each subject: ✅ same versions, schemas and ids; ⬅️ / ➡️ only on one\n  side; ❌ missing versions, different schemas, or the same schema with\n  another id (records written on one side don't decode on the other) and\n  a different subject-level compatibility.\n  \n  Exit code: 0 identical, 1 different.\n\n"
+  else
+    printf "playground schema compare - 🔀 Compare the subjects of two registries (or two contexts)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema compare [OPTIONS]\n"
+  printf "  playground schema compare --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from CLUSTER")"
+    printf "    ⬅️ Cluster of the left side (mdc-* environments, default europe)\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to CLUSTER")"
+    printf "    ➡️ Cluster of the right side (mdc-* environments, default us)\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from-context CONTEXT")"
+    printf "    🗂️ Context of the left side (default: the default context)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to-context CONTEXT")"
+    printf "    🗂️ Context of the right side (default: the default context)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject-prefix PREFIX")"
+    printf "    🔎 Only the subjects starting with this prefix\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema compare --from europe --to us\n"
+    printf "  playground schema compare --from europe --to us --to-context .europe\n"
+    printf "  playground schema compare --from-context . --to-context .migrated --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema exporter\n\n"
+    printf "  🔗 Schema Linking: exporters that copy subjects to another registry\n  \n  An exporter runs in the source registry and copies the subjects it\n  matches (with their ids) to the destination, continuously. With context\n  type AUTO they land in the context .<exporter name>, with CUSTOM in\n  --destination-context, with NONE in the default context.\n  \n  In an mdc-* environment, --cluster is the source and --to the\n  destination (the other cluster by default). Elsewhere, set\n  --destination-url (and --destination-auth).\n  \n  ⚠️ The source registry needs the exporter extension (resource.extension\n  .class, kafkastore.update.handlers, password.encoder.secret): the\n  commands say what to add when it is missing, and\n  other/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml\n  enables it on both registries of mdc-plaintext.\n  \n  See\n  https://docs.confluent.io/platform/current/schema-registry/schema-linking-cp.html\n\n"
+  else
+    printf "playground schema exporter - 🔗 Schema Linking: exporters that copy subjects to another registry\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter COMMAND\n"
+  printf "  playground schema exporter [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🔗 Create an exporter, then wait until it runs\n" "$(green "create")"
+  printf "  %s   📋 List the exporters of the registry, with their state\n" "$(green "list")  "
+  printf "  %s   🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported\n" "$(green "status")"
+  printf "  %s   ⏸️ Pause an exporter\n" "$(green "pause") "
+  printf "  %s   ▶️ Resume a paused exporter\n" "$(green "resume")"
+  printf "  %s   ⏮️ Reset a paused exporter: it exports everything again\n" "$(green "reset") "
+  printf "  %s   🗑️ Delete a paused exporter (the exported schemas stay in the destination)\n" "$(green "delete")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_create_usage() {
+  printf "playground schema exporter create - 🔗 Create an exporter, then wait until it runs\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter create [OPTIONS]\n"
+  printf "  playground schema exporter create --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME (required)")"
+    printf "    📛 Exporter name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to CLUSTER")"
+    printf "    ➡️ Destination cluster in an mdc-* environment (default: the other one)\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--destination-url URL")"
+    printf "    🌐 Url of the destination registry, as seen from the source registry\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--destination-auth USER-INFO")"
+    printf "    🔑 <user>:<password> (or API key:secret) of the destination registry\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context-type TYPE")"
+    printf "    🗂️ Where the subjects land: AUTO (.<exporter name>), CUSTOM\n    (--destination-context) or NONE (default context). Default: CUSTOM with\n    --destination-context, else AUTO\n"
+    printf "    %s\n" "Allowed: AUTO, CUSTOM, NONE"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--destination-context CONTEXT")"
+    printf "    🗂️ Destination context for --context-type CUSTOM\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subjects SUBJECTS")"
+    printf "    🔰 Comma separated subjects or patterns to export (default: *)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject-rename-format FORMAT")"
+    printf "    ✏️ Rename the subjects in the destination, e.g. dc_${subject} (${subject} is\n    replaced by the subject name)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema exporter create --name eu-to-us --cluster europe --to us\n  --destination-context europe\n"
+    printf "  playground schema exporter create --name to-dr --destination-url\n  https://dr-registry:8081 --destination-auth user:password --subjects\n  \"orders-value,payments-*\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_list_usage() {
+  printf "playground schema exporter list - 📋 List the exporters of the registry, with their state\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter list [OPTIONS]\n"
+  printf "  playground schema exporter list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_status_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema exporter status\n\n"
+    printf "  🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and\n  number of objects exported\n  \n  Exit code 1 when the exporter is in ERROR.\n\n"
+  else
+    printf "playground schema exporter status - 🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter status [OPTIONS]\n"
+  printf "  playground schema exporter status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME (required)")"
+    printf "    📛 Exporter name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--wait")"
+    printf "    ⏳ Wait (30 seconds at most) until the exporter is RUNNING, PAUSED or ERROR\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_pause_usage() {
+  printf "playground schema exporter pause - ⏸️ Pause an exporter\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter pause [OPTIONS]\n"
+  printf "  playground schema exporter pause --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME (required)")"
+    printf "    📛 Exporter name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_resume_usage() {
+  printf "playground schema exporter resume - ▶️ Resume a paused exporter\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter resume [OPTIONS]\n"
+  printf "  playground schema exporter resume --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME (required)")"
+    printf "    📛 Exporter name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_reset_usage() {
+  printf "playground schema exporter reset - ⏮️ Reset a paused exporter: it exports everything again\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter reset [OPTIONS]\n"
+  printf "  playground schema exporter reset --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME (required)")"
+    printf "    📛 Exporter name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_exporter_delete_usage() {
+  printf "playground schema exporter delete - 🗑️ Delete a paused exporter (the exported schemas stay in the destination)\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema exporter delete [OPTIONS]\n"
+  printf "  playground schema exporter delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME (required)")"
+    printf "    📛 Exporter name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_schema_get_compatibility_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema get-compatibility\n\n"
@@ -6962,6 +7492,11 @@ playground_schema_get_compatibility_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -7029,6 +7564,11 @@ playground_schema_set_compatibility_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -7082,6 +7622,11 @@ playground_schema_get_mode_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -7139,6 +7684,11 @@ playground_schema_set_mode_usage() {
     printf "  %s\n" "$(magenta "--mode MODE (required)")"
     printf "    Schema Registry mode\n"
     printf "    %s\n" "Allowed: IMPORT, READONLY, READWRITE"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -7291,6 +7841,11 @@ playground_schema_delete_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -7418,6 +7973,11 @@ playground_schema_set_alias_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -7464,6 +8024,11 @@ playground_schema_get_alias_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--context CONTEXT")"
+    printf "    🗂️ Schema Registry context (.europe, or europe): every call goes to\n    /contexts/<context>/…\n    \n    The subjects exported by Schema Linking land in a context of the destination\n    registry. Default: the default context.\n"
     echo
 
     # :flag.usage
@@ -20592,6 +21157,14 @@ function get_sr_url_and_security() {
     sr_url=$SCHEMA_REGISTRY_URL
     sr_security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
+
+  # --context of the schema commands: every call goes to /contexts/<context>/… (contexts start with a dot)
+  if [[ -n "${args[--context]}" ]] && [ "${args[--context]}" != "." ]
+  then
+    sr_context="${args[--context]}"
+    [[ "$sr_context" != .* ]] && sr_context=".${sr_context}"
+    sr_url="${sr_url}/contexts/${sr_context}"
+  fi
 }
 
 # sr_request <method> <path> [<json body>]: one call to the Schema Registry of the running environment
@@ -20754,6 +21327,40 @@ function sr_compatibility_verdicts() {
   sr_request DELETE "/subjects/${tmp_subject}" > /dev/null || true
   sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null || true
   return $ret
+}
+
+# sr_global_compatibility: sets sr_global_compatibility_value to the global compatibility rule: the one of the
+# context with --context when it has one, else the one of the registry (BACKWARD when nothing answers)
+function sr_global_compatibility() {
+  local saved_url="$sr_url"
+  sr_global_compatibility_value=""
+  if sr_request GET "/config"
+  then
+    sr_global_compatibility_value=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility // empty')
+  elif [[ -n "$sr_context" ]]
+  then
+    sr_url="${sr_url%/contexts/*}"
+    sr_request GET "/config" && sr_global_compatibility_value=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility // empty')
+    sr_url="$saved_url"
+  fi
+  sr_global_compatibility_value="${sr_global_compatibility_value:-BACKWARD}"
+  return 0
+}
+
+# sr_exporter_check_available: Schema Linking needs the exporter extension in the registry; returns 1 with the
+# settings to add when /exporters isn't there
+function sr_exporter_check_available() {
+  if sr_request GET "/exporters" && echo "$sr_response" | jq -e 'type == "array"' > /dev/null 2>&1
+  then
+    return 0
+  fi
+  logerror "❌ the Schema Registry at ${sr_url} has no exporter API (Schema Linking): it needs, in the source registry,"
+  logerror "   resource.extension.class=io.confluent.schema.exporter.SchemaExporterResourceExtension"
+  logerror "   kafkastore.update.handlers=io.confluent.schema.exporter.storage.SchemaExporterUpdateHandler"
+  logerror "   password.encoder.secret=<secret>"
+  logerror "   (SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS, SCHEMA_REGISTRY_KAFKASTORE_UPDATE_HANDLERS and SCHEMA_REGISTRY_PASSWORD_ENCODER_SECRET with"
+  logerror "   playground container set-environment-variables -c <schema registry container> --env \"…\"; other/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml has them)"
+  return 1
 }
 
 # sr_format_compatibility_messages <messages json array>: the reasons of a compatibility verdict, one per line
@@ -50475,11 +51082,8 @@ playground_schema_list_command() {
       subjects=$(echo "$sr_response" | jq -r '.[]')
   fi
 
-  global_compatibility="BACKWARD"
-  if sr_request GET "/config"
-  then
-      global_compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
-  fi
+  sr_global_compatibility
+  global_compatibility="$sr_global_compatibility_value"
   global_mode="READWRITE"
   if sr_request GET "/mode"
   then
@@ -50646,17 +51250,17 @@ playground_schema_get_command() {
   if [[ ! -n "$subject" ]]
   then
       [[ -n "$json" ]] || log "✨ --subject flag was not provided, applying command to all subjects"
+      sr_request GET "/subjects" || sr_exit_on_error
+      subject=$(echo "$sr_response" | jq -r '.[]')
       if [[ -n "$deleted" ]]
       then
-          subject=$(playground get-subject-list)
           echo "$subject" > $tmp_dir/subjects-all
           [[ -n "$json" ]] || log "🧟 deleted subjects are included"
-          subject=$(playground get-subject-list --deleted)
+          sr_request GET "/subjects?deleted=true" || sr_exit_on_error
+          subject=$(echo "$sr_response" | jq -r '.[]')
           echo "$subject" > $tmp_dir/subjects-deleted-tmp
 
           sort $tmp_dir/subjects-all $tmp_dir/subjects-deleted-tmp | uniq -u > $tmp_dir/subjects-deleted
-      else
-          subject=$(playground get-subject-list)
       fi
       if [ "$subject" == "" ]
       then
@@ -51066,8 +51670,8 @@ playground_schema_check_compatibility_command() {
       subject_rule=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
       subject_rule_source="subject"
   else
-      sr_request GET "/config" || sr_exit_on_error
-      subject_rule=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+      sr_global_compatibility
+      subject_rule="$sr_global_compatibility_value"
       subject_rule_source="global"
   fi
 
@@ -51461,7 +52065,8 @@ playground_schema_describe_command() {
   fi
   if [ -z "$compatibility" ]
   then
-      sr_request GET "/config" && compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+      sr_global_compatibility
+      compatibility="$sr_global_compatibility_value"
       compatibility_source="global"
   fi
   mode_source="subject"
@@ -51673,9 +52278,15 @@ playground_schema_export_command() {
 
   sr_request GET "/subjects" || sr_exit_on_error
   subjects=$(echo "$sr_response" | jq -r '.[]')
+  if [[ ! -n "$sr_context" ]]
+  then
+      # the default context lists the subjects of the other contexts too (:.europe:orders-value): not part of it
+      subjects=$(echo "$subjects" | grep -v '^:\.')
+  fi
   if [ -n "$subject_prefix" ]
   then
-      subjects=$(echo "$subjects" | grep -F "$subject_prefix" | awk -v p="$subject_prefix" 'index($0, p) == 1')
+      # on the name without its context prefix (:.europe:orders-value)
+      subjects=$(echo "$subjects" | awk -v p="$subject_prefix" '{ name = $0; sub(/^:\.[^:]*:/, "", name); if (index(name, p) == 1) print }')
   fi
   if [ -z "$subjects" ]
   then
@@ -51696,6 +52307,12 @@ playground_schema_export_command() {
   for subject in $subjects
   do
       encoded_subject=$(urlencode "$subject")
+      # with --context, the registry answers the names with their context prefix (:.europe:orders-value): the manifest
+      # keeps the bare name, so that the export can be imported in any context
+      if [[ -n "$sr_context" ]]
+      then
+          subject=$(echo "$subject" | sed -e 's/^:\.[^:]*://')
+      fi
       # one folder per subject (characters that are not safe in a file name replaced by _)
       folder=$(echo "$subject" | sed -e 's#[/:\\ *?"<>|]#_#g')
       mkdir -p "$output_dir/$folder"
@@ -51738,7 +52355,8 @@ playground_schema_export_command() {
   done
 
   jq -s --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg url "$sr_url" --argjson gc "$global_compatibility" --argjson gm "$global_mode" \
-      '{exported_at: $date, registry: $url, global: {compatibility: $gc, mode: $gm}, subjects: .}' "$subjects_file" > "$output_dir/manifest.json"
+      --arg ctx "${sr_context:-.}" \
+      '{exported_at: $date, registry: $url, context: $ctx, global: {compatibility: $gc, mode: $gm}, subjects: .}' "$subjects_file" > "$output_dir/manifest.json"
 
   log "✅ ${nb_subjects} subject(s), ${nb_versions} version(s) exported to ${output_dir} (manifest.json + one file per version)"
   log "🎓 to load them in another registry with the same ids: playground schema import -f ${output_dir}"
@@ -52073,6 +52691,315 @@ playground_schema_test_rules_command() {
 }
 
 # :command.function
+playground_schema_contexts_command() {
+
+  # src/commands/schema/contexts.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_request GET "/contexts" || sr_exit_on_error
+  contexts="$sr_response"
+  if [[ -n "$json" ]]
+  then
+      echo "$contexts" | jq .
+      exit 0
+  fi
+  log "🗂️ Schema Registry contexts (. is the default context)"
+  for ctx in $(echo "$contexts" | jq -r '.[]')
+  do
+      if [ "$ctx" == "." ]
+      then
+          n=$(curl $sr_security -s "${sr_url}/subjects" | jq '[.[] | select(startswith(":.") | not)] | length')
+      else
+          n=$(curl $sr_security -s "${sr_url}/contexts/${ctx}/subjects" | jq 'length')
+      fi
+      if [ "$ctx" == "." ]
+      then
+          mode=$(curl $sr_security -s "${sr_url}/mode" | jq -r '.mode // "?"')
+      else
+          mode=$(curl $sr_security -s "${sr_url}/contexts/${ctx}/mode" | jq -r '.mode // "?"')
+      fi
+      echo "   ${ctx}  ${n} subject(s)  mode ${mode}"
+  done
+  log "🎓 --context <ctx> on the schema commands reads and writes one context, e.g. playground schema list --context .europe"
+
+}
+
+# :command.function
+playground_schema_compare_command() {
+
+  # src/commands/schema/compare.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  from="${args[--from]}"
+  to="${args[--to]}"
+  from_context="${args[--from-context]}"
+  to_context="${args[--to-context]}"
+  subject_prefix="${args[--subject-prefix]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  get_environment_used
+  if [[ "$environment" != mdc* ]]
+  then
+      if [ -z "$from_context" ] && [ -z "$to_context" ]
+      then
+          logerror "❌ outside an mdc-* environment there is one registry: compare two contexts with --from-context / --to-context"
+          exit 1
+      fi
+      from=""
+      to=""
+  else
+      from="${from:-europe}"
+      to="${to:-us}"
+  fi
+  if [ "$from" == "$to" ] && [ "${from_context:-.}" == "${to_context:-.}" ]
+  then
+      logerror "❌ --from and --to are the same registry and context"
+      exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+
+  function export_side() {
+      local cluster="$1"
+      local context="$2"
+      local dir="$3"
+      local export_args=(-o "$dir")
+      [ -n "$cluster" ] && export_args+=(--cluster "$cluster")
+      [ -n "$context" ] && export_args+=(--context "$context")
+      [ -n "$subject_prefix" ] && export_args+=(--subject-prefix "$subject_prefix")
+      if ! playground schema export "${export_args[@]}" > "$dir.log" 2>&1
+      then
+          if grep -q "no subject to export" "$dir.log"
+          then
+              mkdir -p "$dir"
+              echo '{"subjects": []}' > "$dir/manifest.json"
+          else
+              logerror "❌ can't read ${cluster:-the registry}${context:+ context $context}"
+              cat "$dir.log"
+              exit 1
+          fi
+      fi
+  }
+
+  left_label="${from:-registry}${from_context:+ context $from_context}"
+  right_label="${to:-registry}${to_context:+ context $to_context}"
+  [[ -n "$json" ]] || log "🔀 Comparing the subjects of ${left_label} and ${right_label}"
+  export_side "$from" "$from_context" "$tmp_dir/left"
+  export_side "$to" "$to_context" "$tmp_dir/right"
+  compare_args=(--left "$tmp_dir/left" --left-label "$left_label" --right "$tmp_dir/right" --right-label "$right_label")
+  [[ -n "$json" ]] && compare_args+=(--json)
+  python3 -I "$root_folder/tools/schema-tool/schema_compare.py" "${compare_args[@]}"
+
+}
+
+# :command.function
+playground_schema_exporter_create_command() {
+
+  # src/commands/schema/exporter/create.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  name="${args[--name]}"
+  to="${args[--to]}"
+  destination_url="${args[--destination-url]}"
+  destination_auth="${args[--destination-auth]}"
+  context_type="${args[--context-type]}"
+  destination_context="${args[--destination-context]}"
+  subjects="${args[--subjects]}"
+  subject_rename_format="${args[--subject-rename-format]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_exporter_check_available || exit 1
+
+  if [ -z "$destination_url" ]
+  then
+      if [[ "$environment" != mdc* ]]
+      then
+          logerror "❌ set --destination-url (and --destination-auth if needed): --to only works in an mdc-* environment"
+          exit 1
+      fi
+      if [ -z "$to" ]
+      then
+          if [ "$mdc_cluster" == "europe" ]
+          then
+              to="us"
+          else
+              to="europe"
+          fi
+      fi
+      # the exporter runs in the source registry: the destination url is the one of the docker network
+      destination_url="http://schema-registry-${to}:8081"
+  fi
+
+  if [ -z "$context_type" ]
+  then
+      if [ -n "$destination_context" ]
+      then
+          context_type="CUSTOM"
+      else
+          context_type="AUTO"
+      fi
+  fi
+  if [ "$context_type" == "CUSTOM" ] && [ -z "$destination_context" ]
+  then
+      logerror "❌ --context-type CUSTOM needs --destination-context <name>"
+      exit 1
+  fi
+
+  config=$(jq -cn --arg url "$destination_url" --arg auth "$destination_auth" \
+      '{"schema.registry.url": $url} + (if $auth != "" then {"basic.auth.credentials.source": "USER_INFO", "basic.auth.user.info": $auth} else {} end)')
+  body=$(jq -cn --arg name "$name" --arg ct "$context_type" --arg ctx "${destination_context#.}" --arg subjects "${subjects:-*}" \
+      --arg fmt "$subject_rename_format" --argjson config "$config" \
+      '{name: $name, contextType: $ct, subjects: ($subjects | split(",") | map(gsub("^\\s+|\\s+$"; "")))}
+       + (if $ct == "CUSTOM" then {context: $ctx} else {} end)
+       + (if $fmt != "" then {subjectRenameFormat: $fmt} else {} end)
+       + {config: $config}')
+  log "🔗 Creating exporter ${name}: subjects ${subjects:-*} → ${destination_url} (context type ${context_type}${destination_context:+, context .${destination_context#.}})"
+  sr_request POST "/exporters" "$body" || sr_exit_on_error "exporter ${name}"
+  playground schema exporter status --name "$name" ${args[--cluster]:+--cluster ${args[--cluster]}} --wait
+
+}
+
+# :command.function
+playground_schema_exporter_list_command() {
+
+  # src/commands/schema/exporter/list.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_exporter_check_available || exit 1
+  sr_request GET "/exporters" || sr_exit_on_error
+  names=$(echo "$sr_response" | jq -r '.[]')
+  rows="[]"
+  for name in $names
+  do
+      status="{}"
+      sr_request GET "/exporters/${name}/status" && status="$sr_response"
+      info="{}"
+      sr_request GET "/exporters/${name}" && info="$sr_response"
+      rows=$(echo "$rows" | jq --argjson s "$status" --argjson i "$info" '. + [$i + {status: $s}]')
+  done
+  if [[ -n "$json" ]]
+  then
+      echo "$rows" | jq .
+      exit 0
+  fi
+  if [ -z "$names" ]
+  then
+      log "no exporter on this registry (playground schema exporter create --name <name>)"
+      exit 0
+  fi
+  echo "$rows" | jq -r '.[] | "🔗 \(.name)  \(.status.state // "?")  subjects \(.subjects | join(","))  → \(.config["schema.registry.url"] // "?")  context \(.contextType)\(if .context then " ." + .context else "" end)  \(.status.objectsExported // 0) exported\(if .status.trace and .status.trace != "" then "\n   🔥 " + (.status.trace | split("\n")[0]) else "" end)"'
+
+}
+
+# :command.function
+playground_schema_exporter_status_command() {
+
+  # src/commands/schema/exporter/status.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  name="${args[--name]}"
+  wait_running="${args[--wait]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_exporter_check_available || exit 1
+  for i in $(seq 1 15)
+  do
+      sr_request GET "/exporters/${name}/status" || sr_exit_on_error "exporter ${name}"
+      state=$(echo "$sr_response" | jq -r .state)
+      if [[ ! -n "$wait_running" ]] || [ "$state" == "RUNNING" ] || [ "$state" == "PAUSED" ] || [ "$state" == "ERROR" ]
+      then
+          break
+      fi
+      sleep 2
+  done
+  if [[ -n "$json" ]]
+  then
+      echo "$sr_response" | jq .
+  else
+      echo "$sr_response" | jq -r '"🔗 exporter \(.name): \(.state), offset \(.offset), \(.objectsExported // 0) object(s) exported\(if .trace and .trace != "" then "\n   🔥 " + .trace else "" end)"'
+  fi
+  [ "$state" != "ERROR" ] || exit 1
+
+}
+
+# :command.function
+playground_schema_exporter_pause_command() {
+
+  # src/commands/schema/exporter/pause.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  name="${args[--name]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_exporter_check_available || exit 1
+  sr_request PUT "/exporters/${name}/pause" || sr_exit_on_error "exporter ${name}"
+  log "⏸️ exporter ${name} paused"
+
+}
+
+# :command.function
+playground_schema_exporter_resume_command() {
+
+  # src/commands/schema/exporter/resume.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  name="${args[--name]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_exporter_check_available || exit 1
+  sr_request PUT "/exporters/${name}/resume" || sr_exit_on_error "exporter ${name}"
+  log "▶️ exporter ${name} resumed"
+
+}
+
+# :command.function
+playground_schema_exporter_reset_command() {
+
+  # src/commands/schema/exporter/reset.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  name="${args[--name]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_exporter_check_available || exit 1
+  sr_request PUT "/exporters/${name}/reset" || sr_exit_on_error "exporter ${name}"
+  log "⏮️ exporter ${name} reset: it exports everything again from the beginning (pause it first)"
+
+}
+
+# :command.function
+playground_schema_exporter_delete_command() {
+
+  # src/commands/schema/exporter/delete.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  name="${args[--name]}"
+  verbose="${args[--verbose]}"
+
+  get_sr_url_and_security
+  sr_exporter_check_available || exit 1
+  sr_request DELETE "/exporters/${name}" || sr_exit_on_error "exporter ${name} (pause it first)"
+  log "🗑️ exporter ${name} deleted (the exported schemas stay in the destination)"
+
+}
+
+# :command.function
 playground_schema_get_compatibility_command() {
 
   # src/commands/schema/get-compatibility.sh
@@ -52115,9 +53042,11 @@ playground_schema_get_compatibility_command() {
 
   if [ "$source" == "global" ]
   then
-      sr_request GET "/config" || sr_exit_on_error
+      sr_global_compatibility
+      compatibility="$sr_global_compatibility_value"
+  else
+      compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
   fi
-  compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
 
   if [[ -n "$json" ]]
   then
@@ -92932,6 +93861,27 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    contexts)
+      action="contexts"
+      shift
+      playground_schema_contexts_parse_requirements "$@"
+      shift $#
+      ;;
+
+    compare)
+      action="compare"
+      shift
+      playground_schema_compare_parse_requirements "$@"
+      shift $#
+      ;;
+
+    exporter)
+      action="exporter"
+      shift
+      playground_schema_exporter_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-compatibility)
       action="get-compatibility"
       shift
@@ -93115,6 +94065,20 @@ playground_schema_list_parse_requirements() {
         # :flag.case_no_arg
         args['--verbose']=1
         shift
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -93319,6 +94283,20 @@ playground_schema_get_parse_requirements() {
           shift
         else
           printf "%s\n" "--store-in-tmp requires an argument: --store-in-tmp FOLDER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
           exit 1
         fi
         ;;
@@ -93530,6 +94508,20 @@ playground_schema_register_parse_requirements() {
         ;;
 
       # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -93707,6 +94699,20 @@ playground_schema_check_compatibility_parse_requirements() {
         ;;
 
       # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -93872,6 +94878,20 @@ playground_schema_diff_parse_requirements() {
         ;;
 
       # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -94002,6 +95022,20 @@ playground_schema_describe_parse_requirements() {
         # :flag.case_no_arg
         args['--verbose']=1
         shift
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -94296,6 +95330,20 @@ playground_schema_export_parse_requirements() {
         ;;
 
       # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -94456,6 +95504,20 @@ playground_schema_import_parse_requirements() {
         # :flag.case_no_arg
         args['--verbose']=1
         shift
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -94668,6 +95730,1296 @@ playground_schema_test_rules_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_schema_contexts_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_contexts_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema contexts"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_compare_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_compare_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema compare"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --from)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from requires an argument: --from CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --from-context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from-context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from-context requires an argument: --from-context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to-context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to-context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to-context requires an argument: --to-context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --subject-prefix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subject-prefix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject-prefix requires an argument: --subject-prefix PREFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ${args['--from']:-} ]] && [[ ! ${args['--from']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--from must be one of: us, europe" >&2
+    exit 1
+  fi
+  if [[ ${args['--to']:-} ]] && [[ ! ${args['--to']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--to must be one of: us, europe" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    create)
+      action="create"
+      shift
+      playground_schema_exporter_create_parse_requirements "$@"
+      shift $#
+      ;;
+
+    list)
+      action="list"
+      shift
+      playground_schema_exporter_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    status)
+      action="status"
+      shift
+      playground_schema_exporter_status_parse_requirements "$@"
+      shift $#
+      ;;
+
+    pause)
+      action="pause"
+      shift
+      playground_schema_exporter_pause_parse_requirements "$@"
+      shift $#
+      ;;
+
+    resume)
+      action="resume"
+      shift
+      playground_schema_exporter_resume_parse_requirements "$@"
+      shift $#
+      ;;
+
+    reset)
+      action="reset"
+      shift
+      playground_schema_exporter_reset_parse_requirements "$@"
+      shift $#
+      ;;
+
+    delete)
+      action="delete"
+      shift
+      playground_schema_exporter_delete_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_schema_exporter_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_create_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_create_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema exporter create"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --destination-url)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--destination-url']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--destination-url requires an argument: --destination-url URL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --destination-auth)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--destination-auth']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--destination-auth requires an argument: --destination-auth USER-INFO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --context-type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context-type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context-type requires an argument: --context-type TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --destination-context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--destination-context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--destination-context requires an argument: --destination-context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --subjects)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subjects']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subjects requires an argument: --subjects SUBJECTS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --subject-rename-format)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subject-rename-format']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject-rename-format requires an argument: --subject-rename-format FORMAT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--name']+x} ]]; then
+    printf "missing required flag: --name NAME\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--to']:-} ]] && [[ ! ${args['--to']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--to must be one of: us, europe" >&2
+    exit 1
+  fi
+  if [[ ${args['--context-type']:-} ]] && [[ ! ${args['--context-type']:-} =~ ^(AUTO|CUSTOM|NONE)$ ]]; then
+    printf "%s\n" "--context-type must be one of: AUTO, CUSTOM, NONE" >&2
+    exit 1
+  fi
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema exporter list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_status_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema exporter status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --wait)
+
+        # :flag.case_no_arg
+        args['--wait']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--name']+x} ]]; then
+    printf "missing required flag: --name NAME\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_pause_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_pause_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema exporter pause"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--name']+x} ]]; then
+    printf "missing required flag: --name NAME\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_resume_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_resume_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema exporter resume"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--name']+x} ]]; then
+    printf "missing required flag: --name NAME\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_reset_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_reset_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema exporter reset"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--name']+x} ]]; then
+    printf "missing required flag: --name NAME\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_exporter_delete_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_exporter_delete_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema exporter delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--name']+x} ]]; then
+    printf "missing required flag: --name NAME\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_schema_get_compatibility_parse_requirements() {
   local key
 
@@ -94741,6 +97093,20 @@ playground_schema_get_compatibility_parse_requirements() {
         # :flag.case_no_arg
         args['--verbose']=1
         shift
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -94879,6 +97245,20 @@ playground_schema_set_compatibility_parse_requirements() {
           shift
         else
           printf "%s\n" "--compatibility requires an argument: --compatibility COMPATIBILITY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
           exit 1
         fi
         ;;
@@ -95028,6 +97408,20 @@ playground_schema_get_mode_parse_requirements() {
         ;;
 
       # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -95163,6 +97557,20 @@ playground_schema_set_mode_parse_requirements() {
           shift
         else
           printf "%s\n" "--mode requires an argument: --mode MODE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
           exit 1
         fi
         ;;
@@ -95552,6 +97960,20 @@ playground_schema_delete_parse_requirements() {
         ;;
 
       # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -95851,6 +98273,20 @@ playground_schema_set_alias_parse_requirements() {
         ;;
 
       # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -95974,6 +98410,20 @@ playground_schema_get_alias_parse_requirements() {
         # :flag.case_no_arg
         args['--verbose']=1
         shift
+        ;;
+
+      # :flag.case
+      --context)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--context']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--context requires an argument: --context CONTEXT" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -132814,6 +135264,21 @@ playground_schema_completion() {
         playground_schema_test_rules_completion "$completion_current" "$@"
         return
         ;;
+      contexts)
+        shift
+        playground_schema_contexts_completion "$completion_current" "$@"
+        return
+        ;;
+      compare)
+        shift
+        playground_schema_compare_completion "$completion_current" "$@"
+        return
+        ;;
+      exporter)
+        shift
+        playground_schema_exporter_completion "$completion_current" "$@"
+        return
+        ;;
       get-compatibility)
         shift
         playground_schema_get_compatibility_completion "$completion_current" "$@"
@@ -132873,7 +135338,7 @@ playground_schema_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import test-rules get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
+  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import test-rules contexts compare exporter get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -132917,6 +135382,16 @@ playground_schema_list_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -132944,6 +135419,7 @@ playground_schema_list_completion() {
     completion_flag_candidates --deleted "$completion_current" --deleted
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133021,6 +135497,16 @@ playground_schema_get_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133051,6 +135537,7 @@ playground_schema_get_completion() {
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --deleted "$completion_current" --deleted
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133141,6 +135628,16 @@ playground_schema_register_completion() {
         shift
 
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133172,6 +135669,7 @@ playground_schema_register_completion() {
     completion_flag_candidates --normalize "$completion_current" --normalize
     completion_flag_candidates --rule-set "$completion_current" --rule-set
     completion_flag_candidates --rule "$completion_current" --rule
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133254,6 +135752,16 @@ playground_schema_check_compatibility_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133283,6 +135791,7 @@ playground_schema_check_compatibility_completion() {
     completion_flag_candidates --compatibility "$completion_current" --compatibility
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133347,6 +135856,16 @@ playground_schema_diff_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133376,6 +135895,7 @@ playground_schema_diff_completion() {
     completion_flag_candidates --no-verdict "$completion_current" --no-verdict
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133427,6 +135947,16 @@ playground_schema_describe_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133454,6 +135984,7 @@ playground_schema_describe_completion() {
     completion_flag_candidates --id "$completion_current" --id
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133599,6 +136130,16 @@ playground_schema_export_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133625,6 +136166,7 @@ playground_schema_export_completion() {
     completion_flag_candidates --subject-prefix "$completion_current" --subject-prefix
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133697,6 +136239,16 @@ playground_schema_import_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133727,6 +136279,7 @@ playground_schema_import_completion() {
     completion_flag_candidates --subject-prefix "$completion_current" --subject-prefix
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133803,6 +136356,703 @@ playground_schema_test_rules_completion() {
 }
 
 # :command.completion_function
+playground_schema_contexts_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_compare_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --from)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --from-context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from-context"]=1
+
+        ;;
+      --to-context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to-context"]=1
+
+        ;;
+      --subject-prefix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subject-prefix"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --from "$completion_current" --from
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --from-context "$completion_current" --from-context
+    completion_flag_candidates --to-context "$completion_current" --to-context
+    completion_flag_candidates --subject-prefix "$completion_current" --subject-prefix
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      create)
+        shift
+        playground_schema_exporter_create_completion "$completion_current" "$@"
+        return
+        ;;
+      list)
+        shift
+        playground_schema_exporter_list_completion "$completion_current" "$@"
+        return
+        ;;
+      status)
+        shift
+        playground_schema_exporter_status_completion "$completion_current" "$@"
+        return
+        ;;
+      pause)
+        shift
+        playground_schema_exporter_pause_completion "$completion_current" "$@"
+        return
+        ;;
+      resume)
+        shift
+        playground_schema_exporter_resume_completion "$completion_current" "$@"
+        return
+        ;;
+      reset)
+        shift
+        playground_schema_exporter_reset_completion "$completion_current" "$@"
+        return
+        ;;
+      delete)
+        shift
+        playground_schema_exporter_delete_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" create list status pause resume reset delete
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_create_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --destination-url)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--destination-url"]=1
+
+        ;;
+      --destination-auth)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--destination-auth"]=1
+
+        ;;
+      --context-type)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "AUTO"
+            "CUSTOM"
+            "NONE"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context-type"]=1
+
+        ;;
+      --destination-context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--destination-context"]=1
+
+        ;;
+      --subjects)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subjects"]=1
+
+        ;;
+      --subject-rename-format)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subject-rename-format"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --destination-url "$completion_current" --destination-url
+    completion_flag_candidates --destination-auth "$completion_current" --destination-auth
+    completion_flag_candidates --context-type "$completion_current" --context-type
+    completion_flag_candidates --destination-context "$completion_current" --destination-context
+    completion_flag_candidates --subjects "$completion_current" --subjects
+    completion_flag_candidates --subject-rename-format "$completion_current" --subject-rename-format
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_list_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_status_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --wait)
+        completion_blocked_flags["--wait"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --wait "$completion_current" --wait
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_pause_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_resume_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_reset_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_exporter_delete_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
 playground_schema_get_compatibility_completion() {
   local completion_current="$1"
   shift
@@ -133843,6 +137093,16 @@ playground_schema_get_compatibility_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133870,6 +137130,7 @@ playground_schema_get_compatibility_completion() {
     completion_flag_candidates --global "$completion_current" --global
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133931,6 +137192,16 @@ playground_schema_set_compatibility_completion() {
         completion_blocked_flags["--compatibility"]=1
 
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -133958,6 +137229,7 @@ playground_schema_set_compatibility_completion() {
     completion_flag_candidates --global "$completion_current" --global
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --compatibility "$completion_current" --compatibility
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -134004,6 +137276,16 @@ playground_schema_get_mode_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -134031,6 +137313,7 @@ playground_schema_get_mode_completion() {
     completion_flag_candidates --global "$completion_current" --global
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -134088,6 +137371,16 @@ playground_schema_set_mode_completion() {
         completion_blocked_flags["--mode"]=1
 
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -134115,6 +137408,7 @@ playground_schema_set_mode_completion() {
     completion_flag_candidates --global "$completion_current" --global
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --mode "$completion_current" --mode
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -134291,6 +137585,16 @@ playground_schema_delete_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -134319,6 +137623,7 @@ playground_schema_delete_completion() {
     completion_flag_candidates --permanent "$completion_current" --permanent
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -134464,6 +137769,16 @@ playground_schema_set_alias_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -134490,6 +137805,7 @@ playground_schema_set_alias_completion() {
     completion_flag_candidates --subject "$completion_current" --subject
     completion_flag_candidates --alias "$completion_current" --alias
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -134529,6 +137845,16 @@ playground_schema_get_alias_completion() {
 
         shift
         ;;
+      --context)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--context"]=1
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -134555,6 +137881,7 @@ playground_schema_get_alias_completion() {
     completion_flag_candidates --alias "$completion_current" --alias
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --context "$completion_current" --context
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -150460,6 +153787,16 @@ run() {
     "schema export") playground_schema_export_command ;;
     "schema import") playground_schema_import_command ;;
     "schema test-rules") playground_schema_test_rules_command ;;
+    "schema contexts") playground_schema_contexts_command ;;
+    "schema compare") playground_schema_compare_command ;;
+    "schema exporter") playground_schema_exporter_command ;;
+    "schema exporter create") playground_schema_exporter_create_command ;;
+    "schema exporter list") playground_schema_exporter_list_command ;;
+    "schema exporter status") playground_schema_exporter_status_command ;;
+    "schema exporter pause") playground_schema_exporter_pause_command ;;
+    "schema exporter resume") playground_schema_exporter_resume_command ;;
+    "schema exporter reset") playground_schema_exporter_reset_command ;;
+    "schema exporter delete") playground_schema_exporter_delete_command ;;
     "schema get-compatibility") playground_schema_get_compatibility_command ;;
     "schema set-compatibility") playground_schema_set_compatibility_command ;;
     "schema get-mode") playground_schema_get_mode_command ;;

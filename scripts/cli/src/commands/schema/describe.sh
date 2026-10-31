@@ -82,7 +82,8 @@ else
 fi
 if [ -z "$compatibility" ]
 then
-    sr_request GET "/config" && compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+    sr_global_compatibility
+    compatibility="$sr_global_compatibility_value"
     compatibility_source="global"
 fi
 mode_source="subject"

@@ -8,9 +8,15 @@ get_sr_url_and_security
 
 sr_request GET "/subjects" || sr_exit_on_error
 subjects=$(echo "$sr_response" | jq -r '.[]')
+if [[ ! -n "$sr_context" ]]
+then
+    # the default context lists the subjects of the other contexts too (:.europe:orders-value): not part of it
+    subjects=$(echo "$subjects" | grep -v '^:\.')
+fi
 if [ -n "$subject_prefix" ]
 then
-    subjects=$(echo "$subjects" | grep -F "$subject_prefix" | awk -v p="$subject_prefix" 'index($0, p) == 1')
+    # on the name without its context prefix (:.europe:orders-value)
+    subjects=$(echo "$subjects" | awk -v p="$subject_prefix" '{ name = $0; sub(/^:\.[^:]*:/, "", name); if (index(name, p) == 1) print }')
 fi
 if [ -z "$subjects" ]
 then
@@ -31,6 +37,12 @@ nb_subjects=0
 for subject in $subjects
 do
     encoded_subject=$(urlencode "$subject")
+    # with --context, the registry answers the names with their context prefix (:.europe:orders-value): the manifest
+    # keeps the bare name, so that the export can be imported in any context
+    if [[ -n "$sr_context" ]]
+    then
+        subject=$(echo "$subject" | sed -e 's/^:\.[^:]*://')
+    fi
     # one folder per subject (characters that are not safe in a file name replaced by _)
     folder=$(echo "$subject" | sed -e 's#[/:\\ *?"<>|]#_#g')
     mkdir -p "$output_dir/$folder"
@@ -73,7 +85,8 @@ do
 done
 
 jq -s --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg url "$sr_url" --argjson gc "$global_compatibility" --argjson gm "$global_mode" \
-    '{exported_at: $date, registry: $url, global: {compatibility: $gc, mode: $gm}, subjects: .}' "$subjects_file" > "$output_dir/manifest.json"
+    --arg ctx "${sr_context:-.}" \
+    '{exported_at: $date, registry: $url, context: $ctx, global: {compatibility: $gc, mode: $gm}, subjects: .}' "$subjects_file" > "$output_dir/manifest.json"
 
 log "✅ ${nb_subjects} subject(s), ${nb_versions} version(s) exported to ${output_dir} (manifest.json + one file per version)"
 log "🎓 to load them in another registry with the same ids: playground schema import -f ${output_dir}"
