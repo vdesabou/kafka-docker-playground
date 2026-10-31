@@ -4140,6 +4140,8 @@ commands:
 
      🔍 Read
        list                 every subject: versions, latest id, type, rule, mode
+       describe             everything about a subject or a schema id
+       history              timeline from _schemas: registrations, deletes, rule changes
        get                  every version of a subject, or of all subjects
        get-compatibility    the compatibility rule in force (subject or global)
        get-mode / get-alias
@@ -4522,6 +4524,109 @@ commands:
       playground schema diff --subject orders-value --to @customer-v4.avsc
       playground schema diff --from @v1.avsc --to @v2.avsc --no-verdict
       playground schema diff --from id:12 --to id:15 --json
+
+  - name: describe
+    group: Schema
+    filters:
+    - schema_registry_running
+    help: |-
+      🔎 Everything about one subject, or one schema id, in one call
+
+      For a subject: the compatibility rule and mode in force (and whether
+      they come from the subject or the global setting), its alias and other
+      settings, every version (soft-deleted ones too) with its id and
+      registration date, its references, the schemas that reference it (a
+      version they use can't be deleted), the other subjects sharing the same
+      schema id, metadata and rule set, and the subject name strategy its
+      name suggests, with the topic it belongs to.
+
+      For --id: the schema type, record name, and every subject and version
+      using that id (what a consumer resolves from the id in a record).
+    flags:
+    - long: --subject
+      required: false
+      arg: subject
+      conflicts:
+        - "--id"
+      completions:
+        dynamic:
+        - playground get-subject-list
+      help: |-
+        📛 Subject name
+    - long: --id
+      required: false
+      validate: integer
+      arg: id
+      conflicts:
+        - "--subject"
+      help: |-
+        💯 Schema id (the ValueSchemaId: of 'playground topic consume')
+    - *json
+    - *verbose
+    - *cluster
+    examples:
+    - playground schema describe --subject orders-value
+    - playground schema describe --id 3
+    - playground schema describe --subject orders-value --json | jq '.versions[] | select(.deleted)'
+
+  - name: history
+    group: Schema
+    help: |-
+      📜 Timeline of the Schema Registry, from its _schemas topic
+
+      Every registration, soft and permanent delete (and the ids that stop
+      resolving because of it), compatibility, mode and setting change, with
+      its date: answers "who deleted the schema, when, soft or hard?" and
+      "when was the rule relaxed?".
+
+      Reads the kafkastore topic of the running environment (_schemas, or
+      _schemas_<name>_<namespace> with CFK, see --topic), or a dump with -f:
+      the output of 'playground topic consume -t _schemas --json', or of
+      kafka-console-consumer --topic _schemas --from-beginning
+      --property print.key=true --property print.timestamp=true, which is
+      what to ask a customer for.
+
+      Not available on Confluent Cloud, which doesn't expose _schemas: use
+      the audit logs of the organization instead.
+
+      The temporary subjects of 'schema check-compatibility' and 'schema
+      diff' are hidden (--include-temporary to show them).
+    flags:
+    - long: --subject
+      required: false
+      arg: subject
+      completions:
+        dynamic:
+        - playground get-subject-list
+      help: |-
+        📛 Only the events of this subject (the ids are still tracked across subjects)
+    - long: --since
+      arg: since
+      required: false
+      help: |-
+        🕰️ Only the events after: 12h, 30m, 2d, or a date (2026-10-31, 2026-10-31T10:00)
+    - long: --file
+      short: -f
+      arg: file
+      required: false
+      help: |-
+        📄 A dump of the _schemas topic instead of the running environment (JSON lines of 'topic consume --json', or kafka-console-consumer with print.key and print.timestamp)
+    - long: --topic
+      arg: topic
+      required: false
+      help: |-
+        📛 The kafkastore.topic of the Schema Registry (default: _schemas, else the first topic starting with _schemas)
+    - long: --include-temporary
+      required: false
+      help: |-
+        👻 Also show the temporary subjects of check-compatibility and diff
+    - *json
+    - *verbose
+    - *cluster
+    examples:
+    - playground schema history
+    - playground schema history --subject orders-value --since 2d
+    - playground schema history -f customer-schemas-dump.txt --json | jq .summary
 
   - name: get-compatibility
     filters:

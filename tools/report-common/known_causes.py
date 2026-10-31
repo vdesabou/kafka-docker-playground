@@ -146,11 +146,31 @@ KNOWN_CAUSES = [
                "PersistentVolumeClaim"},
     {"name": "operator_error", "severity": "medium", "category": "Operator Issues",
      "pattern": r"reconcile error|Failed to reconcile|Reconciler error|operator error", "hint": False},
+    # the 3 most common Schema Registry errors first, each with the playground schema command that explains it
+    {"name": "schema_id_not_found", "severity": "high", "category": "Schema Registry Issues",
+     "pattern": r"Error retrieving (?:Avro|JSON|Protobuf) (?:unknown )?schema(?: version)? for id|Schema \d+ not found"
+                r"|error code:? ?40403",
+     "title": "🔍 Schema id not found",
+     "advice": "the schema id written in the records doesn't resolve any more: it was permanently deleted (a soft delete "
+               "keeps ids readable), or the consumer reads another registry. playground schema history shows when "
+               "and how it was deleted (💀), playground schema describe --id <id> who uses it"},
+    {"name": "schema_incompatible", "severity": "high", "category": "Schema Registry Issues",
+     "pattern": r"Schema being registered is incompatible with an earlier schema|error code:? ?409\b|error code:? ?40901",
+     "title": "🛡️ Incompatible schema refused",
+     "advice": "a producer (or source connector) registers a version the compatibility rule refuses: "
+               "playground schema check-compatibility and playground schema diff --subject <s> --to @<new schema> show "
+               "the field that breaks it and which rule would accept it"},
+    {"name": "subject_not_found", "severity": "medium", "category": "Schema Registry Issues",
+     "pattern": r"Subject .{0,80}not found|error code:? ?40401",
+     "title": "📛 Subject not found",
+     "advice": "the client looks up a subject that doesn't exist: the subject name strategy differs between producer "
+               "and consumer, or auto.register.schemas=false / use.latest.version with an unregistered schema. "
+               "playground schema list shows the real subject names"},
     {"name": "schema_registry_error", "severity": "medium", "category": "Schema Registry Issues",
-     "pattern": r"SchemaRegistryException|RestClientException|Subject .{0,80}not found|Schema .{0,40}(?:not found|incompatible)",
+     "pattern": r"SchemaRegistryException|RestClientException",
      "title": "📐 Schema Registry error",
-     "advice": "the subject or schema does not exist, or the new schema is not compatible: check the subject name "
-               "strategy and the compatibility level (playground schema get / get-compatibility)"},
+     "advice": "a call to the Schema Registry failed: check its url and credentials in the converter or client "
+               "(playground schema describe --subject <s> for the subject, playground schema history for its changes)"},
     {"name": "ksqldb_error", "severity": "medium", "category": "KsqlDB Issues",
      "pattern": r"\bKsqlException\b|KSQL_PARSING_EXCEPTION|KsqlStatementException", "hint": False},
     {"name": "connect_error", "severity": "medium", "category": "Connect Issues",
@@ -180,6 +200,7 @@ _SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 HINT_ORDER = [
     "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧩 Plugin not found", "📦 Class loading error",
     "🔑 Authentication failure", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
+    "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
     "🔀 Serialization or conversion error", "🔌 Connection failure", "⏱️ Timeouts", "📏 Record too large",
     "❓ Unknown topic or partition", "⏮️ Offset out of range",
 ]

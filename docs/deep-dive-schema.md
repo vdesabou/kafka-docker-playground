@@ -21,6 +21,8 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 | every version of a subject (or of all subjects) | `playground schema get [--subject <s>]` |
 | one version as a plain schema file | `playground schema get --subject <s> --version N --schema-only > vN.avsc` |
 | the schema behind an id seen in a record | `playground schema get --id <id>` |
+| everything about a subject (rule, mode, versions, references, shared ids, topic) or an id | `playground schema describe --subject <s>` / `--id <id>` |
+| who deleted the schema, when, soft or hard? when was the rule relaxed? | `playground schema history [--subject <s>] [--since 2d]` (or `-f <_schemas dump>`) |
 | soft-deleted subjects too | `playground schema get --deleted` |
 | a new version, without producing | `playground schema register --subject <s> << 'EOF' … EOF` |
 | would this schema be accepted? (nothing registered) | `playground schema check-compatibility --subject <s> < new.avsc` (exit 0 / 1, `--compatibility <rule>`) |
@@ -108,6 +110,69 @@ Gotchas:
 - Protobuf schemas are printed as text, Avro and JSON Schema as pretty JSON.
 - Without `--subject`, every subject is read one by one (several REST calls per version): slow on a registry with
   hundreds of subjects. Use `--subject` in scripts.
+
+### Everything about one subject: `describe`
+
+```bash
+playground schema describe --subject orders-value
+playground schema describe --id 3              # every subject and version using the id of a record
+playground schema describe --subject orders-value --json
+```
+
+```text
+🔰 subject orders-value
+   🛡️ compatibility  BACKWARD 🌍 (global, no subject-level rule)
+   🔏 mode           READWRITE 🌍 (global)
+   🏷️ record name    com.example.Order
+   🧭 strategy       TopicNameStrategy → topic orders ✅
+   📚 versions
+      💯 v1  id 3  AVRO  2026-10-31 15:54:23
+         ⬅️ referenced by order-ref v1 (id 5): can't be deleted before it
+         👯 same schema (id) in other-topic-com.example.Order v1
+      🧟 v2  id 4  AVRO  2026-10-31 15:58:55  soft deleted
+```
+
+- The strategy is guessed from the name: `<topic>-key` / `<topic>-value` (TopicNameStrategy), the record full name
+  (RecordNameStrategy) or `<topic>-<record full name>` (TopicRecordNameStrategy). `❗ (no such topic)` means no
+  topic has that name: a strategy mismatch, or a topic deleted without its subjects.
+- `👯 same schema (id)`: the same schema registered under another subject shares its id; permanently deleting one
+  subject doesn't make the id unresolvable while the other keeps it.
+
+### What happened, and when: `history`
+
+```bash
+playground schema history                                  # the whole timeline of the registry
+playground schema history --subject orders-value --since 2d
+playground schema history -f customer-schemas.txt          # a dump sent by a customer
+```
+
+It reads the `_schemas` topic (the registry's own log: every registration, delete and setting change, with the
+time it happened):
+
+```text
+📅 2026-10-31
+   15:53:44  ⏺️ orders-value: registered v1 (id 1, AVRO)
+   15:53:50  🛡️ orders-value: compatibility BACKWARD
+   15:54:10  🧟 orders-value: soft deleted the subject (versions 1, 2): the ids still resolve
+   15:54:21  💀 orders-value: permanently deleted v1 (id 1): ❌ id 1 no longer resolves, records written with it can't be deserialized
+
+🧭 11 events from 26 records: 4 registrations, 2 soft deletes, 3 permanent deletes, 2 setting changes
+   ❌ ids that no longer resolve: 1, 2 (consumers fail on the records written with them: 'Error retrieving Avro schema for id N' / 40403)
+```
+
+Gotchas:
+
+- **To ask a customer for the dump**: `kafka-console-consumer --bootstrap-server … --topic _schemas --from-beginning
+  --property print.key=true --property print.timestamp=true > schemas.txt` (the topic name is `kafkastore.topic`,
+  `_schemas_<name>_<namespace>` with CFK). It holds the schemas, not data, but check it before sharing it.
+- **Not on Confluent Cloud**: `_schemas` isn't exposed; the audit logs of the organization have the schema events.
+- A soft-deleted schema registered again makes the registry tombstone the old version then write a new one: the
+  timeline says `the id is registered again by orders-value v3`, not "no longer resolves".
+- The temporary subjects of `check-compatibility` and `diff` are hidden (`--include-temporary`).
+- The log digests (`playground analyze logs`, `container logs --errors`, `connector diagnose`) point to these commands:
+  `🔍 Schema id not found` (`Error retrieving Avro schema for id N`, `40403`) → `schema history` / `describe --id`,
+  `🛡️ Incompatible schema refused` (`409`) → `check-compatibility` / `diff`, `📛 Subject not found` (`40401`) →
+  `schema list`.
 
 ---
 
@@ -437,11 +502,12 @@ playground stop
 
 | Customer symptom | Command |
 | --- | --- |
-| "`Schema not found` / `Error retrieving Avro schema for id N`" after a cleanup | produce, `schema delete --subject <s> --permanent`, consume: the skipped-records warning shows the failure; a soft delete doesn't reproduce it |
+| "`Schema not found` / `Error retrieving Avro schema for id N`" after a cleanup | on the customer side: `schema history -f <their _schemas dump>` shows the 💀 permanent delete and when; to reproduce: produce, `schema delete --subject <s> --permanent`, consume: the skipped-records warning shows the failure; a soft delete doesn't reproduce it |
+| "who changed the compatibility rule?" / "the rule was relaxed then put back" | `schema history --subject <s>`: every `🛡️ compatibility X → Y` with its time |
 | "the producer gets `Schema being registered is incompatible`" | `set-compatibility` to the customer's rule, `register` v1, then `check-compatibility` and `diff --to @<customer v2>`: the verdict, its reasons and the field that breaks it, without registering anything |
 | "will the new version of our schema be accepted?" / "which rule should we use?" | `diff --subject <s> --to @<new>` shows the verdict of every rule at once; `check-compatibility --compatibility FULL_TRANSITIVE` for a transitive rule |
 | "consumers broke after someone relaxed compatibility" | `set-compatibility NONE`, `register` the incompatible version, set the rule back, consume old and new records |
-| "which schema is this record using?" | `topic consume -t <t> --last 1` for `ValueSchemaId:`, then `schema get --id <id>` |
+| "which schema is this record using?" | `topic consume -t <t> --last 1` for `ValueSchemaId:`, then `schema describe --id <id>` (and `schema get --id <id> --schema-only`) |
 | "the sink reads the wrong subject / subject not found" | the producer's subject name strategy: `schema get` to list the real subjects, `topic consume --value-subject` to read them (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
 | "the same schema keeps creating new versions" | register twice with a whitespace change, then `set-normalize --value true` and again |
 | "a schema registered years ago is refused after an upgrade" | `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
@@ -467,6 +533,8 @@ playground schema register --subject <s> [--schema @file] [--metadata-property k
 playground schema get-compatibility --subject <s> | --global [--json]
 playground schema set-compatibility --subject <s> | --global --compatibility BACKWARD|FORWARD|FULL|NONE[_TRANSITIVE]
 playground topic set-schema-compatibility --topic <t> --compatibility … [--include-key]
+playground schema describe --subject <s> | --id <id> [--json]
+playground schema history [--subject <s>] [--since 12h|2d|<date>] [-f <_schemas dump>] [--json]
 playground schema check-compatibility --subject <s> [--schema @file] [--version N] [--compatibility <rule>] [--json] < new.avsc
 playground schema diff [--subject <s>] [--from N|latest|id:<id>|@file] [--to …] [--no-verdict] [--json]
 playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]
