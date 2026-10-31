@@ -4155,6 +4155,9 @@ commands:
        set-normalize, validate-new-schemas   registry-wide behaviour
        set-alias            point one subject name at another
 
+     📦 Move
+       export / import      a registry to a folder and back, keeping the ids
+
      🔀 diff compares two versions (or a version and a file) field by field,
      with the verdict of each compatibility rule.
 
@@ -4627,6 +4630,103 @@ commands:
     - playground schema history
     - playground schema history --subject orders-value --since 2d
     - playground schema history -f customer-schemas-dump.txt --json | jq .summary
+
+  - name: export
+    group: Schema
+    filters:
+    - schema_registry_running
+    help: |-
+      📦 Export the subjects of the registry to a folder
+
+      One file per version (<subject>/v<n>.avsc|json|proto, pretty-printed)
+      and a manifest.json with the ids, versions, references, metadata, rule
+      sets, and the subject-level compatibility, mode and alias. 'playground
+      schema import' loads it into another registry with the same ids, so
+      records copied from the source still decode.
+
+      🎓 Tip: export into the folder of a reproduction model and add
+      'playground schema import -f <the model folder>/schemas' before
+      creating the connector: the model ships the customer's schemas.
+    flags:
+    - long: --subject-prefix
+      arg: prefix
+      required: false
+      help: |-
+        🔎 Only the subjects starting with this prefix
+    - long: --output-dir
+      short: -o
+      arg: folder
+      default: "schemas-export"
+      required: false
+      help: |-
+        📁 Folder to write (created if needed, files of the same name are overwritten)
+    - *verbose
+    - *cluster
+    examples:
+    - playground schema export -o /tmp/schemas
+    - playground schema export --subject-prefix orders -o ./schemas
+
+  - name: import
+    group: Schema
+    filters:
+    - schema_registry_running
+    help: |-
+      📥 Import schemas into the registry, keeping their ids
+
+      Loads what a customer can send about their registry:
+
+        - a folder (or .tgz / .zip) written by 'playground schema export'
+        - a JSON array of versions: curl <registry>/schemas, or
+          'playground schema get --json'
+        - a dump of the _schemas topic ('playground topic consume -t _schemas
+          --json', or kafka-console-consumer with print.key=true and
+          print.timestamp=true): the last state of every live version
+
+      Every version is registered in IMPORT mode with its original id and
+      version number (in id order, so references exist first), then the
+      subject goes back to its normal mode and gets the compatibility, mode
+      and alias of the source. Records written with those ids decode here.
+
+      ⚠️ IMPORT mode needs mode.mutability=true on the registry (the
+      playground's has it), and an id already used by another schema here is
+      refused (42205): import into a fresh registry, or use --new-ids.
+    flags:
+    - long: --file
+      short: -f
+      arg: file
+      required: true
+      help: |-
+        📄 Export folder, .tgz / .zip of one, JSON array of versions, or _schemas dump
+    - long: --on-conflict
+      arg: action
+      allowed: [skip, overwrite, merge]
+      default: skip
+      required: false
+      help: |-
+        🤝 What to do with a subject that already exists: skip it, overwrite it (permanently deleted first), or merge (versions added to it)
+    - long: --new-ids
+      required: false
+      help: |-
+        🆕 Let the registry assign new ids (no IMPORT mode): the schemas are the same, the ids in old records don't match
+    - long: --with-global-settings
+      required: false
+      help: |-
+        🌍 Also apply the global compatibility of the source
+    - long: --subject-prefix
+      arg: prefix
+      required: false
+      help: |-
+        🔎 Only the subjects starting with this prefix
+    - long: --dry-run
+      required: false
+      help: |-
+        🧪 Show what would be imported, and the conflicts, without changing anything
+    - *verbose
+    - *cluster
+    examples:
+    - playground schema import -f /tmp/schemas --dry-run
+    - playground schema import -f customer-schemas.json --on-conflict overwrite
+    - playground schema import -f customer-_schemas-dump.txt --new-ids
 
   - name: get-compatibility
     filters:

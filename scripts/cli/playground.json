@@ -2048,7 +2048,7 @@
     },
     {
       "name": "schema",
-      "description": "🔰 Schema commands\n\nTalk to the Schema Registry of the running environment, whether it is the\nlocal container or the one in Confluent Cloud, without building the urls\nand the credentials yourself.\n\n🔍 Read\n  list                 every subject: versions, latest id, type, rule, mode\n  describe             everything about a subject or a schema id\n  history              timeline from _schemas: registrations, deletes, rule changes\n  get                  every version of a subject, or of all subjects\n  get-compatibility    the compatibility rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register             add a new version to a subject\n  check-compatibility  would this schema be accepted? (nothing registered)\n  delete               a version, or the whole subject\n  set-compatibility    relax or tighten the evolution rule (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point one subject name at another\n\n🔀 diff compares two versions (or a version and a file) field by field,\nwith the verdict of each compatibility rule.\n\n🪄 derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup",
+      "description": "🔰 Schema commands\n\nTalk to the Schema Registry of the running environment, whether it is the\nlocal container or the one in Confluent Cloud, without building the urls\nand the credentials yourself.\n\n🔍 Read\n  list                 every subject: versions, latest id, type, rule, mode\n  describe             everything about a subject or a schema id\n  history              timeline from _schemas: registrations, deletes, rule changes\n  get                  every version of a subject, or of all subjects\n  get-compatibility    the compatibility rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register             add a new version to a subject\n  check-compatibility  would this schema be accepted? (nothing registered)\n  delete               a version, or the whole subject\n  set-compatibility    relax or tighten the evolution rule (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point one subject name at another\n\n📦 Move\n  export / import      a registry to a folder and back, keeping the ids\n\n🔀 diff compares two versions (or a version and a file) field by field,\nwith the verdict of each compatibility rule.\n\n🪄 derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup",
       "usage": "playground schema COMMAND",
       "options": [],
       "subcommands": [
@@ -2420,6 +2420,108 @@
               ],
               "argument": "",
               "description": "📗 Print the result as JSON, and nothing else"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+            }
+          ]
+        },
+        {
+          "name": "export",
+          "description": "📦 Export the subjects of the registry to a folder\n\nOne file per version (<subject>/v<n>.avsc|json|proto, pretty-printed)\nand a manifest.json with the ids, versions, references, metadata, rule\nsets, and the subject-level compatibility, mode and alias. 'playground\nschema import' loads it into another registry with the same ids, so\nrecords copied from the source still decode.\n\n🎓 Tip: export into the folder of a reproduction model and add\n'playground schema import -f <the model folder>/schemas' before\ncreating the connector: the model ships the customer's schemas.",
+          "usage": "playground schema export [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject-prefix"
+              ],
+              "argument": "PREFIX",
+              "description": "🔎 Only the subjects starting with this prefix"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "FOLDER",
+              "description": "📁 Folder to write (created if needed, files of the same name are overwritten)\n\nDefault value: schemas-export"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+            }
+          ]
+        },
+        {
+          "name": "import",
+          "description": "📥 Import schemas into the registry, keeping their ids\n\nLoads what a customer can send about their registry:\n\n  - a folder (or .tgz / .zip) written by 'playground schema export'\n  - a JSON array of versions: curl <registry>/schemas, or\n    'playground schema get --json'\n  - a dump of the _schemas topic ('playground topic consume -t _schemas\n    --json', or kafka-console-consumer with print.key=true and\n    print.timestamp=true): the last state of every live version\n\nEvery version is registered in IMPORT mode with its original id and\nversion number (in id order, so references exist first), then the\nsubject goes back to its normal mode and gets the compatibility, mode\nand alias of the source. Records written with those ids decode here.\n\n⚠️ IMPORT mode needs mode.mutability=true on the registry (the\nplayground's has it), and an id already used by another schema here is\nrefused (42205): import into a fresh registry, or use --new-ids.",
+          "usage": "playground schema import [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "📄 Export folder, .tgz / .zip of one, JSON array of versions, or _schemas dump\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--on-conflict"
+              ],
+              "argument": "ACTION",
+              "description": "🤝 What to do with a subject that already exists: skip it, overwrite it (permanently deleted first), or merge (versions added to it)\n\nDefault value: skip\nAllowed values: skip, overwrite, merge"
+            },
+            {
+              "names": [
+                "--new-ids"
+              ],
+              "argument": "",
+              "description": "🆕 Let the registry assign new ids (no IMPORT mode): the schemas are the same, the ids in old records don't match"
+            },
+            {
+              "names": [
+                "--with-global-settings"
+              ],
+              "argument": "",
+              "description": "🌍 Also apply the global compatibility of the source"
+            },
+            {
+              "names": [
+                "--subject-prefix"
+              ],
+              "argument": "PREFIX",
+              "description": "🔎 Only the subjects starting with this prefix"
+            },
+            {
+              "names": [
+                "--dry-run"
+              ],
+              "argument": "",
+              "description": "🧪 Show what would be imported, and the conflicts, without changing anything"
             },
             {
               "names": [
