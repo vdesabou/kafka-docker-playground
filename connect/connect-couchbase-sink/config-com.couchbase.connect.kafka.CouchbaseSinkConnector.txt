@@ -12,15 +12,6 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 Name of the Couchbase bucket to use.
@@ -31,6 +22,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.bootstrap.timeout
 
@@ -68,6 +68,28 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 ==========================
 Security
 ==========================
+🔘 couchbase.client.certificate.password
+
+Password for accessing the client certificate.
+
+May be overridden with the KAFKA_COUCHBASE_CLIENT_CERTIFICATE_PASSWORD environment variable.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.cipher.suites
+
+The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
+
+Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -117,28 +139,6 @@ Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private
 If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
 
 	 - Type: STRING
-	 - Default: 
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.client.certificate.password
-
-Password for accessing the client certificate.
-
-May be overridden with the KAFKA_COUCHBASE_CLIENT_CERTIFICATE_PASSWORD environment variable.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.cipher.suites
-
-The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
-
-Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
-
-	 - Type: LIST
 	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
