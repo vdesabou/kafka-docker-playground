@@ -6441,7 +6441,7 @@ playground_schema_register_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--rule-set RULE-SET")"
-    printf "    📏 Data contract rules: a ruleSet json ({\"domainRules\": [...],\n    \"migrationRules\": [...]}, or a bare array of domain rules), as @<file>, a\n    file path or inline json\n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules\n"
+    printf "    📏 Data contract rules: a ruleSet json ({\"domainRules\": [...],\n    \"migrationRules\": [...]}, a bare array of domain rules, or a {\"ruleSet\":\n    {...}} request body), as @<file>, a file path or inline json\n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules\n"
     echo
 
     # :flag.usage
@@ -7011,6 +7011,12 @@ playground_schema_contexts_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema contexts\n"
+    printf "  playground schema contexts --cluster us --json\n"
+    echo
+
   fi
 }
 
@@ -7241,6 +7247,12 @@ playground_schema_exporter_list_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema exporter list --cluster europe\n"
+    printf "  playground schema exporter list --json\n"
+    echo
+
   fi
 }
 
@@ -7248,7 +7260,7 @@ playground_schema_exporter_list_usage() {
 playground_schema_exporter_status_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema exporter status\n\n"
-    printf "  🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and\n  number of objects exported\n  \n  Exit code 1 when the exporter is in ERROR.\n\n"
+    printf "  🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and\n  number of objects exported\n  \n  Exit code 1 when the exporter is in ERROR, or PAUSED with a trace (it stopped\n  on a failure: 'exporter create' fails then too).\n\n"
   else
     printf "playground schema exporter status - 🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported\n\n"
   fi
@@ -7295,6 +7307,12 @@ playground_schema_exporter_status_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema exporter status --name eu-to-us --cluster europe\n"
+    printf "  playground schema exporter status --name eu-to-us --wait --json\n"
+    echo
+
   fi
 }
 
@@ -7332,6 +7350,11 @@ playground_schema_exporter_pause_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema exporter pause --name eu-to-us --cluster europe\n"
     echo
 
   fi
@@ -7373,6 +7396,11 @@ playground_schema_exporter_resume_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema exporter resume --name eu-to-us --cluster europe\n"
+    echo
+
   fi
 }
 
@@ -7412,6 +7440,11 @@ playground_schema_exporter_reset_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema exporter reset --name eu-to-us --cluster europe\n"
+    echo
+
   fi
 }
 
@@ -7449,6 +7482,11 @@ playground_schema_exporter_delete_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema exporter delete --name eu-to-us --cluster europe\n"
     echo
 
   fi
@@ -7645,6 +7683,12 @@ playground_schema_set_compatibility_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema set-compatibility --subject orders-value --compatibility\n  NONE\n"
+    printf "  playground schema set-compatibility --global --compatibility FULL\n"
+    echo
+
   fi
 }
 
@@ -7704,6 +7748,12 @@ playground_schema_get_mode_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema get-mode --subject orders-value\n"
+    printf "  playground schema get-mode --global --json\n"
     echo
 
   fi
@@ -7768,6 +7818,12 @@ playground_schema_set_mode_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema set-mode --subject orders-value --mode READONLY\n"
+    printf "  playground schema set-mode --global --mode READWRITE\n"
+    echo
+
   fi
 }
 
@@ -7813,6 +7869,11 @@ playground_schema_set_normalize_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema set-normalize --value true\n"
+    echo
+
   fi
 }
 
@@ -7856,6 +7917,11 @@ playground_schema_validate_new_schemas_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema validate-new-schemas --value false\n"
     echo
 
   fi
@@ -8054,6 +8120,11 @@ playground_schema_set_alias_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema set-alias --subject orders-value --alias legacy-orders-value\n"
+    echo
+
   fi
 }
 
@@ -8106,6 +8177,12 @@ playground_schema_get_alias_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema get-alias --alias legacy-orders-value\n"
+    printf "  playground schema get-alias --alias legacy-orders-value --json\n"
     echo
 
   fi
@@ -12720,6 +12797,12 @@ playground_topic_set_schema_compatibility_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic set-schema-compatibility --topic orders --compatibility NONE\n"
+    printf "  playground topic set-schema-compatibility --topic orders --compatibility FULL\n  --include-key\n"
     echo
 
   fi
@@ -51509,8 +51592,8 @@ playground_schema_register_command() {
           logerror "❌ --rule-set is not valid json"
           exit 1
       fi
-      # a bare array of rules is taken as domainRules
-      rule_set_json=$(echo "$rule_set_json" | jq -c 'if type == "array" then {domainRules: .} else . end')
+      # a bare array of rules is taken as domainRules, a {"ruleSet": …} wrapper (a request body) is unwrapped
+      rule_set_json=$(echo "$rule_set_json" | jq -c 'if type == "array" then {domainRules: .} elif has("ruleSet") then .ruleSet else . end')
   fi
   if [ "${#rules[@]}" -gt 0 ]
   then
@@ -52997,7 +53080,13 @@ playground_schema_exporter_status_command() {
   else
       echo "$sr_response" | jq -r '"🔗 exporter \(.name): \(.state), offset \(.offset), \(.objectsExported // 0) object(s) exported\(if .trace and .trace != "" then "\n   🔥 " + .trace else "" end)"'
   fi
-  [ "$state" != "ERROR" ] || exit 1
+  # ERROR, or PAUSED with a trace: the exporter stopped on a failure (a destination that refuses the IMPORT mode…)
+  trace=$(echo "$sr_response" | jq -r '.trace // empty')
+  if [ "$state" == "ERROR" ] || { [ "$state" == "PAUSED" ] && [ -n "$trace" ]; }
+  then
+      exit 1
+  fi
+  exit 0
 
 }
 
