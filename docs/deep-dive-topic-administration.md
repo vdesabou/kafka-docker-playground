@@ -203,11 +203,46 @@ Gotchas:
 
 ---
 
-## 7. The brokers
+## 7. Partitions and brokers: `reassign`, `elect-leader`, `broker config`
 
-`playground broker config` changes the configuration of the live brokers (see the recipes below). The other
-`playground broker` commands (the health of the cluster, broker failures and rolling restarts, transactions, broker
-metrics) have their own page, with a 3-broker lab: the [brokers and transactions deep dive](/deep-dive-broker.md).
+These three change where the partitions live and how the brokers behave, while clients run: that is what reproduces
+"it broke during a rebalance", "the client fails when the leader moves", or "it only happens with the customer's broker
+setting".
+
+```bash
+playground run -f <example> --enable-multiple-brokers          # brokers 1, 2 and 3: needed by reassign / elect-leader
+
+# move the replicas: explicit (preferred leader first), or a balanced plan like a rebalance
+playground topic reassign -t orders --replicas 2,3
+playground topic reassign -t orders --brokers 1,2,3 --throttle 100000 --no-wait   # a slow move, still running
+playground topic reassign -t orders --verify-only                                 # its progress (removes the throttle when done)
+
+# move the leaders
+playground topic elect-leader -t orders                         # preferred leader election (the first replica)
+playground topic elect-leader -t orders --partition 0 --leader 2   # a controlled leader change, no broker stopped
+
+# change a broker config live (dynamic configs only)
+playground broker config get --key log.retention.ms            # the value of each broker and its source
+playground broker config set --key log.retention.ms --value 60000   # cluster-wide, --broker <id> for one broker
+playground broker config delete --key log.retention.ms
+```
+
+| Command | Under the hood | What to know |
+| --- | --- | --- |
+| `topic reassign` | `kafka-reassign-partitions --generate` (for `--brokers`), `--execute`, then `--verify` until completed | shows the current and new assignment first (`--dry-run` stops there); `--throttle <bytes/s>` keeps the move running for a while: under-replicated partitions, clients refreshing their metadata; `--no-wait` returns at once |
+| `topic elect-leader` | `kafka-leader-election` (`PREFERRED`, `UNCLEAN` with `--unclean`) | a reassignment only moves the leader when the old one leaves the replicas: the new preferred leaders take over only after an election (or `auto.leader.rebalance.enable`, every 5 minutes). `--leader <id>` first puts the broker first in the replicas (a reassignment without data movement, it must already be a replica), then elects it |
+| `broker config` | `kafka-configs --entity-type brokers` (`--entity-default` without `--broker`) | `get --key <k>` prints the value each broker uses and its source (`DYNAMIC_DEFAULT_BROKER_CONFIG`, `STATIC_BROKER_CONFIG`, `DEFAULT_CONFIG`), `--all` every config; a key that is not dynamic is refused (`Cannot update these configs dynamically`): use `container set-environment-variables`, which recreates the broker |
+
+Gotchas:
+
+- **`reassign` and `elect-leader` need several brokers** (`--enable-multiple-brokers`), not on Confluent Cloud.
+- **`--unclean` loses data**: it elects a replica that is not in sync when no in-sync replica is available. Use it to
+  reproduce exactly that, never to "fix" a repro.
+- `broker config set` without `--broker` sets the cluster-wide default: a value set per broker (`--broker 2`) wins over
+  it, which `get --key` shows as `DYNAMIC_BROKER_CONFIG`.
+
+The other `playground broker` commands (the health of the cluster, broker failures and rolling restarts, transactions,
+broker metrics) have their own page, with a 3-broker lab: the [brokers and transactions deep dive](/deep-dive-broker.md).
 
 ---
 

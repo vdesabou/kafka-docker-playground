@@ -118,4 +118,33 @@ lab_expect_contains "4 records in 1 group(s)"
 lab_expect_contains "original records: topic orders partition 0 offsets 3..6 (4)"
 lab_expect_contains "dlq partition 0 offsets 0..3"
 
+log "Step 6: the follow-up commands"
+lab_run playground connector history --connector strict-sink
+lab_expect_exit 0
+lab_expect_contains "History of 🌎onprem connector strict-sink"
+lab_expect_contains "created (FileStreamSinkConnector, tasks.max=1)"
+lab_expect_contains "FAILED on connect:8083"
+lab_expect_contains "↳ org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler"
+lab_expect_contains "connector deleted"
+lab_expect_contains "1 failure(s) (task 0: 1)"
+lab_expect_contains "deleted"
+lab_run playground connector tasks --connector orders-sink
+lab_expect_exit 0
+lab_expect_contains "Tasks of 🌎onprem connector orders-sink (sink, connector RUNNING, on connect:8083, tasks.max=1, 1 task(s))"
+lab_expect_contains "orders-0"
+lab_run playground connector topics --connector orders-sink
+lab_expect_exit 0
+lab_expect_contains "Active topics of 🌎onprem connector orders-sink (1):"
+lab_expect_equals "$(echo "$LAB_OUTPUT" | tail -1 | tr -d ' ')" "orders" "active topic of orders-sink"
+lab_run playground connector metrics --connector orders-sink
+lab_expect_exit 0
+lab_expect_contains "Task metrics of 🌎onprem connector orders-sink (sink, connector RUNNING)"
+lab_expect_contains "records skipped"
+lab_expect_contains "What stands out:"
+lab_expect_contains "sent to the DLQ"
+lab_expect_contains "↳ playground topic dlq inspect --connector orders-sink"
+lab_run playground connector restart --only-failed
+lab_expect_exit 0
+lab_expect_contains "Nothing is FAILED in 🌎onprem connector orders-sink, skipping it"
+
 log "✅ all the outputs of the page are as expected"

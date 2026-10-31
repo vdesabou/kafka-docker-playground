@@ -22,7 +22,7 @@ CLI change that makes a page wrong shows up as a failing test.
 ### 🩺 A connector doesn't work: diagnose and the dead letter queue
 
 - 📖 [Read the deep dive](/deep-dive-connector-troubleshooting.md)
-- 🧠 Commands: `connector diagnose`, `topic dlq inspect`, `topic dlq replay`
+- 🧠 Commands: `connector diagnose`, `topic dlq inspect`, `topic dlq replay`, `connector tasks`, `topics`, `history`, `metrics`, `restart --only-failed`
 - 🎬 Bite size session: [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
 
 ### 🧭 Offsets and lag: sinks, sources, consumer groups
@@ -40,7 +40,7 @@ CLI change that makes a page wrong shows up as a failing test.
 ### 🧑‍💻 Connector plugins: versions, release notes, config keys, source code, jars
 
 - 📖 [Read the deep dive](/deep-dive-connector-plugin.md)
-- 🧠 Commands: `connector-plugin versions`, `changelog`, `config-key`, `sourcecode`, `search-jar`
+- 🧠 Commands: `connector-plugin versions`, `info`, `changelog`, `config-key`, `config-diff`, `sourcecode`, `fm-versions`, `search-jar`, `dependencies`, `cve-scan`
 - 🎬 Bite size session: [🧑‍💻 The source code of a connector at the customer's version](/sessions?id=🧑💻-the-source-code-of-a-connector-at-the-customers-version)
 
 ### 📈 Benchmark a connector

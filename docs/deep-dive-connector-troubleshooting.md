@@ -3,7 +3,9 @@
 The commands for the most common support question: "my connector doesn't work". `connector diagnose` chains status,
 error digest, progress and next steps in one call. When a sink is `RUNNING` but writes nothing, the records usually
 went to the dead letter queue (DLQ): `topic dlq inspect` groups them by error with the root cause and the original
-offsets, and `topic dlq replay` sends them back once the cause is fixed. Takes about 15 minutes to read and run.
+offsets, and `topic dlq replay` sends them back once the cause is fixed. Then `connector tasks`, `topics`, `history`,
+`metrics` and `restart --only-failed` answer the follow-up questions: how the work is split, what happened before,
+whether it moves, how to recover. Takes about 20 minutes to read and run.
 
 > [!TIP]
 > In a hurry? Watch the short video session [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
@@ -19,6 +21,11 @@ offsets, and `topic dlq replay` sends them back once the cause is fixed. Takes a
 | what a replay would do | `playground topic dlq replay --connector <c> --dry-run` |
 | send the records back to their topic | `playground topic dlq replay --connector <c>` |
 | send them somewhere else | `… replay --to <topic>` (`--keep-error-headers` to keep the error headers) |
+| which task got which partitions / tables, on which worker | `playground connector tasks [--connector <c>]` (`--all-keys`) |
+| the topics it really uses | `playground connector topics [--connector <c>]` (`--reset`) |
+| when it failed, how many restarts, what changed in the config | `playground connector history [--connector <c>]` (`--since 12h`, deleted connectors too) |
+| is it moving? records skipped, retried, sent to the DLQ | `playground connector metrics [--connector <c>]` (`--watch 10s`) |
+| restart only what is FAILED | `playground connector restart --only-failed` |
 
 ---
 
@@ -195,7 +202,135 @@ Gotchas:
 
 ---
 
-## 5. Hands-on lab (≈10 min)
+## 5. Beyond diagnose: `tasks`, `topics`, `history`, `metrics`, `restart --only-failed`
+
+`connector diagnose` answers "what is wrong right now". Five narrower commands answer the follow-up questions: how the
+work is split, what the connector touched, what happened before, whether it moves, and how to recover without touching
+the healthy tasks. All of them take `--connector <c>` (every connector without it) and, except `restart`, `--json`.
+
+| Question | Command | Reads |
+| --- | --- | --- |
+| why does one task do all the work? which worker runs which task? | `connector tasks` | `/status`, `/tasks` (the config of each task), and for a sink the consumer group `connect-<c>` |
+| which topics does it really use? (`topics.regex`, a source with a topic per table) | `connector topics` | `/connectors/<c>/topics` (KIP-558 active topics) |
+| when did it fail? how many restarts? what changed in the config before? | `connector history` | the `connect-status` and `connect-configs` topics |
+| is it making progress? how many records were skipped, retried, sent to the DLQ? | `connector metrics` | the JMX task metrics of the worker(s) running the tasks, plus the connector's own MBeans |
+| restart only what is broken | `connector restart --only-failed` | `/status`, then `restart?includeTasks=true&onlyFailed=true` |
+
+### `connector tasks`: how the work is split
+
+```bash
+playground connector tasks --connector orders-sink
+# 🧵 Tasks of 🌎onprem connector orders-sink (sink, connector RUNNING, on connect:8083, tasks.max=1, 1 task(s))
+# Task   State            Worker                   Partitions
+# 0      🟢 RUNNING       connect:8083             orders-0
+playground connector tasks --connector jdbc-source --all-keys     # the whole config of each task
+```
+
+- **A connector splits its work in the task configs**: `tasks` shows, under each task, only the keys whose value differs
+  between tasks or from the connector config (`⚙️  tables=…` for a JDBC source, `task.id`, files…). When they are all
+  the same: `⚙️ All the tasks have the same config as the connector (use --all-keys to see it)`. Secrets are masked.
+- **Partitions** (sinks only) come from `kafka-consumer-groups --describe` on `connect-<c>` (or
+  `consumer.override.group.id`), matched on the client id `connector-consumer-<c>-<task>`. A task without partition
+  prints `- (no partition assigned)`, and the summary explains it: `tasks.max` is higher than the number of
+  partitions, or the group is rebalancing.
+- With several workers, a `👷 Tasks per worker:` summary shows the balance after a rebalance.
+- **`tasks.max` is a maximum**: a source can create fewer tasks (one JDBC task per table at most), or none until it
+  finds work (`⚠️ The connector has no task`).
+- A failed task shows the first line of its trace (`↳ …`). Fully managed: state only, the config and worker of a task
+  are not exposed.
+
+### `connector topics`: what it touched
+
+```bash
+playground connector topics --connector orders-sink
+# 📚 Active topics of 🌎onprem connector orders-sink (1):
+# orders
+playground connector topics --connector orders-sink --reset    # empty the list, it fills again from now on
+```
+
+- The list **only grows** while the connector runs: a topic used once a week ago is still there. `--reset` starts it
+  over, then run the scenario again to see what is used now.
+- A source lists the topics it wrote to, a sink the topics it consumed from. Each topic is also in `connector history`
+  (`📚 first use of topic …`, with the date).
+- Self-managed, CP 5.5+, `topic.tracking.enable=true` on the worker (the default); `--reset` also needs
+  `topic.tracking.allow.reset=true` (the default).
+
+### `connector history`: what happened before
+
+```bash
+playground connector history --connector strict-sink            # deleted connectors too
+playground connector history --since 1h                         # every connector, recent events only
+```
+
+What it prints (times and generations vary from run to run):
+
+```text
+🕰️ History of 🌎onprem connector strict-sink
+2026-10-31 09:12:03 UTC  🆕 config      created (FileStreamSinkConnector, tasks.max=1)
+2026-10-31 09:12:04 UTC  🟢 connector   RUNNING on connect:8083 (generation 2)
+2026-10-31 09:12:04 UTC  🧵 tasks       1 task config(s) committed
+2026-10-31 09:12:05 UTC  🟢 task 0      RUNNING on connect:8083 (generation 3)
+2026-10-31 09:12:06 UTC  🛑 task 0      RUNNING → FAILED on connect:8083 (generation 3)
+                                        ↳ org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+2026-10-31 09:12:31 UTC  🗑️  connector   connector deleted
+2026-10-31 09:12:31 UTC  🗑️  connector   status removed (connector deleted)
+2026-10-31 09:12:31 UTC  🗑️  task 0      status removed (connector deleted)
+🧾 1 failure(s) (task 0: 1), 0 recovery(ies) after a failure, 0 config change(s), deleted
+```
+
+- **It reads the internal topics of the connect cluster** from the beginning, not the REST API: the past states are
+  there, with the worker and generation of each one, every config change key by key (`+ key=value`, `- key`,
+  `key: old → new`), pause / stop / resume (`🎯 target state …`), task configs committed and the deletion.
+- **The summary** counts the failures per task, the recoveries (back to `RUNNING` after a `FAILED`), the config changes,
+  and gives the current state of the connector and each task with its age (`task 0: RUNNING on connect:8083 for 2h`).
+- **These topics are compacted**: on a long-running cluster, only the last record of each key is kept for sure. The
+  full timeline is reliable for recent events; for a customer's cluster, take it as a lower bound.
+- Topic names come from the worker properties (`config.storage.topic`, `status.storage.topic`); `--config-topic` /
+  `--status-topic` override them. Self-managed only.
+
+### `connector metrics`: is it moving?
+
+```bash
+playground connector metrics --connector orders-sink
+playground connector metrics --connector jdbc-sink --watch 10s   # while a load runs
+```
+
+- **One column per task**: throughput (records read / sent per second for a sink, polled / written for a source, and
+  totals since the task started), time (average and max `put` or `poll` batch, offset commit failures, running and
+  pause ratios) and errors (`record errors`, `records skipped`, `retries`, DLQ produce requests, `last error`).
+- **`🧩 Metrics of the connector itself`**: every other MBean with a `connector=<c>` key or a Debezium
+  `server=<topic.prefix>` (Debezium, Oracle XStream, MongoDB, Oracle CDC…).
+- **`🔎 What stands out:`** turns them into findings with the next command, for example
+  `⚠️ task 0: <n> record error(s), <n> skipped, <n> sent to the DLQ` then `↳ playground topic dlq inspect --connector <c>`,
+  a task that never got a record, a slow `put` (`🐢 … the target system is slow`), a Debezium connector behind the
+  source, disconnected, with a full queue or snapshotting. Otherwise `✅ Nothing stands out`.
+- Rates are the averages Kafka Connect computes over its last samples (about a minute): right after a burst, they lag
+  behind. Totals reset when a task restarts. For a throughput number, use
+  [`connector benchmark`](/deep-dive-connector-benchmark.md).
+- Read over JMX with the `kafka-jmx` tool of the connect image (no restart). Fully managed: the Telemetry API
+  (`connector display-metrics-api`). Not on cfk (`playground get-jmx-metrics -c connect-0 --domain kafka.connect`).
+
+### `connector restart --only-failed`: recover without touching the rest
+
+```bash
+playground connector restart --only-failed                       # every connector
+playground connector restart --connector orders-sink --only-failed
+# ✅ Nothing is FAILED in 🌎onprem connector orders-sink, skipping it
+playground connector restart --connector orders-sink --task-id 0  # one task
+```
+
+- With something FAILED: `🩹 Restarting the FAILED task(s) 0 of 🌎onprem connector <c>` (`the connector instance and
+  FAILED task(s) …` when the connector itself failed), through the KIP-745 call
+  (`restart?includeTasks=true&onlyFailed=true`, CP 7.0+); older versions and fully managed connectors restart each
+  FAILED task one by one.
+- A plain `connector restart` restarts the connector instance and every task: the healthy tasks rebalance too, which
+  can hide a timing problem (or create one). In a repro with several connectors, `--only-failed` is the safe default.
+- **Restart after the fix**, not before: a task that fails on a record fails again on the same record (its offset was not
+  committed). `connector history` then shows a `RUNNING → FAILED` per restart.
+
+---
+
+## 6. Hands-on lab (≈10 min)
 
 A FileStream sink reading an Avro topic that also contains two plain JSON records.
 
@@ -311,13 +446,38 @@ playground topic dlq inspect --connector orders-sink
 #   📬 dlq partition 0 offsets 0..3
 ```
 
+**Step 6: the follow-up commands**
+
+```bash
+playground connector history --connector strict-sink        # deleted in step 1
+# 🕰️ History of 🌎onprem connector strict-sink
+# … 🛑 task 0      … FAILED on connect:8083 (generation …)
+#                                         ↳ org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+# … 🗑️  connector   connector deleted
+# 🧾 1 failure(s) (task 0: 1), 0 recovery(ies) after a failure, 0 config change(s), deleted
+playground connector tasks --connector orders-sink
+# 🧵 Tasks of 🌎onprem connector orders-sink (sink, connector RUNNING, on connect:8083, tasks.max=1, 1 task(s))
+# 0      🟢 RUNNING       connect:8083             orders-0
+playground connector topics --connector orders-sink
+# 📚 Active topics of 🌎onprem connector orders-sink (1):
+# orders
+playground connector metrics --connector orders-sink
+# 📈 Task metrics of 🌎onprem connector orders-sink (sink, connector RUNNING)
+# records skipped   …
+# 🔎 What stands out:
+# ⚠️ task 0: … record error(s), … skipped, … sent to the DLQ
+#    ↳ playground topic dlq inspect --connector orders-sink
+playground connector restart --only-failed
+# ✅ Nothing is FAILED in 🌎onprem connector orders-sink, skipping it
+```
+
 ```bash
 playground stop
 ```
 
 ---
 
-## 6. Recipes for support repros
+## 7. Recipes for support repros
 
 | Customer symptom | Command |
 | --- | --- |
@@ -345,7 +505,7 @@ nb=$(playground topic dlq inspect --topic dlq --json | jq '[.groups[] | select(.
 
 ---
 
-## 7. Cheat sheet
+## 8. Cheat sheet
 
 ```bash
 playground connector metrics  [--connector <c>] [--watch 10s | --json]
