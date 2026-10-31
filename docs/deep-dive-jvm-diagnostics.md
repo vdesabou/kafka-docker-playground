@@ -508,6 +508,8 @@ playground debug tcp-dump         [-c <c>]… [--port <p>] [--filter <bpf>] [--d
   [✂️ jscissors](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do),
   [🐞 remote debugging](/sessions?id=🐞-a-breakpoint-in-a-running-connector-remote-debugging)
 - 📖 [Analyze what you collected](/toolkit-debugging?id=🔎-analyze-what-you-collected) in the Reproduction toolkit
+- 🍪 Deep dive: [Debugging the JVM](/deep-dive-java-debugging.md) for a breakpoint, the JVM's SSL / Kerberos / class
+  loading traces, testssl and the diagnostics bundle
 - 🍪 Deep dives: [`container logs` and `analyze logs`](/deep-dive-container-logs.md) (the same digest for logs),
   [containers](/deep-dive-container-lifecycle.md) (`change-jdk`, `set-environment-variables`)
 - 🧠 CLI reference: [playground analyze](/playground%20analyze), [playground debug](/playground%20debug)

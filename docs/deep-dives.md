@@ -112,6 +112,12 @@ CLI change that makes a page wrong shows up as a failing test.
 - 🧠 Commands: `debug thread-dump`, `heap-dump`, `flight-recorder`, `jscissors`, `analyze thread-dump`, `gc-logs`, `flight-recorder`, `heap-dump`, `jscissors`
 - 🎬 Bite size session: [🧵 thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps), [♻️ GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs), [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go), [✂️ jscissors](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do)
 
+### 🐞 Debugging the JVM: remote debugger, SSL / Kerberos / class loading traces, testssl, diagnostics bundle
+
+- 📖 [Read the deep dive](/deep-dive-java-debugging.md)
+- 🧠 Commands: `debug enable-remote-debugging`, `disable-remote-debugging`, `connector enable-remote-debugging`, `debug java-debug`, `testssl`, `generate-diagnostics`
+- 🎬 Bite size session: [🐞 A breakpoint in a running connector](/sessions?id=🐞-a-breakpoint-in-a-running-connector-remote-debugging)
+
 ## ⚙️ Run, environments and reproductions
 
 ### 🕹️ Running examples and changing versions
@@ -149,6 +155,16 @@ CLI change that makes a page wrong shows up as a failing test.
 - 🧠 Commands: `debug block-traffic`, `debug degrade-traffic`
 - 🎬 Bite size session: [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose)
 
+### 🏚 Break one TCP connection on purpose: the Zazkia proxy
+
+- 📖 [Read the deep dive](/deep-dive-tcp-proxy.md)
+- 🧠 Commands: `tcp-proxy start`, `get-connections`, `delay`, `break`, `close-connection`, `toggle-*`, `close-all-connection-with-error`, `open-ui`
+
+### 🐿️ Flink SQL: run statements, list and cancel jobs
+
+- 📖 [Read the deep dive](/deep-dive-flink.md)
+- 🧠 Commands: `run --enable-flink`, `flink sql`, `flink list-jobs`, `flink cancel`
+
 ### 🛠 Reproduction models: bootstrap, check, export, import
 
 - 📖 [Read the deep dive](/deep-dive-reproduction-models.md)
@@ -160,3 +176,8 @@ CLI change that makes a page wrong shows up as a failing test.
 - 📖 [Read the deep dive](/deep-dive-secrets.md)
 - 🧠 Commands: `secrets check`, `set`, `import`, `list`, `link`, `backend`, `profile`, `env`, `scan`
 - 🎬 Bite size session: [🕹️ Run an example](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) (`secrets set`)
+
+### ☁️ Run the playground on an AWS EC2 instance
+
+- 📖 [Read the deep dive](/deep-dive-ec2.md)
+- 🧠 Commands: `ec2 create`, `open`, `list`, `start`, `stop`, `delete`, `sync-repro-folder`, `push-secrets`, `cloud-resources aws costs`
