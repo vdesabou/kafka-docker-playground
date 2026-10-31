@@ -97,25 +97,4 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Importance: HIGH
 	 - Required: false
 
-==========================
-RBAC
-==========================
-🔘 principal.service.name
-
-The username of the principal for this connector
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 principal.service.password
-
-The password of the principal for this connector
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: HIGH
-	 - Required: false
-
 
