@@ -1,3 +1,5 @@
+# errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+set +e
 file="${args[--file]}"
 new_ids="${args[--new-ids]}"
 on_conflict="${args[--on-conflict]}"
@@ -15,13 +17,14 @@ fi
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 import_mode_subjects=()
 function restore_modes() {
+    local rc=$?
     local s
     for s in "${import_mode_subjects[@]}"
     do
         sr_request DELETE "/mode/$(urlencode "$s")" > /dev/null
     done
     rm -rf "$tmp_dir"
-    return 0
+    return $rc
 }
 trap restore_modes EXIT
 

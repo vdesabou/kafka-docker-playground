@@ -1,3 +1,5 @@
+# errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+set +e
 subject="${args[--subject]}"
 id="${args[--id]}"
 version="${args[--version]}"
@@ -175,6 +177,14 @@ do
             log "🔰 subject ${subject} 💯 version ${real_version} (id $id)"
         fi
         print_schema "$schema_type" "$schema"
+        if echo "$object" | jq -e '.metadata != null' > /dev/null 2>&1
+        then
+            log "🟡 metadata $(echo "$object" | jq -c .metadata)"
+        fi
+        if echo "$object" | jq -e '.ruleSet != null' > /dev/null 2>&1
+        then
+            log "📏 ruleSet $(echo "$object" | jq -c .ruleSet)"
+        fi
 
         if [[ -n "$store_in_tmp" ]] && [ "$store_in_tmp" != "" ]
         then

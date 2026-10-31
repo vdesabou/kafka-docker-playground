@@ -1,3 +1,5 @@
+# errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+set +e
 subject_prefix="${args[--subject-prefix]}"
 output_dir="${args[--output-dir]}"
 verbose="${args[--verbose]}"

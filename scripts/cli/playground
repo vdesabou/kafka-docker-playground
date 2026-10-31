@@ -176,6 +176,7 @@ playground_usage() {
   printf "  %s   📜 Timeline of the Schema Registry, from its _schemas topic\n" "$(green "schema history")                            "
   printf "  %s   📦 Export the subjects of the registry to a folder\n" "$(green "schema export")                             "
   printf "  %s   📥 Import schemas into the registry, keeping their ids\n" "$(green "schema import")                             "
+  printf "  %s   📏 Test the data contract rules of a subject against records\n" "$(green "schema test-rules")                         "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "schema get-compatibility")                  "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "schema set-compatibility")                  "
   printf "  %s   🔏 Get the mode in force\n" "$(green "schema get-mode")                           "
@@ -6171,7 +6172,7 @@ playground_get_docker_compose_usage() {
 playground_schema_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema\n\n"
-    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
+    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    test-rules           do these records pass the data contract rules?\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
   else
     printf "playground schema - 🔰 Schema commands\n\n"
   fi
@@ -6191,6 +6192,7 @@ playground_schema_usage() {
   printf "  %s   📜 Timeline of the Schema Registry, from its _schemas topic\n" "$(green "history")             "
   printf "  %s   📦 Export the subjects of the registry to a folder\n" "$(green "export")              "
   printf "  %s   📥 Import schemas into the registry, keeping their ids\n" "$(green "import")              "
+  printf "  %s   📏 Test the data contract rules of a subject against records\n" "$(green "test-rules")          "
   printf "  %s   🛡️ Get the compatibility rule in force\n" "$(green "get-compatibility")   "
   printf "  %s   🛡️ Set the compatibility rule of a subject (--subject), or of the whole registry (--global)\n" "$(green "set-compatibility")   "
   printf "  %s   🔏 Get the mode in force\n" "$(green "get-mode")            "
@@ -6420,6 +6422,16 @@ playground_schema_register_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--rule-set RULE-SET")"
+    printf "    📏 Data contract rules: a ruleSet json ({\"domainRules\": [...],\n    \"migrationRules\": [...]}, or a bare array of domain rules), as @<file>, a\n    file path or inline json\n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--rule RULE (repeatable)")"
+    printf "    📏 Shortcut for a CEL condition checked when producing: <name>:<CEL\n    expression>, added to the domain rules (kind CONDITION, type CEL, mode\n    WRITE)\n    \n    Example: --rule 'amountPositive:message.amount > 0' --rule\n    'hasCurrency:size(message.currency) == 3'\n    \n    ❕ The rules run in the clients (serializers with use.latest.version=true and\n    the kafka-schema-rules jar), not in the registry: registering them never\n    refuses a record.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -6432,7 +6444,7 @@ playground_schema_register_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground schema register --subject test-protobuf << 'EOF'\nsyntax = \"proto3\";\n\npackage com.github.vdesabou;\n\nmessage Customer {\n    int64 count = 1;\n    string first_name = 2;\n    string last_name = 3;\n    string address = 4;\n}\nEOF\n  \n  playground schema register --subject test-avro --metadata-property test=test\n  --metadata-property test2=test << 'EOF'\n{\n    \"type\": \"record\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"name\": \"Customer\",\n    \"fields\": [\n        {\n            \"name\": \"count\",\n            \"type\": \"long\",\n            \"doc\": \"count\"\n        },\n        {\n            \"name\": \"first_name\",\n            \"type\": \"string\",\n            \"doc\": \"First Name of Customer\"\n        },\n        {\n            \"name\": \"last_name\",\n            \"type\": \"string\",\n            \"doc\": \"Last Name of Customer\"\n        },\n        {\n            \"name\": \"address\",\n            \"type\": \"string\",\n            \"doc\": \"Address of Customer\"\n        }\n    ]\n}\nEOF\n"
+    printf "  playground schema register --subject test-protobuf << 'EOF'\nsyntax = \"proto3\";\n\npackage com.github.vdesabou;\n\nmessage Customer {\n    int64 count = 1;\n    string first_name = 2;\n    string last_name = 3;\n    string address = 4;\n}\nEOF\n  \n  playground schema register --subject orders-value --rule\n  'amountPositive:message.amount > 0' --schema @order.avsc\n  \n  playground schema register --subject orders-value --rule-set @rules.json\n  --metadata-property owner=team-a --schema @order.avsc\n  \n  playground schema register --subject test-avro --metadata-property test=test\n  --metadata-property test2=test << 'EOF'\n{\n    \"type\": \"record\",\n    \"namespace\": \"com.github.vdesabou\",\n    \"name\": \"Customer\",\n    \"fields\": [\n        {\n            \"name\": \"count\",\n            \"type\": \"long\",\n            \"doc\": \"count\"\n        },\n        {\n            \"name\": \"first_name\",\n            \"type\": \"string\",\n            \"doc\": \"First Name of Customer\"\n        },\n        {\n            \"name\": \"last_name\",\n            \"type\": \"string\",\n            \"doc\": \"Last Name of Customer\"\n        },\n        {\n            \"name\": \"address\",\n            \"type\": \"string\",\n            \"doc\": \"Address of Customer\"\n        }\n    ]\n}\nEOF\n"
 echo
 
 fi
@@ -6852,6 +6864,65 @@ playground_schema_import_usage() {
 }
 
 # :command.usage
+playground_schema_test_rules_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema test-rules\n\n"
+    printf "  📏 Test the data contract rules of a subject against records\n  \n  Sends each record through the real serializer (the console producer of\n  the schema-registry container, use.latest.version=true) with the\n  schema and rule set of the version, into a temporary topic and subject\n  deleted afterwards: ✅ the record passes the rules, ❌ which rule\n  failed and its expression (Rule failed: amountPositive, Expr failed:\n  'message.amount > 0'). Nothing is written to the topics of the subject.\n  \n  Exit code: 0 when every record passes, 1 otherwise.\n  \n  ❕ The rules are only kept by a Schema Registry with\n  resource.extension.class=io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension\n  ('playground schema register' warns when they were dropped). Plaintext\n  environment only, schemas without references.\n\n"
+  else
+    printf "playground schema test-rules - 📏 Test the data contract rules of a subject against records\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema test-rules [OPTIONS]\n"
+  printf "  playground schema test-rules --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT (required)")"
+    printf "    📛 Subject name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--version VERSION")"
+    printf "    🔢 Version whose rules are tested (default: latest, what a producer with\n    use.latest.version=true uses)\n"
+    printf "    %s\n" "Default: latest"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--record RECORD (repeatable)")"
+    printf "    📦 A record (json), repeatable; default: stdin, one json per line\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema test-rules --subject orders-value --record '{\"id\": 1,\n  \"amount\": 5.0}' --record '{\"id\": 2, \"amount\": -1.0}'\n  \n  playground schema test-rules --subject orders-value < records.jsonl\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_schema_get_compatibility_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema get-compatibility\n\n"
@@ -7244,7 +7315,7 @@ playground_schema_delete_usage() {
 playground_schema_derive_schema_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema derive-schema\n\n"
-    printf "  🪄 Derive a schema based on payload\n  \n  Give it one or more json records, on stdin or with --payload, and it\n  works out a schema that covers them all. Much faster than writing an\n  avro schema by hand, and it handles unions when a field has different\n  types across records.\n\n"
+    printf "  🪄 Derive a schema based on payload\n  \n  Give it one or more json records, on stdin or with --payload, and it\n  works out a schema that covers them all. Much faster than writing an\n  avro schema by hand, and it handles unions when a field has different\n  types across records.\n  \n  The type is called Schema unless --name is set (--namespace for its\n  namespace / protobuf package). Values that look like a date, a\n  timestamp, a uuid, a decimal in a string or epoch milliseconds get a 💡\n  hint with the logical type to use: the plugin only sees strings and\n  numbers. --output-file writes the schema, --register --subject\n  registers it.\n\n"
   else
     printf "playground schema derive-schema - 🪄 Derive a schema based on payload\n\n"
   fi
@@ -7273,6 +7344,31 @@ playground_schema_derive_schema_usage() {
     printf "    %s\n" "Default: AVRO"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--name NAME")"
+    printf "    🏷️ Name of the top-level record / message (json schema: title), instead of\n    Schema\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--namespace NAMESPACE")"
+    printf "    🏷️ Namespace of the record (protobuf: package)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-file, -o FILE")"
+    printf "    📄 Also write the schema to this file\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--register")"
+    printf "    ⏺️ Register the schema in --subject (Schema Registry of the running\n    environment)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--subject SUBJECT")"
+    printf "    📛 Subject for --register\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -7280,7 +7376,7 @@ playground_schema_derive_schema_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground schema derive-schema << EOF\n{\"name\": \"Foo\", \"Age\": {\"int\": 12}}\n{\"name\": \"Bar\", \"Age\": {\"string\": \"12\"}}\n{\"sport\": \"Football\"}\n{\"_id\":{\"key\":\"AA\"},\"duration\":{\"numberInt\":\"240\"},\"employeeNumber\":{\"numberInt\":\"12345\"},\"isActive\":\"Y\",\"plannedAbsenceKey\":\"AA\",\"startTimeMin\":{\"numberLong\":\"11599920\"}}\nEOF\n  \n  playground schema derive-schema --payload '{\"sport\": \"Football\"}'\n  --schema-type PROTOBUF\n"
+    printf "  playground schema derive-schema --name Order --namespace com.example -o\n  order.avsc << EOF\n{\"order_id\": 1, \"customer\": \"acme\", \"amount\": 9.99, \"created\":\n\"2026-10-31T10:00:00Z\"}\nEOF\n  \n  playground schema derive-schema --payload @sample.json --register --subject\n  orders-value\n  \n  playground schema derive-schema << EOF\n{\"name\": \"Foo\", \"Age\": {\"int\": 12}}\n{\"name\": \"Bar\", \"Age\": {\"string\": \"12\"}}\n{\"sport\": \"Football\"}\n{\"_id\":{\"key\":\"AA\"},\"duration\":{\"numberInt\":\"240\"},\"employeeNumber\":{\"numberInt\":\"12345\"},\"isActive\":\"Y\",\"plannedAbsenceKey\":\"AA\",\"startTimeMin\":{\"numberLong\":\"11599920\"}}\nEOF\n  \n  playground schema derive-schema --payload '{\"sport\": \"Football\"}'\n  --schema-type PROTOBUF\n"
 echo
 
 fi
@@ -20654,9 +20750,9 @@ function sr_compatibility_verdicts() {
       break
     fi
   done
-  sr_request DELETE "/config/${tmp_subject}" > /dev/null
-  sr_request DELETE "/subjects/${tmp_subject}" > /dev/null
-  sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null
+  sr_request DELETE "/config/${tmp_subject}" > /dev/null || true
+  sr_request DELETE "/subjects/${tmp_subject}" > /dev/null || true
+  sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null || true
   return $ret
 }
 
@@ -50361,6 +50457,8 @@ playground_get_docker_compose_command() {
 playground_schema_list_command() {
 
   # src/commands/schema/list.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   prefix="${args[--prefix]}"
   deleted="${args[--deleted]}"
   json="${args[--json]}"
@@ -50462,6 +50560,8 @@ playground_schema_list_command() {
 playground_schema_get_command() {
 
   # src/commands/schema/get.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   id="${args[--id]}"
   version="${args[--version]}"
@@ -50639,6 +50739,14 @@ playground_schema_get_command() {
               log "🔰 subject ${subject} 💯 version ${real_version} (id $id)"
           fi
           print_schema "$schema_type" "$schema"
+          if echo "$object" | jq -e '.metadata != null' > /dev/null 2>&1
+          then
+              log "🟡 metadata $(echo "$object" | jq -c .metadata)"
+          fi
+          if echo "$object" | jq -e '.ruleSet != null' > /dev/null 2>&1
+          then
+              log "📏 ruleSet $(echo "$object" | jq -c .ruleSet)"
+          fi
 
           if [[ -n "$store_in_tmp" ]] && [ "$store_in_tmp" != "" ]
           then
@@ -50672,6 +50780,8 @@ playground_schema_register_command() {
   verbose="${args[--verbose]}"
 
   eval "metadata_property=(${args[--metadata-property]})"
+  eval "rules=(${args[--rule]})"
+  rule_set="${args[--rule-set]}"
   get_sr_url_and_security
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -50703,13 +50813,55 @@ playground_schema_register_command() {
       esac
   fi
 
-  # Check if the array contains multiple results
-  if [ "${#metadata_property[@]}" -gt 1 ]
+  if [ "${#metadata_property[@]}" -gt 0 ]
   then
       log "🟡 schema metadata are present, adding them"
       # Construct metadata_json using jq
       metadata_json=$(jq -n --argjson props "$(printf '%s\n' "${metadata_property[@]}" | jq -R 'split("=") | { (.[0]): .[1] }' | jq -s 'add')" '{properties: $props}')
       json_new=$(echo $json_new | jq --argjson metadata "$metadata_json" '. + { "metadata": $metadata }')
+  fi
+
+  # data contracts: a rule set (file or json), and/or --rule shortcuts (CEL conditions checked when producing)
+  rule_set_json=""
+  if [[ -n "$rule_set" ]]
+  then
+      if [[ $rule_set == @* ]]
+      then
+          rule_set_json=$(cat "${rule_set#@}") || exit 1
+      elif [ -f "$rule_set" ]
+      then
+          rule_set_json=$(cat "$rule_set")
+      else
+          rule_set_json="$rule_set"
+      fi
+      if ! echo "$rule_set_json" | jq -e . > /dev/null 2>&1
+      then
+          logerror "❌ --rule-set is not valid json"
+          exit 1
+      fi
+      # a bare array of rules is taken as domainRules
+      rule_set_json=$(echo "$rule_set_json" | jq -c 'if type == "array" then {domainRules: .} else . end')
+  fi
+  if [ "${#rules[@]}" -gt 0 ]
+  then
+      [ -z "$rule_set_json" ] && rule_set_json='{"domainRules": []}'
+      for rule in "${rules[@]}"
+      do
+          rule_name="${rule%%:*}"
+          rule_expr="${rule#*:}"
+          if [ -z "$rule_name" ] || [ "$rule_name" == "$rule" ] || [ -z "$rule_expr" ]
+          then
+              logerror "❌ --rule '$rule': expected <name>:<CEL expression>, for example 'amountPositive:message.amount > 0'"
+              exit 1
+          fi
+          rule_set_json=$(echo "$rule_set_json" | jq -c --arg n "$rule_name" --arg e "$rule_expr" \
+              '.domainRules = ((.domainRules // []) + [{name: $n, kind: "CONDITION", type: "CEL", mode: "WRITE", expr: $e}])')
+      done
+  fi
+  if [ -n "$rule_set_json" ]
+  then
+      log "📏 data contract rules: $(echo "$rule_set_json" | jq -r '[(.domainRules // [])[], (.migrationRules // [])[], (.encodingRules // [])[]] | map(.name) | join(", ")')"
+      json_new=$(echo "$json_new" | jq -c --argjson rs "$rule_set_json" '. + {ruleSet: $rs}')
   fi
 
   if [[ -n "$id" ]]
@@ -50860,6 +51012,17 @@ playground_schema_register_command() {
       logerror "❌ schema registry refused the schema for subject ${subject} (error code $(echo "$curl_output" | jq -r .error_code))"
       exit 1
   fi
+  # a registry without the rule set extension accepts the request and silently drops the rules
+  if [ -n "$rule_set_json" ]
+  then
+      registered_version=$(echo "$curl_output" | jq -r '.version // empty')
+      if [ -n "$registered_version" ] && sr_request GET "/subjects/${subject}/versions/${registered_version}" && echo "$sr_response" | jq -e '.ruleSet == null' > /dev/null 2>&1
+      then
+          logwarn "❗ the registry dropped the rules: data contract rules need resource.extension.class=io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension on Schema Registry"
+          logwarn "   playground container set-environment-variables -c schema-registry --env \"SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension\""
+          logwarn "   (an unchanged schema returns its existing version: register it again after the restart, it gets a new version with the rules)"
+      fi
+  fi
 
 }
 
@@ -50867,6 +51030,8 @@ playground_schema_register_command() {
 playground_schema_check_compatibility_command() {
 
   # src/commands/schema/check-compatibility.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   schema="${args[--schema]}"
   version="${args[--version]}"
@@ -50921,6 +51086,7 @@ playground_schema_check_compatibility_command() {
   check_subject="$encoded_subject"
   tmp_subject=""
   function cleanup_tmp_subject() {
+      local rc=$?
       if [ -n "$tmp_subject" ]
       then
           sr_request DELETE "/config/${tmp_subject}" > /dev/null
@@ -50928,8 +51094,8 @@ playground_schema_check_compatibility_command() {
           sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null
       fi
       rm -rf $tmp_dir
-      # the status of the last command of an EXIT trap would become the exit code of the command
-      return 0
+      # keep the exit code of the command (the status of the last command of an EXIT trap would replace it)
+      return $rc
   }
 
   if [[ -n "$compatibility" ]] && [ "$compatibility" != "$subject_rule" ]
@@ -51032,6 +51198,8 @@ playground_schema_check_compatibility_command() {
 playground_schema_diff_command() {
 
   # src/commands/schema/diff.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   from="${args[--from]}"
   to="${args[--to]}"
@@ -51209,6 +51377,8 @@ playground_schema_diff_command() {
 playground_schema_describe_command() {
 
   # src/commands/schema/describe.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   id="${args[--id]}"
   json="${args[--json]}"
@@ -51415,6 +51585,8 @@ playground_schema_describe_command() {
 playground_schema_history_command() {
 
   # src/commands/schema/history.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   since="${args[--since]}"
   file="${args[--file]}"
@@ -51491,6 +51663,8 @@ playground_schema_history_command() {
 playground_schema_export_command() {
 
   # src/commands/schema/export.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject_prefix="${args[--subject-prefix]}"
   output_dir="${args[--output-dir]}"
   verbose="${args[--verbose]}"
@@ -51575,6 +51749,8 @@ playground_schema_export_command() {
 playground_schema_import_command() {
 
   # src/commands/schema/import.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   file="${args[--file]}"
   new_ids="${args[--new-ids]}"
   on_conflict="${args[--on-conflict]}"
@@ -51592,13 +51768,14 @@ playground_schema_import_command() {
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   import_mode_subjects=()
   function restore_modes() {
+      local rc=$?
       local s
       for s in "${import_mode_subjects[@]}"
       do
           sr_request DELETE "/mode/$(urlencode "$s")" > /dev/null
       done
       rm -rf "$tmp_dir"
-      return 0
+      return $rc
   }
   trap restore_modes EXIT
 
@@ -51769,9 +51946,138 @@ playground_schema_import_command() {
 }
 
 # :command.function
+playground_schema_test_rules_command() {
+
+  # src/commands/schema/test-rules.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
+  subject="${args[--subject]}"
+  version="${args[--version]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+  eval "records=(${args[--record]})"
+
+  get_sr_url_and_security
+  if [[ "$environment" != "plaintext" ]]
+  then
+      logerror "❌ schema test-rules runs the console producer of the schema-registry container: only on the plaintext environment (running: $environment)"
+      exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  tmp_name="playground-schema-check-$$-$RANDOM"
+  tmp_subject_created=0
+  function cleanup_test_rules() {
+      local rc=$?
+      if [ $tmp_subject_created -eq 1 ]
+      then
+          sr_request DELETE "/subjects/${tmp_name}-value" > /dev/null
+          sr_request DELETE "/subjects/${tmp_name}-value?permanent=true" > /dev/null
+          playground topic delete --topic "$tmp_name" --skip-delete-schema > /dev/null 2>&1
+      fi
+      rm -rf "$tmp_dir"
+      return $rc
+  }
+  trap cleanup_test_rules EXIT
+
+  # the records: --record (repeatable), else stdin, one json per line
+  records_file="$tmp_dir/records"
+  if [ "${#records[@]}" -gt 0 ]
+  then
+      printf '%s\n' "${records[@]}" > "$records_file"
+  else
+      if [ -t 0 ]
+      then
+          logerror "❌ give the records with --record '<json>' or on stdin, one json per line"
+          exit 1
+      fi
+      grep -v '^\s*$' > "$records_file"
+  fi
+
+  encoded_subject=$(urlencode "$subject")
+  sr_request GET "/subjects/${encoded_subject}/versions/${version}" || sr_exit_on_error "subject ${subject} version ${version}"
+  obj="$sr_response"
+  schema_type=$(echo "$obj" | jq -r '.schemaType // "AVRO"')
+  if ! echo "$obj" | jq -e '.ruleSet != null' > /dev/null 2>&1
+  then
+      logerror "❌ ${subject} v$(echo "$obj" | jq -r .version) has no ruleSet: nothing to test"
+      logerror "   register one with 'playground schema register --subject ${subject} --rule <name>:<CEL expression>' (or --rule-set)"
+      exit 1
+  fi
+  if echo "$obj" | jq -e '(.references // []) | length > 0' > /dev/null
+  then
+      logerror "❌ schemas with references are not supported by schema test-rules"
+      exit 1
+  fi
+  case "$schema_type" in
+      AVRO) producer=kafka-avro-console-producer ;;
+      JSON) producer=kafka-json-schema-console-producer ;;
+      PROTOBUF) producer=kafka-protobuf-console-producer ;;
+  esac
+  rule_names=$(echo "$obj" | jq -r '[(.ruleSet.domainRules // [])[], (.ruleSet.migrationRules // [])[]] | map("\(.name) (\(.kind) \(.type) \(.mode)\(if .onFailure then ", onFailure " + .onFailure else "" end))") | join(", ")')
+  [[ -n "$json" ]] || log "📏 ${subject} v$(echo "$obj" | jq -r .version) (id $(echo "$obj" | jq -r .id)): ${rule_names}"
+
+  # a temporary subject with the same schema and rules (same id), and its topic: the serializer runs the rules of the
+  # latest version of <topic>-value, nothing is written to the topics of the subject
+  copy_body=$(echo "$obj" | jq -c '{schema, schemaType: (.schemaType // "AVRO"), references: (.references // [])} + (if .metadata then {metadata} else {} end) + {ruleSet}')
+  sr_request POST "/subjects/${tmp_name}-value/versions" "$copy_body" || sr_exit_on_error "temporary subject"
+  tmp_subject_created=1
+  schema_string=$(echo "$obj" | jq -r .schema)
+
+  results_file="$tmp_dir/results.jsonl"
+  : > "$results_file"
+  nb_failed=0
+  while IFS= read -r record
+  do
+      output=$(echo "$record" | docker exec -i schema-registry "$producer" --bootstrap-server broker:9092 --topic "$tmp_name" \
+          --property schema.registry.url=http://schema-registry:8081 --property auto.register.schemas=false \
+          --property use.latest.version=true --property latest.compatibility.strict=false \
+          --property "value.schema=$schema_string" 2>&1)
+      ret=$?
+      if [ $ret -eq 0 ]
+      then
+          jq -cn --arg r "$record" '{record: $r, passed: true}' >> "$results_file"
+          [[ -n "$json" ]] || log "✅ $record"
+      else
+          nb_failed=$((nb_failed+1))
+          rule=$(echo "$output" | grep -oE "Rule failed: [^ ]+" | head -1 | sed -e 's/Rule failed: //')
+          expr=$(echo "$output" | grep -oE "Expr failed: .*" | head -1 | sed -e 's/^Expr failed: //')
+          reason=$(echo "$output" | grep -E "Caused by|Exception" | grep -v "^\s" | tail -1 | cut -c1-300)
+          jq -cn --arg r "$record" --arg rule "$rule" --arg expr "$expr" --arg reason "$reason" \
+              '{record: $r, passed: false, rule: (if $rule == "" then null else $rule end), expr: (if $expr == "" then null else $expr end), reason: $reason}' >> "$results_file"
+          if [[ ! -n "$json" ]]
+          then
+              if [ -n "$rule" ]
+              then
+                  logerror "❌ $record"
+                  logerror "   rule ${rule} failed: ${expr}"
+              else
+                  logerror "❌ $record: ${reason}"
+              fi
+          fi
+      fi
+  done < "$records_file"
+
+  if [[ -n "$json" ]]
+  then
+      jq -s --arg s "$subject" '{subject: $s, passed: (map(select(.passed)) | length), failed: (map(select(.passed | not)) | length), records: .}' "$results_file"
+  else
+      log "🧭 $(( $(wc -l < "$results_file") - nb_failed )) passed, ${nb_failed} failed: a failed record is refused by a producer using this version (use.latest.version=true), or sent to its DLQ with onFailure DLQ"
+  fi
+  if [ $nb_failed -gt 0 ]
+  then
+      exit 1
+  fi
+  exit 0
+
+}
+
+# :command.function
 playground_schema_get_compatibility_command() {
 
   # src/commands/schema/get-compatibility.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   global="${args[--global]}"
   json="${args[--json]}"
@@ -51837,6 +52143,8 @@ playground_schema_get_compatibility_command() {
 playground_schema_set_compatibility_command() {
 
   # src/commands/schema/set-compatibility.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   global="${args[--global]}"
   compatibility="${args[--compatibility]}"
@@ -51873,6 +52181,8 @@ playground_schema_set_compatibility_command() {
 playground_schema_get_mode_command() {
 
   # src/commands/schema/get-mode.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   global="${args[--global]}"
   json="${args[--json]}"
@@ -51933,6 +52243,8 @@ playground_schema_get_mode_command() {
 playground_schema_set_mode_command() {
 
   # src/commands/schema/set-mode.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   global="${args[--global]}"
   mode="${args[--mode]}"
@@ -52042,6 +52354,8 @@ playground_schema_validate_new_schemas_command() {
 playground_schema_delete_command() {
 
   # src/commands/schema/delete.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   subject="${args[--subject]}"
   version="${args[--version]}"
   permanent="${args[--permanent]}"
@@ -52170,7 +52484,18 @@ playground_schema_derive_schema_command() {
   # src/commands/schema/derive-schema.sh
   schema_type="${args[--schema-type]}"
   payload="${args[--payload]}"
+  name="${args[--name]}"
+  namespace="${args[--namespace]}"
+  output_file="${args[--output-file]}"
+  register="${args[--register]}"
+  subject="${args[--subject]}"
   verbose="${args[--verbose]}"
+
+  if [[ -n "$register" ]] && [[ ! -n "$subject" ]]
+  then
+      logerror "❌ --register needs --subject"
+      exit 1
+  fi
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
@@ -52271,7 +52596,80 @@ EOF
 
   set -e
   log "🪄 Schema file generated"
-  cat $tmp_dir/schema_file | jq -r '.schemas[]|del(.messagesMatched)|.schema'
+
+  # the maven plugin names everything "Schema": rename the top-level type, set its namespace / package
+  function rename_schema() {
+      local schema="$1"
+      case "$schema_type" in
+          AVRO)
+              echo "$schema" | jq --arg n "$name" --arg ns "$namespace" '(if $n != "" then .name = $n else . end) | (if $ns != "" then .namespace = $ns else . end)'
+              ;;
+          JSON)
+              echo "$schema" | jq --arg n "$name" '(if $n != "" then .title = $n else . end)'
+              ;;
+          PROTOBUF)
+              local out="$schema"
+              if [ -n "$name" ]
+              then
+                  out=$(echo "$out" | sed -e "s/^message Schema {/message ${name} {/")
+              fi
+              if [ -n "$namespace" ]
+              then
+                  out=$(echo "$out" | awk -v pkg="$namespace" '{print} /^syntax = / && !done {print ""; print "package " pkg ";"; done=1}')
+              fi
+              echo "$out"
+              ;;
+      esac
+  }
+
+  nb_schemas=$(jq '.schemas | length' $tmp_dir/schema_file)
+  first_schema=""
+  for i in $(seq 0 $((nb_schemas-1)))
+  do
+      if [ "$schema_type" == "PROTOBUF" ]
+      then
+          derived=$(jq -r ".schemas[$i].schema" $tmp_dir/schema_file)
+      else
+          derived=$(jq ".schemas[$i].schema" $tmp_dir/schema_file)
+      fi
+      derived=$(rename_schema "$derived")
+      [ $i -eq 0 ] && first_schema="$derived"
+      echo "$derived"
+  done
+  if [ "$nb_schemas" -gt 1 ] && { [[ -n "$output_file" ]] || [[ -n "$register" ]]; }
+  then
+      logwarn "the records gave ${nb_schemas} schemas that can't be merged: only the first one is written / registered"
+  fi
+
+  # hints: values that look like a logical type the plugin can't guess
+  hints=$(jq -r '
+    paths(scalars) as $p | getpath($p) as $v | ($p | map(tostring) | join(".")) as $path |
+    if ($v | type) == "string" then
+      if ($v | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) then "\($path): \"\($v)\" looks like a date (avro: {\"type\": \"int\", \"logicalType\": \"date\"}, json schema: \"format\": \"date\")"
+      elif ($v | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9]{2}:[0-9]{2}")) then "\($path): \"\($v)\" looks like a timestamp (avro: {\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}, json schema: \"format\": \"date-time\")"
+      elif ($v | test("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")) then "\($path): looks like a uuid (avro: {\"type\": \"string\", \"logicalType\": \"uuid\"})"
+      elif ($v | test("^-?[0-9]+\\.[0-9]+$")) then "\($path): \"\($v)\" is a number in a string: a decimal? (avro: {\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": …, \"scale\": …})"
+      else empty end
+    elif ($v | type) == "number" and ($v | tostring | test("^1[0-9]{12}$")) then "\($path): \($v) looks like epoch milliseconds (avro: {\"type\": \"long\", \"logicalType\": \"timestamp-millis\"})"
+    else empty end' $payload_file 2> /dev/null | awk -F': ' '!seen[$1]++')
+  if [ -n "$hints" ]
+  then
+      while read -r hint
+      do
+          log "💡 $hint"
+      done <<< "$hints"
+  fi
+
+  if [[ -n "$output_file" ]]
+  then
+      echo "$first_schema" > "$output_file"
+      log "📄 schema written to $output_file"
+  fi
+  if [[ -n "$register" ]]
+  then
+      echo "$first_schema" > $tmp_dir/derived_schema
+      playground schema register --subject "$subject" --schema "@$tmp_dir/derived_schema"
+  fi
 }
 
 # :command.function
@@ -52327,6 +52725,8 @@ playground_schema_set_alias_command() {
 playground_schema_get_alias_command() {
 
   # src/commands/schema/get-alias.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   alias="${args[--alias]}"
   json="${args[--json]}"
   verbose="${args[--verbose]}"
@@ -61036,6 +61436,8 @@ playground_topic_elect_leader_command() {
 playground_topic_set_schema_compatibility_command() {
 
   # src/commands/topic/set-schema-compatibility.sh
+  # errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+  set +e
   topic="${args[--topic]}"
   compatibility="${args[--compatibility]}"
   include_key="${args[--include-key]}"
@@ -92523,6 +92925,13 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    test-rules)
+      action="test-rules"
+      shift
+      playground_schema_test_rules_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-compatibility)
       action="get-compatibility"
       shift
@@ -93085,6 +93494,39 @@ playground_schema_register_parse_requirements() {
         # :flag.case_no_arg
         args['--normalize']=1
         shift
+        ;;
+
+      # :flag.case
+      --rule-set)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--rule-set']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--rule-set requires an argument: --rule-set RULE-SET" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --rule)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--rule']+x} ]]; then
+            args['--rule']="$escaped"
+          else
+            args['--rule']="${args['--rule']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--rule requires an argument: --rule RULE" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -94077,6 +94519,144 @@ playground_schema_import_parse_requirements() {
     printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_test_rules_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_test_rules_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema test-rules"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--version requires an argument: --version VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --record)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--record']+x} ]]; then
+            args['--record']="$escaped"
+          else
+            args['--record']="${args['--record']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--record requires an argument: --record RECORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--subject']+x} ]]; then
+    printf "missing required flag: --subject SUBJECT\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--version']:-} ]] || args['--version']="latest"
 
   # :command.user_filter
   filter_error=$(filter_schema_registry_running)
@@ -95097,6 +95677,70 @@ playground_schema_derive_schema_parse_requirements() {
           shift
         else
           printf "%s\n" "--schema-type requires an argument: --schema-type SCHEMA-TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --namespace)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--namespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--namespace requires an argument: --namespace NAMESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-file | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-file requires an argument: --output-file, -o FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --register)
+
+        # :flag.case_no_arg
+        args['--register']=1
+        shift
+        ;;
+
+      # :flag.case
+      --subject)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--subject']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--subject requires an argument: --subject SUBJECT" >&2
           exit 1
         fi
         ;;
@@ -132165,6 +132809,11 @@ playground_schema_completion() {
         playground_schema_import_completion "$completion_current" "$@"
         return
         ;;
+      test-rules)
+        shift
+        playground_schema_test_rules_completion "$completion_current" "$@"
+        return
+        ;;
       get-compatibility)
         shift
         playground_schema_get_compatibility_completion "$completion_current" "$@"
@@ -132224,7 +132873,7 @@ playground_schema_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
+  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import test-rules get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -132473,6 +133122,25 @@ playground_schema_register_completion() {
 
         shift
         ;;
+      --rule-set)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--rule-set"]=1
+
+        ;;
+      --rule)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -132502,6 +133170,8 @@ playground_schema_register_completion() {
     completion_flag_candidates --id "$completion_current" --id
     completion_flag_candidates --metadata-property "$completion_current" --metadata-property
     completion_flag_candidates --normalize "$completion_current" --normalize
+    completion_flag_candidates --rule-set "$completion_current" --rule-set
+    completion_flag_candidates --rule "$completion_current" --rule
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -133058,6 +133728,76 @@ playground_schema_import_completion() {
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_test_rules_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --subject)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-subject-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subject"]=1
+
+        ;;
+      --version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--version"]=1
+
+        ;;
+      --record)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --subject "$completion_current" --subject
+    completion_flag_candidates --version "$completion_current" --version
+    completion_flag_candidates --record "$completion_current" --record
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
 }
@@ -133621,6 +134361,51 @@ playground_schema_derive_schema_completion() {
         completion_blocked_flags["--schema-type"]=1
 
         ;;
+      --name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--name"]=1
+
+        ;;
+      --namespace)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--namespace"]=1
+
+        ;;
+      --output-file | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-file"]=1
+
+        ;;
+      --register)
+        completion_blocked_flags["--register"]=1
+
+        shift
+        ;;
+      --subject)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--subject"]=1
+
+        ;;
       *)
         return
         ;;
@@ -133631,6 +134416,11 @@ playground_schema_derive_schema_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --payload "$completion_current" --payload
     completion_flag_candidates --schema-type "$completion_current" --schema-type
+    completion_flag_candidates --name "$completion_current" --name
+    completion_flag_candidates --namespace "$completion_current" --namespace
+    completion_flag_candidates --output-file "$completion_current" --output-file -o
+    completion_flag_candidates --register "$completion_current" --register
+    completion_flag_candidates --subject "$completion_current" --subject
   fi
 
 }
@@ -149669,6 +150459,7 @@ run() {
     "schema history") playground_schema_history_command ;;
     "schema export") playground_schema_export_command ;;
     "schema import") playground_schema_import_command ;;
+    "schema test-rules") playground_schema_test_rules_command ;;
     "schema get-compatibility") playground_schema_get_compatibility_command ;;
     "schema set-compatibility") playground_schema_set_compatibility_command ;;
     "schema get-mode") playground_schema_get_mode_command ;;

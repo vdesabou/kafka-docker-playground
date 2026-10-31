@@ -1,6 +1,17 @@
 schema_type="${args[--schema-type]}"
 payload="${args[--payload]}"
+name="${args[--name]}"
+namespace="${args[--namespace]}"
+output_file="${args[--output-file]}"
+register="${args[--register]}"
+subject="${args[--subject]}"
 verbose="${args[--verbose]}"
+
+if [[ -n "$register" ]] && [[ ! -n "$subject" ]]
+then
+    logerror "❌ --register needs --subject"
+    exit 1
+fi
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
@@ -100,4 +111,77 @@ fi
 
 set -e
 log "🪄 Schema file generated"
-cat $tmp_dir/schema_file | jq -r '.schemas[]|del(.messagesMatched)|.schema'
+
+# the maven plugin names everything "Schema": rename the top-level type, set its namespace / package
+function rename_schema() {
+    local schema="$1"
+    case "$schema_type" in
+        AVRO)
+            echo "$schema" | jq --arg n "$name" --arg ns "$namespace" '(if $n != "" then .name = $n else . end) | (if $ns != "" then .namespace = $ns else . end)'
+            ;;
+        JSON)
+            echo "$schema" | jq --arg n "$name" '(if $n != "" then .title = $n else . end)'
+            ;;
+        PROTOBUF)
+            local out="$schema"
+            if [ -n "$name" ]
+            then
+                out=$(echo "$out" | sed -e "s/^message Schema {/message ${name} {/")
+            fi
+            if [ -n "$namespace" ]
+            then
+                out=$(echo "$out" | awk -v pkg="$namespace" '{print} /^syntax = / && !done {print ""; print "package " pkg ";"; done=1}')
+            fi
+            echo "$out"
+            ;;
+    esac
+}
+
+nb_schemas=$(jq '.schemas | length' $tmp_dir/schema_file)
+first_schema=""
+for i in $(seq 0 $((nb_schemas-1)))
+do
+    if [ "$schema_type" == "PROTOBUF" ]
+    then
+        derived=$(jq -r ".schemas[$i].schema" $tmp_dir/schema_file)
+    else
+        derived=$(jq ".schemas[$i].schema" $tmp_dir/schema_file)
+    fi
+    derived=$(rename_schema "$derived")
+    [ $i -eq 0 ] && first_schema="$derived"
+    echo "$derived"
+done
+if [ "$nb_schemas" -gt 1 ] && { [[ -n "$output_file" ]] || [[ -n "$register" ]]; }
+then
+    logwarn "the records gave ${nb_schemas} schemas that can't be merged: only the first one is written / registered"
+fi
+
+# hints: values that look like a logical type the plugin can't guess
+hints=$(jq -r '
+  paths(scalars) as $p | getpath($p) as $v | ($p | map(tostring) | join(".")) as $path |
+  if ($v | type) == "string" then
+    if ($v | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) then "\($path): \"\($v)\" looks like a date (avro: {\"type\": \"int\", \"logicalType\": \"date\"}, json schema: \"format\": \"date\")"
+    elif ($v | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9]{2}:[0-9]{2}")) then "\($path): \"\($v)\" looks like a timestamp (avro: {\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}, json schema: \"format\": \"date-time\")"
+    elif ($v | test("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")) then "\($path): looks like a uuid (avro: {\"type\": \"string\", \"logicalType\": \"uuid\"})"
+    elif ($v | test("^-?[0-9]+\\.[0-9]+$")) then "\($path): \"\($v)\" is a number in a string: a decimal? (avro: {\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": …, \"scale\": …})"
+    else empty end
+  elif ($v | type) == "number" and ($v | tostring | test("^1[0-9]{12}$")) then "\($path): \($v) looks like epoch milliseconds (avro: {\"type\": \"long\", \"logicalType\": \"timestamp-millis\"})"
+  else empty end' $payload_file 2> /dev/null | awk -F': ' '!seen[$1]++')
+if [ -n "$hints" ]
+then
+    while read -r hint
+    do
+        log "💡 $hint"
+    done <<< "$hints"
+fi
+
+if [[ -n "$output_file" ]]
+then
+    echo "$first_schema" > "$output_file"
+    log "📄 schema written to $output_file"
+fi
+if [[ -n "$register" ]]
+then
+    echo "$first_schema" > $tmp_dir/derived_schema
+    playground schema register --subject "$subject" --schema "@$tmp_dir/derived_schema"
+fi

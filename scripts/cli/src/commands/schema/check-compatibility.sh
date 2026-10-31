@@ -1,3 +1,5 @@
+# errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+set +e
 subject="${args[--subject]}"
 schema="${args[--schema]}"
 version="${args[--version]}"
@@ -52,6 +54,7 @@ rule_source="$subject_rule_source"
 check_subject="$encoded_subject"
 tmp_subject=""
 function cleanup_tmp_subject() {
+    local rc=$?
     if [ -n "$tmp_subject" ]
     then
         sr_request DELETE "/config/${tmp_subject}" > /dev/null
@@ -59,8 +62,8 @@ function cleanup_tmp_subject() {
         sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null
     fi
     rm -rf $tmp_dir
-    # the status of the last command of an EXIT trap would become the exit code of the command
-    return 0
+    # keep the exit code of the command (the status of the last command of an EXIT trap would replace it)
+    return $rc
 }
 
 if [[ -n "$compatibility" ]] && [ "$compatibility" != "$subject_rule" ]

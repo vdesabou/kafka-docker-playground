@@ -2206,19 +2206,19 @@ subcommands:
     version of a subject, or of all subjects\n  get-compatibility    the compatibility
     rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register
     \            add a new version to a subject\n  check-compatibility  would this
-    schema be accepted? (nothing registered)\n  delete               a version, or
-    the whole subject\n  set-compatibility    relax or tighten the evolution rule
-    (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject
-    or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n
-    \ set-alias            point one subject name at another\n\n\U0001F4E6 Move\n
-    \ export / import      a registry to a folder and back, keeping the ids\n\n\U0001F500
-    diff compares two versions (or a version and a file) field by field,\nwith the
-    verdict of each compatibility rule.\n\n\U0001FA84 derive-schema turns a sample
-    payload into an avro, json schema or\nprotobuf schema, which saves writing one
-    by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value.
-    'playground topic delete' removes both along with the\ntopic.\n\n\U0001F36A Deep
-    dive: https://kafka-docker-playground.io/#/deep-dive-schema\n\U0001F3AC Bite size
-    session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup"
+    schema be accepted? (nothing registered)\n  test-rules           do these records
+    pass the data contract rules?\n  delete               a version, or the whole
+    subject\n  set-compatibility    relax or tighten the evolution rule (subject or
+    global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n
+    \ set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point
+    one subject name at another\n\n\U0001F4E6 Move\n  export / import      a registry
+    to a folder and back, keeping the ids\n\n\U0001F500 diff compares two versions
+    (or a version and a file) field by field,\nwith the verdict of each compatibility
+    rule.\n\n\U0001FA84 derive-schema turns a sample payload into an avro, json schema
+    or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally
+    named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete'
+    removes both along with the\ntopic.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup"
   usage: playground schema COMMAND
   options: []
   subcommands:
@@ -2362,6 +2362,22 @@ subcommands:
       argument: ''
       description: "\U0001FAE7 Add ?normalize=true at the end of the request to normalize
         the schema. The default is false."
+    - names:
+      - "--rule-set"
+      argument: RULE-SET
+      description: "\U0001F4CF Data contract rules: a ruleSet json ({\"domainRules\":
+        [...], \"migrationRules\": [...]}, or a bare array of domain rules), as @<file>,
+        a file path or inline json\n\nSee docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules"
+    - names:
+      - "--rule"
+      argument: RULE
+      description: "\U0001F4CF Shortcut for a CEL condition checked when producing:
+        <name>:<CEL expression>, added to the domain rules (kind CONDITION, type CEL,
+        mode WRITE)\n\nExample: --rule 'amountPositive:message.amount > 0' --rule
+        'hasCurrency:size(message.currency) == 3'\n\n❕ The rules run in the clients
+        (serializers with use.latest.version=true and the kafka-schema-rules jar),
+        not in the registry: registering them never refuses a record.\n\nRepeatable:
+        ✓ Yes"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -2655,6 +2671,42 @@ subcommands:
         the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
+  - name: test-rules
+    description: "\U0001F4CF Test the data contract rules of a subject against records\n\nSends
+      each record through the real serializer (the console producer of\nthe schema-registry
+      container, use.latest.version=true) with the\nschema and rule set of the version,
+      into a temporary topic and subject\ndeleted afterwards: ✅ the record passes
+      the rules, ❌ which rule\nfailed and its expression (Rule failed: amountPositive,
+      Expr failed:\n'message.amount > 0'). Nothing is written to the topics of the
+      subject.\n\nExit code: 0 when every record passes, 1 otherwise.\n\n❕ The rules
+      are only kept by a Schema Registry with\nresource.extension.class=io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension\n('playground
+      schema register' warns when they were dropped). Plaintext\nenvironment only,
+      schemas without references."
+    usage: playground schema test-rules [OPTIONS]
+    options:
+    - names:
+      - "--subject"
+      argument: SUBJECT
+      description: "\U0001F4DB Subject name\n\nRequired: ✓ Yes"
+    - names:
+      - "--version"
+      argument: VERSION
+      description: "\U0001F522 Version whose rules are tested (default: latest, what
+        a producer with use.latest.version=true uses)\n\nDefault value: latest"
+    - names:
+      - "--record"
+      argument: RECORD
+      description: "\U0001F4E6 A record (json), repeatable; default: stdin, one json
+        per line\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
   - name: get-compatibility
     description: "\U0001F6E1️ Get the compatibility rule in force\n\nThe rule that
       decides whether a new schema version is accepted. When a\nproducer fails with
@@ -2911,7 +2963,12 @@ subcommands:
     description: "\U0001FA84 Derive a schema based on payload\n\nGive it one or more
       json records, on stdin or with --payload, and it\nworks out a schema that covers
       them all. Much faster than writing an\navro schema by hand, and it handles unions
-      when a field has different\ntypes across records."
+      when a field has different\ntypes across records.\n\nThe type is called Schema
+      unless --name is set (--namespace for its\nnamespace / protobuf package). Values
+      that look like a date, a\ntimestamp, a uuid, a decimal in a string or epoch
+      milliseconds get a \U0001F4A1\nhint with the logical type to use: the plugin
+      only sees strings and\nnumbers. --output-file writes the schema, --register
+      --subject\nregisters it."
     usage: playground schema derive-schema [OPTIONS]
     options:
     - names:
@@ -2924,6 +2981,29 @@ subcommands:
       description: "\U0001F9E9 Schema Registry schema \"type\":\n\n- AVRO\n- JSON
         (json schema)\n- PROTOBUF\n\nDefault is AVRO\n\nDefault value: AVRO\nAllowed
         values: AVRO, JSON, PROTOBUF"
+    - names:
+      - "--name"
+      argument: NAME
+      description: "\U0001F3F7️ Name of the top-level record / message (json schema:
+        title), instead of Schema"
+    - names:
+      - "--namespace"
+      argument: NAMESPACE
+      description: "\U0001F3F7️ Namespace of the record (protobuf: package)"
+    - names:
+      - "--output-file"
+      - "-o"
+      argument: FILE
+      description: "\U0001F4C4 Also write the schema to this file"
+    - names:
+      - "--register"
+      argument: ''
+      description: "⏺️ Register the schema in --subject (Schema Registry of the running
+        environment)"
+    - names:
+      - "--subject"
+      argument: SUBJECT
+      description: "\U0001F4DB Subject for --register"
   - name: set-alias
     description: "\U0001F52F Set a subject alias\n\nMakes --alias point at --subject,
       so a client asking for the alias gets\nthe real subject's schemas. That is how

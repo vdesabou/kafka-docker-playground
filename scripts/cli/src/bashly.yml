@@ -4149,6 +4149,7 @@ commands:
      ✍️ Write
        register             add a new version to a subject
        check-compatibility  would this schema be accepted? (nothing registered)
+       test-rules           do these records pass the data contract rules?
        delete               a version, or the whole subject
        set-compatibility    relax or tighten the evolution rule (subject or global)
        set-mode             READWRITE, READONLY or IMPORT (subject or global)
@@ -4372,6 +4373,23 @@ commands:
       - long: --normalize
         help: |-
           🫧 Add ?normalize=true at the end of the request to normalize the schema. The default is false.
+      - long: --rule-set
+        arg: rule-set
+        required: false
+        help: |-
+          📏 Data contract rules: a ruleSet json ({"domainRules": [...], "migrationRules": [...]}, or a bare array of domain rules), as @<file>, a file path or inline json
+
+          See docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#rules
+      - long: --rule
+        arg: rule
+        required: false
+        repeatable: true
+        help: |-
+          📏 Shortcut for a CEL condition checked when producing: <name>:<CEL expression>, added to the domain rules (kind CONDITION, type CEL, mode WRITE)
+
+          Example: --rule 'amountPositive:message.amount > 0' --rule 'hasCurrency:size(message.currency) == 3'
+
+          ❕ The rules run in the clients (serializers with use.latest.version=true and the kafka-schema-rules jar), not in the registry: registering them never refuses a record.
       - *cluster
 
     examples: |
@@ -4387,6 +4405,10 @@ commands:
           string address = 4;
       }
       EOF
+
+      playground schema register --subject orders-value --rule 'amountPositive:message.amount > 0' --schema @order.avsc
+
+      playground schema register --subject orders-value --rule-set @rules.json --metadata-property owner=team-a --schema @order.avsc
 
       playground schema register --subject test-avro --metadata-property test=test --metadata-property test2=test << 'EOF'
       {
@@ -4728,6 +4750,47 @@ commands:
     - playground schema import -f customer-schemas.json --on-conflict overwrite
     - playground schema import -f customer-_schemas-dump.txt --new-ids
 
+  - name: test-rules
+    group: Schema
+    filters:
+    - schema_registry_running
+    help: |-
+      📏 Test the data contract rules of a subject against records
+
+      Sends each record through the real serializer (the console producer of
+      the schema-registry container, use.latest.version=true) with the
+      schema and rule set of the version, into a temporary topic and subject
+      deleted afterwards: ✅ the record passes the rules, ❌ which rule
+      failed and its expression (Rule failed: amountPositive, Expr failed:
+      'message.amount > 0'). Nothing is written to the topics of the subject.
+
+      Exit code: 0 when every record passes, 1 otherwise.
+
+      ❕ The rules are only kept by a Schema Registry with
+      resource.extension.class=io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension
+      ('playground schema register' warns when they were dropped). Plaintext
+      environment only, schemas without references.
+    flags:
+    - *subject_required
+    - long: --version
+      arg: version
+      default: latest
+      required: false
+      help: |-
+        🔢 Version whose rules are tested (default: latest, what a producer with use.latest.version=true uses)
+    - long: --record
+      arg: record
+      required: false
+      repeatable: true
+      help: |-
+        📦 A record (json), repeatable; default: stdin, one json per line
+    - *json
+    - *verbose
+    examples: |
+      playground schema test-rules --subject orders-value --record '{"id": 1, "amount": 5.0}' --record '{"id": 2, "amount": -1.0}'
+
+      playground schema test-rules --subject orders-value < records.jsonl
+
   - name: get-compatibility
     filters:
     - schema_registry_running
@@ -4980,6 +5043,13 @@ commands:
       works out a schema that covers them all. Much faster than writing an
       avro schema by hand, and it handles unions when a field has different
       types across records.
+
+      The type is called Schema unless --name is set (--namespace for its
+      namespace / protobuf package). Values that look like a date, a
+      timestamp, a uuid, a decimal in a string or epoch milliseconds get a 💡
+      hint with the logical type to use: the plugin only sees strings and
+      numbers. --output-file writes the schema, --register --subject
+      registers it.
     flags:
       - long: --payload
         arg: payload
@@ -5003,7 +5073,38 @@ commands:
           - AVRO
           - JSON
           - PROTOBUF
+      - long: --name
+        arg: name
+        required: false
+        help: |-
+          🏷️ Name of the top-level record / message (json schema: title), instead of Schema
+      - long: --namespace
+        arg: namespace
+        required: false
+        help: |-
+          🏷️ Namespace of the record (protobuf: package)
+      - long: --output-file
+        short: -o
+        arg: file
+        required: false
+        help: |-
+          📄 Also write the schema to this file
+      - long: --register
+        required: false
+        help: |-
+          ⏺️ Register the schema in --subject (Schema Registry of the running environment)
+      - long: --subject
+        arg: subject
+        required: false
+        help: |-
+          📛 Subject for --register
     examples: |
+        playground schema derive-schema --name Order --namespace com.example -o order.avsc << EOF
+        {"order_id": 1, "customer": "acme", "amount": 9.99, "created": "2026-10-31T10:00:00Z"}
+        EOF
+
+        playground schema derive-schema --payload @sample.json --register --subject orders-value
+
         playground schema derive-schema << EOF
         {"name": "Foo", "Age": {"int": 12}}
         {"name": "Bar", "Age": {"string": "12"}}
