@@ -204,4 +204,20 @@ lab_expect_contains '❌ {"id": 2, "amount": -1.0}'
 lab_expect_contains "rule amountPositive failed: 'message.amount > 0'"
 lab_expect_contains "1 passed, 1 failed"
 
+log "Step 7: the same schema on two CP versions"
+cat > "$schema_dir/legacy.avsc" << 'EOT'
+{"type": "record", "name": "Order", "namespace": "com.my-company.orders", "fields": [ {"name": "id", "type": "int"} ]}
+EOT
+lab_run playground schema validate --cp-version 7.9.2 --cp-version "$TAG" < "$schema_dir/legacy.avsc"
+if version_gt "$TAG" "8.1.99"
+then
+    lab_expect_exit 1
+    lab_expect_contains '42201 Namespace part "my-company" is invalid'
+else
+    lab_expect_exit 0
+fi
+lab_expect_contains "🧭 Verdict per CP version"
+lab_run bash -c "docker ps -a --format '{{.Names}}' | grep -c playground-schema-validate || true"
+lab_expect_equals "$LAB_OUTPUT" "0" "the Schema Registry containers are removed"
+
 log "✅ all the outputs of the page are as expected"

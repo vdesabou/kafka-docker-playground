@@ -34,6 +34,7 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 | data contract rules on a version, and do these records pass them? | `playground schema register --subject <s> --rule '<name>:<CEL expr>'` / `playground schema test-rules --subject <s> --record '<json>'` |
 | freeze or migrate a subject (or the registry) | `playground schema set-mode --subject <s> \| --global --mode READONLY\|IMPORT\|READWRITE` |
 | registry-wide behaviour | `playground schema set-normalize --value true` / `validate-new-schemas --value false` |
+| accepted by Schema Registry 7.9, refused by 8.4? (no upgrade) | `playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 < schema.avsc` |
 | one subject name pointing at another | `playground schema set-alias --subject <s> --alias <a>` (CP 7.4.1+) |
 | Schema Linking: copy subjects to another registry, and check what arrived | `playground schema exporter create --name <n> --cluster europe --to us [--destination-context <c>]` / `playground schema compare --from europe --to us [--to-context .<c>]` |
 | the subjects of one context (Schema Linking destinations) | `playground schema contexts` / `--context <ctx>` on the schema commands |
@@ -432,6 +433,35 @@ These commands work with every environment the playground starts: plain http on 
 client certificates on `sasl-ssl` / `2way-ssl`, basic auth `superUser` on RBAC, and the API key of `.ccloud/` on
 Confluent Cloud. They're not available on multi data center environments.
 
+### Across CP versions: `validate`
+
+```bash
+playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 < legacy.avsc
+playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 --schema @v1.avsc --schema @v2.avsc --json
+```
+
+```text
+🐳 Schema Registry 7.9.2: starting confluentinc/cp-schema-registry:7.9.2
+   ✅ schema 1: accepted (id 1)
+🐳 Schema Registry 8.4.0: starting confluentinc/cp-schema-registry:8.4.0
+   ❌ schema 1: 42201 Namespace part "my-company" is invalid: Illegal character in: my-company
+
+🧭 Verdict per CP version (each version starts with an empty registry and its default settings)
+SCHEMA    7.9.2  8.4.0
+schema 1  ✅     ❌ 42201
+```
+
+- For each version, a Schema Registry container starts next to the broker of the running environment, with its own
+  kafkastore topic (both deleted afterwards, `--keep` to look at them): nothing changes in the registry of the
+  environment, and no upgrade is needed.
+- Several `--schema` are registered in that order in `--subject`: a v1 then a v2 also shows the compatibility checks
+  of each version (`409`).
+- Each registry runs with the **defaults of its version**: to tell whether the difference comes from the stricter
+  validation (CP 8.2.0+, Avro 1.12 namespaces) rather than from the parser itself, replay with
+  `playground schema validate-new-schemas --value false` on a registry of the new version.
+- Needs a running docker environment (not ccloud / cfk). CP 5.x / 6.0 registries can't talk to a CP 8 broker: start
+  the environment with an older `--tag` for them.
+
 ### Moving a registry: `export` and `import`
 
 ```bash
@@ -625,7 +655,7 @@ playground stop
 | "which schema is this record using?" | `topic consume -t <t> --last 1` for `ValueSchemaId:`, then `schema describe --id <id>` (and `schema get --id <id> --schema-only`) |
 | "the sink reads the wrong subject / subject not found" | the producer's subject name strategy: `schema get` to list the real subjects, `topic consume --value-subject` to read them (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
 | "the same schema keeps creating new versions" | register twice with a whitespace change, then `set-normalize --value true` and again |
-| "a schema registered years ago is refused after an upgrade" | `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
+| "a schema registered years ago is refused after an upgrade" | `validate --cp-version <theirs> --cp-version <target> < schema.avsc` shows which version refuses it and why; then `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
 | "after Schema Linking, the consumers in DR fail with `Schema not found`" | `mdc-plaintext` with the lab override, `exporter create … --destination-context <c>`, then `schema get --id <id> --cluster us` (40403) vs `--context <c>` (found): the ids are in the context |
 | "is everything linked? the destination misses subjects" | `schema compare --from <source> --to <destination> --to-context .<c>`, and `schema exporter status --name <n>` (ERROR + trace) |
 | "we migrated subjects and the ids changed" | `export` on the source, `import` on the target: same ids (or `register --id <id>` for one schema) |
@@ -654,6 +684,7 @@ playground schema set-compatibility --subject <s> | --global --compatibility BAC
 playground topic set-schema-compatibility --topic <t> --compatibility … [--include-key]
 playground schema describe --subject <s> | --id <id> [--json]
 playground schema history [--subject <s>] [--since 12h|2d|<date>] [-f <_schemas dump>] [--json]
+playground schema validate --cp-version <A> --cp-version <B> [--schema @v1.avsc]... [--subject <s>] [--keep] [--json] < schema
 playground schema contexts [--cluster us|europe]             # --context <ctx> on list, get, describe, register, export, import…
 playground schema exporter create --name <n> [--cluster <source>] [--to <cluster> | --destination-url <url> [--destination-auth u:p]] [--context-type AUTO|CUSTOM|NONE] [--destination-context <c>] [--subjects "a,b*"]
 playground schema exporter list|status|pause|resume|reset|delete [--name <n>] [--cluster <source>]
