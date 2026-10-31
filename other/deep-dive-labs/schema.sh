@@ -103,6 +103,11 @@ lab_expect_contains '"deleted": true'
 lab_run playground topic consume -t orders --min-expected-messages 2 --timeout 60
 lab_expect_contains "topic is not using any schema for value" "topic consume finds no subject after a soft delete"
 
+lab_run playground schema describe --id 2
+lab_expect_exit 0
+lab_expect_contains "💯 schema id 2: AVRO com.example.Order"
+lab_expect_contains "🔰 orders-value v2 🧟 soft deleted"
+
 log "Step 3b: re-register after a soft delete: same id, next version"
 lab_run playground schema register --subject orders-value < "$schema_dir/v2.avsc"
 lab_expect_exit 0
@@ -134,6 +139,16 @@ then
     exit 1
 fi
 log "✅ new id $new_id after a permanent delete"
+
+lab_run playground schema history --subject orders-value
+lab_expect_exit 0
+lab_expect_contains "⏺️ orders-value: registered v1 (id 1, AVRO)"
+lab_expect_contains "🧟 orders-value: soft deleted the subject (versions 1, 2): the ids still resolve"
+lab_expect_contains "❌ id 1 no longer resolves"
+lab_expect_contains "ids that no longer resolve: 1, 2"
+lab_run playground schema describe --subject orders-value
+lab_expect_exit 0
+lab_expect_contains "🧭 strategy       TopicNameStrategy → topic orders ✅"
 
 log "Step 5: derive a schema"
 lab_run playground schema derive-schema << 'EOT'
