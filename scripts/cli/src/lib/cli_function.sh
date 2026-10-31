@@ -957,9 +957,9 @@ function sr_compatibility_verdicts() {
       break
     fi
   done
-  sr_request DELETE "/config/${tmp_subject}" > /dev/null
-  sr_request DELETE "/subjects/${tmp_subject}" > /dev/null
-  sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null
+  sr_request DELETE "/config/${tmp_subject}" > /dev/null || true
+  sr_request DELETE "/subjects/${tmp_subject}" > /dev/null || true
+  sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null || true
   return $ret
 }
 

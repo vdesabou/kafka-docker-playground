@@ -30,7 +30,8 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 | the rule that accepts or refuses a new version | `playground schema get-compatibility --subject <s>` (or `--global`) / `set-compatibility --compatibility …` |
 | the same, on the value subject of a topic | `playground topic set-schema-compatibility --topic <t> --compatibility …` |
 | remove a version or a subject | `playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]` |
-| a schema from a sample JSON record | `playground schema derive-schema --schema-type AVRO\|JSON\|PROTOBUF << 'EOF' … EOF` |
+| a schema from a sample JSON record | `playground schema derive-schema --schema-type AVRO\|JSON\|PROTOBUF [--name <N>] [-o <file>] [--register --subject <s>] << 'EOF' … EOF` |
+| data contract rules on a version, and do these records pass them? | `playground schema register --subject <s> --rule '<name>:<CEL expr>'` / `playground schema test-rules --subject <s> --record '<json>'` |
 | freeze or migrate a subject (or the registry) | `playground schema set-mode --subject <s> \| --global --mode READONLY\|IMPORT\|READWRITE` |
 | registry-wide behaviour | `playground schema set-normalize --value true` / `validate-new-schemas --value false` |
 | one subject name pointing at another | `playground schema set-alias --subject <s> --alias <a>` (CP 7.4.1+) |
@@ -196,8 +197,10 @@ playground schema register --subject orders-all-value << 'EOF'
                   {"name": "com.example.Product",  "subject": "product",  "version": 1} ] }
 EOF
 
-# data contracts: metadata properties
+# data contracts: metadata properties, and rules (CEL conditions checked by the producers)
 playground schema register --subject orders-value --metadata-property owner=team-a --metadata-property pii=false < order.avsc
+playground schema register --subject orders-value --rule 'amountPositive:message.amount > 0' < order.avsc
+playground schema register --subject orders-value --rule-set @rules.json < order.avsc     # {"domainRules": […], "migrationRules": […]}
 ```
 
 What `register` prints is the registry's answer:
@@ -230,6 +233,36 @@ Gotchas:
   registration. Without it, a schema that only differs by whitespace or field order can become a new version.
 - The plaintext environment validates Avro defaults (`SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: true`):
   a `"default"` of the wrong type is refused at registration.
+- **A Schema Registry of Confluent Platform drops the rules silently** unless it runs with
+  `resource.extension.class=io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension`: `register` checks
+  and warns, `❗ the registry dropped the rules`, with the command that enables it in the playground:
+  `playground container set-environment-variables -c schema-registry --env "SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension"`.
+  An unchanged schema returns its existing version: register it again after the restart to get a version with the
+  rules. A single `--metadata-property` is kept (it used to be dropped).
+- `--rule '<name>:<expr>'` is a shortcut for a domain rule `{"kind": "CONDITION", "type": "CEL", "mode": "WRITE"}`;
+  anything else (`onFailure: DLQ`, `READ` rules, migration rules, `JSONATA` transforms) goes in `--rule-set`.
+
+### Testing the rules: `test-rules`
+
+```bash
+playground schema test-rules --subject orders-value --record '{"id": 1, "amount": 5.0}' --record '{"id": 2, "amount": -1.0}'
+playground schema test-rules --subject orders-value < records.jsonl --json
+```
+
+```text
+📏 orders-value v2 (id 6): amountPositive (CONDITION CEL WRITE)
+✅ {"id": 1, "amount": 5.0}
+❌ {"id": 2, "amount": -1.0}
+   rule amountPositive failed: 'message.amount > 0'
+🧭 1 passed, 1 failed: a failed record is refused by a producer using this version (use.latest.version=true), or sent to its DLQ with onFailure DLQ
+```
+
+- It sends each record through the real serializer (the console producer of the `schema-registry` container, with
+  `use.latest.version=true`) into a temporary topic and subject (`playground-schema-check-…`, deleted afterwards):
+  the verdict is the client's, not a reimplementation of CEL. Exit 1 when a record fails.
+- The rules run in the clients (`kafka-schema-rules` on their classpath), never in the registry: registering a rule
+  doesn't refuse anything by itself, a producer without `use.latest.version=true` (or an old client) ignores it.
+- Plaintext environment only, schemas without references.
 
 ---
 
@@ -358,6 +391,7 @@ EOF
 
 playground schema derive-schema --schema-type PROTOBUF --payload '{"sport": "Football"}'
 playground schema derive-schema --schema-type JSON --payload @sample.json
+playground schema derive-schema --name Order --namespace com.example -o order.avsc --register --subject orders-value < sample.jsonl
 ```
 
 It runs the `derive-schema` goal of the Schema Registry Maven plugin, at the version of the playground's default CP
@@ -368,8 +402,14 @@ Gotchas:
 - **Several records give one schema that covers them all**: one JSON per line; a field with different types across
   records becomes a union (Avro). A single multi-line JSON document is minified into one record.
 - **The schema comes from the values you give**: `9.99` → `double`, `1` → `int` (not `long`), a `null` → a null type.
-  Give records that show the real range of values, and review the result: it never guesses optional fields or
-  logical types (dates, decimals). A JSON `null` becomes `{"type": "null"}` in a JSON Schema.
+  Give records that show the real range of values, and review the result: it never guesses optional fields. A JSON
+  `null` becomes `{"type": "null"}` in a JSON Schema.
+- **Logical types get a hint, not a type**: values that look like a date, a timestamp, a uuid, a decimal in a string or
+  epoch milliseconds stay `string` / `long`, with
+  `💡 day: "2026-10-31" looks like a date (avro: {"type": "int", "logicalType": "date"}, json schema: "format": "date")`.
+- The type is called `Schema` unless `--name` is set (`--namespace` sets the namespace, or the protobuf `package`; for
+  JSON Schema `--name` is the `title`). `-o` writes the schema, `--register --subject` registers it (the first schema
+  only, when the records gave several).
 - The first run downloads the Maven plugin and its dependencies (cached in `~/.m2`): slow once.
 - To register the result and produce with it in one go: `topic produce --derive-value-schema-as AVRO` (see the
   [`topic produce` deep dive](/deep-dive-topic-produce.md)).
@@ -545,7 +585,8 @@ playground stop
 | "a schema registered years ago is refused after an upgrade" | `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
 | "we migrated subjects and the ids changed" | `export` on the source, `import` on the target: same ids (or `register --id <id>` for one schema) |
 | "here are our schemas" (a `/schemas` dump, a `_schemas` dump, an export) | `import -f <file>` before the connector: the repro uses the customer's schemas and ids |
-| "we only have a sample message" | `derive-schema`, review, then `register` or `topic produce --derive-value-schema-as` |
+| "we only have a sample message" | `derive-schema --name <record> -o <file>`, review (and the 💡 hints), then `register` or `topic produce --derive-value-schema-as` |
+| "the producer fails with `Rule failed: …` / records end up in the DLQ of a data contract" | `register --rule` (or `--rule-set` with the customer's ruleSet) on a registry with the rule set extension, then `test-rules --record` with their records: which rule fails and its expression |
 
 In a repro model, register the customer's schemas **before** creating the connector, and fail fast when the registry
 refuses them:
@@ -573,7 +614,9 @@ playground schema import -f <folder|.tgz|JSON array|_schemas dump> [--on-conflic
 playground schema check-compatibility --subject <s> [--schema @file] [--version N] [--compatibility <rule>] [--json] < new.avsc
 playground schema diff [--subject <s>] [--from N|latest|id:<id>|@file] [--to …] [--no-verdict] [--json]
 playground schema delete --subject <s> [--version N] [--permanent] [--dry-run]
-playground schema derive-schema [--schema-type AVRO|JSON|PROTOBUF] [--payload '<json>'|@file] << 'EOF' … EOF
+playground schema derive-schema [--schema-type AVRO|JSON|PROTOBUF] [--payload '<json>'|@file] [--name <N>] [--namespace <ns>] [-o <file>] [--register --subject <s>] << 'EOF' … EOF
+playground schema register --subject <s> [--rule '<name>:<CEL expr>']... [--rule-set @rules.json] < schema
+playground schema test-rules --subject <s> [--version N] [--record '<json>']... [--json]
 playground schema get-mode|set-mode --subject <s> | --global [--mode READWRITE|READONLY|IMPORT]
 playground schema set-normalize|validate-new-schemas --value true|false
 playground schema get-alias|set-alias --subject <s> [--alias <a>]

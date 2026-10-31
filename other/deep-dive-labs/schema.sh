@@ -181,4 +181,27 @@ lab_expect_contains 'syntax = "proto3";'
 lab_expect_contains "message Schema {"
 lab_expect_contains "string sport = 1;"
 
+log "Step 5b: derive with a name, and the logical type hints"
+lab_run playground schema derive-schema --name Order --namespace com.example --payload '{"id": 1, "day": "2026-10-31"}'
+lab_expect_exit 0
+lab_expect_contains '"name": "Order",'
+lab_expect_contains '💡 day: "2026-10-31" looks like a date'
+
+log "Step 6: data contract rules"
+lab_run playground schema register --subject rules-value --rule 'amountPositive:message.amount > 0' < "$schema_dir/v1.avsc"
+lab_expect_exit 0
+lab_expect_contains "📏 data contract rules: amountPositive"
+lab_expect_contains "❗ the registry dropped the rules"
+playground container set-environment-variables -c schema-registry --env "SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension"
+for i in $(seq 1 60); do playground schema list > /dev/null 2>&1 && break; sleep 2; done
+lab_run playground schema register --subject rules-value --rule 'amountPositive:message.amount > 0' < "$schema_dir/v1.avsc"
+lab_expect_exit 0
+lab_expect_not_contains "dropped the rules"
+lab_run playground schema test-rules --subject rules-value --record '{"id": 1, "amount": 5.0}' --record '{"id": 2, "amount": -1.0}'
+lab_expect_exit 1
+lab_expect_contains '✅ {"id": 1, "amount": 5.0}'
+lab_expect_contains '❌ {"id": 2, "amount": -1.0}'
+lab_expect_contains "rule amountPositive failed: 'message.amount > 0'"
+lab_expect_contains "1 passed, 1 failed"
+
 log "✅ all the outputs of the page are as expected"

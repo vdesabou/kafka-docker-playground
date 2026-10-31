@@ -5,6 +5,8 @@ normalize="${args[--normalize]}"
 verbose="${args[--verbose]}"
 
 eval "metadata_property=(${args[--metadata-property]})"
+eval "rules=(${args[--rule]})"
+rule_set="${args[--rule-set]}"
 get_sr_url_and_security
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -36,13 +38,55 @@ else
     esac
 fi
 
-# Check if the array contains multiple results
-if [ "${#metadata_property[@]}" -gt 1 ]
+if [ "${#metadata_property[@]}" -gt 0 ]
 then
     log "🟡 schema metadata are present, adding them"
     # Construct metadata_json using jq
     metadata_json=$(jq -n --argjson props "$(printf '%s\n' "${metadata_property[@]}" | jq -R 'split("=") | { (.[0]): .[1] }' | jq -s 'add')" '{properties: $props}')
     json_new=$(echo $json_new | jq --argjson metadata "$metadata_json" '. + { "metadata": $metadata }')
+fi
+
+# data contracts: a rule set (file or json), and/or --rule shortcuts (CEL conditions checked when producing)
+rule_set_json=""
+if [[ -n "$rule_set" ]]
+then
+    if [[ $rule_set == @* ]]
+    then
+        rule_set_json=$(cat "${rule_set#@}") || exit 1
+    elif [ -f "$rule_set" ]
+    then
+        rule_set_json=$(cat "$rule_set")
+    else
+        rule_set_json="$rule_set"
+    fi
+    if ! echo "$rule_set_json" | jq -e . > /dev/null 2>&1
+    then
+        logerror "❌ --rule-set is not valid json"
+        exit 1
+    fi
+    # a bare array of rules is taken as domainRules
+    rule_set_json=$(echo "$rule_set_json" | jq -c 'if type == "array" then {domainRules: .} else . end')
+fi
+if [ "${#rules[@]}" -gt 0 ]
+then
+    [ -z "$rule_set_json" ] && rule_set_json='{"domainRules": []}'
+    for rule in "${rules[@]}"
+    do
+        rule_name="${rule%%:*}"
+        rule_expr="${rule#*:}"
+        if [ -z "$rule_name" ] || [ "$rule_name" == "$rule" ] || [ -z "$rule_expr" ]
+        then
+            logerror "❌ --rule '$rule': expected <name>:<CEL expression>, for example 'amountPositive:message.amount > 0'"
+            exit 1
+        fi
+        rule_set_json=$(echo "$rule_set_json" | jq -c --arg n "$rule_name" --arg e "$rule_expr" \
+            '.domainRules = ((.domainRules // []) + [{name: $n, kind: "CONDITION", type: "CEL", mode: "WRITE", expr: $e}])')
+    done
+fi
+if [ -n "$rule_set_json" ]
+then
+    log "📏 data contract rules: $(echo "$rule_set_json" | jq -r '[(.domainRules // [])[], (.migrationRules // [])[], (.encodingRules // [])[]] | map(.name) | join(", ")')"
+    json_new=$(echo "$json_new" | jq -c --argjson rs "$rule_set_json" '. + {ruleSet: $rs}')
 fi
 
 if [[ -n "$id" ]]
@@ -188,4 +232,15 @@ if echo "$curl_output" | jq -e 'has("error_code")' > /dev/null 2>&1
 then
     logerror "❌ schema registry refused the schema for subject ${subject} (error code $(echo "$curl_output" | jq -r .error_code))"
     exit 1
+fi
+# a registry without the rule set extension accepts the request and silently drops the rules
+if [ -n "$rule_set_json" ]
+then
+    registered_version=$(echo "$curl_output" | jq -r '.version // empty')
+    if [ -n "$registered_version" ] && sr_request GET "/subjects/${subject}/versions/${registered_version}" && echo "$sr_response" | jq -e '.ruleSet == null' > /dev/null 2>&1
+    then
+        logwarn "❗ the registry dropped the rules: data contract rules need resource.extension.class=io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension on Schema Registry"
+        logwarn "   playground container set-environment-variables -c schema-registry --env \"SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.rulehandler.RuleSetResourceExtension\""
+        logwarn "   (an unchanged schema returns its existing version: register it again after the restart, it gets a new version with the rules)"
+    fi
 fi

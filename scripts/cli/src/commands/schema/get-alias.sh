@@ -1,3 +1,5 @@
+# errexit can be left on by a filter or a library function: the checks below handle the failures themselves
+set +e
 alias="${args[--alias]}"
 json="${args[--json]}"
 verbose="${args[--verbose]}"
