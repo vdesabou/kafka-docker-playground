@@ -34,7 +34,10 @@ or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 | data contract rules on a version, and do these records pass them? | `playground schema register --subject <s> --rule '<name>:<CEL expr>'` / `playground schema test-rules --subject <s> --record '<json>'` |
 | freeze or migrate a subject (or the registry) | `playground schema set-mode --subject <s> \| --global --mode READONLY\|IMPORT\|READWRITE` |
 | registry-wide behaviour | `playground schema set-normalize --value true` / `validate-new-schemas --value false` |
+| accepted by Schema Registry 7.9, refused by 8.4? (no upgrade) | `playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 < schema.avsc` |
 | one subject name pointing at another | `playground schema set-alias --subject <s> --alias <a>` (CP 7.4.1+) |
+| Schema Linking: copy subjects to another registry, and check what arrived | `playground schema exporter create --name <n> --cluster europe --to us [--destination-context <c>]` / `playground schema compare --from europe --to us [--to-context .<c>]` |
+| the subjects of one context (Schema Linking destinations) | `playground schema contexts` / `--context <ctx>` on the schema commands |
 | the customer's schemas in the playground, with their ids | `playground schema export -o <folder>` / `playground schema import -f <folder \| /schemas JSON \| _schemas dump>` |
 
 ---
@@ -430,6 +433,35 @@ These commands work with every environment the playground starts: plain http on 
 client certificates on `sasl-ssl` / `2way-ssl`, basic auth `superUser` on RBAC, and the API key of `.ccloud/` on
 Confluent Cloud. They're not available on multi data center environments.
 
+### Across CP versions: `validate`
+
+```bash
+playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 < legacy.avsc
+playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 --schema @v1.avsc --schema @v2.avsc --json
+```
+
+```text
+🐳 Schema Registry 7.9.2: starting confluentinc/cp-schema-registry:7.9.2
+   ✅ schema 1: accepted (id 1)
+🐳 Schema Registry 8.4.0: starting confluentinc/cp-schema-registry:8.4.0
+   ❌ schema 1: 42201 Namespace part "my-company" is invalid: Illegal character in: my-company
+
+🧭 Verdict per CP version (each version starts with an empty registry and its default settings)
+SCHEMA    7.9.2  8.4.0
+schema 1  ✅     ❌ 42201
+```
+
+- For each version, a Schema Registry container starts next to the broker of the running environment, with its own
+  kafkastore topic (both deleted afterwards, `--keep` to look at them): nothing changes in the registry of the
+  environment, and no upgrade is needed.
+- Several `--schema` are registered in that order in `--subject`: a v1 then a v2 also shows the compatibility checks
+  of each version (`409`).
+- Each registry runs with the **defaults of its version**: to tell whether the difference comes from the stricter
+  validation (CP 8.2.0+, Avro 1.12 namespaces) rather than from the parser itself, replay with
+  `playground schema validate-new-schemas --value false` on a registry of the new version.
+- Needs a running docker environment (not ccloud / cfk). CP 5.x / 6.0 registries can't talk to a CP 8 broker: start
+  the environment with an older `--tag` for them.
+
 ### Moving a registry: `export` and `import`
 
 ```bash
@@ -460,6 +492,47 @@ Gotchas:
   with `--with-global-settings`.
 - In a reproduction model, export the customer's schemas into the model folder and start the scenario with
   `playground schema import -f "${DIR}/schemas"`: the model ships them.
+
+### Contexts and Schema Linking: `--context`, `contexts`, `exporter`, `compare`
+
+A **context** is a separate namespace of subjects **and schema ids** inside one registry. Schema Linking (an
+**exporter** running in the source registry) copies subjects, with their ids, into a context of the destination
+registry. In the `mdc-*` environments the two registries are `--cluster europe` and `--cluster us`; the lab override
+`other/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml` enables the exporter extension on both:
+
+```bash
+playground start-environment --environment mdc-plaintext --docker-compose-override-file "${PWD}/other/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml"
+playground schema register --subject orders-value --cluster europe < order.avsc
+playground schema exporter create --name eu-to-us --cluster europe --destination-context europe
+# 🔗 exporter eu-to-us: RUNNING, offset 3, 2 object(s) exported
+playground schema contexts --cluster us
+#    .  0 subject(s)  mode READWRITE
+#    .europe  1 subject(s)  mode IMPORT
+playground schema list --cluster us --context europe          # :.europe:orders-value …
+playground schema compare --from europe --to us --to-context .europe
+# ✅ orders-value: 1 version(s), same schemas and ids
+playground schema exporter list|status|pause|resume|reset|delete --name eu-to-us --cluster europe
+```
+
+Gotchas:
+
+- **The ids live in the context**: on the destination, `playground schema get --id 1 --cluster us` fails with
+  `40403 Schema 1 not found`, `--context europe` finds it. A consumer of the destination reading replicated records
+  fails the same way, unless it looks up the context (`context.name.strategy` in the deserializer) or the exporter
+  uses `--context-type NONE` (default context, ids must not collide). This is the classic Schema Linking repro.
+- `--context-type AUTO` (default without `--destination-context`) lands in `.<exporter name>`, `CUSTOM` in
+  `--destination-context`, `NONE` in the default context. The destination context is put in `IMPORT` mode: nothing
+  can be registered there by hand.
+- The exporter commands need the exporter extension in the **source** registry (`resource.extension.class`,
+  `kafkastore.update.handlers`, `password.encoder.secret`): without it they print the settings to add. Outside `mdc-*`,
+  `exporter create --destination-url <url> [--destination-auth user:password]` exports to any registry the source
+  can reach (Confluent Cloud included).
+- `pause` before `reset` or `delete`; deleting an exporter leaves the exported schemas in the destination.
+- `compare` exports both sides (`schema export` under the hood) and ignores the context prefix of the names
+  (`:.europe:orders-value` = `orders-value`); exit 1 when they differ. Outside `mdc-*` it compares two contexts of the
+  registry (`--from-context`, `--to-context`).
+- Without `--context`, `schema list` / `get` show the subjects of every context (with their `:.<context>:` prefix);
+  `schema export` keeps only the default context.
 
 ---
 
@@ -582,7 +655,9 @@ playground stop
 | "which schema is this record using?" | `topic consume -t <t> --last 1` for `ValueSchemaId:`, then `schema describe --id <id>` (and `schema get --id <id> --schema-only`) |
 | "the sink reads the wrong subject / subject not found" | the producer's subject name strategy: `schema get` to list the real subjects, `topic consume --value-subject` to read them (see the [`topic consume` deep dive](/deep-dive-topic-consume.md)) |
 | "the same schema keeps creating new versions" | register twice with a whitespace change, then `set-normalize --value true` and again |
-| "a schema registered years ago is refused after an upgrade" | `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
+| "a schema registered years ago is refused after an upgrade" | `validate --cp-version <theirs> --cp-version <target> < schema.avsc` shows which version refuses it and why; then `validate-new-schemas --value true` (CP 8.2 default) vs `false` on the same schema |
+| "after Schema Linking, the consumers in DR fail with `Schema not found`" | `mdc-plaintext` with the lab override, `exporter create … --destination-context <c>`, then `schema get --id <id> --cluster us` (40403) vs `--context <c>` (found): the ids are in the context |
+| "is everything linked? the destination misses subjects" | `schema compare --from <source> --to <destination> --to-context .<c>`, and `schema exporter status --name <n>` (ERROR + trace) |
 | "we migrated subjects and the ids changed" | `export` on the source, `import` on the target: same ids (or `register --id <id>` for one schema) |
 | "here are our schemas" (a `/schemas` dump, a `_schemas` dump, an export) | `import -f <file>` before the connector: the repro uses the customer's schemas and ids |
 | "we only have a sample message" | `derive-schema --name <record> -o <file>`, review (and the 💡 hints), then `register` or `topic produce --derive-value-schema-as` |
@@ -609,6 +684,11 @@ playground schema set-compatibility --subject <s> | --global --compatibility BAC
 playground topic set-schema-compatibility --topic <t> --compatibility … [--include-key]
 playground schema describe --subject <s> | --id <id> [--json]
 playground schema history [--subject <s>] [--since 12h|2d|<date>] [-f <_schemas dump>] [--json]
+playground schema validate --cp-version <A> --cp-version <B> [--schema @v1.avsc]... [--subject <s>] [--keep] [--json] < schema
+playground schema contexts [--cluster us|europe]             # --context <ctx> on list, get, describe, register, export, import…
+playground schema exporter create --name <n> [--cluster <source>] [--to <cluster> | --destination-url <url> [--destination-auth u:p]] [--context-type AUTO|CUSTOM|NONE] [--destination-context <c>] [--subjects "a,b*"]
+playground schema exporter list|status|pause|resume|reset|delete [--name <n>] [--cluster <source>]
+playground schema compare [--from europe] [--to us] [--from-context <c>] [--to-context <c>] [--json]
 playground schema export [--subject-prefix <p>] [-o <folder>]
 playground schema import -f <folder|.tgz|JSON array|_schemas dump> [--on-conflict skip|overwrite|merge] [--new-ids] [--dry-run]
 playground schema check-compatibility --subject <s> [--schema @file] [--version N] [--compatibility <rule>] [--json] < new.avsc

@@ -250,7 +250,8 @@ my-app (interceptor) ──commits──> __consumer_offsets
 ## 5. Hands-on lab (≈20 min)
 
 The lab starts its own `mdc-plaintext` environment (the override `docker-compose.mdc-plaintext.replication.yml` of
-the lab folder only enables cluster links on `broker-europe`), then replays the three tools on the same data.
+the lab folder enables cluster links on `broker-europe` and the Schema Linking exporter on both schema registries),
+then replays the three tools on the same data, and Schema Linking.
 
 ```bash
 playground start-environment --environment mdc-plaintext --docker-compose-override-file "$PWD/other/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml"
@@ -470,6 +471,20 @@ playground container exec -c broker-europe --command "kafka-cluster-links --boot
 # Cluster link 'us-to-europe' deletion successfully completed.
 ```
 
+**Step 6: Schema Linking, europe to us, into a context**
+
+```bash
+playground schema register --subject linked-orders-value --cluster europe --schema @order.avsc     # { "id": 3, … }
+playground schema exporter create --name eu-to-us --cluster europe --subjects "linked-*" --destination-context europe
+# 🔗 exporter eu-to-us: RUNNING, offset 3, 1 object(s) exported
+playground schema compare --from europe --to us --to-context .europe --subject-prefix linked-
+# ✅ linked-orders-value: 1 version(s), same schemas and ids
+playground schema get --id 3 --cluster us                     # 🔥 Schema 3 not found: the id is in the context .europe
+playground schema get --id 3 --cluster us --context europe    # { "subject": ":.europe:linked-orders-value", … }
+playground schema exporter pause --name eu-to-us --cluster europe
+playground schema exporter delete --name eu-to-us --cluster europe
+```
+
 In CI the whole lab takes about 6 minutes, half of it to start the environment. Not replayed: the Replicator
 executable and the SASL / Kerberos variants (same mechanics, run the examples of §2), and the Confluent Cloud
 examples (they need Confluent Cloud credentials and are not in CI).
@@ -492,6 +507,7 @@ playground stop
 | "the consumers in DR started from the beginning / the end" | the group didn't exist in the destination: `auto.offset.reset` decided. `kafka-consumer-groups --describe --group <g>` on both brokers (`GroupIdNotFoundException` = never translated) |
 | "messages loop between the two data centers" | Replicator both ways without `provenance.header.enable=true` (`replicator-connect` sets it). MirrorMaker 2 doesn't loop: the prefix marks remote topics |
 | "Replicator to Confluent Cloud" | `ccloud/replicator/connect-onprem-to-cloud.sh` (CP 7.x only, exits 111 with 8+): `dest.kafka.*` with `SASL_SSL`, `topic.auto.create=false` and the topic created first |
+| "Schema Linking: are the schemas in DR? the DR consumers fail with `Schema not found`" | lab override (exporter extension on both registries), `playground schema exporter create --name <n> --cluster europe --destination-context europe`, `playground schema compare --from europe --to us --to-context .europe`; the ids are in the context: `schema get --id <id> --cluster us` fails, `--context europe` works (see the [schema deep dive](/deep-dive-schema.md)) |
 | "migrate schemas to Confluent Cloud" | `ccloud/migrate-schemas-to-confluent-cloud/start.sh`: destination registry in `IMPORT` mode, `_schemas` replicated with `schema.registry.topic`, source registry `READONLY` |
 | "move a sink connector to the DR cluster without rewriting everything" | `multi-data-center/cluster-linking/start-plaintext-migrate-sink-connector.sh`: the group `connect-<connector>` follows through the link |
 | "the source data center goes down: what happens to the replication, the consumers?" | `playground broker stop --cluster europe --broker 1 --kill`, look at the Replicator / MirrorMaker 2 tasks (`playground connector status --cluster us`) and the groups on the other side, then `playground broker start --cluster europe --broker 1` |
@@ -514,6 +530,7 @@ playground container exec -c broker-us --command "kafka-consumer-groups --bootst
 playground container exec -c connect-us --command "curl -s http://localhost:8083/connectors/<c>/status"     # connect-europe: same, from inside
 playground container logs -c connect-us --errors      playground debug thread-dump -c connect-europe
 playground topic|consumer-group|connector|schema … --cluster us|europe
+playground schema exporter create --name <n> --cluster europe [--destination-context <c>]    playground schema compare --from europe --to us [--to-context .<c>]   # Schema Linking
 playground topic compare --topic <t> [--to-topic <t2>] --from europe --to us [--wait]      # is everything replicated?     # or: export PLAYGROUND_CLUSTER=us, playground state set run.cluster us
 playground broker health|describe|metrics --cluster europe        playground broker stop --cluster europe --broker 1 --kill   # a data center goes down
 # Cluster Linking, on the destination broker:

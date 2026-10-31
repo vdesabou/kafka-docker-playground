@@ -4150,6 +4150,7 @@ commands:
        register             add a new version to a subject
        check-compatibility  would this schema be accepted? (nothing registered)
        test-rules           do these records pass the data contract rules?
+       validate             accepted by Schema Registry X, refused by Y? (throwaway registries)
        delete               a version, or the whole subject
        set-compatibility    relax or tighten the evolution rule (subject or global)
        set-mode             READWRITE, READONLY or IMPORT (subject or global)
@@ -4158,6 +4159,9 @@ commands:
 
      📦 Move
        export / import      a registry to a folder and back, keeping the ids
+       compare              two registries (mdc clusters) or two contexts
+       exporter             Schema Linking: create, list, status, pause…
+       contexts             the contexts of the registry (--context on the commands)
 
      🔀 diff compares two versions (or a version and a file) field by field,
      with the verdict of each compatibility rule.
@@ -4208,6 +4212,14 @@ commands:
       long: --verbose
       short: -v
       help: 🐞 Show command being ran.
+    - &context
+      long: --context
+      arg: context
+      required: false
+      help: |-
+        🗂️ Schema Registry context (.europe, or europe): every call goes to /contexts/<context>/…
+
+        The subjects exported by Schema Linking land in a context of the destination registry. Default: the default context.
     - &cluster
       long: --cluster
       arg: cluster
@@ -4296,6 +4308,7 @@ commands:
         help: store in /tmp folder
         arg: folder
         private: true
+      - *context
       - *cluster
     examples:
     - playground schema get
@@ -4390,6 +4403,7 @@ commands:
           Example: --rule 'amountPositive:message.amount > 0' --rule 'hasCurrency:size(message.currency) == 3'
 
           ❕ The rules run in the clients (serializers with use.latest.version=true and the kafka-schema-rules jar), not in the registry: registering them never refuses a record.
+      - *context
       - *cluster
 
     examples: |
@@ -4493,6 +4507,7 @@ commands:
         🛡️ Evaluate under this rule instead of the one of the subject
     - *json
     - *verbose
+    - *context
     - *cluster
     examples: |
       playground schema check-compatibility --subject orders-value < customer-v2.avsc
@@ -4542,6 +4557,7 @@ commands:
         🙅 Only the field-level diff, don't ask the registry for the compatibility verdicts
     - *json
     - *verbose
+    - *context
     - *cluster
     examples: |
       playground schema diff --subject orders-value
@@ -4588,6 +4604,7 @@ commands:
         💯 Schema id (the ValueSchemaId: of 'playground topic consume')
     - *json
     - *verbose
+    - *context
     - *cluster
     examples:
     - playground schema describe --subject orders-value
@@ -4683,6 +4700,7 @@ commands:
       help: |-
         📁 Folder to write (created if needed, files of the same name are overwritten)
     - *verbose
+    - *context
     - *cluster
     examples:
     - playground schema export -o /tmp/schemas
@@ -4744,6 +4762,7 @@ commands:
       help: |-
         🧪 Show what would be imported, and the conflicts, without changing anything
     - *verbose
+    - *context
     - *cluster
     examples:
     - playground schema import -f /tmp/schemas --dry-run
@@ -4791,6 +4810,259 @@ commands:
 
       playground schema test-rules --subject orders-value < records.jsonl
 
+  - name: contexts
+    group: Schema
+    filters:
+    - schema_registry_running
+    help: |-
+      🗂️ List the contexts of the registry, with their number of subjects and mode
+
+      Contexts are separate namespaces of subjects and schema ids in one
+      registry. Schema Linking exports into one (.<name>) on the
+      destination: a consumer of the default context doesn't find those ids.
+    flags:
+    - *json
+    - *verbose
+    - *cluster
+
+  - name: compare
+    group: Schema
+    help: |-
+      🔀 Compare the subjects of two registries (or two contexts)
+
+      In an mdc-* environment, --from and --to are the clusters (europe and
+      us by default); --from-context / --to-context pick a context on each
+      side (the destination context of a Schema Linking exporter, typically).
+      Elsewhere, compare two contexts of the registry.
+
+      For each subject: ✅ same versions, schemas and ids; ⬅️ / ➡️ only on one
+      side; ❌ missing versions, different schemas, or the same schema with
+      another id (records written on one side don't decode on the other) and
+      a different subject-level compatibility.
+
+      Exit code: 0 identical, 1 different.
+    flags:
+    - long: --from
+      arg: cluster
+      allowed: [us, europe]
+      required: false
+      help: |-
+        ⬅️ Cluster of the left side (mdc-* environments, default europe)
+    - long: --to
+      arg: cluster
+      allowed: [us, europe]
+      required: false
+      help: |-
+        ➡️ Cluster of the right side (mdc-* environments, default us)
+    - long: --from-context
+      arg: context
+      required: false
+      help: |-
+        🗂️ Context of the left side (default: the default context)
+    - long: --to-context
+      arg: context
+      required: false
+      help: |-
+        🗂️ Context of the right side (default: the default context)
+    - long: --subject-prefix
+      arg: prefix
+      required: false
+      help: |-
+        🔎 Only the subjects starting with this prefix
+    - *json
+    - *verbose
+    examples:
+    - playground schema compare --from europe --to us
+    - playground schema compare --from europe --to us --to-context .europe
+    - playground schema compare --from-context . --to-context .migrated --json
+
+  - name: exporter
+    group: Schema
+    help: |-
+      🔗 Schema Linking: exporters that copy subjects to another registry
+
+      An exporter runs in the source registry and copies the subjects it
+      matches (with their ids) to the destination, continuously. With context
+      type AUTO they land in the context .<exporter name>, with CUSTOM in
+      --destination-context, with NONE in the default context.
+
+      In an mdc-* environment, --cluster is the source and --to the
+      destination (the other cluster by default). Elsewhere, set
+      --destination-url (and --destination-auth).
+
+      ⚠️ The source registry needs the exporter extension (resource.extension
+      .class, kafkastore.update.handlers, password.encoder.secret): the
+      commands say what to add when it is missing, and
+      other/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml
+      enables it on both registries of mdc-plaintext.
+
+      See https://docs.confluent.io/platform/current/schema-registry/schema-linking-cp.html
+    commands:
+    - name: create
+      filters:
+      - schema_registry_running
+      help: |-
+        🔗 Create an exporter, then wait until it runs
+      flags:
+      - &exporter_name
+        long: --name
+        arg: name
+        required: true
+        help: |-
+          📛 Exporter name
+      - long: --to
+        arg: cluster
+        allowed: [us, europe]
+        required: false
+        help: |-
+          ➡️ Destination cluster in an mdc-* environment (default: the other one)
+      - long: --destination-url
+        arg: url
+        required: false
+        help: |-
+          🌐 Url of the destination registry, as seen from the source registry
+      - long: --destination-auth
+        arg: user-info
+        required: false
+        help: |-
+          🔑 <user>:<password> (or API key:secret) of the destination registry
+      - long: --context-type
+        arg: type
+        allowed: [AUTO, CUSTOM, NONE]
+        required: false
+        help: |-
+          🗂️ Where the subjects land: AUTO (.<exporter name>), CUSTOM (--destination-context) or NONE (default context). Default: CUSTOM with --destination-context, else AUTO
+      - long: --destination-context
+        arg: context
+        required: false
+        help: |-
+          🗂️ Destination context for --context-type CUSTOM
+      - long: --subjects
+        arg: subjects
+        required: false
+        help: |-
+          🔰 Comma separated subjects or patterns to export (default: *)
+      - long: --subject-rename-format
+        arg: format
+        required: false
+        help: |-
+          ✏️ Rename the subjects in the destination, e.g. dc_${subject} (${subject} is replaced by the subject name)
+      - *verbose
+      - *cluster
+      examples:
+      - playground schema exporter create --name eu-to-us --cluster europe --to us --destination-context europe
+      - playground schema exporter create --name to-dr --destination-url https://dr-registry:8081 --destination-auth user:password --subjects "orders-value,payments-*"
+    - name: list
+      filters:
+      - schema_registry_running
+      help: |-
+        📋 List the exporters of the registry, with their state
+      flags:
+      - *json
+      - *verbose
+      - *cluster
+    - name: status
+      filters:
+      - schema_registry_running
+      help: |-
+        🚦 State of an exporter (RUNNING, PAUSED, ERROR with its trace), offset and number of objects exported
+
+        Exit code 1 when the exporter is in ERROR.
+      flags:
+      - *exporter_name
+      - long: --wait
+        required: false
+        help: |-
+          ⏳ Wait (30 seconds at most) until the exporter is RUNNING, PAUSED or ERROR
+      - *json
+      - *verbose
+      - *cluster
+    - name: pause
+      filters:
+      - schema_registry_running
+      help: |-
+        ⏸️ Pause an exporter
+      flags:
+      - *exporter_name
+      - *verbose
+      - *cluster
+    - name: resume
+      filters:
+      - schema_registry_running
+      help: |-
+        ▶️ Resume a paused exporter
+      flags:
+      - *exporter_name
+      - *verbose
+      - *cluster
+    - name: reset
+      filters:
+      - schema_registry_running
+      help: |-
+        ⏮️ Reset a paused exporter: it exports everything again
+      flags:
+      - *exporter_name
+      - *verbose
+      - *cluster
+    - name: delete
+      filters:
+      - schema_registry_running
+      help: |-
+        🗑️ Delete a paused exporter (the exported schemas stay in the destination)
+      flags:
+      - *exporter_name
+      - *verbose
+      - *cluster
+
+  - name: validate
+    group: Schema
+    help: |-
+      🧪 Register schemas in a throwaway Schema Registry of each CP version, and compare the verdicts
+
+      Answers "a schema registered years ago is refused after the upgrade"
+      without upgrading anything: for each --cp-version, a Schema Registry
+      container of that version starts next to the broker of the running
+      environment (its own kafkastore topic, both deleted afterwards), and
+      the schemas are registered in --subject in the order given, so a
+      v1 then v2 also shows the compatibility checks of each version.
+
+      Each registry starts empty with the default settings of its version
+      (validation of new schemas is on since CP 8.2.0, with the stricter
+      namespaces of Avro 1.12).
+
+      Exit code: 0 when every schema is accepted by every version, 1
+      otherwise. Needs a running docker environment (not ccloud / cfk). CP
+      5.x / 6.0 registries can't talk to a CP 8 broker.
+    flags:
+    - long: --cp-version
+      arg: version
+      required: true
+      repeatable: true
+      help: |-
+        🏷️ CP version of a Schema Registry to try (repeat it: --cp-version 7.9.2 --cp-version 8.2.0)
+    - long: --schema
+      arg: schema
+      required: false
+      repeatable: true
+      help: |-
+        🔥 A schema: @<file>, a file path or the schema itself (repeatable, registered in that order); default: stdin
+    - long: --subject
+      arg: subject
+      default: validate-value
+      required: false
+      help: |-
+        📛 Subject to register in (default validate-value)
+    - long: --keep
+      required: false
+      help: |-
+        🐳 Keep the Schema Registry containers and their topics (to look at their logs or settings)
+    - *json
+    - *verbose
+    examples: |
+      playground schema validate --cp-version 7.9.2 --cp-version 8.2.0 < legacy.avsc
+
+      playground schema validate --cp-version 7.9.2 --cp-version 8.4.0 --schema @v1.avsc --schema @v2.avsc --json
+
   - name: get-compatibility
     filters:
     - schema_registry_running
@@ -4826,6 +5098,7 @@ commands:
         🌍 The global setting of the registry, instead of one subject
     - *json
     - *verbose
+    - *context
     - *cluster
     examples:
     - playground schema get-compatibility --subject orders-value
@@ -4868,6 +5141,7 @@ commands:
       required: true
       help: |-
         Schema Registry compatibility rule
+    - *context
     - *cluster
 
   - name: get-mode
@@ -4887,6 +5161,7 @@ commands:
     - *global
     - *json
     - *verbose
+    - *context
     - *cluster
 
   - name: set-mode
@@ -4917,6 +5192,7 @@ commands:
       required: true
       help: |-
         Schema Registry mode
+    - *context
     - *cluster
 
   - name: set-normalize
@@ -5028,6 +5304,7 @@ commands:
       help: |-
         🧪 Show what would be deleted, and its effect on the schema ids, without deleting anything
     - *verbose
+    - *context
     - *cluster
     examples:
     - playground schema delete --subject orders-value --version 2
@@ -5144,6 +5421,7 @@ commands:
       help: |-
         🔯 Alias name
     - *verbose
+    - *context
     - *cluster
 
   - name: get-alias
@@ -5169,6 +5447,7 @@ commands:
         🔯 Alias name
     - *json
     - *verbose
+    - *context
     - *cluster
 
 - name: tcp-proxy

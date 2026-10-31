@@ -2207,12 +2207,16 @@ subcommands:
     rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register
     \            add a new version to a subject\n  check-compatibility  would this
     schema be accepted? (nothing registered)\n  test-rules           do these records
-    pass the data contract rules?\n  delete               a version, or the whole
-    subject\n  set-compatibility    relax or tighten the evolution rule (subject or
-    global)\n  set-mode             READWRITE, READONLY or IMPORT (subject or global)\n
-    \ set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point
-    one subject name at another\n\n\U0001F4E6 Move\n  export / import      a registry
-    to a folder and back, keeping the ids\n\n\U0001F500 diff compares two versions
+    pass the data contract rules?\n  validate             accepted by Schema Registry
+    X, refused by Y? (throwaway registries)\n  delete               a version, or
+    the whole subject\n  set-compatibility    relax or tighten the evolution rule
+    (subject or global)\n  set-mode             READWRITE, READONLY or IMPORT (subject
+    or global)\n  set-normalize, validate-new-schemas   registry-wide behaviour\n
+    \ set-alias            point one subject name at another\n\n\U0001F4E6 Move\n
+    \ export / import      a registry to a folder and back, keeping the ids\n  compare
+    \             two registries (mdc clusters) or two contexts\n  exporter             Schema
+    Linking: create, list, status, pause…\n  contexts             the contexts of
+    the registry (--context on the commands)\n\n\U0001F500 diff compares two versions
     (or a version and a file) field by field,\nwith the verdict of each compatibility
     rule.\n\n\U0001FA84 derive-schema turns a sample payload into an avro, json schema
     or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally
@@ -2249,6 +2253,12 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -2299,6 +2309,12 @@ subcommands:
       - "--deleted"
       argument: ''
       description: "\U0001F9DF Include soft deleted subjects\n\nConflicts with: id"
+    - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -2379,6 +2395,12 @@ subcommands:
         not in the registry: registering them never refuses a record.\n\nRepeatable:
         ✓ Yes"
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -2430,6 +2452,12 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -2480,6 +2508,12 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -2516,6 +2550,12 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -2608,6 +2648,12 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -2665,6 +2711,12 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -2707,6 +2759,323 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+  - name: contexts
+    description: "\U0001F5C2️ List the contexts of the registry, with their number
+      of subjects and mode\n\nContexts are separate namespaces of subjects and schema
+      ids in one\nregistry. Schema Linking exports into one (.<name>) on the\ndestination:
+      a consumer of the default context doesn't find those ids."
+    usage: playground schema contexts [OPTIONS]
+    options:
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
+  - name: compare
+    description: "\U0001F500 Compare the subjects of two registries (or two contexts)\n\nIn
+      an mdc-* environment, --from and --to are the clusters (europe and\nus by default);
+      --from-context / --to-context pick a context on each\nside (the destination
+      context of a Schema Linking exporter, typically).\nElsewhere, compare two contexts
+      of the registry.\n\nFor each subject: ✅ same versions, schemas and ids; ⬅️ /
+      ➡️ only on one\nside; ❌ missing versions, different schemas, or the same schema
+      with\nanother id (records written on one side don't decode on the other) and\na
+      different subject-level compatibility.\n\nExit code: 0 identical, 1 different."
+    usage: playground schema compare [OPTIONS]
+    options:
+    - names:
+      - "--from"
+      argument: CLUSTER
+      description: |-
+        ⬅️ Cluster of the left side (mdc-* environments, default europe)
+
+        Allowed values: us, europe
+    - names:
+      - "--to"
+      argument: CLUSTER
+      description: |-
+        ➡️ Cluster of the right side (mdc-* environments, default us)
+
+        Allowed values: us, europe
+    - names:
+      - "--from-context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Context of the left side (default: the default context)"
+    - names:
+      - "--to-context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Context of the right side (default: the default context)"
+    - names:
+      - "--subject-prefix"
+      argument: PREFIX
+      description: "\U0001F50E Only the subjects starting with this prefix"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: exporter
+    description: "\U0001F517 Schema Linking: exporters that copy subjects to another
+      registry\n\nAn exporter runs in the source registry and copies the subjects
+      it\nmatches (with their ids) to the destination, continuously. With context\ntype
+      AUTO they land in the context .<exporter name>, with CUSTOM in\n--destination-context,
+      with NONE in the default context.\n\nIn an mdc-* environment, --cluster is the
+      source and --to the\ndestination (the other cluster by default). Elsewhere,
+      set\n--destination-url (and --destination-auth).\n\n⚠️ The source registry needs
+      the exporter extension (resource.extension\n.class, kafkastore.update.handlers,
+      password.encoder.secret): the\ncommands say what to add when it is missing,
+      and\nother/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml\nenables
+      it on both registries of mdc-plaintext.\n\nSee https://docs.confluent.io/platform/current/schema-registry/schema-linking-cp.html"
+    usage: playground schema exporter COMMAND
+    options: []
+    subcommands:
+    - name: create
+      description: "\U0001F517 Create an exporter, then wait until it runs"
+      usage: playground schema exporter create [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F4DB Exporter name\n\nRequired: ✓ Yes"
+      - names:
+        - "--to"
+        argument: CLUSTER
+        description: |-
+          ➡️ Destination cluster in an mdc-* environment (default: the other one)
+
+          Allowed values: us, europe
+      - names:
+        - "--destination-url"
+        argument: URL
+        description: "\U0001F310 Url of the destination registry, as seen from the
+          source registry"
+      - names:
+        - "--destination-auth"
+        argument: USER-INFO
+        description: "\U0001F511 <user>:<password> (or API key:secret) of the destination
+          registry"
+      - names:
+        - "--context-type"
+        argument: TYPE
+        description: "\U0001F5C2️ Where the subjects land: AUTO (.<exporter name>),
+          CUSTOM (--destination-context) or NONE (default context). Default: CUSTOM
+          with --destination-context, else AUTO\n\nAllowed values: AUTO, CUSTOM, NONE"
+      - names:
+        - "--destination-context"
+        argument: CONTEXT
+        description: "\U0001F5C2️ Destination context for --context-type CUSTOM"
+      - names:
+        - "--subjects"
+        argument: SUBJECTS
+        description: "\U0001F530 Comma separated subjects or patterns to export (default:
+          *)"
+      - names:
+        - "--subject-rename-format"
+        argument: FORMAT
+        description: "✏️ Rename the subjects in the destination, e.g. dc_${subject}
+          (${subject} is replaced by the subject name)"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
+    - name: list
+      description: "\U0001F4CB List the exporters of the registry, with their state"
+      usage: playground schema exporter list [OPTIONS]
+      options:
+      - names:
+        - "--json"
+        argument: ''
+        description: "\U0001F4D7 Print the result as JSON, and nothing else"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
+    - name: status
+      description: "\U0001F6A6 State of an exporter (RUNNING, PAUSED, ERROR with its
+        trace), offset and number of objects exported\n\nExit code 1 when the exporter
+        is in ERROR."
+      usage: playground schema exporter status [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F4DB Exporter name\n\nRequired: ✓ Yes"
+      - names:
+        - "--wait"
+        argument: ''
+        description: "⏳ Wait (30 seconds at most) until the exporter is RUNNING, PAUSED
+          or ERROR"
+      - names:
+        - "--json"
+        argument: ''
+        description: "\U0001F4D7 Print the result as JSON, and nothing else"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
+    - name: pause
+      description: "⏸️ Pause an exporter"
+      usage: playground schema exporter pause [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F4DB Exporter name\n\nRequired: ✓ Yes"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
+    - name: resume
+      description: "▶️ Resume a paused exporter"
+      usage: playground schema exporter resume [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F4DB Exporter name\n\nRequired: ✓ Yes"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
+    - name: reset
+      description: "⏮️ Reset a paused exporter: it exports everything again"
+      usage: playground schema exporter reset [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F4DB Exporter name\n\nRequired: ✓ Yes"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
+    - name: delete
+      description: "\U0001F5D1️ Delete a paused exporter (the exported schemas stay
+        in the destination)"
+      usage: playground schema exporter delete [OPTIONS]
+      options:
+      - names:
+        - "--name"
+        argument: NAME
+        description: "\U0001F4DB Exporter name\n\nRequired: ✓ Yes"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--cluster"
+        argument: CLUSTER
+        description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+          the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+          state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+          values: us, europe"
+  - name: validate
+    description: "\U0001F9EA Register schemas in a throwaway Schema Registry of each
+      CP version, and compare the verdicts\n\nAnswers \"a schema registered years
+      ago is refused after the upgrade\"\nwithout upgrading anything: for each --cp-version,
+      a Schema Registry\ncontainer of that version starts next to the broker of the
+      running\nenvironment (its own kafkastore topic, both deleted afterwards), and\nthe
+      schemas are registered in --subject in the order given, so a\nv1 then v2 also
+      shows the compatibility checks of each version.\n\nEach registry starts empty
+      with the default settings of its version\n(validation of new schemas is on since
+      CP 8.2.0, with the stricter\nnamespaces of Avro 1.12).\n\nExit code: 0 when
+      every schema is accepted by every version, 1\notherwise. Needs a running docker
+      environment (not ccloud / cfk). CP\n5.x / 6.0 registries can't talk to a CP
+      8 broker."
+    usage: playground schema validate [OPTIONS]
+    options:
+    - names:
+      - "--cp-version"
+      argument: VERSION
+      description: "\U0001F3F7️ CP version of a Schema Registry to try (repeat it:
+        --cp-version 7.9.2 --cp-version 8.2.0)\n\nRequired: ✓ Yes\nRepeatable: ✓ Yes"
+    - names:
+      - "--schema"
+      argument: SCHEMA
+      description: "\U0001F525 A schema: @<file>, a file path or the schema itself
+        (repeatable, registered in that order); default: stdin\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--subject"
+      argument: SUBJECT
+      description: "\U0001F4DB Subject to register in (default validate-value)\n\nDefault
+        value: validate-value"
+    - names:
+      - "--keep"
+      argument: ''
+      description: "\U0001F433 Keep the Schema Registry containers and their topics
+        (to look at their logs or settings)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the result as JSON, and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
   - name: get-compatibility
     description: "\U0001F6E1️ Get the compatibility rule in force\n\nThe rule that
       decides whether a new schema version is accepted. When a\nproducer fails with
@@ -2734,6 +3103,12 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -2775,6 +3150,12 @@ subcommands:
         Required: ✓ Yes
         Allowed values: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -2807,6 +3188,12 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -2847,6 +3234,12 @@ subcommands:
 
         Required: ✓ Yes
         Allowed values: IMPORT, READONLY, READWRITE
+    - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -2953,6 +3346,12 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -3026,6 +3425,12 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
     - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -3052,6 +3457,12 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--context"
+      argument: CONTEXT
+      description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
+        call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
+        land in a context of the destination registry. Default: the default context."
     - names:
       - "--cluster"
       argument: CLUSTER

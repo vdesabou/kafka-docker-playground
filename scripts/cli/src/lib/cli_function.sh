@@ -799,6 +799,14 @@ function get_sr_url_and_security() {
     sr_url=$SCHEMA_REGISTRY_URL
     sr_security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
+
+  # --context of the schema commands: every call goes to /contexts/<context>/… (contexts start with a dot)
+  if [[ -n "${args[--context]}" ]] && [ "${args[--context]}" != "." ]
+  then
+    sr_context="${args[--context]}"
+    [[ "$sr_context" != .* ]] && sr_context=".${sr_context}"
+    sr_url="${sr_url}/contexts/${sr_context}"
+  fi
 }
 
 # sr_request <method> <path> [<json body>]: one call to the Schema Registry of the running environment
@@ -961,6 +969,40 @@ function sr_compatibility_verdicts() {
   sr_request DELETE "/subjects/${tmp_subject}" > /dev/null || true
   sr_request DELETE "/subjects/${tmp_subject}?permanent=true" > /dev/null || true
   return $ret
+}
+
+# sr_global_compatibility: sets sr_global_compatibility_value to the global compatibility rule: the one of the
+# context with --context when it has one, else the one of the registry (BACKWARD when nothing answers)
+function sr_global_compatibility() {
+  local saved_url="$sr_url"
+  sr_global_compatibility_value=""
+  if sr_request GET "/config"
+  then
+    sr_global_compatibility_value=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility // empty')
+  elif [[ -n "$sr_context" ]]
+  then
+    sr_url="${sr_url%/contexts/*}"
+    sr_request GET "/config" && sr_global_compatibility_value=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility // empty')
+    sr_url="$saved_url"
+  fi
+  sr_global_compatibility_value="${sr_global_compatibility_value:-BACKWARD}"
+  return 0
+}
+
+# sr_exporter_check_available: Schema Linking needs the exporter extension in the registry; returns 1 with the
+# settings to add when /exporters isn't there
+function sr_exporter_check_available() {
+  if sr_request GET "/exporters" && echo "$sr_response" | jq -e 'type == "array"' > /dev/null 2>&1
+  then
+    return 0
+  fi
+  logerror "❌ the Schema Registry at ${sr_url} has no exporter API (Schema Linking): it needs, in the source registry,"
+  logerror "   resource.extension.class=io.confluent.schema.exporter.SchemaExporterResourceExtension"
+  logerror "   kafkastore.update.handlers=io.confluent.schema.exporter.storage.SchemaExporterUpdateHandler"
+  logerror "   password.encoder.secret=<secret>"
+  logerror "   (SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS, SCHEMA_REGISTRY_KAFKASTORE_UPDATE_HANDLERS and SCHEMA_REGISTRY_PASSWORD_ENCODER_SECRET with"
+  logerror "   playground container set-environment-variables -c <schema registry container> --env \"…\"; other/deep-dive-labs/docker-compose.mdc-plaintext.replication.yml has them)"
+  return 1
 }
 
 # sr_format_compatibility_messages <messages json array>: the reasons of a compatibility verdict, one per line

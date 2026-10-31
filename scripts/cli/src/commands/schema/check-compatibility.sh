@@ -34,8 +34,8 @@ then
     subject_rule=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
     subject_rule_source="subject"
 else
-    sr_request GET "/config" || sr_exit_on_error
-    subject_rule=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
+    sr_global_compatibility
+    subject_rule="$sr_global_compatibility_value"
     subject_rule_source="global"
 fi
 

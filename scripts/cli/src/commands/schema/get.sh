@@ -84,17 +84,17 @@ fi
 if [[ ! -n "$subject" ]]
 then
     [[ -n "$json" ]] || log "✨ --subject flag was not provided, applying command to all subjects"
+    sr_request GET "/subjects" || sr_exit_on_error
+    subject=$(echo "$sr_response" | jq -r '.[]')
     if [[ -n "$deleted" ]]
     then
-        subject=$(playground get-subject-list)
         echo "$subject" > $tmp_dir/subjects-all
         [[ -n "$json" ]] || log "🧟 deleted subjects are included"
-        subject=$(playground get-subject-list --deleted)
+        sr_request GET "/subjects?deleted=true" || sr_exit_on_error
+        subject=$(echo "$sr_response" | jq -r '.[]')
         echo "$subject" > $tmp_dir/subjects-deleted-tmp
 
         sort $tmp_dir/subjects-all $tmp_dir/subjects-deleted-tmp | uniq -u > $tmp_dir/subjects-deleted
-    else
-        subject=$(playground get-subject-list)
     fi
     if [ "$subject" == "" ]
     then

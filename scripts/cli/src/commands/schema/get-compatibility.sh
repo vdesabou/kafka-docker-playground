@@ -37,9 +37,11 @@ fi
 
 if [ "$source" == "global" ]
 then
-    sr_request GET "/config" || sr_exit_on_error
+    sr_global_compatibility
+    compatibility="$sr_global_compatibility_value"
+else
+    compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
 fi
-compatibility=$(echo "$sr_response" | jq -r '.compatibilityLevel // .compatibility')
 
 if [[ -n "$json" ]]
 then
