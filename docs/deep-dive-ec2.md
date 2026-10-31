@@ -128,10 +128,9 @@ Gotchas:
 
 - **Without `--instance`, a command applies to all your instances** (`✨ --instance flag was not provided, applying
   command to all ec2 instances`); only `delete` asks to confirm first (when you have several).
-- **`--instance` takes the value of the completion, not a bare name**: `<name>/<state>/<dns>/<id>` (TAB completion
-  writes `<what you typed>@<that>`, the part before `@` is dropped). With a bare name, `stop`, `start`, `open`,
-  `sync-repro-folder` and `push-secrets` read the name as the state and skip the instance. In a script, use
-  `--instance "$(playground ec2 status --instance <name> --all)"`. `delete` is the exception: it only needs the name.
+- **`--instance` takes a bare name or the value of the completion**: `pg-<you>-<suffix>`, or
+  `<name>/<state>/<dns>/<id>` (TAB completion writes `<what you typed>@<that>`, the part before `@` is dropped). A bare
+  name is looked up in `ec2 list` (`❌ ec2 instance <name> not found` when it isn't one of yours).
 - **`ec2 list` prints a log line first**: `playground --output-level WARN ec2 list` gives only the instances, which is
   what the commands use internally. `ec2 status --instance <name>` (private) prints the state alone, `--all` the
   whole line, and nothing when there is no such instance.
