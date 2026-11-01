@@ -12,7 +12,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 # TEST 1 -> STREAM + Materialized View with DOUBLE and INT types
 log "Create a stream of transactions"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM my_transactions_stream (transaction STRUCT<customer_id INT,product_id DOUBLE,txn_id INT>, created_at BIGINT, description VARCHAR)
@@ -20,7 +20,7 @@ CREATE STREAM my_transactions_stream (transaction STRUCT<customer_id INT,product
 EOF
 
 log "Create a materialized view from this stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE TABLE TRANSACTIONS_MV
@@ -35,25 +35,25 @@ GROUP BY transaction
 EMIT CHANGES;
 EOF
 
-sleep 5
+playground ksqldb wait
 log "Insert the records to the stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 INSERT INTO MY_TRANSACTIONS_STREAM (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:=123, product_id:=10005, txn_id:=500005), 1697188928, 'buying stocks');
 INSERT INTO MY_TRANSACTIONS_STREAM (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:=123, product_id:=10006, txn_id:=500006), 1697188930, 'second transaction');
 INSERT INTO MY_TRANSACTIONS_STREAM (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:=140, txn_id:=500007), 1697188940, 'transaction for user 140');
 INSERT INTO MY_TRANSACTIONS_STREAM (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:=140, product_id:=10005, txn_id:=500008), 1697188950, 'second trx for user 140');
 EOF
-sleep 5
+playground ksqldb wait
 
 log "Print the full table"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT * FROM TRANSACTIONS_MV
 EMIT CHANGES LIMIT 4;
 EOF
 
 log "SELECT with a WHERE CLAUSE using -> and setting all keys fields in where clause"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS_MV
@@ -80,7 +80,7 @@ EOF
 
 log "PUSH Query: SELECT with a WHERE CLAUSE using -> and setting one key field as IS NULL"
 log "This push query works well and return the output"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS_MV
@@ -90,7 +90,7 @@ EOF
 
 log "Pull Query: SELECT with a WHERE CLAUSE using -> and setting one key field as IS NULL"
 log "This pull query will fail, as this is not supported by ksqlDB"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql --ignore-errors << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS_MV
@@ -107,7 +107,7 @@ EOF
 
 # log "SELECT with a WHERE clause using STRUCT"
 #NOT WORKING --> NO OUTPUT and hanging
-# timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+# playground ksqldb sql << EOF
 # SET 'auto.offset.reset' = 'earliest';
 #
 # SELECT * FROM TRANSACTIONS_MV
@@ -117,7 +117,7 @@ EOF
 
 # TEST 2 -> STREAM + Materialized View
 log "Create STREAM and TABLE"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM my_transactions_stream2 (transaction STRUCT<customer_id VARCHAR,product_id VARCHAR,txn_id VARCHAR>, created_at BIGINT, description VARCHAR)
@@ -134,19 +134,19 @@ CREATE TABLE TRANSACTIONS_MV2
   GROUP BY transaction
   EMIT CHANGES;
 EOF
-sleep 5
+playground ksqldb wait
 
 log "Insert the records to the stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 INSERT INTO MY_TRANSACTIONS_STREAM2 (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:='123', product_id:='10005', txn_id:='500005'), 1697188928, 'buying stocks');
 INSERT INTO MY_TRANSACTIONS_STREAM2 (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:='123', product_id:='10006', txn_id:='500006'), 1697188930, 'second transaction');
 INSERT INTO MY_TRANSACTIONS_STREAM2 (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:='140', txn_id:='500007'), 1697188940, 'transaction for user 140');
 INSERT INTO MY_TRANSACTIONS_STREAM2 (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:='140', product_id:='10005', txn_id:='500008'), 1697188950, 'second trx for user 140');
 EOF
-sleep 5
+playground ksqldb wait
 
 log "Print the full table"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT * FROM TRANSACTIONS_MV2
 EMIT CHANGES LIMIT 4;
@@ -169,7 +169,7 @@ EOF
 # |007} |     |     |
 
 log "With ksqlDB, we can't query the record that the one of his composite field set as NULL. (i.e: product_id is null)"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT * FROM TRANSACTIONS_MV2
 WHERE TRANSACTION = STRUCT(CUSTOMER_ID:='140', PRODUCT_ID:=null, TXN_ID:='500007');
@@ -179,7 +179,7 @@ EOF
 # TEST 3 -> TABLE
 log "Create the ksqlDB table"
 log "The Primary key will be a STRUCT<>"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE TABLE TRANSACTIONS (
@@ -197,7 +197,7 @@ CREATE TABLE TRANSACTIONS (
 EOF
 
 log "Insert the records to this table"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 INSERT INTO TRANSACTIONS (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:=123, product_id:=10005, txn_id:=500005), 1697188928, 'buying stocks');
 INSERT INTO TRANSACTIONS (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(customer_id:=123, product_id:=10006, txn_id:=500006), 1697188930, 'second transaction');
@@ -207,7 +207,7 @@ INSERT INTO TRANSACTIONS (TRANSACTION, CREATED_AT, DESCRIPTION) VALUES (STRUCT(c
 EOF
 
 log "Print the full table"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS
@@ -216,7 +216,7 @@ EMIT CHANGES LIMIT 4;
 EOF
 
 log "SELECT with a WHERE CLAUSE using ->"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS
@@ -246,7 +246,7 @@ EOF
 
 log "SELECT with a WHERE CLAUSE on a NULL field using -> and CAST(null AS STRING)"
 log "It will fail. CAST(null AS STRING) is not supported by ksqlDB "
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS
@@ -262,7 +262,7 @@ EOF
 
 log "SELECT with a WHERE clause using STRUCT"
 log "NOT WORKING --> NO OUTPUT and hanging"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS

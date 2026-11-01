@@ -11,17 +11,17 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create topics"
-docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic orders --partitions 1 --config retention.ms=-1 --config retention.bytes=-1
-docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic customers --partitions 1 --config retention.ms=-1 --config retention.bytes=-1
+playground topic create --topic orders --nb-partitions 1 --config retention.ms=-1 --config retention.bytes=-1
+playground topic create --topic customers --nb-partitions 1 --config retention.ms=-1 --config retention.bytes=-1
 log "Produce records to the stream"
-docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic orders << EOF
+playground topic produce -t orders --nb-messages 3 << 'EOF'
 {"id":101,"customer_id":1,"total":56.03,"order_date":1696340019}
 {"id":102,"customer_id":2,"total":89.03,"order_date":1696340080}
 {"id":103,"customer_id":3,"total":19.03,"order_date":1696346959}
 EOF
 
 log "Create the ksqlDB table and the Stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE TABLE customers (
@@ -45,11 +45,10 @@ EOF
 
 log "The rowtime of the record from my stream is earlier than the rowtime of the record in my table that I expect it to join with"
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
 log "We join the STREAM and the TABLE"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT orders.id AS ID, total, first_name, last_name
@@ -71,14 +70,14 @@ EOF
 log "The rowtime of order 103 is after the rowtime of table, so the join will be successful"
 
 log "Produce more records to the stream with ROWTIME after the rowtime of table"
-docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic orders << EOF
+playground topic produce -t orders --nb-messages 3 << 'EOF'
 {"id":104,"customer_id":1,"total":18,"order_date":1696346959}
 {"id":105,"customer_id":2,"total":45.56,"order_date":1696346969}
 {"id":106,"customer_id":3,"total":78.96,"order_date":1696346979}
 EOF
 
 log "We can run again the stream-table join"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT orders.id AS ID, total, first_name, last_name

@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Example with the HAVING clause"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM TEMP_CITY_FOO(CITY VARCHAR, TEMP VARCHAR) WITH(KAFKA_TOPIC = 'temp.city.foo',VALUE_FORMAT = 'AVRO', PARTITIONS = 1);
@@ -27,10 +27,9 @@ AS SELECT CITY,LATEST_BY_OFFSET(TEMP) AS TEMP FROM TEMP_CITY_FOO GROUP BY CITY H
 
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT * FROM TEMP_CITY_FOO_LATEST WHERE CITY = 'KOL';
 EOF
@@ -44,14 +43,13 @@ EOF
 
 log "You can add a logical tombstone to your topic"
 log "Because of the HAVING latest_by_offset(TEMP, false) IS NOT NULL clause, it will remove the value for the key `KOL`"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 INSERT INTO TEMP_CITY_FOO VALUES('KOL',null);
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb wait
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT * FROM TEMP_CITY_FOO_LATEST WHERE CITY = 'KOL';
 print 'temp.city.latest.foo' from beginning LIMIT 4;
@@ -70,7 +68,7 @@ EOF
 
 log "Example with the source table"
 log "Create the Stream and the source table"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 CREATE STREAM TEMP_CITY_BAR(CITY VARCHAR, TEMP VARCHAR) WITH(KAFKA_TOPIC = 'temp.city.bar',VALUE_FORMAT = 'AVRO', PARTITIONS = 1);
 
@@ -86,29 +84,27 @@ AS SELECT CITY,LATEST_BY_OFFSET(TEMP) AS TEMP FROM TEMP_CITY_BAR GROUP BY CITY E
 INSERT INTO TEMP_CITY_BAR VALUES('KOL','42');
 EOF
 
-# Wait for the stream to be initialized
-sleep 10
+playground ksqldb wait
 log "Insert the tombstone"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 CREATE STREAM TEMP_CITY_BAR_TOMBSTONE(CITY VARCHAR KEY, TEMP VARCHAR) WITH(KAFKA_TOPIC = 'temp.city.bar.latest',VALUE_FORMAT = 'KAFKA');
 
 INSERT INTO TEMP_CITY_BAR_TOMBSTONE VALUES('KOL',CAST(NULL AS VARCHAR));
 EOF
 
-sleep 10
+playground ksqldb wait
 log "We create the source table based on the topic temp.city.bar.latest"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE SOURCE TABLE TEMP_CITY_BAR_LATEST_SOURCE(CITY VARCHAR PRIMARY KEY, TEMP VARCHAR) WITH(KAFKA_TOPIC = 'temp.city.bar.latest',VALUE_FORMAT = 'AVRO', PARTITIONS = 1);
 
 EOF
 
-# Wait for the stream to be initialized
-sleep 20
+playground ksqldb wait
 log "Checking the content of the table TEMP_CITY_BAR_LATEST_SOURCE"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * from TEMP_CITY_BAR_LATEST_SOURCE WHERE CITY = 'KOL';

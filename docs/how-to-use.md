@@ -450,6 +450,25 @@ By default, `ksqldb-server` and `ksqldb-cli` containers (see [`environment/plain
 
 You can enable this with `--enable-ksqldb` option of [playground run](/playground%20run) or by setting environment variable `ENABLE_KSQLDB=1` in your shell.
 
+🧮 Then run ksqlDB statements and inspect the streams, tables and queries with [playground ksqldb](/playground%20ksqldb), instead of `docker exec ksqldb-cli ksql` or `curl` on the REST API (`http://127.0.0.1:8088`):
+
+```bash
+# one ksql cli session: SET 'auto.offset.reset' applies to the statements that follow it in the same call
+playground ksqldb sql << 'EOF'
+SET 'auto.offset.reset' = 'earliest';
+CREATE STREAM orders (id INT, product VARCHAR) WITH (kafka_topic='orders', value_format='json', partitions=1);
+CREATE TABLE orders_by_product AS SELECT product, COUNT(*) AS nb FROM orders GROUP BY product EMIT CHANGES;
+INSERT INTO orders (id, product) VALUES (1, 'foo');
+EOF
+
+playground ksqldb wait                                   # the persistent queries are RUNNING and have no lag (instead of a sleep)
+playground ksqldb sql <<< "SELECT * FROM orders_by_product WHERE product = 'foo';"
+playground ksqldb list                                   # streams, tables, queries and their state
+playground ksqldb describe --source orders_by_product    # fields, queries with their lag, statistics, errors
+```
+
+A failing statement makes `playground ksqldb sql` exit with code 1 (the other statements are still run): add `--ignore-errors` when the failure is expected. A push query (`EMIT CHANGES`) needs a `LIMIT` or `--query-timeout`, otherwise it is stopped after `--max-wait` seconds.
+
 ### 💠 Enabling Control Center
 
 By default, `control-center` container (see [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml)) is not started for every test.

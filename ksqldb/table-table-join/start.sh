@@ -12,7 +12,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB tables"
 log "First, we create a Kafka topic and table to represent the movie reference data. Then, Kafka topic and a second table to represent the additional movie data about leading actor"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -37,7 +37,7 @@ CREATE TABLE lead_actor (
 EOF
 
 log "Insert the records to these two tables"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 INSERT INTO MOVIES (ID, TITLE, RELEASE_YEAR) VALUES (48, 'Aliens', 1986);
 INSERT INTO MOVIES (ID, TITLE, RELEASE_YEAR) VALUES (294, 'Die Hard', 1998);
@@ -53,7 +53,7 @@ EOF
 
 log "With a Table-Table join, we enrich the movie data with more information about who the lead actor in the movie is"
 log "The following query does a left join between the movie table and the lead actor table."
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT M.ID, M.TITLE, M.RELEASE_YEAR, L.ACTOR_NAME
@@ -76,7 +76,7 @@ EOF
 # Query terminated
 
 log "We create a new table based on this table-table join"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE TABLE MOVIES_ENRICHED AS
@@ -87,9 +87,8 @@ CREATE TABLE MOVIES_ENRICHED AS
     EMIT CHANGES;
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb wait
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM MOVIES_ENRICHED;

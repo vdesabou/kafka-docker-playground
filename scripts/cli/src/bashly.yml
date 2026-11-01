@@ -270,6 +270,10 @@ commands:
   help: Return some completion for running flink job list
   private: true
 
+- name: get-ksqldb-source-list
+  help: Return some completion for ksqlDB streams and tables
+  private: true
+
 - name: get-catalog-tag-list
   help: Return some completion for stream catalog tag list
   private: true
@@ -11501,6 +11505,212 @@ commands:
       - playground flink cancel
       - playground flink cancel --job 972185f42739cba34766e6dea6d80a50
       - playground flink cancel --all
+
+- name: ksqldb
+  expose: always
+  group: ksqlDB
+  filters:
+  - ksqldb_running
+  help: |-
+    🧮 ksqlDB commands
+
+    Run ksqlDB statements and inspect the streams, tables and queries of the
+    ksqlDB server started with 'playground run --enable-ksqldb' (the ksqldb/
+    examples enable it), without docker exec or curl.
+
+      sql        run ksqlDB statements (stdin or --file) with the ksql cli
+      list       streams, tables and persistent queries with their state
+      describe   fields, queries, statistics, errors and lag of a stream or table
+      wait       wait until the persistent queries are RUNNING and have no lag
+
+    🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.
+    The records that fail a query are in the KSQL_PROCESSING_LOG stream.
+  commands:
+
+    - name: sql
+      group: ksqlDB
+      help: |-
+        🧮 Run ksqlDB statements with the ksql cli
+
+        The statements are read from stdin (heredoc) or --file, and run in one
+        ksql cli session (ksql --file) in the ksqldb-cli container: so SET
+        'auto.offset.reset' = 'earliest' applies to the statements that follow
+        it in the same call. DDL, INSERT INTO, pull and push queries, PRINT,
+        SHOW, DESCRIBE... are all supported, and their results are printed as
+        tables.
+
+        Every statement is run, even after a failing one. The errors are
+        printed with ❌, and the command then exits with code 1, unless
+        --ignore-errors is set (a statement that is expected to fail, to
+        show the error).
+
+        🎓 Tip: a push query (EMIT CHANGES) never ends without a LIMIT: add
+        LIMIT <n>, or --query-timeout. Otherwise the cli is stopped after
+        --max-wait seconds. To wait for a CREATE ... AS SELECT to process its
+        input before querying it, use 'playground ksqldb wait' instead of a sleep.
+      flags:
+      - long: --file
+        short: -f
+        required: false
+        arg: file
+        validate: file_exists
+        completions:
+          dynamic:
+          - playground get-specific-file-extension "$completion_current" --extension "sql"
+        help: |-
+          📄 File with the ksqlDB statements, separated by ;
+
+          ℹ️ If not set, the statements are read from stdin
+      - long: --max-wait
+        short: -w
+        required: false
+        arg: max_wait
+        validate: integer
+        default: "120"
+        help: |-
+          ⏳ Stop the ksql cli after this number of seconds (default 120)
+      - long: --query-timeout
+        required: false
+        arg: query_timeout
+        validate: integer
+        help: |-
+          ⏱️ Stop each push query (EMIT CHANGES) after this number of seconds, like a LIMIT in time
+
+          ℹ️ ksql --query-timeout
+      - long: --ignore-errors
+        required: false
+        help: |-
+          🙈 Do not exit with code 1 when a statement fails (its error is still printed)
+      - long: --width
+        required: false
+        arg: width
+        validate: integer
+        help: |-
+          📏 Width of the result tables, split between their columns
+
+          ℹ️ Default: the width of the terminal, 200 when the output is not a terminal
+      - *verbose
+      examples:
+      - |-
+        playground ksqldb sql << 'EOF'
+        SET 'auto.offset.reset' = 'earliest';
+        CREATE STREAM orders (id INT, product VARCHAR) WITH (kafka_topic='orders', value_format='json', partitions=1);
+        INSERT INTO orders (id, product) VALUES (1, 'foo');
+        SELECT * FROM orders EMIT CHANGES LIMIT 1;
+        EOF
+      - playground ksqldb sql --file ./queries.sql
+      - echo "SELECT * FROM orders EMIT CHANGES;" | playground ksqldb sql --query-timeout 10
+      - echo "CREATE STREAM orders (id INT) WITH (kafka_topic='orders', value_format='json');" | playground ksqldb sql --ignore-errors
+      x_example_outputs:
+      - command: playground ksqldb sql --file ./queries.sql
+        output: |-
+          11:02:31 ℹ️ 🧮 Running ksqlDB statements in ksqldb-cli container (ksqlDB 8.4.0, http://localhost:8088)
+          Successfully changed local property 'auto.offset.reset' to 'earliest'. Use the UNSET command to revert your change.
+
+           Message
+          ----------------
+           Stream created
+          ----------------
+          ❌ Exception while preparing statement: NOPE does not exist.
+          +----------------------+----------------------+
+          |ID                    |PRODUCT               |
+          +----------------------+----------------------+
+          |1                     |foo                   |
+          Limit Reached
+          Query terminated
+          11:02:36 ❗ ❌ 1 ksqlDB statement(s) failed (the other statements were run):
+             Exception while preparing statement: NOPE does not exist.
+          11:02:36 ❗    🎓 add --ignore-errors when the failure is expected
+
+    - name: list
+      group: ksqlDB
+      help: |-
+        📋 List the streams, tables and persistent queries
+
+        Name, topic, key and value formats of every stream and table, then the
+        persistent queries with their state and sinks (SHOW STREAMS, SHOW
+        TABLES and SHOW QUERIES).
+      flags:
+      - long: --json
+        required: false
+        help: |-
+          📗 Print {"streams": [...], "tables": [...], "queries": [...]} (the REST API objects) and nothing else
+      - *verbose
+      examples:
+      - playground ksqldb list
+      - playground ksqldb list --json | jq -r '.queries[] | select(.state != "RUNNING") | .id'
+
+    - name: describe
+      group: ksqlDB
+      help: |-
+        🔎 Describe a stream or a table
+
+        Topic, formats, fields, the queries that write to it and read from it
+        with their state and lag, the statistics (total-messages,
+        messages-per-sec...) and the errors of the queries (DESCRIBE ...
+        EXTENDED).
+
+        With --json, the REST API sourceDescription object, plus "stats" and
+        "errors" (the statistics summed over the servers, by name) and "lag"
+        (the lag of each query writing to it, by query id).
+      flags:
+      - long: --source
+        short: -s
+        required: false
+        arg: source
+        completions:
+          dynamic:
+          - playground get-ksqldb-source-list
+        help: |-
+          🧮 Name of the stream or table
+
+          ℹ️ Required when not in a terminal, otherwise picked with fzf
+      - long: --json
+        required: false
+        help: |-
+          📗 Print the description as JSON and nothing else
+      - *verbose
+      examples:
+      - playground ksqldb describe --source ridersNearMountainView
+      - playground ksqldb describe --source ORDERS_ENRICHED --json | jq '.stats."total-messages"'
+
+    - name: wait
+      group: ksqlDB
+      help: |-
+        ⏳ Wait until the persistent queries are RUNNING and have no lag
+
+        Waits until every query writing to --source (or every persistent
+        query) is RUNNING and has committed all the records of its input
+        topics, so that its result is complete: use it instead of a sleep
+        after a CREATE ... AS SELECT and the records it reads.
+
+        Exits with code 1 when a query is in ERROR, or after --max-wait seconds.
+      flags:
+      - long: --source
+        short: -s
+        required: false
+        arg: source
+        repeatable: true
+        completions:
+          dynamic:
+          - playground get-ksqldb-source-list
+        help: |-
+          🧮 Only wait for the queries writing to this stream or table (repeatable)
+
+          ℹ️ If not set, all persistent queries
+      - long: --max-wait
+        short: -w
+        required: false
+        arg: max_wait
+        validate: integer
+        default: "120"
+        help: |-
+          ⏳ Maximum number of seconds to wait (default 120)
+      - *verbose
+      examples:
+      - playground ksqldb wait
+      - playground ksqldb wait --source currentLocation --source ridersNearMountainView
+      - playground ksqldb wait --source ORDERS_ENRICHED --max-wait 3600
 
 - name: rbac
   expose: always

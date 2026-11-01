@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB streams"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -35,7 +35,7 @@ CREATE TABLE ridersNearMountainView AS
 EOF
 
 log "Insert records to the stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('c2309eec', 37.7877, -122.4205);
 INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('18f4ea86', 37.3903, -122.0643);
 INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4ab5cbad', 37.3952, -122.0813);
@@ -44,11 +44,10 @@ INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4a7c7b41', 
 INSERT INTO riderLocations (profileId, latitude, longitude) VALUES ('4ddad000', 37.7857, -122.4011);
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
 log "Run a Pull query against the materialized view"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * from ridersNearMountainView WHERE distanceInMiles <= 10;

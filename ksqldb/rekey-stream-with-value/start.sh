@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM ratings (old INT, id INT, rating DOUBLE)
@@ -21,7 +21,7 @@ CREATE STREAM ratings (old INT, id INT, rating DOUBLE)
 EOF
 
 log "Insert records to the stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 INSERT INTO ratings (old, id, rating) VALUES (1, 294, 8.2);
 INSERT INTO ratings (old, id, rating) VALUES (2, 294, 8.5);
 INSERT INTO ratings (old, id, rating) VALUES (3, 354, 9.9);
@@ -33,16 +33,15 @@ INSERT INTO ratings (old, id, rating) VALUES (8, 128, 8.4);
 INSERT INTO ratings (old, id, rating) VALUES (9, 780, 2.1);
 EOF
 
-# Wait for the stream to be initialized
-sleep 10
+playground ksqldb wait
 
 log "See the content of this topic"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 PRINT ratings FROM BEGINNING LIMIT 9;
 EOF
 
 log "Re-partition the topic with the movie ID"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM RATINGS_REKEYED
@@ -54,10 +53,9 @@ CREATE STREAM RATINGS_REKEYED
 DESCRIBE RATINGS_REKEYED;
 EOF
 
-# Wait for the stream to be initialized
-sleep 10
+playground ksqldb wait
 log "Check the content of the rekey topic to ensure the key has been correctly set"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 PRINT ratings_keyed_by_id FROM BEGINNING LIMIT 9;
 EOF
 

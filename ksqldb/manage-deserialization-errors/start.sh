@@ -8,10 +8,10 @@ source ${DIR}/../../scripts/utils.sh
 export ENABLE_KSQLDB=true
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create the ksqlDB streams"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 CREATE STREAM SENSORS_RAW (id VARCHAR, timestamp VARCHAR, enabled BOOLEAN)
     WITH (KAFKA_TOPIC = 'SENSORS_RAW',
           VALUE_FORMAT = 'JSON',
@@ -28,18 +28,17 @@ EOF
 
 log "Insert records to the stream"
 log "The last record with the error contains the field ENABLED specified as string instead of a boolean"
-docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic SENSORS_RAW << EOF
+playground topic produce -t SENSORS_RAW --nb-messages 3 << 'EOF'
 {"id": "e7f45046-ad13-404c-995e-1eca16742801", "timestamp": "2020-01-15 02:20:30", "enabled": true}
 {"id": "835226cf-caf6-4c91-a046-359f1d3a6e2e", "timestamp": "2020-01-15 02:25:30", "enabled": true}
 {"id": "1a076a64-4a84-40cb-a2e8-2190f3b37465", "timestamp": "2020-01-15 02:30:30", "enabled": "true"}
 EOF
 
 
-# Wait for the stream to be initialized
-sleep 10
+playground ksqldb wait
 
 log "Run a Pull query against stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT
@@ -60,7 +59,7 @@ EOF
 
 
 log "Run a Pull query against stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT
     message->deserializationError->errorMessage,

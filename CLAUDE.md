@@ -193,6 +193,7 @@ environments where the raw command only works on `plaintext`.
 | `tc` / `iptables` in a container to slow down or cut its network (`add_latency`…) | `playground debug degrade-traffic` (`--latency`, `--jitter`, `--loss`, `--corruption`, `--rate`, `--action start\|stop\|status`) / `playground debug block-traffic` |
 | editing `log4j.properties` to raise a log level | `playground debug log-level set --package <pkg> --level TRACE` |
 | `docker exec sql-client bin/sql-client.sh`, `curl` on the Flink jobmanager REST API (`:18081/jobs`) | `playground flink sql` (statements on stdin or `--file`) / `playground flink list-jobs` (`--state`, `--json`) / `playground flink cancel` (`--job`, `--all`) |
+| `docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF`, `curl` on the ksqlDB REST API (`:8088/ksql`), `sleep N` waiting for a `CREATE … AS SELECT` | `playground ksqldb sql` (statements on stdin or `--file`, exit 1 on a failed statement, `--ignore-errors` when expected, `--query-timeout`) / `playground ksqldb wait [--source <s>]` (persistent queries RUNNING with no lag) / `playground ksqldb list` / `playground ksqldb describe --source <s>` (queries, lag, statistics, errors, `--json`) |
 
 Legitimate exceptions — use the raw command only for these, and only when no flag above covers it:
 

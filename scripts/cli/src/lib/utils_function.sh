@@ -993,8 +993,7 @@ function set_profiles() {
     playground state del flags.ENABLE_KSQLDB
   else
     log "🚀 ksqldb is enabled"
-    log "🔧 You can use ksqlDB with CLI using:"
-    log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
+    log "🔧 You can run ksqlDB statements with: playground ksqldb sql (stdin or --file), see playground ksqldb --help"
     profile_ksqldb_command="--profile ksqldb"
     playground state set flags.ENABLE_KSQLDB 1
   fi

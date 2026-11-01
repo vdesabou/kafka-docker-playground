@@ -408,6 +408,9 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 🖇️ [Monitoring cluster linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-cluster-linking) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ## 🎏 KSQL
+
+All the examples below run their statements with `playground ksqldb sql`, and wait for their queries with `playground ksqldb wait`.
+
 - [Quickstart example](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/quickstart-example) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Simple examples using a vanilla Java producer/consumer (JSON, Avro, Proto, JSON_SR)](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/simple-example-vanilla-producer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to join a stream and a stream](https://github.com/vdesabou/kafka-docker-playground/tree/master/ksqldb/stream-stream-join) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)

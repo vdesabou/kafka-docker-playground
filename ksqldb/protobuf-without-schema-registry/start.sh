@@ -10,22 +10,18 @@ export ENABLE_KSQLDB=true
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-sleep 5
-
 log "Send message in raw Protobuf, without Schema Registry"
-docker exec proto_producer bash -c "python producer.py"
+playground container exec -c proto_producer --command "python producer.py"
 
 log "Create the ksqlDB stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM persons (key INT KEY, name STRING, id INT, email STRING, phones ARRAY<STRUCT<number STRING, type INT>>) with (kafka_topic='persons', partitions=1, value_format='PROTOBUF_NOSR');
 
 EOF
 
-# Wait for the stream to be initialized
-sleep 10
-docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM PERSONS LIMIT 1;
@@ -44,7 +40,7 @@ EOF
 # |     |     |     |     |}]   |
 
 log "Create a new stream to convert my stream to Protobuf"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM persons_protobuf_sr
@@ -52,9 +48,9 @@ CREATE STREAM persons_protobuf_sr
   AS SELECT * FROM persons;
 EOF
 
-sleep 5
+playground ksqldb wait
 log "Read from the new stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 DESCRIBE persons_protobuf_sr extended;

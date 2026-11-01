@@ -7854,6 +7854,142 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+- name: ksqldb
+  description: "\U0001F9EE ksqlDB commands\n\nRun ksqlDB statements and inspect the
+    streams, tables and queries of the\nksqlDB server started with 'playground run
+    --enable-ksqldb' (the ksqldb/\nexamples enable it), without docker exec or curl.\n\n
+    \ sql        run ksqlDB statements (stdin or --file) with the ksql cli\n  list
+    \      streams, tables and persistent queries with their state\n  describe   fields,
+    queries, statistics, errors and lag of a stream or table\n  wait       wait until
+    the persistent queries are RUNNING and have no lag\n\n\U0001F393 Tip: the REST
+    API of ksqldb-server is published on http://localhost:8088.\nThe records that
+    fail a query are in the KSQL_PROCESSING_LOG stream."
+  usage: playground ksqldb COMMAND
+  options: []
+  subcommands:
+  - name: sql
+    description: "\U0001F9EE Run ksqlDB statements with the ksql cli\n\nThe statements
+      are read from stdin (heredoc) or --file, and run in one\nksql cli session (ksql
+      --file) in the ksqldb-cli container: so SET\n'auto.offset.reset' = 'earliest'
+      applies to the statements that follow\nit in the same call. DDL, INSERT INTO,
+      pull and push queries, PRINT,\nSHOW, DESCRIBE... are all supported, and their
+      results are printed as\ntables.\n\nEvery statement is run, even after a failing
+      one. The errors are\nprinted with ❌, and the command then exits with code 1,
+      unless\n--ignore-errors is set (a statement that is expected to fail, to\nshow
+      the error).\n\n\U0001F393 Tip: a push query (EMIT CHANGES) never ends without
+      a LIMIT: add\nLIMIT <n>, or --query-timeout. Otherwise the cli is stopped after\n--max-wait
+      seconds. To wait for a CREATE ... AS SELECT to process its\ninput before querying
+      it, use 'playground ksqldb wait' instead of a sleep."
+    usage: playground ksqldb sql [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F4C4 File with the ksqlDB statements, separated by ;\n\nℹ️
+        If not set, the statements are read from stdin"
+    - names:
+      - "--max-wait"
+      - "-w"
+      argument: MAX_WAIT
+      description: |-
+        ⏳ Stop the ksql cli after this number of seconds (default 120)
+
+        Default value: 120
+    - names:
+      - "--query-timeout"
+      argument: QUERY_TIMEOUT
+      description: |-
+        ⏱️ Stop each push query (EMIT CHANGES) after this number of seconds, like a LIMIT in time
+
+        ℹ️ ksql --query-timeout
+    - names:
+      - "--ignore-errors"
+      argument: ''
+      description: "\U0001F648 Do not exit with code 1 when a statement fails (its
+        error is still printed)"
+    - names:
+      - "--width"
+      argument: WIDTH
+      description: "\U0001F4CF Width of the result tables, split between their columns\n\nℹ️
+        Default: the width of the terminal, 200 when the output is not a terminal"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: list
+    description: "\U0001F4CB List the streams, tables and persistent queries\n\nName,
+      topic, key and value formats of every stream and table, then the\npersistent
+      queries with their state and sinks (SHOW STREAMS, SHOW\nTABLES and SHOW QUERIES)."
+    usage: playground ksqldb list [OPTIONS]
+    options:
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print {\"streams\": [...], \"tables\": [...], \"queries\":
+        [...]} (the REST API objects) and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: describe
+    description: "\U0001F50E Describe a stream or a table\n\nTopic, formats, fields,
+      the queries that write to it and read from it\nwith their state and lag, the
+      statistics (total-messages,\nmessages-per-sec...) and the errors of the queries
+      (DESCRIBE ...\nEXTENDED).\n\nWith --json, the REST API sourceDescription object,
+      plus \"stats\" and\n\"errors\" (the statistics summed over the servers, by name)
+      and \"lag\"\n(the lag of each query writing to it, by query id)."
+    usage: playground ksqldb describe [OPTIONS]
+    options:
+    - names:
+      - "--source"
+      - "-s"
+      argument: SOURCE
+      description: "\U0001F9EE Name of the stream or table\n\nℹ️ Required when not
+        in a terminal, otherwise picked with fzf"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the description as JSON and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: wait
+    description: |-
+      ⏳ Wait until the persistent queries are RUNNING and have no lag
+
+      Waits until every query writing to --source (or every persistent
+      query) is RUNNING and has committed all the records of its input
+      topics, so that its result is complete: use it instead of a sleep
+      after a CREATE ... AS SELECT and the records it reads.
+
+      Exits with code 1 when a query is in ERROR, or after --max-wait seconds.
+    usage: playground ksqldb wait [OPTIONS]
+    options:
+    - names:
+      - "--source"
+      - "-s"
+      argument: SOURCE
+      description: "\U0001F9EE Only wait for the queries writing to this stream or
+        table (repeatable)\n\nℹ️ If not set, all persistent queries\n\nRepeatable:
+        ✓ Yes"
+    - names:
+      - "--max-wait"
+      - "-w"
+      argument: MAX_WAIT
+      description: |-
+        ⏳ Maximum number of seconds to wait (default 120)
+
+        Default value: 120
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
 - name: rbac
   description: "\U0001F6E1️ RBAC commands (rbac-sasl-plain and cfk-rbac environments,
     plus Confluent Cloud ACLs)\n\nChange permissions of the running rbac-sasl-plain

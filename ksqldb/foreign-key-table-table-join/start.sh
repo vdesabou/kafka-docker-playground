@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB tables"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE TABLE orders (
@@ -41,7 +41,7 @@ EMIT CHANGES;
 EOF
 
 log "Insert the records to these two tables"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 INSERT INTO orders (id, user_id, value) VALUES (1, 1, 100);
 INSERT INTO orders (id, user_id, value) VALUES (2, 2, 123);
@@ -55,11 +55,10 @@ INSERT INTO users (u_id, name, last_name) VALUES (3, 'Serge', 'Gainsbourg');
 
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
 log "Query the FK table-table joins"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM orders_with_users;
