@@ -20,6 +20,9 @@ sed -e "s|:NOW:|$NOW|g" \
 sed -e "s|:NOW:|$NOW|g" \
     ${DIR}/schemas/shipments-template.avro > ${DIR}/schemas/shipments.avro
 
+# make sure ksqlDB is not disabled
+export ENABLE_KSQLDB=true
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -258,7 +261,8 @@ playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
-CREATE TABLE ORDERPER_PROD_CUST_AGG AS SELECT
+-- a key of 2 columns (GROUP BY PRODUCTID, CUSTOMERID) needs a key format with a schema, not KAFKA
+CREATE TABLE ORDERPER_PROD_CUST_AGG WITH (KEY_FORMAT='JSON') AS SELECT
   os.PRODUCTID PRODUCTID,
   os.CUSTOMERID CUSTOMERID,
   COUNT(*) COUNTVAL,

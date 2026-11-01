@@ -45,8 +45,6 @@ playground ksqldb wait
 log "We can query this nested JSON"
 playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
--- we can adjust the column width so we can easily see the results of the query
-SET CLI COLUMN-WIDTH 10
 
 SELECT
     TRANSACTION->num_shares AS SHARES,
