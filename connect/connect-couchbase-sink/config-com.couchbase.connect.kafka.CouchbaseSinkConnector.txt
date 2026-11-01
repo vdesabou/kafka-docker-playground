@@ -68,17 +68,6 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 ==========================
 Security
 ==========================
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -154,6 +143,17 @@ Note that this config is considered advanced, please only customize the cipher l
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Logging
 ==========================
@@ -193,6 +193,23 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 ==========================
 Sink Behavior
 ==========================
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+If the bucket component contains a dot, escape it by enclosing it in backticks.
+
+If the bucket component is omitted, it defaults to the value of the `couchbase.bucket` property.
+
+*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
+
+* Override example: `couchbase.default.collection[widgets]=inventory.widgets`
+
+	 - Type: STRING
+	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.topic.to.collection
 
 A map from Kafka topic to Couchbase collection.
@@ -316,23 +333,6 @@ TIP: Try not to confuse this with the Kafka Connect framework's built-in `errors
 
 	 - Type: STRING
 	 - Default: 0
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-If the bucket component contains a dot, escape it by enclosing it in backticks.
-
-If the bucket component is omitted, it defaults to the value of the `couchbase.bucket` property.
-
-*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
-
-* Override example: `couchbase.default.collection[widgets]=inventory.widgets`
-
-	 - Type: STRING
-	 - Default: _default._default
 	 - Importance: MEDIUM
 	 - Required: false
 
