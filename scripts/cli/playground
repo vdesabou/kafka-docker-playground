@@ -43139,6 +43139,33 @@ playground_run_command() {
     export CONNECTOR_JAR=$connector_jar
   fi
 
+  # ENABLE_* exported in the shell (documented as an alternative to the --enable-* flags) enable the component too: turn
+  # them into their flag, so that the banner, the history, re-run, the clipboard command and the run log record them
+  while read -r shell_variable flag_variable flag_name not_on_ccloud
+  do
+    if [[ -n "${!shell_variable}" ]] && [[ -z "${!flag_variable}" ]]
+    then
+      if [[ $test_file == *"ccloud"* ]] && [[ "$not_on_ccloud" == "1" ]]
+      then
+        # not supported with ccloud examples (the flag would exit): ignored, as before
+        continue
+      fi
+      log "🌱 $shell_variable is set in your shell: same as $flag_name (added to the flags of this run)"
+      printf -v "$flag_variable" '%s' "1"
+    fi
+  done << 'EOF'
+ENABLE_KSQLDB enable_ksqldb --enable-ksqldb 1
+ENABLE_RESTPROXY enable_rest_proxy --enable-rest-proxy 1
+ENABLE_CONTROL_CENTER enable_c3 --enable-control-center 0
+ENABLE_LEGACY_CONTROL_CENTER enable_legacy_c3 --enable-legacy-control-center 0
+ENABLE_FLINK enable_flink --enable-flink 0
+ENABLE_CONDUKTOR enable_conduktor --enable-conduktor 0
+ENABLE_KAFKA_NODES enable_multiple_brokers --enable-multiple-brokers 1
+ENABLE_CONNECT_NODES enable_multiple_connect_workers --enable-multiple-connect-workers 1
+ENABLE_JMX_GRAFANA enable_jmx_grafana --enable-jmx-grafana 0
+ENABLE_KCAT enable_kcat --enable-kcat 0
+EOF
+
   if [[ -n "$enable_ksqldb" ]]
   then
     if [[ $test_file == *"ccloud"* ]]
@@ -47272,8 +47299,12 @@ playground_open_docs_command() {
       fi
   elif [[ -n "$only_show_url" ]]
   then
-      # informational (playground status, run…): an example without documentation link (other/…) must not stop them
-      logwarn "no documentation link in README file $readme_file"
+      # informational (playground status, run…): an example without documentation link must not stop them. Only connector
+      # READMEs have a "Quickly test" link: warn for those only, the others (ksqldb/, other/, schema-registry/…) never had one
+      if [[ "$test_file" == */connect/* ]] || [[ "$test_file" == */ccloud/fm-* ]]
+      then
+        logwarn "no documentation link in README file $readme_file"
+      fi
   else
       logerror "Could not find documentation link in README file $readme_file"
       exit 1
