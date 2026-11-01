@@ -165,6 +165,11 @@ CLI change that makes a page wrong shows up as a failing test.
 - 📖 [Read the deep dive](/deep-dive-flink.md)
 - 🧠 Commands: `run --enable-flink`, `flink sql`, `flink list-jobs`, `flink cancel`
 
+### 🧮 ksqlDB: run statements, list, describe and wait for queries
+
+- 📖 [Read how to enable it](/how-to-use?id=🚀-enabling-ksqldb), the `ksqldb/` examples use these commands
+- 🧠 Commands: `run --enable-ksqldb`, `ksqldb sql`, `ksqldb list`, `ksqldb describe`, `ksqldb wait`
+
 ### 🛠 Reproduction models: bootstrap, check, export, import
 
 - 📖 [Read the deep dive](/deep-dive-reproduction-models.md)

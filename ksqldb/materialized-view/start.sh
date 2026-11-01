@@ -16,14 +16,14 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Describing the calls table in DB 'mydb':"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe calls'"
+playground container exec -c mysql --command "mysql --user=root --password=password --database=mydb -e 'describe calls'"
 
 log "Show content of calls table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from calls'"
+playground container exec -c mysql --command "mysql --user=root --password=password --database=mydb -e 'select * from calls'"
 
 
 log "Create source connector"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -51,12 +51,10 @@ CREATE SOURCE CONNECTOR calls_reader WITH (
 );
 EOF
 
-
-
-sleep 5
+playground topic wait-for-records --topic dbserver1.mydb.calls --min-expected-messages 1 --max-wait 120
 
 log "Check topic"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -66,7 +64,7 @@ DESCRIBE CONNECTOR calls_reader;
 EOF
 
 log "Create the ksqlDB calls stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -78,7 +76,7 @@ EOF
 
 
 log "Create the materialized views"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -99,12 +97,12 @@ CREATE TABLE lifetime_view AS
     EMIT CHANGES;
 EOF
 
-sleep 5
+playground ksqldb wait
 
 if ! version_gt $TAG_BASE "5.9.9"; then
     # with 5.5.x, we need to use ROWKEY
     log "Query the materialized views"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -118,7 +116,7 @@ WHERE ROWKEY = 'michael';
 EOF
 else
     log "Query the materialized views"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -135,48 +133,7 @@ fi
 
 
 
-# log "Adding an element to the table"
-# docker exec mysql mysql --user=root --password=password --database=mydb -e "
-# INSERT INTO calls (   \
-#   id,   \
-#   name, \
-#   email,   \
-#   last_modified \
-# ) VALUES (  \
-#   2,    \
-#   'another',  \
-#   'another@apache.org',   \
-#   NOW() \
-# ); "
-
-# log "Show content of calls table:"
-# docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from calls'"
-
-# log "Creating Debezium MySQL source connector"
-# curl -X PUT \
-#      -H "Content-Type: application/json" \
-#      --data '{
-#                "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-#                     "tasks.max": "1",
-#                     "database.hostname": "mysql",
-#                     "database.port": "3306",
-#                     "database.user": "debezium",
-#                     "database.password": "dbz",
-#                     "database.server.id": "223344",
-#                     "database.server.name": "dbserver1",
-#                     "database.whitelist": "mydb",
-#                     "database.history.kafka.bootstrap.servers": "broker:9092",
-#                     "database.history.kafka.topic": "schema-changes.mydb",
-#                     "transforms": "RemoveDots",
-#                     "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-#                     "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
-#                     "transforms.RemoveDots.replacement": "\$1_\$2_\$3"
-#           }' \
-#      http://localhost:8083/connectors/debezium-mysql-source/config | jq .
-
-# sleep 5
-
-# log "Verifying topic dbserver1.mydb.calls"
+log "Verifying topic dbserver1.mydb.calls"
 playground topic consume --topic dbserver1.mydb.calls --min-expected-messages 2 --timeout 60
 
 

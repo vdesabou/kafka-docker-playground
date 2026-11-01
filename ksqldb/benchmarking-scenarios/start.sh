@@ -5,66 +5,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 
-function wait_for_stream_to_finish () {
-  stream="$1"
-
-  set +e
-  MAX_WAIT=3600
-  CUR_WAIT=0
-  nb_streams_finished=0
-  while [[ ! "${nb_streams_finished}" = "1" ]]
-  do
-    throughput=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-        -H "Accept: application/vnd.ksql.v1+json" \
-        -d $"{
-      \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
-      \"streamsProperties\": {}
-    }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-    if [ "$throughput" = "0" ]
-    then
-      let "nb_streams_finished++"
-    elif [ "$throughput" = "" ]
-    then
-      log "⚠️ Stream $stream has not started to process messages"
-      continue
-    else
-      log "⏳ Stream $stream currently processing $throughput messages-per-sec"
-    fi
-
-    sleep 5
-    CUR_WAIT=$(( CUR_WAIT+5 ))
-    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-      logerror "❗❗❗ ERROR: Please troubleshoot"
-      exit 1
-    fi
-  done
-  set -e
-}
-
 function throughtput () {
   stream="$1"
   duration="$2"
 
-  MAX_WAIT=600
-  CUR_WAIT=0
-  totalmessages=""
-  while [[ "${totalmessages}" = "" ]]
-  do
-    totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-        -H "Accept: application/vnd.ksql.v1+json" \
-        -d $"{
-      \"ksql\": \"DESCRIBE EXTENDED $stream;\",
-      \"streamsProperties\": {}
-    }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-
-    sleep 5
-    CUR_WAIT=$(( CUR_WAIT+5 ))
-    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-      logerror "❗❗❗ ERROR: Please troubleshoot"
-      exit 1
-    fi
-  done
-
+  totalmessages=$(playground ksqldb describe --source "$stream" --json | jq '.stats."total-messages" // 0 | floor')
   throughput=$(echo $((totalmessages / duration)))
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
 }
@@ -79,82 +24,78 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create topic orders"
-curl -s -X PUT \
-      -H "Content-Type: application/json" \
-      --data '{
-                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "orders",
-                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": "false",
-                "max.interval": 1,
-                "iterations": "10000",
-                "tasks.max": "10",
-                "schema.filename" : "/tmp/schemas/orders.avro",
-                "schema.keyfield" : "orderid"
-            }' \
-      http://localhost:8083/connectors/datagen-orders/config | jq
+playground connector create-or-update --connector datagen-orders --no-wait << EOF
+{
+    "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+    "kafka.topic": "orders",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "max.interval": 1,
+    "iterations": "10000",
+    "tasks.max": "10",
+    "schema.filename": "/tmp/schemas/orders.avro",
+    "schema.keyfield": "orderid"
+}
+EOF
 
 wait_for_datagen_connector_to_inject_data "orders" "10"
 
 log "Create topic shipments"
-curl -s -X PUT \
-      -H "Content-Type: application/json" \
-      --data '{
-                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "shipments",
-                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": "false",
-                "max.interval": 1,
-                "iterations": "10000",
-                "tasks.max": "10",
-                "schema.filename" : "/tmp/schemas/shipments.avro"
-            }' \
-      http://localhost:8083/connectors/datagen-shipments/config | jq
+playground connector create-or-update --connector datagen-shipments --no-wait << EOF
+{
+    "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+    "kafka.topic": "shipments",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "max.interval": 1,
+    "iterations": "10000",
+    "tasks.max": "10",
+    "schema.filename": "/tmp/schemas/shipments.avro"
+}
+EOF
 
 wait_for_datagen_connector_to_inject_data "shipments" "10"
 
 log "Create topic products"
-curl -s -X PUT \
-      -H "Content-Type: application/json" \
-      --data '{
-                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "products",
-                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": "false",
-                "max.interval": 1,
-                "iterations": "100",
-                "tasks.max": "10",
-                "schema.filename" : "/tmp/schemas/products.avro",
-                "schema.keyfield" : "productid"
-            }' \
-      http://localhost:8083/connectors/datagen-products/config | jq
+playground connector create-or-update --connector datagen-products --no-wait << EOF
+{
+    "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+    "kafka.topic": "products",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "max.interval": 1,
+    "iterations": "100",
+    "tasks.max": "10",
+    "schema.filename": "/tmp/schemas/products.avro",
+    "schema.keyfield": "productid"
+}
+EOF
 
 wait_for_datagen_connector_to_inject_data "products" "10"
 
 log "Create topic customers"
-curl -s -X PUT \
-      -H "Content-Type: application/json" \
-      --data '{
-                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "customers",
-                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": "false",
-                "max.interval": 1,
-                "iterations": "1000",
-                "tasks.max": "10",
-                "schema.filename" : "/tmp/schemas/customers.avro",
-                "schema.keyfield" : "customerid"
-            }' \
-      http://localhost:8083/connectors/datagen-customers/config | jq
+playground connector create-or-update --connector datagen-customers --no-wait << EOF
+{
+    "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+    "kafka.topic": "customers",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "max.interval": 1,
+    "iterations": "1000",
+    "tasks.max": "10",
+    "schema.filename": "/tmp/schemas/customers.avro",
+    "schema.keyfield": "customerid"
+}
+EOF
 
 wait_for_datagen_connector_to_inject_data "customers" "10"
 
 log "Create the ksqlDB tables and streams"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -206,7 +147,7 @@ EOF
 
 log "START BENCHMARK for QUERY 0"
 SECONDS=0
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -217,12 +158,12 @@ FROM
 WHERE productid='Product_1' or productid='Product_2';
 EOF
 
-wait_for_stream_to_finish "FILTERED_STREAM"
+playground ksqldb wait --max-wait 3600 --source "FILTERED_STREAM"
 throughtput "FILTERED_STREAM" "$SECONDS"
 
 log "START BENCHMARK for QUERY 1"
 SECONDS=0
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -245,12 +186,12 @@ LEFT OUTER JOIN
     ON ((O.CUSTOMERID = CUSTOMERS.CUSTOMERID));
 EOF
 
-wait_for_stream_to_finish "ENRICHED_O_C"
+playground ksqldb wait --max-wait 3600 --source "ENRICHED_O_C"
 throughtput "ENRICHED_O_C" "$SECONDS"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 2"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -276,12 +217,12 @@ LEFT JOIN
 ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
-wait_for_stream_to_finish "ENRICHED_O_C_P"
+playground ksqldb wait --max-wait 3600 --source "ENRICHED_O_C_P"
 throughtput "ENRICHED_O_C_P" "$SECONDS"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 3"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -308,12 +249,12 @@ INNER JOIN SHIPMENTS S
 ON O.ORDERID = S.ORDERID;
 EOF
 
-wait_for_stream_to_finish "ORDERS_SHIPPED"
+playground ksqldb wait --max-wait 3600 --source "ORDERS_SHIPPED"
 throughtput "ORDERS_SHIPPED" "$SECONDS"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 4"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 SET 'auto.offset.reset' = 'earliest';
 
@@ -332,5 +273,5 @@ GROUP BY
   os.PRODUCTID, os.CUSTOMERID;
 EOF
 
-wait_for_stream_to_finish "ORDERPER_PROD_CUST_AGG"
+playground ksqldb wait --max-wait 3600 --source "ORDERPER_PROD_CUST_AGG"
 throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"

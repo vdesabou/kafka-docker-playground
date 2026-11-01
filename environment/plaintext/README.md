@@ -12,10 +12,18 @@ This is a deployment with no security:
 * 1 ksqldb-cli
 * 1 control-center
 
-Using ksqlDB using CLI:
+Using ksqlDB with the CLI (with `--enable-ksqldb`):
 
 ```bash
-$ docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+$ playground ksqldb sql << 'EOF'
+SHOW STREAMS;
+EOF
+```
+
+Interactive ksql cli session:
+
+```bash
+$ docker exec -it ksqldb-cli ksql http://ksqldb-server:8088
 ```
 
 ## How to run

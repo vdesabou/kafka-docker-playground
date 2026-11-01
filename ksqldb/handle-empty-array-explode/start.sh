@@ -12,26 +12,25 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 # example with JSON
 log "Create a topic named my-structure-json"
-docker exec -i connect kafka-topics --create --bootstrap-server broker:9092 --topic my-structure-json --partitions 1
+playground topic create --topic my-structure-json --nb-partitions 1
 log "Produce records to my-structure-json"
-docker exec -i connect kafka-console-producer --bootstrap-server broker:9092 --topic my-structure-json << EOF
+playground topic produce -t my-structure-json --nb-messages 3 << 'EOF'
 {"field1":"value11","field2":[]}
 {"field1":"value12","field2":null}
 {"field1":"value13","field2":[{"field21":"value21","field22":"value22"}]}
 EOF
 
 log "Create the ksqlDB stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 CREATE STREAM myStructureJSON(rowkey string key, field1 string, field2 array<struct<field21 string, field22 string>>)
 WITH (kafka_topic='my-structure-json', value_format='json');
 EOF
 
-# Wait for the stream to be initialized
-sleep 10
+playground ksqldb wait
 
 log "Query this stream with EXPLODE + CASE to handle empty array or null value"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT
   rowkey,

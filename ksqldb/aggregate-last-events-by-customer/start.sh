@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the transaction stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 -- Create the stream of transactions
 CREATE STREAM transactions (
   CUSTOMER_ID BIGINT,
@@ -41,7 +41,7 @@ CREATE TABLE customers (
 EOF
 
 log "Insert records to the table and stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 -- Insert customers data
 INSERT INTO customers (id, first_name, last_name, email) VALUES (6011000990139424, 'Janice', 'Smith', 'jsmith@mycompany.com');
@@ -59,10 +59,10 @@ INSERT INTO transactions (customer_id, timestamp, card_type, amount, ip_address,
 
 EOF
 
-sleep 10
+playground ksqldb wait
 
 log "Get the last 3 transaction events for each customer"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 CREATE TABLE last_3_transactions_by_customer_id AS
 SELECT customer_id,
@@ -79,10 +79,10 @@ GROUP BY customer_id EMIT CHANGES;
 
 EOF
 
-sleep 15
+playground ksqldb wait
 
 log "We can query this aggregation and join with the customer details"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 CREATE TABLE last_3_transactions_by_customer_id_enriched AS
 SELECT customer_id, first_name, last_name, email, payment_sum as last_3_payment_sum
@@ -92,9 +92,9 @@ EMIT CHANGES;
 
 EOF
 
-sleep 15
+playground ksqldb wait
 
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM last_3_transactions_by_customer_id_enriched;

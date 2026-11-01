@@ -65,6 +65,7 @@ playground_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for topic list\n" "$(green "get-topic-list")                            "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for consumer group list\n" "$(green "get-consumer-group-list")                   "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for running flink job list\n" "$(green "get-flink-job-list")                        "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for ksqlDB streams and tables\n" "$(green "get-ksqldb-source-list")                    "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for stream catalog tag list\n" "$(green "get-catalog-tag-list")                      "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for subject list\n" "$(green "get-subject-list")                          "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for examples list\n" "$(green "get-examples-list-with-fzf")                "
@@ -299,6 +300,13 @@ playground_usage() {
   printf "  %s   🐿️ Run Flink SQL statements with the SQL client\n" "$(green "flink sql")                                 "
   printf "  %s   📋 List the jobs of the Flink cluster\n" "$(green "flink list-jobs")                           "
   printf "  %s   🛑 Cancel a Flink job\n" "$(green "flink cancel")                              "
+  echo
+  printf "%s\n" "$(bold "ksqlDB commands:")"
+  printf "  %s   🧮 ksqlDB commands\n" "$(green "ksqldb")                                    "
+  printf "  %s   🧮 Run ksqlDB statements with the ksql cli\n" "$(green "ksqldb sql")                                "
+  printf "  %s   📋 List the streams, tables and persistent queries\n" "$(green "ksqldb list")                               "
+  printf "  %s   🔎 Describe a stream or a table\n" "$(green "ksqldb describe")                           "
+  printf "  %s   ⏳ Wait until the persistent queries are RUNNING and have no lag\n" "$(green "ksqldb wait")                               "
   echo
   printf "%s\n" "$(bold "RBAC commands:")"
   printf "  %s   🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)\n" "$(green "rbac")                                      "
@@ -1041,6 +1049,28 @@ playground_get_flink_job_list_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-flink-job-list\n"
   printf "  playground get-flink-job-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_ksqldb_source_list_usage() {
+  printf "playground get-ksqldb-source-list - Return some completion for ksqlDB streams and tables\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-ksqldb-source-list\n"
+  printf "  playground get-ksqldb-source-list --help | -h\n"
   echo
 
   # :command.long_usage
@@ -15593,6 +15623,251 @@ playground_flink_cancel_usage() {
 }
 
 # :command.usage
+playground_ksqldb_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ksqldb\n\n"
+    printf "  🧮 ksqlDB commands\n  \n  Run ksqlDB statements and inspect the streams, tables and queries of the\n  ksqlDB server started with 'playground run --enable-ksqldb' (the ksqldb/\n  examples enable it), without docker exec or curl.\n  \n    sql        run ksqlDB statements (stdin or --file) with the ksql cli\n    list       streams, tables and persistent queries with their state\n    describe   fields, queries, statistics, errors and lag of a stream or table\n    wait       wait until the persistent queries are RUNNING and have no lag\n  \n  🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.\n  The records that fail a query are in the KSQL_PROCESSING_LOG stream.\n\n"
+  else
+    printf "playground ksqldb - 🧮 ksqlDB commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ksqldb COMMAND\n"
+  printf "  playground ksqldb [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "ksqlDB commands:")"
+  printf "  %s   🧮 Run ksqlDB statements with the ksql cli\n" "$(green "sql")     "
+  printf "  %s   📋 List the streams, tables and persistent queries\n" "$(green "list")    "
+  printf "  %s   🔎 Describe a stream or a table\n" "$(green "describe")"
+  printf "  %s   ⏳ Wait until the persistent queries are RUNNING and have no lag\n" "$(green "wait")    "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ksqldb_sql_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ksqldb sql\n\n"
+    printf "  🧮 Run ksqlDB statements with the ksql cli\n  \n  The statements are read from stdin (heredoc) or --file, and run in one\n  ksql cli session (ksql --file) in the ksqldb-cli container: so SET\n  'auto.offset.reset' = 'earliest' applies to the statements that follow\n  it in the same call. DDL, INSERT INTO, pull and push queries, PRINT,\n  SHOW, DESCRIBE... are all supported, and their results are printed as\n  tables.\n  \n  Every statement is run, even after a failing one. The errors are\n  printed with ❌, and the command then exits with code 1, unless\n  --ignore-errors is set (a statement that is expected to fail, to\n  show the error).\n  \n  🎓 Tip: a push query (EMIT CHANGES) never ends without a LIMIT: add\n  LIMIT <n>, or --query-timeout. Otherwise the cli is stopped after\n  --max-wait seconds. To wait for a CREATE ... AS SELECT to process its\n  input before querying it, use 'playground ksqldb wait' instead of a sleep.\n\n"
+  else
+    printf "playground ksqldb sql - 🧮 Run ksqlDB statements with the ksql cli\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ksqldb sql [OPTIONS]\n"
+  printf "  playground ksqldb sql --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    📄 File with the ksqlDB statements, separated by ;\n    \n    ℹ️ If not set, the statements are read from stdin\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait, -w MAX_WAIT")"
+    printf "    ⏳ Stop the ksql cli after this number of seconds (default 120)\n"
+    printf "    %s\n" "Default: 120"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--query-timeout QUERY_TIMEOUT")"
+    printf "    ⏱️ Stop each push query (EMIT CHANGES) after this number of seconds, like a\n    LIMIT in time\n    \n    ℹ️ ksql --query-timeout\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--ignore-errors")"
+    printf "    🙈 Do not exit with code 1 when a statement fails (its error is still\n    printed)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--width WIDTH")"
+    printf "    📏 Width of the result tables, split between their columns\n    \n    ℹ️ Default: the width of the terminal, 200 when the output is not a terminal\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ksqldb sql << 'EOF'\nSET 'auto.offset.reset' = 'earliest';\nCREATE STREAM orders (id INT, product VARCHAR) WITH (kafka_topic='orders',\nvalue_format='json', partitions=1);\nINSERT INTO orders (id, product) VALUES (1, 'foo');\nSELECT * FROM orders EMIT CHANGES LIMIT 1;\nEOF\n"
+printf "  playground ksqldb sql --file ./queries.sql\n"
+printf "  echo \"SELECT * FROM orders EMIT CHANGES;\" | playground ksqldb sql\n  --query-timeout 10\n"
+printf "  echo \"CREATE STREAM orders (id INT) WITH (kafka_topic='orders',\n  value_format='json');\" | playground ksqldb sql --ignore-errors\n"
+echo
+
+fi
+}
+
+# :command.usage
+playground_ksqldb_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ksqldb list\n\n"
+    printf "  📋 List the streams, tables and persistent queries\n  \n  Name, topic, key and value formats of every stream and table, then the\n  persistent queries with their state and sinks (SHOW STREAMS, SHOW\n  TABLES and SHOW QUERIES).\n\n"
+  else
+    printf "playground ksqldb list - 📋 List the streams, tables and persistent queries\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ksqldb list [OPTIONS]\n"
+  printf "  playground ksqldb list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print {\"streams\": [...], \"tables\": [...], \"queries\": [...]} (the REST API\n    objects) and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ksqldb list\n"
+    printf "  playground ksqldb list --json | jq -r '.queries[] | select(.state !=\n  \"RUNNING\") | .id'\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ksqldb_describe_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ksqldb describe\n\n"
+    printf "  🔎 Describe a stream or a table\n  \n  Topic, formats, fields, the queries that write to it and read from it\n  with their state and lag, the statistics (total-messages,\n  messages-per-sec...) and the errors of the queries (DESCRIBE ...\n  EXTENDED).\n  \n  With --json, the REST API sourceDescription object, plus \"stats\" and\n  \"errors\" (the statistics summed over the servers, by name) and \"lag\"\n  (the lag of each query writing to it, by query id).\n\n"
+  else
+    printf "playground ksqldb describe - 🔎 Describe a stream or a table\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ksqldb describe [OPTIONS]\n"
+  printf "  playground ksqldb describe --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--source, -s SOURCE")"
+    printf "    🧮 Name of the stream or table\n    \n    ℹ️ Required when not in a terminal, otherwise picked with fzf\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the description as JSON and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ksqldb describe --source ridersNearMountainView\n"
+    printf "  playground ksqldb describe --source ORDERS_ENRICHED --json | jq\n  '.stats.\"total-messages\"'\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ksqldb_wait_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ksqldb wait\n\n"
+    printf "  ⏳ Wait until the persistent queries are RUNNING and have no lag\n  \n  Waits until every query writing to --source (or every persistent\n  query) is RUNNING and has committed all the records of its input\n  topics, so that its result is complete: use it instead of a sleep\n  after a CREATE ... AS SELECT and the records it reads.\n  \n  Exits with code 1 when a query is in ERROR, or after --max-wait seconds.\n\n"
+  else
+    printf "playground ksqldb wait - ⏳ Wait until the persistent queries are RUNNING and have no lag\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ksqldb wait [OPTIONS]\n"
+  printf "  playground ksqldb wait --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--source, -s SOURCE (repeatable)")"
+    printf "    🧮 Only wait for the queries writing to this stream or table (repeatable)\n    \n    ℹ️ If not set, all persistent queries\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait, -w MAX_WAIT")"
+    printf "    ⏳ Maximum number of seconds to wait (default 120)\n"
+    printf "    %s\n" "Default: 120"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ksqldb wait\n"
+    printf "  playground ksqldb wait --source currentLocation --source\n  ridersNearMountainView\n"
+    printf "  playground ksqldb wait --source ORDERS_ENRICHED --max-wait 3600\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_rbac_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground rbac\n\n"
@@ -24402,6 +24677,26 @@ function filter_flink_running() {
   fi
 }
 
+function filter_ksqldb_running() {
+  if ! get_ksqldb_url_and_security; then
+    logerror "ksqldb-server should be running to run this command: start an example with playground run --enable-ksqldb (the ksqldb/ examples enable it)"
+    return
+  fi
+  # right after start-environment, ksqldb-server can still be starting: wait for it, 120 seconds at most
+  local status="" i
+  for i in {1..120}; do
+    status=$(curl $ksqldb_security -s -f "${ksqldb_url}/info" 2>/dev/null | jq -r '.KsqlServerInfo.serverStatus // empty' 2>/dev/null)
+    if [[ "$status" == "RUNNING" ]]; then
+      return
+    fi
+    if [ $i -eq 5 ]; then
+      log "⏳ waiting for ksqldb-server to be ready ($ksqldb_url)" >&2
+    fi
+    sleep 1
+  done
+  logerror "ksqldb-server REST API $ksqldb_url is not ready after 120 seconds (server status: ${status:-no answer}): check playground container logs -c ksqldb-server --errors"
+}
+
 function filter_docker_running() {
   # doctor is precisely the command you run when the engine is down (and the switch
   # commands are how you leave an engine that is down), and a bare
@@ -28983,6 +29278,48 @@ function get_flink_rest_url () {
   flink_rest_url="http://localhost:${mapped##*:}"
 }
 
+# ksqldb-server REST API seen from the host (published port of ksqldb-server:8088), and the credentials to use:
+# rbac-sasl-plain authenticates the REST clients (basic auth), as ksqlDBAdmin. Sets $ksqldb_url, $ksqldb_security
+# (curl arguments) and $ksqldb_cli_security (ksql cli arguments). Returns 1 when ksqldb-server is not running.
+function get_ksqldb_url_and_security () {
+  ksqldb_url=""
+  ksqldb_security=""
+  ksqldb_cli_security=""
+  local mapped
+  mapped=$(docker port ksqldb-server "8088/tcp" 2>/dev/null | head -1)
+  if [ -z "$mapped" ]
+  then
+    return 1
+  fi
+  ksqldb_url="http://localhost:${mapped##*:}"
+  get_environment_used
+  if [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+    ksqldb_security="-u ksqlDBAdmin:ksqlDBAdmin"
+    ksqldb_cli_security="--user ksqlDBAdmin --password ksqlDBAdmin"
+  fi
+}
+
+# runs the ksql statements $1 with the /ksql REST endpoint (not for SELECT / PRINT, use the cli for those) and prints
+# the JSON response. Returns 1 when the request fails, or when a statement fails (its error is in the response).
+function ksqldb_rest_statement () {
+  local statement="$1" body response
+  body=$(jq -n --arg ksql "$statement" '{ksql: $ksql, streamsProperties: {}}')
+  response=$(curl $ksqldb_security -s -X POST "${ksqldb_url}/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" -H "Content-Type: application/vnd.ksql.v1+json" \
+    -d "$body")
+  if [[ -z "$response" ]]
+  then
+    logerror "❌ no response from ksqlDB REST API $ksqldb_url" >&2
+    return 1
+  fi
+  printf '%s\n' "$response"
+  if echo "$response" | jq -e 'type == "object" and (."@type" // "" | test("error"))' > /dev/null 2>&1
+  then
+    return 1
+  fi
+}
+
 # client ids of the tasks of a self-managed connector, one per line: connector-consumer-<connector>-<task> for a sink,
 # connector-producer-<connector>-<task> for a source, or the consumer|producer.override.client.id of its config (then
 # shared by all the tasks)
@@ -32074,8 +32411,7 @@ function set_profiles() {
     playground state del flags.ENABLE_KSQLDB
   else
     log "🚀 ksqldb is enabled"
-    log "🔧 You can use ksqlDB with CLI using:"
-    log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
+    log "🔧 You can run ksqlDB statements with: playground ksqldb sql (stdin or --file), see playground ksqldb --help"
     profile_ksqldb_command="--profile ksqldb"
     playground state set flags.ENABLE_KSQLDB 1
   fi
@@ -38484,6 +38820,15 @@ playground_get_flink_job_list_command() {
   # src/commands/get-flink-job-list.sh
   get_flink_rest_url || exit 0
   curl -s "${flink_rest_url}/jobs/overview" 2>/dev/null | jq -r '.jobs[] | select(.state | IN("FINISHED", "CANCELED", "FAILED") | not) | .jid' 2>/dev/null
+
+}
+
+# :command.function
+playground_get_ksqldb_source_list_command() {
+
+  # src/commands/get-ksqldb-source-list.sh
+  get_ksqldb_url_and_security || exit 0
+  ksqldb_rest_statement "SHOW STREAMS; SHOW TABLES;" 2>/dev/null | jq -r '.[] | (.streams // .tables // [])[] | .name' 2>/dev/null
 
 }
 
@@ -67557,6 +67902,350 @@ playground_flink_cancel_command() {
 }
 
 # :command.function
+playground_ksqldb_sql_command() {
+
+  # src/commands/ksqldb/sql.sh
+  file="${args[--file]}"
+  max_wait="${args[--max-wait]}"
+  ignore_errors="${args[--ignore-errors]}"
+  width="${args[--width]}"
+  query_timeout="${args[--query-timeout]}"
+
+  if [[ -n "$file" ]]
+  then
+      sql=$(cat "$file")
+  else
+      sql=$(read_stdin_if_any)
+  fi
+
+  if [[ -z "${sql//[[:space:]]/}" ]]
+  then
+      logerror "❌ no ksqlDB statements: pass them on stdin (heredoc) or with --file"
+      exit 1
+  fi
+
+  get_ksqldb_url_and_security
+  container="ksqldb-cli"
+  if [[ -z "$(docker ps --filter "name=^${container}$" --filter "status=running" --format "{{.Names}}")" ]]
+  then
+      logerror "❌ the $container container is not running: start an example with playground run --enable-ksqldb"
+      exit 1
+  fi
+
+  if [[ -z "$width" ]]
+  then
+      # the tables of the cli split this width between their columns: without a terminal, they are 5 characters wide
+      width=200
+      if [ -t 1 ]
+      then
+          width=$(tput cols 2>/dev/null || echo 200)
+      fi
+  fi
+
+  ksqldb_version=$(curl $ksqldb_security -s "${ksqldb_url}/info" | jq -r '.KsqlServerInfo.version // empty' 2>/dev/null)
+
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
+  printf '%s\n' "$sql" > "$tmp_dir/statements.sql"
+  docker cp "$tmp_dir/statements.sql" "$container:/tmp/playground-ksqldb-statements.sql" > /dev/null
+
+  cli_options="$ksqldb_cli_security"
+  if [[ -n "$query_timeout" ]]
+  then
+      cli_options="$cli_options --query-timeout $((query_timeout * 1000))"
+  fi
+
+  log "🧮 Running ksqlDB statements in $container container (ksqlDB ${ksqldb_version:-?}, $ksqldb_url)"
+  rc=0
+  # -t + stty: the cli formats the tables for the terminal width. --file runs every statement, even after a failing one,
+  # and prints the errors in red
+  output=$(docker exec -t "$container" sh -c "stty cols $width 2>/dev/null; timeout $max_wait ksql $cli_options --file /tmp/playground-ksqldb-statements.sql http://ksqldb-server:8088" 2>&1) || rc=$?
+  output=$(printf '%s\n' "$output" | tr -d '\r')
+
+  # the errors of the statements are the red lines
+  errors=$(printf '%s\n' "$output" | grep $'\x1b\[31m' | sed 's/\x1b\[[0-9;]*m//g' || true)
+
+  # drop the jvm warnings and the startup lines of the cli, keep the results
+  printf '%s\n' "$output" \
+      | grep -v -E "^WARNING: |^FIPS Mode: |^  -> Using netty-tcnative|^Debug Options: ?$" \
+      | sed '/\x1b\[31m/s/^/❌ /' \
+      | sed 's/\x1b\[[0-9;]*m//g' \
+      | cat -s | sed '1{/^$/d;}'
+
+  if [ $rc -eq 124 ]
+  then
+      logerror "⏱️ the ksql cli was stopped after ${max_wait}s: a push query (EMIT CHANGES) never ends without a LIMIT"
+      logerror "   add LIMIT <n> to the query, set --query-timeout, or increase --max-wait"
+      exit 1
+  fi
+
+  if [[ -n "$errors" ]]
+  then
+      nb_errors=$(printf '%s\n' "$errors" | wc -l | tr -d ' ')
+      if [[ -n "$ignore_errors" ]]
+      then
+          logwarn "⚠️ $nb_errors ksqlDB statement(s) failed (ignored, --ignore-errors is set)"
+      else
+          logerror "❌ $nb_errors ksqlDB statement(s) failed (the other statements were run):"
+          printf '%s\n' "$errors" | sed 's/^/   /' >&2
+          logerror "   🎓 add --ignore-errors when the failure is expected"
+          exit 1
+      fi
+  fi
+
+  if [ $rc -ne 0 ]
+  then
+      if printf '%s\n' "$output" | grep -q -iE "Unauthorized|401"
+      then
+          logerror "❌ the ksql cli could not authenticate to ksqldb-server"
+      fi
+      logerror "❌ the ksql cli exited with code $rc"
+      exit 1
+  fi
+
+}
+
+# :command.function
+playground_ksqldb_list_command() {
+
+  # src/commands/ksqldb/list.sh
+  json="${args[--json]}"
+
+  get_ksqldb_url_and_security
+
+  if ! response=$(ksqldb_rest_statement "SHOW STREAMS; SHOW TABLES; SHOW QUERIES;")
+  then
+      logerror "❌ could not list the streams, tables and queries:"
+      echo "$response" | jq -r '.message // .' >&2
+      exit 1
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      echo "$response" | jq '{
+          streams: ([.[] | select(."@type" == "streams") | .streams[]]),
+          tables: ([.[] | select(."@type" == "tables") | .tables[]]),
+          queries: ([.[] | select(."@type" == "queries") | .queries[]])
+      }'
+      exit 0
+  fi
+
+  ksqldb_version=$(curl $ksqldb_security -s "${ksqldb_url}/info" | jq -r '.KsqlServerInfo.version // empty' 2>/dev/null)
+  log "🧮 Streams, tables and queries of ksqlDB ${ksqldb_version:-?} ($ksqldb_url)"
+
+  # the KSQL_PROCESSING_LOG stream and the internal sources are listed too: they are part of the server
+  {
+      printf 'TYPE\tNAME\tTOPIC\tKEY FORMAT\tVALUE FORMAT\tWINDOWED\n'
+      echo "$response" | jq -r '.[] | select(."@type" == "streams" or ."@type" == "tables") | (.streams // .tables)[]
+          | [.type, .name, .topic, .keyFormat, .valueFormat, (.isWindowed | tostring)] | @tsv'
+  } | column -t -s $'\t'
+
+  nb_queries=$(echo "$response" | jq '[.[] | select(."@type" == "queries") | .queries[]] | length')
+  echo ""
+  if [ "$nb_queries" -eq 0 ]
+  then
+      log "🔎 No persistent query"
+      exit 0
+  fi
+  {
+      printf 'QUERY ID\tSTATE\tTYPE\tSINKS\tSINK TOPICS\n'
+      echo "$response" | jq -r '.[] | select(."@type" == "queries") | .queries[]
+          | [.id, (.state // "?"), (.queryType // "?"), ((.sinks // []) | join(",")), ((.sinkKafkaTopics // []) | join(","))] | @tsv'
+  } | column -t -s $'\t'
+
+  if echo "$response" | jq -e '[.[] | select(."@type" == "queries") | .queries[] | select(.state == "ERROR")] | length > 0' > /dev/null
+  then
+      echo ""
+      logwarn "⚠️ a query is in ERROR: playground ksqldb describe --source <its sink> shows its errors, playground container logs -c ksqldb-server --errors the stack trace"
+  fi
+
+}
+
+# :command.function
+playground_ksqldb_describe_command() {
+
+  # src/commands/ksqldb/describe.sh
+  source="${args[--source]}"
+  json="${args[--json]}"
+
+  get_ksqldb_url_and_security
+
+  if [[ -z "$source" ]]
+  then
+      if [[ ! -t 0 ]] || [[ ! -t 1 ]]
+      then
+          logerror "❌ --source is required"
+          exit 1
+      fi
+      source=$(playground get-ksqldb-source-list | fzf --prompt="🧮 stream or table: " --height=40% --reverse)
+      if [[ -z "$source" ]]
+      then
+          logerror "❌ no stream or table selected"
+          exit 1
+      fi
+  fi
+
+  # keep a quoted name as is (case sensitive), otherwise ksqlDB uppercases it
+  if ! response=$(ksqldb_rest_statement "DESCRIBE $source EXTENDED;")
+  then
+      logerror "❌ could not describe $source: $(echo "$response" | jq -r '.message // .' 2>/dev/null)"
+      logerror "   🎓 playground ksqldb list shows the streams and tables"
+      exit 1
+  fi
+
+  # statistics summed over the servers, the lag of each query is the sum over the partitions of its input topics
+  description=$(echo "$response" | jq '.[0].sourceDescription
+      | .stats = ((.clusterStatistics // []) | group_by(.name) | map({key: .[0].name, value: (map(.value) | add)}) | from_entries)
+      | .errors = ((.clusterErrorStats // []) | group_by(.name) | map({key: .[0].name, value: (map(.value) | add)}) | from_entries)
+      | .lag = ((.queryOffsetSummaries // []) | map({key: (.groupId | sub("^_confluent-ksql-.*query_"; "")),
+          value: ([.topicSummaries[]?.offsets[]? | (.logEndOffset - (.consumerOffset // 0))] | if length == 0 then null else add end)}) | from_entries)')
+
+  if [[ -n "$json" ]]
+  then
+      echo "$description"
+      exit 0
+  fi
+
+  echo "$description" | jq -r '"🧮 \(.type) \(.name): topic \(.topic) (\(.partitions) partitions, replication \(.replication)), key format \(.keyFormat), value format \(.valueFormat)"
+      + (if .windowType then ", \(.windowType) windows" else "" end)
+      + (if (.timestamp // "") != "" then ", timestamp column \(.timestamp)" else "" end)' | while IFS= read -r line; do log "$line"; done
+
+  echo ""
+  {
+      printf 'FIELD\tTYPE\tKEY\n'
+      echo "$description" | jq -r '.fields[] | [.name, (.schema.type + (if .schema.memberSchema then "<\(.schema.memberSchema.type)>" elif .schema.fields then "<STRUCT>" else "" end)), (if .type == "KEY" then "🔑" elif .type == "HEADER" then "header" else "" end)] | @tsv'
+  } | column -t -s $'\t'
+
+  for kind in writeQueries readQueries
+  do
+      nb=$(echo "$description" | jq --arg k "$kind" '.[$k] | length')
+      [ "$nb" -eq 0 ] && continue
+      echo ""
+      if [[ "$kind" == "writeQueries" ]]
+      then
+          log "✍️ Queries writing to $source"
+      else
+          log "📖 Queries reading from $source"
+      fi
+      {
+          printf 'QUERY ID\tSTATE\tLAG\n'
+          echo "$description" | jq -r --arg k "$kind" '. as $d | .[$k][] | [.id, (.state // "?"), (($d.lag[.id] // "-") | tostring)] | @tsv'
+      } | column -t -s $'\t'
+  done
+
+  echo ""
+  if [[ "$(echo "$description" | jq '.stats | length')" -eq 0 ]]
+  then
+      log "📊 No statistics: no query reads from or writes to $source yet"
+  else
+      log "📊 Statistics (sum over the ksqlDB servers)"
+      echo "$description" | jq -r '.stats | to_entries[] | "   \(.key): \(.value)"'
+  fi
+  if [[ "$(echo "$description" | jq '.errors | length')" -gt 0 ]]
+  then
+      logwarn "⚠️ Errors"
+      echo "$description" | jq -r '.errors | to_entries[] | "   \(.key): \(.value)"'
+      logwarn "   🎓 the records that failed are in the processing log: SELECT * FROM KSQL_PROCESSING_LOG EMIT CHANGES LIMIT 10;"
+  fi
+
+}
+
+# :command.function
+playground_ksqldb_wait_command() {
+
+  # src/commands/ksqldb/wait.sh
+  eval "sources=(${args[--source]:-})"
+  max_wait="${args[--max-wait]}"
+
+  get_ksqldb_url_and_security
+
+  if [ ${#sources[@]} -eq 0 ]
+  then
+      # every sink of a persistent query
+      if ! queries=$(ksqldb_rest_statement "SHOW QUERIES;")
+      then
+          logerror "❌ could not list the queries: $(echo "$queries" | jq -r '.message // .' 2>/dev/null)"
+          exit 1
+      fi
+      while IFS= read -r s
+      do
+          [[ -n "$s" ]] && sources+=("$s")
+      done < <(echo "$queries" | jq -r '[.[0].queries[] | select(.queryType == "PERSISTENT") | .sinks[]] | unique[]')
+      if [ ${#sources[@]} -eq 0 ]
+      then
+          log "🔎 No persistent query, nothing to wait for"
+          exit 0
+      fi
+  fi
+
+  log "⏳ Waiting up to ${max_wait}s for the queries writing to ${sources[*]} to be RUNNING and to have processed all their input records"
+  start=$SECONDS
+  last_log=$SECONDS
+  first_pass=1
+  while true
+  do
+      pending=""
+      for s in "${sources[@]}"
+      do
+          if ! response=$(ksqldb_rest_statement "DESCRIBE $s EXTENDED;")
+          then
+              logerror "❌ could not describe $s: $(echo "$response" | jq -r '.message // .' 2>/dev/null)"
+              exit 1
+          fi
+          description=$(echo "$response" | jq '.[0].sourceDescription')
+          if [[ "$(echo "$description" | jq '.writeQueries | length')" -eq 0 ]]
+          then
+              if [[ -n "$first_pass" ]]
+              then
+                  logwarn "⚠️ no query writes to $s, nothing to wait for on it"
+              fi
+              continue
+          fi
+          failed=$(echo "$description" | jq -r '.writeQueries[] | select(.state == "ERROR") | .id')
+          if [[ -n "$failed" ]]
+          then
+              logerror "❌ query $failed writing to $s is in ERROR"
+              logerror "   🎓 playground ksqldb describe --source $s, playground container logs -c ksqldb-server --errors"
+              exit 1
+          fi
+          # a query that has not committed yet has no offsets in its summary (or no summary): its lag is unknown, wait
+          state=$(echo "$description" | jq -r '
+              ((.queryOffsetSummaries // []) | map({key: (.groupId | sub("^_confluent-ksql-.*query_"; "")),
+                  value: ([.topicSummaries[]?.offsets[]? | (.logEndOffset - (.consumerOffset // 0))] | if length == 0 then null else add end)}) | from_entries) as $lag
+              | .writeQueries[] | select(.state != "RUNNING" or ($lag[.id] == null) or ($lag[.id] > 0))
+              | "\(.id): \(.state // "?"), lag \($lag[.id] // "unknown, no committed offsets yet")"')
+          if [[ -n "$state" ]]
+          then
+              pending="${pending}${state}"$'\n'
+          fi
+      done
+
+      if [[ -z "$pending" ]]
+      then
+          log "✅ the queries writing to ${sources[*]} are RUNNING and have no lag (after $((SECONDS - start))s)"
+          exit 0
+      fi
+
+      if [ $((SECONDS - start)) -ge "$max_wait" ]
+      then
+          logerror "❌ still waiting after ${max_wait}s:"
+          printf '%s' "$pending" | sed 's/^/   /' >&2
+          logerror "   🎓 playground ksqldb describe --source <sink> shows the statistics and errors, increase --max-wait for a big input"
+          exit 1
+      fi
+
+      if [ $((SECONDS - last_log)) -ge 10 ]
+      then
+          printf '%s' "$pending" | while IFS= read -r line; do log "   ⏳ $line"; done
+          last_log=$SECONDS
+      fi
+      first_pass=""
+      sleep 2
+  done
+
+}
+
+# :command.function
 playground_rbac_role_binding_create_command() {
 
   # src/commands/rbac/role-binding/create.sh
@@ -80343,6 +81032,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-ksqldb-source-list)
+      action="get-ksqldb-source-list"
+      shift
+      playground_get_ksqldb_source_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-catalog-tag-list)
       action="get-catalog-tag-list"
       shift
@@ -80739,6 +81435,13 @@ parse_requirements() {
       action="flink"
       shift
       playground_flink_parse_requirements "$@"
+      shift $#
+      ;;
+
+    ksqldb)
+      action="ksqldb"
+      shift
+      playground_ksqldb_parse_requirements "$@"
       shift $#
       ;;
 
@@ -82390,6 +83093,66 @@ playground_get_flink_job_list_parse_requirements() {
 
   # :command.command_filter
   action="get-flink-job-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_ksqldb_source_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_ksqldb_source_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-ksqldb-source-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -117524,6 +118287,565 @@ playground_flink_cancel_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_ksqldb_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ksqldb_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    sql)
+      action="sql"
+      shift
+      playground_ksqldb_sql_parse_requirements "$@"
+      shift $#
+      ;;
+
+    list)
+      action="list"
+      shift
+      playground_ksqldb_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    describe)
+      action="describe"
+      shift
+      playground_ksqldb_describe_parse_requirements "$@"
+      shift $#
+      ;;
+
+    wait)
+      action="wait"
+      shift
+      playground_ksqldb_wait_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_ksqldb_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_ksqldb_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ksqldb_sql_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ksqldb_sql_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ksqldb sql"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait | -w)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait, -w MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --query-timeout)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--query-timeout']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--query-timeout requires an argument: --query-timeout QUERY_TIMEOUT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --ignore-errors)
+
+        # :flag.case_no_arg
+        args['--ignore-errors']=1
+        shift
+        ;;
+
+      # :flag.case
+      --width)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--width']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--width requires an argument: --width WIDTH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="120"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait, -w MAX_WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--query-timeout'] ]]; then
+    validation_output="$(validate_integer "${args['--query-timeout']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--query-timeout QUERY_TIMEOUT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--width'] ]]; then
+    validation_output="$(validate_integer "${args['--width']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--width WIDTH" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ksqldb_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ksqldb_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ksqldb list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ksqldb_describe_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ksqldb_describe_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ksqldb describe"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --source | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--source']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--source requires an argument: --source, -s SOURCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ksqldb_wait_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ksqldb_wait_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ksqldb wait"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --source | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--source']+x} ]]; then
+            args['--source']="$escaped"
+          else
+            args['--source']="${args['--source']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--source requires an argument: --source, -s SOURCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait | -w)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait, -w MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="120"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait, -w MAX_WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
 playground_rbac_parse_requirements() {
   local key
 
@@ -129566,6 +130888,11 @@ playground_completion() {
         playground_flink_completion "$completion_current" "$@"
         return
         ;;
+      ksqldb)
+        shift
+        playground_ksqldb_completion "$completion_current" "$@"
+        return
+        ;;
       rbac)
         shift
         playground_rbac_completion "$completion_current" "$@"
@@ -129620,7 +130947,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker consumer-group flink rbac connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker consumer-group flink ksqldb rbac connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -130228,6 +131555,29 @@ playground_get_consumer_group_list_completion() {
 
 # :command.completion_function
 playground_get_flink_job_list_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_get_ksqldb_source_list_completion() {
   local completion_current="$1"
   shift
 
@@ -148085,6 +149435,269 @@ playground_flink_cancel_completion() {
 }
 
 # :command.completion_function
+playground_ksqldb_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      sql)
+        shift
+        playground_ksqldb_sql_completion "$completion_current" "$@"
+        return
+        ;;
+      list)
+        shift
+        playground_ksqldb_list_completion "$completion_current" "$@"
+        return
+        ;;
+      describe)
+        shift
+        playground_ksqldb_describe_completion "$completion_current" "$@"
+        return
+        ;;
+      wait)
+        shift
+        playground_ksqldb_wait_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" sql list describe wait
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_ksqldb_sql_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-specific-file-extension "$completion_current" --extension "sql"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --max-wait | -w)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --query-timeout)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--query-timeout"]=1
+
+        ;;
+      --ignore-errors)
+        completion_blocked_flags["--ignore-errors"]=1
+
+        shift
+        ;;
+      --width)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--width"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --max-wait "$completion_current" --max-wait -w
+    completion_flag_candidates --query-timeout "$completion_current" --query-timeout
+    completion_flag_candidates --ignore-errors "$completion_current" --ignore-errors
+    completion_flag_candidates --width "$completion_current" --width
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_ksqldb_list_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_ksqldb_describe_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --source | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-ksqldb-source-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--source"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --source "$completion_current" --source -s
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_ksqldb_wait_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --source | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-ksqldb-source-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --max-wait | -w)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --source "$completion_current" --source -s
+    completion_flag_candidates --max-wait "$completion_current" --max-wait -w
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
 playground_rbac_completion() {
   local completion_current="$1"
   shift
@@ -154231,6 +155844,7 @@ run() {
     "get-topic-list") playground_get_topic_list_command ;;
     "get-consumer-group-list") playground_get_consumer_group_list_command ;;
     "get-flink-job-list") playground_get_flink_job_list_command ;;
+    "get-ksqldb-source-list") playground_get_ksqldb_source_list_command ;;
     "get-catalog-tag-list") playground_get_catalog_tag_list_command ;;
     "get-subject-list") playground_get_subject_list_command ;;
     "get-examples-list-with-fzf") playground_get_examples_list_with_fzf_command ;;
@@ -154497,6 +156111,11 @@ run() {
     "flink sql") playground_flink_sql_command ;;
     "flink list-jobs") playground_flink_list_jobs_command ;;
     "flink cancel") playground_flink_cancel_command ;;
+    "ksqldb") playground_ksqldb_command ;;
+    "ksqldb sql") playground_ksqldb_sql_command ;;
+    "ksqldb list") playground_ksqldb_list_command ;;
+    "ksqldb describe") playground_ksqldb_describe_command ;;
+    "ksqldb wait") playground_ksqldb_wait_command ;;
     "rbac") playground_rbac_command ;;
     "rbac role-binding") playground_rbac_role_binding_command ;;
     "rbac role-binding create") playground_rbac_role_binding_create_command ;;

@@ -20,7 +20,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating streams with UDF and inserting data..."
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 DESCRIBE FUNCTION formula_simple_log4j_logging;
 
 DESCRIBE FUNCTION formula_custom_log4j_logging_level;
@@ -53,14 +53,14 @@ INSERT INTO s1 (a, b, c) VALUES ('k2', 4, 6);
 INSERT INTO s1 (a, b, c) VALUES ('k3', 6, 9);
 EOF
 
-sleep 10
+playground ksqldb wait
 
 log "Verify the UDF logs using KSQL SLF4J+Log4j1 logger and default log level..."
-docker container logs ksqldb-server 2>/dev/null | grep -E "INFO V1: \d+, V2: \d+ \(com\.example\.FormulaUdfSimpleLog4jLogging)"
+playground container logs -c ksqldb-server --no-follow --grep "INFO V1: [0-9]*, V2: [0-9]* (com.example.FormulaUdfSimpleLog4jLogging)"
 
 log "Verify the UDF logs using KSQL SLF4J+Log4j1 logger and custom log level..."
-docker exec ksqldb-server cat /etc/ksqldb-server/log4j.properties | grep "FormulaUdfLog4jCustomLoggingLevel"
-docker container logs ksqldb-server 2>/dev/null | grep -E "DEBUG V1: \d+, V2: \d+ \(com\.example\.FormulaUdfLog4jCustomLoggingLevel\)"
+playground container exec -c ksqldb-server --command "grep FormulaUdfLog4jCustomLoggingLevel /etc/ksqldb-server/log4j.properties"
+playground container logs -c ksqldb-server --no-follow --grep "DEBUG V1: [0-9]*, V2: [0-9]* (com.example.FormulaUdfLog4jCustomLoggingLevel)"
 
 log "Verify the UDF logs using a custom SLF4J+Logback logger, custom log level and custom message format..."
-docker container logs ksqldb-server 2>/dev/null | grep -E "INFO  com\.example\.FormulaUdfCustomLogger - V1: \d+, V2: \d+"
+playground container logs -c ksqldb-server --no-follow --grep "INFO  com.example.FormulaUdfCustomLogger - V1: [0-9]*, V2: [0-9]*"

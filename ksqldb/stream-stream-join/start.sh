@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the Streams"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 CREATE STREAM orders (ID INT KEY, order_ts VARCHAR, total_amount DOUBLE, customer_name VARCHAR)
     WITH (KAFKA_TOPIC='_orders',
@@ -30,7 +30,7 @@ CREATE STREAM shipments (ID VARCHAR KEY, ship_ts VARCHAR, order_id INT, warehous
 EOF
 
 log "Insert the records"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 INSERT INTO orders (id, order_ts, total_amount, customer_name) VALUES (1, '2019-03-29T06:01:18Z', 133548.84, 'Ricardo Ferreira');
 INSERT INTO orders (id, order_ts, total_amount, customer_name) VALUES (2, '2019-03-29T17:02:20Z', 164839.31, 'Tim Berglund');
@@ -43,7 +43,7 @@ INSERT INTO shipments (id, ship_ts, order_id, warehouse) VALUES ('ship-kr47454',
 EOF
 
 log "The following query will do a left join between the ratings stream and the movies table on the movie id"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT o.id AS order_id,

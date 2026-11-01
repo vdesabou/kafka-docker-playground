@@ -34,7 +34,7 @@ log "Sleep 60 seconds to let ksql to start"
 sleep 60
 
 log "Create the input topic with a stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 CREATE STREAM SENSORS_RAW (id VARCHAR, timestamp VARCHAR, enabled BOOLEAN)
     WITH (KAFKA_TOPIC = 'SENSORS_RAW',
           VALUE_FORMAT = 'JSON',

@@ -117,7 +117,7 @@ docker exec -i rest-proxy curl -X POST -H "Content-Type: application/vnd.kafka.a
 #You would need to copy these JARs into share/java/kafka-rest-lib. The jars already exist in CP in share/java/kafka-serde-tools so you can copy them from there.
 
 log "Try to produce record with ksqlDB"
-docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM orders
@@ -127,7 +127,7 @@ CREATE STREAM orders
     VALUE_SCHEMA_ID=${rules_id}
   );
 EOF
-docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM TESTDATACONTRACTS
@@ -139,7 +139,7 @@ CREATE STREAM TESTDATACONTRACTS
 EOF
 sleep 5
 
-docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM orders EMIT CHANGES LIMIT 1;
@@ -148,7 +148,7 @@ SELECT * FROM TESTDATACONTRACTS EMIT CHANGES LIMIT 1;
 EOF
 
 # It's failing ask ksqlDb doesn't support yet Data Contract feature
-docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 INSERT INTO TESTDATACONTRACTS(`f1`) VALUES ('this is success');
 INSERT INTO orders2 (`orderId`, `customerId`, `totalPriceCents`, `state`, `timestamp`) VALUES (1, 3, 15, 'Pending', FROM_UNIXTIME(UNIX_TIMESTAMP()));
 EOF

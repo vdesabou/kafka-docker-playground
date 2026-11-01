@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 CREATE STREAM clicks (ip VARCHAR, url VARCHAR, timestamp VARCHAR)
 WITH (KAFKA_TOPIC='clicks',
@@ -22,7 +22,7 @@ WITH (KAFKA_TOPIC='clicks',
 EOF
 
 log "Insert records to the stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 INSERT INTO clicks (ip, timestamp, url) VALUES ('51.56.119.117',FORMAT_TIMESTAMP(FROM_UNIXTIME(UNIX_TIMESTAMP()),'yyyy-MM-dd''T''HH:mm:ssX'),'/etiam/justo/etiam/pretium/iaculis.xml');
 INSERT INTO clicks (ip, timestamp, url) VALUES ('51.56.119.117',FORMAT_TIMESTAMP(FROM_UNIXTIME(UNIX_TIMESTAMP() + (60 * 1000)),'yyyy-MM-dd''T''HH:mm:ssX'),'/nullam/orci/pede/venenatis.json');
 INSERT INTO clicks (ip, timestamp, url) VALUES ('53.170.33.192',FORMAT_TIMESTAMP(FROM_UNIXTIME(UNIX_TIMESTAMP() + (91 * 1000)),'yyyy-MM-dd''T''HH:mm:ssX'),'/mauris/morbi/non.jpg');
@@ -35,11 +35,10 @@ INSERT INTO clicks (ip, timestamp, url) VALUES ('53.170.33.192',FORMAT_TIMESTAMP
 
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
 log "Run a query to see how many ratings were given to each movie in tumbling, 6-hour intervals"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT
@@ -64,7 +63,7 @@ EOF
 
 log "We can create a table based on this session window aggregation"
 log "Configure ksqlDB to buffer the aggregates as it builds them. This makes the query feel like it responds more slowly, but it means that you get just one row per window"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SET 'ksql.streams.cache.max.bytes.buffering'='2000000';
 
@@ -94,7 +93,7 @@ EOF
 
 log "When ksqlDB builds aggregates, it emits the values as new messages are processed, meaning that you may see intermediate results on the screen too. When ksql.streams.cache.max.bytes.buffering was set above, this suppressed these"
 log "If you change the value to zero and re-run the above query you’ll see the intermediate emissions too:"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 SET 'ksql.streams.cache.max.bytes.buffering'='0';
 SELECT IP,
@@ -127,7 +126,7 @@ EOF
 # Query terminated
 
 log "Create a table based on this aggregation"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 CREATE TABLE IP_SESSIONS AS
 SELECT IP,
@@ -140,11 +139,10 @@ SELECT IP,
 GROUP BY IP;
 EOF
 
-# Wait for the stream to be initialized
-sleep 10
+playground ksqldb wait
 
 log "Print the topic"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 PRINT IP_SESSIONS FROM BEGINNING LIMIT 5;
 EOF
 

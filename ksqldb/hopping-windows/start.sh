@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 CREATE STREAM TEMPERATURE_READINGS (ID VARCHAR KEY, TIMESTAMP VARCHAR, READING BIGINT)
     WITH (KAFKA_TOPIC = 'TEMPERATURE_READINGS',
@@ -22,7 +22,7 @@ CREATE STREAM TEMPERATURE_READINGS (ID VARCHAR KEY, TIMESTAMP VARCHAR, READING B
 EOF
 
 log "Insert records to the stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 INSERT INTO TEMPERATURE_READINGS (ID, TIMESTAMP, READING) VALUES ('1', '2020-01-15 02:15:30', 55);
 INSERT INTO TEMPERATURE_READINGS (ID, TIMESTAMP, READING) VALUES ('1', '2020-01-15 02:20:30', 50);
 INSERT INTO TEMPERATURE_READINGS (ID, TIMESTAMP, READING) VALUES ('1', '2020-01-15 02:25:30', 45);
@@ -33,11 +33,10 @@ INSERT INTO TEMPERATURE_READINGS (ID, TIMESTAMP, READING) VALUES ('1', '2020-01-
 INSERT INTO TEMPERATURE_READINGS (ID, TIMESTAMP, READING) VALUES ('1', '2020-01-15 02:50:30', 60);
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
 log "Run a query to detect a temperature drop below 45°F for a period of 10 minutes"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql --query-timeout 30 << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT
@@ -65,7 +64,7 @@ EOF
 # Query terminated
 
 log "We can create a table based on this hopping window aggregation"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 CREATE TABLE TRIGGERED_ALERTS AS
     SELECT
         ID AS KEY,
@@ -94,11 +93,10 @@ CREATE STREAM ALERTS AS
 
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
 log "Create a table based on this aggregation"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql --query-timeout 30 << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT
     ID,

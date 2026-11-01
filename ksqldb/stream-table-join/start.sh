@@ -12,7 +12,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB table and the Stream"
 log "We have a table to represent the movie reference data and a stream to represent the ratings of those movies"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 CREATE TABLE movies (ID INT PRIMARY KEY, title VARCHAR, release_year INT)
     WITH (kafka_topic='movies', partitions=1, value_format='avro');
@@ -23,7 +23,7 @@ CREATE STREAM ratings (MOVIE_ID INT KEY, rating DOUBLE)
 EOF
 
 log "Insert the records"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 INSERT INTO movies (id, title, release_year) VALUES (294, 'Die Hard', 1998);
 INSERT INTO movies (id, title, release_year) VALUES (354, 'Tree of Life', 2011);
@@ -44,7 +44,7 @@ INSERT INTO ratings (movie_id, rating) VALUES (780, 2.1);
 EOF
 
 log "The following query will do a left join between the ratings stream and the movies table on the movie id"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT ratings.movie_id AS ID, title, release_year, rating
@@ -70,7 +70,7 @@ EOF
 # Limit Reached
 
 log "We create a new stream based on this stream-table join"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM rated_movies
@@ -81,9 +81,8 @@ CREATE STREAM rated_movies
     LEFT JOIN movies ON ratings.movie_id = movies.id;
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb wait
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM rated_movies;

@@ -3896,6 +3896,26 @@ function filter_flink_running() {
   fi
 }
 
+function filter_ksqldb_running() {
+  if ! get_ksqldb_url_and_security; then
+    logerror "ksqldb-server should be running to run this command: start an example with playground run --enable-ksqldb (the ksqldb/ examples enable it)"
+    return
+  fi
+  # right after start-environment, ksqldb-server can still be starting: wait for it, 120 seconds at most
+  local status="" i
+  for i in {1..120}; do
+    status=$(curl $ksqldb_security -s -f "${ksqldb_url}/info" 2>/dev/null | jq -r '.KsqlServerInfo.serverStatus // empty' 2>/dev/null)
+    if [[ "$status" == "RUNNING" ]]; then
+      return
+    fi
+    if [ $i -eq 5 ]; then
+      log "⏳ waiting for ksqldb-server to be ready ($ksqldb_url)" >&2
+    fi
+    sleep 1
+  done
+  logerror "ksqldb-server REST API $ksqldb_url is not ready after 120 seconds (server status: ${status:-no answer}): check playground container logs -c ksqldb-server --errors"
+}
+
 function filter_docker_running() {
   # doctor is precisely the command you run when the engine is down (and the switch
   # commands are how you leave an engine that is down), and a bare
@@ -8442,6 +8462,48 @@ function get_flink_rest_url () {
     return 1
   fi
   flink_rest_url="http://localhost:${mapped##*:}"
+}
+
+# ksqldb-server REST API seen from the host (published port of ksqldb-server:8088), and the credentials to use:
+# rbac-sasl-plain authenticates the REST clients (basic auth), as ksqlDBAdmin. Sets $ksqldb_url, $ksqldb_security
+# (curl arguments) and $ksqldb_cli_security (ksql cli arguments). Returns 1 when ksqldb-server is not running.
+function get_ksqldb_url_and_security () {
+  ksqldb_url=""
+  ksqldb_security=""
+  ksqldb_cli_security=""
+  local mapped
+  mapped=$(docker port ksqldb-server "8088/tcp" 2>/dev/null | head -1)
+  if [ -z "$mapped" ]
+  then
+    return 1
+  fi
+  ksqldb_url="http://localhost:${mapped##*:}"
+  get_environment_used
+  if [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+    ksqldb_security="-u ksqlDBAdmin:ksqlDBAdmin"
+    ksqldb_cli_security="--user ksqlDBAdmin --password ksqlDBAdmin"
+  fi
+}
+
+# runs the ksql statements $1 with the /ksql REST endpoint (not for SELECT / PRINT, use the cli for those) and prints
+# the JSON response. Returns 1 when the request fails, or when a statement fails (its error is in the response).
+function ksqldb_rest_statement () {
+  local statement="$1" body response
+  body=$(jq -n --arg ksql "$statement" '{ksql: $ksql, streamsProperties: {}}')
+  response=$(curl $ksqldb_security -s -X POST "${ksqldb_url}/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" -H "Content-Type: application/vnd.ksql.v1+json" \
+    -d "$body")
+  if [[ -z "$response" ]]
+  then
+    logerror "❌ no response from ksqlDB REST API $ksqldb_url" >&2
+    return 1
+  fi
+  printf '%s\n' "$response"
+  if echo "$response" | jq -e 'type == "object" and (."@type" // "" | test("error"))' > /dev/null 2>&1
+  then
+    return 1
+  fi
 }
 
 # client ids of the tasks of a self-managed connector, one per line: connector-consumer-<connector>-<task> for a sink,

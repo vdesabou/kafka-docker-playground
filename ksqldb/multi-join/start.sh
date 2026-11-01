@@ -11,7 +11,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the Stream and the Table"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 CREATE TABLE customers (customerid STRING PRIMARY KEY, customername STRING)
     WITH (KAFKA_TOPIC='customers',
@@ -31,7 +31,7 @@ CREATE STREAM orders (orderid STRING KEY, customerid STRING, itemid STRING, purc
 EOF
 
 log "Insert the records"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 
 INSERT INTO customers VALUES ('1', 'Adrian Garcia');
 INSERT INTO customers VALUES ('2', 'Robert Miller');
@@ -51,7 +51,7 @@ INSERT INTO orders VALUES ('xyz987', '2', '102', '2020-05-05');
 EOF
 
 log "Create a stream that produces orders enriched with data from the customers and items tables"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 CREATE STREAM orders_enriched AS
@@ -64,11 +64,10 @@ CREATE STREAM orders_enriched AS
 
 EOF
 
-# Wait for the stream to be initialized
-sleep 5
+playground ksqldb wait
 
 log "View the result by selecting the values from our new enriched orders stream"
-timeout 120 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 << EOF
+playground ksqldb sql << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM ORDERS_ENRICHED EMIT CHANGES LIMIT 6;
