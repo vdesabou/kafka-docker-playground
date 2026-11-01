@@ -8098,7 +8098,7 @@
         },
         {
           "name": "wait",
-          "description": "⏳ Wait until the persistent queries are RUNNING and have no lag\n\nWaits until every query writing to --source (or every persistent\nquery) is RUNNING and has committed all the records of its input\ntopics, so that its result is complete: use it instead of a sleep\nafter a CREATE ... AS SELECT and the records it reads.\n\nExits with code 1 when a query is in ERROR, or after --max-wait seconds.",
+          "description": "⏳ Wait until the persistent queries are RUNNING and have no lag\n\nWaits until every query writing to --source (or every persistent\nquery) is RUNNING and has committed all the records of its input\ntopics, so that its result is complete: use it instead of a sleep\nafter a CREATE ... AS SELECT and the records it reads.\n\nA query that has not committed any offset yet is done when its input\ntopics are empty, or when it is still without commit after 20 seconds\nRUNNING: it has nothing to process from where it started (a CREATE\nsent without SET 'auto.offset.reset' = 'earliest' reads from the end\nof its topics), and a warning says so.\n\nExits with code 1 when a query is in ERROR, or after --max-wait seconds.",
           "usage": "playground ksqldb wait [OPTIONS]",
           "options": [
             {

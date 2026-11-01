@@ -25,25 +25,6 @@ services:
       - broker
       - schema-registry
       - mysql
-    volumes:
-      - ../../confluent-hub:/usr/share/confluent-hub-components
-    environment:
-      # Configuration to embed Kafka Connect support.
-      # https://docs.ksqldb.io/en/latest/how-to-guides/use-connector-management/#configuring-ksqldb
-      KSQL_KSQL_CONNECT_URL: "http://localhost:8083"
-      # required for 5.5.x:
-      KSQL_CONNECT_REST_ADVERTISED_HOST_NAME: "ksqldb-server"
-      KSQL_CONNECT_GROUP_ID: "ksql-connect-cluster"
-      KSQL_CONNECT_BOOTSTRAP_SERVERS: "broker:9092"
-      KSQL_CONNECT_KEY_CONVERTER: "io.confluent.connect.avro.AvroConverter"
-      KSQL_CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
-      KSQL_CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      KSQL_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      KSQL_CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
-      KSQL_CONNECT_CONFIG_STORAGE_TOPIC: "ksql-connect-configs"
-      KSQL_CONNECT_OFFSET_STORAGE_TOPIC: "ksql-connect-offsets"
-      KSQL_CONNECT_STATUS_STORAGE_TOPIC: "ksql-connect-statuses"
-      KSQL_CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      KSQL_CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      KSQL_CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-      KSQL_CONNECT_PLUGIN_PATH: "/usr/share/confluent-hub-components"
+    # CREATE SOURCE CONNECTOR runs the connector on the connect container (KSQL_KSQL_CONNECT_URL of the environment,
+    # http://connect:8083), which has the Debezium MySQL plugin: the Connect worker embedded in ksqldb-server fails to
+    # start on CP 8 ("Failed to connect to and describe Kafka cluster") and takes ksqldb-server down with it

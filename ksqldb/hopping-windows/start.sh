@@ -65,6 +65,8 @@ EOF
 
 log "We can create a table based on this hopping window aggregation"
 playground ksqldb sql << EOF
+SET 'auto.offset.reset' = 'earliest';
+
 CREATE TABLE TRIGGERED_ALERTS AS
     SELECT
         ID AS KEY,

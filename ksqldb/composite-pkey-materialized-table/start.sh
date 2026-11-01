@@ -169,7 +169,7 @@ EOF
 # |007} |     |     |
 
 log "With ksqlDB, we can't query the record that the one of his composite field set as NULL. (i.e: product_id is null)"
-playground ksqldb sql << EOF
+playground ksqldb sql --ignore-errors << EOF
 SET 'auto.offset.reset' = 'earliest';
 SELECT * FROM TRANSACTIONS_MV2
 WHERE TRANSACTION = STRUCT(CUSTOMER_ID:='140', PRODUCT_ID:=null, TXN_ID:='500007');
@@ -246,7 +246,7 @@ EOF
 
 log "SELECT with a WHERE CLAUSE on a NULL field using -> and CAST(null AS STRING)"
 log "It will fail. CAST(null AS STRING) is not supported by ksqlDB "
-playground ksqldb sql << EOF
+playground ksqldb sql --ignore-errors << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS
@@ -262,7 +262,7 @@ EOF
 
 log "SELECT with a WHERE clause using STRUCT"
 log "NOT WORKING --> NO OUTPUT and hanging"
-playground ksqldb sql << EOF
+playground ksqldb sql --query-timeout 20 << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT * FROM TRANSACTIONS

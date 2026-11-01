@@ -81,7 +81,9 @@ playground ksqldb wait
 
 log "The join emit will have an array for RHS fields which you can then explode"
 log "Query the stream JOINSTR with EXPLODE()"
-playground ksqldb sql << EOF
+# a push query with EXPLODE and a LIMIT fails on ksqlDB 8.4 ("Can't find any functions with the name 'EXPLODE'"):
+# stop it after 15 seconds instead
+playground ksqldb sql --query-timeout 15 << EOF
 SET 'auto.offset.reset' = 'earliest';
 
 SELECT EXPLODE(R_IDS) R_ID, * FROM JOINSTR EMIT CHANGES;
