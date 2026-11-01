@@ -30,8 +30,15 @@ then
 
     if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
     then
-        playground container kill-all
-        log "🎓 to only stop the playground containers instead: playground config container-kill-all-before-run false"
+        if [[ "$environment" != cfk* ]] && [[ -z "$(docker ps -qa 2> /dev/null)" ]]
+        then
+            # nothing to kill: 'playground run' already killed everything before executing the example. Only remove the
+            # volumes, as kill-all does, without killing (and logging) a second time
+            docker volume prune -f > /dev/null 2>&1
+        else
+            playground container kill-all
+            log "🎓 to only stop the playground containers instead: playground config container-kill-all-before-run false"
+        fi
     else
         playground stop
     fi
