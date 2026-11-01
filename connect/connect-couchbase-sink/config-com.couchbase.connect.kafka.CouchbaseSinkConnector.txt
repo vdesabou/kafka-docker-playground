@@ -12,6 +12,15 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
 🔘 couchbase.bucket
 
 Name of the Couchbase bucket to use.
@@ -22,15 +31,6 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
-
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
 
 🔘 couchbase.bootstrap.timeout
 
@@ -68,25 +68,14 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 ==========================
 Security
 ==========================
-🔘 couchbase.client.certificate.password
+🔘 couchbase.trust.store.password
 
-Password for accessing the client certificate.
+Password for accessing the trust store.
 
-May be overridden with the KAFKA_COUCHBASE_CLIENT_CERTIFICATE_PASSWORD environment variable.
+May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.cipher.suites
-
-The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
-
-Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
-
-	 - Type: LIST
-	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -143,14 +132,25 @@ If you supply a value for this config property, the `couchbase.username` and `co
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.trust.store.password
+🔘 couchbase.client.certificate.password
 
-Password for accessing the trust store.
+Password for accessing the client certificate.
 
-May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
+May be overridden with the KAFKA_COUCHBASE_CLIENT_CERTIFICATE_PASSWORD environment variable.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.cipher.suites
+
+The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
+
+Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
+
+	 - Type: LIST
+	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -193,23 +193,6 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 ==========================
 Sink Behavior
 ==========================
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-If the bucket component contains a dot, escape it by enclosing it in backticks.
-
-If the bucket component is omitted, it defaults to the value of the `couchbase.bucket` property.
-
-*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
-
-* Override example: `couchbase.default.collection[widgets]=inventory.widgets`
-
-	 - Type: STRING
-	 - Default: _default._default
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.topic.to.collection
 
 A map from Kafka topic to Couchbase collection.
@@ -333,6 +316,23 @@ TIP: Try not to confuse this with the Kafka Connect framework's built-in `errors
 
 	 - Type: STRING
 	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+If the bucket component contains a dot, escape it by enclosing it in backticks.
+
+If the bucket component is omitted, it defaults to the value of the `couchbase.bucket` property.
+
+*This property supports contextual overrides.* The context is the name of the Kafka topic the record came from. Specify a context by enclosing it in square brackets and appending it to the property name. When there is no matching override, the value of the base property (without brackets) is used instead.
+
+* Override example: `couchbase.default.collection[widgets]=inventory.widgets`
+
+	 - Type: STRING
+	 - Default: _default._default
 	 - Importance: MEDIUM
 	 - Required: false
 
