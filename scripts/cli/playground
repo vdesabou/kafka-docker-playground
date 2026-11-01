@@ -45182,6 +45182,16 @@ EOF
       then
         log "   🔢 with another connector version:   playground run -f $test_file --connector-tag <version>"
       fi
+      if [ "$(playground state get flags.ENABLE_KSQLDB 2> /dev/null)" == "1" ]
+      then
+        log "   🧮 streams, tables and queries:      playground ksqldb list"
+        log "   🧮 run ksqlDB statements:            playground ksqldb sql <<< \"SHOW QUERIES;\""
+        log "   🔢 with another ksqlDB version:      playground run -f $test_file --ksqldb-tag <version>"
+      fi
+      if [ "$(playground state get flags.ENABLE_FLINK 2> /dev/null)" == "1" ]
+      then
+        log "   🐿️ Flink jobs:                       playground flink list-jobs"
+      fi
       log "   🔁 run it again:                     playground re-run"
     fi
     run_log_finish "$original_exit_status"
@@ -45315,12 +45325,27 @@ EOF
     logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED)"
     logerror "####################################################"
 
+    # hints that fit what the example ran: the connector type is recorded before the example runs, the ksqlDB / Flink
+    # flags by start-environment
+    failed_connector_type=$(playground state get run.connector_type 2> /dev/null)
+    log "🧑‍🚒 you can troubleshoot the issue by running:"
+    if [ "$failed_connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$failed_connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ] || [ "$failed_connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+    then
+      echo "playground connector diagnose          # status, error digest, lag and offsets of the connector(s)"
+    fi
     if [[ $test_file != *"fully-managed"* ]]
     then
-      log "🧑‍🚒 you can troubleshoot the issue by running:"
-      echo "playground container display-error-all"
-      log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
-      echo "playground container logs --open --container connect"
+      if [ "$(playground state get flags.ENABLE_KSQLDB 2> /dev/null)" == "1" ]
+      then
+        echo "playground ksqldb list                 # streams, tables and queries: a query in ERROR?"
+        echo "playground container logs -c ksqldb-server --errors"
+      fi
+      if [ "$(playground state get flags.ENABLE_FLINK 2> /dev/null)" == "1" ]
+      then
+        echo "playground flink list-jobs --state FAILED"
+      fi
+      echo "playground container display-error-all # errors of every container"
+      echo "playground container logs -c connect --errors   # error digest of one container (--open for the full logs)"
     fi
 
     # same example red in CI: show the CI failure to tell a local problem from a broken example

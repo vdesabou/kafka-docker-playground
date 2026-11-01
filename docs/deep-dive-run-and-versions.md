@@ -103,7 +103,10 @@ What the run prints, in order:
 then the connector versions (for Confluent plugins, the last 5 with their release notes, and the `connector-plugin changelog --from <yours>`
 command when yours is not the latest) and status, a hint when a newer patch of the Confluent Platform version you run is published,
 the links to the docs and the source code, and the 🧭 next steps (`connector diagnose`, `repro bootstrap` from this example,
-another `--connector-tag`, `re-run`). The Confluent Platform hint:
+another `--connector-tag`, `re-run`; with ksqlDB `ksqldb list`, `ksqldb sql`, another `--ksqldb-tag`; with Flink `flink list-jobs`).
+When the example fails, the 🧑‍🚒 hints also follow what it ran: `connector diagnose` for a connector, `ksqldb list` and the
+ksqldb-server error digest with ksqlDB, `flink list-jobs --state FAILED` with Flink, then `container display-error-all` and
+`container logs -c connect --errors`. The Confluent Platform hint:
 
 ```text
 📢 Confluent Platform 8.3.2 is published (you run 8.3.0): 185 change(s), 19 security related
