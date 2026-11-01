@@ -32,8 +32,12 @@ then
     fi
 elif [[ -n "$only_show_url" ]]
 then
-    # informational (playground status, run…): an example without documentation link (other/…) must not stop them
-    logwarn "no documentation link in README file $readme_file"
+    # informational (playground status, run…): an example without documentation link must not stop them. Only connector
+    # READMEs have a "Quickly test" link: warn for those only, the others (ksqldb/, other/, schema-registry/…) never had one
+    if [[ "$test_file" == */connect/* ]] || [[ "$test_file" == */ccloud/fm-* ]]
+    then
+      logwarn "no documentation link in README file $readme_file"
+    fi
 else
     logerror "Could not find documentation link in README file $readme_file"
     exit 1

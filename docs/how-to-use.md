@@ -444,6 +444,9 @@ Selecting options is really easy with [playground run](/playground%20run) menu:
 
 ![options](./images/options.jpg)
 
+> [!NOTE]
+> The `ENABLE_*` environment variables below (`ENABLE_KSQLDB=1`, `ENABLE_CONTROL_CENTER=1`…) are the same as the matching `--enable-*` option: when one is exported in your shell, [playground run](/playground%20run) prints `🌱 ENABLE_CONTROL_CENTER is set in your shell: same as --enable-control-center` and adds the option to the run, so that `playground history`, `playground re-run` and the run log replay it. Unset it (`unset ENABLE_CONTROL_CENTER`) to stop enabling the component on every run.
+
 ### 🚀 Enabling ksqlDB
 
 By default, `ksqldb-server` and `ksqldb-cli` containers (see [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml)) are not started for every test.
