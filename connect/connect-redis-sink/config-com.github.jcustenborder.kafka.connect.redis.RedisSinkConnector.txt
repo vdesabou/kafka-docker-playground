@@ -1,230 +1,176 @@
 ==========================
-redis.hosts
-==========================
-🔘 localhost:6379
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The Redis hosts to connect to.
-	 - Required: HIGH
 
 ==========================
-redis.client.mode
-==========================
-🔘 Standalone
+🔘 redis.hosts
 
+The Redis hosts to connect to.
 
+	 - Type: LIST
+	 - Default: localhost:6379
+	 - Importance: HIGH
+	 - Required: false
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client mode to use when interacting with the Redis cluster.
-	 - Required: MEDIUM
+🔘 redis.client.mode
 
-==========================
-redis.ssl.enabled
-==========================
-🔘 false
+The client mode to use when interacting with the Redis cluster.
 
+	 - Type: STRING
+	 - Default: Standalone
+	 - Importance: MEDIUM
+	 - Required: false
 
+🔘 redis.ssl.enabled
 
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Flag to determine if SSL is enabled.
-	 - Required: MEDIUM
+Flag to determine if SSL is enabled.
 
-==========================
-redis.password
-==========================
-🔘 [hidden]
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password used to connect to Redis.
-	 - Required: MEDIUM
-
-==========================
-redis.database
-==========================
-🔘 1
-
-
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: Redis database to connect to.
-	 - Required: MEDIUM
-
-==========================
-redis.auto.reconnect.enabled
-==========================
-🔘 true
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Flag to determine if the Redis client should automatically reconnect.
-	 - Required: LOW
-
-==========================
-redis.request.queue.size
-==========================
-🔘 2147483647
-
-
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The maximum number of queued requests to Redis.
-	 - Required: LOW
-
-==========================
-redis.socket.tcp.no.delay.enabled
-==========================
-🔘 true
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Flag to enable TCP no delay should be used.
-	 - Required: LOW
-
-==========================
-redis.socket.keep.alive.enabled
-==========================
-🔘 false
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Flag to enable a keepalive to Redis.
-	 - Required: LOW
-
-==========================
-redis.socket.connect.timeout.ms
-==========================
-🔘 10000
-
-
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The amount of time in milliseconds to wait before timing out a socket when connecting.
-	 - Required: LOW
-
-==========================
-redis.ssl.provider
-==========================
-🔘 JDK
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The SSL provider to use.
-	 - Required: LOW
-
-==========================
-redis.ssl.keystore.path
-==========================
-🔘 STRING
-
-
-
-	 - Type: MEDIUM
+	 - Type: BOOLEAN
 	 - Default: false
-	 - Importance: 
-	 - Required: The path to the SSL keystore.
+	 - Importance: MEDIUM
+	 - Required: false
 
-==========================
-redis.ssl.keystore.password
-==========================
-🔘 [hidden]
+🔘 redis.password
 
+Password used to connect to Redis.
 
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
 
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for the SSL keystore.
-	 - Required: MEDIUM
+🔘 redis.database
 
-==========================
-redis.ssl.truststore.path
-==========================
-🔘 STRING
+Redis database to connect to.
 
+	 - Type: INT
+	 - Default: 1
+	 - Importance: MEDIUM
+	 - Required: false
 
+🔘 redis.auto.reconnect.enabled
 
-	 - Type: MEDIUM
+Flag to determine if the Redis client should automatically reconnect.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 redis.request.queue.size
+
+The maximum number of queued requests to Redis.
+
+	 - Type: INT
+	 - Default: 2147483647
+	 - Importance: LOW
+	 - Required: false
+
+🔘 redis.socket.tcp.no.delay.enabled
+
+Flag to enable TCP no delay should be used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 redis.socket.keep.alive.enabled
+
+Flag to enable a keepalive to Redis.
+
+	 - Type: BOOLEAN
 	 - Default: false
-	 - Importance: 
-	 - Required: The path to the SSL truststore.
+	 - Importance: LOW
+	 - Required: false
 
-==========================
-redis.ssl.truststore.password
-==========================
-🔘 [hidden]
+🔘 redis.socket.connect.timeout.ms
 
+The amount of time in milliseconds to wait before timing out a socket when connecting.
 
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
 
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for the SSL truststore.
-	 - Required: MEDIUM
+🔘 redis.ssl.provider
 
-==========================
-redis.connection.attempts
-==========================
-🔘 3
+The SSL provider to use.
 
+	 - Type: STRING
+	 - Default: JDK
+	 - Importance: LOW
+	 - Required: false
 
+🔘 redis.ssl.keystore.path
 
-	 - Type: false
-	 - Default: INT
-	 - Importance: The number of attempt when connecting to redis.
-	 - Required: MEDIUM
+The path to the SSL keystore.
 
-==========================
-redis.connection.retry.delay.ms
-==========================
-🔘 2000
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
+🔘 redis.ssl.keystore.password
 
+The password for the SSL keystore.
 
-	 - Type: false
-	 - Default: INT
-	 - Importance: The amount of milliseconds to wait between redis connection attempts.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
 
-==========================
-redis.operation.timeout.ms
-==========================
-🔘 10000
+🔘 redis.ssl.truststore.path
 
+The path to the SSL truststore.
 
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The amount of time in milliseconds before an operation is marked as timed out.
-	 - Required: MEDIUM
+🔘 redis.ssl.truststore.password
 
-==========================
-redis.charset
-==========================
-🔘 UTF-8
+The password for the SSL truststore.
 
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
 
+🔘 redis.connection.attempts
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The character set to use for String key and values.
-	 - Required: LOW
+The number of attempt when connecting to redis.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.connection.retry.delay.ms
+
+The amount of milliseconds to wait between redis connection attempts.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.operation.timeout.ms
+
+The amount of time in milliseconds before an operation is marked as timed out.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redis.charset
+
+The character set to use for String key and values.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 null
@@ -264,4 +210,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 
