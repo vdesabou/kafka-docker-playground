@@ -759,8 +759,8 @@ jobs:
       - name: Cleanup resources
         run: |
           cd ./scripts/cli
-          ./playground cleanup-cloud-resources --force
-          ./playground cleanup-cloud-resources --force --user vsaboulin
+          ./playground cloud-resources cleanup --force
+          ./playground cloud-resources cleanup --force --user vsaboulin
         env:
           AZ_USER: ${{ vars.AZ_USER}}
           AZ_CLIENT_ID: ${{ vars.AZ_CLIENT_ID}}

@@ -546,7 +546,7 @@ function check_if_continue()
 
 function check_if_skip() {
 
-  # playground cleanup-cloud-resources --dry-run: show the command, run nothing
+  # playground cloud-resources cleanup --dry-run: show the command, run nothing
   if [[ -n "${dry_run:-}" ]]
   then
     log "🔎 dry-run, would run: $1"
@@ -604,7 +604,7 @@ function delete_topic()
 # "<kafka cluster id> <entry> <run id>" per line, where <entry> is a topic name,
 # "prefix:<topic prefix>" or "connector:<connector name>", and <run id> identifies the
 # 'playground run' that created it (empty for lines written before run ids existed).
-# 'playground cleanup-cloud-resources' uses it to delete only the user's topics when the cluster
+# 'playground cloud-resources cleanup' uses it to delete only the user's topics when the cluster
 # is shared with other people (topic names are generic, they can't be matched on the username),
 # and the end-of-run cleanup to delete only what the last run created.
 # Kept out of .ccloud, which 'playground cleanup-cloud-details' wipes.

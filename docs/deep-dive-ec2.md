@@ -44,7 +44,7 @@ free unless you opt in to create an instance (a few cents).
    stopped one still bills its volume (`--size`, 1000 GB by default). `create` / `open` / `start` add the instance to
    `ec2.running_list` in the `[ec2]` section of `playground.ini`, `stop` / `delete` remove it, and `playground status`
    and the end of every `playground run` print `🤑 you have an ec2 instance <name> running !` for each name in that
-   list. Nothing else (`cloud-resources aws list`, `cleanup-cloud-resources`) knows about these instances.
+   list. Nothing else (`cloud-resources aws list`, `cloud-resources cleanup`) knows about these instances.
 
 ---
 
@@ -209,7 +209,7 @@ Gotchas:
   run in unlimited CPU credit mode by default: a CPU-bound soak test adds a surcharge.
 - **The reminder is only as good as `playground.ini`**: an instance created from another laptop, or started from the
   AWS console, is not in it; one stopped or deleted from the console stays in it. `ec2 list` asks AWS, trust it.
-- **`cloud-resources aws list` and `cleanup-cloud-resources` don't cover EC2 instances**: they look for the Kinesis
+- **`cloud-resources aws list` and `cloud-resources cleanup` don't cover EC2 instances**: they look for the Kinesis
   streams, SQS queues, Lambda functions, Redshift clusters… that the examples create. Only `ec2 delete` removes an
   instance.
 - **`cloud-resources aws costs` / `costs-history` do show what it cost**: they report the spend of the resources tagged

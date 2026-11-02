@@ -28,7 +28,7 @@ Each `confluent` command is logged, ready to be copied, for example:
 💻 confluent kafka acl create --service-account sa-o2k1pno --operations create,write --allow --topic datagen_pageviews --environment env-519yzz --cluster lkc-ng7qn3
 ```
 
-The service account and its ACLs are deleted with the connector (`playground connector delete`, the cleanup at the end of the run, [playground cleanup-cloud-resources](/playground%20cleanup-cloud-resources)).
+The service account and its ACLs are deleted with the connector (`playground connector delete`, the cleanup at the end of the run, [playground cloud-resources cleanup](/playground%20cloud-resources%20cleanup)).
 
 | Option (run menu entry) | What it does |
 | --- | --- |
