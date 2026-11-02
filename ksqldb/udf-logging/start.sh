@@ -16,6 +16,9 @@ then
     build_java_component_with_retry "udf-custom-logger" docker run -i --rm -v "${DIR}/udf-custom-logger":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/../../scripts/settings.xml:/tmp/settings.xml" -v "${DIR}/udf-custom-logger/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml package
 fi
 
+# make sure ksqlDB is not disabled
+export ENABLE_KSQLDB=true
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
