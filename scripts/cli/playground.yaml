@@ -792,9 +792,10 @@ subcommands:
         start and end dates\n\nFor accuracy, Confluent recommends using a start_date
         that is at least 72 hours prior to the current date and time.\n\n\U0001F310
         Also writes a self-contained HTML report in --output-dir, opened in the browser
-        in an interactive terminal (--no-open to skip): cost per day, per product
-        and environment, the resources still billing, the top resources, the resources
-        of each product, the product x environment matrix and the cost per line type."
+        in an interactive terminal (--no-open to skip): cost per day (zoomable), per
+        product and environment, the resources still billing, the top resources, the
+        resources of each product, the product x environment matrix and the cost per
+        line type."
       usage: playground cloud-resources ccloud costs [OPTIONS]
       options:
       - names:
@@ -832,9 +833,10 @@ subcommands:
         default it will only display total cost in dollars. Use the --detailed flag
         to see more information.\n\n\U0001F310 Also writes a self-contained HTML report
         in --output-dir, opened in the browser in an interactive terminal (--no-open
-        to skip): cost per month and per day, per product, environment and line type,
-        the month x product matrix, the top resources with the ones still billing,
-        and the details of each month."
+        to skip): cost per month and per day (zoomable: drag over a range of days,
+        last 7 / 30 / 90 days), per product, environment and line type, the month
+        x product matrix, the top resources with the ones still billing, and the details
+        of each month."
       usage: playground cloud-resources ccloud costs-history [OPTIONS]
       options:
       - names:
@@ -4294,9 +4296,9 @@ subcommands:
       --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way
       to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed,
       2 when no GC event was found\n\n\U0001F310 Also writes a self-contained HTML
-      dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards,
-      recommendations; no external resource) in --output-dir, opened in the browser
-      in an interactive terminal\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\U0001F3AC
+      dashboard (pause timeline and heap before / after GC that zoom together, pause
+      distribution, KPI cards, recommendations; no external resource) in --output-dir,
+      opened in the browser in an interactive terminal\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%99%BB%EF%B8%8F-long-gc-pauses-or-a-memory-leak-analyze-gc-logs"
     usage: playground analyze gc-logs [OPTIONS]
     options:
@@ -5562,8 +5564,9 @@ subcommands:
       - "--html"
       argument: ''
       description: "\U0001F310 With --errors, also write a self-contained HTML report
-        of the digest in /tmp/playground-log-reports (known causes, timeline, root
-        causes, every distinct record), opened in the browser in an interactive terminal"
+        of the digest in /tmp/playground-log-reports (known causes, zoomable timeline,
+        root causes, every distinct record), opened in the browser in an interactive
+        terminal"
   - name: display-error-all
     description: "\U0001F525 Display all ERROR/FATAL logs in all containers/pods.
       Useful for quick troubleshooting\n\nThe first command to run when an example
@@ -5596,8 +5599,9 @@ subcommands:
       - "--html"
       argument: ''
       description: "\U0001F310 Also write a self-contained HTML report of all the
-        containers in /tmp/playground-log-reports (known causes, timeline, root causes,
-        every distinct record), opened in the browser in an interactive terminal"
+        containers in /tmp/playground-log-reports (known causes, zoomable timeline,
+        root causes, every distinct record), opened in the browser in an interactive
+        terminal"
   - name: ssh
     description: "\U0001F6EC SSH into container\n\nInteractive shell inside the container,
       as the user the component runs\nwith. Use 'playground container exec' instead

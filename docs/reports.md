@@ -12,6 +12,13 @@ report and click around: this is what you get on your own data.
 > Every `playground analyze` command accepts `--sample <name>` to run it on those samples, so you can see what it
 > reports before running it on real data. `playground analyze <command> --help` lists the samples.
 
+> [!TIP]
+> 🔍 The charts over time zoom: drag over a range to zoom on it, ◀ ▶ to move the window, double-click to zoom out.
+> Occurrences of the log analysis, arrivals in the dead letter queue and jscissors calls are counted again for the
+> zoomed range (a burst of a few seconds in a 3-day bundle shows per second). The GC pause and heap charts zoom together,
+> so do the per second charts of the network capture. In the cloud costs history, a click on a month shows its days
+> in the cost per day chart, which also has last 7 / 30 / 90 days buttons.
+
 <div class="report-gallery">
   <div class="report-card">
     <a href="reports/connector-diagnose.html" target="_blank" rel="noopener"><img src="images/reports/connector-diagnose.png" alt="🩺 Connector diagnose report" loading="lazy"></a>

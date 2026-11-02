@@ -150,11 +150,10 @@ def html_report(groups: List[dict], records: List[dict], summary: dict, topic: s
         ts = r.get("timestamp")
         if isinstance(ts, (int, float)) and ts > 0:
             points.append((datetime.fromtimestamp(ts / 1000), "records"))
-    tl = rh.time_bins(points, ("records",))
     bars = [(f"{g.get('stage') or '?'}: {short_class(g.get('exception')) or 'no headers'}", g["count"],
              f"{g['count']} record(s): {group_title(g)}") for g in groups[:10]]
     charts = rh.charts_grid([
-        ("📈 When they arrived in the DLQ (record timestamps)", rh.svg_time_columns(tl, [("records", "records", rh.SERIES_1)]) if tl else ""),
+        ("📈 When they arrived in the DLQ (record timestamps)", rh.time_chart(points, [("records", "records", rh.SERIES_1)], ms=True)),
         ("🔝 Groups (records)", rh.svg_hbars(bars)),
     ])
     body = [rh.verdict_html(*verdict(groups, summary, topic)), kpis, rh.findings_html(findings(groups, summary, grep, max_messages)),

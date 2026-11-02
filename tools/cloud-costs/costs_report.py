@@ -204,11 +204,13 @@ def ranked(d: Dict[str, float]) -> List[tuple]:
     return sorted(((k, v) for k, v in d.items() if round(v, 4) != 0), key=lambda kv: -kv[1])
 
 
-def svg_columns(points: List[tuple], highlight: Optional[int] = None) -> str:
-    """One column per point: (label, value, tooltip, has_data); value labels on the highest and the highlighted columns"""
+def svg_columns(points: List[tuple], highlight: Optional[int] = None, W: int = 600, H: int = 210,
+                links: Optional[List[tuple]] = None, link_target: str = "") -> str:
+    """One column per point: (label, value, tooltip, has_data); value labels on the highest and the highlighted columns.
+    links: (from, to) of each point: a click on its column zooms the zoomable chart of id link_target (rh.zoom_chart) on it."""
     if not points:
         return ""
-    W, H, L, B, T = 600, 210, 54, 26, 16
+    L, B, T = 54, 26, 16
     pw, ph = W - L - 10, H - B - T
     mx = rh.nice_max(max((p[1] for p in points), default=0))
     n = len(points)
@@ -229,19 +231,38 @@ def svg_columns(points: List[tuple], highlight: Optional[int] = None) -> str:
         h = max(1.5, ph * v / mx) if v > 0 else 0
         color = rh.SERIES_2 if i == highlight else rh.SERIES_1
         # hit target taller than the column, for the tooltip of the small ones
-        out.append(f'<g><rect x="{L + i * slot:.1f}" y="{T}" width="{slot:.1f}" height="{ph}" fill="transparent"/>'
+        link = (f' data-zoom-link="{e(link_target)}" data-zoom-from="{e(links[i][0])}" data-zoom-to="{e(links[i][1])}" style="cursor:pointer"'
+                if links and link_target else "")
+        out.append(f'<g{link}><rect x="{L + i * slot:.1f}" y="{T}" width="{slot:.1f}" height="{ph}" fill="transparent"/>'
                    f'<rect x="{x:.1f}" y="{T + ph - h:.1f}" width="{bw:.1f}" height="{h:.1f}" rx="2" fill="{color}"/>'
-                   f'<title>{e(tip)}: {money(v)}</title></g>')
+                   f'<title>{e(tip)}: {money(v)}{" (click to see its days)" if link else ""}</title></g>')
         if n <= 24 and (i == top or i == highlight) and v > 0:
             out.append(f'<text x="{x + bw / 2:.1f}" y="{T + ph - h - 4:.1f}" font-size="10" fill="#334155" '
                        f'text-anchor="middle">{e(money(v))}</text>')
-    step = max(1, n // 12)
+    step = max(1, n // (W // 50))
     for i in range(0, n, step):
         out.append(f'<text x="{L + i * slot + slot / 2:.1f}" y="{H - 8}" font-size="10" fill="#64748b" text-anchor="middle">'
                    f'{e(points[i][0])}</text>')
     out.append('<defs><pattern id="nodata" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
                '<line x1="0" y1="0" x2="0" y2="6" stroke="#94a3b8" stroke-width="2"/></pattern></defs></svg>')
     return "".join(out)
+
+
+# a click on a month of the cost per month chart zooms the cost per day chart on its days
+DAILY_CHART_ID = "cost-per-day"
+
+
+def svg_daily_zoomable(daily: Dict[str, float], days: List[str]) -> str:
+    """Cost per day, zoomable (rh.zoom_chart): drag over a range of days, last 7 / 30 / 90 days, ◀ ▶, double-click to zoom out.
+    Full width card, so a wider drawing: its text keeps the size of the other charts."""
+    if not days:
+        return ""
+    W, H = 1200, 260
+    static = svg_columns([(datetime.strptime(d, "%Y-%m-%d").strftime("%b %d"), daily.get(d, 0.0), d, True) for d in days], W=W, H=H)
+    chart = {"type": "columns", "xfmt": "day", "fmt": "money", "labels": True, "W": W, "H": H,
+             "series": [{"label": "cost", "color": rh.SERIES_1}],
+             "x": days, "values": [[round(daily.get(d, 0.0), 4)] for d in days]}
+    return rh.zoom_chart(chart, static, [(f"Last {k} days", k) for k in (7, 30, 90) if k < len(days)], wide=True, chart_id=DAILY_CHART_ID)
 
 
 def heat(v: float, mx: float) -> str:
@@ -602,15 +623,17 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
 
     # charts
     points = [(short_label(m), t, range_label(m), m["ok"]) for m, t in zip(months, month_totals)]
-    charts = [(f"📅 Cost per month <span class='muted'>(current period in orange)</span>", svg_columns(points, len(points) - 1)),
+    with_days = cloud == "ccloud" and bool(records)
+    charts = [(f"📅 Cost per month <span class='muted'>(current period in orange{', click a month to see its days' if with_days else ''})</span>",
+               svg_columns(points, len(points) - 1, links=[(m["start"], m["end"]) for m in months] if with_days else None,
+                           link_target=DAILY_CHART_ID)),
               (f"👛 Cost per {lab['category']} <span class='muted'>(last 12 months)</span>",
                rh.svg_hbars([(k, v, f"{k}: {money(v)}") for k, v in by_category[:15]], money))]
     if cloud == "ccloud" and records:
         daily = sum_by(records, "day")
         first = date.fromisoformat(min(daily))
         days = [(first + timedelta(days=i)).isoformat() for i in range((date.fromisoformat(max(daily)) - first).days + 1)]
-        charts.append(("📆 Cost per day", svg_columns(
-            [(datetime.strptime(d, "%Y-%m-%d").strftime("%b %d"), daily.get(d, 0.0), d, True) for d in days])))
+        charts.append(("📆 Cost per day", svg_daily_zoomable(daily, days)))
         charts.append(("🌍 Cost per environment", rh.svg_hbars(
             [(k or "(none)", v, f"{k}: {money(v)}") for k, v in ranked(sum_by(records, "group"))[:15]], money)))
     elif cloud == "azure" and records:
@@ -772,8 +795,7 @@ def build_range(user: str, period: dict) -> str:
 
     if records:
         body.append(rh.charts_grid([
-            ("📆 Cost per day", svg_columns(
-                [(datetime.strptime(d, "%Y-%m-%d").strftime("%b %d"), daily.get(d, 0.0), d, True) for d in days])),
+            ("📆 Cost per day", svg_daily_zoomable(daily, days)),
             (f"👛 Cost per {lab['category']}", rh.svg_hbars([(k, v, f"{k}: {money(v)}") for k, v in by_category[:15]], money)),
             ("🌍 Cost per environment", rh.svg_hbars([(k or "(none)", v, f"{k}: {money(v)}") for k, v in by_group[:15]], money)),
         ]))

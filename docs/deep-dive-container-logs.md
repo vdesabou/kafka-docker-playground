@@ -453,7 +453,7 @@ playground analyze logs --sample connect_task_failure|support_bundle
 - `xN` + first / last seen line tell "once at startup" from "every minute until now".
 - `--errors` and `analyze logs` exit 0: not assertions. `--wait-for-log` matches old lines too, every 10 s.
 - Offline: one digest per file, archives extracted, `.gz` read on the fly, binaries skipped.
-- Offline also writes an HTML report (known causes, timeline, root causes, every record, configuration) in `--output-dir`; `--json` for scripts.
+- Offline also writes an HTML report (known causes, timeline that zooms down to the second, root causes, every record, configuration) in `--output-dir`; `--json` for scripts.
   With several levels (`--include-warnings`), chips FATAL / ERROR / WARN above the root causes hide or show the records of a level;
   a Connector picker keeps the records of one connector (`[my-connector|task-0]` context of the line).
 - Sources: [`container/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/container/logs.sh),

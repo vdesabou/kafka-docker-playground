@@ -711,6 +711,18 @@ def svg_columns(timeline: List[dict], series: List[Tuple[str, str, str]], unit: 
     return "".join(out)
 
 
+def zoom_columns(timeline: List[dict], series: List[Tuple[str, str, str]], legend: str = "", group: str = "") -> str:
+    """svg_columns(), zoomable (drag over a range of seconds, double-click to zoom out); the charts of one group zoom together"""
+    if not timeline:
+        return svg_columns(timeline, series, "")
+    chart = {"type": "columns", "xfmt": "second", "fmt": "int", "W": 600, "H": 190, "L": 44,
+             "series": [{"label": l, "color": c} for _, l, c in series],
+             "x": [p["second"] for p in timeline], "values": [[p[k] for k, _, _ in series] for p in timeline]}
+    if group:
+        chart["group"] = group
+    return report_html.zoom_chart(chart, legend + svg_columns(timeline, series, ""))
+
+
 def svg_hbars(rows: List[Tuple[str, float, str]], fmt) -> str:
     if not rows:
         return "<p>ℹ️ No TCP conversation.</p>"
@@ -769,13 +781,15 @@ def html_report(res: dict, title: str) -> str:
                    f'{SEVERITY_ICONS.get(f["severity"], "")} {_e(f["severity"])}</span><span class="rec-text">{_e(f["text"])}</span></div>'
                    for f in res["findings"])
 
+    # with the resets and retransmissions chart, both per second charts zoom together
+    group = "per-second" if res["resets"] or res["retransmissions"] else ""
     charts = ["<div class='charts-grid'>",
-              f"<div class='chart-card'><h2>📈 Packets per second</h2>{svg_columns(res['timeline'], [('packets', 'packets', SERIES_1)], '')}</div>"]
+              f"<div class='chart-card'><h2>📈 Packets per second</h2>{zoom_columns(res['timeline'], [('packets', 'packets', SERIES_1)], group=group)}</div>"]
     if res["resets"] or res["retransmissions"]:
         legend = (f"<div class='legend'><i style='background:{SERIES_1}'></i>resets"
                   f"<i style='background:{SERIES_2}'></i>retransmissions</div>")
-        charts.append(f"<div class='chart-card'><h2>⚠️ Resets and retransmissions per second</h2>{legend}"
-                      + svg_columns(res["timeline"], [("resets", "resets", SERIES_1), ("retransmissions", "retransmissions", SERIES_2)], "")
+        charts.append(f"<div class='chart-card'><h2>⚠️ Resets and retransmissions per second</h2>"
+                      + zoom_columns(res["timeline"], [("resets", "resets", SERIES_1), ("retransmissions", "retransmissions", SERIES_2)], legend, group)
                       + "</div>")
     conv_rows = [(f"{x['client']} → {x['server']}", x["bytes"], f"{x['frames']} frames, {fmt_bytes(x['bytes'])}, {x['status']}")
                  for x in res["conversations"][:12]]

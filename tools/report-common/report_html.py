@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Look shared by the HTML reports of the playground commands (same as analyze thread-dump / gc-logs / tcp-dump):
-header, verdict banner, tiles, findings with severity badges, tables, SVG charts, light / dark theme with a
-"Toggle theme" button. Self-contained: no external resource.
+header, verdict banner, tiles, findings with severity badges, tables, SVG charts, charts over time that zoom
+(zoom_chart(), time_chart(), drawn by zoom_chart.js), light / dark theme with a "Toggle theme" button. Self-contained:
+no external resource.
 
 Imported, after adding this folder to sys.path, by:
   - the newer reports, which use page() and every helper: tools/log-analyzer/log_report.py,
@@ -17,6 +18,8 @@ The benchmark, flight recorder and SMT test reports have their own layout (chart
 own "Toggle theme" button, with the same blue header and the same light / dark palette (slate) as these.
 """
 
+import json
+import os
 import re
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
@@ -220,10 +223,34 @@ def log_html(text) -> str:
     return "\n".join(out)
 
 
+# zoomable charts (zoom_chart(), time_chart()): toolbar above the chart, drawn again by zoom_chart.js for the visible window
+ZOOM_CSS = """
+.chart-card:has(.zoom-chart.wide){grid-column:1/-1}
+.zoom-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 8px;font-size:.78rem}
+.zoom-bar button{font:inherit;font-size:.74rem;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:1px 9px;cursor:pointer}
+.zoom-bar button:hover{border-color:#2a78d6;color:#2a78d6}
+.zoom-bar button.on{background:#2a78d6;border-color:#2a78d6;color:#fff}
+.zoom-bar button:disabled{opacity:.4;cursor:default}
+.zoom-bar button:disabled:hover{border-color:#cbd5e1;color:#475569}
+.zoom-info{margin-left:auto;color:#64748b}
+.zoom-chart svg{cursor:crosshair;user-select:none;-webkit-user-select:none}
+.zoom-hint{font-size:.72rem;color:#94a3b8;margin-top:2px}
+""" + dark("""
+.zoom-bar button,.zoom-bar button:disabled:hover{color:#cbd5e1;background:#1e293b;border-color:#334155}
+.zoom-bar button.on{background:#2a78d6;border-color:#2a78d6;color:#fff}
+.zoom-info{color:#94a3b8}
+.zoom-hint{color:#64748b}
+""")
+
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "zoom_chart.js"), encoding="utf-8") as _f:
+    ZOOM_SCRIPT = "<script>" + _f.read() + "</script>"
+
+
 def style(extra: str = "") -> str:
     """<style> element: the shared look, then the rules of one report (they win over the shared ones), then the dark theme
-    (a report adds its own dark rules to extra with dark()); followed by the script of the "Toggle theme" button"""
-    return f"<style>{BASE_CSS}{LOG_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}"
+    (a report adds its own dark rules to extra with dark()); followed by the scripts of the "Toggle theme" button and of
+    the zoomable charts"""
+    return f"<style>{BASE_CSS}{LOG_CSS}{ZOOM_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}{ZOOM_SCRIPT}"
 
 
 HTML_CSS = style(NEWER_REPORTS_CSS)
@@ -397,6 +424,42 @@ def svg_time_columns(tl: dict, series: Sequence[Tuple[str, str, str]], note: str
     out.append("</svg>")
     legend = "".join(f"<i style='background:{c}'></i>{e(l)}" for _, l, c in series)
     return f"<div class='legend'>{legend} · per {fmt_bucket(tl['bucket'])}{e(note)}</div>" + "".join(out)
+
+
+def zoom_chart(chart: dict, fallback: str, presets: Sequence[Tuple[str, float]] = (), wide: bool = False, chart_id: str = "") -> str:
+    """A chart that zooms (drag over a range, ◀ ▶, presets, double-click to zoom out), drawn by zoom_chart.js from chart
+    (its header documents the keys); fallback: the static chart, shown without JavaScript. presets: (label, span) buttons
+    for the last span of the x axis (days of a columns chart). wide: the chart card takes the whole width of the grid.
+    chart_id: id of the chart, for the elements of another chart that zoom it on a click (data-zoom-link="<chart_id>",
+    data-zoom-from, data-zoom-to: x values, the end excluded; ISO days for a columns chart of days).
+    The page needs style() (in page() and the reports that call style())."""
+    buttons = ("<button type='button' data-zoom='prev' title='Previous window'>◀</button>"
+               "<button type='button' data-zoom='next' title='Next window'>▶</button>"
+               + "".join(f"<button type='button' data-zoom='preset' data-span='{span}'>{e(label)}</button>" for label, span in presets)
+               + "<button type='button' data-zoom='all'>All</button>")
+    hint = "🔍 Drag over the chart to zoom on a range, double-click to zoom out" + (
+        ": the charts next to it follow." if chart.get("group") else ".")
+    return (f"<div class='zoom-chart{' wide' if wide else ''}'{f' id={chr(39)}{e(chart_id)}{chr(39)}' if chart_id else ''} data-chart='{e(json.dumps(chart, separators=(',', ':')))}'>"
+            f"<div class='zoom-bar' hidden>{buttons}<span class='zoom-info'></span></div>"
+            f"<div class='zoom-svg'>{fallback}</div><div class='zoom-hint' hidden>{e(hint)}</div></div>")
+
+
+def time_chart(points: List[Tuple[datetime, str]], series: Sequence[Tuple[str, str, str]], note: str = "",
+               ms: bool = False, max_points: int = 100000) -> str:
+    """Occurrences over time, zoomable: time_bins() + svg_time_columns() without JavaScript, counted again per bucket of the
+    visible window by zoom_chart.js (zooming on a burst shows it per minute, then per second). series: (key, label, color);
+    the series without any point are left out; ms: the times have milliseconds (zoom down to 1 ms buckets). "" without points."""
+    tl = time_bins(points, [k for k, _, _ in series])
+    if not tl:
+        return ""
+    times: Dict[str, List[int]] = {k: [] for k, _, _ in series}
+    for ts, key in points:
+        times[key].append(round(ts.timestamp(), 3) if ms else int(ts.timestamp()))
+    shown = [s for s in series if times[s[0]]] or list(series[:1])
+    data = [sorted(times[k])[:max_points] for k, _, _ in shown]
+    chart = {"type": "events", "series": [{"label": l, "color": c} for _, l, c in shown], "times": data, "W": 600, "H": 190,
+             "L": 44, "note": note, "ms": ms}
+    return zoom_chart(chart, svg_time_columns(tl, series, note))
 
 
 def svg_hbars(rows: Sequence[Tuple[str, float, str]], fmt: Optional[Callable[[float], str]] = None) -> str:
