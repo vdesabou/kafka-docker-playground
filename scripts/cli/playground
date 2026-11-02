@@ -8764,7 +8764,7 @@ playground_tools_install_vscode_extension_usage() {
 playground_tools_install_alfred_workflow_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools install-alfred-workflow\n\n"
-    printf "  🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5\n  with the Powerpack)\n  \n  A launcher for the playground CLI: type 'kdp' in Alfred, or select text\n  anywhere and use the Universal Action \"kdp: support case, example, config\n  key…\":\n  \n    kdp find <words>            find-example: ↩ copies 'playground run -f …'\n    kdp history [words]         replay a past run with its exact flags\n    kdp plugin <p> [version]    connector-plugin info, changelog, source code,\n  jars, CVEs\n    kdp key <key> [class]       connector-plugin config-key\n    kdp docs [words]            deep dive pages\n    kdp status                  status, connector status / diagnose, connect\n  errors\n    kdp repro / notes / case    reproduction models, notes, support cases (when\n  present)\n  \n  On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\n  it in the terminal set in Alfred (for an example, that stops the running\n  environment), ⌥ and ⇧ depend on the mode.\n  \n  By default, builds the workflow from scripts/alfred-workflow/ and opens it\n  in Alfred, which asks to import it: run the command again after a pull to\n  update it. With --link, the folder is symlinked into your Alfred\n  preferences instead, so changes to the source are live (to work on it).\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%8e%%a9-alfred-workflow-macos\n\n"
+    printf "  🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5\n  with the Powerpack)\n  \n  A launcher for the playground CLI: type 'kdp' in Alfred, or select text\n  anywhere and use the Universal Action \"kdp: support case, example, config\n  key…\":\n  \n    kdp find <words>            find-example: ↩ copies 'playground run -f …'\n    kdp history [words]         replay a past run with its exact flags\n    kdp plugin <p> [version]    connector-plugin info, changelog, source code,\n  jars, CVEs\n    kdp key <key> [class]       connector-plugin config-key\n    kdp docs [words]            deep dive pages\n    kdp status                  status, connector status / diagnose, connect\n  errors\n    kdp repro / notes / case    reproduction models, notes, support cases (when\n  present)\n  \n  On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\n  it in the terminal (for an example, that stops the running environment),\n  ⌥ and ⇧ depend on the mode.\n  \n  Read-only commands (plugin, key, status) show their output in the Alfred\n  window, streamed while they run. \"Show output\" and \"Run in the terminal\"\n  are workflow settings: the output can go to the terminal instead, and the\n  terminal is the one set in Alfred (default), a new VS Code integrated\n  terminal, Terminal.app, or copy only.\n  \n  By default, builds the workflow from scripts/alfred-workflow/ and opens it\n  in Alfred, which asks to import it: run the command again after a pull to\n  update it. With --link, the folder is symlinked into your Alfred\n  preferences instead, to work on it: Alfred does not watch the folder\n  behind the link, so run the command again after an edit (it reloads the\n  workflow in Alfred).\n  Alfred then writes its settings to scripts/alfred-workflow/prefs.plist\n  (ignored by git) and may rewrite info.plist when you edit the workflow in\n  Alfred Preferences: check git diff before committing.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%8e%%a9-alfred-workflow-macos\n\n"
   else
     printf "playground tools install-alfred-workflow - 🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n\n"
   fi
@@ -55345,7 +55345,14 @@ playground_tools_install_alfred_workflow_command() {
       done
       ln -sfn "$source_dir" "$target"
       log "🔗 $target -> $source_dir"
-      log "👏 kdp workflow $version linked: changes to $source_dir are live (open Alfred Preferences > Workflows once if kdp does not show up)"
+      # Alfred does not watch the folder behind a symlink: reload it now (run the command again after editing the workflow)
+      if osascript -e "tell application id \"com.runningwithcrayons.Alfred\" to reload workflow \"$bundle_id\"" > /dev/null 2>&1
+      then
+          log "🔄 workflow reloaded in Alfred"
+      else
+          logwarn "⚠️ could not reload the workflow in Alfred: open Alfred Preferences > Workflows and click it"
+      fi
+      log "👏 kdp workflow $version linked to $source_dir: run this command again after editing it, Alfred does not see changes behind the link"
       exit 0
   fi
 

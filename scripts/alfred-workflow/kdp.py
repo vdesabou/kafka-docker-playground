@@ -32,10 +32,15 @@ Workflow configuration (environment variables set by Alfred):
   kdp_root    kafka-docker-playground folder (default: the clone this file is in, when linked)
   ticket_url  support ticket URL, {} is replaced by the number (empty: no ticket link)
   notes_dir   notes folder (default <kdp_root>/claude-notes)
+  show_output where read-only commands (status, plugin, key…) show their output: alfred (a Text View,
+              default) or terminal
+  terminal    where "run in the terminal" goes: alfred (Alfred Preferences > Features > Terminal),
+              vscode (a new VS Code integrated terminal), terminal_app (Terminal.app) or copy
 
 Python 3.9 compatible (macOS system python).
 """
 import glob
+import hashlib
 import json
 import os
 import re
@@ -60,6 +65,8 @@ CLI = os.path.join(ROOT, "scripts", "cli", "playground")
 NOTES_DIR = os.path.expanduser(os.environ.get("notes_dir") or os.path.join(ROOT, "claude-notes"))
 REPRO_DIR = os.path.join(ROOT, "reproduction-models")
 TICKET_URL = (os.environ.get("ticket_url") or "").strip()
+TERMINAL = (os.environ.get("terminal") or "alfred").strip()
+SHOW_OUTPUT = (os.environ.get("show_output") or "alfred").strip()
 DOCS_DIR = os.path.join(ROOT, "docs")
 CACHE_DIR = os.environ.get("alfred_workflow_cache") or os.path.expanduser(
     "~/Library/Caches/com.vdesabou.kdp-alfred"
@@ -167,10 +174,24 @@ def ago(ts):
     return time.strftime("%Y-%m-%d", time.localtime(ts))
 
 
+def routed(action):
+    """'terminal' goes to Alfred's Terminal Command, unless the terminal setting picks another target."""
+    return "run_in_terminal" if action == "terminal" and TERMINAL != "alfred" else action
+
+
+def action_vars(action, arg, title):
+    """Variables of an item or modifier. 'output' = a read-only command: Text View or terminal."""
+    if action == "output":
+        if SHOW_OUTPUT == "alfred":
+            return {"action": "view", "view_title": title}
+        action = "terminal"
+    return {"action": routed(action)}
+
+
 def mod(subtitle, action=None, arg=None):
     if action is None or arg is None:
         return {"valid": False, "subtitle": subtitle}
-    return {"valid": True, "subtitle": subtitle, "arg": arg, "variables": {"action": action}}
+    return {"valid": True, "subtitle": subtitle, "arg": arg, "variables": action_vars(action, arg, subtitle)}
 
 
 def item(title, subtitle="", action=None, arg=None, autocomplete=None, mods=None, icon=None,
@@ -178,8 +199,11 @@ def item(title, subtitle="", action=None, arg=None, autocomplete=None, mods=None
     it = {"title": title, "subtitle": subtitle}
     if action and arg is not None:
         it["arg"] = arg
-        it["variables"] = {"action": action}
+        it["variables"] = action_vars(action, arg, title)
         it["valid"] = True if valid is None else valid
+        if action == "output" and SHOW_OUTPUT == "alfred":
+            mods = dict(mods or {})
+            mods.setdefault("ctrl", mod("⌃ run in the terminal instead", "terminal", arg))
     else:
         it["valid"] = False
     if autocomplete is not None:
@@ -293,7 +317,7 @@ def repro_item(m):
         "copy", run,
         mods=script_mods(
             script, run,
-            alt=mod("⌥ hand-off report in the terminal (repro export --report-only)", "terminal",
+            alt=mod("⌥ hand-off report (repro export --report-only)", "output",
                     in_root("playground repro export -f {} --report-only".format(q(script)))),
             shift=mod("⇧ open ticket " + case, "open", ticket_url(case)) if ticket_url(case)
             else mod("⇧ no case number on this model" if not case else "⇧ set ticket_url to open ticket " + case),
@@ -404,7 +428,7 @@ def mode_history(rest):
 def parse_note(path):
     title, resume = None, None
     try:
-        with open(path, errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             head = f.read(4096)
             f.seek(0, os.SEEK_END)
             size = f.tell()
@@ -514,16 +538,16 @@ def mode_plugin(rest):
 
     items = [
         item("ℹ️ Info: license, latest version, examples, fully managed equivalents" + (", how far is " + v if v else ""),
-             "connector-plugin info", "terminal", cmd("info", "--from " + q(v) if v else "")),
-        item("📜 Changelog since " + v, "connector-plugin changelog --from " + v, "terminal", cmd("changelog", "--from " + q(v)))
+             "connector-plugin info", "output", cmd("info", "--from " + q(v) if v else "")),
+        item("📜 Changelog since " + v, "connector-plugin changelog --from " + v, "output", cmd("changelog", "--from " + q(v)))
         if v else info("📜 Changelog", need_v, autocomplete="plugin {} ".format(p)),
-        item("💻 Source code URL" + (" at " + v if v else ""), "connector-plugin sourcecode --only-show-url", "terminal",
+        item("💻 Source code URL" + (" at " + v if v else ""), "connector-plugin sourcecode --only-show-url", "output",
              cmd("sourcecode", ("--connector-tag " + q(v) + " " if v else "") + "--only-show-url")),
-        item("📦 Dependencies (jars) of " + v, "connector-plugin dependencies --connector-tag " + v, "terminal",
+        item("📦 Dependencies (jars) of " + v, "connector-plugin dependencies --connector-tag " + v, "output",
              cmd("dependencies", "--connector-tag " + q(v))) if v else info("📦 Dependencies (jars)", need_v, autocomplete="plugin {} ".format(p)),
-        item("🛡️ CVE scan of " + v, "connector-plugin cve-scan --connector-tag " + v + " (grype in Docker)", "terminal",
+        item("🛡️ CVE scan of " + v, "connector-plugin cve-scan --connector-tag " + v + " (grype in Docker)", "output",
              cmd("cve-scan", "--connector-tag " + q(v))) if v else info("🛡️ CVE scan", need_v, autocomplete="plugin {} ".format(p)),
-        item("☁️ Fully managed versions (cc-connect images)", "connector-plugin fm-versions --last 20 (Confluent employees: VPN + GH_TOKEN)", "terminal",
+        item("☁️ Fully managed versions (cc-connect images)", "connector-plugin fm-versions --last 20 (Confluent employees: VPN + GH_TOKEN)", "output",
              cmd("fm-versions", "--last 20")),
     ]
     if "/" in p:
@@ -540,10 +564,10 @@ def mode_key(rest):
     cls = w[1] if len(w) > 1 else None
     extra = " --connector-class " + q(cls) if cls else ""
     items = [item("🔑 " + k + (" in " + cls if cls else ""), "connector-plugin config-key: doc, default, values used in examples",
-                  "terminal", in_root("playground connector-plugin config-key -k {}{}".format(q(k), extra)))]
+                  "output", in_root("playground connector-plugin config-key -k {}{}".format(q(k), extra)))]
     if cls:
         items.append(item("📅 Since which version does " + k + " exist?", "config-key --since-version (downloads plugin versions)",
-                          "terminal", in_root("playground connector-plugin config-key -k {}{} --since-version".format(q(k), extra))))
+                          "output", in_root("playground connector-plugin config-key -k {}{} --since-version".format(q(k), extra))))
     else:
         items.append(info("📅 Since which version?", "add a connector class: kdp key {} <class>".format(k), autocomplete="key {} ".format(k)))
     return {"items": items}
@@ -583,7 +607,7 @@ def mode_status(rest):
         ("🔥 Connect errors", "container logs -c connect --errors", "playground container logs -c connect --errors"),
         ("🏥 Broker health", "under-replicated / offline partitions, quorum", "playground broker health"),
     ]
-    return {"items": [item(t, s, "terminal", in_root(c), copy=c) for t, s, c in rows if words_match(rest.split(), t, c)]}
+    return {"items": [item(t, s, "output", in_root(c), copy=c) for t, s, c in rows if words_match(rest.split(), t, c)]}
 
 
 MODES = {
@@ -608,6 +632,198 @@ def script_filter(query):
 
 # --------------------------------------------------------------------------- actions
 
+# VS Code has no command line or URL to run something in its integrated terminal: open a *new* one from the
+# command palette (never type into an existing one, it may run a process such as a Claude Code session),
+# paste the command and press return. Needs Accessibility for Alfred (System Events keystrokes).
+VSCODE_SCRIPT = """
+on run argv
+    tell application id "com.microsoft.VSCode" to activate
+    delay 0.6
+    tell application "System Events"
+        keystroke "p" using {command down, shift down}
+        delay 0.5
+        keystroke "Terminal: Create New Terminal"
+        delay 0.7
+        key code 36
+        delay 1.5
+        keystroke "v" using command down
+        delay 0.3
+        key code 36
+    end tell
+end run
+"""
+
+TERMINAL_APP_SCRIPT = """
+on run argv
+    tell application "Terminal"
+        activate
+        do script (item 1 of argv)
+    end tell
+end run
+"""
+
+
+ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)|\x1b[()][0-9A-B]")
+VIEW_MAX_LINES = 3000
+
+
+def display_cmd(cmd):
+    prefix = "cd {} && ".format(q(ROOT))
+    return cmd[len(prefix):] if cmd.startswith(prefix) else cmd
+
+
+VIEW_DIR = os.path.join(CACHE_DIR, "view")
+VIEW_CURRENT = os.path.join(VIEW_DIR, "current")
+VIEW_TRIGGER = "view_output"
+BUNDLE_ID = os.environ.get("alfred_workflow_bundleid") or "com.vdesabou.kdp-alfred"
+RUN_TRIGGER_SCRIPT = """
+on run argv
+    tell application id "com.runningwithcrayons.Alfred" to run trigger (item 1 of argv) in workflow (item 2 of argv) with argument (item 3 of argv)
+end run
+"""
+
+
+def job_file(job, name, default=""):
+    try:
+        with open(os.path.join(job, name), encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return default
+
+
+def start_view_job(cmd, title):
+    """Run a read-only command in the background, its output going to <cache>/view/<key>/output.log."""
+    os.makedirs(VIEW_DIR, exist_ok=True)
+    # drop the jobs of previous days
+    for old in glob.glob(os.path.join(VIEW_DIR, "*")):
+        if os.path.isdir(old) and time.time() - os.path.getmtime(old) > 86400:
+            subprocess.run(["rm", "-rf", old])
+    key = hashlib.sha1((cmd + "\0" + repr(time.time())).encode()).hexdigest()[:16]
+    job = os.path.join(VIEW_DIR, key)
+    os.makedirs(job)
+    for name, value in (("cmd", cmd), ("title", title), ("start", repr(time.time()))):
+        with open(os.path.join(job, name), "w", encoding="utf-8") as f:
+            f.write(value)
+    subprocess.Popen(
+        ["/bin/bash", "-c", 'eval "$1" > "$2" 2>&1 < /dev/null; echo $? > "$3"', "kdp-view", cmd,
+         os.path.join(job, "output.log"), os.path.join(job, "exit")],
+        cwd=ROOT, env=env(), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    with open(VIEW_CURRENT, "w") as f:
+        f.write(key)
+    return key
+
+
+def view_key(arg=None):
+    """The job given by the Text View argument, else the last one started."""
+    k = (arg or "").strip()
+    if not re.fullmatch(r"[0-9a-f]{16}", k):
+        k = job_file(VIEW_DIR, "current")
+    return k if k and os.path.isdir(os.path.join(VIEW_DIR, k)) else None
+
+
+def clean_output(path):
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            text = f.read()
+    except OSError:
+        return ""
+    text = ANSI.sub("", text)
+    # progress bars: keep what a terminal would show after each carriage return
+    text = "\n".join(line.split("\r")[-1] for line in text.split("\n"))
+    return text
+
+
+def open_view(cmd, title):
+    """Action of a read-only item: start the job, then open the Text View through the workflow's external trigger.
+
+    A Text View reached directly from the script filter result never shows (Alfred closes its window when an
+    item is actioned): Alfred's own workflows open their views with run trigger, so does this one.
+    """
+    key = start_view_job(cmd, title)
+    rc, err = osascript(RUN_TRIGGER_SCRIPT, VIEW_TRIGGER, BUNDLE_ID, key)
+    if rc != 0:
+        return "⚠️ could not open the output view ({}): ⌃↩ runs it in the terminal".format(short(err, 80))
+    return ""
+
+
+def view(arg=None):
+    """Script of the Text View: the output of the job so far, rerun every 0.5 s until the command exits."""
+    key = view_key(arg)
+    if not key:
+        return {"response": "Nothing to show."}
+    job = os.path.join(VIEW_DIR, key)
+    cmd, title = job_file(job, "cmd"), job_file(job, "title", "kdp")
+    try:
+        elapsed = int(time.time() - float(job_file(job, "start", "0")))
+    except ValueError:
+        elapsed = 0
+    done = os.path.exists(os.path.join(job, "exit"))
+    code = job_file(job, "exit")
+    out = clean_output(os.path.join(job, "output.log")).rstrip()
+    lines = out.split("\n")
+    if len(lines) > VIEW_MAX_LINES:
+        out = "✂️ {} first lines not shown (⌘↩ copies everything)\n".format(len(lines) - VIEW_MAX_LINES) + "\n".join(lines[-VIEW_MAX_LINES:])
+    fence = "```"
+    while fence in out:
+        fence += "`"
+    body = "{f}text\n{o}\n{f}".format(f=fence, o=out) if out else ("_no output_" if done else "⏳ running…")
+    response = "**{}**\n\n`{}`\n\n{}".format(title, display_cmd(cmd), body)
+    if not done:
+        status = "⏳ running {}s".format(elapsed)
+    elif code == "0":
+        status = "✅ done in {}s".format(elapsed)
+    else:
+        status = "❌ exit {} after {}s".format(code, elapsed)
+    result = {
+        "response": response,
+        "footer": status + " · ⌘↩ copy output · ⌥↩ copy command · ⎋ close",
+        "behaviour": {"response": "replace", "scroll": "auto" if done else "end"},
+    }
+    if not done:
+        result["rerun"] = 0.5
+    return result
+
+
+def view_copy(what):
+    key = view_key()
+    job = os.path.join(VIEW_DIR, key) if key else ""
+    if what == "command":
+        text = display_cmd(job_file(job, "cmd")) if job else ""
+    else:
+        text = (clean_output(os.path.join(job, "output.log")).rstrip() + "\n") if job else ""
+    subprocess.run(["pbcopy"], input=text, text=True)
+    return "📋 Copied the {} ({} lines)".format(what, text.count("\n") + 1) if what == "output" else "📋 Copied: " + short(text, 100)
+
+
+def osascript(script, *argv):
+    p = subprocess.run(["osascript", "-e", script] + list(argv), capture_output=True, text=True)
+    return p.returncode, p.stderr.strip()
+
+
+def run_in_terminal(cmd):
+    if TERMINAL == "terminal_app":
+        rc, err = osascript(TERMINAL_APP_SCRIPT, cmd)
+        if rc == 0:
+            return ""
+        subprocess.run(["pbcopy"], input=cmd, text=True)
+        return "⚠️ Terminal.app: {} · command copied to the clipboard".format(short(err, 80))
+    if TERMINAL == "vscode":
+        previous = subprocess.run(["pbpaste"], capture_output=True, text=True).stdout
+        subprocess.run(["pbcopy"], input=cmd, text=True)
+        rc, err = osascript(VSCODE_SCRIPT)
+        if rc != 0:
+            # the command stays in the clipboard, to paste by hand
+            hint = " · allow Alfred in System Settings > Privacy & Security > Accessibility" if "1002" in err or "ssistive" in err or "not allowed" in err else ""
+            return "⚠️ VS Code: {}{} · command copied to the clipboard".format(short(err, 80), hint)
+        time.sleep(0.5)
+        subprocess.run(["pbcopy"], input=previous, text=True)
+        return ""
+    subprocess.run(["pbcopy"], input=cmd, text=True)
+    return "📋 Copied, paste it in your terminal: " + short(cmd, 100)
+
+
 
 def action(arg):
     act = os.environ.get("action", "")
@@ -627,6 +843,10 @@ def action(arg):
     if act == "code":
         subprocess.run(["code", arg], env=env())
         return ""
+    if act == "view":
+        return open_view(arg, os.environ.get("view_title") or "kdp")
+    if act == "run_in_terminal":
+        return run_in_terminal(arg)
     if act == "refresh_repros":
         try:
             os.remove(REPRO_CACHE + ".lock")
@@ -638,6 +858,18 @@ def action(arg):
 
 
 def main():
+    # Alfred runs scripts without LANG: never fall back to ascii
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except AttributeError:
+            pass
+    if len(sys.argv) > 1 and sys.argv[1] == "--view":
+        sys.stdout.write(json.dumps(view(sys.argv[2] if len(sys.argv) > 2 else None)))
+        return
+    if len(sys.argv) > 2 and sys.argv[1] == "--view-copy":
+        sys.stdout.write(view_copy(sys.argv[2]))
+        return
     if len(sys.argv) > 2 and sys.argv[1] == "--action":
         msg = action(sys.argv[2])
         if msg:

@@ -60,7 +60,7 @@ On macOS, the [Alfred](https://www.alfredapp.com/) workflow puts the most common
 
 ```bash
 playground tools install-alfred-workflow          # builds it and opens it in Alfred, which asks to import it
-playground tools install-alfred-workflow --link   # symlinks scripts/alfred-workflow/ instead, to work on it
+playground tools install-alfred-workflow --link   # symlinks scripts/alfred-workflow/ instead, to work on it (run it again after an edit: it reloads the workflow)
 ```
 
 Run it again after a `git pull` to update the workflow. Then type `kdp` in Alfred, or select text anywhere and use the Universal Action **kdp: support case, example, config key…**:
@@ -77,9 +77,21 @@ Run it again after a `git pull` to update the workflow. Then type `kdp` in Alfre
 | `kdp notes [words]` | a notes folder, and the Claude Code session that wrote a note (when the folder exists) |
 | `kdp case <number>` | ticket link, notes and repro models of a support case (`ticket_url` setting) |
 
-On a result, ↩ copies the command (or opens the page), ⌘ opens the script in VS Code, ⌃ runs the command in the terminal set in Alfred (for an example, that stops the environment that is running), and ⌥ / ⇧ depend on the mode: hold the key to see what it does. Commands that take a few seconds (`plugin`, `key`) run in the terminal rather than in Alfred.
+On a result, ↩ copies the command (or opens the page), ⌘ opens the script in VS Code, ⌃ runs the command in the terminal (for an example, that stops the environment that is running), and ⌥ / ⇧ depend on the mode: hold the key to see what it does. Read-only commands (`plugin`, `key`, `status`, the repro hand-off report) show their output in the Alfred window, streamed while they run, with ✅ or ❌ and the exit code at the end (⌘↩ copies the output, ⌥↩ the command, ⌃ on the result runs it in the terminal instead). Interactive ones (`playground run`, `claude`) always go to the terminal.
 
-The workflow settings (Alfred Preferences > Workflows > kafka-docker-playground (kdp) > Configure Workflow) are `kdp_root` (your clone, set by the install), `ticket_url` (for example `https://example.zendesk.com/agent/tickets/{}`) and `notes_dir`.
+The workflow settings (Alfred Preferences > Workflows > kafka-docker-playground (kdp) > Configure Workflow) are:
+
+| Setting | What |
+| --- | --- |
+| `kdp_root` | your clone, set by the install |
+| Show output (`show_output`) | where read-only commands show their output: the Alfred window (default, needs Alfred 5.5 or later) or the terminal |
+| Run in the terminal (`terminal`) | where terminal commands go: the terminal set in Alfred Preferences > Features > Terminal (default), **VS Code** (a new integrated terminal in the front window: the command is pasted there, so Alfred needs Accessibility in System Settings > Privacy & Security), **Terminal.app**, or **copy only** |
+| `ticket_url` | for `kdp case`, for example `https://example.zendesk.com/agent/tickets/{}` |
+| `notes_dir` | for `kdp notes` and `kdp case` |
+
+> If a terminal item does nothing with the default setting, the application set in Alfred Preferences > Features > Terminal is probably not installed (a custom iTerm script left behind, for example): pick another one there, or another **Run in the terminal** value.
+
+With `--link`, Alfred writes your settings to `scripts/alfred-workflow/prefs.plist` (ignored by git), and may rewrite `info.plist` when you edit the workflow in Alfred Preferences: check `git diff` before committing.
 
 ### 🤖 Using the CLI from AI agents
 

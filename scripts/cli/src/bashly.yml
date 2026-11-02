@@ -5827,13 +5827,24 @@ commands:
         kdp repro / notes / case    reproduction models, notes, support cases (when present)
 
       On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs
-      it in the terminal set in Alfred (for an example, that stops the running
-      environment), ⌥ and ⇧ depend on the mode.
+      it in the terminal (for an example, that stops the running environment),
+      ⌥ and ⇧ depend on the mode.
+
+      Read-only commands (plugin, key, status) show their output in the Alfred
+      window, streamed while they run. "Show output" and "Run in the terminal"
+      are workflow settings: the output can go to the terminal instead, and the
+      terminal is the one set in Alfred (default), a new VS Code integrated
+      terminal, Terminal.app, or copy only.
 
       By default, builds the workflow from scripts/alfred-workflow/ and opens it
       in Alfred, which asks to import it: run the command again after a pull to
       update it. With --link, the folder is symlinked into your Alfred
-      preferences instead, so changes to the source are live (to work on it).
+      preferences instead, to work on it: Alfred does not watch the folder
+      behind the link, so run the command again after an edit (it reloads the
+      workflow in Alfred).
+      Alfred then writes its settings to scripts/alfred-workflow/prefs.plist
+      (ignored by git) and may rewrite info.plist when you edit the workflow in
+      Alfred Preferences: check git diff before committing.
 
       👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos
     flags:
