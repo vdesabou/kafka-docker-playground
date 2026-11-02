@@ -7,7 +7,7 @@ Quickly test the [Solace Sink](https://docs.confluent.io/kafka-connectors/solace
 ## Prerequisites
 
 * With CP 8.x, connector version 2.1.16 or later.
-* The Solace JMS client `sol-jms-10.6.4.jar` is downloaded from Maven Central on the first run and copied into the connector `lib` folder.
+* The Solace JMS client `sol-jms-10.19.0.jar` is downloaded from Maven Central on the first run and copied into the connector `lib` folder. Set `SOLACE_JMS_VERSION` to test another client version (connector versions that don't bundle commons-lang 2.6 need 10.13.0 or later).
 
 ## How to run
 
