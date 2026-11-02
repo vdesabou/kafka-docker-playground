@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.vdesabou.kdp-alfred</string>
+	<key>category</key>
+	<string>Productivity</string>
+	<key>connections</key>
+	<dict>
+		<key>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>62519360-28FD-4015-9605-9AB1EC720C80</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>C4DBD50D-D5EF-48E1-83EF-F543DC9794D6</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>8763BFCA-C67F-4381-A571-36D71A4D8AC7</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>6A5317AA-09CC-408D-8100-6EA088FCD2B4</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</string>
+				<key>modifiers</key>
+				<integer>131072</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</string>
+				<key>modifiers</key>
+				<integer>262144</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>8763BFCA-C67F-4381-A571-36D71A4D8AC7</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>59B57580-CB26-4AB9-9474-499182F2BACB</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>CF0EFFE1-671A-4F0B-B42F-4E692AEC94A7</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6A5317AA-09CC-408D-8100-6EA088FCD2B4</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>kafka-docker-playground</string>
+	<key>description</key>
+	<string>Find examples, repro models, runs, cases, notes, plugin info and docs of kafka-docker-playground</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>kafka-docker-playground (kdp)</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>kdp</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>1</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>⏳ asking playground…</string>
+				<key>script</key>
+				<string>PATH=/opt/homebrew/bin:/usr/local/bin:$PATH python3 kdp.py "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>find · repro · history · case · notes · plugin · key · docs · status</string>
+				<key>title</key>
+				<string>kafka-docker-playground</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>6A5317AA-09CC-408D-8100-6EA088FCD2B4</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>acceptsfiles</key>
+				<false/>
+				<key>acceptsmulti</key>
+				<integer>0</integer>
+				<key>acceptstext</key>
+				<true/>
+				<key>acceptsurls</key>
+				<false/>
+				<key>name</key>
+				<string>kdp: support case, example, config key…</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.universalaction</string>
+			<key>uid</key>
+			<string>CF0EFFE1-671A-4F0B-B42F-4E692AEC94A7</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>conditions</key>
+				<array>
+					<dict>
+						<key>inputstring</key>
+						<string>{var:action}</string>
+						<key>matchcasesensitive</key>
+						<true/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
+						<string>terminal</string>
+						<key>outputlabel</key>
+						<string>terminal</string>
+						<key>uid</key>
+						<string>C4DBD50D-D5EF-48E1-83EF-F543DC9794D6</string>
+					</dict>
+				</array>
+				<key>elselabel</key>
+				<string>copy / open / code</string>
+				<key>hideelse</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.conditional</string>
+			<key>uid</key>
+			<string>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.terminalcommand</string>
+			<key>uid</key>
+			<string>62519360-28FD-4015-9605-9AB1EC720C80</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>PATH=/opt/homebrew/bin:/usr/local/bin:$PATH python3 kdp.py --action "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>8763BFCA-C67F-4381-A571-36D71A4D8AC7</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<true/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>kdp</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>59B57580-CB26-4AB9-9474-499182F2BACB</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string># kafka-docker-playground (kdp)
+
+Keyword **kdp**, or the Universal Action **kdp: support case, example, config key…** on selected text.
+
+| Query | What |
+| --- | --- |
+| `kdp find &lt;words&gt;` | `playground find-example`: examples (and repro models) |
+| `kdp history [words]` | `playground history`: replay a run |
+| `kdp plugin &lt;plugin&gt; [version]` | connector-plugin info / changelog / sourcecode / dependencies / cve-scan |
+| `kdp key &lt;key&gt; [class]` | connector-plugin config-key (`--since-version` with a class) |
+| `kdp docs [words]` | deep dive and toolkit pages on kafka-docker-playground.io |
+| `kdp status` | playground status, connector status / diagnose, connect errors, broker health |
+| `kdp repro [words]` | reproduction models, mine first (only when `reproduction-models/` has models) |
+| `kdp notes [words]` | notes folder, resume the Claude Code session that wrote a note (only when the folder exists) |
+| `kdp case &lt;number&gt;` (or `kdp &lt;number&gt;`) | ticket link (`ticket_url`), notes and repro models of the case |
+
+Keys: ↩ copy the command (or open), ⌘ VS Code, ⌃ run in the terminal, ⌥ / ⇧ depend on the mode (hold the key to see the subtitle).
+⌃ on an example runs `playground run`, which stops the environment that is running.
+
+Commands sent to the terminal use the application set in Alfred Preferences &gt; Features &gt; Terminal.
+
+Installed by `playground tools install-alfred-workflow` (source in scripts/alfred-workflow/ of kafka-docker-playground).
+</string>
+	<key>uidata</key>
+	<dict>
+		<key>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</key>
+		<dict>
+			<key>xpos</key>
+			<integer>260</integer>
+			<key>ypos</key>
+			<integer>80</integer>
+		</dict>
+		<key>59B57580-CB26-4AB9-9474-499182F2BACB</key>
+		<dict>
+			<key>xpos</key>
+			<integer>600</integer>
+			<key>ypos</key>
+			<integer>160</integer>
+		</dict>
+		<key>62519360-28FD-4015-9605-9AB1EC720C80</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>2</integer>
+			<key>note</key>
+			<string>runs in the terminal set in Alfred &gt; Features &gt; Terminal</string>
+			<key>xpos</key>
+			<integer>420</integer>
+			<key>ypos</key>
+			<integer>20</integer>
+		</dict>
+		<key>6A5317AA-09CC-408D-8100-6EA088FCD2B4</key>
+		<dict>
+			<key>xpos</key>
+			<integer>30</integer>
+			<key>ypos</key>
+			<integer>60</integer>
+		</dict>
+		<key>8763BFCA-C67F-4381-A571-36D71A4D8AC7</key>
+		<dict>
+			<key>note</key>
+			<string>copy / copyfile / open / reveal / code / refresh_repros</string>
+			<key>xpos</key>
+			<integer>420</integer>
+			<key>ypos</key>
+			<integer>160</integer>
+		</dict>
+		<key>CF0EFFE1-671A-4F0B-B42F-4E692AEC94A7</key>
+		<dict>
+			<key>note</key>
+			<string>Universal Action: selected text (a case number, a key, words)</string>
+			<key>xpos</key>
+			<integer>30</integer>
+			<key>ypos</key>
+			<integer>230</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>~/Documents/github/kafka-docker-playground</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Path of your clone (~ allowed). Set by playground tools install-alfred-workflow</string>
+			<key>label</key>
+			<string>kafka-docker-playground folder</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>kdp_root</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>https://example.zendesk.com/agent/tickets/{}</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Optional, for kdp case: {} is replaced by the ticket number</string>
+			<key>label</key>
+			<string>Support ticket URL</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>ticket_url</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>~/Documents/github/kafka-docker-playground/claude-notes</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Optional, for kdp notes and kdp case (default: &lt;kafka-docker-playground folder&gt;/claude-notes)</string>
+			<key>label</key>
+			<string>Notes folder</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>notes_dir</string>
+		</dict>
+	</array>
+	<key>version</key>
+	<string>1.0.0</string>
+	<key>webaddress</key>
+	<string>https://kafka-docker-playground.io/#/cli?id=%F0%9F%8E%A9-alfred-workflow-macos</string>
+</dict>
+</plist>

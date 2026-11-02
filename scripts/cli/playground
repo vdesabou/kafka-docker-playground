@@ -211,6 +211,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Tools commands:")"
   printf "  %s   🧰 Tools commands\n" "$(green "tools")                                     "
   printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "tools install-vscode-extension")            "
+  printf "  %s   🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n" "$(green "tools install-alfred-workflow")             "
   printf "  %s   🔖 Read provided avro file\n" "$(green "tools read-avro-file")                      "
   printf "  %s   🔖 Read provided parquet file\n" "$(green "tools read-parquet-file")                   "
   printf "  %s   🔐 Generate keys and certificates used for SSL\n" "$(green "tools certs-create")                        "
@@ -8695,7 +8696,7 @@ playground_tcp_proxy_open_ui_usage() {
 playground_tools_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools\n\n"
-    printf "  🧰 Tools commands\n  \n  Small utilities that are handy around the playground but are not tied to a\n  running environment:\n  \n    read-avro-file        dump an avro file as readable json\n    read-parquet-file     same, for parquet\n    certs-create          generate a keystore and truststore for a component\n    redos-check           check a topics.regex for catastrophic backtracking\n    install-vscode-extension   playground completion inside VS Code\n  \n  🎓 Tip: the file readers are what you use to check what a sink connector\n  really wrote, after pulling the file out with 'playground container cp'.\n\n"
+    printf "  🧰 Tools commands\n  \n  Small utilities that are handy around the playground but are not tied to a\n  running environment:\n  \n    read-avro-file        dump an avro file as readable json\n    read-parquet-file     same, for parquet\n    certs-create          generate a keystore and truststore for a component\n    redos-check           check a topics.regex for catastrophic backtracking\n    install-vscode-extension   playground completion inside VS Code\n    install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n  \n  🎓 Tip: the file readers are what you use to check what a sink connector\n  really wrote, after pulling the file out with 'playground container cp'.\n\n"
   else
     printf "playground tools - 🧰 Tools commands\n\n"
   fi
@@ -8707,6 +8708,7 @@ playground_tools_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n" "$(green "install-vscode-extension")"
+  printf "  %s   🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n" "$(green "install-alfred-workflow") "
   printf "  %s   🔖 Read provided avro file\n" "$(green "read-avro-file")          "
   printf "  %s   🔖 Read provided parquet file\n" "$(green "read-parquet-file")       "
   printf "  %s   🔐 Generate keys and certificates used for SSL\n" "$(green "certs-create")            "
@@ -8753,6 +8755,45 @@ playground_tools_install_vscode_extension_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground tools install-vscode-extension\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_install_alfred_workflow_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools install-alfred-workflow\n\n"
+    printf "  🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5\n  with the Powerpack)\n  \n  A launcher for the playground CLI: type 'kdp' in Alfred, or select text\n  anywhere and use the Universal Action \"kdp: support case, example, config\n  key…\":\n  \n    kdp find <words>            find-example: ↩ copies 'playground run -f …'\n    kdp history [words]         replay a past run with its exact flags\n    kdp plugin <p> [version]    connector-plugin info, changelog, source code,\n  jars, CVEs\n    kdp key <key> [class]       connector-plugin config-key\n    kdp docs [words]            deep dive pages\n    kdp status                  status, connector status / diagnose, connect\n  errors\n    kdp repro / notes / case    reproduction models, notes, support cases (when\n  present)\n  \n  On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\n  it in the terminal set in Alfred (for an example, that stops the running\n  environment), ⌥ and ⇧ depend on the mode.\n  \n  By default, builds the workflow from scripts/alfred-workflow/ and opens it\n  in Alfred, which asks to import it: run the command again after a pull to\n  update it. With --link, the folder is symlinked into your Alfred\n  preferences instead, so changes to the source are live (to work on it).\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%8e%%a9-alfred-workflow-macos\n\n"
+  else
+    printf "playground tools install-alfred-workflow - 🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools install-alfred-workflow [OPTIONS]\n"
+  printf "  playground tools install-alfred-workflow --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--link")"
+    printf "    🔗 Symlink scripts/alfred-workflow/ into the Alfred preferences instead of\n    importing a copy\n    \n    Changes to the source are live, for development. Replaces an existing\n    symlink, never a workflow folder.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground tools install-alfred-workflow\n"
+    printf "  playground tools install-alfred-workflow --link\n"
     echo
 
   fi
@@ -55244,6 +55285,99 @@ playground_tools_install_vscode_extension_command() {
 }
 
 # :command.function
+playground_tools_install_alfred_workflow_command() {
+
+  # src/commands/tools/install-alfred-workflow.sh
+  link="${args[--link]}"
+
+  if [[ "$(uname -s)" != "Darwin" ]]
+  then
+      logerror "❌ Alfred is only available on macOS"
+      exit 1
+  fi
+
+  source_dir="$root_folder/scripts/alfred-workflow"
+  if [ ! -f "$source_dir/info.plist" ] || [ ! -f "$source_dir/kdp.py" ]
+  then
+      logerror "❌ $source_dir does not contain the workflow (info.plist, kdp.py)"
+      exit 1
+  fi
+
+  if [ ! -d "/Applications/Alfred 5.app" ]
+  then
+      logwarn "🎩 Alfred 5 is not in /Applications: get it from https://www.alfredapp.com (workflows need the Powerpack)"
+  fi
+
+  bundle_id=$(plutil -extract bundleid raw "$source_dir/info.plist")
+  version=$(plutil -extract version raw "$source_dir/info.plist")
+
+  if [[ -n "$link" ]]
+  then
+      # Alfred preferences: the sync folder when one is set (Alfred Preferences > Advanced), else the default one
+      prefs_dir="$HOME/Library/Application Support/Alfred/Alfred.alfredpreferences"
+      sync_folder=$(defaults read com.runningwithcrayons.Alfred-Preferences syncfolder 2>/dev/null)
+      if [ -n "$sync_folder" ]
+      then
+          prefs_dir="${sync_folder/#\~/$HOME}/Alfred.alfredpreferences"
+      fi
+      workflows_dir="$prefs_dir/workflows"
+      if [ ! -d "$workflows_dir" ]
+      then
+          logerror "❌ Alfred workflows folder $workflows_dir not found: open Alfred Preferences once, or install without --link"
+          exit 1
+      fi
+      target="$workflows_dir/kafka-docker-playground-kdp"
+      if [ -e "$target" ] && [ ! -L "$target" ]
+      then
+          logerror "❌ $target exists and is not a symlink: delete that workflow in Alfred Preferences first"
+          exit 1
+      fi
+      # an imported copy with the same bundle id would clash with the link
+      for plist in "$workflows_dir"/*/info.plist
+      do
+          [ -f "$plist" ] || continue
+          dir=$(dirname "$plist")
+          [ "$dir" = "$target" ] && continue
+          if [ "$(plutil -extract bundleid raw "$plist" 2>/dev/null)" = "$bundle_id" ]
+          then
+              logwarn "⚠️ $dir is another copy of this workflow ($bundle_id): delete it in Alfred Preferences > Workflows"
+          fi
+      done
+      ln -sfn "$source_dir" "$target"
+      log "🔗 $target -> $source_dir"
+      log "👏 kdp workflow $version linked: changes to $source_dir are live (open Alfred Preferences > Workflows once if kdp does not show up)"
+      exit 0
+  fi
+
+  # kept after the command returns: Alfred reads the file once its import dialog is confirmed
+  out_dir="${TMPDIR:-/tmp}"
+  out_dir="${out_dir%/}/kdp-alfred-workflow"
+  rm -rf "$out_dir"
+  mkdir -p "$out_dir/build"
+  # -L: copy the icon, which is a symlink to docs/assets
+  cp -RL "$source_dir/." "$out_dir/build/"
+  rm -rf "$out_dir/build/__pycache__"
+  # the imported copy lives in the Alfred preferences: point it to this clone
+  plutil -replace userconfigurationconfig.0.config.default -string "$root_folder" "$out_dir/build/info.plist"
+
+  bundle="$out_dir/kdp.alfred5workflow"
+  if ! (cd "$out_dir/build" && zip -q -r "$bundle" . -x '.*' -x '__pycache__/*')
+  then
+      logerror "❌ failed to build $bundle"
+      exit 1
+  fi
+
+  log "🎩 Opening $bundle in Alfred: confirm the import (kafka-docker-playground folder: $root_folder)"
+  if ! open "$bundle"
+  then
+      logerror "❌ could not open $bundle: double-click it in the Finder"
+      exit 1
+  fi
+  log "👏 type 'kdp' in Alfred once imported. Run this command again after a git pull to update the workflow ($version)"
+
+}
+
+# :command.function
 playground_tools_read_avro_file_command() {
 
   # src/commands/tools/read-avro-file.sh
@@ -101433,6 +101567,13 @@ playground_tools_parse_requirements() {
       shift $#
       ;;
 
+    install-alfred-workflow)
+      action="install-alfred-workflow"
+      shift
+      playground_tools_install_alfred_workflow_parse_requirements "$@"
+      shift $#
+      ;;
+
     read-avro-file)
       action="read-avro-file"
       shift
@@ -101589,6 +101730,97 @@ playground_tools_install_vscode_extension_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_tools_install_alfred_workflow_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_install_alfred_workflow_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v zip >/dev/null 2>&1; then
+    printf "missing dependency: zip\n" >&2
+    printf "%s\n\n" "install it with your package manager (brew install zip)" >&2
+    missing_deps=1
+  else
+    deps['zip']="$(command -v zip | head -n1)"
+  fi
+
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "install it with 'xcode-select --install' or 'brew install python'" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="tools install-alfred-workflow"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --link)
+
+        # :flag.case_no_arg
+        args['--link']=1
+        shift
+        ;;
 
       --)
         shift
@@ -140786,6 +141018,11 @@ playground_tools_completion() {
         playground_tools_install_vscode_extension_completion "$completion_current" "$@"
         return
         ;;
+      install-alfred-workflow)
+        shift
+        playground_tools_install_alfred_workflow_completion "$completion_current" "$@"
+        return
+        ;;
       read-avro-file)
         shift
         playground_tools_read_avro_file_completion "$completion_current" "$@"
@@ -140815,7 +141052,7 @@ playground_tools_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" install-vscode-extension read-avro-file read-parquet-file certs-create redos-check
+  completion_candidates "$completion_current" install-vscode-extension install-alfred-workflow read-avro-file read-parquet-file certs-create redos-check
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -140842,6 +141079,35 @@ playground_tools_install_vscode_extension_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_install_alfred_workflow_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --link)
+        completion_blocked_flags["--link"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --link "$completion_current" --link
   fi
 
 }
@@ -156407,6 +156673,7 @@ run() {
     "tcp-proxy open-ui") playground_tcp_proxy_open_ui_command ;;
     "tools") playground_tools_command ;;
     "tools install-vscode-extension") playground_tools_install_vscode_extension_command ;;
+    "tools install-alfred-workflow") playground_tools_install_alfred_workflow_command ;;
     "tools read-avro-file") playground_tools_read_avro_file_command ;;
     "tools read-parquet-file") playground_tools_read_parquet_file_command ;;
     "tools certs-create") playground_tools_certs_create_command ;;

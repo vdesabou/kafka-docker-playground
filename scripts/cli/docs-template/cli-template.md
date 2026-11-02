@@ -54,6 +54,33 @@ Once installed, go on a `.sh` script and then type  in Palette `Ctrl+Shift+P` (o
 
 ![extension](./images/vscode_extension2.jpg)
 
+### 🎩 Alfred workflow (macOS)
+
+On macOS, the [Alfred](https://www.alfredapp.com/) workflow puts the most common lookups one keystroke away, without opening a terminal first (Alfred 5 with the Powerpack):
+
+```bash
+playground tools install-alfred-workflow          # builds it and opens it in Alfred, which asks to import it
+playground tools install-alfred-workflow --link   # symlinks scripts/alfred-workflow/ instead, to work on it
+```
+
+Run it again after a `git pull` to update the workflow. Then type `kdp` in Alfred, or select text anywhere and use the Universal Action **kdp: support case, example, config key…**:
+
+| Query | What |
+| --- | --- |
+| `kdp find <words>` | [`playground find-example`](/cli?id=playground-find-example): ↩ copies `playground run -f …` |
+| `kdp history [words]` | replay a past run with its exact flags |
+| `kdp plugin <plugin> [version]` | `connector-plugin info`, `changelog`, `sourcecode`, `dependencies`, `cve-scan`, Hub page |
+| `kdp key <key> [class]` | `connector-plugin config-key` (`--since-version` with a class) |
+| `kdp docs [words]` | the deep dive and toolkit pages of this site |
+| `kdp status` | `status`, `connector status`, `connector diagnose`, connect errors, `broker health` |
+| `kdp repro [words]` | reproduction models, yours first (when `reproduction-models/` has models) |
+| `kdp notes [words]` | a notes folder, and the Claude Code session that wrote a note (when the folder exists) |
+| `kdp case <number>` | ticket link, notes and repro models of a support case (`ticket_url` setting) |
+
+On a result, ↩ copies the command (or opens the page), ⌘ opens the script in VS Code, ⌃ runs the command in the terminal set in Alfred (for an example, that stops the environment that is running), and ⌥ / ⇧ depend on the mode: hold the key to see what it does. Commands that take a few seconds (`plugin`, `key`) run in the terminal rather than in Alfred.
+
+The workflow settings (Alfred Preferences > Workflows > kafka-docker-playground (kdp) > Configure Workflow) are `kdp_root` (your clone, set by the install), `ticket_url` (for example `https://example.zendesk.com/agent/tickets/{}`) and `notes_dir`.
+
 ### 🤖 Using the CLI from AI agents
 
 AI coding agents (Claude Code, Github Copilot, Cursor, etc...) drive the playground with the same CLI as you do: there is no MCP server to install. A few commands and flags are designed so that an agent gets a bounded, non-interactive answer:

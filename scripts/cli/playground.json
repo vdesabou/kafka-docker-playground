@@ -3740,7 +3740,7 @@
     },
     {
       "name": "tools",
-      "description": "🧰 Tools commands\n\nSmall utilities that are handy around the playground but are not tied to a\nrunning environment:\n\n  read-avro-file        dump an avro file as readable json\n  read-parquet-file     same, for parquet\n  certs-create          generate a keystore and truststore for a component\n  redos-check           check a topics.regex for catastrophic backtracking\n  install-vscode-extension   playground completion inside VS Code\n\n🎓 Tip: the file readers are what you use to check what a sink connector\nreally wrote, after pulling the file out with 'playground container cp'.",
+      "description": "🧰 Tools commands\n\nSmall utilities that are handy around the playground but are not tied to a\nrunning environment:\n\n  read-avro-file        dump an avro file as readable json\n  read-parquet-file     same, for parquet\n  certs-create          generate a keystore and truststore for a component\n  redos-check           check a topics.regex for catastrophic backtracking\n  install-vscode-extension   playground completion inside VS Code\n  install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n\n🎓 Tip: the file readers are what you use to check what a sink connector\nreally wrote, after pulling the file out with 'playground container cp'.",
       "usage": "playground tools COMMAND",
       "options": [],
       "subcommands": [
@@ -3749,6 +3749,20 @@
           "description": "🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n\nGives you the same completion inside VS Code as in your terminal: while\nediting an example or a reproduction model, playground commands, flags\nand their allowed values are proposed as you type, with the help text\non hover. Worth the two minutes of setup if you write example scripts.\n\nIt is installed as \"Shell Script Command Completion (kafka-docker-playground)\"\n(tetradresearch.vscode-h2o-playground), in place of the marketplace one,\nso that VS Code does not auto-update it with the unpatched version. Run\nthe command again to get a newer upstream version.\n\nAfter installation, install \"playground\" command:\n\n* Go on a .sh file\n\n* Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load Command Spec (experimental)\" and then type \"playground\"\n\n🔖 The command spec is downloaded from the master branch: commands added in a local branch are only proposed once merged. Run \"Load Command Spec\" again to refresh it.\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension",
           "usage": "playground tools install-vscode-extension",
           "options": []
+        },
+        {
+          "name": "install-alfred-workflow",
+          "description": "🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n\nA launcher for the playground CLI: type 'kdp' in Alfred, or select text\nanywhere and use the Universal Action \"kdp: support case, example, config\nkey…\":\n\n  kdp find <words>            find-example: ↩ copies 'playground run -f …'\n  kdp history [words]         replay a past run with its exact flags\n  kdp plugin <p> [version]    connector-plugin info, changelog, source code, jars, CVEs\n  kdp key <key> [class]       connector-plugin config-key\n  kdp docs [words]            deep dive pages\n  kdp status                  status, connector status / diagnose, connect errors\n  kdp repro / notes / case    reproduction models, notes, support cases (when present)\n\nOn a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\nit in the terminal set in Alfred (for an example, that stops the running\nenvironment), ⌥ and ⇧ depend on the mode.\n\nBy default, builds the workflow from scripts/alfred-workflow/ and opens it\nin Alfred, which asks to import it: run the command again after a pull to\nupdate it. With --link, the folder is symlinked into your Alfred\npreferences instead, so changes to the source are live (to work on it).\n\n👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos",
+          "usage": "playground tools install-alfred-workflow [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--link"
+              ],
+              "argument": "",
+              "description": "🔗 Symlink scripts/alfred-workflow/ into the Alfred preferences instead of importing a copy\n\nChanges to the source are live, for development. Replaces an existing\nsymlink, never a workflow folder."
+            }
+          ]
         },
         {
           "name": "read-avro-file",
