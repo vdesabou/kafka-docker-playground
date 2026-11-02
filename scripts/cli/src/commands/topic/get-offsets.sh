@@ -21,7 +21,7 @@ then
     exit 1
 fi
 class_name="kafka.tools.GetOffsetShell"
-if version_gt "$CP_CONNECT_TAG" "7.6.9"
+if version_gt "$CP_CONNECT_TAG" "7.6.99"
 then
     class_name="org.apache.kafka.tools.GetOffsetShell"
 fi
