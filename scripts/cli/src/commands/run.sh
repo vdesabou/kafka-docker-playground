@@ -2109,13 +2109,15 @@ function cleanup {
     then
       log "   🔢 with another connector version:   playground run -f $test_file --connector-tag <version>"
     fi
-    if [ "$(playground state get flags.ENABLE_KSQLDB 2> /dev/null)" == "1" ]
+    # the ksqlDB / Flink flags are recorded by start-environment: a fully managed (or custom) connector example doesn't
+    # run it, the flags are the ones of the previous local run
+    if [ $is_ccloud_managed == 0 ] && [ "$(playground state get flags.ENABLE_KSQLDB 2> /dev/null)" == "1" ]
     then
       log "   🧮 streams, tables and queries:      playground ksqldb list"
       log "   🧮 run ksqlDB statements:            playground ksqldb sql <<< \"SHOW QUERIES;\""
       log "   🔢 with another ksqlDB version:      playground run -f $test_file --ksqldb-tag <version>"
     fi
-    if [ "$(playground state get flags.ENABLE_FLINK 2> /dev/null)" == "1" ]
+    if [ $is_ccloud_managed == 0 ] && [ "$(playground state get flags.ENABLE_FLINK 2> /dev/null)" == "1" ]
     then
       log "   🐿️ Flink jobs:                       playground flink list-jobs"
     fi
@@ -2268,7 +2270,7 @@ else
   then
     echo "playground connector diagnose          # status, error digest, lag and offsets of the connector(s)"
   fi
-  if [ $is_fully_managed == 0 ]
+  if [ $is_ccloud_managed == 0 ]
   then
     if [ "$(playground state get flags.ENABLE_KSQLDB 2> /dev/null)" == "1" ]
     then
