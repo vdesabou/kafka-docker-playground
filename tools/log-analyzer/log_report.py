@@ -764,8 +764,9 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        + e(", ".join(res["files_without_findings"][:500])) + "</p></details>" if res["files_without_findings"] else "")
                     + "</div>")
         for f in res["files"]:
-            title = log_viewer.link(viewers, f["label"], e(f["label"]))
-            body.append(f"<div class='table-card file-records'><h2>📄 {title}</h2>"
+            # not "title": the title of the report, in its header
+            file_title = log_viewer.link(viewers, f["label"], e(f["label"]))
+            body.append(f"<div class='table-card file-records'><h2>📄 {file_title}</h2>"
                         f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
     body.append(config_html(res.get("configuration") or [], viewers))
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
