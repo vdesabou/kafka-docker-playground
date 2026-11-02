@@ -64,6 +64,8 @@ def check_plist():
         script = os.path.join(HERE, text_views[0]["config"].get("inputfile", ""))
         if not os.access(script, os.X_OK):
             fail("info.plist: Text View script {} missing or not executable".format(script))
+    if not os.access(os.path.join(HERE, "notify-run.sh"), os.X_OK):
+        fail("notify-run.sh (runs started from the workflow) missing or not executable")
     code = open(os.path.join(HERE, "kdp.py"), encoding="utf-8").read()
     for o in d["objects"]:
         script = o.get("config", {}).get("script", "")
@@ -130,7 +132,8 @@ QUERIES = [
 def check_modes(root, cache):
     env = {"HOME": os.environ.get("HOME", "/tmp"), "USER": os.environ.get("USER", "ci"), "PATH": "/usr/bin:/bin",
            "PYTHONUTF8": "1", "kdp_root": root, "alfred_workflow_cache": cache}
-    for q in QUERIES:
+    example = os.path.join(root, "connect", "connect-filestream-sink", "filestream-sink.sh")
+    for q in QUERIES + ["find @{} ".format(example), "history @{} --enable-control-center ".format(example)]:
         out, err = run_query(q, env)
         if out is None:
             fail("kdp {}: {}".format(q, err))

@@ -320,6 +320,27 @@
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<true/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>kdp</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>59B57580-CB26-4AB9-9474-499182F2BACB</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>concurrently</key>
 				<false/>
 				<key>escaping</key>
@@ -339,27 +360,6 @@
 			<string>8763BFCA-C67F-4381-A571-36D71A4D8AC7</string>
 			<key>version</key>
 			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>lastpathcomponent</key>
-				<false/>
-				<key>onlyshowifquerypopulated</key>
-				<true/>
-				<key>removeextension</key>
-				<false/>
-				<key>text</key>
-				<string>{query}</string>
-				<key>title</key>
-				<string>kdp</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.notification</string>
-			<key>uid</key>
-			<string>59B57580-CB26-4AB9-9474-499182F2BACB</string>
-			<key>version</key>
-			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -408,6 +408,21 @@
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>view_output</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>BA740760-7F0B-4967-A155-E19AAB375283</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>behaviour</key>
 				<integer>2</integer>
 				<key>fontmode</key>
@@ -435,21 +450,6 @@
 			<string>alfred.workflow.userinterface.text</string>
 			<key>uid</key>
 			<string>35DE1A5F-3CE9-4116-8619-379133B6EA20</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>availableviaurlhandler</key>
-				<false/>
-				<key>triggerid</key>
-				<string>view_output</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>BA740760-7F0B-4967-A155-E19AAB375283</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -534,12 +534,12 @@
 	<key>readme</key>
 	<string># kafka-docker-playground (kdp)
 
-Keyword **kdp** (the first line says what is running, 🆕 when the clone has a newer workflow), or the Universal Action **kdp: config, stack trace, connector class, key, case…** on selected text: a connector config gets validate / convert / repro bootstrap, a stack trace `analyze logs`, a connector class its plugin and examples, a config key `kdp key`.
+Keyword **kdp** (the first line says what is running: ↩ status, ⌘ re-run, ⌥ stop, ⇧ update versions; 🆕 when the clone has a newer workflow), or the Universal Action **kdp: config, stack trace, connector class, key, case…** on selected text: a connector config gets validate / convert / repro bootstrap, a stack trace `analyze logs`, a connector class its plugin and examples, a config key `kdp key`.
 
 | Query | What |
 | --- | --- |
-| `kdp find &lt;words&gt;` | `playground find-example`: examples (and repro models) |
-| `kdp history [words]` | `playground history`: replay a run |
+| `kdp find &lt;words&gt;` | `playground find-example`: examples (and repro models); Tab: ▶️ run it (says what it stops), README, repro bootstrap |
+| `kdp history [words]` | `playground history`; Tab: 🔁 re-run with the same flags |
 | `kdp plugin &lt;words&gt; [version]` | pick the plugin in the list (↩ fills it in), then a version in its list, then connector-plugin info / changelog / sourcecode / dependencies / cve-scan |
 | `kdp key &lt;words&gt;` | pick the key in the list, then a connector that has it: connector-plugin config-key (`--since-version` with a connector) |
 | `kdp docs [words]` | deep dive and toolkit pages on kafka-docker-playground.io |
@@ -796,7 +796,7 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 		</dict>
 	</array>
 	<key>version</key>
-	<string>1.5.0</string>
+	<string>1.6.0</string>
 	<key>webaddress</key>
 	<string>https://kafka-docker-playground.io/#/cli?id=%F0%9F%8E%A9-alfred-workflow-macos</string>
 </dict>
