@@ -1188,7 +1188,7 @@
             "--last"
           ],
           "argument": "",
-          "description": "⏮️ Print the most recent command matching the query (the last run\nwithout query), and nothing else\n\nConflicts with: --list, --json, --run, --stats, --prune"
+          "description": "⏮️ Print the most recent command matching the query (the last run\nwithout query), and nothing else\n\nThe --cluster-creds and --cluster-schema-registry-creds values are\nprinted as '<masked>': use --run to replay the command with them\n\nConflicts with: --list, --json, --run, --stats, --prune"
         },
         {
           "names": [

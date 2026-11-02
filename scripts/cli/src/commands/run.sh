@@ -961,7 +961,7 @@ then
 
         missing_env_list+=("$mandatory_environment_variable")
       else
-        if [[ $mandatory_environment_variable == *"PASSWORD"* ]] || [[ $mandatory_environment_variable == *"SECRET"* ]] || [[ $mandatory_environment_variable == *"TOKEN"* ]] || [[ $mandatory_environment_variable == *"KEY"* ]]
+        if [[ $mandatory_environment_variable == *"PASSWORD"* ]] || [[ $mandatory_environment_variable == *"SECRET"* ]] || [[ $mandatory_environment_variable == *"TOKEN"* ]] || [[ $mandatory_environment_variable == *"KEY"* ]] || [[ $mandatory_environment_variable == *"USER_INFO"* ]] || [[ $mandatory_environment_variable == *"CREDS"* ]]
         then
           missing_env="${missing_env}🔑 ${GREEN}${mandatory_environment_variable} is set${NC}\n"
         else
@@ -1258,8 +1258,8 @@ then
         # same flags, reopening the menu for the selected example
         trap - EXIT
         playground state set run.test_file "$previous_test_file"
-        IFS=' ' flag_list="${array_flag_list[*]}"
-        playground run -f "$test_file_directory/$sibling_example" --force-interactive-re-run $flag_list
+        flag_list_to_args
+        playground run -f "$test_file_directory/$sibling_example" --force-interactive-re-run "${flag_args[@]}"
         exit $?
       fi
     fi
@@ -2154,7 +2154,7 @@ then
   else
     log "🚀 Running example with flags"
   fi
-  log "⛳ Flags used are $flag_list"
+  log "⛳ Flags used are $(mask_creds_in_command "$flag_list")"
 else
   if [[ $test_file == *"ccloud"* ]]
   then
@@ -2174,16 +2174,12 @@ then
 fi
 # shell-quoted, so that 'playground history' and eval replay it as is; credentials are not written
 history_line="playground run -f $(printf '%q' "$test_file")"
-for flag in "${array_flag_list[@]}"
-do
-  case "$flag" in
-    "") ;;
-    "--cluster-creds "*|"--cluster-schema-registry-creds "*) history_line+=" ${flag%% *} '<masked>'" ;;
-    --*=*) history_line+=" ${flag%%=*}=$(printf '%q' "${flag#*=}")" ;;
-    "--"*" "*) history_line+=" ${flag%% *} $(printf '%q' "${flag#* }")" ;;
-    *) history_line+=" $(printf '%q' "$flag")" ;;
-  esac
-done
+flag_list_to_args
+if [ ${#flag_args[@]} -gt 0 ]
+then
+  history_line+="$(printf ' %q' "${flag_args[@]}")"
+fi
+history_line=$(mask_creds_in_command "$history_line")
 # a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
 history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
 history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
@@ -2199,8 +2195,13 @@ then
 
     if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
     then
-        echo "playground run -f $test_file $flag_list" | pbcopy
+        # shell-quoted like the history line, credentials masked
+        echo "$history_line" | pbcopy
         log "📋 command to run again example has been copied to the clipboard (disable with 'playground config clipboard false')"
+        if [[ "$history_line" == *"'<masked>'"* ]]
+        then
+          log "🙈 the credentials are masked in it: replace '<masked>', or use 'playground re-run' / 'playground history --run'"
+        fi
     fi
 fi
 

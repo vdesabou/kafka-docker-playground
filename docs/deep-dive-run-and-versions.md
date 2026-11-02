@@ -137,7 +137,9 @@ Gotchas:
   (exit 111).
 - `--connector-tag` and `--connector-zip` are exclusive. `--connector-jar` combines with either: it replaces the jar of
   the installed plugin whose name contains the connector version, and warns when it can't find it.
-- On macOS the run line is copied to the clipboard (`playground config clipboard false` to stop it).
+- On macOS the run line is copied to the clipboard (`playground config clipboard false` to stop it). Like the history and the
+  `⛳ Flags used are` line, it shows the `--cluster-creds` / `--cluster-schema-registry-creds` values as `'<masked>'`:
+  `playground re-run` and `playground history --run` replay them.
 - **Each run writes a masked run log** to share it: header (re-run command, versions, host, result), the whole output
   with passwords, api keys and tokens masked and, for a failure, the errors of the connect container. Its path is the
   last line of the run (`📄 masked log of this run …`). `--run-log-file <file>` / `--no-run-log` for one run,

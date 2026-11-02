@@ -4606,7 +4606,7 @@ playground_history_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--last")"
-    printf "    ⏮️ Print the most recent command matching the query (the last run\n    without query), and nothing else\n"
+    printf "    ⏮️ Print the most recent command matching the query (the last run\n    without query), and nothing else\n    \n    The --cluster-creds and --cluster-schema-registry-creds values are\n    printed as '<masked>': use --run to replay the command with them\n"
     printf "    %s\n" "Conflicts: --list, --json, --run, --stats, --prune"
     echo
 
@@ -25295,6 +25295,36 @@ function maybe_remove_flag () {
   array_flag_list=("${kept[@]}")
 }
 
+# replace the values of --cluster-creds / --cluster-schema-registry-creds by '<masked>' in a command line or a flag list
+function mask_creds_in_command () {
+  if [[ "$1" == *"creds"* ]]
+  then
+    # a value is a word, backslash-quoted characters included
+    sed -E 's/(--cluster-(schema-registry-)?creds[ =])([^ \\]|\\.)+/\1'"'<masked>'"'/g' <<< "$1"
+  else
+    echo "$1"
+  fi
+}
+
+# array_flag_list of playground run as arguments, in the flag_args array: "--flag value" entries are two arguments,
+# "--flag=value" and "--flag" entries one, so values with spaces survive and no word splitting (IFS) is needed
+function flag_list_to_args () {
+  local flag name
+  flag_args=()
+  for flag in "${array_flag_list[@]}"
+  do
+    [ -z "$flag" ] && continue
+    # the name ends at the first space or '=': a value can contain both (a secret ending with '=', a path with spaces)
+    name="${flag%%[ =]*}"
+    if [ "${flag:${#name}:1}" == " " ]
+    then
+      flag_args+=("$name" "${flag#* }")
+    else
+      flag_args+=("$flag")
+    fi
+  done
+}
+
 # set the log levels of PLAYGROUND_CONNECT_LOG_LEVELS (playground run --connect-log-level), best effort
 function apply_connect_log_levels () {
   if [ -z "$PLAYGROUND_CONNECT_LOG_LEVELS" ]
@@ -43827,7 +43857,7 @@ EOF
 
           missing_env_list+=("$mandatory_environment_variable")
         else
-          if [[ $mandatory_environment_variable == *"PASSWORD"* ]] || [[ $mandatory_environment_variable == *"SECRET"* ]] || [[ $mandatory_environment_variable == *"TOKEN"* ]] || [[ $mandatory_environment_variable == *"KEY"* ]]
+          if [[ $mandatory_environment_variable == *"PASSWORD"* ]] || [[ $mandatory_environment_variable == *"SECRET"* ]] || [[ $mandatory_environment_variable == *"TOKEN"* ]] || [[ $mandatory_environment_variable == *"KEY"* ]] || [[ $mandatory_environment_variable == *"USER_INFO"* ]] || [[ $mandatory_environment_variable == *"CREDS"* ]]
           then
             missing_env="${missing_env}🔑 ${GREEN}${mandatory_environment_variable} is set${NC}\n"
           else
@@ -44124,8 +44154,8 @@ EOF
           # same flags, reopening the menu for the selected example
           trap - EXIT
           playground state set run.test_file "$previous_test_file"
-          IFS=' ' flag_list="${array_flag_list[*]}"
-          playground run -f "$test_file_directory/$sibling_example" --force-interactive-re-run $flag_list
+          flag_list_to_args
+          playground run -f "$test_file_directory/$sibling_example" --force-interactive-re-run "${flag_args[@]}"
           exit $?
         fi
       fi
@@ -45020,7 +45050,7 @@ EOF
     else
       log "🚀 Running example with flags"
     fi
-    log "⛳ Flags used are $flag_list"
+    log "⛳ Flags used are $(mask_creds_in_command "$flag_list")"
   else
     if [[ $test_file == *"ccloud"* ]]
     then
@@ -45040,16 +45070,12 @@ EOF
   fi
   # shell-quoted, so that 'playground history' and eval replay it as is; credentials are not written
   history_line="playground run -f $(printf '%q' "$test_file")"
-  for flag in "${array_flag_list[@]}"
-  do
-    case "$flag" in
-      "") ;;
-      "--cluster-creds "*|"--cluster-schema-registry-creds "*) history_line+=" ${flag%% *} '<masked>'" ;;
-      --*=*) history_line+=" ${flag%%=*}=$(printf '%q' "${flag#*=}")" ;;
-      "--"*" "*) history_line+=" ${flag%% *} $(printf '%q' "${flag#* }")" ;;
-      *) history_line+=" $(printf '%q' "$flag")" ;;
-    esac
-  done
+  flag_list_to_args
+  if [ ${#flag_args[@]} -gt 0 ]
+  then
+    history_line+="$(printf ' %q' "${flag_args[@]}")"
+  fi
+  history_line=$(mask_creds_in_command "$history_line")
   # a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
   history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
   history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
@@ -45065,8 +45091,13 @@ EOF
 
       if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
       then
-          echo "playground run -f $test_file $flag_list" | pbcopy
+          # shell-quoted like the history line, credentials masked
+          echo "$history_line" | pbcopy
           log "📋 command to run again example has been copied to the clipboard (disable with 'playground config clipboard false')"
+          if [[ "$history_line" == *"'<masked>'"* ]]
+          then
+            log "🙈 the credentials are masked in it: replace '<masked>', or use 'playground re-run' / 'playground history --run'"
+          fi
       fi
   fi
 
@@ -45522,10 +45553,15 @@ playground_re_run_command() {
   declare -a array_flag_list=()
   encoded_array="$(playground state get run.array_flag_list_base64)"
   eval "$(echo "$encoded_array" | base64 -d)"
-  IFS=' ' flag_list="${array_flag_list[*]}"
+  flag_list_to_args
+  command_line="playground run -f $(printf '%q' "$test_file")"
+  if [ ${#flag_args[@]} -gt 0 ]
+  then
+    command_line+="$(printf ' %q' "${flag_args[@]}")"
+  fi
 
-  log "⚡ re-run with playground run -f \"$test_file\" $flag_list"
-  playground run -f "$test_file" $flag_list --force-interactive-re-run
+  log "⚡ re-run with $(mask_creds_in_command "$command_line")"
+  playground run -f "$test_file" "${flag_args[@]}" --force-interactive-re-run
 }
 
 # :command.function
@@ -45894,16 +45930,6 @@ playground_history_command() {
       fi
   }
 
-  function history_mask_creds () {
-      if [[ "$1" == *"creds"* ]]
-      then
-          # a value is a word, backslash-quoted characters included
-          sed -E 's/(--cluster-(schema-registry-)?creds[ =])([^ \\]|\\.)+/\1'"'<masked>'"'/g' <<< "$1"
-      else
-          echo "$1"
-      fi
-  }
-
   # tac is GNU coreutils: not on macOS without Homebrew
   function history_reverse () {
       awk '{ lines[NR] = $0 } END { for (i = NR; i > 0; i--) print lines[i] }' "$@"
@@ -45995,7 +46021,7 @@ playground_history_command() {
       displayed="${command//"$root_folder/"/}"
       if [[ "$displayed" == *"creds"* ]]
       then
-          displayed=$(history_mask_creds "$displayed")
+          displayed=$(mask_creds_in_command "$displayed")
       fi
       # fzf counts these emojis (with a variation selector) as one column, the terminal draws two
       case "$icon" in
@@ -46056,14 +46082,15 @@ playground_history_command() {
 
   if [[ -n "$last" ]]
   then
-      head -1 $tmp_dir/entries | cut -d $'\x1f' -f 2
+      # lines written by older versions hold the credentials in clear
+      mask_creds_in_command "$(head -1 $tmp_dir/entries | cut -d $'\x1f' -f 2)"
       exit 0
   fi
 
   if [[ -n "$run" ]]
   then
       res=$(history_unmask_creds "$(head -1 $tmp_dir/entries | cut -d $'\x1f' -f 2)") || exit 1
-      log "🏰 $(history_mask_creds "$res")"
+      log "🏰 $(mask_creds_in_command "$res")"
       eval "$res"
       exit $?
   fi
@@ -46082,7 +46109,7 @@ playground_history_command() {
           do
               exists=false
               [ -f "$script" ] && exists=true
-              printf '%s\t%s\t%s\t%s\t%s\n' "$(history_mask_creds "$command")" "$script" "$meta" "$runs" "$exists"
+              printf '%s\t%s\t%s\t%s\t%s\n' "$(mask_creds_in_command "$command")" "$script" "$meta" "$runs" "$exists"
           done < $tmp_dir/listed | jq -R -s --arg root "$root_folder/" '
               split("\n") | map(select(length > 0) | split("\t") | . as $f
                   | ($f[2] | split(" ") | map(select(contains("=")) | {key: (split("=")[0]), value: (split("=")[1:] | join("="))}) | from_entries) as $m
@@ -46094,7 +46121,7 @@ playground_history_command() {
       log "🏰 runs${query:+ matching \"$query\"}, most recent first"
       while IFS=$'\x1f' read -r displayed command script meta runs
       do
-          echo "$(history_mask_creds "$command")"
+          echo "$(mask_creds_in_command "$command")"
           details=()
           result=$(history_meta "$meta" result)
           date=$(history_meta "$meta" date)
@@ -46132,7 +46159,7 @@ playground_history_command() {
   # preview: last result, README title, the header of a repro model, the command
   {
       printf 'root_folder=%q\n' "$root_folder"
-      declare -f history_meta history_duration history_result_icon history_mask_creds
+      declare -f history_meta history_duration history_result_icon mask_creds_in_command
       cat << 'EOF'
 command="$1"; script="$2"; meta="$3"; runs="$4"
 echo "📄 ${script#"$root_folder/"}"
@@ -46154,7 +46181,7 @@ title=$(grep -m 1 "^# " "$(dirname "$script")/README.md" 2> /dev/null)
 [ -n "$title" ] && echo "📖 ${title#\# }"
 grep -E "^# (💡 description|🎯 expected|💥 actual|🎫 jira|🩹 status): ?[^ ]" "$script" 2> /dev/null | sed -e 's/^# //'
 echo
-history_mask_creds "$command"
+mask_creds_in_command "$command"
 EOF
   } > $tmp_dir/preview.sh
 

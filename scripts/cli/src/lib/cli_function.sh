@@ -4478,6 +4478,36 @@ function maybe_remove_flag () {
   array_flag_list=("${kept[@]}")
 }
 
+# replace the values of --cluster-creds / --cluster-schema-registry-creds by '<masked>' in a command line or a flag list
+function mask_creds_in_command () {
+  if [[ "$1" == *"creds"* ]]
+  then
+    # a value is a word, backslash-quoted characters included
+    sed -E 's/(--cluster-(schema-registry-)?creds[ =])([^ \\]|\\.)+/\1'"'<masked>'"'/g' <<< "$1"
+  else
+    echo "$1"
+  fi
+}
+
+# array_flag_list of playground run as arguments, in the flag_args array: "--flag value" entries are two arguments,
+# "--flag=value" and "--flag" entries one, so values with spaces survive and no word splitting (IFS) is needed
+function flag_list_to_args () {
+  local flag name
+  flag_args=()
+  for flag in "${array_flag_list[@]}"
+  do
+    [ -z "$flag" ] && continue
+    # the name ends at the first space or '=': a value can contain both (a secret ending with '=', a path with spaces)
+    name="${flag%%[ =]*}"
+    if [ "${flag:${#name}:1}" == " " ]
+    then
+      flag_args+=("$name" "${flag#* }")
+    else
+      flag_args+=("$flag")
+    fi
+  done
+}
+
 # set the log levels of PLAYGROUND_CONNECT_LOG_LEVELS (playground run --connect-log-level), best effort
 function apply_connect_log_levels () {
   if [ -z "$PLAYGROUND_CONNECT_LOG_LEVELS" ]

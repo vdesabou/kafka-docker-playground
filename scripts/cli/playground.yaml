@@ -1298,6 +1298,9 @@ subcommands:
       ⏮️ Print the most recent command matching the query (the last run
       without query), and nothing else
 
+      The --cluster-creds and --cluster-schema-registry-creds values are
+      printed as '<masked>': use --run to replay the command with them
+
       Conflicts with: --list, --json, --run, --stats, --prune
   - names:
     - "--run"
