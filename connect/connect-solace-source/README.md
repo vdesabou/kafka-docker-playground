@@ -7,7 +7,7 @@ Quickly test the [Solace Source](https://docs.confluent.io/kafka-connectors/sola
 ## Prerequisites
 
 * With CP 8.x, connector version 1.2.0 or later.
-* The Solace JMS client `sol-jms-10.6.4.jar` is downloaded from Maven Central on the first run.
+* The Solace JMS client `sol-jms-10.19.0.jar` is downloaded from Maven Central on the first run. Set `SOLACE_JMS_VERSION` to test another client version (connector versions that don't bundle commons-lang 2.6 need 10.13.0 or later).
 
 ## How to run
 

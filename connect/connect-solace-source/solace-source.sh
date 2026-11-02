@@ -30,11 +30,14 @@ function wait_for_solace () {
      sleep 30
 }
 
+# Solace JMS client, not bundled in the connector: versions that don't bundle commons-lang 2.6 need 10.13.0 or later
+SOLACE_JMS_VERSION=${SOLACE_JMS_VERSION:-"10.19.0"}
+
 cd ../../connect/connect-solace-source
-if [ ! -f ${DIR}/sol-jms-10.6.4.jar ]
+if [ ! -f ${DIR}/sol-jms-${SOLACE_JMS_VERSION}.jar ]
 then
-     log "Downloading sol-jms-10.6.4.jar"
-     wget -q https://repo1.maven.org/maven2/com/solacesystems/sol-jms/10.6.4/sol-jms-10.6.4.jar
+     log "Downloading sol-jms-${SOLACE_JMS_VERSION}.jar"
+     wget -q https://repo1.maven.org/maven2/com/solacesystems/sol-jms/${SOLACE_JMS_VERSION}/sol-jms-${SOLACE_JMS_VERSION}.jar
 fi
 cd -
 
@@ -43,7 +46,7 @@ cd ../../connect/connect-solace-source
 
 # Copy JAR files to confluent-hub
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/
-cp ../../connect/connect-solace-source/sol-jms-10.6.4.jar ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/sol-jms-10.6.4.jar
+cp ../../connect/connect-solace-source/sol-jms-${SOLACE_JMS_VERSION}.jar ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/sol-jms-${SOLACE_JMS_VERSION}.jar
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
