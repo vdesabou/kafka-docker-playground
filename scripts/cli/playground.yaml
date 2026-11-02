@@ -1046,7 +1046,8 @@ subcommands:
       SQL Server), self-managed and fully managed, and with their reproduction models.\n\nSQL_DATAGEN_DURATION
       (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5) change the duration
       and the number of\nparallel sessions, BENCHMARK_LOAD_SCRIPT another load script
-      than benchmark-load.bash (see playground connector\nbenchmark)."
+      than benchmark-load.bash (see playground connector\nbenchmark). If the injection
+      fails, the command exits with its exit code."
   - names:
     - "--benchmark"
     argument: ''
