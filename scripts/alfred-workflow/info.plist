@@ -171,6 +171,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>9B3FD41E-3EDD-477B-924C-5A5E6691FB29</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6A5317AA-09CC-408D-8100-6EA088FCD2B4</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>BA740760-7F0B-4967-A155-E19AAB375283</key>
 		<array>
 			<dict>
@@ -307,27 +320,6 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>lastpathcomponent</key>
-				<false/>
-				<key>onlyshowifquerypopulated</key>
-				<true/>
-				<key>removeextension</key>
-				<false/>
-				<key>text</key>
-				<string>{query}</string>
-				<key>title</key>
-				<string>kdp</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.notification</string>
-			<key>uid</key>
-			<string>59B57580-CB26-4AB9-9474-499182F2BACB</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>concurrently</key>
 				<false/>
 				<key>escaping</key>
@@ -347,6 +339,27 @@
 			<string>8763BFCA-C67F-4381-A571-36D71A4D8AC7</string>
 			<key>version</key>
 			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<true/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>kdp</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>59B57580-CB26-4AB9-9474-499182F2BACB</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -395,21 +408,6 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>availableviaurlhandler</key>
-				<false/>
-				<key>triggerid</key>
-				<string>view_output</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.external</string>
-			<key>uid</key>
-			<string>BA740760-7F0B-4967-A155-E19AAB375283</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>behaviour</key>
 				<integer>2</integer>
 				<key>fontmode</key>
@@ -443,6 +441,21 @@
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>view_output</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>BA740760-7F0B-4967-A155-E19AAB375283</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>concurrently</key>
 				<false/>
 				<key>escaping</key>
@@ -460,6 +473,37 @@
 			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
 			<string>4DF707E4-934C-40FB-8E08-3F5629396498</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>hotkey</key>
+				<integer>40</integer>
+				<key>hotmod</key>
+				<integer>1179648</integer>
+				<key>hotstring</key>
+				<string>K</string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>9B3FD41E-3EDD-477B-924C-5A5E6691FB29</string>
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
@@ -527,50 +571,50 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 			<key>note</key>
 			<string>Text View: output of read-only commands (kdp-view.sh → kdp.py --view, reruns every 0.5 s until the command exits)</string>
 			<key>xpos</key>
-			<real>420.0</real>
+			<real>420</real>
 			<key>ypos</key>
-			<real>300.0</real>
+			<real>300</real>
 		</dict>
 		<key>3A4988D3-112F-4B41-AB82-B96BA1AB4ABF</key>
 		<dict>
 			<key>note</key>
 			<string>⌘↩ copy output</string>
 			<key>xpos</key>
-			<real>600.0</real>
+			<real>600</real>
 			<key>ypos</key>
-			<real>280.0</real>
+			<real>280</real>
 		</dict>
 		<key>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</key>
 		<dict>
 			<key>xpos</key>
-			<real>260.0</real>
+			<real>260</real>
 			<key>ypos</key>
-			<real>80.0</real>
+			<real>80</real>
 		</dict>
 		<key>4A2CE7FF-D5E4-4F0D-B275-08B6071D4B81</key>
 		<dict>
 			<key>note</key>
 			<string>⇧↩ open the HTML report found in the output</string>
 			<key>xpos</key>
-			<integer>600</integer>
+			<real>600</real>
 			<key>ypos</key>
-			<integer>520</integer>
+			<real>520</real>
 		</dict>
 		<key>4DF707E4-934C-40FB-8E08-3F5629396498</key>
 		<dict>
 			<key>note</key>
 			<string>⌥↩ copy command</string>
 			<key>xpos</key>
-			<real>600.0</real>
+			<real>600</real>
 			<key>ypos</key>
-			<real>400.0</real>
+			<real>400</real>
 		</dict>
 		<key>59B57580-CB26-4AB9-9474-499182F2BACB</key>
 		<dict>
 			<key>xpos</key>
-			<real>600.0</real>
+			<real>600</real>
 			<key>ypos</key>
-			<real>160.0</real>
+			<real>160</real>
 		</dict>
 		<key>62519360-28FD-4015-9605-9AB1EC720C80</key>
 		<dict>
@@ -579,43 +623,50 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 			<key>note</key>
 			<string>runs in the terminal set in Alfred &gt; Features &gt; Terminal</string>
 			<key>xpos</key>
-			<real>420.0</real>
+			<real>420</real>
 			<key>ypos</key>
-			<real>20.0</real>
+			<real>20</real>
 		</dict>
 		<key>6A5317AA-09CC-408D-8100-6EA088FCD2B4</key>
 		<dict>
 			<key>xpos</key>
-			<real>30.0</real>
+			<real>30</real>
 			<key>ypos</key>
-			<real>60.0</real>
+			<real>60</real>
 		</dict>
 		<key>8763BFCA-C67F-4381-A571-36D71A4D8AC7</key>
 		<dict>
 			<key>note</key>
 			<string>copy / copyfile / open / reveal / code / refresh_repros</string>
 			<key>xpos</key>
-			<real>420.0</real>
+			<real>420</real>
 			<key>ypos</key>
-			<real>160.0</real>
+			<real>160</real>
+		</dict>
+		<key>9B3FD41E-3EDD-477B-924C-5A5E6691FB29</key>
+		<dict>
+			<key>xpos</key>
+			<real>55</real>
+			<key>ypos</key>
+			<real>480</real>
 		</dict>
 		<key>BA740760-7F0B-4967-A155-E19AAB375283</key>
 		<dict>
 			<key>note</key>
 			<string>view_output: opened by kdp.py (action view) with the job id as argument</string>
 			<key>xpos</key>
-			<real>260.0</real>
+			<real>260</real>
 			<key>ypos</key>
-			<real>300.0</real>
+			<real>300</real>
 		</dict>
 		<key>CF0EFFE1-671A-4F0B-B42F-4E692AEC94A7</key>
 		<dict>
 			<key>note</key>
 			<string>Universal Action: selected text (a case number, a key, words)</string>
 			<key>xpos</key>
-			<real>30.0</real>
+			<real>30</real>
 			<key>ypos</key>
-			<real>230.0</real>
+			<real>230</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
