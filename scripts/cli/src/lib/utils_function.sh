@@ -5298,21 +5298,44 @@ EC2_INSTANCE_STATE_RUNNING="✅running"
 EC2_INSTANCE_STATE_STOPPING="⌛stopping"
 EC2_INSTANCE_STATE_PENDING="⌛pending"
 
+# path of an example relative to the repository (or to reproduction-models/), to test its folder names (ccloud, fm-…)
+# without matching the folders above the repository: a clone or a worktree in .../my-ccloud-tests/ is not ccloud
+function example_relative_path () {
+  local file="$1"
+  local root
+  root=$(cd "$root_folder" 2> /dev/null && pwd -P)
+  if [ -f "$file" ]
+  then
+    file="$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file")"
+  fi
+  if [[ "$file" == */reproduction-models/* ]]
+  then
+    echo "reproduction-models/${file##*/reproduction-models/}"
+  elif [ -n "$root" ] && [[ "$file" == "$root/"* ]]
+  then
+    echo "${file#"$root/"}"
+  else
+    echo "$file"
+  fi
+}
+
 function get_connector_type () {
   get_connector_paths
+  local example_path
+  example_path=$(example_relative_path "$test_file")
   if [ "$connector_paths" == "" ]
   then
-    if grep -q -e "fm-" <<< "$test_file"
+    if grep -q -e "fm-" <<< "$example_path"
     then
       echo "$CONNECTOR_TYPE_FULLY_MANAGED"
-    elif grep -q -e "custom-connector" <<< "$test_file"
+    elif grep -q -e "custom-connector" <<< "$example_path"
     then
       echo "$CONNECTOR_TYPE_CUSTOM"
     else
       echo ""
     fi
   else
-    if grep -q -e "ccloud" <<< "$test_file"
+    if grep -q -e "ccloud" <<< "$example_path"
     then
       echo "$CONNECTOR_TYPE_SELF_MANAGED"
     elif [[ -n "$environment" ]] && [ "$environment" == "ccloud" ]
@@ -5656,7 +5679,7 @@ function get_optional_env_vars () {
   [ -f "$test_file" ] || return 0
 
   {
-    if [[ "$test_file" == *"ccloud"* ]] || [ "$environment" == "ccloud" ] || grep -q "bootstrap_ccloud_environment" "$test_file"
+    if [[ "$(example_relative_path "$test_file")" == *"ccloud"* ]] || [ "$environment" == "ccloud" ] || grep -q "bootstrap_ccloud_environment" "$test_file"
     then
       get_ccloud_env_vars
     fi

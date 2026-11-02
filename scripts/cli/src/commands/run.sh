@@ -44,6 +44,10 @@ ccloud_service_account_id="${args[--ccloud-service-account-id]}"
 force_interactive_re_run="${args[--force-interactive-re-run]}"
 force_interactive_repro="${args[--force-interactive-repro]}"
 run_log_file_flag="${args[--run-log-file]}"
+if [ -n "$run_log_file_flag" ] && [[ "$run_log_file_flag" != /* ]]
+then
+  run_log_file_flag="$PWD/$run_log_file_flag"
+fi
 no_run_log_flag="${args[--no-run-log]}"
 
 interactive_mode=0
@@ -87,6 +91,48 @@ then
   exit 1
 fi
 
+# its folder names (ccloud, fm-…) are tested on this path, not on the absolute one: a clone or a worktree in
+# .../my-ccloud-tests/ must not turn every example into a ccloud example
+test_file_rel=$(example_relative_path "$test_file")
+
+# --environment has no default: PLAYGROUND_ENVIRONMENT exported in the shell is the fallback (as documented), recorded as
+# --environment so that the banner, the history, re-run and the run log show it
+if [[ -z "$environment" ]] && [[ -n "$PLAYGROUND_ENVIRONMENT" ]] && [ "$PLAYGROUND_ENVIRONMENT" != "plaintext" ] && [[ $test_file_rel != *"ccloud"* ]]
+then
+  case "$PLAYGROUND_ENVIRONMENT" in
+    ccloud|cfk|cfk-rbac|sasl-ssl|sasl-plain|2way-ssl|sasl-scram|kerberos|ssl_kerberos|ldap-authorizer-sasl-plain|ldap-sasl-plain|rbac-sasl-plain)
+      if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
+      if [ -n "$connector_paths" ]
+      then
+        log "🌱 PLAYGROUND_ENVIRONMENT=$PLAYGROUND_ENVIRONMENT is set in your shell: same as --environment $PLAYGROUND_ENVIRONMENT (added to the flags of this run)"
+        environment="$PLAYGROUND_ENVIRONMENT"
+      fi
+    ;;
+  esac
+fi
+
+# what the example runs against, for the checks of the flags below and for the menu:
+# - is_ccloud: a Confluent Cloud cluster (ccloud example, or a connector example with --environment ccloud)
+# - is_fully_managed / is_custom_connector: the connector runs in Confluent Cloud, no local connect (get_connector_type:
+#   fm-* without local connect, including fm-custom-smt-* and the reproduction models of fully managed examples)
+is_ccloud=0
+if [[ $test_file_rel == *"ccloud"* ]] || [ "${environment:-$PLAYGROUND_ENVIRONMENT}" == "ccloud" ]
+then
+  is_ccloud=1
+fi
+example_connector_type=$(get_connector_type | tr -d '\n')
+is_fully_managed=0
+if [ "$example_connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+then
+  is_fully_managed=1
+fi
+is_custom_connector=0
+if [ "$example_connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+  is_custom_connector=1
+fi
+is_ccloud_managed=$((is_fully_managed | is_custom_connector))
+
 #
 # 🔐 Resolve, from the secrets store, the variables this example needs and that
 # are not already exported. Scoped to the example's own list on purpose: no
@@ -94,7 +140,7 @@ fi
 # process for the rest of the session.
 #
 load_secrets_for_example "$test_file" "${environment:-$PLAYGROUND_ENVIRONMENT}"
-if [[ $test_file == *"ccloud"* ]] || [ "${environment:-$PLAYGROUND_ENVIRONMENT}" == "ccloud" ]
+if [[ $test_file_rel == *"ccloud"* ]] || [ "${environment:-$PLAYGROUND_ENVIRONMENT}" == "ccloud" ]
 then
   ccloud_secrets_loaded=1
 fi
@@ -131,7 +177,7 @@ then
   fi
 fi
 
-if [[ $test_file == *"ccloud"* ]]
+if [ $is_ccloud == 1 ]
 then
   verify_installed "confluent"
 fi
@@ -176,7 +222,7 @@ fi
 
 if [[ -n "$schema_registry_tag" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --schema-registry-tag is not supported with ccloud examples"
     exit 1
@@ -188,7 +234,7 @@ fi
 
 if [[ -n "$ksqldb_tag" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --ksqldb-tag is not supported with ccloud examples"
     exit 1
@@ -215,10 +261,11 @@ then
     exit 1
   fi
 
+  # also plaintext: an explicit --environment plaintext wins over PLAYGROUND_ENVIRONMENT exported in the shell
+  export PLAYGROUND_ENVIRONMENT=$environment
   if [ "$environment" != "plaintext" ]
   then
     array_flag_list+=("--environment=$environment")
-    export PLAYGROUND_ENVIRONMENT=$environment
   fi
 fi
 
@@ -290,7 +337,7 @@ while read -r shell_variable flag_variable flag_name not_on_ccloud
 do
   if [[ -n "${!shell_variable}" ]] && [[ -z "${!flag_variable}" ]]
   then
-    if [[ $test_file == *"ccloud"* ]] && [[ "$not_on_ccloud" == "1" ]]
+    if [ $is_ccloud == 1 ] && [[ "$not_on_ccloud" == "1" ]]
     then
       # not supported with ccloud examples (the flag would exit): ignored, as before
       continue
@@ -303,17 +350,17 @@ ENABLE_KSQLDB enable_ksqldb --enable-ksqldb 1
 ENABLE_RESTPROXY enable_rest_proxy --enable-rest-proxy 1
 ENABLE_CONTROL_CENTER enable_c3 --enable-control-center 0
 ENABLE_LEGACY_CONTROL_CENTER enable_legacy_c3 --enable-legacy-control-center 0
-ENABLE_FLINK enable_flink --enable-flink 0
+ENABLE_FLINK enable_flink --enable-flink 1
 ENABLE_CONDUKTOR enable_conduktor --enable-conduktor 0
 ENABLE_KAFKA_NODES enable_multiple_brokers --enable-multiple-brokers 1
 ENABLE_CONNECT_NODES enable_multiple_connect_workers --enable-multiple-connect-workers 1
 ENABLE_JMX_GRAFANA enable_jmx_grafana --enable-jmx-grafana 0
-ENABLE_KCAT enable_kcat --enable-kcat 0
+ENABLE_KCAT enable_kcat --enable-kcat 1
 EOF
 
 if [[ -n "$enable_ksqldb" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --enable-ksqldb is not supported with ccloud examples"
     exit 1
@@ -324,7 +371,7 @@ fi
 
 if [[ -n "$enable_rest_proxy" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --enable-rest-proxy is not supported with ccloud examples"
     exit 1
@@ -341,6 +388,11 @@ fi
 
 if [[ -n "$enable_flink" ]]
 then
+  if [ $is_ccloud == 1 ]
+  then
+    logwarn "❌ --enable-flink is not supported with ccloud examples"
+    exit 1
+  fi
   array_flag_list+=("--enable-flink")
   export ENABLE_FLINK=true
 fi
@@ -353,7 +405,7 @@ fi
 
 if [[ -n "$enable_multiple_brokers" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --enable-multiple-brokers is not supported with ccloud examples"
     exit 1
@@ -364,7 +416,7 @@ fi
 
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --enable-multiple-connect-workers is not supported with ccloud examples"
     exit 1
@@ -388,6 +440,11 @@ fi
 
 if [[ -n "$enable_kcat" ]]
 then
+  if [ $is_ccloud == 1 ]
+  then
+    logwarn "❌ --enable-kcat is not supported with ccloud examples"
+    exit 1
+  fi
   array_flag_list+=("--enable-kcat")
   export ENABLE_KCAT=true
 fi
@@ -398,8 +455,12 @@ then
   # rows are injected by this command once the example is done (see sql_datagen_inject), with the benchmark-load.bash of
   # the example: not SQL_DATAGEN, which the examples and reproduction models of the former Java datagen still test
   export ENABLE_SQL_DATAGEN=true
+  if [[ -n "$force_interactive_repro" ]]
+  then
+    force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
+  fi
 
-  if [[ $test_file != *"fully-managed"* ]]
+  if [ $is_fully_managed == 0 ]
   then
     log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
     array_flag_list+=("--enable-jmx-grafana")
@@ -407,7 +468,6 @@ then
 
     if [[ -n "$force_interactive_repro" ]]
     then
-      force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
       force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
     fi
   fi
@@ -427,7 +487,7 @@ fi
 
 if [[ -n "$connect_community_image" ]]
 then
-  if [[ $test_file == *"fully-managed"* ]]
+  if [ $is_fully_managed == 1 ]
   then
     logwarn "❌ --connect-community-image is not supported with fully managed connector examples"
     exit 1
@@ -438,7 +498,7 @@ fi
 
 if [[ -n "$kafka_community_image" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --kafka-community-image is not supported with ccloud examples"
     exit 1
@@ -449,7 +509,7 @@ fi
 
 if [[ -n "$enable_kraft" ]]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [ $is_ccloud == 1 ]
   then
     logwarn "❌ --enable-kraft is not supported with ccloud examples"
     exit 1
@@ -466,7 +526,7 @@ fi
 
 if [[ -n "$connect_log_level" ]]
 then
-  if [[ $test_file == *"fully-managed"* ]]
+  if [ $is_fully_managed == 1 ]
   then
     logwarn "❌ --connect-log-level is not supported with fully managed connector examples"
     exit 1
@@ -586,7 +646,7 @@ then
   if [[ $cluster_environment == *"/"* ]]
   then
     cluster_environment=${cluster_environment//[$' \t']/}
-    cluster_environment=${cluster_environment#*/}
+    cluster_environment=${cluster_environment%%/*}
   fi
   array_flag_list+=("--cluster-environment $cluster_environment")
   export ENVIRONMENT=$cluster_environment
@@ -621,7 +681,7 @@ fi
 
 if [[ -n "$ccloud_service_account" ]] || [[ -n "$ccloud_service_account_acls" ]] || [[ -n "$ccloud_service_account_id" ]]
 then
-  if [[ $test_file != *"fully-managed"* ]] && [[ $test_file != *"custom-"* ]]
+  if [ $is_ccloud_managed == 0 ]
   then
     logerror "❌ --ccloud-service-account is only supported with fully managed and custom connector examples"
     exit 1
@@ -652,7 +712,7 @@ fi
 
 if [[ -n "$open" ]]
 then
-  if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+  if [ $is_ccloud_managed == 1 ]
   then
     playground open --file "${test_file}"
   else
@@ -709,7 +769,7 @@ then
   fi
   
   MENU_PROBLEM="❌ The example cannot be executed, check error(s) 👉"
-  if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+  if [ $is_ccloud_managed == 1 ]
   then
     MENU_OPEN_FILE="📖 Open the example file in text editor"
   else
@@ -836,7 +896,7 @@ then
   do
     has_error=0
 
-    if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
+    if [[ $test_file_rel == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
       # environment switched to ccloud in this menu: same variables as above, only
       # once (the menu can unset them) and never on top of --cluster-* flags
@@ -970,7 +1030,7 @@ then
       fi
     done
 
-    if [[ $test_file == *"aws"* ]]
+    if [[ $test_file_rel == *"aws"* ]]
     then
       if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
       then
@@ -1011,7 +1071,7 @@ then
       fi
     fi
 
-    if [[ $test_file == *"gcp"* ]]
+    if [[ $test_file_rel == *"gcp"* ]]
     then
       if [ ! -f "$test_file_directory/keyfile.json" ] && [ -z "$GCP_KEYFILE_CONTENT" ]
       then
@@ -1087,16 +1147,11 @@ then
     # 🍔 build the menu: an entry is only added when it applies to this example
     #
     is_ccloud=0
-    if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
+    if [[ $test_file_rel == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
       is_ccloud=1
     fi
-    # no local connect (versions, profiles...)
-    is_fully_managed=0
-    if [[ $test_file == *"fully-managed"* ]]
-    then
-      is_fully_managed=1
-    fi
+    # no local connect (versions, profiles...): is_fully_managed, computed once with get_connector_type
 
     options=()
 
@@ -1137,12 +1192,12 @@ then
     add_menu_toggle $((1-is_ccloud)) "$ENABLE_JMX_GRAFANA" "$MENU_GRAFANA"
     add_menu_toggle $((1-is_ccloud)) "$ENABLE_KAFKA_NODES" "$MENU_BROKERS"
     add_menu_toggle $((1-is_ccloud)) "$ENABLE_CONNECT_NODES" "$MENU_CONNECT_WORKERS"
-    add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KCAT" "$MENU_KCAT"
+    add_menu_toggle $((1-is_ccloud)) "$ENABLE_KCAT" "$MENU_KCAT"
     add_menu_toggle $sql_datagen "$ENABLE_SQL_DATAGEN" "$MENU_SQL_DATAGEN"
     add_menu_toggle $benchmark_available "$ENABLE_BENCHMARK" "$MENU_BENCHMARK"
-    if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]; then ccloud_service_account_available=1; else ccloud_service_account_available=0; fi
+    if [ $is_ccloud_managed == 1 ]; then ccloud_service_account_available=1; else ccloud_service_account_available=0; fi
     add_menu_toggle $ccloud_service_account_available "$PG_CCLOUD_SERVICE_ACCOUNT" "$MENU_CCLOUD_SERVICE_ACCOUNT"
-    add_menu_toggle $((1-is_fully_managed)) "$ENABLE_FLINK" "$MENU_FLINK"
+    add_menu_toggle $((1-is_ccloud)) "$ENABLE_FLINK" "$MENU_FLINK"
     add_menu_group "$MENU_SEPARATOR_FEATURES" "${toggle_group[@]}"
 
     group=()
@@ -1222,7 +1277,7 @@ then
 
     if [[ $res == *"$MENU_OPEN_FILE"* ]]
     then
-      if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
+      if [ $is_ccloud_managed == 1 ]
       then
         playground open --file "${test_file}"
       else
@@ -1456,7 +1511,7 @@ then
         unset ENABLE_SQL_DATAGEN
         interactive_enable_sql=""
 
-        if [[ $test_file != *"fully-managed"* ]]
+        if [ $is_fully_managed == 0 ]
         then
           array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
           unset ENABLE_JMX_GRAFANA
@@ -1995,12 +2050,15 @@ then
 
   if [ "$interactive_enable_sql" == "true" ]
   then
-    if [[ $test_file != *"fully-managed"* ]]
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
+    fi
+    if [ $is_fully_managed == 0 ]
     then
       log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
       if [[ -n "$force_interactive_repro" ]]
       then
-        force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
         force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
       fi
     fi
@@ -2119,13 +2177,9 @@ playground state set run.test_file "$previous_test_file"
 maybe_cleanup_ccloud_run_resources
 # already done, don't do it again in the 'playground stop' below
 export PG_SKIP_CCLOUD_RUN_CLEANUP=1
+# false by default: only the containers of the previous example are stopped
 container_kill_all_before_run=$(playground config get container-kill-all-before-run)
-if [ "$container_kill_all_before_run" == "" ]
-then
-    playground config set container-kill-all-before-run false
-fi
-
-if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
+if [ "$container_kill_all_before_run" == "true" ]
 then
   playground container kill-all
   log "🎓 to only stop the playground containers instead: playground config container-kill-all-before-run false"
@@ -2142,13 +2196,21 @@ array_declaration=$(declare -p array_flag_list)
 encoded_array=$(echo "$array_declaration" | base64)
 playground state set run.array_flag_list_base64 "$encoded_array"
 
+if [ $is_ccloud == 1 ] && [[ $test_file_rel == *"ccloud"* ]]
+then
+  environment="ccloud"
+elif [ -z "$environment" ]
+then
+  environment="${PLAYGROUND_ENVIRONMENT:-plaintext}"
+fi
+
 # 📄 from now on, the output also goes to a masked run log that can be shared (playground config run-log)
 run_log_start
 trap 'run_log_finish $?' EXIT
 
 if [ "$flag_list" != "" ]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [[ $test_file_rel == *"ccloud"* ]]
   then
     log "🚀⛅ Running ccloud example with flags"
   else
@@ -2156,7 +2218,7 @@ then
   fi
   log "⛳ Flags used are $(mask_creds_in_command "$flag_list")"
 else
-  if [[ $test_file == *"ccloud"* ]]
+  if [[ $test_file_rel == *"ccloud"* ]]
   then
     log "🚀⛅ Running ccloud example without any flags"
   else
@@ -2166,7 +2228,7 @@ fi
 
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 playground state set run.test_file "$test_file"
-if [[ $test_file == *"ccloud"* ]]
+if [[ $test_file_rel == *"ccloud"* ]]
 then
   # Confluent Cloud resources created by this run are recorded with this id, see maybe_cleanup_ccloud_run_resources
   export PG_CCLOUD_RUN_ID="$(date +%s)"
@@ -2357,10 +2419,10 @@ then
   playground generate-connector-plugin-list > /dev/null 2>&1 &
 fi
 
-if [[ $test_file == *"aws"* ]]
+if [[ $test_file_rel == *"aws"* ]]
 then
     playground cloud-resources aws costs-history --no-open > /tmp/aws-costs-history.txt 2>/dev/null &
-elif [[ $test_file == *"azure"* ]]
+elif [[ $test_file_rel == *"azure"* ]]
 then
     playground cloud-resources azure costs-history --no-open > /tmp/azure-costs-history.txt 2>/dev/null &
 fi
@@ -2483,7 +2545,7 @@ else
   then
     echo "playground connector diagnose          # status, error digest, lag and offsets of the connector(s)"
   fi
-  if [[ $test_file != *"fully-managed"* ]]
+  if [ $is_fully_managed == 0 ]
   then
     if [ "$(playground state get flags.ENABLE_KSQLDB 2> /dev/null)" == "1" ]
     then
@@ -2522,7 +2584,7 @@ check_for_ec2_instance_running
 if [ ! -z "$ENABLE_JMX_GRAFANA" ]
 then
   echo ""
-  if [[ $test_file == *"ccloud"* ]]
+  if [[ $test_file_rel == *"ccloud"* ]]
   then
     log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)"
@@ -2532,7 +2594,7 @@ then
     log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)"
   fi
 
-  if [[ $test_file != *"fully-managed"* ]]
+  if [ $is_fully_managed == 0 ]
   then
     if [ -z "$GITHUB_RUN_NUMBER" ]
     then
@@ -2574,7 +2636,7 @@ fi
 
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
-  if [[ $test_file == *"ccloud"* ]]
+  if [[ $test_file_rel == *"ccloud"* ]]
   then
     echo ""
     # wait that process with "playground ccloud-costs-history" is finished
@@ -2592,7 +2654,7 @@ then
     fi
     log "👀 all the details are in the HTML report above, or run <playground ccloud-costs-history --detailed>"
     display_ccloud_leftovers
-  elif [[ $test_file == *"aws"* ]]
+  elif [[ $test_file_rel == *"aws"* ]]
   then
     echo ""
     # wait that process with "playground cloud-resources aws costs-history" is finished
@@ -2609,7 +2671,7 @@ then
       cat /tmp/aws-costs-history.txt
     fi
     log "👀 all the details are in the HTML report above, or run <playground cloud-resources aws costs-history --detailed>"
-  elif [[ $test_file == *"azure"* ]]
+  elif [[ $test_file_rel == *"azure"* ]]
   then
     echo ""
     # wait that process with "playground cloud-resources azure costs-history" is finished

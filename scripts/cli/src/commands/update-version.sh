@@ -29,7 +29,7 @@ fi
 
 # ccloud examples have no broker container: connect gives the CP version
 version_container="broker"
-if [[ $test_file == *"ccloud"* ]] || [ "$environment" == "ccloud" ]
+if [[ "$(example_relative_path "$test_file")" == *"ccloud"* ]] || [ "$environment" == "ccloud" ]
 then
   version_container="connect"
 fi
