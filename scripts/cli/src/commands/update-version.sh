@@ -5,22 +5,38 @@ connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
 
 test_file=$(get_current_test_file) || exit 1
+filename=$(basename "$test_file")
 
-# determining the docker-compose file from from test_file
-docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-test_file_directory="$(dirname "${test_file}")"
-docker_compose_file="${test_file_directory}/${docker_compose_file}"
+environment=$(playground state get run.environment)
+if [[ "$environment" == cfk* ]]
+then
+  logerror "❌ update-version is not available with the $environment environment: run the example again with playground run --tag / --connector-tag"
+  exit 1
+fi
+if [ "$(playground state get run.connector_type)" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+then
+  logerror "❌ update-version does not apply to fully managed connectors: Confluent Cloud manages their version"
+  exit 1
+fi
 
+# sets docker_compose_file (the override of the example), with the same fallbacks as everywhere else
+get_connector_paths > /dev/null
 docker_compose_file_available=1
-if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+if [ ! -f "${docker_compose_file}" ]
 then
   docker_compose_file_available=0
 fi
 
-current_tag=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+# ccloud examples have no broker container: connect gives the CP version
+version_container="broker"
+if [[ $test_file == *"ccloud"* ]] || [ "$environment" == "ccloud" ]
+then
+  version_container="connect"
+fi
+current_tag=$(docker inspect -f '{{.Config.Image}}' $version_container 2> /dev/null | cut -d ":" -f 2)
 if [ "$current_tag" == "" ]
 then
-  logerror "❌ Could not retrieve current cp version (using broker container)"
+  logerror "❌ Could not retrieve current cp version (using $version_container container), is the example running?"
   exit 1
 fi
 
@@ -118,13 +134,11 @@ IFS=' ' flag_list="${array_flag_list[*]}"
 if [ "$flag_list" == "" ]
 then
   docs_available=1
-  set +e
   playground open-docs --only-show-url > /dev/null 2>&1
   if [ $? -eq 1 ]
   then
     docs_available=0
   fi
-  set -e
 
   terminal_columns=$(tput cols)
   if [[ $terminal_columns -gt 180 ]]
@@ -162,6 +176,8 @@ then
 
   connector_example=0
   current_versions=""
+  # a connector not installed yet (no manifest) counts as a change
+  change_detected=0
   get_connector_paths
   if [ "$connector_paths" != "" ]
   then
@@ -200,14 +216,12 @@ then
 
   # readonly MENU_LETS_GO="🚀 Run the example !" #0
   readonly MENU_OPEN_FILE="📖 Open the file in text editor"
-  set +e
   if [[ $(type -f open 2>&1) =~ "not found" ]]
   then
     MENU_OPEN_DOCS="🌐 Show link to the docs"
   else
     MENU_OPEN_DOCS="🌐 Open the docs in browser"
   fi
-  set -e
   readonly MENU_SEPARATOR="--------------------------------------------------" #3
   MENU_TAG="🎯 CP version (all components) (current $current_tag) $(printf '%*s' $((${MAX_LENGTH}-46-${#MENU_TAG})) ' ') --tag" #4
   MENU_CONNECT_TAG="🔗 CP version (connect only) (current $current_connect_tag) $(printf '%*s' $((${MAX_LENGTH}-44-${#MENU_CONNECT_TAG})) ' ') --connect-tag"
@@ -221,7 +235,6 @@ then
   example="$last_two_folders/$filename"
 
   stop=0
-  change_detected=0
   while [ $stop != 1 ]
   do
     if [ $change_detected -eq 0 ]
@@ -231,17 +244,6 @@ then
       MENU_LETS_GO="🚀 Run the example !" #0
     fi
     options=("$MENU_LETS_GO" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_GO_BACK")
-
-    if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
-    then
-      if [[ $test_file == *"fully-managed"* ]]
-      then
-        unset 'options[5]'
-        unset 'options[6]'
-        unset 'options[7]'
-        unset 'options[8]'
-      fi
-    fi
 
     if [ $connector_example == 0 ] || [ $docker_compose_file_available == 0 ]
     then
@@ -261,6 +263,11 @@ then
 
     preview="\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
     res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"$preview\"")
+    if [ -z "$res" ]
+    then
+      # esc: nothing changed
+      exit 0
+    fi
 
     if [[ $res == *"$MENU_LETS_GO"* ]]
     then
@@ -284,8 +291,8 @@ then
 
     if [[ $res == *"$MENU_GO_BACK"* ]]
     then
-      stop=1
-      playground update-versions
+      log "🔙 no version changed"
+      exit 0
     fi
 
     if [[ $res == *"$MENU_TAG"* ]]
@@ -334,6 +341,8 @@ then
     then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-tag"
+      # utils.sh refuses CONNECTOR_TAG and CONNECTOR_ZIP together
+      unset CONNECTOR_ZIP
       connector_tags=""
       for connector_path in ${connector_paths//,/ }
       do
@@ -348,6 +357,7 @@ then
         fi
 
         ## current version
+        current_version=""
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
         if [ -f $manifest_file ]
         then
@@ -382,6 +392,8 @@ then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-tag"
       maybe_remove_flag "--connector-jar"
+      # utils.sh refuses CONNECTOR_TAG and CONNECTOR_ZIP together
+      unset CONNECTOR_TAG CONNECTOR_JAR
       connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
       if [[ $connector_zip == *"@"* ]]
       then

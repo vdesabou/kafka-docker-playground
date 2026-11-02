@@ -855,10 +855,10 @@ subcommands:
     \ --connect-tag     Confluent Platform version for connect only\n  --schema-registry-tag,
     --ksqldb-tag, --control-center-tag\n                    version for that component
     only\n  --connector-tag   connector version from Confluent Hub\n  --connector-zip
-    \  connector from a local zip or a URL\n  --connector-jar   a single jar, dropped
-    into the existing plugin\n\n\U0001F9F0 Adding to the example\n  --environment
-    \    run a connector example under another security setup\n  --enable-<x>      add
-    control-center, ksqldb, flink, grafana, kcat...\n  --enable-sql-datagen\n                    continuous
+    \  connector from a local zip\n  --connector-jar   a single jar, dropped into
+    the existing plugin\n\n\U0001F9F0 Adding to the example\n  --environment     run
+    a connector example under another security setup\n  --enable-<x>      add control-center,
+    ksqldb, flink, grafana, kcat...\n  --enable-sql-datagen\n                    continuous
     realistic data for CDC source examples\n  --benchmark       benchmark the connector
     once the example succeeded\n  --connect-community-image, --kafka-community-image\n
     \                   use community images instead of enterprise ones\n  --enable-kraft
@@ -1393,14 +1393,13 @@ subcommands:
     10.6.0?\".\n\n  --tag            \U0001F522 every Confluent Platform component\n
     \ --connect-tag    \U0001F517 only the connect container, other components untouched\n
     \ --connector-tag  \U0001F9E9 the connector, from Confluent Hub\n  --connector-zip
-    \ \U0001F4E6 the connector, from a local zip or a URL\n  --connector-jar  ☕ a
-    single jar, dropped into the existing plugin\n\nWith no flag, you are prompted
-    with the versions available. The versions\ncurrently running are read from the
-    broker and connect containers, so the\nexample must be up.\n\n\U0001F393 Tip:
-    this is a version bisect tool. Keep the example running and call it\nrepeatedly
-    until you find the version where the behaviour changes.\n\n\U0001F36A Deep dive:
-    https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC Bite
-    size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version"
+    \ \U0001F4E6 the connector, from a local zip\n  --connector-jar  ☕ a single jar,
+    dropped into the existing plugin\n\nWith no flag, you are prompted with the versions
+    available. The versions\ncurrently running are read from the broker and connect
+    containers, so the\nexample must be up.\n\n\U0001F393 Tip: this is a version bisect
+    tool. Keep the example running and call it\nrepeatedly until you find the version
+    where the behaviour changes.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version"
   usage: playground update-version [OPTIONS]
   options:
   - names:
