@@ -30,6 +30,16 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>4A2CE7FF-D5E4-4F0D-B275-08B6071D4B81</string>
+				<key>modifiers</key>
+				<integer>131072</integer>
+				<key>modifiersubtext</key>
+				<string>open the HTML report</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 		</array>
 		<key>3A4988D3-112F-4B41-AB82-B96BA1AB4ABF</key>
 		<array>
@@ -61,6 +71,19 @@
 			<dict>
 				<key>destinationuid</key>
 				<string>8763BFCA-C67F-4381-A571-36D71A4D8AC7</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>4A2CE7FF-D5E4-4F0D-B275-08B6071D4B81</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>59B57580-CB26-4AB9-9474-499182F2BACB</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -337,7 +360,7 @@
 				<key>acceptsurls</key>
 				<false/>
 				<key>name</key>
-				<string>kdp: support case, example, config key…</string>
+				<string>kdp: config, stack trace, connector class, key, case…</string>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.trigger.universalaction</string>
@@ -394,7 +417,7 @@
 				<key>fontsizing</key>
 				<integer>0</integer>
 				<key>footertext</key>
-				<string>⌘↩ copy output · ⌥↩ copy command · ⎋ close</string>
+				<string>↩ run again · text↩ filter · ⌘↩ copy output · ⌥↩ copy command · ⇧↩ open report · ⎋ close</string>
 				<key>inputfile</key>
 				<string>kdp-view.sh</string>
 				<key>inputtype</key>
@@ -440,19 +463,47 @@
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>PYTHONUTF8=1 PATH=/opt/homebrew/bin:/usr/local/bin:$PATH python3 kdp.py --view-open-report</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>4A2CE7FF-D5E4-4F0D-B275-08B6071D4B81</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string># kafka-docker-playground (kdp)
 
-Keyword **kdp**, or the Universal Action **kdp: support case, example, config key…** on selected text.
+Keyword **kdp** (the first line says what is running, 🆕 when the clone has a newer workflow), or the Universal Action **kdp: config, stack trace, connector class, key, case…** on selected text: a connector config gets validate / convert / repro bootstrap, a stack trace `analyze logs`, a connector class its plugin and examples, a config key `kdp key`.
 
 | Query | What |
 | --- | --- |
 | `kdp find &lt;words&gt;` | `playground find-example`: examples (and repro models) |
 | `kdp history [words]` | `playground history`: replay a run |
-| `kdp plugin &lt;plugin&gt; [version]` | connector-plugin info / changelog / sourcecode / dependencies / cve-scan |
-| `kdp key &lt;key&gt; [class]` | connector-plugin config-key (`--since-version` with a class) |
+| `kdp plugin &lt;words&gt; [version]` | pick the plugin in the list (↩ fills it in), then a version in its list, then connector-plugin info / changelog / sourcecode / dependencies / cve-scan |
+| `kdp key &lt;words&gt;` | pick the key in the list, then a connector that has it: connector-plugin config-key (`--since-version` with a connector) |
 | `kdp docs [words]` | deep dive and toolkit pages on kafka-docker-playground.io |
+| `kdp connector [words]` | pick a running connector (failed first), then diagnose, status, tasks, metrics, history, config, offsets, topics, restart failed tasks, pause / resume |
+| `kdp logs [container] [pattern]` | pick a container, then its errors, last lines, the lines matching a pattern, or follow them in the terminal |
+| `kdp topic [words]` | pick a topic: describe, number of records, last / first records, grep, DLQ inspect |
+| `kdp schema [words]` | pick a subject: describe, latest schema, history, diff, compatibility |
+| `kdp ci [words]` | pick a CI test: get-ci-result (with logs and HTML report), 🔥 issues |
 | `kdp status` | playground status, connector status / diagnose, connect errors, broker health |
 | `kdp repro [words]` | reproduction models, mine first (only when `reproduction-models/` has models) |
 | `kdp notes [words]` | notes folder, resume the Claude Code session that wrote a note (only when the folder exists) |
@@ -461,7 +512,7 @@ Keyword **kdp**, or the Universal Action **kdp: support case, example, config ke
 Keys: ↩ copy the command (or open), ⌘ VS Code, ⌃ run in the terminal, ⌥ / ⇧ depend on the mode (hold the key to see the subtitle).
 ⌃ on an example runs `playground run`, which stops the environment that is running.
 
-Read-only commands (`plugin`, `key`, `status`, the repro hand-off report) show their output in the Alfred window, streamed while they run (⌘↩ copies the output, ⌥↩ the command), unless **Show output** says terminal. Interactive ones (`playground run`, `claude`) always go to the terminal.
+Read-only commands (`plugin`, `key`, `status`, the repro hand-off report) show their output in the Alfred window, streamed while they run (↩ runs it again, `watch` + ↩ every 5 s, text + ↩ filters the lines, ⇧↩ opens the HTML report, ⌘↩ copies the output, ⌥↩ the command), unless **Show output** says terminal. Interactive ones (`playground run`, `claude`) always go to the terminal.
 
 Commands sent to the terminal go where the **Run in the terminal** setting says: the terminal set in Alfred Preferences &gt; Features &gt; Terminal (default), a new VS Code integrated terminal, Terminal.app, or the clipboard only.
 
@@ -476,41 +527,50 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 			<key>note</key>
 			<string>Text View: output of read-only commands (kdp-view.sh → kdp.py --view, reruns every 0.5 s until the command exits)</string>
 			<key>xpos</key>
-			<real>420</real>
+			<real>420.0</real>
 			<key>ypos</key>
-			<real>300</real>
+			<real>300.0</real>
 		</dict>
 		<key>3A4988D3-112F-4B41-AB82-B96BA1AB4ABF</key>
 		<dict>
 			<key>note</key>
 			<string>⌘↩ copy output</string>
 			<key>xpos</key>
-			<real>600</real>
+			<real>600.0</real>
 			<key>ypos</key>
-			<real>280</real>
+			<real>280.0</real>
 		</dict>
 		<key>498F2B95-BDC1-4099-A6CE-EC1FD858DCA1</key>
 		<dict>
 			<key>xpos</key>
-			<real>260</real>
+			<real>260.0</real>
 			<key>ypos</key>
-			<real>80</real>
+			<real>80.0</real>
+		</dict>
+		<key>4A2CE7FF-D5E4-4F0D-B275-08B6071D4B81</key>
+		<dict>
+			<key>note</key>
+			<string>⇧↩ open the HTML report found in the output</string>
+			<key>xpos</key>
+			<integer>600</integer>
+			<key>ypos</key>
+			<integer>520</integer>
 		</dict>
 		<key>4DF707E4-934C-40FB-8E08-3F5629396498</key>
 		<dict>
 			<key>note</key>
 			<string>⌥↩ copy command</string>
 			<key>xpos</key>
-			<real>600</real>
+			<real>600.0</real>
 			<key>ypos</key>
-			<real>400</real>
+			<real>400.0</real>
 		</dict>
 		<key>59B57580-CB26-4AB9-9474-499182F2BACB</key>
 		<dict>
 			<key>xpos</key>
-			<real>600</real>
+			<real>600.0</real>
 			<key>ypos</key>
-			<real>160</real>
+			<real>160.0</real>
 		</dict>
 		<key>62519360-28FD-4015-9605-9AB1EC720C80</key>
 		<dict>
@@ -519,43 +579,43 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 			<key>note</key>
 			<string>runs in the terminal set in Alfred &gt; Features &gt; Terminal</string>
 			<key>xpos</key>
-			<real>420</real>
+			<real>420.0</real>
 			<key>ypos</key>
-			<real>20</real>
+			<real>20.0</real>
 		</dict>
 		<key>6A5317AA-09CC-408D-8100-6EA088FCD2B4</key>
 		<dict>
 			<key>xpos</key>
-			<real>30</real>
+			<real>30.0</real>
 			<key>ypos</key>
-			<real>60</real>
+			<real>60.0</real>
 		</dict>
 		<key>8763BFCA-C67F-4381-A571-36D71A4D8AC7</key>
 		<dict>
 			<key>note</key>
 			<string>copy / copyfile / open / reveal / code / refresh_repros</string>
 			<key>xpos</key>
-			<real>420</real>
+			<real>420.0</real>
 			<key>ypos</key>
-			<real>160</real>
+			<real>160.0</real>
 		</dict>
 		<key>BA740760-7F0B-4967-A155-E19AAB375283</key>
 		<dict>
 			<key>note</key>
 			<string>view_output: opened by kdp.py (action view) with the job id as argument</string>
 			<key>xpos</key>
-			<real>260</real>
+			<real>260.0</real>
 			<key>ypos</key>
-			<real>300</real>
+			<real>300.0</real>
 		</dict>
 		<key>CF0EFFE1-671A-4F0B-B42F-4E692AEC94A7</key>
 		<dict>
 			<key>note</key>
 			<string>Universal Action: selected text (a case number, a key, words)</string>
 			<key>xpos</key>
-			<real>30</real>
+			<real>30.0</real>
 			<key>ypos</key>
-			<real>230</real>
+			<real>230.0</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
@@ -685,7 +745,7 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 		</dict>
 	</array>
 	<key>version</key>
-	<string>1.1.0</string>
+	<string>1.5.0</string>
 	<key>webaddress</key>
 	<string>https://kafka-docker-playground.io/#/cli?id=%F0%9F%8E%A9-alfred-workflow-macos</string>
 </dict>

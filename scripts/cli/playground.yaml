@@ -3771,13 +3771,19 @@ subcommands:
   - name: install-alfred-workflow
     description: "\U0001F3A9 Install the \"kafka-docker-playground (kdp)\" Alfred
       workflow (macOS, Alfred 5 with the Powerpack)\n\nA launcher for the playground
-      CLI: type 'kdp' in Alfred, or select text\nanywhere and use the Universal Action
-      \"kdp: support case, example, config\nkey…\":\n\n  kdp find <words>            find-example:
-      ↩ copies 'playground run -f …'\n  kdp history [words]         replay a past
-      run with its exact flags\n  kdp plugin <p> [version]    connector-plugin info,
-      changelog, source code, jars, CVEs\n  kdp key <key> [class]       connector-plugin
-      config-key\n  kdp docs [words]            deep dive pages\n  kdp status                  status,
-      connector status / diagnose, connect errors\n  kdp repro / notes / case    reproduction
+      CLI: type 'kdp' in Alfred, or select text\nanywhere (a connector config, a stack
+      trace, a connector class, a config\nkey, a case number) and use the Universal
+      Action \"kdp: config, stack\ntrace, connector class, key, case…\":\n\n  kdp
+      find <words>            find-example: ↩ copies 'playground run -f …'\n  kdp
+      history [words]         replay a past run with its exact flags\n  kdp plugin
+      <words> [ver]    pick a plugin, then a version, then info, changelog, source
+      code, jars, CVEs\n  kdp key <words>             pick a config key, then a connector:
+      config-key\n  kdp docs [words]            deep dive pages\n  kdp connector [words]
+      \      pick a running connector: diagnose, status, tasks, metrics, history…\n
+      \ kdp logs [container] [pat]  pick a container: errors, last lines, grep, follow\n
+      \ kdp topic / schema / ci     pick a topic, a subject, a CI test: describe,
+      records, history, CI result\n  kdp status                  status, connector
+      status / diagnose, connect errors\n  kdp repro / notes / case    reproduction
       models, notes, support cases (when present)\n\nOn a result: ↩ copies the command
       (or opens), ⌘ opens in VS Code, ⌃ runs\nit in the terminal (for an example,
       that stops the running environment),\n⌥ and ⇧ depend on the mode.\n\nRead-only
