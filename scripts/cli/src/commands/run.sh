@@ -2135,7 +2135,9 @@ fi
 unset PG_SKIP_CCLOUD_RUN_CLEANUP
 set -e
 
-IFS=' ' flag_list="${array_flag_list[*]}"
+# in a subshell: a bare 'IFS=' ' flag_list=…' (two assignments) would keep IFS=' ' for the rest of the run, and every
+# 'for x in $list' over a multi-line list (ccloud cleanup of the connectors and topics of the run…) would loop once
+flag_list=$(IFS=' '; echo "${array_flag_list[*]}")
 array_declaration=$(declare -p array_flag_list)
 encoded_array=$(echo "$array_declaration" | base64)
 playground state set run.array_flag_list_base64 "$encoded_array"
@@ -2280,15 +2282,16 @@ function cleanup {
     playground connector versions
   fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-  then
-    if [ "$connector_name" != "" ]
-    then
-      playground connector status --connector "$connector_name"
-    fi
-  elif [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
     playground connector status
+  elif [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    # without --connector: every connector of the run. In CI, they were just deleted (maybe_cleanup_ccloud_run_resources)
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      playground connector status
+    fi
   fi
 
   if [ -z "$GITHUB_RUN_NUMBER" ]
@@ -2401,6 +2404,7 @@ fi
 # same for --benchmark
 run_benchmark="$ENABLE_BENCHMARK"
 benchmark_ret=0
+sql_datagen_ret=0
 if grep -q '^export ENABLE_BENCHMARK=true' "$filename"
 then
   run_benchmark=true
@@ -2435,7 +2439,11 @@ then
   if [ -n "$sql_datagen" ]
   then
     # SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5)
-    sql_datagen_inject "$test_file" "${SQL_DATAGEN_DURATION:-10}" "${SQL_DATAGEN_SESSIONS:-5}" || ret=$?
+    sql_datagen_inject "$test_file" "${SQL_DATAGEN_DURATION:-10}" "${SQL_DATAGEN_SESSIONS:-5}" || sql_datagen_ret=$?
+    if [ $sql_datagen_ret -ne 0 ]
+    then
+      logerror "❌ --enable-sql-datagen: the injection failed (exit code $sql_datagen_ret)"
+    fi
   fi
   if [ -n "$run_benchmark" ]
   then
@@ -2505,6 +2513,9 @@ else
   fi
   exit $ret
 fi
+# the example succeeded: what follows is informational (ec2, grafana, costs…), a failure there must not end the run with
+# an error after the SUCCESS banner (and record it as a FAILURE in the history)
+set +e
 check_for_ec2_instance_running
 
 if [ ! -z "$ENABLE_JMX_GRAFANA" ]
@@ -2617,7 +2628,11 @@ then
   fi
 fi
 
-# the example succeeded, but --benchmark did not
+# the example succeeded, but --enable-sql-datagen or --benchmark did not
+if [ $sql_datagen_ret -ne 0 ]
+then
+  exit $sql_datagen_ret
+fi
 if [ $benchmark_ret -ne 0 ]
 then
   exit $benchmark_ret
