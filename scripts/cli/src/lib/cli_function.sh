@@ -5131,8 +5131,8 @@ function cleanup_confluent_cloud_resources () {
   deleted_topics="$topics_to_delete"
 
   # forget recorded topics and connectors that are gone (deleted above or by someone else)
-  # only when both listings succeed, an empty list would forget everything
-  if topics_json=$(confluent kafka topic list --output json) && connectors_json=$(confluent connect cluster list --output json)
+  # only when both listings succeed, an empty list would forget everything; not in a dry-run (nothing was deleted)
+  if [[ -z "${dry_run:-}" ]] && topics_json=$(confluent kafka topic list --output json) && connectors_json=$(confluent connect cluster list --output json)
   then
     prune_ccloud_recorded_entries "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name')" "$(echo "$connectors_json" | jq -r '.[].name')"
   fi

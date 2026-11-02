@@ -3,6 +3,18 @@ force="${args[--force]}"
 # Convert the space delimited string to an array
 eval "resources=(${args[--resource]})"
 recorded_topics_only="${args[--recorded-topics-only]}"
+# read by check_if_skip and confirm_deletion: every deletion is shown, none is run
+dry_run="${args[--dry-run]}"
+if [[ -n "$dry_run" ]] && [[ -n "$recorded_topics_only" ]]
+then
+    # bashly only checks a conflict against the flags already parsed: also refused here, whatever the order
+    logerror "❌ --dry-run can't be used with --recorded-topics-only"
+    exit 1
+fi
+if [[ -n "$dry_run" ]]
+then
+    log "🔎 dry-run: listing what would be deleted, nothing is deleted"
+fi
 
 if [[ -n "$recorded_topics_only" ]]
 then
@@ -36,6 +48,11 @@ function name_has_user () {
 
 # true when the deletion described by $1 can go on: always with --force or in CI, otherwise when the user answers y
 function confirm_deletion () {
+    if [[ -n "$dry_run" ]]
+    then
+        log "🔎 dry-run, would ask: $1"
+        return 1
+    fi
     if [[ -n "$force" ]] || [ -n "$GITHUB_RUN_NUMBER" ]
     then
         return 0
@@ -278,6 +295,12 @@ function cleanup_gcp () {
 }
 
 function cleanup_ccloud () {
+    if [[ -n "$dry_run" ]] && [ -z "$CLUSTER_NAME" ] && [ -z "$(playground state get ccloud.CLUSTER_NAME)" ]
+    then
+        # bootstrap_ccloud_environment would create a cluster: not in a dry-run
+        logwarn "⏭️ dry-run: no Confluent Cloud cluster known (CLUSTER_NAME or a previous ccloud run), skipping Confluent Cloud"
+        return
+    fi
     cleanup_confluent_cloud_resources
 
     if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
