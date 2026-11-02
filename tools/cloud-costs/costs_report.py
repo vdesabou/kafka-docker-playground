@@ -548,6 +548,78 @@ def still_billing_card(records: List[dict], billing_now: set) -> str:
                    rh.table(["Resource", "Id", "Product", "Environment", f"Cost on {e(last_day)}", "≈ per month"], rows, num=(4, 5)))
 
 
+# ── tiles that follow the range selected in the cost per day chart (ccloud) ───────────────────────────────────────────
+# costs_filter.js computes them again from range_data() when a range is selected, and puts back the HTML written here
+# when the whole chart is shown again
+
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "costs_filter.js"), encoding="utf-8") as _f:
+    FILTER_SCRIPT = "<script>" + _f.read() + "</script>"
+
+RANGE_CSS = (".range-banner{display:flex;align-items:center;gap:10px;margin:-8px 0 22px;padding:10px 16px;border-radius:10px;"
+             "background:#eff6ff;border-left:4px solid #2a78d6;font-size:.86rem;color:#1e3a5f}"
+             ".range-banner button{font:inherit;font-size:.78rem;color:#fff;background:#2a78d6;border:0;border-radius:6px;"
+             "padding:3px 10px;cursor:pointer;white-space:nowrap}"
+             ".kpi-card.range-on{box-shadow:0 0 0 2px #2a78d6}"
+             + rh.dark(".range-banner{background:#172554;color:#bfdbfe}\n.kpi-card.range-on{box-shadow:0 0 0 2px #2a78d6}"))
+
+
+class RangeTiles:
+    """Marks the tiles of a report that follow the range of the cost per day chart (no mark when off)"""
+
+    def __init__(self, on: bool):
+        self.on = on
+
+    def kpi(self, key: str, html: str) -> str:
+        return html.replace('<div class="kpi-card', f'<div data-range-kpi="{key}" class="kpi-card', 1) if self.on else html
+
+    def tile(self, key: str, html: str) -> str:
+        return f"<div data-range-tile='{key}'>{html}</div>" if self.on and html else html
+
+    def title(self, static: str, template: str, key: str = "") -> str:
+        """template: the title for a range, {range}, {k} (rows shown) and {n} (rows in total) replaced"""
+        # between double quotes: e() leaves the single quotes of the template (class='muted')
+        return f'<span data-range-title="{e(template)}" data-range-key="{key}">{static}</span>' if self.on else static
+
+    def banner(self) -> str:
+        return ("<div class='range-banner' hidden><span class='range-text'></span>"
+                "<button type='button'>Show everything</button></div>") if self.on else ""
+
+
+def range_data(records: List[dict], days: List[str], mode: str, billing_now: set, top_headers: List[str], note: str,
+               months: Optional[List[dict]] = None) -> str:
+    """The records of the report per day, resource, product, environment and line type, for costs_filter.js; days: the x
+    axis of the cost per day chart; mode: history (build()) or range (build_range())"""
+    day_index = {d: i for i, d in enumerate(days)}
+    lists: Dict[str, Dict[str, int]] = {"categories": {}, "groups": {}, "details": {}}
+    items: Dict[str, int] = {}
+    item_info: List[list] = []
+    rows: Dict[tuple, List[float]] = {}
+
+    def idx(kind: str, v: str) -> int:
+        return lists[kind].setdefault(v, len(lists[kind]))
+
+    for r in records:
+        if r["day"] not in day_index:
+            continue
+        key = r["item_id"] or r["item"]
+        if key not in items:
+            items[key] = len(item_info)
+            item_info.append([r["item"], r["item_id"], r["group"], r["category"]])
+        k = (day_index[r["day"]], items[key], idx("categories", r["category"]), idx("groups", r["group"]), idx("details", r["detail"]))
+        acc = rows.setdefault(k, [0.0, 0.0])
+        acc[0] += r["amount"]
+        acc[1] += r["discount"]
+    starts = sorted(m["start"] for m in months or [])
+    day_month = [max((m for m in starts if m <= d), default="") for d in days] if starts else []
+    data = {"mode": mode, "chart": DAILY_CHART_ID, "days": days, "dayMonth": day_month, "labels": LABELS["ccloud"],
+            "categories": list(lists["categories"]), "groups": list(lists["groups"]), "details": list(lists["details"]),
+            "items": item_info, "billing": sorted(items[k] for k in billing_now if k in items),
+            "badge": rh.badge("still billing", "warn"), "topHeaders": top_headers, "note": note,
+            "rows": [list(k) + [round(a, 6), round(d, 6)] for k, (a, d) in rows.items()]}
+    payload = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
+    return f"<script type='application/json' id='cost-range-data'>{payload}</script>"
+
+
 def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict]] = None) -> str:
     lab = LABELS[cloud]
     today = date.today()
@@ -600,15 +672,16 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
         body.append(rh.findings_html([{"severity": "MEDIUM", "text": f"No data for {range_label(m)}: the cost query failed, "
                                                                       f"this month is left out of the totals."} for m in failed]))
 
+    rt = RangeTiles(cloud == "ccloud" and bool(records))
     cards = [
-        rh.kpi("Last 12 months", money(total), f"{len(months)} periods"),
+        rt.kpi("total", rh.kpi("Last 12 months", money(total), f"{len(months)} periods")),
         rh.kpi("Current period", money(month_totals[-1]) if months else "-",
                f"since {range_label(current).split(' to ')[0]}" if current else "", "warn" if projected and average and projected > 1.5 * average else ""),
         rh.kpi("Projected", money(projected) if projected is not None else "-", "current period at this pace"),
         rh.kpi("Previous period", money(previous_total), range_label(full[-1][0]) if full else ""),
         rh.kpi("Monthly average", money(average), "complete periods"),
-        rh.kpi(f"Top {lab['category']}", money(by_category[0][1]) if by_category else "-",
-               f"{by_category[0][0]} ({100 * by_category[0][1] / total:.0f}%)" if by_category and total else ""),
+        rt.kpi("top", rh.kpi(f"Top {lab['category']}", money(by_category[0][1]) if by_category else "-",
+                             f"{by_category[0][0]} ({100 * by_category[0][1] / total:.0f}%)" if by_category and total else "")),
     ]
     if cloud == "ccloud":
         cards.append(rh.kpi("Resources still billing", str(len(billing_now)), "billed on each of the last 3 days with data",
@@ -618,8 +691,9 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
         cards.append(rh.kpi(f"{lab['items'].capitalize()} billed", str(n_current), "in the current period"))
     discount = sum(r["discount"] for r in records)
     if discount:
-        cards.append(rh.kpi("Discounts", money(abs(discount)), "already deducted"))
+        cards.append(rt.kpi("discount", rh.kpi("Discounts", money(abs(discount)), "already deducted")))
     body.append(rh.kpis_html(cards))
+    body.append(rt.banner())
 
     # charts
     points = [(short_label(m), t, range_label(m), m["ok"]) for m, t in zip(months, month_totals)]
@@ -627,15 +701,17 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
     charts = [(f"📅 Cost per month <span class='muted'>(current period in orange{', click a month to see its days' if with_days else ''})</span>",
                svg_columns(points, len(points) - 1, links=[(m["start"], m["end"]) for m in months] if with_days else None,
                            link_target=DAILY_CHART_ID)),
-              (f"👛 Cost per {lab['category']} <span class='muted'>(last 12 months)</span>",
-               rh.svg_hbars([(k, v, f"{k}: {money(v)}") for k, v in by_category[:15]], money))]
+              (rt.title(f"👛 Cost per {lab['category']} <span class='muted'>(last 12 months)</span>",
+                        f"👛 Cost per {lab['category']} <span class='muted'>({{range}})</span>"),
+               rt.tile("category", rh.svg_hbars([(k, v, f"{k}: {money(v)}") for k, v in by_category[:15]], money)))]
     if cloud == "ccloud" and records:
         daily = sum_by(records, "day")
         first = date.fromisoformat(min(daily))
         days = [(first + timedelta(days=i)).isoformat() for i in range((date.fromisoformat(max(daily)) - first).days + 1)]
         charts.append(("📆 Cost per day", svg_daily_zoomable(daily, days)))
-        charts.append(("🌍 Cost per environment", rh.svg_hbars(
-            [(k or "(none)", v, f"{k}: {money(v)}") for k, v in ranked(sum_by(records, "group"))[:15]], money)))
+        charts.append((rt.title("🌍 Cost per environment", "🌍 Cost per environment <span class='muted'>({range})</span>"),
+                       rt.tile("group", rh.svg_hbars(
+                           [(k or "(none)", v, f"{k}: {money(v)}") for k, v in ranked(sum_by(records, "group"))[:15]], money))))
     elif cloud == "azure" and records:
         charts.append(("📦 Cost per resource group", rh.svg_hbars(
             [(k or "(none)", v, f"{k}: {money(v)}") for k, v in ranked(sum_by(records, "group"))[:15]], money)))
@@ -702,14 +778,20 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
             row += [str(len(it["months"])), f"<span style='white-space:nowrap'>{e(last or '-')}</span>", money(it["total"]), f"{100 * it['total'] / total:.1f}%" if total else "-"]
             rows.append(row)
         n_num = 4
-        body.append(rh.card(f"🔝 Top {len(top)} {lab['items']} <span class='muted'>(of {len(items)}, last 12 months)</span>",
-                            rh.table(headers, rows, num=tuple(range(len(headers) - n_num, len(headers))))))
+        body.append(rh.card(rt.title(f"🔝 Top {len(top)} {lab['items']} <span class='muted'>(of {len(items)}, last 12 months)</span>",
+                                     f"🔝 Top {{k}} {lab['items']} <span class='muted'>(of {{n}}, {{range}})</span>"),
+                            rt.tile("top", rh.table(headers, rows, num=tuple(range(len(headers) - n_num, len(headers)))))))
+        top_headers = headers
 
         if cloud == "ccloud":
             lines = sum_by(records, lambda r: (r["category"], r["detail"]))
             rows = [[e(c), f"<span class='mono'>{e(d)}</span>", money(v), f"{100 * v / total:.1f}%" if total else "-"]
                     for (c, d), v in sorted(lines.items(), key=lambda kv: -kv[1]) if round(v, 4) != 0][:30]
-            body.append(rh.card("🧾 Cost per line type", rh.table(["Product", "Line type", "Total", "Share"], rows, num=(2, 3))))
+            body.append(rh.card(rt.title("🧾 Cost per line type", "🧾 Cost per line type <span class='muted'>({range})</span>"),
+                                rt.tile("lines", rh.table(["Product", "Line type", "Total", "Share"], rows, num=(2, 3)))))
+            body.append(range_data(records, days, "history", billing_now, top_headers,
+                                   "The per month tiles (current period, projected, previous period, monthly average, resources "
+                                   "still billing, products per month, details per month) don't change.", months))
 
         # details of each month, the most recent first
         details = []
@@ -745,6 +827,8 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
         meta.append(f"🗓️ {e(range_label({'start': months[0]['start'], 'end': months[-1]['end']}))}")
     css = ("<style>.kpi-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.kpi-value{font-size:1.4rem;white-space:nowrap}"
            "td .heat{display:block;margin:-7px -11px;padding:7px 11px}</style>")
+    if rt.on:
+        css = css.replace("</style>", RANGE_CSS + "</style>") + FILTER_SCRIPT
     return rh.page(f"{lab['name']} costs", f"💰 {e(lab['name'])} costs, last 12 months", meta, css + "".join(body),
                    f"playground cloud-resources {cloud} costs-history")
 
@@ -778,26 +862,30 @@ def build_range(user: str, period: dict) -> str:
         body.append(rh.verdict_html("ok", f"✅ {money(total)} from {range_label(period)}, {money(per_day)} per day on average, "
                                           "nothing billed on each of the last 3 days."))
 
+    rt = RangeTiles(bool(records))
     cards = [
-        rh.kpi("Total", money(total), range_label(period)),
-        rh.kpi("Days with data", f"{len(with_data)} / {len(days)}", "the last days can be incomplete"),
-        rh.kpi("Per day", money(per_day), "average over the days with data"),
-        rh.kpi("≈ per month", money(30 * per_day), "at this pace"),
-        rh.kpi(f"Top {lab['category']}", money(by_category[0][1]) if by_category else "-",
-               f"{by_category[0][0]} ({100 * by_category[0][1] / total:.0f}%)" if by_category and total else ""),
+        rt.kpi("total", rh.kpi("Total", money(total), range_label(period))),
+        rt.kpi("days", rh.kpi("Days with data", f"{len(with_data)} / {len(days)}", "the last days can be incomplete")),
+        rt.kpi("perday", rh.kpi("Per day", money(per_day), "average over the days with data")),
+        rt.kpi("permonth", rh.kpi("≈ per month", money(30 * per_day), "at this pace")),
+        rt.kpi("top", rh.kpi(f"Top {lab['category']}", money(by_category[0][1]) if by_category else "-",
+                             f"{by_category[0][0]} ({100 * by_category[0][1] / total:.0f}%)" if by_category and total else "")),
         rh.kpi("Resources still billing", str(len(billing_now)), "billed on each of the last 3 days with data",
                "warn" if billing_now else "ok"),
     ]
     discount = sum(r["discount"] for r in records)
     if discount:
-        cards.append(rh.kpi("Discounts", money(abs(discount)), "already deducted"))
+        cards.append(rt.kpi("discount", rh.kpi("Discounts", money(abs(discount)), "already deducted")))
     body.append(rh.kpis_html(cards))
+    body.append(rt.banner())
 
     if records:
         body.append(rh.charts_grid([
             ("📆 Cost per day", svg_daily_zoomable(daily, days)),
-            (f"👛 Cost per {lab['category']}", rh.svg_hbars([(k, v, f"{k}: {money(v)}") for k, v in by_category[:15]], money)),
-            ("🌍 Cost per environment", rh.svg_hbars([(k or "(none)", v, f"{k}: {money(v)}") for k, v in by_group[:15]], money)),
+            (rt.title(f"👛 Cost per {lab['category']}", f"👛 Cost per {lab['category']} <span class='muted'>({{range}})</span>"),
+             rt.tile("category", rh.svg_hbars([(k, v, f"{k}: {money(v)}") for k, v in by_category[:15]], money))),
+            (rt.title("🌍 Cost per environment", "🌍 Cost per environment <span class='muted'>({range})</span>"),
+             rt.tile("group", rh.svg_hbars([(k or "(none)", v, f"{k}: {money(v)}") for k, v in by_group[:15]], money))),
         ]))
 
         if billing_now:
@@ -830,8 +918,10 @@ def build_range(user: str, period: dict) -> str:
 
         tail = ["Environment", "Line types", "Days billed", "First billed", "Last billed", "Total", "Share"]
         headers = ["Resource", "Id", lab["category"].capitalize()] + tail
-        body.append(rh.card(f"🔝 Top {min(30, len(top))} {lab['items']} <span class='muted'>(of {len(top)})</span>",
-                            rh.table(headers, [item_row(it) for it in top[:30]], num=tuple(range(len(headers) - 4, len(headers))))))
+        body.append(rh.card(rt.title(f"🔝 Top {min(30, len(top))} {lab['items']} <span class='muted'>(of {len(top)})</span>",
+                                     f"🔝 Top {{k}} {lab['items']} <span class='muted'>(of {{n}}, {{range}})</span>"),
+                            rt.tile("top", rh.table(headers, [item_row(it) for it in top[:30]], num=tuple(range(len(headers) - 4, len(headers)))))))
+        top_headers = headers
 
         # the resources of each product, like the text output
         details = []
@@ -841,7 +931,9 @@ def build_range(user: str, period: dict) -> str:
             details.append(f"<details><summary><b>{e(c)}</b>: {money(v)} <span class='muted'>({100 * v / total:.1f}%, "
                            f"{len(rows)} {lab['item'] if len(rows) == 1 else lab['items']})</span></summary>"
                            + rh.table(headers, rows, num=tuple(range(len(headers) - 4, len(headers)))) + "</details>")
-        body.append(rh.card(f"🔍 {lab['items'].capitalize()} per {lab['category']}", "".join(details)))
+        body.append(rh.card(rt.title(f"🔍 {lab['items'].capitalize()} per {lab['category']}",
+                                     f"🔍 {lab['items'].capitalize()} per {lab['category']} <span class='muted'>({{range}})</span>", "per-category"),
+                            rt.tile("per-category", "".join(details))))
 
         # product x environment matrix
         groups = [k for k, _ in by_group]
@@ -850,14 +942,18 @@ def build_range(user: str, period: dict) -> str:
         rows = [[e(c)] + [f"<span{heat(per_cat[c].get(g, 0), mx)}>{money(per_cat[c][g])}</span>" if round(per_cat[c].get(g, 0), 4)
                           else "<span class='muted'>-</span>" for g in groups] + [f"<b>{money(v)}</b>"] for c, v in by_category]
         rows.append(["<b>Total</b>"] + [f"<b>{money(v)}</b>" for _, v in by_group] + [f"<b>{money(total)}</b>"])
-        body.append(rh.card(f"🗂️ {lab['categories'].capitalize()} per environment",
-                            rh.table([lab["category"].capitalize()] + [e(g or "(none)") for g in groups] + ["Total"], rows,
-                                     num=tuple(range(1, len(groups) + 2)))))
+        body.append(rh.card(rt.title(f"🗂️ {lab['categories'].capitalize()} per environment",
+                                     f"🗂️ {lab['categories'].capitalize()} per environment <span class='muted'>({{range}})</span>"),
+                            rt.tile("matrix", rh.table([lab["category"].capitalize()] + [e(g or "(none)") for g in groups] + ["Total"], rows,
+                                                       num=tuple(range(1, len(groups) + 2))))))
 
         lines = sum_by(records, lambda r: (r["category"], r["detail"]))
         rows = [[e(c), f"<span class='mono'>{e(d)}</span>", money(v), f"{100 * v / total:.1f}%" if total else "-"]
                 for (c, d), v in sorted(lines.items(), key=lambda kv: -kv[1]) if round(v, 4) != 0][:30]
-        body.append(rh.card("🧾 Cost per line type", rh.table(["Product", "Line type", "Total", "Share"], rows, num=(2, 3))))
+        body.append(rh.card(rt.title("🧾 Cost per line type", "🧾 Cost per line type <span class='muted'>({range})</span>"),
+                            rt.tile("lines", rh.table(["Product", "Line type", "Total", "Share"], rows, num=(2, 3)))))
+        body.append(range_data(records, days, "range", billing_now, top_headers,
+                               "The resources still billing (on each of the last 3 days with data) don't change."))
 
     notes = [DELAY_NOTE["ccloud"],
              "Costs of the whole organization the confluent CLI is logged into (confluent billing cost list), amounts after discounts.",
@@ -867,6 +963,8 @@ def build_range(user: str, period: dict) -> str:
 
     css = ("<style>.kpi-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.kpi-value{font-size:1.4rem;white-space:nowrap}"
            "td .heat{display:block;margin:-7px -11px;padding:7px 11px}</style>")
+    if rt.on:
+        css = css.replace("</style>", RANGE_CSS + "</style>") + FILTER_SCRIPT
     return rh.page(f"{lab['name']} costs", f"💰 {e(lab['name'])} costs, {e(range_label(period))}",
                    [f"☁️ {e(lab['name'])}", f"🗓️ {e(range_label(period))}"], css + "".join(body),
                    f"playground cloud-resources ccloud costs --start-date {period['start']} --end-date {period['end']}")

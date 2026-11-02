@@ -17,7 +17,8 @@ report and click around: this is what you get on your own data.
 > Occurrences of the log analysis, arrivals in the dead letter queue and jscissors calls are counted again for the
 > zoomed range (a burst of a few seconds in a 3-day bundle shows per second). The GC pause and heap charts zoom together,
 > so do the per second charts of the network capture. In the cloud costs history, a click on a month shows its days
-> in the cost per day chart, which also has last 7 / 30 / 90 days buttons.
+> in the cost per day chart, which also has last 7 / 30 / 90 days buttons: the tiles then follow the selected range
+> (totals, top product, cost per product and environment, top resources, line types).
 
 <div class="report-gallery">
   <div class="report-card">
