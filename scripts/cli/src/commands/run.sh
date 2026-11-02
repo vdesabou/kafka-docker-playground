@@ -14,21 +14,212 @@ connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
 
-enable_ksqldb="${args[--enable-ksqldb]}"
-enable_rest_proxy="${args[--enable-rest-proxy]}"
-enable_c3="${args[--enable-control-center]}"
-enable_flink="${args[--enable-flink]}"
-enable_conduktor="${args[--enable-conduktor]}"
-enable_multiple_brokers="${args[--enable-multiple-brokers]}"
-enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
-enable_jmx_grafana="${args[--enable-jmx-grafana]}"
-enable_kcat="${args[--enable-kcat]}"
-enable_sql_datagen="${args[--enable-sql-datagen]}"
-benchmark="${args[--benchmark]}"
-connect_community_image="${args[--connect-community-image]}"
-kafka_community_image="${args[--kafka-community-image]}"
-enable_kraft="${args[--enable-kraft]}"
-enable_legacy_c3="${args[--enable-legacy-control-center]}"
+# 🧩 the boolean flags of playground run, one line each: read by apply_boolean_flags (flags, ENABLE_* from the shell,
+# checks), by the menu (labels, visibility, toggles) and by force_enable_boolean_flags (reproduction models). Adding a
+# boolean flag: its line here, plus the flag in bashly.yml.
+#
+# flag | variable | value | ENABLE_* from the shell is the flag (1/0) | refused on (ccloud, fully_managed, -) |
+# hidden in the menu on (ccloud, fully_managed, -, or the name of a 0/1 variable) | menu group | emoji | text
+boolean_flags_table='
+--enable-ksqldb|ENABLE_KSQLDB|true|1|ccloud|fully_managed|options|🎏|ksqlDB
+--enable-control-center|ENABLE_CONTROL_CENTER|true|1|-|fully_managed|options|💠|Control Center
+--enable-conduktor|ENABLE_CONDUKTOR|true|1|-|fully_managed|options|🐺|Conduktor Platform
+--enable-rest-proxy|ENABLE_RESTPROXY|true|1|ccloud|ccloud|options|🧲|Rest Proxy
+--enable-jmx-grafana|ENABLE_JMX_GRAFANA|true|1|-|ccloud|options|📊|Grafana
+--enable-multiple-brokers|ENABLE_KAFKA_NODES|true|1|ccloud|ccloud|options|🔢|Multiple brokers
+--enable-multiple-connect-workers|ENABLE_CONNECT_NODES|true|1|ccloud|ccloud|options|🥉|Multiple connect workers
+--enable-kcat|ENABLE_KCAT|true|1|ccloud|ccloud|options|🐈|kcat
+--enable-sql-datagen|ENABLE_SQL_DATAGEN|true|0|-|sql_datagen|options|🌀|SQL Datagen injection
+--benchmark|ENABLE_BENCHMARK|true|0|-|benchmark_available|options|🏎️|Benchmark the connector
+--enable-flink|ENABLE_FLINK|true|1|ccloud|ccloud|options|🐹|Flink
+--connect-community-image|CP_CONNECT_IMAGE|confluentinc/cp-kafka-connect|0|fully_managed|fully_managed|images|🌱|Community connect image
+--kafka-community-image|CP_KAFKA_IMAGE|confluentinc/cp-kafka|0|ccloud|ccloud|images|🌿|Community kafka image
+--enable-kraft|ENABLE_KRAFT|true|0|ccloud|ccloud|images|📡|KRaft (CP 7.4 to 7.9)
+--enable-legacy-control-center|ENABLE_LEGACY_CONTROL_CENTER|true|1|-|fully_managed|images|🧓|Legacy Control Center (CP < 8)
+'
+declare -a bf_flag=() bf_variable=() bf_value=() bf_adopt=() bf_refused=() bf_hidden=() bf_group=() bf_emoji=() bf_text=()
+# how each flag got enabled: flag, shell, menu or hook (sql-datagen enabling Grafana); empty when disabled
+declare -a bf_source=() bf_menu_label=()
+nb_boolean_flags=0
+while IFS='|' read -r bf_line_flag bf_line_variable bf_line_value bf_line_adopt bf_line_refused bf_line_hidden bf_line_group bf_line_emoji bf_line_text
+do
+  # bashly indents the body of the command, the lines of the table too
+  bf_line_flag="${bf_line_flag//[[:space:]]/}"
+  [ -z "$bf_line_flag" ] && continue
+  bf_flag[nb_boolean_flags]="$bf_line_flag"
+  bf_variable[nb_boolean_flags]="$bf_line_variable"
+  bf_value[nb_boolean_flags]="$bf_line_value"
+  bf_adopt[nb_boolean_flags]="$bf_line_adopt"
+  bf_refused[nb_boolean_flags]="$bf_line_refused"
+  bf_hidden[nb_boolean_flags]="$bf_line_hidden"
+  bf_group[nb_boolean_flags]="$bf_line_group"
+  bf_emoji[nb_boolean_flags]="$bf_line_emoji"
+  bf_text[nb_boolean_flags]="$bf_line_text"
+  bf_source[nb_boolean_flags]=""
+  nb_boolean_flags=$((nb_boolean_flags + 1))
+done <<< "$boolean_flags_table"
+
+function boolean_flag_index () {
+  local i
+  for ((i = 0; i < nb_boolean_flags; i++))
+  do
+    if [ "${bf_flag[i]}" == "$1" ]
+    then
+      echo "$i"
+      return
+    fi
+  done
+}
+
+# set by the flag, the shell, the menu or a reproduction model: ENABLE_*=<anything>, or the image of the line
+function boolean_flag_enabled () {
+  local variable="${bf_variable[$1]}"
+  local value="${!variable:-}"
+  if [ "${bf_value[$1]}" == "true" ]
+  then
+    [ -n "$value" ]
+  else
+    [[ "$value" == *"${bf_value[$1]#*/}"* ]]
+  fi
+}
+
+# the reason the flag can't be used with this example (is_ccloud, is_fully_managed), nothing when it can
+function boolean_flag_refusal () {
+  case "${bf_refused[$1]}" in
+    ccloud) [ $is_ccloud == 1 ] && echo "ccloud examples" ;;
+    fully_managed) [ $is_fully_managed == 1 ] && echo "fully managed connector examples" ;;
+  esac
+  return 0
+}
+
+function enable_boolean_flag () {
+  array_flag_list+=("${bf_flag[$1]}")
+  export "${bf_variable[$1]}=${bf_value[$1]}"
+  bf_source[$1]="$2"
+}
+
+function disable_boolean_flag () {
+  maybe_remove_flag "${bf_flag[$1]}"
+  unset "${bf_variable[$1]}"
+  bf_source[$1]=""
+}
+
+# --enable-sql-datagen: Grafana shows the connector during the injection, only with a local connect. Removed with
+# sql-datagen only when sql-datagen added it
+function sync_sql_datagen_grafana () {
+  local sql_index grafana_index
+  sql_index=$(boolean_flag_index --enable-sql-datagen)
+  grafana_index=$(boolean_flag_index --enable-jmx-grafana)
+  # enabled by the flag or the menu (not by an ENABLE_SQL_DATAGEN exported in the shell, which is not the flag)
+  if [ -n "${bf_source[sql_index]}" ]
+  then
+    if [ $is_fully_managed == 0 ] && ! boolean_flag_enabled $grafana_index
+    then
+      log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
+      enable_boolean_flag $grafana_index hook
+    fi
+  elif [ "${bf_source[grafana_index]}" == "hook" ]
+  then
+    disable_boolean_flag $grafana_index
+  fi
+}
+
+# the flags given, and the ENABLE_* exported in the shell (documented as an alternative to the --enable-* flags): turned
+# into their flag, so that the banner, the history, re-run, the clipboard command and the run log record them
+function apply_boolean_flags () {
+  local i source variable refusal
+  for ((i = 0; i < nb_boolean_flags; i++))
+  do
+    source=""
+    variable="${bf_variable[i]}"
+    refusal=$(boolean_flag_refusal $i)
+    if [[ -n "${args[${bf_flag[i]}]:-}" ]]
+    then
+      source="flag"
+    elif [ "${bf_adopt[i]}" == "1" ] && [[ -n "${!variable:-}" ]] && [ -z "$refusal" ]
+    then
+      log "🌱 $variable is set in your shell: same as ${bf_flag[i]} (added to the flags of this run)"
+      source="shell"
+    fi
+    if [ -z "$source" ]
+    then
+      continue
+    fi
+    if [ -n "$refusal" ]
+    then
+      logwarn "❌ ${bf_flag[i]} is not supported with $refusal"
+      exit 1
+    fi
+    enable_boolean_flag $i "$source"
+  done
+  sync_sql_datagen_grafana
+}
+
+function create_boolean_flag_menu_labels () {
+  local i
+  for ((i = 0; i < nb_boolean_flags; i++))
+  do
+    bf_menu_label[i]="$(menu_label "${bf_emoji[i]}" "${bf_text[i]}" "${bf_flag[i]}" 4)"
+  done
+}
+
+# the toggles of a menu group ($1), with the entries that apply to this example
+function add_boolean_flag_toggles () {
+  local i shown current
+  for ((i = 0; i < nb_boolean_flags; i++))
+  do
+    [ "${bf_group[i]}" == "$1" ] || continue
+    case "${bf_hidden[i]}" in
+      ccloud) shown=$((1 - is_ccloud)) ;;
+      fully_managed) shown=$((1 - is_fully_managed)) ;;
+      -) shown=1 ;;
+      *) shown="${!bf_hidden[i]:-0}" ;;
+    esac
+    current=""
+    if boolean_flag_enabled $i
+    then
+      current=1
+    fi
+    add_menu_toggle "$shown" "$current" "${bf_menu_label[i]}"
+  done
+}
+
+# the toggles picked in the menu ($1): flipped
+function toggle_boolean_flags () {
+  local i
+  for ((i = 0; i < nb_boolean_flags; i++))
+  do
+    if [[ "$1" == *"${bf_menu_label[i]}"* ]]
+    then
+      if boolean_flag_enabled $i
+      then
+        disable_boolean_flag $i
+      else
+        enable_boolean_flag $i menu
+      fi
+      if [ "${bf_flag[i]}" == "--enable-sql-datagen" ]
+      then
+        sync_sql_datagen_grafana
+      fi
+    fi
+  done
+}
+
+# a reproduction model keeps the flags given or picked for it (not the ENABLE_* of the shell): export lines in its script
+function force_enable_boolean_flags () {
+  local i
+  if [[ -z "$force_interactive_repro" ]]
+  then
+    return
+  fi
+  for ((i = 0; i < nb_boolean_flags; i++))
+  do
+    case "${bf_source[i]}" in
+      flag|menu|hook) force_enable "${bf_flag[i]}" "${bf_variable[i]}" "${bf_value[i]}" ;;
+    esac
+  done
+}
+
 connect_log_level="${args[--connect-log-level]}"
 
 cluster_type="${args[--cluster-type]}"
@@ -331,198 +522,7 @@ then
   export CONNECTOR_JAR=$connector_jar
 fi
 
-# ENABLE_* exported in the shell (documented as an alternative to the --enable-* flags) enable the component too: turn
-# them into their flag, so that the banner, the history, re-run, the clipboard command and the run log record them
-while read -r shell_variable flag_variable flag_name not_on_ccloud
-do
-  if [[ -n "${!shell_variable}" ]] && [[ -z "${!flag_variable}" ]]
-  then
-    if [ $is_ccloud == 1 ] && [[ "$not_on_ccloud" == "1" ]]
-    then
-      # not supported with ccloud examples (the flag would exit): ignored, as before
-      continue
-    fi
-    log "🌱 $shell_variable is set in your shell: same as $flag_name (added to the flags of this run)"
-    printf -v "$flag_variable" '%s' "1"
-  fi
-done << 'EOF'
-ENABLE_KSQLDB enable_ksqldb --enable-ksqldb 1
-ENABLE_RESTPROXY enable_rest_proxy --enable-rest-proxy 1
-ENABLE_CONTROL_CENTER enable_c3 --enable-control-center 0
-ENABLE_LEGACY_CONTROL_CENTER enable_legacy_c3 --enable-legacy-control-center 0
-ENABLE_FLINK enable_flink --enable-flink 1
-ENABLE_CONDUKTOR enable_conduktor --enable-conduktor 0
-ENABLE_KAFKA_NODES enable_multiple_brokers --enable-multiple-brokers 1
-ENABLE_CONNECT_NODES enable_multiple_connect_workers --enable-multiple-connect-workers 1
-ENABLE_JMX_GRAFANA enable_jmx_grafana --enable-jmx-grafana 0
-ENABLE_KCAT enable_kcat --enable-kcat 1
-EOF
-
-if [[ -n "$enable_ksqldb" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --enable-ksqldb is not supported with ccloud examples"
-    exit 1
-  fi
-  array_flag_list+=("--enable-ksqldb")
-  export ENABLE_KSQLDB=true
-fi
-
-if [[ -n "$enable_rest_proxy" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --enable-rest-proxy is not supported with ccloud examples"
-    exit 1
-  fi
-  array_flag_list+=("--enable-rest-proxy")
-  export ENABLE_RESTPROXY=true
-fi
-
-if [[ -n "$enable_c3" ]]
-then
-  array_flag_list+=("--enable-control-center")
-  export ENABLE_CONTROL_CENTER=true
-fi
-
-if [[ -n "$enable_flink" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --enable-flink is not supported with ccloud examples"
-    exit 1
-  fi
-  array_flag_list+=("--enable-flink")
-  export ENABLE_FLINK=true
-fi
-
-if [[ -n "$enable_conduktor" ]]
-then
-  array_flag_list+=("--enable-conduktor")
-  export ENABLE_CONDUKTOR=true
-fi
-
-if [[ -n "$enable_multiple_brokers" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --enable-multiple-brokers is not supported with ccloud examples"
-    exit 1
-  fi
-  array_flag_list+=("--enable-multiple-brokers")
-  export ENABLE_KAFKA_NODES=true
-fi
-
-if [[ -n "$enable_multiple_connect_workers" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --enable-multiple-connect-workers is not supported with ccloud examples"
-    exit 1
-  fi
-
-  array_flag_list+=("--enable-multiple-connect-workers")
-  # connect2 and connect3 get the connect configuration of the example in start-environment
-  export ENABLE_CONNECT_NODES=true
-fi
-
-if [[ -n "$enable_jmx_grafana" ]]
-then
-  array_flag_list+=("--enable-jmx-grafana")
-  export ENABLE_JMX_GRAFANA=true
-
-  if [[ -n "$force_interactive_repro" ]]
-  then
-    force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
-  fi
-fi
-
-if [[ -n "$enable_kcat" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --enable-kcat is not supported with ccloud examples"
-    exit 1
-  fi
-  array_flag_list+=("--enable-kcat")
-  export ENABLE_KCAT=true
-fi
-
-if [[ -n "$enable_sql_datagen" ]]
-then
-  array_flag_list+=("--enable-sql-datagen")
-  # rows are injected by this command once the example is done (see sql_datagen_inject), with the benchmark-load.bash of
-  # the example: not SQL_DATAGEN, which the examples and reproduction models of the former Java datagen still test
-  export ENABLE_SQL_DATAGEN=true
-  if [[ -n "$force_interactive_repro" ]]
-  then
-    force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
-  fi
-
-  if [ $is_fully_managed == 0 ]
-  then
-    log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
-    array_flag_list+=("--enable-jmx-grafana")
-    export ENABLE_JMX_GRAFANA=true
-
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
-    fi
-  fi
-fi
-
-if [[ -n "$benchmark" ]]
-then
-  array_flag_list+=("--benchmark")
-  # playground connector benchmark is run by this command once the example is done
-  export ENABLE_BENCHMARK=true
-
-  if [[ -n "$force_interactive_repro" ]]
-  then
-    force_enable --benchmark ENABLE_BENCHMARK
-  fi
-fi
-
-if [[ -n "$connect_community_image" ]]
-then
-  if [ $is_fully_managed == 1 ]
-  then
-    logwarn "❌ --connect-community-image is not supported with fully managed connector examples"
-    exit 1
-  fi
-  array_flag_list+=("--connect-community-image")
-  export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
-fi
-
-if [[ -n "$kafka_community_image" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --kafka-community-image is not supported with ccloud examples"
-    exit 1
-  fi
-  array_flag_list+=("--kafka-community-image")
-  export CP_KAFKA_IMAGE=confluentinc/cp-kafka
-fi
-
-if [[ -n "$enable_kraft" ]]
-then
-  if [ $is_ccloud == 1 ]
-  then
-    logwarn "❌ --enable-kraft is not supported with ccloud examples"
-    exit 1
-  fi
-  array_flag_list+=("--enable-kraft")
-  export ENABLE_KRAFT=true
-fi
-
-if [[ -n "$enable_legacy_c3" ]]
-then
-  array_flag_list+=("--enable-legacy-control-center")
-  export ENABLE_LEGACY_CONTROL_CENTER=true
-fi
+apply_boolean_flags
 
 if [[ -n "$connect_log_level" ]]
 then
@@ -797,22 +797,8 @@ then
 
   readonly MENU_SEPARATOR="--------------------------------------------------"
 
-  MENU_KSQLDB="$(menu_label "🎏" "ksqlDB" "--enable-ksqldb" 4)"
-  MENU_C3="$(menu_label "💠" "Control Center" "--enable-control-center" 4)"
-  MENU_CONDUKTOR="$(menu_label "🐺" "Conduktor Platform" "--enable-conduktor" 4)"
-  MENU_RP="$(menu_label "🧲" "Rest Proxy" "--enable-rest-proxy" 4)"
-  MENU_GRAFANA="$(menu_label "📊" "Grafana" "--enable-jmx-grafana" 4)"
-  MENU_BROKERS="$(menu_label "🔢" "Multiple brokers" "--enable-multiple-brokers" 4)"
-  MENU_CONNECT_WORKERS="$(menu_label "🥉" "Multiple connect workers" "--enable-multiple-connect-workers" 4)"
-  MENU_KCAT="$(menu_label "🐈" "kcat" "--enable-kcat" 4)"
-  MENU_SQL_DATAGEN="$(menu_label "🌀" "SQL Datagen injection" "--enable-sql-datagen" 4)"
-  MENU_BENCHMARK="$(menu_label "🏎️" "Benchmark the connector" "--benchmark" 4)"
+  create_boolean_flag_menu_labels
   MENU_CCLOUD_SERVICE_ACCOUNT="$(menu_label "👤" "Connector service account" "--ccloud-service-account" 4)"
-  MENU_FLINK="$(menu_label "🐹" "Flink" "--enable-flink" 4)"
-  MENU_CONNECT_COMMUNITY_IMAGE="$(menu_label "🌱" "Community connect image" "--connect-community-image" 4)"
-  MENU_KAFKA_COMMUNITY_IMAGE="$(menu_label "🌿" "Community kafka image" "--kafka-community-image" 4)"
-  MENU_KRAFT="$(menu_label "📡" "KRaft (CP 7.4 to 7.9)" "--enable-kraft" 4)"
-  MENU_LEGACY_C3="$(menu_label "🧓" "Legacy Control Center (CP < 8)" "--enable-legacy-control-center" 4)"
 
 
   readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
@@ -1185,19 +1171,9 @@ then
     add_menu_group "$MENU_SEPARATOR" "${group[@]}"
 
     toggle_group=()
-    add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KSQLDB" "$MENU_KSQLDB"
-    add_menu_toggle $((1-is_fully_managed)) "$ENABLE_CONTROL_CENTER" "$MENU_C3"
-    add_menu_toggle $((1-is_fully_managed)) "$ENABLE_CONDUKTOR" "$MENU_CONDUKTOR"
-    add_menu_toggle $((1-is_ccloud)) "$ENABLE_RESTPROXY" "$MENU_RP"
-    add_menu_toggle $((1-is_ccloud)) "$ENABLE_JMX_GRAFANA" "$MENU_GRAFANA"
-    add_menu_toggle $((1-is_ccloud)) "$ENABLE_KAFKA_NODES" "$MENU_BROKERS"
-    add_menu_toggle $((1-is_ccloud)) "$ENABLE_CONNECT_NODES" "$MENU_CONNECT_WORKERS"
-    add_menu_toggle $((1-is_ccloud)) "$ENABLE_KCAT" "$MENU_KCAT"
-    add_menu_toggle $sql_datagen "$ENABLE_SQL_DATAGEN" "$MENU_SQL_DATAGEN"
-    add_menu_toggle $benchmark_available "$ENABLE_BENCHMARK" "$MENU_BENCHMARK"
+    add_boolean_flag_toggles options
     if [ $is_ccloud_managed == 1 ]; then ccloud_service_account_available=1; else ccloud_service_account_available=0; fi
     add_menu_toggle $ccloud_service_account_available "$PG_CCLOUD_SERVICE_ACCOUNT" "$MENU_CCLOUD_SERVICE_ACCOUNT"
-    add_menu_toggle $((1-is_ccloud)) "$ENABLE_FLINK" "$MENU_FLINK"
     add_menu_group "$MENU_SEPARATOR_FEATURES" "${toggle_group[@]}"
 
     group=()
@@ -1222,14 +1198,7 @@ then
     add_menu_group "$MENU_SEPARATOR_CLOUD" "${group[@]}"
 
     toggle_group=()
-    is_connect_community_image=""
-    if [[ $CP_CONNECT_IMAGE == *"cp-kafka-connect"* ]]; then is_connect_community_image=1; fi
-    is_kafka_community_image=""
-    if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]; then is_kafka_community_image=1; fi
-    add_menu_toggle $((1-is_fully_managed)) "$is_connect_community_image" "$MENU_CONNECT_COMMUNITY_IMAGE"
-    add_menu_toggle $((1-is_ccloud)) "$is_kafka_community_image" "$MENU_KAFKA_COMMUNITY_IMAGE"
-    add_menu_toggle $((1-is_ccloud)) "$ENABLE_KRAFT" "$MENU_KRAFT"
-    add_menu_toggle $((1-is_fully_managed)) "$ENABLE_LEGACY_CONTROL_CENTER" "$MENU_LEGACY_C3"
+    add_boolean_flag_toggles images
     add_menu_group "$MENU_SEPARATOR_IMAGES" "${toggle_group[@]}"
 
     group=()
@@ -1368,171 +1337,7 @@ then
       fi
     fi
 
-    if [[ $res == *"$MENU_KSQLDB"* ]]
-    then
-      if [ -z "$ENABLE_KSQLDB" ]
-      then
-        array_flag_list+=("--enable-ksqldb")
-        export ENABLE_KSQLDB=true
-        interactive_enable_ksqldb="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-ksqldb"}")
-        unset ENABLE_KSQLDB
-        interactive_enable_ksqldb=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_C3"* ]]
-    then
-      if [ -z "$ENABLE_CONTROL_CENTER" ]
-      then
-        array_flag_list+=("--enable-control-center")
-        export ENABLE_CONTROL_CENTER=true
-        interactive_enable_c3="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-control-center"}")
-        unset ENABLE_CONTROL_CENTER
-        interactive_enable_c3=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_FLINK"* ]]
-    then
-      if [ -z "$ENABLE_FLINK" ]
-      then
-        array_flag_list+=("--enable-flink")
-        export ENABLE_FLINK=true
-        interactive_enable_flink="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-flink"}")
-        unset ENABLE_FLINK
-        interactive_enable_flink=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_RP"* ]]
-    then
-      if [ -z "$ENABLE_RESTPROXY" ]
-      then
-        array_flag_list+=("--enable-rest-proxy")
-        export ENABLE_RESTPROXY=true
-        interactive_enable_rp="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-rest-proxy"}")
-        unset ENABLE_RESTPROXY
-        interactive_enable_rp=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_CONDUKTOR"* ]]
-    then
-      if [ -z "$ENABLE_CONDUKTOR" ]
-      then
-        array_flag_list+=("--enable-conduktor")
-        export ENABLE_CONDUKTOR=true
-        interactive_enable_conduktor="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-conduktor"}")
-        unset ENABLE_CONDUKTOR
-        interactive_enable_conduktor=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_GRAFANA"* ]]
-    then
-      if [ -z "$ENABLE_JMX_GRAFANA" ]
-      then
-        array_flag_list+=("--enable-jmx-grafana")
-        export ENABLE_JMX_GRAFANA=true
-        interactive_enable_grafana="true"
-
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
-        unset ENABLE_JMX_GRAFANA
-        interactive_enable_grafana=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_BROKERS"* ]]
-    then
-      if [ -z "$ENABLE_KAFKA_NODES" ]
-      then
-        array_flag_list+=("--enable-multiple-brokers")
-        export ENABLE_KAFKA_NODES=true
-        interactive_enable_broker="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-multiple-brokers"}")
-        unset ENABLE_KAFKA_NODES
-        interactive_enable_broker=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_CONNECT_WORKERS"* ]]
-    then
-      if [ -z "$ENABLE_CONNECT_NODES" ]
-      then
-        array_flag_list+=("--enable-multiple-connect-workers")
-        export ENABLE_CONNECT_NODES=true
-        interactive_enable_connect="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
-        unset ENABLE_CONNECT_NODES
-        interactive_enable_connect=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_KCAT"* ]]
-    then
-      if [ -z "$ENABLE_KCAT" ]
-      then
-        array_flag_list+=("--enable-kcat")
-        export ENABLE_KCAT=true
-        interactive_enable_kcat="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-kcat"}")
-        unset ENABLE_KCAT
-        interactive_enable_kcat=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_SQL_DATAGEN"* ]]
-    then
-      if [ -z "$ENABLE_SQL_DATAGEN" ]
-      then
-        array_flag_list+=("--enable-sql-datagen")
-        export ENABLE_SQL_DATAGEN=true
-        interactive_enable_sql="true"
-
-        array_flag_list+=("--enable-jmx-grafana")
-        export ENABLE_JMX_GRAFANA=true
-        interactive_enable_grafana="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-sql-datagen"}")
-        unset ENABLE_SQL_DATAGEN
-        interactive_enable_sql=""
-
-        if [ $is_fully_managed == 0 ]
-        then
-          array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
-          unset ENABLE_JMX_GRAFANA
-          interactive_enable_grafana=""
-        fi
-      fi
-    fi
-
-    if [[ $res == *"$MENU_BENCHMARK"* ]]
-    then
-      if [ -z "$ENABLE_BENCHMARK" ]
-      then
-        array_flag_list+=("--benchmark")
-        export ENABLE_BENCHMARK=true
-        interactive_enable_benchmark="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--benchmark"}")
-        unset ENABLE_BENCHMARK
-        interactive_enable_benchmark=""
-      fi
-    fi
+    toggle_boolean_flags "$res"
 
     if [[ $res == *"$MENU_CCLOUD_SERVICE_ACCOUNT"* ]]
     then
@@ -1588,62 +1393,6 @@ then
           array_flag_list+=("--ccloud-service-account-id $ccloud_service_account_id")
           export PG_CCLOUD_SERVICE_ACCOUNT_ID=$ccloud_service_account_id
         fi
-      fi
-    fi
-
-    if [[ $res == *"$MENU_CONNECT_COMMUNITY_IMAGE"* ]]
-    then
-      if [ -z "$is_connect_community_image" ]
-      then
-        array_flag_list+=("--connect-community-image")
-        export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
-        interactive_connect_community_image="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--connect-community-image"}")
-        unset CP_CONNECT_IMAGE
-        interactive_connect_community_image=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_KAFKA_COMMUNITY_IMAGE"* ]]
-    then
-      if [ -z "$is_kafka_community_image" ]
-      then
-        array_flag_list+=("--kafka-community-image")
-        export CP_KAFKA_IMAGE=confluentinc/cp-kafka
-        interactive_kafka_community_image="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--kafka-community-image"}")
-        unset CP_KAFKA_IMAGE
-        interactive_kafka_community_image=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_KRAFT"* ]]
-    then
-      if [ -z "$ENABLE_KRAFT" ]
-      then
-        array_flag_list+=("--enable-kraft")
-        export ENABLE_KRAFT=true
-        interactive_enable_kraft="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-kraft"}")
-        unset ENABLE_KRAFT
-        interactive_enable_kraft=""
-      fi
-    fi
-
-    if [[ $res == *"$MENU_LEGACY_C3"* ]]
-    then
-      if [ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
-      then
-        array_flag_list+=("--enable-legacy-control-center")
-        export ENABLE_LEGACY_CONTROL_CENTER=true
-        interactive_enable_legacy_c3="true"
-      else
-        array_flag_list=("${array_flag_list[@]/"--enable-legacy-control-center"}")
-        unset ENABLE_LEGACY_CONTROL_CENTER
-        interactive_enable_legacy_c3=""
       fi
     fi
 
@@ -1926,114 +1675,7 @@ then
     fi
   done # end while loop stop
 
-  if [ "$interactive_enable_ksqldb" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-ksqldb ENABLE_KSQLDB
-    fi
-  fi
-
-  if [ "$interactive_enable_rp" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-rest-proxy ENABLE_RESTPROXY
-    fi
-  fi
-
-  if [ "$interactive_enable_c3" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-control-center ENABLE_CONTROL_CENTER
-    fi
-  fi
-
-  if [ "$interactive_enable_flink" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-flink ENABLE_FLINK
-    fi
-  fi
-
-  if [ "$interactive_enable_conduktor" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-conduktor ENABLE_CONDUKTOR
-    fi
-  fi
-
-  if [ "$interactive_enable_broker" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-multiple-brokers ENABLE_KAFKA_NODES
-    fi
-  fi
-
-  if [ "$interactive_enable_connect" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-multiple-connect-workers ENABLE_CONNECT_NODES
-    fi
-  fi
-
-  if [ "$interactive_enable_grafana" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
-    fi
-  fi
-
-  if [ "$interactive_enable_kcat" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-kcat ENABLE_KCAT
-    fi
-  fi
-
-  if [ "$interactive_connect_community_image" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --connect-community-image CP_CONNECT_IMAGE confluentinc/cp-kafka-connect
-    fi
-  fi
-
-  if [ "$interactive_kafka_community_image" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --kafka-community-image CP_KAFKA_IMAGE confluentinc/cp-kafka
-    fi
-  fi
-
-  if [ "$interactive_enable_kraft" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-kraft ENABLE_KRAFT
-    fi
-  fi
-
-  if [ "$interactive_enable_legacy_c3" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-legacy-control-center ENABLE_LEGACY_CONTROL_CENTER
-    fi
-  fi
-
-  if [ "$interactive_enable_benchmark" == "true" ] && [[ -n "$force_interactive_repro" ]]
-  then
-    force_enable --benchmark ENABLE_BENCHMARK
-  fi
+  force_enable_boolean_flags
 
   if [ "$interactive_enable_ccloud_service_account" == "true" ] && [[ -n "$force_interactive_repro" ]]
   then
@@ -2045,22 +1687,6 @@ then
     if [ -n "$PG_CCLOUD_SERVICE_ACCOUNT_ID" ]
     then
       force_enable --ccloud-service-account-id PG_CCLOUD_SERVICE_ACCOUNT_ID "$PG_CCLOUD_SERVICE_ACCOUNT_ID"
-    fi
-  fi
-
-  if [ "$interactive_enable_sql" == "true" ]
-  then
-    if [[ -n "$force_interactive_repro" ]]
-    then
-      force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
-    fi
-    if [ $is_fully_managed == 0 ]
-    then
-      log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
-      if [[ -n "$force_interactive_repro" ]]
-      then
-        force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
-      fi
     fi
   fi
 
@@ -2173,6 +1799,15 @@ set +e
 trap - EXIT
 # 'playground stop' stops the example recorded in run.test_file
 playground state set run.test_file "$previous_test_file"
+# PG_RUN_PRINT_FLAGS_AND_EXIT=1 (private): the flags and the variables this run would use, then exit before anything
+# is stopped or started (used to compare two versions of this command)
+if [ -n "${PG_RUN_PRINT_FLAGS_AND_EXIT:-}" ]
+then
+  printf 'flag %s\n' "${array_flag_list[@]}" | grep -v '^flag $' | sort
+  env | grep -E '^(ENABLE_[A-Z_]+|CP_[A-Z_]+_IMAGE|PLAYGROUND_ENVIRONMENT|PLAYGROUND_CONNECT_LOG_LEVELS|CONNECTOR_(TAG|ZIP|JAR)|TAG|CP_[A-Z_]+_TAG|CLUSTER_[A-Z_]+|PG_CCLOUD_SERVICE_ACCOUNT[A-Z_]*)=' | sed -E 's/^([A-Z_]*(CREDS|SECRET|PASSWORD|KEY)[A-Z_]*)=.*/\1=<masked>/' | sed 's/^/env /' | sort
+  exit 0
+fi
+
 # resources left by the previous ccloud run (e.g. interrupted before its final connector delete)
 maybe_cleanup_ccloud_run_resources
 # already done, don't do it again in the 'playground stop' below

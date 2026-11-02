@@ -1821,6 +1821,9 @@ commands:
     help: "📜 With --enable-sql-datagen or --benchmark, load script to use instead of benchmark-load.bash (file of the example folder, or absolute path)"
   - name: BENCHMARK_ARGS
     help: "🏎️ With --benchmark, extra flags for playground connector benchmark (e.g. \"--nb-records 10000000 --record-size 100\" or \"--mode steady --duration 5m\")"
+  - name: PG_RUN_PRINT_FLAGS_AND_EXIT
+    private: true
+    help: "Print the flags and the variables the run would use (secrets masked), then exit before stopping or starting anything: compares two versions of this command"
   - name: PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE
     help: "🙈 With --ccloud-service-account, regex of the ACLs not to create, matched on <OPERATION> <ResourceType>:<name> [prefix] (e.g. \"READ Group:\")"
   dependencies:
