@@ -4510,6 +4510,30 @@ function file_unlock () {
   rmdir "$1.lock" 2> /dev/null || true
 }
 
+# true when a browser can be opened: open on macOS, xdg-open with a display on Linux (Debian's /bin/open is openvt)
+function can_open_url () {
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    command -v open > /dev/null 2>&1
+  else
+    command -v xdg-open > /dev/null 2>&1 && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]
+  fi
+}
+
+# opens $1 in the browser, returns 1 when it can't (no browser: headless, ssh…), the caller then prints the url
+function open_url () {
+  if ! can_open_url
+  then
+    return 1
+  fi
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    open "$1"
+  else
+    xdg-open "$1" > /dev/null 2>&1 &
+  fi
+}
+
 function maybe_remove_flag () {
   flag="$1"
   local entry

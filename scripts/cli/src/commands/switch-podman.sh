@@ -11,21 +11,43 @@ fi
 # the rootful podman socket, as set up in the documentation
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-    if ! podman machine inspect > /dev/null 2>&1
+    # the machine to use: the default one, the only one, podman-machine-default, or the first one ('podman machine
+    # inspect' without a name only looks for podman-machine-default)
+    machines=$(podman machine list --format '{{.Name}}|{{.Default}}' 2>/dev/null)
+    machine=$(echo "$machines" | awk -F'|' '$2 == "true" {print $1; exit}')
+    if [ -z "$machine" ] && [ "$(echo "$machines" | grep -c .)" == "1" ]
+    then
+        machine=$(echo "$machines" | cut -d '|' -f 1)
+    fi
+    if [ -z "$machine" ] && echo "$machines" | grep -q '^podman-machine-default|'
+    then
+        machine="podman-machine-default"
+    fi
+    if [ -z "$machine" ] && [ -n "$machines" ]
+    then
+        machine=$(echo "$machines" | head -1 | cut -d '|' -f 1)
+        logwarn "⚠️ several podman machines and no default one, using $machine (set it with 'podman system connection default')"
+    fi
+    if [ -z "$machine" ]
     then
         logerror "❌ no podman machine found, create one first:"
         logerror "  podman machine init --rootful --cpus 4 --memory 12288 --disk-size 100"
         logerror "👉 $docs_url"
         exit 1
     fi
-    if [ "$(podman machine inspect --format '{{.State}}' 2>/dev/null)" != "running" ]
+    if [ "$(podman machine inspect "$machine" --format '{{.State}}' 2>/dev/null)" != "running" ]
     then
-        log "🚀 Starting the podman machine"
-        podman machine start > /dev/null
+        log "🚀 Starting the podman machine $machine"
+        podman machine start "$machine" > /dev/null
     fi
-    podman_socket=$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null)
+    podman_socket=$(podman machine inspect "$machine" --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null)
 else
+    # the rootful socket of the documentation, otherwise the one podman reports (rootless user socket)
     podman_socket="/run/podman-api/podman.sock"
+    if [ ! -S "$podman_socket" ]
+    then
+        podman_socket=$(podman info --format '{{.Host.RemoteSocket.Path}}' 2>/dev/null | sed 's#^unix://##')
+    fi
 fi
 
 if [ ! -S "$podman_socket" ]

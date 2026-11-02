@@ -15,20 +15,21 @@ then
 fi
 
 # no match is not an error (set -e): handled below
-string=$(grep "Quickly test " $readme_file || true)
-url=$(echo "$string" | grep -oE 'https?://[^ ]+' || true)
+string=$(grep "Quickly test " "$readme_file" || true)
+# the first link only: a README line can hold several
+url=$(echo "$string" | grep -oE 'https?://[^ ]+' | head -1 || true)
 url=${url//)/}
 
 if [[ $url =~ "http" ]]
 then
-    short_url=$(echo $url | cut -d '#' -f 1)
-    if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
+    short_url=$(echo "$url" | cut -d '#' -f 1)
+    if [[ -z "$only_show_url" ]] && can_open_url
     then
+        log "🌐 opening documentation $short_url"
+        open_url "$short_url"
+    else
         log "🌐 documentation is available at:"
         echo "$short_url"
-    else
-        log "🌐 opening documentation $short_url"
-        open "$short_url"
     fi
 elif [[ -n "$only_show_url" ]]
 then
