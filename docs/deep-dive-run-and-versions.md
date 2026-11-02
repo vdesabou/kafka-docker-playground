@@ -90,6 +90,9 @@ What the run prints, in order:
 
 ```text
 ⛳ Flags used are --tag=8.2.0
+🏰 ran 5 time(s) before: 3 ✅ 2 ❌ · last run 2026-10-30 14:02 ❌ FAILURE in 1m12s with --tag=8.3.0
+🏰 with these exact flags: 2 time(s), last run 2026-10-28 09:41 ✅ SUCCESS in 40s
+⏱️ last successful run took 40s
 🚀 Number of examples ran so far: 363
 ####################################################
 🚀 Executing filestream-sink.sh in dir /…/kafka-docker-playground/connect/connect-filestream-sink
@@ -141,6 +144,10 @@ Gotchas:
   (exit 111).
 - `--connector-tag` and `--connector-zip` are exclusive. `--connector-jar` combines with either: it replaces the jar of
   the installed plugin whose name contains the connector version, and warns when it can't find it.
+- The 🏰 lines come from `playground-run-history`, read before this run is added to it: every earlier run of the
+  script whatever its flags (results counted, ▫️ for runs recorded before results were kept), the last one, the runs
+  of this exact command when the flags differ, and how long the last successful run took. A first run prints
+  `🆕 first run of this example`. `playground history --prune` keeps one line per command, so the counts restart there.
 - On macOS the run line is copied to the clipboard (`playground config clipboard false` to stop it). Like the history and the
   `⛳ Flags used are` line, it shows the `--cluster-creds` / `--cluster-schema-registry-creds` values as `'<masked>'`:
   `playground re-run` and `playground history --run` replay them.
