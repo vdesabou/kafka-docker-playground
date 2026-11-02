@@ -62812,7 +62812,7 @@ playground_topic_get_number_records_command() {
       elif [[ "$environment" == cfk* ]]
       then
           cfk_class_name="kafka.tools.GetOffsetShell"
-          if version_gt "$cached_cfk_tag" "7.6.9"
+          if version_gt "$cached_cfk_tag" "7.6.99"
           then
               cfk_class_name="org.apache.kafka.tools.GetOffsetShell"
           fi
@@ -62847,7 +62847,7 @@ playground_topic_get_number_records_command() {
                   tag="$container_tag"
               fi
               class_name="kafka.tools.GetOffsetShell"
-              if version_gt "$tag" "7.6.9"
+              if version_gt "$tag" "7.6.99"
               then
                   class_name="org.apache.kafka.tools.GetOffsetShell"
               fi
@@ -62939,7 +62939,7 @@ playground_topic_get_offsets_command() {
       exit 1
   fi
   class_name="kafka.tools.GetOffsetShell"
-  if version_gt "$CP_CONNECT_TAG" "7.6.9"
+  if version_gt "$CP_CONNECT_TAG" "7.6.99"
   then
       class_name="org.apache.kafka.tools.GetOffsetShell"
   fi
@@ -64316,7 +64316,7 @@ playground_topic_consume_command() {
       exit 1
     fi
     get_offsets_class="kafka.tools.GetOffsetShell"
-    if version_gt "$CP_CONNECT_TAG" "7.6.9"
+    if version_gt "$CP_CONNECT_TAG" "7.6.99"
     then
       get_offsets_class="org.apache.kafka.tools.GetOffsetShell"
     fi

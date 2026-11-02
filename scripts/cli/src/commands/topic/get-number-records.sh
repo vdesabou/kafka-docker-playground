@@ -116,7 +116,7 @@ do
     elif [[ "$environment" == cfk* ]]
     then
         cfk_class_name="kafka.tools.GetOffsetShell"
-        if version_gt "$cached_cfk_tag" "7.6.9"
+        if version_gt "$cached_cfk_tag" "7.6.99"
         then
             cfk_class_name="org.apache.kafka.tools.GetOffsetShell"
         fi
@@ -151,7 +151,7 @@ do
                 tag="$container_tag"
             fi
             class_name="kafka.tools.GetOffsetShell"
-            if version_gt "$tag" "7.6.9"
+            if version_gt "$tag" "7.6.99"
             then
                 class_name="org.apache.kafka.tools.GetOffsetShell"
             fi

@@ -587,7 +587,7 @@ then
     exit 1
   fi
   get_offsets_class="kafka.tools.GetOffsetShell"
-  if version_gt "$CP_CONNECT_TAG" "7.6.9"
+  if version_gt "$CP_CONNECT_TAG" "7.6.99"
   then
     get_offsets_class="org.apache.kafka.tools.GetOffsetShell"
   fi
