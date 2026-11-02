@@ -4,13 +4,7 @@ connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
 
-test_file=$(playground state get run.test_file)
-
-if [ ! -f $test_file ]
-then 
-    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-    exit 1
-fi
+test_file=$(get_current_test_file) || exit 1
 
 # determining the docker-compose file from from test_file
 docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)

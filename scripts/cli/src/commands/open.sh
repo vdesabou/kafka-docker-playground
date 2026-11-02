@@ -9,13 +9,7 @@ then
     test_file=$(echo "$test_file" | cut -d "@" -f 2)
   fi
 else
-  test_file=$(playground state get run.test_file)
-
-  if [ ! -f $test_file ]
-  then 
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
-  fi
+  test_file=$(get_current_test_file) || exit 1
 fi
 
 do_wait=""
@@ -30,7 +24,7 @@ then
   docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
   test_file_directory="$(dirname "${test_file}")"
   docker_compose_file="${test_file_directory}/${docker_compose_file}"
-  if [ ! -f $docker_compose_file ]
+  if [ ! -f "$docker_compose_file" ]
   then
     logwarn "--open-docker-compose is set but docker compose file could not be retrieved from $test_file"
   else

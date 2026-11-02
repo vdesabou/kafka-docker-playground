@@ -2,10 +2,16 @@ environment=$(playground state get run.environment)
 test_file=$(playground state get run.test_file)
 cfk_port_forward_pids=$(ps -axo pid=,command= | grep -E '[k]ubectl( |.* )port-forward ' | grep 'confluent' | awk '{print $1}')
 
-if [ ! -f $test_file ]
-then 
-    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-    exit 1
+docker_command=$(playground state get run.docker_command)
+if [ -z "$test_file" ] && [ -z "$docker_command" ] && [ -z "$cfk_port_forward_pids" ]
+then
+    log "💤 no example was started with 'playground run', nothing to stop"
+    exit 0
+fi
+if [ -n "$test_file" ] && [ ! -f "$test_file" ]
+then
+    # deleted repro model, removed worktree…: the containers still run, stop them with the saved docker compose command
+    logwarn "⚠️ file $test_file retrieved from $root_folder/playground.ini does not exist anymore, stopping with the docker compose command saved there"
 fi
 export flink_connectors=""
 filename=$(basename -- "$test_file")
@@ -44,7 +50,6 @@ then
     maybe_cleanup_ccloud_run_resources
 fi
 
-docker_command=$(playground state get run.docker_command)
 echo "$docker_command" > $tmp_dir/tmp
 
 sed -e "s|up -d|down -v --remove-orphans|g" \
@@ -55,4 +60,9 @@ sed -e "s|--quiet-pull||g" \
 
 # the command sources utils.sh: with CONNECTOR_TAG/ZIP/JAR set, it looks for the docker-compose override of this
 # temporary script, does not find one and exits before 'docker compose down' (a stop installs no connector anyway)
-env -u CONNECTOR_TAG -u CONNECTOR_ZIP -u CONNECTOR_JAR bash $tmp_dir/playground-command-stop
+if ! env -u CONNECTOR_TAG -u CONNECTOR_ZIP -u CONNECTOR_JAR bash $tmp_dir/playground-command-stop
+then
+    logerror "❌ could not stop the example with the docker compose command saved in $root_folder/playground.ini"
+    logerror "👉 to remove every container instead: playground container kill-all"
+    exit 1
+fi

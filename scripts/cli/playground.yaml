@@ -1461,11 +1461,12 @@ subcommands:
   description: "\U0001F6D1 Stop currently running example\n\nTears down every container
     of the environment and of the example, and\nremoves their volumes, by replaying
     the docker compose command stored in\nplayground.ini. Nothing is left behind,
-    so the next example starts clean.\n\n❕ Data is not kept: topics, connectors and
-    the content of the databases\n   started by the example are gone.\n\nFor a Confluent
-    Cloud example, the connectors and topics it created are\nlisted and deleted too,
-    after asking for confirmation. Change this with\n'playground config cleanup-ccloud-resources-after-run
-    ask|true|false'."
+    so the next example starts clean.\nThis also works when the example file no longer
+    exists (deleted\nreproduction model, removed worktree).\n\n❕ Data is not kept:
+    topics, connectors and the content of the databases\n   started by the example
+    are gone.\n\nFor a Confluent Cloud example, the connectors and topics it created
+    are\nlisted and deleted too, after asking for confirmation. Change this with\n'playground
+    config cleanup-ccloud-resources-after-run ask|true|false'."
   usage: playground stop
   options: []
 - name: remove-all-docker-images

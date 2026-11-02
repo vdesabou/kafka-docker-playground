@@ -23,14 +23,8 @@ then
     dir2="$test"
     environment="plaintext"
 else
-    test_file=$(playground state get run.test_file)
+    test_file=$(get_current_test_file) || exit 1
     get_environment_used
-
-    if [ ! -f $test_file ]
-    then 
-        logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-        exit 1
-    fi
 
     test_file_directory="$(dirname "${test_file}")"
     base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
