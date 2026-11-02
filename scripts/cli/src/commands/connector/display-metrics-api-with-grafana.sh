@@ -172,7 +172,7 @@ then
         if [ "$automatically" == "true" ] || [ "$automatically" == "" ]
         then
 
-        if [[ $(type -f open 2>&1) =~ "not found" ]]
+        if ! can_open_url
         then
             log "🔗 Cannot open browser, use url:"
             echo "http://127.0.0.1:3000"
@@ -181,11 +181,11 @@ then
             then
             log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in browser $browser (you can change browser with 'playground config open-grafana-in-browser browser <browser>')"
             log "🤖 Open grafana with browser $browser (login/password is admin/password)"
-            open -a "$browser" "http://127.0.0.1:3000"
+            open_url "http://127.0.0.1:3000" "$browser"
             else
             log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in default browser (you can set browser with 'playground config open-grafana-in-browser browser <browser>')"
             log "🤖 Open grafana (login/password is admin/password)"
-            open "http://127.0.0.1:3000"
+            open_url "http://127.0.0.1:3000"
             fi
         fi
         fi

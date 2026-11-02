@@ -4518,6 +4518,13 @@ playground_get_ci_result_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--logs")"
     printf "    🔥 When CI is red, show why: tail and ERROR/FATAL digest of each failing\n    script of the latest failing job\n"
+    printf "    %s\n" "Conflicts: --json"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the CI status as one JSON object, and nothing else: test,\n    environment, status (ok, fail, not_tested,\n    not_in_ci, no_badge, unknown, skipped), url (job or issue) and message.\n    Exits with code 1 when the status is fail\n    \n    🎓 Tip: for scripts and AI agents, for example playground get-ci-result\n    --test <dir> --json | jq -r .status\n"
+    printf "    %s\n" "Conflicts: --logs"
     echo
 
     # :flag.usage
@@ -4618,7 +4625,7 @@ playground_history_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--stats")"
-    printf "    📊 Print the most run examples, the most used --tag, --connector-tag and\n    --environment, and the results\n"
+    printf "    📊 Print the most run examples, the most used --tag, --connector-tag and\n    --environment, and the results, over every run of the history (the query is\n    ignored)\n"
     printf "    %s\n" "Conflicts: --list, --json, --last, --run, --prune"
     echo
 
@@ -25396,7 +25403,8 @@ function can_open_url () {
   fi
 }
 
-# opens $1 in the browser, returns 1 when it can't (no browser: headless, ssh…), the caller then prints the url
+# opens $1 in the browser ($2: a browser application, macOS only), returns 1 when it can't (no browser: headless,
+# ssh…), the caller then prints the url
 function open_url () {
   if ! can_open_url
   then
@@ -25404,7 +25412,12 @@ function open_url () {
   fi
   if [[ "$OSTYPE" == "darwin"* ]]
   then
-    open "$1"
+    if [ -n "${2:-}" ]
+    then
+      open -a "$2" "$1"
+    else
+      open "$1"
+    fi
   else
     xdg-open "$1" > /dev/null 2>&1 &
   fi
@@ -32206,7 +32219,12 @@ function check_if_skip() {
   then
     eval "$1"
   else
-    read -p "Do you want to skip this command? (y/n) " reply
+    if ! read -p "Do you want to skip this command? (y/n) " reply
+    then
+      # no answer possible (no terminal): skipped, rather than asking again forever
+      logwarn "no answer (no terminal?): skipping the command, use --force to run it"
+      return 0
+    fi
 
     case "$reply" in
     y|Y ) log "Skipping command...";;
@@ -43847,7 +43865,7 @@ EOF
       MENU_OPEN_FILE="📖 Open the example files (including docker-compose file) in text editor"
     fi
     set +e
-    if [[ $(type -f open 2>&1) =~ "not found" ]]
+    if ! can_open_url
     then
       MENU_OPEN_DOCS="🌐 Show link to the docs"
     else
@@ -44360,7 +44378,7 @@ EOF
 
       if [[ $res == *"$MENU_OPEN_DOCS"* ]]
       then
-        if [[ $(type -f open 2>&1) =~ "not found" ]]
+        if ! can_open_url
         then
           playground open-docs --only-show-url
         else
@@ -45692,7 +45710,7 @@ EOF
           if [ "$automatically" == "true" ] || [ "$automatically" == "" ]
           then
 
-          if [[ $(type -f open 2>&1) =~ "not found" ]]
+          if ! can_open_url
           then
               log "🔗 Cannot open browser, use url:"
               echo "http://127.0.0.1:3000"
@@ -45701,11 +45719,11 @@ EOF
               then
               log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in browser $browser (you can change browser with 'playground config open-grafana-in-browser browser <browser>')"
               log "🤖 Open grafana with browser $browser (login/password is admin/password)"
-              open -a "$browser" "http://127.0.0.1:3000"
+              open_url "http://127.0.0.1:3000" "$browser"
               else
               log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in default browser (you can set browser with 'playground config open-grafana-in-browser browser <browser>')"
               log "🤖 Open grafana (login/password is admin/password)"
-              open "http://127.0.0.1:3000"
+              open_url "http://127.0.0.1:3000"
               fi
           fi
           fi
@@ -45813,6 +45831,18 @@ playground_get_ci_result_command() {
   max_findings="${args[--max-findings]}"
   output_dir="${args[--output-dir]}"
   no_open="${args[--no-open]}"
+  json="${args[--json]}"
+
+  # --json: one object, status ok | fail | not_tested | not_in_ci | no_badge | unknown | skipped, exit 1 when fail
+  function print_ci_json () {
+      jq -n --arg test "$dir2" --arg environment "$environment" --arg status "$1" --arg url "$2" --arg message "$3" \
+          '{test: $test, environment: $environment, status: $status, url: (if $url == "" then null else $url end), message: $message}'
+      if [ "$1" == "fail" ]
+      then
+          exit 1
+      fi
+      exit 0
+  }
 
   if [[ -n "$test" ]]
   then
@@ -45853,6 +45883,10 @@ playground_get_ci_result_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
+  if [[ "$dir2" == reproduction-models* ]] && [[ -n "$json" ]]
+  then
+      print_ci_json "skipped" "" "reproduction models are not part of the CI matrix"
+  fi
   if [[ "$dir2" == reproduction-models* ]]
   then
       exit 0
@@ -45861,6 +45895,10 @@ playground_get_ci_result_command() {
   content_file="$tmp_dir/content.md"
   if ! curl -s --fail -o $content_file https://kafka-docker-playground.io/content.md
   then
+      if [[ -n "$json" ]]
+      then
+          print_ci_json "unknown" "" "could not download the CI results from https://kafka-docker-playground.io/content.md"
+      fi
       logwarn "🤖 CI status: could not download the CI results from https://kafka-docker-playground.io/content.md"
       if [[ ! -n "$logs" ]]
       then
@@ -45896,28 +45934,50 @@ playground_get_ci_result_command() {
       fi
   fi
 
-  if [[ -n "$podman" ]] && [[ ! -n "$logs" ]]
+  if [[ -n "$podman" ]] && [[ ! -n "$logs" ]] && [[ -z "$json" ]]
   then
       logwarn "🦭 the published CI status is the one of the docker runs, add --logs to read the podman job"
   fi
 
+  url=""
   if [ -z "$example_line" ]
   then
-      log "🤖 CI status: 🤷‍♂️ $dir2 is not in the CI results (not in the 🚀 test list of ci.yml, or added recently)"
+      ci_status="not_in_ci"
+      ci_message="$dir2 is not in the CI results (not in the 🚀 test list of ci.yml, or added recently)"
+      log_line="🤖 CI status: 🤷‍♂️ $ci_message"
   elif ci_badge_present "$badge_prefix ok"
   then
       url=$(ci_badge_url "$badge_prefix ok")
-      log "🤖 CI status: 🟢 ${label}ok${url:+, 🔗 test url: $url}"
+      ci_status="ok"
+      ci_message="${label}ok"
+      log_line="🤖 CI status: 🟢 ${label}ok${url:+, 🔗 test url: $url}"
   elif ci_badge_present "$badge_prefix fail"
   then
       url=$(ci_badge_url "$badge_prefix fail")
-      logwarn "🤖 CI status: 🔴 ${label}fail${url:+, 🐛 github issue: $url}"
+      ci_status="fail"
+      ci_message="${label}fail"
+      log_line="🤖 CI status: 🔴 ${label}fail${url:+, 🐛 github issue: $url}"
   elif grep -qF "[not tested]" <<< "$example_line"
   then
-      log "🤖 CI status: 🤷‍♂️ not tested"
+      ci_status="not_tested"
+      ci_message="not tested"
+      log_line="🤖 CI status: 🤷‍♂️ not tested"
   else
       # no badge on its line: update-readme only writes the overall badge when every CP version gives the same result
-      log "🤖 CI status: 🤷‍♂️ no CI badge for $dir2 (the results may differ between CP versions), see https://kafka-docker-playground.io/#/content"
+      ci_status="no_badge"
+      ci_message="no CI badge for $dir2 (the results may differ between CP versions), see https://kafka-docker-playground.io/#/content"
+      log_line="🤖 CI status: 🤷‍♂️ $ci_message"
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      print_ci_json "$ci_status" "$url" "$ci_message"
+  fi
+  if [ "$ci_status" == "fail" ]
+  then
+      logwarn "$log_line"
+  else
+      log "$log_line"
   fi
 
   if [[ ! -n "$logs" ]]
@@ -46200,6 +46260,10 @@ playground_history_command() {
 
   if [[ -n "$stats" ]]
   then
+      if [[ -n "$query" ]]
+      then
+          logwarn "📊 --stats covers every run of the history: \"$query\" is ignored"
+      fi
       nb_runs=$(awk -F '\037' '{ total += $3 } END { print total + 0 }' $tmp_dir/history)
       log "📊 $nb_runs runs of $(wc -l < $tmp_dir/history | tr -d ' ') different commands in $history_file"
       log "🏆 most run examples"
@@ -46520,14 +46584,13 @@ EOF
   }
   bind -x '"\t": history_complete' 2> /dev/null
 
-  # Prompt the user to edit the res variable
-  read -e -p "" -i "$res" edited_res
-
-  # Use the edited value if it is not empty
-  if [[ -n "$edited_res" ]]
+  # Prompt the user to edit the res variable: an empty line or ctrl-d cancels
+  if ! read -e -p "" -i "$res" edited_res || [[ -z "${edited_res// /}" ]]
   then
-    res="$edited_res"
+    log "🏰 nothing run"
+    exit 0
   fi
+  res="$edited_res"
 
   res=$(history_unmask_creds "$res") || exit 1
   eval "$res"
@@ -47112,7 +47175,7 @@ playground_update_version_command() {
 
     # readonly MENU_LETS_GO="🚀 Run the example !" #0
     readonly MENU_OPEN_FILE="📖 Open the file in text editor"
-    if [[ $(type -f open 2>&1) =~ "not found" ]]
+    if ! can_open_url
     then
       MENU_OPEN_DOCS="🌐 Show link to the docs"
     else
@@ -47177,7 +47240,7 @@ playground_update_version_command() {
 
       if [[ $res == *"$MENU_OPEN_DOCS"* ]]
       then
-        if [[ $(type -f open 2>&1) =~ "not found" ]]
+        if ! can_open_url
         then
           playground open-docs --only-show-url
         else
@@ -47908,7 +47971,12 @@ playground_cleanup_cloud_resources_command() {
       local reply
       while true
       do
-          read -p "$1 (y/n) " reply
+          if ! read -p "$1 (y/n) " reply
+          then
+              # no answer possible (no terminal): skipped, rather than asking again forever
+              logwarn "no answer (no terminal?): skipping, use --force to delete without asking"
+              return 1
+          fi
           case "$reply" in
               y|Y ) return 0;;
               n|N ) log "Skipping..."; return 1;;
@@ -55053,11 +55121,11 @@ EOF
 
   log "💗 you can now use zazkia tcp proxy using <zazkia:49998>"
   log "🌐 zazkia UI is available on http://localhost:9191"
-  if [[ $(type -f open 2>&1) =~ "not found" ]]
+  if ! can_open_url
   then
     :
   else
-    open "http://localhost:9191"
+    open_url "http://localhost:9191"
   fi
 
   if [[ -n "$skip_automatic_connector_config" ]]
@@ -55383,13 +55451,13 @@ playground_tcp_proxy_toggle_writes_service_command() {
 playground_tcp_proxy_open_ui_command() {
 
   # src/commands/tcp-proxy/open-ui.sh
-  if [[ $(type -f open 2>&1) =~ "not found" ]]
+  if ! can_open_url
   then
       log "🔗 Cannot open browser, use url:"
       echo "http://localhost:9191"
   else
       log "🧲 Open Zazkia UI"
-      open "http://localhost:9191"
+      open_url "http://localhost:9191"
   fi
 
 }
@@ -72187,13 +72255,13 @@ playground_connector_plugin_sourcecode_command() {
   then
       # stdout is kept for the JSON document
       log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at: $sourcecode_url" >&2
-  elif [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]] || [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]] || [[ -n "$grep_regex" ]]
+  elif [[ -n "$only_show_url" ]] || ! can_open_url || [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]] || [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]] || [[ -n "$grep_regex" ]]
   then
       log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
       echo "$sourcecode_url"
   else
       log "🧑‍💻 opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
-      open "$sourcecode_url"
+      open_url "$sourcecode_url"
   fi
 
   if [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]]
@@ -78938,7 +79006,7 @@ playground_connector_display_metrics_api_with_grafana_command() {
           if [ "$automatically" == "true" ] || [ "$automatically" == "" ]
           then
 
-          if [[ $(type -f open 2>&1) =~ "not found" ]]
+          if ! can_open_url
           then
               log "🔗 Cannot open browser, use url:"
               echo "http://127.0.0.1:3000"
@@ -78947,11 +79015,11 @@ playground_connector_display_metrics_api_with_grafana_command() {
               then
               log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in browser $browser (you can change browser with 'playground config open-grafana-in-browser browser <browser>')"
               log "🤖 Open grafana with browser $browser (login/password is admin/password)"
-              open -a "$browser" "http://127.0.0.1:3000"
+              open_url "http://127.0.0.1:3000" "$browser"
               else
               log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in default browser (you can set browser with 'playground config open-grafana-in-browser browser <browser>')"
               log "🤖 Open grafana (login/password is admin/password)"
-              open "http://127.0.0.1:3000"
+              open_url "http://127.0.0.1:3000"
               fi
           fi
           fi
@@ -79269,14 +79337,14 @@ playground_connector_open_docs_command() {
               if [[ $url =~ "http" ]]
               then
                   short_url=$(echo $url | cut -d '#' -f 1)
-                  if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
+                  if [[ -n "$only_show_url" ]] || ! can_open_url
                   then
                       log "🌐 documentation for $connector_type connector $name is available at:"
                       echo "$short_url"
                       doc_links="${doc_links}|$name@$short_url"
                   else
                       log "🌐 opening documentation for $connector_type connector $name $short_url"
-                      open "$short_url"
+                      open_url "$short_url"
                   fi
               else
                   doc_available=0
@@ -79529,7 +79597,7 @@ playground_connector_open_ccloud_connector_in_browser_command() {
           TYPE="sources"
       fi
 
-      if [[ $(type -f open 2>&1) =~ "not found" ]]
+      if ! can_open_url
       then
           log "🔗 Cannot open browser, use url:"
           echo "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
@@ -79537,10 +79605,10 @@ playground_connector_open_ccloud_connector_in_browser_command() {
           if [[ -n "$browser" ]]
           then
               log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard with browser $browser"
-              open -a "$browser" "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+              open_url "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour" "$browser"
           else
               log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
-              open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+              open_url "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
           fi
       fi
   done
@@ -91743,9 +91811,27 @@ playground_get_ci_result_parse_requirements() {
 
       # :flag.case
       --logs)
+        # :flag.conflicts
+        if [[ -n "${args['--json']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--json" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--logs']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+        # :flag.conflicts
+        if [[ -n "${args['--logs']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--logs" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--json']=1
         shift
         ;;
 
@@ -136031,6 +136117,13 @@ playground_get_ci_result_completion() {
         ;;
       --logs)
         completion_blocked_flags["--logs"]=1
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--logs"]=1
 
         shift
         ;;
@@ -136071,6 +136164,7 @@ playground_get_ci_result_completion() {
     completion_flag_candidates --environment "$completion_current" --environment
     completion_flag_candidates --podman "$completion_current" --podman
     completion_flag_candidates --logs "$completion_current" --logs
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-open "$completion_current" --no-open

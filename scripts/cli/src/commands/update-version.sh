@@ -216,7 +216,7 @@ then
 
   # readonly MENU_LETS_GO="🚀 Run the example !" #0
   readonly MENU_OPEN_FILE="📖 Open the file in text editor"
-  if [[ $(type -f open 2>&1) =~ "not found" ]]
+  if ! can_open_url
   then
     MENU_OPEN_DOCS="🌐 Show link to the docs"
   else
@@ -281,7 +281,7 @@ then
 
     if [[ $res == *"$MENU_OPEN_DOCS"* ]]
     then
-      if [[ $(type -f open 2>&1) =~ "not found" ]]
+      if ! can_open_url
       then
         playground open-docs --only-show-url
       else

@@ -4520,7 +4520,8 @@ function can_open_url () {
   fi
 }
 
-# opens $1 in the browser, returns 1 when it can't (no browser: headless, ssh…), the caller then prints the url
+# opens $1 in the browser ($2: a browser application, macOS only), returns 1 when it can't (no browser: headless,
+# ssh…), the caller then prints the url
 function open_url () {
   if ! can_open_url
   then
@@ -4528,7 +4529,12 @@ function open_url () {
   fi
   if [[ "$OSTYPE" == "darwin"* ]]
   then
-    open "$1"
+    if [ -n "${2:-}" ]
+    then
+      open -a "$2" "$1"
+    else
+      open "$1"
+    fi
   else
     xdg-open "$1" > /dev/null 2>&1 &
   fi

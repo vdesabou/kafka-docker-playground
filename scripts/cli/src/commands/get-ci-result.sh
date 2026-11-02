@@ -5,6 +5,18 @@ logs="${args[--logs]}"
 max_findings="${args[--max-findings]}"
 output_dir="${args[--output-dir]}"
 no_open="${args[--no-open]}"
+json="${args[--json]}"
+
+# --json: one object, status ok | fail | not_tested | not_in_ci | no_badge | unknown | skipped, exit 1 when fail
+function print_ci_json () {
+    jq -n --arg test "$dir2" --arg environment "$environment" --arg status "$1" --arg url "$2" --arg message "$3" \
+        '{test: $test, environment: $environment, status: $status, url: (if $url == "" then null else $url end), message: $message}'
+    if [ "$1" == "fail" ]
+    then
+        exit 1
+    fi
+    exit 0
+}
 
 if [[ -n "$test" ]]
 then
@@ -45,6 +57,10 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 
+if [[ "$dir2" == reproduction-models* ]] && [[ -n "$json" ]]
+then
+    print_ci_json "skipped" "" "reproduction models are not part of the CI matrix"
+fi
 if [[ "$dir2" == reproduction-models* ]]
 then
     exit 0
@@ -53,6 +69,10 @@ fi
 content_file="$tmp_dir/content.md"
 if ! curl -s --fail -o $content_file https://kafka-docker-playground.io/content.md
 then
+    if [[ -n "$json" ]]
+    then
+        print_ci_json "unknown" "" "could not download the CI results from https://kafka-docker-playground.io/content.md"
+    fi
     logwarn "🤖 CI status: could not download the CI results from https://kafka-docker-playground.io/content.md"
     if [[ ! -n "$logs" ]]
     then
@@ -88,28 +108,50 @@ then
     fi
 fi
 
-if [[ -n "$podman" ]] && [[ ! -n "$logs" ]]
+if [[ -n "$podman" ]] && [[ ! -n "$logs" ]] && [[ -z "$json" ]]
 then
     logwarn "🦭 the published CI status is the one of the docker runs, add --logs to read the podman job"
 fi
 
+url=""
 if [ -z "$example_line" ]
 then
-    log "🤖 CI status: 🤷‍♂️ $dir2 is not in the CI results (not in the 🚀 test list of ci.yml, or added recently)"
+    ci_status="not_in_ci"
+    ci_message="$dir2 is not in the CI results (not in the 🚀 test list of ci.yml, or added recently)"
+    log_line="🤖 CI status: 🤷‍♂️ $ci_message"
 elif ci_badge_present "$badge_prefix ok"
 then
     url=$(ci_badge_url "$badge_prefix ok")
-    log "🤖 CI status: 🟢 ${label}ok${url:+, 🔗 test url: $url}"
+    ci_status="ok"
+    ci_message="${label}ok"
+    log_line="🤖 CI status: 🟢 ${label}ok${url:+, 🔗 test url: $url}"
 elif ci_badge_present "$badge_prefix fail"
 then
     url=$(ci_badge_url "$badge_prefix fail")
-    logwarn "🤖 CI status: 🔴 ${label}fail${url:+, 🐛 github issue: $url}"
+    ci_status="fail"
+    ci_message="${label}fail"
+    log_line="🤖 CI status: 🔴 ${label}fail${url:+, 🐛 github issue: $url}"
 elif grep -qF "[not tested]" <<< "$example_line"
 then
-    log "🤖 CI status: 🤷‍♂️ not tested"
+    ci_status="not_tested"
+    ci_message="not tested"
+    log_line="🤖 CI status: 🤷‍♂️ not tested"
 else
     # no badge on its line: update-readme only writes the overall badge when every CP version gives the same result
-    log "🤖 CI status: 🤷‍♂️ no CI badge for $dir2 (the results may differ between CP versions), see https://kafka-docker-playground.io/#/content"
+    ci_status="no_badge"
+    ci_message="no CI badge for $dir2 (the results may differ between CP versions), see https://kafka-docker-playground.io/#/content"
+    log_line="🤖 CI status: 🤷‍♂️ $ci_message"
+fi
+
+if [[ -n "$json" ]]
+then
+    print_ci_json "$ci_status" "$url" "$ci_message"
+fi
+if [ "$ci_status" == "fail" ]
+then
+    logwarn "$log_line"
+else
+    log "$log_line"
 fi
 
 if [[ ! -n "$logs" ]]

@@ -109,6 +109,10 @@ history_reverse $tmp_dir/history-snapshot | awk '
 
 if [[ -n "$stats" ]]
 then
+    if [[ -n "$query" ]]
+    then
+        logwarn "📊 --stats covers every run of the history: \"$query\" is ignored"
+    fi
     nb_runs=$(awk -F '\037' '{ total += $3 } END { print total + 0 }' $tmp_dir/history)
     log "📊 $nb_runs runs of $(wc -l < $tmp_dir/history | tr -d ' ') different commands in $history_file"
     log "🏆 most run examples"
@@ -429,14 +433,13 @@ function history_complete () {
 }
 bind -x '"\t": history_complete' 2> /dev/null
 
-# Prompt the user to edit the res variable
-read -e -p "" -i "$res" edited_res
-
-# Use the edited value if it is not empty
-if [[ -n "$edited_res" ]]
+# Prompt the user to edit the res variable: an empty line or ctrl-d cancels
+if ! read -e -p "" -i "$res" edited_res || [[ -z "${edited_res// /}" ]]
 then
-  res="$edited_res"
+  log "🏰 nothing run"
+  exit 0
 fi
+res="$edited_res"
 
 res=$(history_unmask_creds "$res") || exit 1
 eval "$res"

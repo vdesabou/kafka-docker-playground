@@ -115,11 +115,11 @@ wait_container_ready
 
 log "💗 you can now use zazkia tcp proxy using <zazkia:49998>"
 log "🌐 zazkia UI is available on http://localhost:9191"
-if [[ $(type -f open 2>&1) =~ "not found" ]]
+if ! can_open_url
 then
   :
 else
-  open "http://localhost:9191"
+  open_url "http://localhost:9191"
 fi
 
 if [[ -n "$skip_automatic_connector_config" ]]

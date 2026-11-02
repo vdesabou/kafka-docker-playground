@@ -41,7 +41,7 @@ do
         TYPE="sources"
     fi
 
-    if [[ $(type -f open 2>&1) =~ "not found" ]]
+    if ! can_open_url
     then
         log "🔗 Cannot open browser, use url:"
         echo "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
@@ -49,10 +49,10 @@ do
         if [[ -n "$browser" ]]
         then
             log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard with browser $browser"
-            open -a "$browser" "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+            open_url "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour" "$browser"
         else
             log "🤖 Open $connector_type connector $connector ($connectorId) in Confluent Cloud dashboard"
-            open "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+            open_url "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
         fi
     fi
 done

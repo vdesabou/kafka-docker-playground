@@ -37,14 +37,14 @@ else
             if [[ $url =~ "http" ]]
             then
                 short_url=$(echo $url | cut -d '#' -f 1)
-                if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
+                if [[ -n "$only_show_url" ]] || ! can_open_url
                 then
                     log "🌐 documentation for $connector_type connector $name is available at:"
                     echo "$short_url"
                     doc_links="${doc_links}|$name@$short_url"
                 else
                     log "🌐 opening documentation for $connector_type connector $name $short_url"
-                    open "$short_url"
+                    open_url "$short_url"
                 fi
             else
                 doc_available=0

@@ -1124,7 +1124,14 @@
             "--logs"
           ],
           "argument": "",
-          "description": "🔥 When CI is red, show why: tail and ERROR/FATAL digest of each failing script of the latest failing job"
+          "description": "🔥 When CI is red, show why: tail and ERROR/FATAL digest of each failing script of the latest failing job\n\nConflicts with: --json"
+        },
+        {
+          "names": [
+            "--json"
+          ],
+          "argument": "",
+          "description": "📗 Print the CI status as one JSON object, and nothing else: test, environment, status (ok, fail, not_tested,\nnot_in_ci, no_badge, unknown, skipped), url (job or issue) and message. Exits with code 1 when the status is fail\n\n🎓 Tip: for scripts and AI agents, for example playground get-ci-result --test <dir> --json | jq -r .status\n\nConflicts with: --logs"
         },
         {
           "names": [
@@ -1202,7 +1209,7 @@
             "--stats"
           ],
           "argument": "",
-          "description": "📊 Print the most run examples, the most used --tag, --connector-tag and\n--environment, and the results\n\nConflicts with: --list, --json, --last, --run, --prune"
+          "description": "📊 Print the most run examples, the most used --tag, --connector-tag and\n--environment, and the results, over every run of the history (the query is\nignored)\n\nConflicts with: --list, --json, --last, --run, --prune"
         },
         {
           "names": [
