@@ -3724,9 +3724,10 @@ subcommands:
     \       dump an avro file as readable json\n  read-parquet-file     same, for
     parquet\n  certs-create          generate a keystore and truststore for a component\n
     \ redos-check           check a topics.regex for catastrophic backtracking\n  install-vscode-extension
-    \  playground completion inside VS Code\n\n\U0001F393 Tip: the file readers are
-    what you use to check what a sink connector\nreally wrote, after pulling the file
-    out with 'playground container cp'."
+    \  playground completion inside VS Code\n  install-alfred-workflow    kdp launcher
+    for the playground CLI (macOS)\n\n\U0001F393 Tip: the file readers are what you
+    use to check what a sink connector\nreally wrote, after pulling the file out with
+    'playground container cp'."
   usage: playground tools COMMAND
   options: []
   subcommands:
@@ -3748,6 +3749,32 @@ subcommands:
       Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension"
     usage: playground tools install-vscode-extension
     options: []
+  - name: install-alfred-workflow
+    description: "\U0001F3A9 Install the \"kafka-docker-playground (kdp)\" Alfred
+      workflow (macOS, Alfred 5 with the Powerpack)\n\nA launcher for the playground
+      CLI: type 'kdp' in Alfred, or select text\nanywhere and use the Universal Action
+      \"kdp: support case, example, config\nkey…\":\n\n  kdp find <words>            find-example:
+      ↩ copies 'playground run -f …'\n  kdp history [words]         replay a past
+      run with its exact flags\n  kdp plugin <p> [version]    connector-plugin info,
+      changelog, source code, jars, CVEs\n  kdp key <key> [class]       connector-plugin
+      config-key\n  kdp docs [words]            deep dive pages\n  kdp status                  status,
+      connector status / diagnose, connect errors\n  kdp repro / notes / case    reproduction
+      models, notes, support cases (when present)\n\nOn a result: ↩ copies the command
+      (or opens), ⌘ opens in VS Code, ⌃ runs\nit in the terminal set in Alfred (for
+      an example, that stops the running\nenvironment), ⌥ and ⇧ depend on the mode.\n\nBy
+      default, builds the workflow from scripts/alfred-workflow/ and opens it\nin
+      Alfred, which asks to import it: run the command again after a pull to\nupdate
+      it. With --link, the folder is symlinked into your Alfred\npreferences instead,
+      so changes to the source are live (to work on it).\n\n\U0001F449 Check documentation
+      https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos"
+    usage: playground tools install-alfred-workflow [OPTIONS]
+    options:
+    - names:
+      - "--link"
+      argument: ''
+      description: "\U0001F517 Symlink scripts/alfred-workflow/ into the Alfred preferences
+        instead of importing a copy\n\nChanges to the source are live, for development.
+        Replaces an existing\nsymlink, never a workflow folder."
   - name: read-avro-file
     description: "\U0001F516 Read provided avro file\n\nPrints the records as json,
       along with the writer schema embedded in the\nfile. The way to check what a
