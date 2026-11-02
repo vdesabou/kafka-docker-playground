@@ -4480,6 +4480,36 @@ function get_current_test_file () {
   echo "$current_test_file"
 }
 
+# lock of a file shared by parallel runs (playground-run-history): mkdir is atomic, and flock is not on macOS.
+# A lock older than 30 seconds was left by a killed process and is taken over; after 10 seconds of waiting the caller
+# goes on without it (a history line is not worth blocking a run)
+function file_lock () {
+  local lock="$1.lock"
+  local waited=0
+  local lock_mtime
+  while ! mkdir "$lock" 2> /dev/null
+  do
+    # GNU stat first: BSD stat -f is something else on Linux
+    lock_mtime=$(stat -c %Y "$lock" 2> /dev/null || stat -f %m "$lock" 2> /dev/null)
+    if [ -n "$lock_mtime" ] && [ $(( $(date +%s) - lock_mtime )) -gt 30 ]
+    then
+      rm -rf "$lock"
+      continue
+    fi
+    sleep 0.1
+    waited=$((waited + 1))
+    if [ $waited -ge 100 ]
+    then
+      logwarn "⚠️ $1 is locked by another run ($lock), going on without the lock" >&2
+      return 0
+    fi
+  done
+}
+
+function file_unlock () {
+  rmdir "$1.lock" 2> /dev/null || true
+}
+
 function maybe_remove_flag () {
   flag="$1"
   local entry

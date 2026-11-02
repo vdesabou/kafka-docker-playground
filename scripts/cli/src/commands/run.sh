@@ -2245,7 +2245,9 @@ history_line=$(mask_creds_in_command "$history_line")
 # a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
 history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
 history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
+file_lock "$root_folder/playground-run-history"
 echo "$history_entry" >> "$root_folder/playground-run-history"
+file_unlock "$root_folder/playground-run-history"
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -2296,12 +2298,15 @@ function record_run_in_history {
     130|143) result="INTERRUPTED" ;;
   esac
   [ -f "$history_file" ] || return 0
+  # locked, and replaced in one mv: a run starting now appends its line in the meantime (lost with 'cat tmp > file')
+  file_lock "$history_file"
   # the last line of this run: other runs of this checkout may have been added since
   HISTORY_ENTRY="$history_entry" HISTORY_SUFFIX=" result=$result duration=$SECONDS" awk '
     NR == FNR { if ($0 == ENVIRON["HISTORY_ENTRY"]) last = FNR; next }
     FNR == last { $0 = $0 ENVIRON["HISTORY_SUFFIX"] }
-    { print }' "$history_file" "$history_file" > "$history_file.tmp" && cat "$history_file.tmp" > "$history_file"
-  rm -f "$history_file.tmp"
+    { print }' "$history_file" "$history_file" > "$history_file.tmp.$$" && mv -f "$history_file.tmp.$$" "$history_file"
+  rm -f "$history_file.tmp.$$"
+  file_unlock "$history_file"
 }
 function cleanup {
   # 💡 Capture the original exit status immediately!

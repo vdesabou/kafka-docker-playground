@@ -25342,6 +25342,36 @@ function get_current_test_file () {
   echo "$current_test_file"
 }
 
+# lock of a file shared by parallel runs (playground-run-history): mkdir is atomic, and flock is not on macOS.
+# A lock older than 30 seconds was left by a killed process and is taken over; after 10 seconds of waiting the caller
+# goes on without it (a history line is not worth blocking a run)
+function file_lock () {
+  local lock="$1.lock"
+  local waited=0
+  local lock_mtime
+  while ! mkdir "$lock" 2> /dev/null
+  do
+    # GNU stat first: BSD stat -f is something else on Linux
+    lock_mtime=$(stat -c %Y "$lock" 2> /dev/null || stat -f %m "$lock" 2> /dev/null)
+    if [ -n "$lock_mtime" ] && [ $(( $(date +%s) - lock_mtime )) -gt 30 ]
+    then
+      rm -rf "$lock"
+      continue
+    fi
+    sleep 0.1
+    waited=$((waited + 1))
+    if [ $waited -ge 100 ]
+    then
+      logwarn "⚠️ $1 is locked by another run ($lock), going on without the lock" >&2
+      return 0
+    fi
+  done
+}
+
+function file_unlock () {
+  rmdir "$1.lock" 2> /dev/null || true
+}
+
 function maybe_remove_flag () {
   flag="$1"
   local entry
@@ -45243,7 +45273,9 @@ EOF
   # a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
   history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
   history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
+  file_lock "$root_folder/playground-run-history"
   echo "$history_entry" >> "$root_folder/playground-run-history"
+  file_unlock "$root_folder/playground-run-history"
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -45294,12 +45326,15 @@ EOF
       130|143) result="INTERRUPTED" ;;
     esac
     [ -f "$history_file" ] || return 0
+    # locked, and replaced in one mv: a run starting now appends its line in the meantime (lost with 'cat tmp > file')
+    file_lock "$history_file"
     # the last line of this run: other runs of this checkout may have been added since
     HISTORY_ENTRY="$history_entry" HISTORY_SUFFIX=" result=$result duration=$SECONDS" awk '
       NR == FNR { if ($0 == ENVIRON["HISTORY_ENTRY"]) last = FNR; next }
       FNR == last { $0 = $0 ENVIRON["HISTORY_SUFFIX"] }
-      { print }' "$history_file" "$history_file" > "$history_file.tmp" && cat "$history_file.tmp" > "$history_file"
-    rm -f "$history_file.tmp"
+      { print }' "$history_file" "$history_file" > "$history_file.tmp.$$" && mv -f "$history_file.tmp.$$" "$history_file"
+    rm -f "$history_file.tmp.$$"
+    file_unlock "$history_file"
   }
   function cleanup {
     # 💡 Capture the original exit status immediately!
@@ -46103,7 +46138,10 @@ playground_history_command() {
   # most recent first, de-duplicated on the command (spaces normalized, so that a trailing space is not another
   # entry): "<command> US <comment of its last run> US <number of runs>" (US: unit separator, not a
   # whitespace like TAB, so that read keeps an empty field)
-  history_reverse "$history_file" | awk '
+  # read from a snapshot: --prune rewrites the file from it, and keeps the lines appended since (runs started meanwhile)
+  cp "$history_file" $tmp_dir/history-snapshot
+  nb_lines_snapshot=$(wc -l < $tmp_dir/history-snapshot | tr -d ' ')
+  history_reverse $tmp_dir/history-snapshot | awk '
       { gsub(/[ \t]+/, " "); sub(/^ /, ""); sub(/ $/, "") }
       !/^playground run -f / { next }
       {
@@ -46202,10 +46240,15 @@ playground_history_command() {
 
   if [[ -n "$prune" ]]
   then
+      file_lock "$history_file"
       nb_lines=$(wc -l < "$history_file" | tr -d ' ')
       cp "$history_file" "$history_file.bak"
-      # oldest first, as run appends them
-      history_reverse $tmp_dir/entries | awk -F '\037' '{ print $2 ($4 != "" ? " # " $4 : "") }' > "$history_file"
+      # oldest first, as run appends them, then the lines appended since the snapshot
+      {
+          history_reverse $tmp_dir/entries | awk -F '\037' '{ print $2 ($4 != "" ? " # " $4 : "") }'
+          tail -n +$((nb_lines_snapshot + 1)) "$history_file"
+      } > "$history_file.tmp.$$" && mv -f "$history_file.tmp.$$" "$history_file"
+      file_unlock "$history_file"
       log "🧹 $history_file: $nb_lines lines → $(wc -l < "$history_file" | tr -d ' ') (one per command, $nb_missing whose script no longer exists removed)"
       log "💾 previous version kept in $history_file.bak"
       exit 0
