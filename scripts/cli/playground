@@ -45605,6 +45605,64 @@ playground_run_command() {
     export PG_CCLOUD_RUN_ID="$(date +%s)"
     playground state set run.ccloud_run_id "$PG_CCLOUD_RUN_ID"
   fi
+  # 🏰 what playground history knows about this example, before this run is added to it: number of runs and results
+  # (any flags), the last run, and the runs of this exact command when the flags differ
+  function show_previous_runs_of_example {
+    local history_file="$root_folder/playground-run-history" summary line
+    [ -f "$history_file" ] || return 0
+    summary=$(HISTORY_SCRIPT="playground run -f $(printf '%q' "$test_file")" HISTORY_COMMAND="$history_line" awk '
+      function duration(s) {
+        if (s == "") return ""
+        s += 0
+        if (s >= 3600) return int(s / 3600) "h" int(s % 3600 / 60) "m"
+        if (s >= 60) return int(s / 60) "m" s % 60 "s"
+        return s "s"
+      }
+      function meta(key,    v) {
+        if (index(comment, " " key "=") == 0) return ""
+        v = substr(comment, index(comment, " " key "=") + length(key) + 2)
+        sub(/ .*/, "", v)
+        return v
+      }
+      function icon(r) {
+        return r == "SUCCESS" ? "✅" : r == "FAILURE" ? "❌" : r == "SKIPPED" ? "⏭️" : r == "INTERRUPTED" ? "⏹️" : "▫️"
+      }
+      function describe(    d, r, t) {
+        d = meta("date"); r = meta("result"); t = duration(meta("duration"))
+        sub(/T/, " ", d)
+        t = (d != "" ? substr(d, 1, 16) : "") (r != "" ? " " icon(r) " " r : "") (t != "" ? " in " t : "")
+        sub(/^ /, "", t)
+        return t != "" ? t : "(before dates and results were recorded)"
+      }
+      BEGIN { script = ENVIRON["HISTORY_SCRIPT"]; command = ENVIRON["HISTORY_COMMAND"] }
+      {
+        gsub(/[ \t]+/, " "); sub(/ $/, "")
+        line = $0; comment = ""
+        i = index($0, " # date=")
+        if (i > 0) { line = substr($0, 1, i - 1); comment = " " substr($0, i + 3) }
+        # the script alone, or followed by flags (a backslash-quoted space is part of the path)
+        if (line != script && index(line, script " ") != 1) next
+        runs++
+        r = meta("result"); results[r == "" ? "unknown" : r]++
+        last = describe(); last_flags = substr(line, length(script) + 2)
+        if (r == "SUCCESS" && meta("duration") != "") last_success = duration(meta("duration"))
+        if (line == command) { command_runs++; command_last = describe() }
+      }
+      END {
+        if (runs == 0) { print "🆕 first run of this example (nothing in playground history)"; exit }
+        counts = ""
+        n = split("SUCCESS FAILURE SKIPPED INTERRUPTED unknown", order, " ")
+        for (k = 1; k <= n; k++) if (results[order[k]] > 0) counts = counts " " results[order[k]] " " icon(order[k]) (order[k] == "unknown" ? " (result not recorded)" : "")
+        print "🏰 ran " runs " time(s) before:" counts " · last run " last (last_flags != "" ? " with " last_flags : " without flags")
+        if (command_runs < runs) print "🏰 with these exact flags: " (command_runs > 0 ? command_runs " time(s), last run " command_last : "never")
+        if (last_success != "") print "⏱️ last successful run took " last_success
+      }' "$history_file")
+    while IFS= read -r line
+    do
+      [ -n "$line" ] && log "$line"
+    done <<< "$summary"
+    return 0
+  }
   # shell-quoted, so that 'playground history' and eval replay it as is; credentials are not written
   history_line="playground run -f $(printf '%q' "$test_file")"
   flag_list_to_args
@@ -45613,6 +45671,7 @@ playground_run_command() {
     history_line+="$(printf ' %q' "${flag_args[@]}")"
   fi
   history_line=$(mask_creds_in_command "$history_line")
+  show_previous_runs_of_example
   # a trailing comment, ignored by eval: the result and the duration are added when the run ends (record_run_in_history)
   history_branch=$(git -C "$root_folder" rev-parse --abbrev-ref HEAD 2> /dev/null)
   history_entry="$history_line # date=$(date +%Y-%m-%dT%H:%M:%S)${history_branch:+ branch=$history_branch}"
