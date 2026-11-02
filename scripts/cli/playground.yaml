@@ -889,9 +889,10 @@ subcommands:
     in\n  /tmp/playground-run-logs.\n\n  --run-log-file    write it to that file\n
     \ --no-run-log      don't write it\n  playground config run-log false | run-log-folder
     <folder>\n\n  The masking is best-effort: review the file before sharing it\n
-    \ outside Confluent.\n\n❗ this command will kill all containers using \"playground
-    container kill-all\", you can disable this by running \"playground config container-kill-all-before-run
-    false\"\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    \ outside Confluent.\n\n❗ the containers of the previous example are stopped first
+    (\"playground stop\"). To kill every container instead (\"playground container
+    kill-all\"), run \"playground config container-kill-all-before-run true\"\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
     Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground run [OPTIONS]
   options:
@@ -901,10 +902,12 @@ subcommands:
     description: "\U0001F510 The environment to start when running a connector example
       \n\n- plaintext\n- ccloud\n- cfk\n- cfk-rbac\n- 2way-ssl\n- kerberos\n- ldap-authorizer-sasl-plain\n-
       ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n-
-      ssl_kerberos\n\nDefault is plaintext.\nThis is only supported when example is
-      a connector example\n\nDefault value: plaintext\nAllowed values: ccloud, cfk,
-      cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos,
-      ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain"
+      ssl_kerberos\n\nDefault is PLAYGROUND_ENVIRONMENT when it is exported in your
+      shell (it is then\nadded to the flags of the run), plaintext otherwise. Not
+      available with\nccloud examples (they run against Confluent Cloud).\nThis is
+      only supported when example is a connector example\n\nAllowed values: ccloud,
+      cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos,
+      ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain"
   - names:
     - "--file"
     - "-f"
@@ -994,14 +997,14 @@ subcommands:
   - names:
     - "--enable-flink"
     argument: ''
-    description: "\U0001F43F️ Enable Flink\n\nBy default, flink is not started for
-      every test\n\nOnce enabled, the CLI will ask if you need to download any connectors.
-      Based on the response, you can download one or more connectors from Flink maven
-      repository.\n\nTo skip the question (in a script or CI), set FLINK_URL to the
-      jar(s) to download, e.g. the Kafka SQL connector.\n\nFlink UI and REST API:
-      http://127.0.0.1:18081\n\n\U0001F393 Tip: run Flink SQL and manage the jobs
-      with 'playground flink sql|list-jobs|cancel', see the flink/flink-sql-kafka
-      example."
+    description: "\U0001F43F️ Enable Flink\n\n❗ not supported with ccloud examples\n\nBy
+      default, flink is not started for every test\n\nOnce enabled, the CLI will ask
+      if you need to download any connectors. Based on the response, you can download
+      one or more connectors from Flink maven repository.\n\nTo skip the question
+      (in a script or CI), set FLINK_URL to the jar(s) to download, e.g. the Kafka
+      SQL connector.\n\nFlink UI and REST API: http://127.0.0.1:18081\n\n\U0001F393
+      Tip: run Flink SQL and manage the jobs with 'playground flink sql|list-jobs|cancel',
+      see the flink/flink-sql-kafka example."
   - names:
     - "--enable-conduktor"
     argument: ''
@@ -1033,8 +1036,8 @@ subcommands:
   - names:
     - "--enable-kcat"
     argument: ''
-    description: "\U0001F408‍⬛ Enable kcat\n\nYou can use it with:\n\n$ docker exec
-      kcat kcat -b broker:9092 -L"
+    description: "\U0001F408‍⬛ Enable kcat\n\n❗ not supported with ccloud examples\n\nYou
+      can use it with:\n\n$ docker exec kcat kcat -b broker:9092 -L"
   - names:
     - "--enable-sql-datagen"
     argument: ''

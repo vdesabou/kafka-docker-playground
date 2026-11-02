@@ -122,9 +122,13 @@ ksqldb-server error digest with ksqlDB, `flink list-jobs --state FAILED` with Fl
 
 Gotchas:
 
-- **A run stops what was running.** The very first run on a machine kills **every container** (`container kill-all`)
-  and sets `playground config container-kill-all-before-run false`; the next runs only `playground stop` the previous
-  example. Set it back to `true` if you want a clean slate each time.
+- **A run stops what was running**: `playground stop` of the previous example. Set
+  `playground config container-kill-all-before-run true` to kill **every container** (`container kill-all`) before each
+  run instead, for a clean slate each time.
+- **`PLAYGROUND_ENVIRONMENT` exported in your shell is `--environment`**: a connector example runs under it and the run
+  records it as `--environment <env>` (banner, history, `re-run`, run log). An explicit `--environment plaintext` wins
+  over it. ccloud examples ignore it, and `--enable-flink`, `--enable-kcat`, `--enable-ksqldb`… are refused with
+  `--environment ccloud` like with a ccloud example.
 - **`-f` takes a path to a `.sh`**: relative paths are accepted (completed with the current folder), `@<path>` too
   (what `<tab>` completion produces). The help says "absolute": that's what the completion and the history store.
 - **Bad combinations fail before anything is stopped**: `--enable-legacy-control-center` with CP 8, `--enable-kraft`

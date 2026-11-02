@@ -22,13 +22,9 @@ playground state del run.connector_type_before_switch
 if [[ ! -n "$no_stop" ]]
 then
     set +e
+    # false by default: only the containers of the previous example are stopped
     container_kill_all_before_run=$(playground config get container-kill-all-before-run)
-    if [ "$container_kill_all_before_run" == "" ]
-    then
-        playground config set container-kill-all-before-run false
-    fi
-
-    if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
+    if [ "$container_kill_all_before_run" == "true" ]
     then
         if [[ "$environment" != cfk* ]] && [[ -z "$(docker ps -qa 2> /dev/null)" ]]
         then
