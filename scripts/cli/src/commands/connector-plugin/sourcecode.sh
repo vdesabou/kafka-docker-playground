@@ -910,13 +910,13 @@ if [[ -n "$json" ]]
 then
     # stdout is kept for the JSON document
     log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at: $sourcecode_url" >&2
-elif [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]] || [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]] || [[ -n "$grep_regex" ]]
+elif [[ -n "$only_show_url" ]] || ! can_open_url || [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]] || [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]] || [[ -n "$grep_regex" ]]
 then
     log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
     echo "$sourcecode_url"
 else
     log "🧑‍💻 opening sourcecode url $sourcecode_url for plugin $connector_plugin in browser$additional_text"
-    open "$sourcecode_url"
+    open_url "$sourcecode_url"
 fi
 
 if [[ -n "$log_flag" ]] || [[ -n "$files_flag" ]]

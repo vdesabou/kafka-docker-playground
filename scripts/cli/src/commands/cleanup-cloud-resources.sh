@@ -60,7 +60,12 @@ function confirm_deletion () {
     local reply
     while true
     do
-        read -p "$1 (y/n) " reply
+        if ! read -p "$1 (y/n) " reply
+        then
+            # no answer possible (no terminal): skipped, rather than asking again forever
+            logwarn "no answer (no terminal?): skipping, use --force to delete without asking"
+            return 1
+        fi
         case "$reply" in
             y|Y ) return 0;;
             n|N ) log "Skipping..."; return 1;;

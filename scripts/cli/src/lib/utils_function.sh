@@ -559,7 +559,12 @@ function check_if_skip() {
   then
     eval "$1"
   else
-    read -p "Do you want to skip this command? (y/n) " reply
+    if ! read -p "Do you want to skip this command? (y/n) " reply
+    then
+      # no answer possible (no terminal): skipped, rather than asking again forever
+      logwarn "no answer (no terminal?): skipping the command, use --force to run it"
+      return 0
+    fi
 
     case "$reply" in
     y|Y ) log "Skipping command...";;
