@@ -24660,6 +24660,13 @@ function filter_schema_registry_running() {
       echo "$mdc_error"
       return
     fi
+    # mdc-kerberos has no usable Schema Registry: schema-registry-us / -europe come from the mdc-plaintext compose file,
+    # bootstrap on broker-<cluster>:9092 without SASL and restart in a loop. topic produce / consume of plain string values
+    # don't need one: let them run (the replicator Kerberos examples)
+    if [[ "$environment" == "mdc-kerberos" ]] && { [[ "$action" == "topic produce" ]] || [[ "$action" == "topic consume" ]]; }
+    then
+      return
+    fi
   fi
   get_sr_url_and_security
 
