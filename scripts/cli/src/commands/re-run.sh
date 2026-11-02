@@ -1,10 +1,4 @@
-test_file=$(playground state get run.test_file)
-
-if [ ! -f $test_file ]
-then
-  logerror "❌ file $test_file retrieved from $root_folder/playground.ini does not exist!"
-  exit 1
-fi
+test_file=$(get_current_test_file) || exit 1
 
 declare -a array_flag_list=()
 encoded_array="$(playground state get run.array_flag_list_base64)"

@@ -5030,7 +5030,7 @@ playground_open_usage() {
 playground_stop_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground stop\n\n"
-    printf "  🛑 Stop currently running example\n  \n  Tears down every container of the environment and of the example, and\n  removes their volumes, by replaying the docker compose command stored in\n  playground.ini. Nothing is left behind, so the next example starts clean.\n  \n  ❕ Data is not kept: topics, connectors and the content of the databases\n     started by the example are gone.\n  \n  For a Confluent Cloud example, the connectors and topics it created are\n  listed and deleted too, after asking for confirmation. Change this with\n  'playground config cleanup-ccloud-resources-after-run ask|true|false'.\n\n"
+    printf "  🛑 Stop currently running example\n  \n  Tears down every container of the environment and of the example, and\n  removes their volumes, by replaying the docker compose command stored in\n  playground.ini. Nothing is left behind, so the next example starts clean.\n  This also works when the example file no longer exists (deleted\n  reproduction model, removed worktree).\n  \n  ❕ Data is not kept: topics, connectors and the content of the databases\n     started by the example are gone.\n  \n  For a Confluent Cloud example, the connectors and topics it created are\n  listed and deleted too, after asking for confirmation. Change this with\n  'playground config cleanup-ccloud-resources-after-run ask|true|false'.\n\n"
   else
     printf "playground stop - 🛑 Stop currently running example\n\n"
   fi
@@ -25277,6 +25277,24 @@ function add_connector_config_based_on_environment () {
   set +e
   diff <(jq --sort-keys . $tmp_dir/1.json) <(jq --sort-keys . $tmp_dir/2.json)
   set -e
+}
+
+# the example of the last 'playground run' (run.test_file of playground.ini), on stdout. Errors go to stderr and
+# return 1 when no example was run yet or its file no longer exists: test_file=$(get_current_test_file) || exit 1
+function get_current_test_file () {
+  local current_test_file
+  current_test_file=$(playground state get run.test_file)
+  if [ -z "$current_test_file" ]
+  then
+    logerror "❌ no example was run yet (run.test_file is not set in $root_folder/playground.ini), start one with 'playground run'" >&2
+    return 1
+  fi
+  if [ ! -f "$current_test_file" ]
+  then
+    logerror "❌ file $current_test_file retrieved from $root_folder/playground.ini does not exist!" >&2
+    return 1
+  fi
+  echo "$current_test_file"
 }
 
 function maybe_remove_flag () {
@@ -45542,13 +45560,7 @@ EOF
 playground_re_run_command() {
 
   # src/commands/re-run.sh
-  test_file=$(playground state get run.test_file)
-
-  if [ ! -f $test_file ]
-  then
-    logerror "❌ file $test_file retrieved from $root_folder/playground.ini does not exist!"
-    exit 1
-  fi
+  test_file=$(get_current_test_file) || exit 1
 
   declare -a array_flag_list=()
   encoded_array="$(playground state get run.array_flag_list_base64)"
@@ -45593,15 +45605,8 @@ playground_get_ci_result_command() {
       dir2="$test"
       environment="plaintext"
   else
-      test_file=$(playground state get run.test_file)
+      test_file=$(get_current_test_file) || exit 1
       get_environment_used
-
-      if [ ! -f $test_file ]
-      then
-
-          logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-          exit 1
-      fi
 
       test_file_directory="$(dirname "${test_file}")"
       base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
@@ -46510,20 +46515,12 @@ playground_switch_back_command() {
   playground state set run.connector_type "$connector_type_before_switch"
   playground state del run.connector_type_before_switch
 
+  # nothing is started or stopped: the CLI simply talks to the containers of the last example again
   test_file=$(playground state get run.test_file)
-
-  if [ ! -f $test_file ]
+  if [ -n "$test_file" ]
   then
-
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
+      log "💡 last example: ${test_file#"$root_folder/"}"
   fi
-
-  last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
-  filename=$(basename $test_file)
-
-  log "🚀 Running example "
-  echo $last_two_folders/$filename
 }
 
 # :command.function
@@ -46638,14 +46635,7 @@ playground_update_version_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
 
-  test_file=$(playground state get run.test_file)
-
-  if [ ! -f $test_file ]
-  then
-
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
-  fi
+  test_file=$(get_current_test_file) || exit 1
 
   # determining the docker-compose file from from test_file
   docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
@@ -47161,14 +47151,7 @@ playground_open_command() {
       test_file=$(echo "$test_file" | cut -d "@" -f 2)
     fi
   else
-    test_file=$(playground state get run.test_file)
-
-    if [ ! -f $test_file ]
-    then
-
-        logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-        exit 1
-    fi
+    test_file=$(get_current_test_file) || exit 1
   fi
 
   do_wait=""
@@ -47183,7 +47166,7 @@ playground_open_command() {
     docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
     test_file_directory="$(dirname "${test_file}")"
     docker_compose_file="${test_file_directory}/${docker_compose_file}"
-    if [ ! -f $docker_compose_file ]
+    if [ ! -f "$docker_compose_file" ]
     then
       logwarn "--open-docker-compose is set but docker compose file could not be retrieved from $test_file"
     else
@@ -47203,11 +47186,16 @@ playground_stop_command() {
   test_file=$(playground state get run.test_file)
   cfk_port_forward_pids=$(ps -axo pid=,command= | grep -E '[k]ubectl( |.* )port-forward ' | grep 'confluent' | awk '{print $1}')
 
-  if [ ! -f $test_file ]
+  docker_command=$(playground state get run.docker_command)
+  if [ -z "$test_file" ] && [ -z "$docker_command" ] && [ -z "$cfk_port_forward_pids" ]
   then
-
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
+      log "💤 no example was started with 'playground run', nothing to stop"
+      exit 0
+  fi
+  if [ -n "$test_file" ] && [ ! -f "$test_file" ]
+  then
+      # deleted repro model, removed worktree…: the containers still run, stop them with the saved docker compose command
+      logwarn "⚠️ file $test_file retrieved from $root_folder/playground.ini does not exist anymore, stopping with the docker compose command saved there"
   fi
   export flink_connectors=""
   filename=$(basename -- "$test_file")
@@ -47246,7 +47234,6 @@ playground_stop_command() {
       maybe_cleanup_ccloud_run_resources
   fi
 
-  docker_command=$(playground state get run.docker_command)
   echo "$docker_command" > $tmp_dir/tmp
 
   sed -e "s|up -d|down -v --remove-orphans|g" \
@@ -47257,7 +47244,12 @@ playground_stop_command() {
 
   # the command sources utils.sh: with CONNECTOR_TAG/ZIP/JAR set, it looks for the docker-compose override of this
   # temporary script, does not find one and exits before 'docker compose down' (a stop installs no connector anyway)
-  env -u CONNECTOR_TAG -u CONNECTOR_ZIP -u CONNECTOR_JAR bash $tmp_dir/playground-command-stop
+  if ! env -u CONNECTOR_TAG -u CONNECTOR_ZIP -u CONNECTOR_JAR bash $tmp_dir/playground-command-stop
+  then
+      logerror "❌ could not stop the example with the docker compose command saved in $root_folder/playground.ini"
+      logerror "👉 to remove every container instead: playground container kill-all"
+      exit 1
+  fi
 }
 
 # :command.function
@@ -60213,14 +60205,7 @@ playground_container_recreate_command() {
 
   wait_container_ready
 
-  test_file=$(playground state get run.test_file)
-
-  if [ ! -f $test_file ]
-  then
-
-      logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-      exit 1
-  fi
+  test_file=$(get_current_test_file) || exit 1
 
   if [[ "${test_file}" == *"xstream"* ]]
   then

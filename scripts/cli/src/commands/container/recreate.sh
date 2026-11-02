@@ -52,13 +52,7 @@ bash /tmp/playground-command
 
 wait_container_ready
 
-test_file=$(playground state get run.test_file)
-
-if [ ! -f $test_file ]
-then 
-    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-    exit 1
-fi
+test_file=$(get_current_test_file) || exit 1
 
 if [[ "${test_file}" == *"xstream"* ]]
 then

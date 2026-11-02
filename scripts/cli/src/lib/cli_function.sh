@@ -4462,6 +4462,24 @@ function add_connector_config_based_on_environment () {
   set -e
 }
 
+# the example of the last 'playground run' (run.test_file of playground.ini), on stdout. Errors go to stderr and
+# return 1 when no example was run yet or its file no longer exists: test_file=$(get_current_test_file) || exit 1
+function get_current_test_file () {
+  local current_test_file
+  current_test_file=$(playground state get run.test_file)
+  if [ -z "$current_test_file" ]
+  then
+    logerror "❌ no example was run yet (run.test_file is not set in $root_folder/playground.ini), start one with 'playground run'" >&2
+    return 1
+  fi
+  if [ ! -f "$current_test_file" ]
+  then
+    logerror "❌ file $current_test_file retrieved from $root_folder/playground.ini does not exist!" >&2
+    return 1
+  fi
+  echo "$current_test_file"
+}
+
 function maybe_remove_flag () {
   flag="$1"
   local entry

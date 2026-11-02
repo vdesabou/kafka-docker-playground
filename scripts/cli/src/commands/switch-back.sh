@@ -18,16 +18,9 @@ playground state del run.environment_before_switch
 playground state set run.connector_type "$connector_type_before_switch"
 playground state del run.connector_type_before_switch
 
+# nothing is started or stopped: the CLI simply talks to the containers of the last example again
 test_file=$(playground state get run.test_file)
-
-if [ ! -f $test_file ]
-then 
-    logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
-    exit 1
+if [ -n "$test_file" ]
+then
+    log "💡 last example: ${test_file#"$root_folder/"}"
 fi
-
-last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
-filename=$(basename $test_file)
-
-log "🚀 Running example "
-echo $last_two_folders/$filename
