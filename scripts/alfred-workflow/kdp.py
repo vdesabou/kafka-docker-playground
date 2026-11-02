@@ -131,6 +131,9 @@ def q(s):
 
 def env():
     e = dict(os.environ)
+    # Alfred runs scripts without LANG: give the commands a UTF-8 locale (emojis, sort, setlocale warnings)
+    if not e.get("LANG") and not e.get("LC_ALL"):
+        e["LANG"] = "en_US.UTF-8"
     e["PATH"] = ":".join(
         [os.path.join(ROOT, "scripts", "cli"), "/opt/homebrew/bin", "/usr/local/bin", e.get("PATH", "/usr/bin:/bin")]
     )
@@ -1466,6 +1469,11 @@ ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)|\x
 VIEW_MAX_LINES = 3000
 
 
+def md_escape(text):
+    """Markdown of the Text View: server1_mydb_CUSTOMERS-value must not turn mydb into italics."""
+    return re.sub(r"([\\`*_\[\]<>#|~])", r"\\\1", text)
+
+
 def display_cmd(cmd):
     prefix = "cd {} && ".format(q(ROOT))
     return cmd[len(prefix):] if cmd.startswith(prefix) else cmd
@@ -1632,7 +1640,7 @@ def view(arg=None):
     while fence in out:
         fence += "`"
     body = "{f}text\n{o}\n{f}".format(f=fence, o=out) if out else ("_no output_" if done else "⏳ running…")
-    response = "**{}**\n\n`{}`\n\n".format(title, display_cmd(cmd))
+    response = "**{}**\n\n`{}`\n\n".format(md_escape(title), display_cmd(cmd))
     if line_filter:
         response += "🔍 lines containing **{}**: {} · ↩ with an empty field runs the command again\n\n".format(
             line_filter, len([x for x in out.split("\n") if x]))

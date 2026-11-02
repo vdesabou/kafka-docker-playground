@@ -31735,19 +31735,17 @@ function urlencode() {
   # https://gist.github.com/cdown/1163649
   # urlencode <string>
 
-  old_lc_collate=$LC_COLLATE
-  LC_COLLATE=C
-
+  # the unreserved characters are listed rather than as ranges, so that the result doesn't depend on the locale;
+  # changing LC_COLLATE instead made bash warn "setlocale: LC_COLLATE: cannot change locale ()" when LANG is
+  # not set (Alfred)
   local length="${#1}"
   for (( i = 0; i < length; i++ )); do
       local c="${1:$i:1}"
       case $c in
-          [a-zA-Z0-9.~_-]) printf '%s' "$c" ;;
+          [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.~_-]) printf '%s' "$c" ;;
           *) printf '%%%02X' "'$c" ;;
       esac
   done
-
-  LC_COLLATE=$old_lc_collate
 }
 
 function base64() {
