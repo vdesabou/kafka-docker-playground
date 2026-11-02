@@ -55,7 +55,14 @@ then
     done
     ln -sfn "$source_dir" "$target"
     log "🔗 $target -> $source_dir"
-    log "👏 kdp workflow $version linked: changes to $source_dir are live (open Alfred Preferences > Workflows once if kdp does not show up)"
+    # Alfred does not watch the folder behind a symlink: reload it now (run the command again after editing the workflow)
+    if osascript -e "tell application id \"com.runningwithcrayons.Alfred\" to reload workflow \"$bundle_id\"" > /dev/null 2>&1
+    then
+        log "🔄 workflow reloaded in Alfred"
+    else
+        logwarn "⚠️ could not reload the workflow in Alfred: open Alfred Preferences > Workflows and click it"
+    fi
+    log "👏 kdp workflow $version linked to $source_dir: run this command again after editing it, Alfred does not see changes behind the link"
     exit 0
 fi
 
