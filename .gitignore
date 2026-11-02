@@ -120,3 +120,5 @@ docs/changelog.md
 
 # settings of the kdp Alfred workflow, written by Alfred when it is installed with playground tools install-alfred-workflow --link
 scripts/alfred-workflow/prefs.plist
+# bytecode of kdp.py, when it is imported (scripts/alfred-workflow/check.py does not write it)
+scripts/alfred-workflow/__pycache__/
