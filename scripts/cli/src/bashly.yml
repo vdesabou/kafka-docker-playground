@@ -3032,6 +3032,9 @@ commands:
     playground one. Everything has to be pulled again afterwards, so the next
     run is slow.
 
+    The Oracle database images (oracle/database, db-prebuilt-*) are kept: they
+    take a long time to build.
+
     🎓 Tip: prefer 'playground remove-cp-docker-images' to drop only the
     Confluent Platform versions you no longer test.
 
@@ -3051,7 +3054,7 @@ commands:
       arg: version
       completions:
         dynamic:
-        - docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq
+        - docker image ls --format '{{.Repository}} {{.Tag}}' | awk '$1 ~ /^confluentinc\// && $2 != "<none>" {print $2}' | sort -u
       help: |-
         🔢 Specific version to remove
 
@@ -3060,17 +3063,19 @@ commands:
   help: |-
     🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
 
-        It also refreshes images for aws, gcp and azure cli
-
-    Useful when a version tag has been re-published, or when the cloud CLI
-    images have drifted behind the API they talk to.
+    Useful when a version tag has been re-published. Images built locally by
+    the playground are skipped with a warning.
   flags:
+    - long: --include-cloud-cli
+      required: false
+      help: |-
+        ☁️ Also pull the aws, azure and gcp cli images (several GB), when they have drifted behind the API they talk to
     - long: --version
       required: true
       arg: version
       completions:
         dynamic:
-        - docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq
+        - docker image ls --format '{{.Repository}} {{.Tag}}' | awk '$1 ~ /^confluentinc\// && $2 != "<none>" {print $2}' | sort -u
       help: |-
         🔢 Specific version to pull 
 
