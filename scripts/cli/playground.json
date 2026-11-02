@@ -1337,7 +1337,7 @@
     },
     {
       "name": "remove-all-docker-images",
-      "description": "🧨 Remove all docker images (including docker volumes)\n\nReclaims disk space by wiping your whole local Docker state, not just the\nplayground one. Everything has to be pulled again afterwards, so the next\nrun is slow.\n\n🎓 Tip: prefer 'playground remove-cp-docker-images' to drop only the\nConfluent Platform versions you no longer test.",
+      "description": "🧨 Remove all docker images (including docker volumes)\n\nReclaims disk space by wiping your whole local Docker state, not just the\nplayground one. Everything has to be pulled again afterwards, so the next\nrun is slow.\n\nThe Oracle database images (oracle/database, db-prebuilt-*) are kept: they\ntake a long time to build.\n\n🎓 Tip: prefer 'playground remove-cp-docker-images' to drop only the\nConfluent Platform versions you no longer test.",
       "usage": "playground remove-all-docker-images",
       "options": []
     },
@@ -1357,9 +1357,16 @@
     },
     {
       "name": "refresh-cp-docker-images",
-      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\n    It also refreshes images for aws, gcp and azure cli\n\nUseful when a version tag has been re-published, or when the cloud CLI\nimages have drifted behind the API they talk to.",
+      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\nUseful when a version tag has been re-published. Images built locally by\nthe playground are skipped with a warning.",
       "usage": "playground refresh-cp-docker-images [OPTIONS]",
       "options": [
+        {
+          "names": [
+            "--include-cloud-cli"
+          ],
+          "argument": "",
+          "description": "☁️ Also pull the aws, azure and gcp cli images (several GB), when they have drifted behind the API they talk to"
+        },
         {
           "names": [
             "--version"

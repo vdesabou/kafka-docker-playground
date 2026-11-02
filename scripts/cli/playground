@@ -5070,7 +5070,7 @@ playground_stop_usage() {
 playground_remove_all_docker_images_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground remove-all-docker-images\n\n"
-    printf "  🧨 Remove all docker images (including docker volumes)\n  \n  Reclaims disk space by wiping your whole local Docker state, not just the\n  playground one. Everything has to be pulled again afterwards, so the next\n  run is slow.\n  \n  🎓 Tip: prefer 'playground remove-cp-docker-images' to drop only the\n  Confluent Platform versions you no longer test.\n\n"
+    printf "  🧨 Remove all docker images (including docker volumes)\n  \n  Reclaims disk space by wiping your whole local Docker state, not just the\n  playground one. Everything has to be pulled again afterwards, so the next\n  run is slow.\n  \n  The Oracle database images (oracle/database, db-prebuilt-*) are kept: they\n  take a long time to build.\n  \n  🎓 Tip: prefer 'playground remove-cp-docker-images' to drop only the\n  Confluent Platform versions you no longer test.\n\n"
   else
     printf "playground remove-all-docker-images - 🧨 Remove all docker images (including docker volumes)\n\n"
   fi
@@ -5130,7 +5130,7 @@ playground_remove_cp_docker_images_usage() {
 playground_refresh_cp_docker_images_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground refresh-cp-docker-images\n\n"
-    printf "  🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a\n  version installed locally\n  \n      It also refreshes images for aws, gcp and azure cli\n  \n  Useful when a version tag has been re-published, or when the cloud CLI\n  images have drifted behind the API they talk to.\n\n"
+    printf "  🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a\n  version installed locally\n  \n  Useful when a version tag has been re-published. Images built locally by\n  the playground are skipped with a warning.\n\n"
   else
     printf "playground refresh-cp-docker-images - 🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\n"
   fi
@@ -5146,6 +5146,11 @@ playground_refresh_cp_docker_images_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-cloud-cli")"
+    printf "    ☁️ Also pull the aws, azure and gcp cli images (several GB), when they have\n    drifted behind the API they talk to\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--version VERSION (required)")"
     printf "    🔢 Specific version to pull\n"
@@ -47268,14 +47273,24 @@ playground_stop_command() {
 playground_remove_all_docker_images_command() {
 
   # src/commands/remove-all-docker-images.sh
-  log "🧨 Remove all docker images (including docker volumes)"
+  log "🧨 Remove all docker images (including docker volumes), except the Oracle database images (oracle/database, db-prebuilt-*: long to build)"
   check_if_continue
 
   set +e
   playground container kill-all
-  docker image rm $(docker image list | grep -v "oracle/database"  | grep -v "db-prebuilt" | awk 'NR>1 {print $3}') -f
-  docker system prune -a -f
-  docker volume rm $(docker volume ls -qf dangling=true)
+  images=$(docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep -v "^oracle/database" | grep -v "^db-prebuilt" | awk '{print $2}' | sort -u)
+  if [ -n "$images" ]
+  then
+      docker image rm -f $images
+  fi
+  # no -a: 'docker system prune -a' removes every unused image, the Oracle ones included
+  docker system prune -f
+  volumes=$(docker volume ls -qf dangling=true)
+  if [ -n "$volumes" ]
+  then
+      docker volume rm $volumes
+  fi
+
 }
 
 # :command.function
@@ -47284,26 +47299,48 @@ playground_remove_cp_docker_images_command() {
   # src/commands/remove-cp-docker-images.sh
   version=${args[--version]}
 
+  # image ids of the confluentinc images whose tag is exactly $1 (a grep would also match 7.4.10 for 7.4.1)
+  function cp_image_ids_with_tag () {
+      docker image ls --format '{{.Repository}} {{.Tag}} {{.ID}}' | awk -v v="$1" '$1 ~ /^confluentinc\// && $2 == v {print $3}' | sort -u
+  }
+
+  function remove_cp_images_with_tag () {
+      local ids
+      ids=$(cp_image_ids_with_tag "$1")
+      if [ -z "$ids" ]
+      then
+          logwarn "no Confluent Platform docker image with tag $1"
+          return
+      fi
+      docker rmi -f $ids
+  }
+
   if [[ -n "$version" ]]
   then
       log "🧹 removing Confluent Platform docker images: $version"
       check_if_continue
-      docker image ls | grep confluentinc | grep $version | awk '{print $3}' | xargs docker rmi -f
+      remove_cp_images_with_tag "$version"
       exit 0
   fi
 
-  LATEST_TAG=$(grep "export TAG" $root_folder/scripts/utils.sh | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
+  LATEST_TAG=$(grep "# default tag" "$root_folder/scripts/utils.sh" | head -1 | cut -d "=" -f 2 | cut -d " " -f 1)
   if [ -z "$LATEST_TAG" ]
   then
       logerror "❌ error while getting default TAG "
       exit 1
   fi
 
-  for version in $(docker image ls | grep confluentinc | grep -v "<none>" | grep -Ev "latest|2.0.0|$LATEST_TAG"  | awk '{print $2}' | sort | uniq);
+  versions=$(docker image ls --format '{{.Repository}} {{.Tag}}' | awk -v d="$LATEST_TAG" '$1 ~ /^confluentinc\// && $2 != "<none>" && $2 != "latest" && $2 != "2.0.0" && $2 != d {print $2}' | sort -u)
+  if [ -z "$versions" ]
+  then
+      log "🧹 no Confluent Platform docker image to remove (the default TAG $LATEST_TAG is always kept)"
+      exit 0
+  fi
+  for version in $versions
   do
       log "🧹 removing Confluent Platform docker images: $version (skipping default TAG $LATEST_TAG)"
       check_if_continue
-      docker image ls | grep confluentinc | grep $version | awk '{print $3}' | xargs docker rmi -f
+      remove_cp_images_with_tag "$version"
   done
 
 }
@@ -47313,17 +47350,40 @@ playground_refresh_cp_docker_images_command() {
 
   # src/commands/refresh-cp-docker-images.sh
   version=${args[--version]}
+  include_cloud_cli=${args[--include-cloud-cli]}
 
-  docker pull amazon/aws-cli
-  docker pull mcr.microsoft.com/azure-cli:azurelinux3.0
-  docker pull google/cloud-sdk:latest
-
-  if [[ -n "$version" ]]
+  if [[ -n "$include_cloud_cli" ]]
   then
-      log "🔄 Pulling Confluent Platform docker images for $version"
-      docker image ls | grep confluentinc | grep $version | awk '{print $1":"$2}' | xargs -I {} docker pull {}
+      log "🔄 Pulling aws, azure and gcp cli docker images"
+      docker pull amazon/aws-cli
+      docker pull mcr.microsoft.com/azure-cli:azurelinux3.0
+      docker pull google/cloud-sdk:latest
+  fi
+
+  # confluentinc images whose tag is exactly $version (a grep would also match 7.4.10 for 7.4.1)
+  images=$(docker image ls --format '{{.Repository}} {{.Tag}}' | awk -v v="$version" '$1 ~ /^confluentinc\// && $2 == v {print $1":"$2}' | sort -u)
+  if [ -z "$images" ]
+  then
+      logwarn "no Confluent Platform docker image with tag $version installed locally"
       exit 0
   fi
+
+  log "🔄 Pulling Confluent Platform docker images for $version"
+  failed=0
+  for image in $images
+  do
+      # images built locally by the playground (connect with extra tools) are not on Docker Hub
+      if ! docker pull "$image"
+      then
+          logwarn "⚠️ could not pull $image (built locally?), skipping"
+          failed=$((failed+1))
+      fi
+  done
+  if [ $failed -gt 0 ]
+  then
+      logwarn "⚠️ $failed image(s) could not be pulled"
+  fi
+
 }
 
 # :command.function
@@ -92602,6 +92662,14 @@ playground_refresh_cp_docker_images_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --include-cloud-cli)
+
+        # :flag.case_no_arg
+        args['--include-cloud-cli']=1
+        shift
+        ;;
+
+      # :flag.case
       --version)
 
         # :flag.case_arg
@@ -136010,7 +136078,7 @@ playground_remove_cp_docker_images_completion() {
       --version)
         shift
         if [[ $# -eq 0 ]]; then
-          if completion_output="$({ docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq; } 2>/dev/null)"; then
+          if completion_output="$({ docker image ls --format '{{.Repository}} {{.Tag}}' | awk '$1 ~ /^confluentinc\// && $2 != "<none>" {print $2}' | sort -u; } 2>/dev/null)"; then
             completion_dynamic_candidates "$completion_current" "$completion_output"
           fi
 
@@ -136044,10 +136112,15 @@ playground_refresh_cp_docker_images_completion() {
         completion_blocked_flags["--help"]=1
         shift
         ;;
+      --include-cloud-cli)
+        completion_blocked_flags["--include-cloud-cli"]=1
+
+        shift
+        ;;
       --version)
         shift
         if [[ $# -eq 0 ]]; then
-          if completion_output="$({ docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq; } 2>/dev/null)"; then
+          if completion_output="$({ docker image ls --format '{{.Repository}} {{.Tag}}' | awk '$1 ~ /^confluentinc\// && $2 != "<none>" {print $2}' | sort -u; } 2>/dev/null)"; then
             completion_dynamic_candidates "$completion_current" "$completion_output"
           fi
 
@@ -136065,6 +136138,7 @@ playground_refresh_cp_docker_images_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --include-cloud-cli "$completion_current" --include-cloud-cli
     completion_flag_candidates --version "$completion_current" --version
   fi
 
