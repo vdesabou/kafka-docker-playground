@@ -6560,7 +6560,7 @@ function save_aws_s3_buckets() {
     rm -rf "$tmp_dir"
 }
 
-# HTML report of ccloud-costs-history / cloud-resources aws|azure costs-history (tools/cloud-costs/costs_report.py)
+# HTML report of cloud-resources ccloud|aws|azure costs-history (tools/cloud-costs/costs_report.py)
 # $1: ccloud, aws or azure, $2: folder with one raw cost API response per month (<start date>_<end date>.json),
 # $3: output dir, $4: non-empty to never open it, $5: user of the cflt_managed_id tag (aws, azure)
 function write_cloud_costs_report() {
@@ -6585,7 +6585,7 @@ function write_cloud_costs_report() {
     open_html_report "$report" "$no_open"
 }
 
-# HTML report of playground ccloud-costs: one range of dates
+# HTML report of playground cloud-resources ccloud costs: one range of dates
 # $1: raw response of confluent billing cost list, named <start date>_<end date>.json, $2: output dir, $3: non-empty for --no-open, $4: user
 function write_ccloud_costs_range_report() {
     local range_file="$1"

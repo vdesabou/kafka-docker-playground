@@ -2303,9 +2303,9 @@ then
   if [[ $test_file_rel == *"ccloud"* ]]
   then
     echo ""
-    # wait that process with "playground ccloud-costs-history" is finished
+    # wait that process with "playground cloud-resources ccloud costs-history" is finished
     set +e
-    while pgrep -f "playground ccloud-costs-history" > /dev/null
+    while pgrep -f "playground cloud-resources ccloud costs-history" > /dev/null
     do
       log "⌛ wait for monthly ccloud costs..."
       sleep 5
@@ -2316,7 +2316,7 @@ then
       log "📅💰 monthly ccloud costs"
       cat /tmp/ccloud-costs-history.txt
     fi
-    log "👀 all the details are in the HTML report above, or run <playground ccloud-costs-history --detailed>"
+    log "👀 all the details are in the HTML report above, or run <playground cloud-resources ccloud costs-history --detailed>"
     display_ccloud_leftovers
   elif [[ $test_file_rel == *"aws"* ]]
   then
