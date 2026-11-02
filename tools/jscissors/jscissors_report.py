@@ -496,11 +496,10 @@ def html_report(a: dict, top: int, html_dir: str) -> str:
             points.append((datetime.fromtimestamp(c["ts"] / 1000), "calls"))
         if c.get("exc") and c.get("ts"):
             points.append((datetime.fromtimestamp(c["ts"] / 1000), "exceptions"))
-    tl = rh.time_bins(points, ("calls", "exceptions"))
     bars = [(f"{short_class(m['class'])}.{m['method']}", m["total_us"] / 1000, f"{m['calls']:,} calls, {fmt_us(m['total_us'])} in total")
             for m in a["methods"][:12] if m["total_us"]]
     charts = rh.charts_grid([
-        ("📈 Calls recorded with details, and exceptions", rh.svg_time_columns(tl, [("calls", "calls", rh.SERIES_1), ("exceptions", "exceptions", rh.SERIES_2)]) if tl else ""),
+        ("📈 Calls recorded with details, and exceptions", rh.time_chart(points, [("calls", "calls", rh.SERIES_1), ("exceptions", "exceptions", rh.SERIES_2)], ms=True)),
         ("⏱️ Total time by method (ms)", rh.svg_hbars(bars, lambda v: f"{v:,.1f} ms")),
     ])
     body = [TREE_CSS, rh.verdict_html(*a["verdict"]), kpis, rh.findings_html(a["findings"]), charts]

@@ -1746,7 +1746,7 @@ commands:
 
         For accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.
 
-        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day, per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day (zoomable), per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
       flags:
         - long: --start-date
           arg: start_date
@@ -1799,7 +1799,7 @@ commands:
 
         By default it will only display total cost in dollars. Use the --detailed flag to see more information.
 
-        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day, per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days), per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
 
       flags:
         - long: --detailed
@@ -6476,7 +6476,7 @@ commands:
 
       🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found
 
-      🌐 Also writes a self-contained HTML dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal
+      🌐 Also writes a self-contained HTML dashboard (pause timeline and heap before / after GC that zoom together, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal
 
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%99%BB%EF%B8%8F-long-gc-pauses-or-a-memory-leak-analyze-gc-logs
@@ -8150,7 +8150,7 @@ commands:
         required: false
         needs: [--errors]
         help: |-
-          🌐 With --errors, also write a self-contained HTML report of the digest in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal
+          🌐 With --errors, also write a self-contained HTML report of the digest in /tmp/playground-log-reports (known causes, zoomable timeline, root causes, every distinct record), opened in the browser in an interactive terminal
       examples:
       - playground container logs --container connect
       - playground container logs -c connect --errors
@@ -8228,7 +8228,7 @@ commands:
       - long: --html
         required: false
         help: |-
-          🌐 Also write a self-contained HTML report of all the containers in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal
+          🌐 Also write a self-contained HTML report of all the containers in /tmp/playground-log-reports (known causes, zoomable timeline, root causes, every distinct record), opened in the browser in an interactive terminal
       examples:
       - playground container display-error-all
       - playground container display-error-all --since 10m --include-warnings

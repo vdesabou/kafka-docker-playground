@@ -173,7 +173,7 @@ Gotchas:
   day, per product and environment, the resources still billing, the top resources with the days they were billed, the
   resources of each product, the product x environment matrix and the cost per line type.
 - **`cloud-resources ccloud costs-history` also writes an HTML report** in `/tmp/playground-cloud-costs` (`--output-dir`, `--no-open`): cost
-  per month and per day, per product, environment and line type, the resources still billing (a cost on each of the last 3
+  per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days, click a month to see its days), per product, environment and line type, the resources still billing (a cost on each of the last 3
   days with data, with a monthly estimate) and the details of each month. `playground run` of a `ccloud` example prints its
   link at the end (`--sample ccloud_dummy` to try it on dummy data); `cloud-resources aws|azure costs-history` write the
   same report for the AWS / Azure resources of the playground. When S3 costs something, the AWS one adds the Amazon S3

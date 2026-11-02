@@ -32,7 +32,7 @@ from typing import Dict, List, Optional, Tuple
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
-                         kpi, kpis_html, page, svg_hbars, svg_time_columns, time_bins, verdict_html)
+                         kpi, kpis_html, page, svg_hbars, time_chart, verdict_html)
 import known_causes  # noqa: E402
 import log_viewer  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
@@ -498,8 +498,8 @@ def show_config(res: dict, name: str) -> str:
 
 # ── HTML ──────────────────────────────────────────────────────────────────────
 
-def timeline(files: List[dict]) -> Optional[dict]:
-    """Occurrences per time bucket, errors (ERROR + FATAL) and warnings side by side; None without timestamps."""
+def timeline(files: List[dict]) -> Tuple[List[Tuple[datetime, str]], bool]:
+    """Occurrences, errors (ERROR + FATAL) and warnings, with their time; and whether the timestamps of a record were capped."""
     points: List[Tuple[datetime, str]] = []
     capped = False
     for _, r in all_records(files):
@@ -510,23 +510,16 @@ def timeline(files: List[dict]) -> Optional[dict]:
                 points.append((datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S"), "warnings" if r["level"] == "WARN" else "errors"))
             except ValueError:
                 pass
-    tl = time_bins(points, ("errors", "warnings"))
-    if tl:
-        tl["capped"] = capped
-    return tl
-
-
-def svg_timeline(tl: dict) -> str:
-    return svg_time_columns(tl, [("errors", "ERROR/FATAL", SERIES_1), ("warnings", "WARN", SERIES_2)],
-                            " · first 1000 occurrences of each record" if tl["capped"] else "")
+    return points, capped
 
 
 def charts_html(files: List[dict], causes: List[dict]) -> str:
-    tl = timeline(files)
+    points, capped = timeline(files)
     rows = [(f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"],
              c["occurrences"], f"{c['root_cause'] + ': ' + c['example'] if c['root_cause'] else c['label']}: {c['occurrences']} occurrence(s)")
             for c in causes[:10]]
-    return charts_grid([("📈 Occurrences over time", svg_timeline(tl) if tl else ""),
+    return charts_grid([("📈 Occurrences over time", time_chart(points, [("errors", "ERROR/FATAL", SERIES_1), ("warnings", "WARN", SERIES_2)],
+                                                                 " · first 1000 occurrences of each record" if capped else "")),
                         ("🔝 Root causes (occurrences)", svg_hbars(rows))])
 
 

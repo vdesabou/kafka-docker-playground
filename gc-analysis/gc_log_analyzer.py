@@ -1294,6 +1294,36 @@ def svg_heap(events: List[GCEvent], x_unit: float, x_label: str, xmx: Optional[f
     return "".join(out)
 
 
+def zoom_pause_timeline(events: List[GCEvent], x_unit: float, x_label: str) -> str:
+    """svg_pause_timeline(), zoomable with the heap chart (report_html.zoom_chart): every Full GC / failure, the other
+    pauses sampled to 20000"""
+    static = svg_pause_timeline(events, x_unit, x_label)
+    pts = [(round(e.t_ms / x_unit, 4), e.pause_ms, e.is_full or e.cmf or e.evac_failure) for e in events if e.pause_ms > 0]
+    if not pts:
+        return static
+    ok = _sample([[x, round(y, 3)] for x, y, bad in pts if not bad], 20000)
+    bad = [[x, round(y, 3)] for x, y, b in pts if b]
+    chart = {"type": "xy", "fmt": "num", "W": 560, "H": 270, "xlabel": x_label, "ylabel": "pause (ms)", "yunit": "ms", "group": "gc",
+             "layers": [{"kind": "dots", "label": "pause", "color": "#3b82f6", "r": 2, "opacity": .55, "points": sorted(ok)},
+                        {"kind": "dots", "label": "Full GC / evacuation or mode failure", "color": "#dc2626", "r": 3.5,
+                         "keep": True, "points": bad}]}
+    return report_html.zoom_chart(chart, static)
+
+
+def zoom_heap(events: List[GCEvent], x_unit: float, x_label: str, xmx: Optional[float]) -> str:
+    """svg_heap(), zoomable with the pause timeline (report_html.zoom_chart), sampled to 10000 points"""
+    static = svg_heap(events, x_unit, x_label, xmx)
+    pts = _sample([(round(e.t_ms / x_unit, 4), e.heap_before_mb, e.heap_after_mb) for e in events if e.heap_after_mb > 0], 10000)
+    if not pts:
+        return static
+    chart = {"type": "xy", "fmt": "num", "W": 560, "H": 270, "xlabel": x_label, "ylabel": "heap (MB)", "yunit": "MB", "group": "gc",
+             "layers": [{"kind": "line", "label": "before GC", "color": "#f97316", "points": [[x, round(b, 1)] for x, b, _ in pts if b > 0]},
+                        {"kind": "line", "label": "after GC", "color": "#16a34a", "points": [[x, round(a, 1)] for x, _, a in pts if a > 0]}]}
+    if xmx:
+        chart["hline"] = {"y": xmx, "label": "-Xmx", "color": "#dc2626"}
+    return report_html.zoom_chart(chart, static)
+
+
 def svg_bars(labels: List[str], values: List[float], colors: List[str], ylabel: str) -> str:
     W, H, L, B, T = 560, 290, 56, 60, 14
     ymax = _nice_ticks(0, max(values) if values and max(values) > 0 else 1)[-1]
@@ -1378,8 +1408,8 @@ def html_report(stats: dict, runs_summary: List[dict], warnings: List[str], run:
     types = list(stats.get("gc_type_breakdown", {}).items())[:8]
     charts = (
         "<div class='charts-grid'>"
-        f"<div class='chart-card'><h2>📈 GC pause timeline</h2>{svg_pause_timeline(run.events, x_unit, x_label)}</div>"
-        f"<div class='chart-card'><h2>💾 Heap before / after GC</h2>{svg_heap(run.events, x_unit, x_label, stats.get('xmx_mb'))}</div>"
+        f"<div class='chart-card'><h2>📈 GC pause timeline</h2>{zoom_pause_timeline(run.events, x_unit, x_label)}</div>"
+        f"<div class='chart-card'><h2>💾 Heap before / after GC</h2>{zoom_heap(run.events, x_unit, x_label, stats.get('xmx_mb'))}</div>"
         f"<div class='chart-card'><h2>📊 Pause distribution</h2>{svg_bars([k + 'ms' for k in dist], list(dist.values()), ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#dc2626'], 'pauses')}</div>"
         f"<div class='chart-card'><h2>♻️ GC types</h2>{svg_bars([k for k, _ in types], [v['count'] for _, v in types], ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1'], 'events')}</div>"
         "</div>")

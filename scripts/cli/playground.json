@@ -729,7 +729,7 @@
           "subcommands": [
             {
               "name": "costs",
-              "description": "💰  Retrieve ccloud costs for a range of dates\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost data can take up to 72 hours to become available.\n\nStart date can reach a maximum of one year into the past\n\nOne month is the maximum window between start and end dates\n\nFor accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day, per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.",
+              "description": "💰  Retrieve ccloud costs for a range of dates\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost data can take up to 72 hours to become available.\n\nStart date can reach a maximum of one year into the past\n\nOne month is the maximum window between start and end dates\n\nFor accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day (zoomable), per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.",
               "usage": "playground cloud-resources ccloud costs [OPTIONS]",
               "options": [
                 {
@@ -773,7 +773,7 @@
             },
             {
               "name": "costs-history",
-              "description": "👛  Retrieve ccloud costs for each month since last year\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day, per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.",
+              "description": "👛  Retrieve ccloud costs for each month since last year\n\nAll you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days), per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.",
               "usage": "playground cloud-resources ccloud costs-history [OPTIONS]",
               "options": [
                 {
@@ -4125,7 +4125,7 @@
         },
         {
           "name": "gc-logs",
-          "description": "📈 Analyze JVM Garbage Collection logs\n\n📊 Parses GC logs from local files / folders or a running container: pause statistics, Full GC and evacuation / concurrent mode failures, live set, heap floor trend (leak), allocation stalls, GC causes, and recommendations backed by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n\n🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and unified (-Xlog:gc*) formats, any decoration\n\n🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder: files are ordered by timestamp and split by JVM restart, the latest run is analyzed (--run to pick another)\n\n🧪 With --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n\n🌐 Also writes a self-contained HTML dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%99%BB%EF%B8%8F-long-gc-pauses-or-a-memory-leak-analyze-gc-logs",
+          "description": "📈 Analyze JVM Garbage Collection logs\n\n📊 Parses GC logs from local files / folders or a running container: pause statistics, Full GC and evacuation / concurrent mode failures, live set, heap floor trend (leak), allocation stalls, GC causes, and recommendations backed by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n\n🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and unified (-Xlog:gc*) formats, any decoration\n\n🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder: files are ordered by timestamp and split by JVM restart, the latest run is analyzed (--run to pick another)\n\n🧪 With --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n\n🌐 Also writes a self-contained HTML dashboard (pause timeline and heap before / after GC that zoom together, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%99%BB%EF%B8%8F-long-gc-pauses-or-a-memory-leak-analyze-gc-logs",
           "usage": "playground analyze gc-logs [OPTIONS]",
           "options": [
             {
@@ -5335,7 +5335,7 @@
                 "--html"
               ],
               "argument": "",
-              "description": "🌐 With --errors, also write a self-contained HTML report of the digest in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal"
+              "description": "🌐 With --errors, also write a self-contained HTML report of the digest in /tmp/playground-log-reports (known causes, zoomable timeline, root causes, every distinct record), opened in the browser in an interactive terminal"
             }
           ]
         },
@@ -5370,7 +5370,7 @@
                 "--html"
               ],
               "argument": "",
-              "description": "🌐 Also write a self-contained HTML report of all the containers in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal"
+              "description": "🌐 Also write a self-contained HTML report of all the containers in /tmp/playground-log-reports (known causes, zoomable timeline, root causes, every distinct record), opened in the browser in an interactive terminal"
             }
           ]
         },
