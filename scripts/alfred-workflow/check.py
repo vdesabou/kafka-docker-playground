@@ -140,6 +140,8 @@ def check_modes(root, cache):
 
 def check_view(root, cache):
     os.environ.update({"kdp_root": root, "alfred_workflow_cache": cache, "PYTHONUTF8": "1"})
+    # importing kdp.py must not leave a scripts/alfred-workflow/__pycache__ behind
+    sys.dont_write_bytecode = True
     spec = importlib.util.spec_from_file_location("kdp", os.path.join(HERE, "kdp.py"))
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
