@@ -9,7 +9,7 @@
 <a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/find-example.gif" alt="playground find-example" width="49%"></a>
 <a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/diagnose.gif" alt="playground connector diagnose" width="49%"></a>
 
-More clips (run menu, topics, logs, source code, repro model, benchmark, Claude Code, analyze...) on the [website](https://kafka-docker-playground.io/#/introduction), and 2–3 minute narrated walkthroughs, from the symptom to the HTML report, in the [🎬 Bite size sessions](https://kafka-docker-playground.io/#/sessions).
+More clips (run menu, topics, logs, source code, repro model, benchmark, Claude Code, analyze, Alfred workflow...) on the [website](https://kafka-docker-playground.io/#/introduction), and 2–3 minute narrated walkthroughs, from the symptom to the HTML report, in the [🎬 Bite size sessions](https://kafka-docker-playground.io/#/sessions).
 
 ## 📚 Documentation
 
@@ -25,6 +25,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](https://kafka-docker-playground.io/#/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
+- 🎩 One keystroke away on macOS with the kdp [Alfred workflow](https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos): find and run examples, pick a connector plugin version or a config key, act on the running connectors, output streamed right in Alfred
 - 📈 [Benchmark](https://kafka-docker-playground.io/#/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
 - 📊 Find what is wrong with shareable [reports](https://kafka-docker-playground.io/#/reports): thread dumps, GC logs, flight recordings, network captures, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
 - 🎬 Learn with [bite size sessions](https://kafka-docker-playground.io/#/sessions): short narrated videos, each about one thing the playground does for you, with the commands to copy
