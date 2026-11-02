@@ -1746,7 +1746,7 @@ commands:
 
         For accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.
 
-        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day (zoomable), per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day (zoomable, the other tiles follow the selected range), per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
       flags:
         - long: --start-date
           arg: start_date
@@ -1799,7 +1799,7 @@ commands:
 
         By default it will only display total cost in dollars. Use the --detailed flag to see more information.
 
-        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days), per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days; the other tiles follow the selected range), per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
 
       flags:
         - long: --detailed

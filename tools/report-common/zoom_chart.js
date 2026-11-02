@@ -14,6 +14,9 @@
 // note (end of the legend), labels (value above the columns when they are few).
 // An element of another chart with data-zoom-link="<id of a zoom chart>", data-zoom-from and data-zoom-to (x values, the
 // end excluded) zooms that chart on a click (a month of the cost per month chart → its days in the cost per day chart).
+// Each draw fires a "zoomchange" event (bubbles) on the chart: detail {from, to, all}, the first and last visible x values
+// (ISO days of a columns chart of days, the end included; numbers otherwise) and whether the whole chart is shown (the
+// tiles of the cloud costs reports follow the range of the cost per day chart with it, tools/cloud-costs/costs_filter.js).
 (function () {
   "use strict";
   const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -267,6 +270,8 @@
       box.querySelector("[data-zoom='prev']").disabled = a <= lo;
       box.querySelector("[data-zoom='next']").disabled = b >= hi;
       bind(holder.querySelector("svg"));
+      const detail = type === "columns" ? {from: c.x[a], to: c.x[b - 1], all: !zoomed()} : {from: a, to: b, all: !zoomed()};
+      box.dispatchEvent(new CustomEvent("zoomchange", {bubbles: true, detail: detail}));
     }
 
     // domain value under the mouse

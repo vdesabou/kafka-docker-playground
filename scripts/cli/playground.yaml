@@ -792,10 +792,10 @@ subcommands:
         start and end dates\n\nFor accuracy, Confluent recommends using a start_date
         that is at least 72 hours prior to the current date and time.\n\n\U0001F310
         Also writes a self-contained HTML report in --output-dir, opened in the browser
-        in an interactive terminal (--no-open to skip): cost per day (zoomable), per
-        product and environment, the resources still billing, the top resources, the
-        resources of each product, the product x environment matrix and the cost per
-        line type."
+        in an interactive terminal (--no-open to skip): cost per day (zoomable, the
+        other tiles follow the selected range), per product and environment, the resources
+        still billing, the top resources, the resources of each product, the product
+        x environment matrix and the cost per line type."
       usage: playground cloud-resources ccloud costs [OPTIONS]
       options:
       - names:
@@ -834,9 +834,9 @@ subcommands:
         to see more information.\n\n\U0001F310 Also writes a self-contained HTML report
         in --output-dir, opened in the browser in an interactive terminal (--no-open
         to skip): cost per month and per day (zoomable: drag over a range of days,
-        last 7 / 30 / 90 days), per product, environment and line type, the month
-        x product matrix, the top resources with the ones still billing, and the details
-        of each month."
+        last 7 / 30 / 90 days; the other tiles follow the selected range), per product,
+        environment and line type, the month x product matrix, the top resources with
+        the ones still billing, and the details of each month."
       usage: playground cloud-resources ccloud costs-history [OPTIONS]
       options:
       - names:
