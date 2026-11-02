@@ -14,12 +14,35 @@ fi
 
 # prints the entry of $1 (a config-<class>.txt reference) for key $2: group, documentation, type, default...
 function config_key_entry () {
+    # references of fully managed connectors written before #9838 have their fields shifted by one
+    # (Type = required, Default = type, Importance = documentation, Required = importance, no documentation):
+    # they are printed the right way round, the default value is not in those files (rewritten by CI since)
     awk -v key="$2" '
     $0 == "==========================" { header = !header; next }
-    header { group = $0; next }
-    $0 == "🔘 " key { found = 1; print "group: " group; next }
+    header { if (!found) group = $0; next }
+    $0 == "🔘 " key { found = 1; next }
     found && /^🔘 / { exit }
-    found { print }
+    found { lines[++n] = $0 }
+    function field(l, name,    v) { v = l; sub("^[ \t]*- " name ": ", "", v); return v }
+    END {
+        if (!found) exit
+        doc = 0
+        for (i = 1; i <= n; i++) {
+            l = lines[i]
+            if (l ~ /^[ \t]*- Type: /) t = field(l, "Type")
+            else if (l ~ /^[ \t]*- Default: /) d = field(l, "Default")
+            else if (l ~ /^[ \t]*- Importance: /) imp = field(l, "Importance")
+            else if (l ~ /^[ \t]*- Required: /) req = field(l, "Required")
+            else if (l != "") doc = 1
+        }
+        print "group: " group
+        if ((t == "true" || t == "false") && d ~ /^(STRING|INT|LONG|SHORT|DOUBLE|BOOLEAN|LIST|PASSWORD|CLASS)$/ && !doc) {
+            print ""; print imp; print ""
+            print "\t - Type: " d; print "\t - Default: "; print "\t - Importance: " req; print "\t - Required: " t
+        } else {
+            for (i = 1; i <= n; i++) print lines[i]
+        }
+    }
     ' "$1"
 }
 

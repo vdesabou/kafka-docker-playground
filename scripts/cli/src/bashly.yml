@@ -5844,14 +5844,18 @@ commands:
       🎩 Install the "kafka-docker-playground (kdp)" Alfred workflow (macOS, Alfred 5 with the Powerpack)
 
       A launcher for the playground CLI: type 'kdp' in Alfred, or select text
-      anywhere and use the Universal Action "kdp: support case, example, config
-      key…":
+      anywhere (a connector config, a stack trace, a connector class, a config
+      key, a case number) and use the Universal Action "kdp: config, stack
+      trace, connector class, key, case…":
 
         kdp find <words>            find-example: ↩ copies 'playground run -f …'
         kdp history [words]         replay a past run with its exact flags
-        kdp plugin <p> [version]    connector-plugin info, changelog, source code, jars, CVEs
-        kdp key <key> [class]       connector-plugin config-key
+        kdp plugin <words> [ver]    pick a plugin, then a version, then info, changelog, source code, jars, CVEs
+        kdp key <words>             pick a config key, then a connector: config-key
         kdp docs [words]            deep dive pages
+        kdp connector [words]       pick a running connector: diagnose, status, tasks, metrics, history…
+        kdp logs [container] [pat]  pick a container: errors, last lines, grep, follow
+        kdp topic / schema / ci     pick a topic, a subject, a CI test: describe, records, history, CI result
         kdp status                  status, connector status / diagnose, connect errors
         kdp repro / notes / case    reproduction models, notes, support cases (when present)
 
