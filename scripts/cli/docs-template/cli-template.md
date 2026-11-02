@@ -58,6 +58,8 @@ Once installed, go on a `.sh` script and then type  in Palette `Ctrl+Shift+P` (o
 
 On macOS, the [Alfred](https://www.alfredapp.com/) workflow puts the most common lookups one keystroke away, without opening a terminal first (Alfred 5 with the Powerpack):
 
+![kdp Alfred workflow](./images/kdp-alfred-workflow.gif)
+
 ```bash
 playground tools install-alfred-workflow          # builds it and opens it in Alfred, which asks to import it
 playground tools install-alfred-workflow --link   # symlinks scripts/alfred-workflow/ instead, to work on it (run it again after an edit: it reloads the workflow)
