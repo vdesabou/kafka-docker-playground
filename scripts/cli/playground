@@ -4483,7 +4483,7 @@ playground_re_run_usage() {
 playground_get_ci_result_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-ci-result\n\n"
-    printf "  🤖 get CI result for current example\n  \n  Tells you whether the example you are running is green in the nightly CI,\n  both for the default environment and for cfk, by reading the published\n  badges from kafka-docker-playground.io.\n  \n  👉 Useful before you spend time debugging: if CI is red too, the breakage\n  is probably not on your side. Reproduction models are always reported as\n  fine, they are not part of the CI matrix.\n  \n  🔥 With --logs, also tells why it is red: the latest failing CI job of the\n  example is located from its '🔥' GitHub issue, its full log is downloaded,\n  and for each failing script the last lines before the failure are shown\n  with a digest of the ERROR/FATAL records (same digest as 'playground\n  container logs --errors').\n  \n  🌐 With --logs, also writes a self-contained HTML report of the failure in\n  --output-dir, opened in the browser in an interactive terminal (--no-open to\n  skip): known causes, last lines before the failure of each failing script,\n  root causes and every distinct record, with links to the issue and the job.\n  \n  Use --test to ask about any example, without running it.\n\n"
+    printf "  🤖 get CI result for current example\n  \n  Tells you whether the example you are running is green in the nightly CI,\n  both for the default environment and for cfk, by reading the published\n  badges from kafka-docker-playground.io.\n  \n  👉 Useful before you spend time debugging: if CI is red too, the breakage\n  is probably not on your side. Reproduction models are skipped, they are not\n  part of the CI matrix.\n  \n  🔥 With --logs, also tells why it is red: the latest failing CI job of the\n  example is located from its '🔥' GitHub issue, its full log is downloaded,\n  and for each failing script the last lines before the failure are shown\n  with a digest of the ERROR/FATAL records (same digest as 'playground\n  container logs --errors').\n  \n  🌐 With --logs, also writes a self-contained HTML report of the failure in\n  --output-dir, opened in the browser in an interactive terminal (--no-open to\n  skip): known causes, last lines before the failure of each failing script,\n  root causes and every distinct record, with links to the issue and the job.\n  \n  Use --test to ask about any example, without running it.\n\n"
   else
     printf "playground get-ci-result - 🤖 get CI result for current example\n\n"
   fi
@@ -4512,7 +4512,7 @@ playground_get_ci_result_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--podman")"
-    printf "    🦭 Check the podman CI run instead of the docker one\n"
+    printf "    🦭 With --logs, read the podman CI job instead of the docker one (the\n    published CI status is the one of the docker runs)\n"
     echo
 
     # :flag.usage
@@ -45633,43 +45633,65 @@ playground_get_ci_result_command() {
   fi
 
   content_file="$tmp_dir/content.md"
-  curl -s -o $content_file  https://kafka-docker-playground.io/content.md
+  if ! curl -s --fail -o $content_file https://kafka-docker-playground.io/content.md
+  then
+      logwarn "🤖 CI status: could not download the CI results from https://kafka-docker-playground.io/content.md"
+      if [[ ! -n "$logs" ]]
+      then
+          exit 0
+      fi
+  fi
 
-  result_ok=""
-  result_fail=""
+  # the line of this example: it links to its folder, ".../tree/master/<dir>)" (a plain grep of the folder would also
+  # match connect-testing-smt-filestream-sink for connect-testing-smt)
+  example_line=$(grep -F "/tree/master/$dir2)" $content_file 2> /dev/null | head -1)
 
+  # job / issue url of the badge [![<label>](<image>)](<url>) of the example line, each badge parsed on its own (the
+  # line holds both the CI and the CI_CFK badges)
+  function ci_badge_url () {
+      grep -oE "\[!\[$1\]\([^)]*\)\]\([^)]*\)" <<< "$example_line" | head -1 | sed -E 's/.*\]\(([^)]*)\)$/\1/'
+  }
+
+  function ci_badge_present () {
+      grep -qF "[![$1](" <<< "$example_line"
+  }
+
+  badge_prefix="CI"
+  label=""
   if [[ "$environment" == cfk* ]]
   then
-      result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI_CFK \(ok\)\].*(\(https[^)]*\)).*/🤖 CI status: 🟢 cfk ok, 🔗 test url: \2/p')"
-      result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI_CFK \(fail\)\].*(\(https[^)]*\)).*/🤖 CI status: 🔴 cfk fail, 🐛 github issue: \2/p')"
-
-      # Backward-compatible fallback when CI_CFK badge is missing.
-      if [ -z "$result_ok" ] && [ -z "$result_fail" ]
+      badge_prefix="CI_CFK"
+      label="cfk "
+      # backward compatible: no CI_CFK badge
+      if ! ci_badge_present "CI_CFK ok" && ! ci_badge_present "CI_CFK fail"
       then
-          result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(ok\)\].*(\(https[^)]*\)).*/🤖 CI status: 🟢 ok, 🔗 test url: \2/p')"
-          result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(fail\)\].*(\(https[^)]*\)).*/🤖 CI status: 🔴 fail, 🐛 github issue: \2/p')"
+          badge_prefix="CI"
+          label=""
       fi
+  fi
+
+  if [[ -n "$podman" ]] && [[ ! -n "$logs" ]]
+  then
+      logwarn "🦭 the published CI status is the one of the docker runs, add --logs to read the podman job"
+  fi
+
+  if [ -z "$example_line" ]
+  then
+      log "🤖 CI status: 🤷‍♂️ $dir2 is not in the CI results (not in the 🚀 test list of ci.yml, or added recently)"
+  elif ci_badge_present "$badge_prefix ok"
+  then
+      url=$(ci_badge_url "$badge_prefix ok")
+      log "🤖 CI status: 🟢 ${label}ok${url:+, 🔗 test url: $url}"
+  elif ci_badge_present "$badge_prefix fail"
+  then
+      url=$(ci_badge_url "$badge_prefix fail")
+      logwarn "🤖 CI status: 🔴 ${label}fail${url:+, 🐛 github issue: $url}"
+  elif grep -qF "[not tested]" <<< "$example_line"
+  then
+      log "🤖 CI status: 🤷‍♂️ not tested"
   else
-      result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(ok\)\].*(\(https[^)]*\)).*/🤖 CI status: 🟢 ok, 🔗 test url: \2/p')"
-      result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(fail\)\].*(\(https[^)]*\)).*/🤖 CI status: 🔴 fail, 🐛 github issue: \2/p')"
-  fi
-
-  result_not_tested="$(grep "$dir2" $content_file | sed -n 's/.*\[not tested\].*/🤖 CI status: 🤷‍♂️ not tested/p')"
-
-  # print only result not empty
-  if [ -n "$result_ok" ]
-  then
-      log "$result_ok"
-  fi
-
-  if [ -n "$result_fail" ]
-  then
-      logwarn "$result_fail"
-  fi
-
-  if [ -n "$result_not_tested" ]
-  then
-      log "$result_not_tested"
+      # no badge on its line: update-readme only writes the overall badge when every CP version gives the same result
+      log "🤖 CI status: 🤷‍♂️ no CI badge for $dir2 (the results may differ between CP versions), see https://kafka-docker-playground.io/#/content"
   fi
 
   if [[ ! -n "$logs" ]]
@@ -45752,14 +45774,6 @@ playground_get_ci_result_command() {
   fi
   echo "   🔗 https://github.com/$repo/actions/runs/$run_id/job/$job_id"
   echo "   🕐 run of $run_date on commit ${head_sha:0:9}"
-
-  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
-  then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
-      log "🐛📂 not deleting tmp dir $tmp_dir"
-  fi
 
   # the full log: 'gh run view --log' truncates long jobs
   if ! gh api --allow-escape-sequences "repos/$repo/actions/jobs/$job_id/logs" > "$tmp_dir/job.log" 2> "$tmp_dir/error.log"
