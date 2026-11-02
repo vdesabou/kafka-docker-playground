@@ -25372,6 +25372,30 @@ function file_unlock () {
   rmdir "$1.lock" 2> /dev/null || true
 }
 
+# true when a browser can be opened: open on macOS, xdg-open with a display on Linux (Debian's /bin/open is openvt)
+function can_open_url () {
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    command -v open > /dev/null 2>&1
+  else
+    command -v xdg-open > /dev/null 2>&1 && [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]
+  fi
+}
+
+# opens $1 in the browser, returns 1 when it can't (no browser: headless, ssh…), the caller then prints the url
+function open_url () {
+  if ! can_open_url
+  then
+    return 1
+  fi
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+    open "$1"
+  else
+    xdg-open "$1" > /dev/null 2>&1 &
+  fi
+}
+
 function maybe_remove_flag () {
   flag="$1"
   local entry
@@ -46739,21 +46763,43 @@ playground_switch_podman_command() {
   # the rootful podman socket, as set up in the documentation
   if [[ "$OSTYPE" == "darwin"* ]]
   then
-      if ! podman machine inspect > /dev/null 2>&1
+      # the machine to use: the default one, the only one, podman-machine-default, or the first one ('podman machine
+      # inspect' without a name only looks for podman-machine-default)
+      machines=$(podman machine list --format '{{.Name}}|{{.Default}}' 2>/dev/null)
+      machine=$(echo "$machines" | awk -F'|' '$2 == "true" {print $1; exit}')
+      if [ -z "$machine" ] && [ "$(echo "$machines" | grep -c .)" == "1" ]
+      then
+          machine=$(echo "$machines" | cut -d '|' -f 1)
+      fi
+      if [ -z "$machine" ] && echo "$machines" | grep -q '^podman-machine-default|'
+      then
+          machine="podman-machine-default"
+      fi
+      if [ -z "$machine" ] && [ -n "$machines" ]
+      then
+          machine=$(echo "$machines" | head -1 | cut -d '|' -f 1)
+          logwarn "⚠️ several podman machines and no default one, using $machine (set it with 'podman system connection default')"
+      fi
+      if [ -z "$machine" ]
       then
           logerror "❌ no podman machine found, create one first:"
           logerror "  podman machine init --rootful --cpus 4 --memory 12288 --disk-size 100"
           logerror "👉 $docs_url"
           exit 1
       fi
-      if [ "$(podman machine inspect --format '{{.State}}' 2>/dev/null)" != "running" ]
+      if [ "$(podman machine inspect "$machine" --format '{{.State}}' 2>/dev/null)" != "running" ]
       then
-          log "🚀 Starting the podman machine"
-          podman machine start > /dev/null
+          log "🚀 Starting the podman machine $machine"
+          podman machine start "$machine" > /dev/null
       fi
-      podman_socket=$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null)
+      podman_socket=$(podman machine inspect "$machine" --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null)
   else
+      # the rootful socket of the documentation, otherwise the one podman reports (rootless user socket)
       podman_socket="/run/podman-api/podman.sock"
+      if [ ! -S "$podman_socket" ]
+      then
+          podman_socket=$(podman info --format '{{.Host.RemoteSocket.Path}}' 2>/dev/null | sed 's#^unix://##')
+      fi
   fi
 
   if [ ! -S "$podman_socket" ]
@@ -47622,20 +47668,21 @@ playground_open_docs_command() {
   fi
 
   # no match is not an error (set -e): handled below
-  string=$(grep "Quickly test " $readme_file || true)
-  url=$(echo "$string" | grep -oE 'https?://[^ ]+' || true)
+  string=$(grep "Quickly test " "$readme_file" || true)
+  # the first link only: a README line can hold several
+  url=$(echo "$string" | grep -oE 'https?://[^ ]+' | head -1 || true)
   url=${url//)/}
 
   if [[ $url =~ "http" ]]
   then
-      short_url=$(echo $url | cut -d '#' -f 1)
-      if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
+      short_url=$(echo "$url" | cut -d '#' -f 1)
+      if [[ -z "$only_show_url" ]] && can_open_url
       then
+          log "🌐 opening documentation $short_url"
+          open_url "$short_url"
+      else
           log "🌐 documentation is available at:"
           echo "$short_url"
-      else
-          log "🌐 opening documentation $short_url"
-          open "$short_url"
       fi
   elif [[ -n "$only_show_url" ]]
   then
@@ -47657,13 +47704,14 @@ playground_open_changelog_command() {
   # src/commands/open-changelog.sh
   only_show_url="${args[--only-show-url]}"
 
-  if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
+  url="https://kafka-docker-playground.io/#/changelog"
+  if [[ -z "$only_show_url" ]] && can_open_url
   then
-      log "📜 changelog is available at:"
-      echo "https://kafka-docker-playground.io/#/changelog"
+      log "📜 opening changelog $url"
+      open_url "$url"
   else
-      log "📜 opening changelog https://kafka-docker-playground.io/#/changelog"
-      open "https://kafka-docker-playground.io/#/changelog"
+      log "📜 changelog is available at:"
+      echo "$url"
   fi
 }
 

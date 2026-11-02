@@ -1,10 +1,11 @@
 only_show_url="${args[--only-show-url]}"
 
-if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]]
+url="https://kafka-docker-playground.io/#/changelog"
+if [[ -z "$only_show_url" ]] && can_open_url
 then
-    log "📜 changelog is available at:"
-    echo "https://kafka-docker-playground.io/#/changelog"
+    log "📜 opening changelog $url"
+    open_url "$url"
 else
-    log "📜 opening changelog https://kafka-docker-playground.io/#/changelog"
-    open "https://kafka-docker-playground.io/#/changelog"
+    log "📜 changelog is available at:"
+    echo "$url"
 fi
