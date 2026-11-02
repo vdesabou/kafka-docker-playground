@@ -120,7 +120,6 @@ def available(name):
     return AVAILABLE.get(name, lambda: True)()
 
 
-WARN_RUN = "⌃ ▶️ run in the terminal (stops the environment that is running)"
 
 
 # --------------------------------------------------------------------------- helpers
@@ -237,6 +236,34 @@ def bootstrap_cmd(script):
     return 'playground repro bootstrap -f {} -d "<case number> <symptom>" --no-run'.format(q(script))
 
 
+def notified(cmd):
+    """A command for the terminal that posts a notification with its result and duration when it ends."""
+    wrapper = os.path.join(os.path.dirname(os.path.realpath(__file__)), "notify-run.sh")
+    return in_root("{} {}".format(q(wrapper), cmd))
+
+
+def last_example():
+    """(example started last, environment) from playground.ini."""
+    try:
+        import configparser
+        ini = configparser.ConfigParser(strict=False, interpolation=None)
+        ini.read(os.path.join(ROOT, "playground.ini"), encoding="utf-8")
+        test_file = ini.get("run", "test_file", fallback="")
+        return "/".join(test_file.split("/")[-3:]) if test_file else "", ini.get("run", "environment", fallback="")
+    except Exception:
+        return "", ""
+
+
+def stop_warning():
+    """What playground run would stop: the example that runs and its containers."""
+    containers = cached_cli_text("container-list", ["get-container-list"], LIVE_TTL).split()
+    if not containers:
+        return "nothing is running"
+    example, _ = last_example()
+    return "⚠️ stops {} · {} container{}".format(example or "the running environment", len(containers),
+                                               "s" if len(containers) > 1 else "")
+
+
 def script_mods(script, run_command, alt=None, shift=None):
     """⌘ VS Code, ⌃ run in terminal, ⌥ README (default), ⇧ copy repro bootstrap (default)."""
     readme = readme_of(script)
@@ -244,8 +271,30 @@ def script_mods(script, run_command, alt=None, shift=None):
         "cmd": mod("⌘ open the script in VS Code", "code", script),
         "alt": alt or (mod("⌥ open the README", "open", readme) if readme else mod("⌥ no README in this folder")),
         "shift": shift or mod("⇧ copy: playground repro bootstrap -f … --no-run", "copy", bootstrap_cmd(script)),
-        "ctrl": mod(WARN_RUN, "terminal", in_root(run_command)),
+        "ctrl": mod("⌃ ▶️ run it in the terminal · " + stop_warning(), "terminal", notified(run_command)),
     }
+
+
+def example_actions(script, flags="", extra=None):
+    """The page of one example (Tab on a find / history / repro result): ▶️ run it first, saying what it stops."""
+    run = "playground run -f {}{}".format(q(script), " " + flags if flags else "")
+    warn = stop_warning()
+    readme = readme_of(script)
+    items = []
+    if flags:
+        items.append(item("🔁 Re-run with the same flags", "{} · {}".format(flags, warn), "terminal", notified(run)))
+    items += [
+        item("▶️ Run " + os.path.basename(script) + (" without these flags" if flags else ""),
+             "in the terminal, notification when it ends · " + warn, "terminal",
+             notified("playground run -f {}".format(q(script)))),
+        item("📋 Copy the run command", run, "copy", run),
+        item("📝 Open in VS Code", script, "code", script),
+    ]
+    if readme:
+        items.append(item("📖 Open the README", readme, "open", readme))
+    items += extra or []
+    items.append(item("🧪 Copy: repro bootstrap from this example", bootstrap_cmd(script), "copy", bootstrap_cmd(script)))
+    return {"items": items}
 
 
 # --------------------------------------------------------------------------- repro cache
@@ -358,24 +407,29 @@ def update_item():
 
 
 def running_item():
-    """▶️ the example started last (playground.ini) and how many containers run, ↩ playground status."""
-    try:
-        import configparser
-        ini = configparser.ConfigParser(strict=False, interpolation=None)
-        ini.read(os.path.join(ROOT, "playground.ini"), encoding="utf-8")
-        test_file = ini.get("run", "test_file", fallback="")
-        environment = ini.get("run", "environment", fallback="")
-    except Exception:
-        return None
-    if not test_file:
+    """▶️ the example started last (playground.ini) and how many containers run: ↩ status, ⌘ re-run, ⌥ stop, ⇧ versions."""
+    example, environment = last_example()
+    if not example:
         return None
     containers = cached_cli_text("container-list", ["get-container-list"], LIVE_TTL).split()
-    example = "/".join(test_file.split("/")[-3:])
     if containers:
         title = "▶️ {} · {} · {} container{}".format(example, environment, len(containers), "s" if len(containers) > 1 else "")
+        mods = {
+            "cmd": mod("⌘ 🔁 re-run it with the same flags (playground re-run, stops it first)", "terminal", notified("playground re-run")),
+            "alt": mod("⌥ ⏹️ stop the environment (playground stop)", "terminal", notified("playground stop")),
+            "shift": mod("⇧ 🔄 update versions: CP, connect or connector (playground update-version prompts)", "terminal",
+                         notified("playground update-version")),
+        }
+        sub = "↩ status · ⌘ re-run · ⌥ stop · ⇧ update versions · Tab: kdp connector"
     else:
         title = "⏹️ Nothing running · last example: {}".format(example)
-    return item(title, "↩ playground status · Tab: kdp connector", "output", in_root("playground status"), autocomplete="connector ")
+        mods = {
+            "cmd": mod("⌘ 🔁 run it again with the same flags (playground re-run)", "terminal", notified("playground re-run")),
+            "alt": mod("⌥ nothing to stop"),
+            "shift": mod("⇧ nothing running to update"),
+        }
+        sub = "↩ status · ⌘ run it again with the same flags"
+    return item(title, sub, "output", in_root("playground status"), autocomplete="connector ", mods=mods)
 
 
 CONNECTOR_CLASS_RE = re.compile(r"\b((?:io|com|org|net|de|ai|co)\.[a-z0-9_]+(?:\.[a-zA-Z0-9_]+)*\.[A-Z][A-Za-z0-9_]*(?:Connector|Sink|Source))\b")
@@ -461,6 +515,8 @@ def mode_menu(rest, raw=""):
 
 
 def mode_find(rest):
+    if rest.strip().startswith("@"):
+        return example_actions(rest.strip()[1:].split()[0])
     if len(rest.strip()) < 2:
         return {"items": [info("🔎 Type words to find an example", "e.g. oracle cdc ssl · s3 sink parquet · 123456")]}
     hits, err = run_json(["find-example", rest.strip(), "--json", "--limit", "20"], timeout=30)
@@ -474,8 +530,9 @@ def mode_find(rest):
         path = h.get("path") or script
         sub = " · ".join(x for x in [h.get("title"), os.path.dirname(path)] if x)
         items.append(item(
-            os.path.basename(path), sub, "copy", h["run_command"],
+            os.path.basename(path), sub + " · Tab: ▶️ run it, README…", "copy", h["run_command"],
             mods=script_mods(script, h["run_command"]), quicklook=readme_of(script) or script,
+            autocomplete="find @{} ".format(script),
         ))
     return {"items": items}
 
@@ -488,7 +545,9 @@ def repro_actions(rest, models):
     run = "playground run -f {}".format(q(script))
     f = q(script)
     items = [
-        item("▶️ Copy the run command", run, "copy", run),
+        item("▶️ Run " + os.path.basename(script), "in the terminal, notification when it ends · " + stop_warning(),
+             "terminal", notified(run)),
+        item("📋 Copy the run command", run, "copy", run),
         item("📝 Open in VS Code", script, "code", script),
         item("🔀 What it changes vs its base example", "repro diff --summary ({})".format(m.get("base_example") or "base example"),
              "output", in_root("playground repro diff -f {} --summary".format(f))),
@@ -535,6 +594,9 @@ def mode_repro(rest):
 
 
 def mode_history(rest):
+    if rest.strip().startswith("@"):
+        script, _, flags = rest.strip()[1:].partition(" ")
+        return example_actions(script, flags.strip())
     args = ["history", "--list", "--json"] + rest.split()
     runs, err = run_json(args, timeout=15)
     if runs is None:
@@ -560,7 +622,8 @@ def mode_history(rest):
             items.append(info("⚠️ " + r.get("path", script), "script no longer exists · " + " · ".join(bits)))
             continue
         items.append(item(r.get("path", script), " · ".join(bits), "copy", cmd,
-                          mods=script_mods(script, cmd), quicklook=readme_of(script) or script))
+                          mods=script_mods(script, cmd), quicklook=readme_of(script) or script,
+                          autocomplete="history @{} {}".format(script, flags).rstrip() + " "))
     if not items:
         items = [info("🤷 No run in the history matches: " + rest)]
     return {"items": items}
@@ -1652,8 +1715,10 @@ def run_in_terminal(cmd):
         time.sleep(0.5)
         subprocess.run(["pbcopy"], input=previous, text=True)
         return ""
-    subprocess.run(["pbcopy"], input=cmd, text=True)
-    return "📋 Copied, paste it in your terminal: " + short(cmd, 100)
+    # copy only: the command itself, without the cd to the playground and the notification wrapper
+    plain = re.sub(r"^'?[^ ']*notify-run\.sh'? ", "", display_cmd(cmd))
+    subprocess.run(["pbcopy"], input=plain, text=True)
+    return "📋 Copied, paste it in your terminal: " + short(plain, 100)
 
 
 
