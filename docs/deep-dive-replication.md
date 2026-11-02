@@ -142,7 +142,9 @@ What the cluster selects:
 The security follows the environment: `mdc-sasl-plain` uses the `client` user (`environment/mdc-sasl-plain/client/client.properties`,
 mounted as `/tmp/client.properties` in the brokers and workers), `mdc-kerberos` runs the tools in the `client`
 container with the `connect` principal and `/etc/kafka/<producer|consumer|command>-<cluster>.properties`, on the
-broker FQDN (`broker-us.kerberos-demo.local:9092`). The `metrics` cluster can't be selected (no Connect worker, no
+broker FQDN (`broker-us.kerberos-demo.local:9092`). `mdc-kerberos` has no usable Schema Registry (the registries of the
+plaintext compose file can't reach the Kerberos brokers): `topic produce` / `consume` work there with plain string
+values, not with Avro / Protobuf / JSON Schema. The `metrics` cluster can't be selected (no Connect worker, no
 Schema Registry): reach `broker-metrics` with `playground container exec`.
 
 ```bash
