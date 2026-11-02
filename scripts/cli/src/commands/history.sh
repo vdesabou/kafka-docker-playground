@@ -84,16 +84,6 @@ function history_result_icon () {
     fi
 }
 
-function history_mask_creds () {
-    if [[ "$1" == *"creds"* ]]
-    then
-        # a value is a word, backslash-quoted characters included
-        sed -E 's/(--cluster-(schema-registry-)?creds[ =])([^ \\]|\\.)+/\1'"'<masked>'"'/g' <<< "$1"
-    else
-        echo "$1"
-    fi
-}
-
 # tac is GNU coreutils: not on macOS without Homebrew
 function history_reverse () {
     awk '{ lines[NR] = $0 } END { for (i = NR; i > 0; i--) print lines[i] }' "$@"
@@ -185,7 +175,7 @@ do
     displayed="${command//"$root_folder/"/}"
     if [[ "$displayed" == *"creds"* ]]
     then
-        displayed=$(history_mask_creds "$displayed")
+        displayed=$(mask_creds_in_command "$displayed")
     fi
     # fzf counts these emojis (with a variation selector) as one column, the terminal draws two
     case "$icon" in
@@ -246,14 +236,15 @@ function history_unmask_creds () {
 
 if [[ -n "$last" ]]
 then
-    head -1 $tmp_dir/entries | cut -d $'\x1f' -f 2
+    # lines written by older versions hold the credentials in clear
+    mask_creds_in_command "$(head -1 $tmp_dir/entries | cut -d $'\x1f' -f 2)"
     exit 0
 fi
 
 if [[ -n "$run" ]]
 then
     res=$(history_unmask_creds "$(head -1 $tmp_dir/entries | cut -d $'\x1f' -f 2)") || exit 1
-    log "🏰 $(history_mask_creds "$res")"
+    log "🏰 $(mask_creds_in_command "$res")"
     eval "$res"
     exit $?
 fi
@@ -272,7 +263,7 @@ then
         do
             exists=false
             [ -f "$script" ] && exists=true
-            printf '%s\t%s\t%s\t%s\t%s\n' "$(history_mask_creds "$command")" "$script" "$meta" "$runs" "$exists"
+            printf '%s\t%s\t%s\t%s\t%s\n' "$(mask_creds_in_command "$command")" "$script" "$meta" "$runs" "$exists"
         done < $tmp_dir/listed | jq -R -s --arg root "$root_folder/" '
             split("\n") | map(select(length > 0) | split("\t") | . as $f
                 | ($f[2] | split(" ") | map(select(contains("=")) | {key: (split("=")[0]), value: (split("=")[1:] | join("="))}) | from_entries) as $m
@@ -284,7 +275,7 @@ then
     log "🏰 runs${query:+ matching \"$query\"}, most recent first"
     while IFS=$'\x1f' read -r displayed command script meta runs
     do
-        echo "$(history_mask_creds "$command")"
+        echo "$(mask_creds_in_command "$command")"
         details=()
         result=$(history_meta "$meta" result)
         date=$(history_meta "$meta" date)
@@ -322,7 +313,7 @@ fi
 # preview: last result, README title, the header of a repro model, the command
 {
     printf 'root_folder=%q\n' "$root_folder"
-    declare -f history_meta history_duration history_result_icon history_mask_creds
+    declare -f history_meta history_duration history_result_icon mask_creds_in_command
     cat << 'EOF'
 command="$1"; script="$2"; meta="$3"; runs="$4"
 echo "📄 ${script#"$root_folder/"}"
@@ -344,7 +335,7 @@ title=$(grep -m 1 "^# " "$(dirname "$script")/README.md" 2> /dev/null)
 [ -n "$title" ] && echo "📖 ${title#\# }"
 grep -E "^# (💡 description|🎯 expected|💥 actual|🎫 jira|🩹 status): ?[^ ]" "$script" 2> /dev/null | sed -e 's/^# //'
 echo
-history_mask_creds "$command"
+mask_creds_in_command "$command"
 EOF
 } > $tmp_dir/preview.sh
 
