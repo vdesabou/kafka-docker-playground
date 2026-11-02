@@ -5327,7 +5327,7 @@ playground_cp_changelog_usage() {
 playground_cleanup_cloud_resources_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cleanup-cloud-resources\n\n"
-    printf "  🧹 Cleanup cloud resources that were created by running examples from the\n  playground\n  \n  ❗it will remove all resources created by the playground, including topics,\n  connectors, clusters, buckets, redshift cluster, etc...\n  \n  Examples that talk to a real cloud create real, billable resources, and an\n  interrupted run leaves them behind. This sweeps them, scoped to the ones\n  whose name contains pg and your username (as is, or lowercased without\n  - . _ like the examples write it), across AWS, GCP and Azure. Restrict the\n  scope with --resource, and run it regularly.\n  \n  Salesforce: the accounts of the playground are dedicated test orgs, every\n  Lead, Contact and PushTopic of them is deleted.\n  \n  Confluent Cloud: connectors whose name contains your username are deleted,\n  with their dlq, success and error topics. All topics of the cluster are\n  deleted only when the cluster was created by the playground for you\n  (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be\n  shared with your team, only the topics recorded as created by your own\n  runs are deleted (local file playground-ccloud-created-topics): topics\n  created with playground topic create / produce, and topics your fully\n  managed source connectors write to, as set in their config (kafka.topic,\n  api1.topics, topic.prefix...).\n  \n  In CI, the service accounts created by the playground (pg-<user>-*) and the\n  subjects of the deleted topics (<topic>-key, <topic>-value) are deleted too.\n  \n  You are asked to confirm every deletion, unless --force is given.\n  \n  ☢️ Deletions are permanent. Use a dedicated cloud account for the\n     playground rather than one that also hosts resources you care about.\n\n"
+    printf "  🧹 Cleanup cloud resources that were created by running examples from the\n  playground\n  \n  ❗it will remove all resources created by the playground, including topics,\n  connectors, clusters, buckets, redshift cluster, etc...\n  \n  Examples that talk to a real cloud create real, billable resources, and an\n  interrupted run leaves them behind. This sweeps them, scoped to the ones\n  whose name contains pg and your username (as is, or lowercased without\n  - . _ like the examples write it), across AWS, GCP and Azure. Restrict the\n  scope with --resource, and run it regularly.\n  \n  Salesforce: the accounts of the playground are dedicated test orgs, every\n  Lead, Contact and PushTopic of them is deleted.\n  \n  Confluent Cloud: connectors whose name contains your username are deleted,\n  with their dlq, success and error topics. All topics of the cluster are\n  deleted only when the cluster was created by the playground for you\n  (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be\n  shared with your team, only the topics recorded as created by your own\n  runs are deleted (local file playground-ccloud-created-topics): topics\n  created with playground topic create / produce, and topics your fully\n  managed source connectors write to, as set in their config (kafka.topic,\n  api1.topics, topic.prefix...).\n  \n  In CI, the service accounts created by the playground (pg-<user>-*) and the\n  subjects of the deleted topics (<topic>-key, <topic>-value) are deleted too.\n  \n  You are asked to confirm every deletion, unless --force is given. Use\n  --dry-run first to see what would be deleted.\n  \n  ☢️ Deletions are permanent. Use a dedicated cloud account for the\n     playground rather than one that also hosts resources you care about.\n\n"
   else
     printf "playground cleanup-cloud-resources - 🧹 Cleanup cloud resources that were created by running examples from the playground\n\n"
   fi
@@ -5362,10 +5362,17 @@ playground_cleanup_cloud_resources_usage() {
     printf "    %s\n" "Default: aws, gcp, azure, ccloud, salesforce"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔎 List what would be deleted (the commands), without deleting anything nor\n    asking\n    \n    The Confluent Cloud part is skipped when no cluster is known (CLUSTER_NAME,\n    or a previous ccloud run): finding\n    one would create it.\n"
+    printf "    %s\n" "Conflicts: --recorded-topics-only"
+    echo
+
     if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
       # :flag.usage
       printf "  %s\n" "$(magenta "--recorded-topics-only")"
       printf "    🧹 only delete the Confluent Cloud topics recorded as created by the\n    playground runs (playground-ccloud-created-topics) that are still on the\n    cluster, except the ones a connector of the cluster uses\n    \n    Used by run-tests.sh at the end of each CI job.\n"
+      printf "    %s\n" "Conflicts: --dry-run"
       echo
 
     fi
@@ -5401,6 +5408,13 @@ playground_cleanup_cloud_resources_usage() {
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "GCP_KEYFILE_CONTENT")"
     printf "    GCP keyfile (generated with \"cat keyfile.json | jq -aRs .\")\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground cleanup-cloud-resources --dry-run\n"
+    printf "  playground cleanup-cloud-resources --resource aws --dry-run\n"
+    printf "  playground cleanup-cloud-resources --resource aws --resource gcp\n"
     echo
 
   fi
@@ -25939,8 +25953,8 @@ function cleanup_confluent_cloud_resources () {
   deleted_topics="$topics_to_delete"
 
   # forget recorded topics and connectors that are gone (deleted above or by someone else)
-  # only when both listings succeed, an empty list would forget everything
-  if topics_json=$(confluent kafka topic list --output json) && connectors_json=$(confluent connect cluster list --output json)
+  # only when both listings succeed, an empty list would forget everything; not in a dry-run (nothing was deleted)
+  if [[ -z "${dry_run:-}" ]] && topics_json=$(confluent kafka topic list --output json) && connectors_json=$(confluent connect cluster list --output json)
   then
     prune_ccloud_recorded_entries "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name')" "$(echo "$connectors_json" | jq -r '.[].name')"
   fi
@@ -32126,6 +32140,13 @@ function check_if_continue()
 }
 
 function check_if_skip() {
+
+  # playground cleanup-cloud-resources --dry-run: show the command, run nothing
+  if [[ -n "${dry_run:-}" ]]
+  then
+    log "🔎 dry-run, would run: $1"
+    return 0
+  fi
 
   if [[ -n "$force" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
   then
@@ -47739,6 +47760,18 @@ playground_cleanup_cloud_resources_command() {
   # Convert the space delimited string to an array
   eval "resources=(${args[--resource]})"
   recorded_topics_only="${args[--recorded-topics-only]}"
+  # read by check_if_skip and confirm_deletion: every deletion is shown, none is run
+  dry_run="${args[--dry-run]}"
+  if [[ -n "$dry_run" ]] && [[ -n "$recorded_topics_only" ]]
+  then
+      # bashly only checks a conflict against the flags already parsed: also refused here, whatever the order
+      logerror "❌ --dry-run can't be used with --recorded-topics-only"
+      exit 1
+  fi
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔎 dry-run: listing what would be deleted, nothing is deleted"
+  fi
 
   if [[ -n "$recorded_topics_only" ]]
   then
@@ -47772,6 +47805,11 @@ playground_cleanup_cloud_resources_command() {
 
   # true when the deletion described by $1 can go on: always with --force or in CI, otherwise when the user answers y
   function confirm_deletion () {
+      if [[ -n "$dry_run" ]]
+      then
+          log "🔎 dry-run, would ask: $1"
+          return 1
+      fi
       if [[ -n "$force" ]] || [ -n "$GITHUB_RUN_NUMBER" ]
       then
           return 0
@@ -48015,6 +48053,12 @@ playground_cleanup_cloud_resources_command() {
 }
 
 function cleanup_ccloud () {
+    if [[ -n "$dry_run" ]] && [ -z "$CLUSTER_NAME" ] && [ -z "$(playground state get ccloud.CLUSTER_NAME)" ]
+    then
+        # bootstrap_ccloud_environment would create a cluster: not in a dry-run
+        logwarn "⏭️ dry-run: no Confluent Cloud cluster known (CLUSTER_NAME or a previous ccloud run), skipping Confluent Cloud"
+        return
+    fi
     cleanup_confluent_cloud_resources
 
     if [ ! -z "$AWS_DATABRICKS_CLUSTER_NAME" ]
@@ -93499,7 +93543,25 @@ playground_cleanup_cloud_resources_parse_requirements() {
         ;;
 
       # :flag.case
+      --dry-run)
+        # :flag.conflicts
+        if [[ -n "${args['--recorded-topics-only']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--recorded-topics-only" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
       --recorded-topics-only)
+        # :flag.conflicts
+        if [[ -n "${args['--dry-run']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--dry-run" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--recorded-topics-only']=1
@@ -136762,6 +136824,12 @@ playground_cleanup_cloud_resources_completion() {
         shift
 
         ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+        completion_blocked_flags["--recorded-topics-only"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -136772,6 +136840,7 @@ playground_cleanup_cloud_resources_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --force "$completion_current" --force
     completion_flag_candidates --resource "$completion_current" --resource
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
   fi
 
 }

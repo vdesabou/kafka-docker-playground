@@ -548,6 +548,13 @@ function check_if_continue()
 
 function check_if_skip() {
 
+  # playground cleanup-cloud-resources --dry-run: show the command, run nothing
+  if [[ -n "${dry_run:-}" ]]
+  then
+    log "🔎 dry-run, would run: $1"
+    return 0
+  fi
+
   if [[ -n "$force" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
   then
     eval "$1"

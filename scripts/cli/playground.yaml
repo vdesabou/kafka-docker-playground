@@ -1611,9 +1611,10 @@ subcommands:
     connectors write to, as set in their config (kafka.topic,\napi1.topics, topic.prefix...).\n\nIn
     CI, the service accounts created by the playground (pg-<user>-*) and the\nsubjects
     of the deleted topics (<topic>-key, <topic>-value) are deleted too.\n\nYou are
-    asked to confirm every deletion, unless --force is given.\n\n☢️ Deletions are
-    permanent. Use a dedicated cloud account for the\n   playground rather than one
-    that also hosts resources you care about."
+    asked to confirm every deletion, unless --force is given. Use\n--dry-run first
+    to see what would be deleted.\n\n☢️ Deletions are permanent. Use a dedicated cloud
+    account for the\n   playground rather than one that also hosts resources you care
+    about."
   usage: playground cleanup-cloud-resources [OPTIONS]
   options:
   - names:
@@ -1631,6 +1632,13 @@ subcommands:
       --resource multiple times\n\nRepeatable: ✓ Yes\nDefault value: [\"aws\", \"gcp\",
       \"azure\", \"ccloud\", \"salesforce\"]\nAllowed values: aws, gcp, azure, ccloud,
       salesforce"
+  - names:
+    - "--dry-run"
+    argument: ''
+    description: "\U0001F50E List what would be deleted (the commands), without deleting
+      anything nor asking\n\nThe Confluent Cloud part is skipped when no cluster is
+      known (CLUSTER_NAME, or a previous ccloud run): finding\none would create it.\n\nConflicts
+      with: --recorded-topics-only"
 - name: repro
   description: "\U0001F477‍♂️ Reproduction model commands\n\nA reproduction model
     is an example written to demonstrate one specific\nproblem, so that anyone can
