@@ -29,7 +29,7 @@ then
      do
           set +e
           log "🏗 Building jar for ${component}"
-          build_java_component_with_retry "${component}" docker run -i --rm -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/modules/scala_2.13/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn install -DskipTests
+          build_java_component_with_retry "${component}" docker run -i --rm -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/../../scripts/settings.xml:/tmp/settings.xml" -v "${DIR}/${component}/modules/scala_2.13/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml install -DskipTests
           set -e
      done
      cp kafka-connect-sap/modules/scala_2.13/target/kafka-connector-hana_2.13-$CONNECTOR_VERSION.jar .
