@@ -1595,18 +1595,22 @@ subcommands:
     including topics, connectors, clusters, buckets, redshift cluster, etc...\n\nExamples
     that talk to a real cloud create real, billable resources, and an\ninterrupted
     run leaves them behind. This sweeps them, scoped to the ones\nwhose name contains
-    your username, across AWS, GCP, Azure, Confluent Cloud\nand Salesforce. Restrict
-    the scope with --resource, and run it regularly.\n\nConfluent Cloud: connectors
+    pg and your username (as is, or lowercased without\n- . _ like the examples write
+    it), across AWS, GCP and Azure. Restrict the\nscope with --resource, and run it
+    regularly.\n\nSalesforce: the accounts of the playground are dedicated test orgs,
+    every\nLead, Contact and PushTopic of them is deleted.\n\nConfluent Cloud: connectors
     whose name contains your username are deleted,\nwith their dlq, success and error
     topics. All topics of the cluster are\ndeleted only when the cluster was created
     by the playground for you\n(pg-<user>-*). On a cluster you provided with CLUSTER_NAME,
     which may be\nshared with your team, only the topics recorded as created by your
     own\nruns are deleted (local file playground-ccloud-created-topics): topics\ncreated
     with playground topic create / produce, and topics your fully\nmanaged source
-    connectors write to, as set in their config (kafka.topic,\napi1.topics, topic.prefix...).\n\nYou
-    are asked to confirm every deletion, unless --force is given.\n\n☢️ Deletions
-    are permanent. Use a dedicated cloud account for the\n   playground rather than
-    one that also hosts resources you care about."
+    connectors write to, as set in their config (kafka.topic,\napi1.topics, topic.prefix...).\n\nIn
+    CI, the service accounts created by the playground (pg-<user>-*) and the\nsubjects
+    of the deleted topics (<topic>-key, <topic>-value) are deleted too.\n\nYou are
+    asked to confirm every deletion, unless --force is given.\n\n☢️ Deletions are
+    permanent. Use a dedicated cloud account for the\n   playground rather than one
+    that also hosts resources you care about."
   usage: playground cleanup-cloud-resources [OPTIONS]
   options:
   - names:

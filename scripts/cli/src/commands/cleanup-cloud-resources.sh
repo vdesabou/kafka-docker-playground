@@ -23,6 +23,34 @@ if [[ ! -n "$user" ]]
 then
     user="${USER}"
 fi
+# examples strip - . _ from the user in the names of their cloud resources (${USER//[-._]/}), some also lowercase it
+user_lower=$(tr '[:upper:]' '[:lower:]' <<< "$user")
+user_normalized=$(tr '[:upper:]' '[:lower:]' <<< "${user//[-._]/}")
+
+# true when the resource name contains pg<anything><user>, with the user as is or normalized like the examples do
+function name_has_user () {
+    local name
+    name=$(tr '[:upper:]' '[:lower:]' <<< "$1")
+    [[ $name = *pg*${user_lower}* ]] || [[ $name = *pg*${user_normalized}* ]]
+}
+
+# true when the deletion described by $1 can go on: always with --force or in CI, otherwise when the user answers y
+function confirm_deletion () {
+    if [[ -n "$force" ]] || [ -n "$GITHUB_RUN_NUMBER" ]
+    then
+        return 0
+    fi
+    local reply
+    while true
+    do
+        read -p "$1 (y/n) " reply
+        case "$reply" in
+            y|Y ) return 0;;
+            n|N ) log "Skipping..."; return 1;;
+            * ) logwarn "invalid response <$reply>! Please enter y or n.";;
+        esac
+    done
+}
 
 function cleanup_aws () {
     if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
@@ -57,7 +85,7 @@ function cleanup_aws () {
     log "Cleanup AWS Kinesis streams"
     for stream in $(aws kinesis list-streams --region $AWS_REGION | jq '.StreamNames[]' -r)
     do
-        if [[ $stream = *pg*${user}* ]]
+        if name_has_user "$stream"
         then
             log "Removing AWS Kinesis stream $stream"
             check_if_skip "aws kinesis delete-stream --stream-name $stream --region $AWS_REGION"
@@ -67,7 +95,7 @@ function cleanup_aws () {
     log "Cleanup AWS SQS queues"
     for queue in $(aws sqs list-queues --region $AWS_REGION | jq '.QueueUrls[]' -r)
     do
-        if [[ $queue = *pg*${user}* ]]
+        if name_has_user "$queue"
         then
             log "Removing AWS SQS queue $queue"
             check_if_skip "aws sqs delete-queue --queue-url ${queue}"
@@ -77,7 +105,7 @@ function cleanup_aws () {
     log "Cleanup AWS Lambda functions"
     for function in $(aws lambda list-functions --region $AWS_REGION | jq '.Functions[].FunctionName' -r)
     do
-        if [[ $function = *pglambdafunction* ]] || [[ $function = *pg*${user}* ]]
+        if name_has_user "$function"
         then
             log "Removing AWS Lambda function $function"
             check_if_skip "aws lambda delete-function --function-name ${function}"
@@ -87,17 +115,29 @@ function cleanup_aws () {
     log "Cleanup AWS Lambda IAM roles"
     for role in $(aws iam list-roles --region $AWS_REGION | jq '.Roles[].RoleName' -r)
     do
-        if [[ $role = *pglambdarole* ]] || [[ $role = *pg*${user}* ]]
+        if name_has_user "$role"
         then
             log "Removing AWS Lambda role $role"
-            check_if_skip "aws iam delete-role --role-name ${role}"
+            if confirm_deletion "Delete AWS IAM role $role?"
+            then
+                # a role with attached (AWSLambdaBasicExecutionRole…) or inline policies can't be deleted (DeleteConflict)
+                for policy in $(aws iam list-attached-role-policies --role-name ${role} | jq -r '.AttachedPolicies[].PolicyArn')
+                do
+                    aws iam detach-role-policy --role-name ${role} --policy-arn $policy
+                done
+                for policy in $(aws iam list-role-policies --role-name ${role} | jq -r '.PolicyNames[]')
+                do
+                    aws iam delete-role-policy --role-name ${role} --policy-name $policy
+                done
+                aws iam delete-role --role-name ${role}
+            fi
         fi
     done
 
     log "Cleanup AWS CloudWatch log group"
     for log_group in $(aws logs describe-log-groups --region $AWS_REGION | jq '.logGroups[].logGroupName' -r)
     do
-        if [[ $log_group = *myloggroup* ]] || [[ $log_group = *pg*${user}* ]]
+        if name_has_user "$log_group"
         then
             # for log_stream in $(aws logs describe-log-streams --log-group-name $log_group --region $AWS_REGION | jq '.logStreams[].logStreamName' -r)
             # do
@@ -113,20 +153,25 @@ function cleanup_aws () {
     log "Cleanup AWS Redshift clusters"
     for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
     do
-        if [[ $cluster = pg*${user}redshift* ]] || [[ $cluster = pg*${user}jdbcredshift* ]]
+        if [[ $cluster = pg*${user_lower}redshift* ]] || [[ $cluster = pg*${user_lower}jdbcredshift* ]] || [[ $cluster = pg*${user_normalized}redshift* ]] || [[ $cluster = pg*${user_normalized}jdbcredshift* ]]
         then
             log "Delete AWS Redshift $cluster"
-            check_if_skip "aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION"
-            sleep 60
-            log "Delete AWS security group sg$cluster"
-            check_if_skip "aws ec2 delete-security-group --group-name sg$cluster --region $AWS_REGION"
+            if confirm_deletion "Delete AWS Redshift cluster $cluster and its security group sg$cluster?"
+            then
+                aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION
+                # the security group is in use until the cluster is gone, which takes several minutes
+                log "Waiting for AWS Redshift $cluster to be deleted"
+                aws redshift wait cluster-deleted --cluster-identifier $cluster --region $AWS_REGION
+                log "Delete AWS security group sg$cluster"
+                aws ec2 delete-security-group --group-name sg$cluster --region $AWS_REGION
+            fi
         fi
     done
 
     log "Cleanup AWS DynamoDB tables"
     for dynamo_table in $(aws dynamodb list-tables --region $AWS_REGION | jq '.TableNames[]' -r)
     do
-        if [[ $dynamo_table = *pg*${user}* ]]
+        if name_has_user "$dynamo_table"
         then
             log "Removing AWS dynamodb table $dynamo_table"
             check_if_skip "aws dynamodb delete-table --table-name ${dynamo_table}"
@@ -140,12 +185,13 @@ function cleanup_azure () {
     log "Cleanup Azure Resource groups"
     for group in $(az group list --query '[].name' --output tsv)
     do
-    if [[ $group = pg*${user}* ]]
+    if name_has_user "$group"
     then
         if [ ! -z "$GITHUB_RUN_NUMBER" ]
         then
         job=$(echo $GITHUB_RUN_NUMBER | cut -d "." -f 1)
-        if [[ $group = pg$user$job* ]]
+        # names are pg<user><type><run number>…, e.g. pg${USER}bk${GITHUB_RUN_NUMBER}
+        if [[ $group =~ ^pg(${user_lower}|${user_normalized})[a-z]*${job} ]]
         then
             log "Skipping current github actions $job"
             continue
@@ -159,14 +205,24 @@ function cleanup_azure () {
 
 function cleanup_gcp () {
     GCP_KEYFILE="$tmp_dir/keyfile.json"
+    if [ -z "$GCP_KEYFILE_CONTENT" ] || [ -z "$GCP_PROJECT" ]
+    then
+        logwarn "⏭️ GCP_KEYFILE_CONTENT or GCP_PROJECT is not set, skipping GCP cleanup"
+        return
+    fi
     echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
-    docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json > /dev/null 2>&1
+    if ! docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json > /dev/null 2>&1
+    then
+        logerror "❌ could not authenticate to GCP project $GCP_PROJECT with GCP_KEYFILE_CONTENT, skipping GCP cleanup"
+        docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
+        return
+    fi
 
     log "Cleanup GCP GCS buckets"
     for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
     do
-        if [[ $bucket = *kafkadockerplaygroundbucket${user}* ]]
+        if [[ $bucket = *kafkadockerplaygroundbucket${user_lower}* ]] || [[ $bucket = *kafkadockerplaygroundbucket${user_normalized}* ]]
         then
             log "Removing GCS bucket $bucket"
             check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil -m rm -r $bucket"
@@ -176,7 +232,7 @@ function cleanup_gcp () {
     log "Cleanup GCP BQ datasets"
     for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" ls)
     do
-        if [[ $dataset = *pg*${user}* ]]
+        if name_has_user "$dataset"
         then
             log "Remove GCP BQ dataset $dataset"
             check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id \"$GCP_PROJECT\" rm -r -f -d \"$dataset\""
@@ -186,7 +242,7 @@ function cleanup_gcp () {
     log "Cleanup Spanner instances"
     for spanner_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances list --project $GCP_PROJECT --format="value(NAME)")
     do
-        if [[ $spanner_instance = *pg*${user}* ]]
+        if name_has_user "$spanner_instance"
         then
 
 #             for spanner_db in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner databases list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
@@ -200,29 +256,25 @@ function cleanup_gcp () {
             for spanner_backup in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups list --project $GCP_PROJECT --instance $spanner_instance --format="value(NAME)")
             do
                 log "Remove Spanner backup $spanner_backup"
-                docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups delete $spanner_backup --instance $spanner_instance --project $GCP_PROJECT << EOF
-Y
-EOF
+                check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner backups delete $spanner_backup --instance $spanner_instance --project $GCP_PROJECT --quiet"
             done
 
             log "Remove Spanner instance $spanner_instance"
-            docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $spanner_instance --project $GCP_PROJECT << EOF
-Y
-EOF
+            check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud spanner instances delete $spanner_instance --project $GCP_PROJECT --quiet"
         fi
     done
 
     log "Cleanup BigTable instances"
     for bigtable_instance in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances list --project $GCP_PROJECT --format="value(NAME)")
     do
-        if [[ $bigtable_instance = *pg*${user}* ]]
+        if name_has_user "$bigtable_instance"
         then
             log "Remove BigTable instance $bigtable_instance"
-            docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $bigtable_instance --project $GCP_PROJECT << EOF
-Y
-EOF
+            check_if_skip "docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud bigtable instances delete $bigtable_instance --project $GCP_PROJECT --quiet"
         fi
     done
+
+    docker rm -f gcloud-config-cleanup-resources > /dev/null 2>&1
 }
 
 function cleanup_ccloud () {
@@ -293,6 +345,12 @@ function cleanup_salesforce_org () {
     if [ -z "$consumer_key" ]
     then
         logwarn "⚠️ no JWT consumer key set for $username, skipping Salesforce cleanup for this account"
+        return
+    fi
+
+    # the Salesforce accounts of the playground are dedicated test orgs: every Lead, Contact and PushTopic is deleted
+    if ! confirm_deletion "Delete every Lead, Contact and PushTopic of Salesforce account $username?"
+    then
         return
     fi
 
