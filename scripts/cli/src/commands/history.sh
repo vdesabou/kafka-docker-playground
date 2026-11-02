@@ -92,7 +92,10 @@ function history_reverse () {
 # most recent first, de-duplicated on the command (spaces normalized, so that a trailing space is not another
 # entry): "<command> US <comment of its last run> US <number of runs>" (US: unit separator, not a
 # whitespace like TAB, so that read keeps an empty field)
-history_reverse "$history_file" | awk '
+# read from a snapshot: --prune rewrites the file from it, and keeps the lines appended since (runs started meanwhile)
+cp "$history_file" $tmp_dir/history-snapshot
+nb_lines_snapshot=$(wc -l < $tmp_dir/history-snapshot | tr -d ' ')
+history_reverse $tmp_dir/history-snapshot | awk '
     { gsub(/[ \t]+/, " "); sub(/^ /, ""); sub(/ $/, "") }
     !/^playground run -f / { next }
     {
@@ -191,10 +194,15 @@ done < $tmp_dir/history
 
 if [[ -n "$prune" ]]
 then
+    file_lock "$history_file"
     nb_lines=$(wc -l < "$history_file" | tr -d ' ')
     cp "$history_file" "$history_file.bak"
-    # oldest first, as run appends them
-    history_reverse $tmp_dir/entries | awk -F '\037' '{ print $2 ($4 != "" ? " # " $4 : "") }' > "$history_file"
+    # oldest first, as run appends them, then the lines appended since the snapshot
+    {
+        history_reverse $tmp_dir/entries | awk -F '\037' '{ print $2 ($4 != "" ? " # " $4 : "") }'
+        tail -n +$((nb_lines_snapshot + 1)) "$history_file"
+    } > "$history_file.tmp.$$" && mv -f "$history_file.tmp.$$" "$history_file"
+    file_unlock "$history_file"
     log "🧹 $history_file: $nb_lines lines → $(wc -l < "$history_file" | tr -d ' ') (one per command, $nb_missing whose script no longer exists removed)"
     log "💾 previous version kept in $history_file.bak"
     exit 0
