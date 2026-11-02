@@ -557,7 +557,7 @@ function check_if_skip() {
     case "$reply" in
     y|Y ) log "Skipping command...";;
     n|N ) eval "$1";;
-    * ) logwarn "invalid response <$reply>! Please enter y or n."; check_if_skip;;
+    * ) logwarn "invalid response <$reply>! Please enter y or n."; check_if_skip "$1";;
     esac
   fi
 }

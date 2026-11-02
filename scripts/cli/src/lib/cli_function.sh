@@ -5073,6 +5073,8 @@ function cleanup_confluent_cloud_resources () {
       log "delete topic $topic"
       check_if_skip "confluent kafka topic delete \"$topic\" --force || true"
   done
+  # their subjects (TopicNameStrategy), deleted below in CI
+  deleted_topics="$topics_to_delete"
 
   # forget recorded topics and connectors that are gone (deleted above or by someone else)
   # only when both listings succeed, an empty list would forget everything
@@ -5083,22 +5085,36 @@ function cleanup_confluent_cloud_resources () {
 
   if [ ! -z "$GITHUB_RUN_NUMBER" ]
   then
-    for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
+    # only the subjects of the topics deleted above (<topic>-key, <topic>-value): the Schema Registry is shared by every
+    # cluster of the environment
+    local subject
+    local subject_topic
+    for subject in $(curl -s -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]' 2>/dev/null)
     do
-        log "permanently delete subject $subject"
-        check_if_skip "curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject\" && curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true\""
+        case "$subject" in
+          *-key) subject_topic="${subject%-key}" ;;
+          *-value) subject_topic="${subject%-value}" ;;
+          *) continue ;;
+        esac
+        if echo "$deleted_topics" | grep -Fxq -e "$subject_topic"
+        then
+            log "permanently delete subject $subject"
+            check_if_skip "curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject\" && curl --request DELETE -u \"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" \"$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true\""
+        fi
     done
 
-    for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
+    # only the service accounts created by the playground (pg-<user>-app-*, pg-<user>-conn-*): the organization also
+    # holds the service accounts that own the API keys used by CI
+    for row in $(confluent iam service-account list --output json | jq -r --arg p "pg-${user}-" '.[] | select(.name | startswith($p)) | @base64'); do
         _jq() {
         echo ${row} | base64 -d | jq -r ${1}
         }
-        
+
         description=$(echo $(_jq '.description'))
         id=$(echo $(_jq '.id'))
         name=$(echo $(_jq '.name'))
 
-        log "deleting service-account $id ($description)"
+        log "deleting service-account $id $name ($description)"
         check_if_skip "confluent iam service-account delete $id --force || true"
     done
   fi
