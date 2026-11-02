@@ -1198,17 +1198,16 @@ subcommands:
     the example you are running is green in the nightly CI,\nboth for the default
     environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n\U0001F449
     Useful before you spend time debugging: if CI is red too, the breakage\nis probably
-    not on your side. Reproduction models are always reported as\nfine, they are not
-    part of the CI matrix.\n\n\U0001F525 With --logs, also tells why it is red: the
-    latest failing CI job of the\nexample is located from its '\U0001F525' GitHub
-    issue, its full log is downloaded,\nand for each failing script the last lines
-    before the failure are shown\nwith a digest of the ERROR/FATAL records (same digest
-    as 'playground\ncontainer logs --errors').\n\n\U0001F310 With --logs, also writes
-    a self-contained HTML report of the failure in --output-dir, opened in the browser
-    in an interactive terminal (--no-open to skip): known causes, last lines before
-    the failure of each failing script, root causes and every distinct record, with
-    links to the issue and the job.\n\nUse --test to ask about any example, without
-    running it."
+    not on your side. Reproduction models are skipped, they are not\npart of the CI
+    matrix.\n\n\U0001F525 With --logs, also tells why it is red: the latest failing
+    CI job of the\nexample is located from its '\U0001F525' GitHub issue, its full
+    log is downloaded,\nand for each failing script the last lines before the failure
+    are shown\nwith a digest of the ERROR/FATAL records (same digest as 'playground\ncontainer
+    logs --errors').\n\n\U0001F310 With --logs, also writes a self-contained HTML
+    report of the failure in --output-dir, opened in the browser in an interactive
+    terminal (--no-open to skip): known causes, last lines before the failure of each
+    failing script, root causes and every distinct record, with links to the issue
+    and the job.\n\nUse --test to ask about any example, without running it."
   usage: playground get-ci-result [OPTIONS]
   options:
   - names:
@@ -1226,7 +1225,8 @@ subcommands:
   - names:
     - "--podman"
     argument: ''
-    description: "\U0001F9AD Check the podman CI run instead of the docker one"
+    description: "\U0001F9AD With --logs, read the podman CI job instead of the docker
+      one (the published CI status is the one of the docker runs)"
   - names:
     - "--logs"
     argument: ''

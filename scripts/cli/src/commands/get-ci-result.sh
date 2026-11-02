@@ -51,43 +51,65 @@ then
 fi
 
 content_file="$tmp_dir/content.md"
-curl -s -o $content_file  https://kafka-docker-playground.io/content.md
+if ! curl -s --fail -o $content_file https://kafka-docker-playground.io/content.md
+then
+    logwarn "🤖 CI status: could not download the CI results from https://kafka-docker-playground.io/content.md"
+    if [[ ! -n "$logs" ]]
+    then
+        exit 0
+    fi
+fi
 
-result_ok=""
-result_fail=""
+# the line of this example: it links to its folder, ".../tree/master/<dir>)" (a plain grep of the folder would also
+# match connect-testing-smt-filestream-sink for connect-testing-smt)
+example_line=$(grep -F "/tree/master/$dir2)" $content_file 2> /dev/null | head -1)
 
+# job / issue url of the badge [![<label>](<image>)](<url>) of the example line, each badge parsed on its own (the
+# line holds both the CI and the CI_CFK badges)
+function ci_badge_url () {
+    grep -oE "\[!\[$1\]\([^)]*\)\]\([^)]*\)" <<< "$example_line" | head -1 | sed -E 's/.*\]\(([^)]*)\)$/\1/'
+}
+
+function ci_badge_present () {
+    grep -qF "[![$1](" <<< "$example_line"
+}
+
+badge_prefix="CI"
+label=""
 if [[ "$environment" == cfk* ]]
 then
-    result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI_CFK \(ok\)\].*(\(https[^)]*\)).*/🤖 CI status: 🟢 cfk ok, 🔗 test url: \2/p')"
-    result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI_CFK \(fail\)\].*(\(https[^)]*\)).*/🤖 CI status: 🔴 cfk fail, 🐛 github issue: \2/p')"
-
-    # Backward-compatible fallback when CI_CFK badge is missing.
-    if [ -z "$result_ok" ] && [ -z "$result_fail" ]
+    badge_prefix="CI_CFK"
+    label="cfk "
+    # backward compatible: no CI_CFK badge
+    if ! ci_badge_present "CI_CFK ok" && ! ci_badge_present "CI_CFK fail"
     then
-        result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(ok\)\].*(\(https[^)]*\)).*/🤖 CI status: 🟢 ok, 🔗 test url: \2/p')"
-        result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(fail\)\].*(\(https[^)]*\)).*/🤖 CI status: 🔴 fail, 🐛 github issue: \2/p')"
+        badge_prefix="CI"
+        label=""
     fi
+fi
+
+if [[ -n "$podman" ]] && [[ ! -n "$logs" ]]
+then
+    logwarn "🦭 the published CI status is the one of the docker runs, add --logs to read the podman job"
+fi
+
+if [ -z "$example_line" ]
+then
+    log "🤖 CI status: 🤷‍♂️ $dir2 is not in the CI results (not in the 🚀 test list of ci.yml, or added recently)"
+elif ci_badge_present "$badge_prefix ok"
+then
+    url=$(ci_badge_url "$badge_prefix ok")
+    log "🤖 CI status: 🟢 ${label}ok${url:+, 🔗 test url: $url}"
+elif ci_badge_present "$badge_prefix fail"
+then
+    url=$(ci_badge_url "$badge_prefix fail")
+    logwarn "🤖 CI status: 🔴 ${label}fail${url:+, 🐛 github issue: $url}"
+elif grep -qF "[not tested]" <<< "$example_line"
+then
+    log "🤖 CI status: 🤷‍♂️ not tested"
 else
-    result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(ok\)\].*(\(https[^)]*\)).*/🤖 CI status: 🟢 ok, 🔗 test url: \2/p')"
-    result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI \(fail\)\].*(\(https[^)]*\)).*/🤖 CI status: 🔴 fail, 🐛 github issue: \2/p')"
-fi
-
-result_not_tested="$(grep "$dir2" $content_file | sed -n 's/.*\[not tested\].*/🤖 CI status: 🤷‍♂️ not tested/p')"
-
-# print only result not empty
-if [ -n "$result_ok" ]
-then
-    log "$result_ok"
-fi
-
-if [ -n "$result_fail" ]
-then
-    logwarn "$result_fail"
-fi
-
-if [ -n "$result_not_tested" ]
-then
-    log "$result_not_tested"
+    # no badge on its line: update-readme only writes the overall badge when every CP version gives the same result
+    log "🤖 CI status: 🤷‍♂️ no CI badge for $dir2 (the results may differ between CP versions), see https://kafka-docker-playground.io/#/content"
 fi
 
 if [[ ! -n "$logs" ]]
@@ -170,14 +192,6 @@ then
 fi
 echo "   🔗 https://github.com/$repo/actions/runs/$run_id/job/$job_id"
 echo "   🕐 run of $run_date on commit ${head_sha:0:9}"
-
-tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-if [ -z "$PG_VERBOSE_MODE" ]
-then
-    trap 'rm -rf $tmp_dir' EXIT
-else
-    log "🐛📂 not deleting tmp dir $tmp_dir"
-fi
 
 # the full log: 'gh run view --log' truncates long jobs
 if ! gh api --allow-escape-sequences "repos/$repo/actions/jobs/$job_id/logs" > "$tmp_dir/job.log" 2> "$tmp_dir/error.log"

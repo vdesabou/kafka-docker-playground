@@ -1094,7 +1094,7 @@
     },
     {
       "name": "get-ci-result",
-      "description": "🤖 get CI result for current example\n\nTells you whether the example you are running is green in the nightly CI,\nboth for the default environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n👉 Useful before you spend time debugging: if CI is red too, the breakage\nis probably not on your side. Reproduction models are always reported as\nfine, they are not part of the CI matrix.\n\n🔥 With --logs, also tells why it is red: the latest failing CI job of the\nexample is located from its '🔥' GitHub issue, its full log is downloaded,\nand for each failing script the last lines before the failure are shown\nwith a digest of the ERROR/FATAL records (same digest as 'playground\ncontainer logs --errors').\n\n🌐 With --logs, also writes a self-contained HTML report of the failure in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): known causes, last lines before the failure of each failing script, root causes and every distinct record, with links to the issue and the job.\n\nUse --test to ask about any example, without running it.",
+      "description": "🤖 get CI result for current example\n\nTells you whether the example you are running is green in the nightly CI,\nboth for the default environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n👉 Useful before you spend time debugging: if CI is red too, the breakage\nis probably not on your side. Reproduction models are skipped, they are not\npart of the CI matrix.\n\n🔥 With --logs, also tells why it is red: the latest failing CI job of the\nexample is located from its '🔥' GitHub issue, its full log is downloaded,\nand for each failing script the last lines before the failure are shown\nwith a digest of the ERROR/FATAL records (same digest as 'playground\ncontainer logs --errors').\n\n🌐 With --logs, also writes a self-contained HTML report of the failure in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): known causes, last lines before the failure of each failing script, root causes and every distinct record, with links to the issue and the job.\n\nUse --test to ask about any example, without running it.",
       "usage": "playground get-ci-result [OPTIONS]",
       "options": [
         {
@@ -1117,7 +1117,7 @@
             "--podman"
           ],
           "argument": "",
-          "description": "🦭 Check the podman CI run instead of the docker one"
+          "description": "🦭 With --logs, read the podman CI job instead of the docker one (the published CI status is the one of the docker runs)"
         },
         {
           "names": [
