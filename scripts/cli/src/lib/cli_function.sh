@@ -5181,7 +5181,7 @@ function cleanup_confluent_cloud_resources () {
 }
 
 # Remind the user what is still alive (and billed) on the Confluent Cloud cluster: connectors
-# named *_<user> and the topics 'playground cleanup-cloud-resources' would delete
+# named *_<user> and the topics 'playground cloud-resources cleanup' would delete
 function display_ccloud_leftovers () {
   local user="${USER}"
   local max_names=5
@@ -5238,7 +5238,7 @@ function display_ccloud_leftovers () {
   then
     logwarn "   📝 $nb_topics topic(s): $(echo "$topics" | head -$max_names | paste -sd ',' - | sed 's/,/, /g')$( [ "$nb_topics" -gt $max_names ] && echo ', ...')"
   fi
-  logwarn "🧹 delete them with <playground cleanup-cloud-resources --resource ccloud>"
+  logwarn "🧹 delete them with <playground cloud-resources cleanup --resource ccloud>"
 }
 
 # Forget recorded entries of a cluster that match nothing anymore: topics not in $2, prefixes
@@ -5330,7 +5330,7 @@ function filter_ccloud_topics_not_used_by_connectors () {
 
 # Delete the topics recorded in playground-ccloud-created-topics (by every run) that are still on the cluster, except
 # the ones a connector of the cluster uses. Called by run-tests.sh at the end of each CI job
-# (playground cleanup-cloud-resources --recorded-topics-only): it catches the topics kept at the end of a run because a
+# (playground cloud-resources cleanup --recorded-topics-only): it catches the topics kept at the end of a run because a
 # connector of another job used them, and the ones of a run killed before its cleanup. The podman nightly has no
 # cleanup job, which would delete the resources of people using the cluster during the day.
 function cleanup_ccloud_recorded_topics () {
@@ -5486,7 +5486,7 @@ function maybe_cleanup_ccloud_run_resources () {
   then
     if [ ! -t 0 ]
     then
-      logwarn "🧹 not running interactively, keeping them. Delete them with <playground cleanup-cloud-resources --resource ccloud>, or set <playground config cleanup-ccloud-resources-after-run true>"
+      logwarn "🧹 not running interactively, keeping them. Delete them with <playground cloud-resources cleanup --resource ccloud>, or set <playground config cleanup-ccloud-resources-after-run true>"
       return 0
     fi
     local reply

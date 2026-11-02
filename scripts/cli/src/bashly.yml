@@ -753,7 +753,7 @@ commands:
       Fully managed connectors are billed while they exist, and an
       interrupted example never reaches its final 'playground connector
       delete'. Resources of older runs, or created outside a run, are left
-      alone: use 'playground cleanup-cloud-resources --resource ccloud'.
+      alone: use 'playground cloud-resources cleanup --resource ccloud'.
     args:
     - name: mode
       required: false
@@ -1523,7 +1523,7 @@ commands:
   expose: always
   group: Cloud Resources
   help: |-
-    ☁️ What the playground left behind in your cloud accounts, and what it costs
+    ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up
 
     Examples that talk to a real cloud create real resources, and an
     interrupted run leaves them behind. These commands show what is still
@@ -1536,8 +1536,11 @@ commands:
     The same three exist for azure, and costs / costs-history for ccloud
     (Confluent Cloud).
 
-    🧹 Nothing is deleted here. To actually remove the resources, use
-       'playground cleanup-cloud-resources'.
+    🧹 Only one command deletes anything:
+
+      cloud-resources cleanup             delete the leftovers in aws, gcp,
+                                          azure, ccloud and salesforce
+                                          (--resource, --dry-run first)
   commands:
   - name: aws
     help: |
@@ -1548,7 +1551,7 @@ commands:
         costs-history   spend per month over the last year
 
       Uses the credentials and region of your aws CLI. Nothing is deleted
-      here, use 'playground cleanup-cloud-resources' for that.
+      here, use 'playground cloud-resources cleanup' for that.
     commands:
     - name: list
       help: |
@@ -1654,7 +1657,7 @@ commands:
         costs-history   spend per month over the last year
 
       Uses the subscription your az CLI is logged into. Nothing is deleted
-      here, use 'playground cleanup-cloud-resources' for that.
+      here, use 'playground cloud-resources cleanup' for that.
     commands:
     - name: list
       help: |
@@ -1728,7 +1731,7 @@ commands:
 
       Uses the organization your confluent CLI is logged into. Leftovers of
       the examples (connectors, topics) are shown by 'playground status'; to
-      delete them, use 'playground cleanup-cloud-resources'.
+      delete them, use 'playground cloud-resources cleanup'.
     commands:
     - name: costs
       dependencies:
@@ -1819,6 +1822,114 @@ commands:
       examples:
         - playground cloud-resources ccloud costs-history
         - playground cloud-resources ccloud costs-history --sample ccloud_dummy
+
+  - name: cleanup
+    dependencies:
+      confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    environment_variables:
+    - name: AZ_USER 
+      help: Azure user
+    - name: GCP_PROJECT 
+      help: GCP project
+    - name: AWS_ACCESS_KEY_ID 
+      help: AWS access key id
+    - name: AWS_SECRET_ACCESS_KEY 
+      help: AWS secret access key
+    - name: GCP_KEYFILE_CONTENT 
+      help: GCP keyfile (generated with "cat keyfile.json | jq -aRs .")
+    help: |-
+      🧹 Cleanup cloud resources that were created by running examples from the playground
+
+      ❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...
+
+      Examples that talk to a real cloud create real, billable resources, and an
+      interrupted run leaves them behind. This sweeps them, scoped to the ones
+      whose name contains pg and your username (as is, or lowercased without
+      - . _ like the examples write it), across AWS, GCP and Azure. Restrict the
+      scope with --resource, and run it regularly.
+
+      Salesforce: the accounts of the playground are dedicated test orgs, every
+      Lead, Contact and PushTopic of them is deleted.
+
+      Confluent Cloud: connectors whose name contains your username are deleted,
+      with their dlq, success and error topics. All topics of the cluster are
+      deleted only when the cluster was created by the playground for you
+      (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be
+      shared with your team, only the topics recorded as created by your own
+      runs are deleted (local file playground-ccloud-created-topics): topics
+      created with playground topic create / produce, and topics your fully
+      managed source connectors write to, as set in their config (kafka.topic,
+      api1.topics, topic.prefix...).
+
+      In CI, the service accounts created by the playground (pg-<user>-*) and the
+      subjects of the deleted topics (<topic>-key, <topic>-value) are deleted too.
+
+      You are asked to confirm every deletion, unless --force is given. Use
+      --dry-run first to see what would be deleted.
+
+      ☢️ Deletions are permanent. Use a dedicated cloud account for the
+         playground rather than one that also hosts resources you care about.
+    flags:
+    - long: --force
+      help: |-
+        ☢️ do not ask for confirmation
+
+        ❗use with caution
+    - long: --user
+      private: true
+      arg: user
+      help: |-
+        ☢️ force user
+    - long: --resource
+      arg: resource
+      help: |-
+        🛁 resource to cleanup
+
+        If not provided, all of them are cleaned up
+
+        🎓 Tip: you can pass multiple resources by specifying --resource multiple times
+      required: false
+      repeatable: true
+      unique: true
+      default:
+        - aws
+        - gcp
+        - azure
+        - ccloud
+        - salesforce
+      allowed: 
+        - aws
+        - gcp
+        - azure
+        - ccloud
+        - salesforce
+    - long: --dry-run
+      required: false
+      conflicts: [--recorded-topics-only]
+      help: |-
+        🔎 List what would be deleted (the commands), without deleting anything nor asking
+
+        The Confluent Cloud part is skipped when no cluster is known (CLUSTER_NAME, or a previous ccloud run): finding
+        one would create it.
+    - long: --recorded-topics-only
+      private: true
+      conflicts: [--dry-run]
+      help: |-
+        🧹 only delete the Confluent Cloud topics recorded as created by the playground runs (playground-ccloud-created-topics) that are still on the cluster, except the ones a connector of the cluster uses
+
+        Used by run-tests.sh at the end of each CI job.
+    examples:
+    - playground cloud-resources cleanup --dry-run
+    - playground cloud-resources cleanup --resource aws --dry-run
+    - playground cloud-resources cleanup --resource aws --resource gcp
+
+- name: cleanup-cloud-resources
+  private: true
+  help: |-
+    🧹 Deprecated: use 'playground cloud-resources cleanup' (same flags)
+  catch_all:
+    label: flags
+    help: flags of 'playground cloud-resources cleanup'
 
 - name: ccloud-costs
   private: true
@@ -2408,7 +2519,7 @@ commands:
 
       The service accounts and their ACLs are deleted with the connectors
       (playground connector delete, end-of-run cleanup, playground
-      cleanup-cloud-resources).
+      cloud-resources cleanup).
 
       🎓 Tip: to reproduce an authorization error, delete or deny an ACL with
       playground rbac acl delete|create --connector <connector> [--deny],
@@ -3137,7 +3248,7 @@ commands:
     behind the playground's back.
 
     ❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete
-       the cloud resources themselves, see 'playground cleanup-cloud-resources'.
+       the cloud resources themselves, see 'playground cloud-resources cleanup'.
 
 
 - name: open-docs
@@ -3241,107 +3352,6 @@ commands:
     playground cp-changelog --from 8.1.4 --to 8.3.2 --component schema-registry --grep "anyOf|allOf"
     playground cp-changelog --from 7.9.3 --security
     playground cp-changelog --from 8.2.0 --component kafka --json
-
-- name: cleanup-cloud-resources
-  group: Run
-  dependencies:
-    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
-  environment_variables:
-  - name: AZ_USER 
-    help: Azure user
-  - name: GCP_PROJECT 
-    help: GCP project
-  - name: AWS_ACCESS_KEY_ID 
-    help: AWS access key id
-  - name: AWS_SECRET_ACCESS_KEY 
-    help: AWS secret access key
-  - name: GCP_KEYFILE_CONTENT 
-    help: GCP keyfile (generated with "cat keyfile.json | jq -aRs .")
-  help: |-
-    🧹 Cleanup cloud resources that were created by running examples from the playground
-
-    ❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...
-
-    Examples that talk to a real cloud create real, billable resources, and an
-    interrupted run leaves them behind. This sweeps them, scoped to the ones
-    whose name contains pg and your username (as is, or lowercased without
-    - . _ like the examples write it), across AWS, GCP and Azure. Restrict the
-    scope with --resource, and run it regularly.
-
-    Salesforce: the accounts of the playground are dedicated test orgs, every
-    Lead, Contact and PushTopic of them is deleted.
-
-    Confluent Cloud: connectors whose name contains your username are deleted,
-    with their dlq, success and error topics. All topics of the cluster are
-    deleted only when the cluster was created by the playground for you
-    (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be
-    shared with your team, only the topics recorded as created by your own
-    runs are deleted (local file playground-ccloud-created-topics): topics
-    created with playground topic create / produce, and topics your fully
-    managed source connectors write to, as set in their config (kafka.topic,
-    api1.topics, topic.prefix...).
-
-    In CI, the service accounts created by the playground (pg-<user>-*) and the
-    subjects of the deleted topics (<topic>-key, <topic>-value) are deleted too.
-
-    You are asked to confirm every deletion, unless --force is given. Use
-    --dry-run first to see what would be deleted.
-
-    ☢️ Deletions are permanent. Use a dedicated cloud account for the
-       playground rather than one that also hosts resources you care about.
-  flags:
-  - long: --force
-    help: |-
-      ☢️ do not ask for confirmation
-
-      ❗use with caution
-  - long: --user
-    private: true
-    arg: user
-    help: |-
-      ☢️ force user
-  - long: --resource
-    arg: resource
-    help: |-
-      🛁 resource to cleanup
-
-      If not provided, all of them are cleaned up
-
-      🎓 Tip: you can pass multiple resources by specifying --resource multiple times
-    required: false
-    repeatable: true
-    unique: true
-    default:
-      - aws
-      - gcp
-      - azure
-      - ccloud
-      - salesforce
-    allowed: 
-      - aws
-      - gcp
-      - azure
-      - ccloud
-      - salesforce
-  - long: --dry-run
-    required: false
-    conflicts: [--recorded-topics-only]
-    help: |-
-      🔎 List what would be deleted (the commands), without deleting anything nor asking
-
-      The Confluent Cloud part is skipped when no cluster is known (CLUSTER_NAME, or a previous ccloud run): finding
-      one would create it.
-  - long: --recorded-topics-only
-    private: true
-    conflicts: [--dry-run]
-    help: |-
-      🧹 only delete the Confluent Cloud topics recorded as created by the playground runs (playground-ccloud-created-topics) that are still on the cluster, except the ones a connector of the cluster uses
-
-      Used by run-tests.sh at the end of each CI job.
-  examples:
-  - playground cleanup-cloud-resources --dry-run
-  - playground cleanup-cloud-resources --resource aws --dry-run
-  - playground cleanup-cloud-resources --resource aws --resource gcp
 
 - name: repro
   expose: always

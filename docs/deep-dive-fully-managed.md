@@ -30,7 +30,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | deploy it with Terraform | `playground connector create-or-update -c <name> --terraform << EOF … EOF` |
 | run it with a service account and the ACLs of the documentation | `playground run -f <example> --ccloud-service-account`, then `playground rbac acl list\|delete\|create --connector <name>` |
 | what you spent | `playground cloud-resources ccloud costs-history`, `playground cloud-resources ccloud costs` |
-| delete what the playground created | `playground stop` in the example folder (`maybe_delete_ccloud_environment`), `playground cleanup-cloud-resources` |
+| delete what the playground created | `playground stop` in the example folder (`maybe_delete_ccloud_environment`), `playground cloud-resources cleanup` |
 
 ---
 
@@ -163,7 +163,7 @@ playground cloud-resources ccloud costs-history  # total per month since last ye
 playground cloud-resources ccloud costs --start-date 2026-10-01 --end-date 2026-10-23   # one range of dates (one month max) + HTML report
 playground connector delete --connector DatagenSource_$USER
 playground stop                                 # in the example folder: maybe_delete_ccloud_environment
-playground cleanup-cloud-resources              # resources left behind by examples (buckets, functions, connectors…)
+playground cloud-resources cleanup              # resources left behind by examples (buckets, functions, connectors…)
 ```
 
 Gotchas:
@@ -185,7 +185,7 @@ Gotchas:
   `ENVIRONMENT` / `CLUSTER_NAME` you exported. Run it in the `ccloud/fm-*` folder (its `stop.sh` calls
   `maybe_delete_ccloud_environment`).
 - **External resources are the example's job**: buckets, tables, queues created by an `fm-*` example are deleted by
-  its `cleanup_cloud_resources` trap at the end; an interrupted run can leave them: `playground cleanup-cloud-resources`
+  its `cleanup_cloud_resources` trap at the end; an interrupted run can leave them: `playground cloud-resources cleanup`
   (needs the cloud credentials of each provider).
 - The connector is billed while it exists, RUNNING or not: delete it, don't just pause it.
 
