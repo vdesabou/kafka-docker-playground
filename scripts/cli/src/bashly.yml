@@ -1533,7 +1533,8 @@ commands:
       cloud-resources aws costs           spend over a range of dates
       cloud-resources aws costs-history   spend per month over the last year
 
-    The same three exist for azure.
+    The same three exist for azure, and costs / costs-history for ccloud
+    (Confluent Cloud).
 
     🧹 Nothing is deleted here. To actually remove the resources, use
        'playground cleanup-cloud-resources'.
@@ -1718,95 +1719,122 @@ commands:
         - *cloud-costs-output-dir
         - *cloud-costs-no-open
 
+  - name: ccloud
+    help: |
+      ☁️ What Confluent Cloud costs you
+
+        costs           spend over a range of dates, by product
+        costs-history   spend per month over the last year
+
+      Uses the organization your confluent CLI is logged into. Leftovers of
+      the examples (connectors, topics) are shown by 'playground status'; to
+      delete them, use 'playground cleanup-cloud-resources'.
+    commands:
+    - name: costs
+      dependencies:
+        confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+      help: |-
+        💰  Retrieve ccloud costs for a range of dates
+
+        All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
+
+        Cost data can take up to 72 hours to become available.
+
+        Start date can reach a maximum of one year into the past
+
+        One month is the maximum window between start and end dates
+
+        For accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.
+
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day, per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
+      flags:
+        - long: --start-date
+          arg: start_date
+          validate: date_format
+          required: false
+          help: |- 
+            🗓️ start date in format yyyy-mm-dd
+
+            Default is 30 days ago
+        - long: --end-date
+          arg: end_date
+          validate: date_format
+          required: false
+          help: |- 
+            🗓️ end date in format yyyy-mm-dd
+
+              Default is 3 days ago
+        - long: --display-only-total-cost
+          private: true
+          help: |-
+            💰 display only total cost
+        - *raw-output-file
+        - *cloud-costs-output-dir
+        - *cloud-costs-no-open
+        - long: --no-report
+          private: true
+          help: |-
+            🚫 Do not write the HTML report (used by costs-history --detailed)
+        - long: --sample
+          short: -s
+          required: false
+          arg: sample
+          allowed: [ccloud_dummy]
+          help: |-
+            🧪 Sample of tools/cloud-costs/samples: writes the HTML report from the last month of this dummy billing data, without calling Confluent Cloud
+
+            To see what the report looks like before running it on your organization.
+      examples:
+        - playground cloud-resources ccloud costs
+        - playground cloud-resources ccloud costs --start-date 2026-09-01 --end-date 2026-10-01
+        - playground cloud-resources ccloud costs --sample ccloud_dummy
+
+    - name: costs-history
+      dependencies:
+        confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+      help: |-
+        👛  Retrieve ccloud costs for each month since last year
+
+        All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
+
+        By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day, per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
+
+      flags:
+        - long: --detailed
+          help: |-
+            💹 display all details for each month
+        - *cloud-costs-output-dir
+        - *cloud-costs-no-open
+        - long: --sample
+          short: -s
+          required: false
+          arg: sample
+          allowed: [ccloud_dummy]
+          help: |-
+            🧪 Sample of tools/cloud-costs/samples: writes the HTML report from this dummy billing data, without calling Confluent Cloud
+
+            To see what the report looks like before running it on your organization.
+      examples:
+        - playground cloud-resources ccloud costs-history
+        - playground cloud-resources ccloud costs-history --sample ccloud_dummy
+
 - name: ccloud-costs
-  dependencies:
-    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  private: true
   help: |-
-    💰  Retrieve ccloud costs for a range of dates
-    
-    All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
-
-    Cost data can take up to 72 hours to become available.
-
-    Start date can reach a maximum of one year into the past
-
-    One month is the maximum window between start and end dates
-
-    For accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.
-
-    🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day, per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
-  flags:
-    - long: --start-date
-      arg: start_date
-      validate: date_format
-      required: false
-      help: |- 
-        🗓️ start date in format yyyy-mm-dd
-
-        Default is 30 days ago
-    - long: --end-date
-      arg: end_date
-      validate: date_format
-      required: false
-      help: |- 
-        🗓️ end date in format yyyy-mm-dd
-
-          Default is 3 days ago
-    - long: --display-only-total-cost
-      private: true
-      help: |-
-        💰 display only total cost
-    - *raw-output-file
-    - *cloud-costs-output-dir
-    - *cloud-costs-no-open
-    - long: --no-report
-      private: true
-      help: |-
-        🚫 Do not write the HTML report (used by ccloud-costs-history --detailed)
-    - long: --sample
-      short: -s
-      required: false
-      arg: sample
-      allowed: [ccloud_dummy]
-      help: |-
-        🧪 Sample of tools/cloud-costs/samples: writes the HTML report from the last month of this dummy billing data, without calling Confluent Cloud
-
-        To see what the report looks like before running it on your organization.
-  examples:
-    - playground ccloud-costs
-    - playground ccloud-costs --start-date 2026-09-01 --end-date 2026-10-01
-    - playground ccloud-costs --sample ccloud_dummy
+    💰 Deprecated: use 'playground cloud-resources ccloud costs' (same flags)
+  catch_all:
+    label: flags
+    help: flags of 'playground cloud-resources ccloud costs'
 
 - name: ccloud-costs-history
-  dependencies:
-    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  private: true
   help: |-
-    👛  Retrieve ccloud costs for each month since last year
-    
-    All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
-
-    By default it will only display total cost in dollars. Use the --detailed flag to see more information.
-
-    🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day, per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
-
-  flags:
-    - long: --detailed
-      help: |-
-        💹 display all details for each month
-    - *cloud-costs-output-dir
-    - *cloud-costs-no-open
-    - long: --sample
-      short: -s
-      required: false
-      arg: sample
-      allowed: [ccloud_dummy]
-      help: |-
-        🧪 Sample of tools/cloud-costs/samples: writes the HTML report from this dummy billing data, without calling Confluent Cloud
-
-        To see what the report looks like before running it on your organization.
-  examples:
-    - playground ccloud-costs-history
-    - playground ccloud-costs-history --sample ccloud_dummy
+    👛 Deprecated: use 'playground cloud-resources ccloud costs-history' (same flags)
+  catch_all:
+    label: flags
+    help: flags of 'playground cloud-resources ccloud costs-history'
 
 - name: run
   group: Run

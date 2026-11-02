@@ -2368,7 +2368,7 @@ function bootstrap_ccloud_environment () {
   fi
 
   # --no-open: the end of playground run prints the link of the HTML report
-  playground ccloud-costs-history --no-open > /tmp/ccloud-costs-history.txt &
+  playground cloud-resources ccloud costs-history --no-open > /tmp/ccloud-costs-history.txt &
 
   suggest_use_previous_example_ccloud=1
   test_file=$(playground state get run.test_file)

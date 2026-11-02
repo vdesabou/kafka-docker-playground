@@ -29,7 +29,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | the fully managed equivalent of a self-managed config | `playground connector translate`, `playground connector connect-migration-utility discovery\|migrate` |
 | deploy it with Terraform | `playground connector create-or-update -c <name> --terraform << EOF … EOF` |
 | run it with a service account and the ACLs of the documentation | `playground run -f <example> --ccloud-service-account`, then `playground rbac acl list\|delete\|create --connector <name>` |
-| what you spent | `playground ccloud-costs-history`, `playground ccloud-costs` |
+| what you spent | `playground cloud-resources ccloud costs-history`, `playground cloud-resources ccloud costs` |
 | delete what the playground created | `playground stop` in the example folder (`maybe_delete_ccloud_environment`), `playground cleanup-cloud-resources` |
 
 ---
@@ -159,8 +159,8 @@ Gotchas:
 ## 4. Costs and cleanup
 
 ```bash
-playground ccloud-costs-history                 # total per month since last year (--detailed for the lines) + HTML report
-playground ccloud-costs --start-date 2026-10-01 --end-date 2026-10-23   # one range of dates (one month max) + HTML report
+playground cloud-resources ccloud costs-history  # total per month since last year (--detailed for the lines) + HTML report
+playground cloud-resources ccloud costs --start-date 2026-10-01 --end-date 2026-10-23   # one range of dates (one month max) + HTML report
 playground connector delete --connector DatagenSource_$USER
 playground stop                                 # in the example folder: maybe_delete_ccloud_environment
 playground cleanup-cloud-resources              # resources left behind by examples (buckets, functions, connectors…)
@@ -168,11 +168,11 @@ playground cleanup-cloud-resources              # resources left behind by examp
 
 Gotchas:
 
-- **Costs show up after up to 72 hours**: `ccloud-costs` of today is not the bill of today.
-- **`ccloud-costs` writes an HTML report of the range** in the same folder (same flags, `--sample ccloud_dummy`): cost per
+- **Costs show up after up to 72 hours**: `cloud-resources ccloud costs` of today is not the bill of today.
+- **`cloud-resources ccloud costs` writes an HTML report of the range** in the same folder (same flags, `--sample ccloud_dummy`): cost per
   day, per product and environment, the resources still billing, the top resources with the days they were billed, the
   resources of each product, the product x environment matrix and the cost per line type.
-- **`ccloud-costs-history` also writes an HTML report** in `/tmp/playground-cloud-costs` (`--output-dir`, `--no-open`): cost
+- **`cloud-resources ccloud costs-history` also writes an HTML report** in `/tmp/playground-cloud-costs` (`--output-dir`, `--no-open`): cost
   per month and per day, per product, environment and line type, the resources still billing (a cost on each of the last 3
   days with data, with a monthly estimate) and the details of each month. `playground run` of a `ccloud` example prints its
   link at the end (`--sample ccloud_dummy` to try it on dummy data); `cloud-resources aws|azure costs-history` write the
@@ -270,7 +270,7 @@ playground stop                                                              # d
 | "which version of the connector runs in Confluent Cloud?" | `connector-plugin sourcecode -c confluentinc/<Type> --only-show-url` (employees, see the [connector plugins deep dive](/deep-dive-connector-plugin.md)) |
 | "is the fix of connector version X in a cc-connect image yet? what changed in the last images?" | `connector-plugin fm-versions -c confluentinc/<Type> --find-first X` / `--last 50 --with-log` (employees) |
 | "the example uses the wrong cluster" | `playground cleanup-cloud-details`, then export `CLUSTER_NAME`… or `CLUSTER_CLOUD` / `CLUSTER_REGION` |
-| "how much did that test cost?" | `playground ccloud-costs --start-date <day before> --end-date <day after>` (72 h delay), its HTML report for the resources billed that day and the ones still billing; `ccloud-costs-history` for the trend |
+| "how much did that test cost?" | `playground cloud-resources ccloud costs --start-date <day before> --end-date <day after>` (72 h delay), its HTML report for the resources billed that day and the ones still billing; `cloud-resources ccloud costs-history` for the trend |
 
 ---
 
@@ -286,7 +286,7 @@ playground connector status|logs|show-config|delete -c <name>
 playground connector error-recommendations|display-metrics-api|open-ccloud-connector-in-browser -c <name>
 playground connector offsets get|alter|reset -c <name>    # + offsets get-offsets-request-status
 playground topic dlq inspect --connector <name>           # dlq-<lcc id>
-playground ccloud-costs-history [--detailed]
+playground cloud-resources ccloud costs-history [--detailed]
 playground stop                                           # in the ccloud/fm-* folder
 ```
 
@@ -311,4 +311,4 @@ playground stop                                           # in the ccloud/fm-* f
   [connector plugins](/deep-dive-connector-plugin.md)
 - 📖 [Confluent Cloud examples](/how-to-use?id=🌤️-confluent-cloud-examples) in How to Use
 - 🧠 CLI reference: [playground connector](/playground%20connector), [playground cleanup-cloud-details](/playground%20cleanup-cloud-details),
-  [playground ccloud-costs-history](/playground%20ccloud-costs-history)
+  [playground cloud-resources ccloud costs-history](/playground%20cloud-resources%20ccloud%20costs-history)

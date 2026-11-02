@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HTML report of playground ccloud-costs-history, cloud-resources aws costs-history and cloud-resources azure costs-history:
+HTML report of playground cloud-resources ccloud|aws|azure costs-history:
 cost per month (and per day for ccloud), per product / service, the month x product matrix, the top resources (the ones
 still billing flagged), per environment and line type (ccloud) or resource group (azure), and the details of each month.
 
@@ -14,7 +14,7 @@ still billing flagged), per environment and line type (ccloud) or resource group
 
 A month without file, or with a file that cannot be read, is shown as "no data" (the query failed).
 
---range-file (ccloud): report of playground ccloud-costs, one range of dates instead of the months of --data-dir.
+--range-file (ccloud): report of playground cloud-resources ccloud costs, one range of dates instead of the months of --data-dir.
 """
 
 import argparse
@@ -711,7 +711,7 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
         notes.append(f"Only resources tagged cflt_managed_id={user} (the tag the playground puts on what it creates), unblended cost in USD."
                      if cloud == "aws" else
                      f"Only resources tagged cflt_managed_id={user} and cflt_managed_by=user (the tags the playground puts on what it creates).")
-    cmd = "playground ccloud-costs" if cloud == "ccloud" else f"playground cloud-resources {cloud} costs"
+    cmd = f"playground cloud-resources {cloud} costs"
     notes.append(f"Text version of one period: {cmd} --start-date <yyyy-mm-dd> --end-date <yyyy-mm-dd>.")
     body.append(rh.card("💡 Notes", "<ul style='margin-left:18px;font-size:.86rem'>" + "".join(f"<li>{e(n)}</li>" for n in notes) + "</ul>"))
 
@@ -723,11 +723,11 @@ def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict
     css = ("<style>.kpi-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.kpi-value{font-size:1.4rem;white-space:nowrap}"
            "td .heat{display:block;margin:-7px -11px;padding:7px 11px}</style>")
     return rh.page(f"{lab['name']} costs", f"💰 {e(lab['name'])} costs, last 12 months", meta, css + "".join(body),
-                   f"playground {'ccloud-costs-history' if cloud == 'ccloud' else 'cloud-resources ' + cloud + ' costs-history'}")
+                   f"playground cloud-resources {cloud} costs-history")
 
 
 def build_range(user: str, period: dict) -> str:
-    """ccloud, one range of dates (playground ccloud-costs): per day, product, environment, resource and line type"""
+    """ccloud, one range of dates (playground cloud-resources ccloud costs): per day, product, environment, resource and line type"""
     lab = LABELS["ccloud"]
     records = period["records"]
     total = sum(r["amount"] for r in records)
@@ -840,14 +840,14 @@ def build_range(user: str, period: dict) -> str:
     notes = [DELAY_NOTE["ccloud"],
              "Costs of the whole organization the confluent CLI is logged into (confluent billing cost list), amounts after discounts.",
              "The end date is excluded. One month is the maximum window, the start date can go back one year.",
-             "Cost per month over the last year: playground ccloud-costs-history."]
+             "Cost per month over the last year: playground cloud-resources ccloud costs-history."]
     body.append(rh.card("💡 Notes", "<ul style='margin-left:18px;font-size:.86rem'>" + "".join(f"<li>{e(n)}</li>" for n in notes) + "</ul>"))
 
     css = ("<style>.kpi-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.kpi-value{font-size:1.4rem;white-space:nowrap}"
            "td .heat{display:block;margin:-7px -11px;padding:7px 11px}</style>")
     return rh.page(f"{lab['name']} costs", f"💰 {e(lab['name'])} costs, {e(range_label(period))}",
                    [f"☁️ {e(lab['name'])}", f"🗓️ {e(range_label(period))}"], css + "".join(body),
-                   f"playground ccloud-costs --start-date {period['start']} --end-date {period['end']}")
+                   f"playground cloud-resources ccloud costs --start-date {period['start']} --end-date {period['end']}")
 
 
 def main() -> int:
