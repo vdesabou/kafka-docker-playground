@@ -1,7 +1,7 @@
 # 📊 Reports
 
 The playground does not only start environments: it also tells you **what is wrong** with them. The `playground analyze`
-commands, the connector diagnose, diff and benchmark, the dead letter queue inspector, the CI result, the SMT tester and the cloud
+commands, the connector diagnose, diff and benchmark, the dead letter queue inspector, the CI result, the SMT tester, the connector CVE scan and the cloud
 costs history print a short digest in the terminal (made to be read by you or by
 [Claude Code](/claude-code.md)) and write a **self-contained HTML report** you can share with a colleague or a customer.
 
@@ -113,6 +113,14 @@ report and click around: this is what you get on your own data.
       <h3><a href="#/playground%20connector%20smt%20test">🔀 SMT test</a></h3>
       <p>What does this transform chain do to a record, and why does it fail? Runs the record through each transform, step by step, and compares Confluent Platform versions.</p>
       <p><code>playground connector smt test --connector filestream-sink --cp-version 7.9.0 --cp-version 8.3.2</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/cve-scan.html" target="_blank" rel="noopener"><img src="images/reports/cve-scan.png" alt="🛡️ Connector CVE scan report" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="#/playground%20connector-plugin%20cve-scan">🛡️ Connector CVE scan</a></h3>
+      <p>The customer's scanner flags CVEs in a connector version: which are real in its jars, and which version fixes them? Scans the jars with grype, compares with another version (fixed ✅, still there ⚠️, new 🆕) and points to the release notes that mention each fixed CVE. What a scanner sees, not an official Confluent statement.</p>
+      <p><code>playground connector-plugin cve-scan -c confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9</code></p>
     </div>
   </div>
   <div class="report-card">
