@@ -99,6 +99,10 @@ lab_expect_equals "$(grep -o "Drag over 📈 Occurrences over time to select a p
 # the findings keep the figures of the whole report, and only say how much of each of them is in the selection
 lab_expect_equals "$(grep -o 'data-recs="[0-9]' "$report_dir/lab-connect-$$-log-report.html" | head -1 | cut -c1-11)" 'data-recs="' "findings wired to the records they were built from"
 lab_expect_contains "🧭 Summary:"
+# the period the logs cover (first and last timestamped line of the files, not only the records), in the terminal
+# summary and as the first tile of the report
+lab_expect_contains "🕐 Period covered:"
+lab_expect_equals "$(grep -o '🕐 Period covered' "$report_dir/lab-connect-$$-log-report.html" | head -1)" "🕐 Period covered" "period covered tile in the HTML report"
 lab_expect_contains "🧠 Known causes"
 lab_expect_contains "🧨 A connector task was killed"
 lab_run playground analyze logs -f "$saved_log.gz" --connector bad-sink --output-dir "$report_dir"
@@ -112,6 +116,7 @@ lab_expect_contains "connector.class = io.confluent.connect.oracle.xstream.cdc.O
 lab_run playground analyze logs -f "$saved_log.gz" --json --json-sections summary,known_causes,files
 lab_expect_exit 0
 lab_expect_contains '"files_with_findings": 1'
+lab_expect_contains '"log_duration_seconds"'
 lab_expect_contains '"title": "🧲 Unknown magic byte"'
 lab_expect_contains '"caused_by": "IllegalArgumentException: Unknown magic byte!"'
 lab_expect_contains '"connector": "bad-sink"'
