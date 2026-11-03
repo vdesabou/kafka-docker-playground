@@ -7,21 +7,11 @@ get_connect_url_and_security
 discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
 if [ ! -d "$discovery_output_dir" ]
 then
-	logerror "❌ $discovery_output_dir does not exist, please run playground connect-migration-utility discovery first !"
+	logerror "❌ $discovery_output_dir does not exist, please run playground connector connect-migration-utility discovery first !"
 	exit 1
 fi
 
 log "🪄 Migrate discovered local connectors in $discovery_output_dir as fully managed connectors"
-
-get_environment_used
-if [ "$migration_mode" == "stop_create_latest_offset" ] ||  [ "$migration_mode" == "create_latest_offset" ]
-then
-	if [ "$environment" != "ccloud" ]
-	then
-		logerror "❌ --migration-mode $migration_mode is only supported with --environment ccloud"
-		exit 1
-	fi
-fi
 
 log "🔌 bootstrapping ccloud environment"
 bootstrap_ccloud_environment "" "" "true"
@@ -41,20 +31,39 @@ do
     then
         for sensitive_prop in "${sensitive_property[@]}"
         do
-            json_key=$(echo "$sensitive_prop" | cut -d'=' -f1)
-            shell_var_name=$(echo "$sensitive_prop" | cut -d'=' -f2)
-            actual_secret_value=$(eval echo "$shell_var_name")
+            # key=value: the value is everything after the first '=' (base64 secrets end with '='), and a value
+            # written $NAME or ${NAME} is the value of that variable (never evaluated as shell code)
+            json_key="${sensitive_prop%%=*}"
+            actual_secret_value="${sensitive_prop#*=}"
+            if [[ "$sensitive_prop" != *=* ]] || [ -z "$json_key" ]
+            then
+                logerror "❌ --sensitive-property should be key=value (got $json_key)"
+                exit 1
+            fi
+            if [[ "$actual_secret_value" =~ ^\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?$ ]]
+            then
+                var_name="${BASH_REMATCH[1]}"
+                actual_secret_value="${!var_name}"
+                if [ -z "$actual_secret_value" ]
+                then
+                    logwarn "⚠️ --sensitive-property $json_key: variable $var_name is empty"
+                fi
+            fi
             secret_values+=("$actual_secret_value")
-            escaped_secret_value=$(echo "$actual_secret_value" | sed 's/[\/&]/\\&/g')
-            escaped_key=$(echo "$json_key" | sed 's/[\/&]/\\&/g')
 
-            if [ -f "$json_file" ]; then
-                # Use a temporary file for sed replacement
-                temp_file=$(mktemp)
-                sed -E "s@(\"$escaped_key\":[[:space:]]*)\"[^\"]*\"@\1\"$escaped_secret_value\"@" "$json_file" > "$temp_file"
-                cp "$temp_file" "$json_file"
-                rm -f "$temp_file"
-                log "🔐 Updated $json_key in $(basename "$json_file")"
+            if [ -f "$json_file" ]
+            then
+                # jq: any character of the value is kept as is (quotes, backslashes, @, &...)
+                if jq -e --arg k "$json_key" '[.. | objects | select(has($k))] | length > 0' "$json_file" > /dev/null 2>&1
+                then
+                    temp_file=$(mktemp)
+                    jq --arg k "$json_key" --arg v "$actual_secret_value" 'walk(if type == "object" and has($k) then .[$k] = $v else . end)' "$json_file" > "$temp_file"
+                    cat "$temp_file" > "$json_file"
+                    rm -f "$temp_file"
+                    log "🔐 Updated $json_key in $(basename "$json_file")"
+                else
+                    logwarn "⚠️ $json_key is not in $(basename "$json_file"), --sensitive-property ignored for it"
+                fi
             fi
         done
     fi
@@ -71,7 +80,7 @@ do
 done
 
 set +e
-docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > "$output_log" 2>&1
+docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/migrate_connector_script.py --worker-urls '$connect_url' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > "$output_log" 2>&1
 ret=$?
 set -e
 if [ $ret -ne 0 ]

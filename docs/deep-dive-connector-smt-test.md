@@ -148,8 +148,9 @@ Gotchas:
 - The output stops at the first error or drop: the steps after it are not run, like in Connect.
 - `--json` prints the harness result as JSON on stdout (`label`, `kafka_version`, `connector_type`, `steps[]` with
   `alias`, `type`, `config`, `predicate`, `predicate_result`, `negate`, `skipped`, `dropped`, `error`, `stack_trace`,
-  `record`), and no report line. To assert the final record in a script (exit 1 when a transform fails, a drop is not
-  an error):
+  `record`), and no report line: the logs go to stderr. With several `--cp-version`, it is a JSON array with one result
+  per version (a version that produced nothing is `{"label": "CP <version>", "error": "no result"}`). To assert the
+  final record in a script (exit 1 when a transform fails, a drop is not an error):
 
   ```bash
   playground connector smt test --json --config @transforms.json --record @record.json \

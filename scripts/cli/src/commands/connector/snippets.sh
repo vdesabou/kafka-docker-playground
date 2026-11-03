@@ -9,6 +9,15 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 
+# $1: schema registry host (default schema-registry)
+function plaintext_schema_registry_snippet () {
+    local sr_host="${1:-schema-registry}"
+    echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file
+    echo -e "    \"key.converter.schema.registry.url\": \"http://$sr_host:8081\"," >> $converter_file
+    echo -e "    \"value.converter\": \"$converter_class\"," >> $converter_file
+    echo -e "    \"value.converter.schema.registry.url\": \"http://$sr_host:8081\"," >> $converter_file
+}
+
 if [[ ! -n "$converter" ]] && [[ ! -n "$dlq" ]]
 then
     logerror "❌ neither --converter or --dlq were provided"
@@ -75,10 +84,7 @@ then
 
             case "${environment}" in
             plaintext|sasl-plain|ldap-authorizer-sasl-plain|ldap-sasl-plain|sasl-scram|kerberos|ssl_kerberos)
-                echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file
-                echo -e "    \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $converter_file
-                echo -e "    \"value.converter\": \"$converter_class\"," >> $converter_file
-                echo -e "    \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $converter_file
+                plaintext_schema_registry_snippet
             ;;
             ccloud)
                 if [ -f $root_folder/.ccloud/env.delta ]
@@ -125,8 +131,20 @@ then
                 echo -e "    \"value.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
                 echo -e "    \"value.converter.basic.auth.user.info\": \"connectorSA:connectorSA\"," >> $converter_file
                 ;;
+            mdc*)
+                # one schema registry per cluster: schema-registry-us / schema-registry-europe
+                sr_cluster="${PLAYGROUND_CLUSTER:-$(playground state get run.cluster 2> /dev/null)}"
+                if [[ "$sr_cluster" != "europe" ]]
+                then
+                    [[ "$sr_cluster" != "us" ]] && log "🌍 $environment: showing the schema registry of cluster us (set PLAYGROUND_CLUSTER=europe for the other one)"
+                    sr_cluster="us"
+                fi
+                plaintext_schema_registry_snippet "schema-registry-$sr_cluster"
+            ;;
             *)
-                return
+                # cfk...: the plaintext schema registry url ('connector create-or-update' rewrites it on cfk)
+                logwarn "⚠️ no specific converter snippet for environment $environment, showing the plaintext one"
+                plaintext_schema_registry_snippet
             ;;
             esac
         ;;

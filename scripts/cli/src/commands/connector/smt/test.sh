@@ -12,6 +12,17 @@ eval "cp_versions=(${args[--cp-version]:-})"
 eval "smt_plugins=(${args[--smt-plugin]:-})"
 eval "smt_jars=(${args[--smt-jar]:-})"
 
+# --json: the json document is the only thing on stdout (fd 3), the logs go to stderr and the harness output is dropped
+# the harness writes to fd 4, a copy of the descriptor: '> /dev/stdout' would reopen the file with O_TRUNC on linux
+# and wipe what was printed before when stdout is a file ('smt test ... > out.log', the deep dive lab)
+if [[ -n "$json" ]]
+then
+    exec 3>&1 1>&2
+    exec 4>/dev/null
+else
+    exec 4>&1
+fi
+
 # docker desktop does not share every temporary folder: work under $HOME
 mkdir -p "$SMT_TESTER_CACHE"
 work=$(mktemp -d "$SMT_TESTER_CACHE/run-XXXXXX")
@@ -124,7 +135,6 @@ then
 fi
 
 harness_args=(--type "$type")
-[[ -n "$json" ]] && harness_args+=(--json)
 
 # the files keep their mode and owner when copied into a container: a --config @file or --record @file made by
 # mktemp (0600) could not be read by the user of the image (AccessDeniedException on /tmp/smt-tester/config.json)
@@ -158,7 +168,7 @@ function run_in_worker () {
     local priority="${container_plugins#,}"
     local stderr_target="/dev/null"
     [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
-    playground --output-level ERROR container exec --container "$smt_connect_container" --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' $smt_connect_container)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target"
+    playground --output-level ERROR container exec --container "$smt_connect_container" --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' $smt_connect_container)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target" >&4
     local ret=$?
     playground --output-level ERROR container cp --source "$smt_connect_container":/tmp/smt-tester/result.json --destination "$work/result-worker.json" > /dev/null 2>&1
     return $ret
@@ -186,11 +196,16 @@ function run_in_image () {
         plugin_path="$plugin_path,/smt-plugins/$(basename "$dir")"
     done
     plugin_path="${plugin_path#,}"
-    local stderr_target="/dev/null"
-    [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
+    # fd 5: stderr with --verbose, /dev/null otherwise (a copy of the descriptor, never the /dev/stderr path)
+    if [[ -n "$verbose" ]]
+    then
+        exec 5>&2
+    else
+        exec 5>/dev/null
+    fi
     docker run --rm ${network:+--network "$network"} -e "SMT_TESTER_VERBOSE=${verbose}" -v "$classes:/smt-tester" -v "$work:/smt-work" "${mounts[@]}" --entrypoint java "$image" \
         -cp "/smt-tester:/etc/kafka-connect/jars/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*:/usr/share/java/confluent-common/*:/usr/share/java/kafka-serde-tools/*:/usr/share/java/monitoring-interceptors/*" \
-        SmtTester --config /smt-work/config.json --record /smt-work/record.json --worker-config /smt-work/worker.properties --plugin-path "$plugin_path" --priority-plugin-path "$plugin_path" --label "CP $version" --json-out "/smt-work/result-$version.json" "${harness_args[@]}" 2> $stderr_target
+        SmtTester --config /smt-work/config.json --record /smt-work/record.json --worker-config /smt-work/worker.properties --plugin-path "$plugin_path" --priority-plugin-path "$plugin_path" --label "CP $version" --json-out "/smt-work/result-$version.json" "${harness_args[@]}" 2>&5 >&4
 }
 
 # html report of the run(s), opened in the browser in an interactive terminal
@@ -223,11 +238,33 @@ function smt_report () {
     fi
 }
 
+# --json: one result as a json object, or an array of them with several --cp-version (a version without a
+# result file is {"label": "CP <version>", "error": "no result"})
+function print_json_results () {
+    local file label
+    {
+        for file in "$@"
+        do
+            if [ -f "$file" ]
+            then
+                cat "$file"
+            else
+                label=$(basename "$file" .json)
+                label="${label#result-}"
+                [ "$label" == "worker" ] || label="CP $label"
+                jq -n --arg l "$label" '{label: $l, error: "no result"}'
+            fi
+        done
+    } | if [ $# -gt 1 ]; then jq -s .; else jq .; fi >&3
+}
+
 ret=0
 if [ ${#cp_versions[@]} -eq 0 ]
 then
     run_in_worker || ret=$?
+    [ -f "$work/result-worker.json" ] || ret=1
     smt_report "$work/result-worker.json"
+    [[ -n "$json" ]] && print_json_results "$work/result-worker.json"
     exit $ret
 fi
 
@@ -260,7 +297,16 @@ then
             echo "   CP $version: no result"
         fi
     done
-    if [ "$(for v in "${cp_versions[@]}"; do [ -f "$work/result-$v.json" ] && jq -S -c '[.steps[] | {alias, error: (.error // null | if . then (. | split(":")[0]) else null end), dropped, record: (.record // null | if . then {topic, key: (.key | try fromjson catch .), value: (.value | try fromjson catch .), headers} else null end)}]' "$work/result-$v.json"; done | sort -u | wc -l | tr -d ' ')" -le 1 ]
+    missing_results=0
+    for version in "${cp_versions[@]}"
+    do
+        [ -f "$work/result-$version.json" ] || missing_results=1
+    done
+    if [ $missing_results -eq 1 ]
+    then
+        # a version without a result cannot be compared: never report it as the same result
+        logwarn "⚠️ the CP versions give different results (at least one version has no result)"
+    elif [ "$(for v in "${cp_versions[@]}"; do [ -f "$work/result-$v.json" ] && jq -S -c '[.steps[] | {alias, error: (.error // null | if . then (. | split(":")[0]) else null end), dropped, record: (.record // null | if . then {topic, key: (.key | try fromjson catch .), value: (.value | try fromjson catch .), headers} else null end)}]' "$work/result-$v.json"; done | sort -u | wc -l | tr -d ' ')" -le 1 ]
     then
         log "✅ same result with all the CP versions"
     else
@@ -271,6 +317,8 @@ report_files=()
 for version in "${cp_versions[@]}"
 do
     report_files+=("$work/result-$version.json")
+    [ -f "$work/result-$version.json" ] || ret=1
 done
 smt_report "${report_files[@]}"
+[[ -n "$json" ]] && print_json_results "${report_files[@]}"
 exit $ret

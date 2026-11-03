@@ -56,12 +56,8 @@ previous_state=""
 function wait_for_created_connector () {
     if [ $is_ccloud_connector -eq 1 ]
     then
-        if [[ -n "$initial_state" ]] && [ "$initial_state" != "RUNNING" ]
-        then
-            playground connector wait --connector "$connector" --state "$initial_state" --max-wait "${max_wait:-600}" || exit 1
-        else
-            wait_for_ccloud_connector_up "$connector" "${max_wait:-600}"
-        fi
+        # --initial-state is refused for Confluent Cloud connectors (checked above)
+        wait_for_ccloud_connector_up "$connector" "${max_wait:-600}"
         return
     fi
 
@@ -350,6 +346,20 @@ then
     exit 1
 fi
 
+# --validate before the service account and its ACLs are created: an invalid config leaves nothing behind
+if [[ -n "$validate" ]]
+then
+    log "✅ --validate is set"
+    set +e
+    validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
+    ret=$?
+    set -e
+    if [ $ret -eq 1 ]
+    then
+        exit 1
+    fi
+fi
+
 # playground run --ccloud-service-account: kafka.auth.mode=SERVICE_ACCOUNT, with a service account
 # and the ACLs of the documentation
 if [ "$PG_CCLOUD_SERVICE_ACCOUNT" == "true" ] && [ $is_ccloud_connector -eq 1 ]
@@ -361,19 +371,6 @@ then
         get_ccloud_connect
         ccloud_connector_service_account_setup "$connector" "$json_content" "$is_create" || exit 1
         printf '%s\n' "$json_content" > $json_file
-    fi
-fi
-
-if [[ -n "$validate" ]]
-then
-    log "✅ --validate is set"
-    set +e
-    validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
-    ret=$?
-    set -e
-    if [ $ret -eq 1 ]
-    then
-        exit 1
     fi
 fi
 
@@ -397,6 +394,12 @@ then
 
     log "✅ Connector $connector successfully deployed using Terraform"
     log "📂 Terraform state saved in: $terraform_dir"
+
+    # read by 'connector show-config', and by wait_for_ccloud_connector_up: the .terraform marker tells it that terraform
+    # owns the connector (it only polls the status, it never re-applies it through the REST API)
+    rm -f "/tmp/config-$connector"
+    (umask 077 && echo "$json_content" > "/tmp/config-$connector")
+    touch "/tmp/config-$connector.terraform"
 
     # Show connector status
     if [ -z "$GITHUB_RUN_NUMBER" ]
@@ -638,7 +641,7 @@ else
 fi
 
 # read by 'connector show-config' and the restart helpers: it can hold passwords, only readable by you
-rm -f "/tmp/config-$connector"
+rm -f "/tmp/config-$connector" "/tmp/config-$connector.terraform"
 (umask 077 && echo "$json_content" > "/tmp/config-$connector")
 
 if [ -z "$GITHUB_RUN_NUMBER" ]

@@ -11070,9 +11070,9 @@ subcommands:
       argument: ''
       description: "\U0001F335 Print the final config (with the automatic configuration
         added for the environment, the CFK rewrites)\nand the request that would be
-        sent, without deploying anything\n\nWith --ccloud-service-account, the service
-        account and its ACLs are not created.\n\nConflicts with: --wait, --wait-for-zero-lag,
-        --terraform, --level"
+        sent, without deploying anything\n\nWith PG_CCLOUD_SERVICE_ACCOUNT=true (playground
+        run --ccloud-service-account), the service account and its ACLs are not created.\n\nConflicts
+        with: --wait, --wait-for-zero-lag, --terraform, --level"
     - names:
       - "--terraform"
       argument: ''
@@ -11095,7 +11095,10 @@ subcommands:
       config in text editor set with playground config editor <editor> (default is
       code). Once file is saved, the new configuration is updated.\n\nThe quickest
       loop to try a configuration change: edit, save, close, and\nthe connector is
-      updated. Nothing is applied if you close the file\nwithout saving."
+      updated. Nothing is applied if you close the file\nwithout saving a change.\n\n☁️
+      Fully managed: the config comes from the last 'connector create-or-update'\nof
+      this machine. When only the REST API has it (secrets masked as ****),\nthe update
+      is refused, so that the masks never replace the real values."
     usage: playground connector update [OPTIONS]
     options:
     - names:

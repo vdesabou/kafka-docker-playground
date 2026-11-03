@@ -20447,7 +20447,7 @@ playground_connector_create_or_update_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--dry-run")"
-    printf "    🌵 Print the final config (with the automatic configuration added for the\n    environment, the CFK rewrites)\n    and the request that would be sent, without deploying anything\n    \n    With --ccloud-service-account, the service account and its ACLs are not\n    created.\n"
+    printf "    🌵 Print the final config (with the automatic configuration added for the\n    environment, the CFK rewrites)\n    and the request that would be sent, without deploying anything\n    \n    With PG_CCLOUD_SERVICE_ACCOUNT=true (playground run\n    --ccloud-service-account), the service account and its ACLs are not created.\n"
     printf "    %s\n" "Conflicts: --wait, --wait-for-zero-lag, --terraform, --level"
     echo
 
@@ -20511,7 +20511,7 @@ fi
 playground_connector_update_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector update\n\n"
-    printf "  🛠️ Update connector configuration by opening current connector config in text\n  editor set with playground config editor <editor> (default is code). Once file\n  is saved, the new configuration is updated.\n  \n  The quickest loop to try a configuration change: edit, save, close, and\n  the connector is updated. Nothing is applied if you close the file\n  without saving.\n\n"
+    printf "  🛠️ Update connector configuration by opening current connector config in text\n  editor set with playground config editor <editor> (default is code). Once file\n  is saved, the new configuration is updated.\n  \n  The quickest loop to try a configuration change: edit, save, close, and\n  the connector is updated. Nothing is applied if you close the file\n  without saving a change.\n  \n  ☁️ Fully managed: the config comes from the last 'connector create-or-update'\n  of this machine. When only the REST API has it (secrets masked as ****),\n  the update is refused, so that the masks never replace the real values.\n\n"
   else
     printf "playground connector update - 🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n\n"
   fi
@@ -29214,7 +29214,7 @@ function smt_tester_hub_plugin () {
 }
 
 # config of a running connector as a JSON object in $curl_output (REST API /config endpoint, or the Connector CR on cfk)
-# returns 1 if it could not be read
+# returns 1 if it could not be read (the REST helpers log the error: called in an 'if', set -e does not stop on it)
 function get_connector_config_json () {
   local connector="$1" connector_type env_used
   connector_type=$(playground state get run.connector_type)
@@ -29223,14 +29223,14 @@ function get_connector_config_json () {
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
     get_ccloud_connect
-    handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
+    handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" || return 1
   elif [[ "$env_used" == cfk* ]]
   then
     # connector.class and tasks.max are not in spec.configs: they are spec.class and spec.taskMax of the CR
     curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c 'select(.spec != null) | (.spec.configs // {}) + {"connector.class": .spec.class, "tasks.max": (.spec.taskMax // 1 | tostring)}' 2>/dev/null)
   else
     get_connect_url_and_security
-    handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
+    handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\"" || return 1
   fi
   if [ -z "$curl_output" ] || ! echo "$curl_output" | jq -e 'type == "object"' > /dev/null 2>&1
   then
@@ -34957,7 +34957,13 @@ function create_ccloud_connector() {
 
 function validate_ccloud_connector_up() {
   connector="$1"
-  if [ -f "/tmp/config-$connector" ]
+  if [ -f "/tmp/config-$connector.terraform" ]
+  then
+    # deployed with 'create-or-update --terraform': terraform owns it, never re-applied through the REST API, and a
+    # terraform apply on every retry (each 5 seconds) is too slow: only poll the status below
+    echo "⏳"
+    set +e
+  elif [ -f "/tmp/config-$connector" ]
   then
     set +e
     PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard --no-wait < "/tmp/config-$connector" > /tmp/output.log 2>&1
@@ -74209,16 +74215,16 @@ playground_connector_convert_command() {
             echo "EOF"
         else
             # the values to fill in become variables (AWS_SECRET_ACCESS_KEY for aws.secret.access.key), so the heredoc is
-            # not quoted: every other $ is escaped
+            # not quoted: every other \, ` and $ is escaped, so that bash gives back the exact json
             echo "# values to fill in before running it:"
             echo "$placeholders" | awk -F'|' '{ v = toupper($1); gsub(/[^A-Z0-9]/, "_", v); printf "#   export %s=...   # %s: %s\n", v, $1, $2 }'
             echo "playground connector create-or-update --connector $name << EOF"
             echo "$config" | jq --arg keys "$(echo "$placeholders" | cut -d'|' -f1)" '
                 ($keys | split("\n") | map(select(length > 0))) as $to_fill
                 | with_entries(
-                    if (.key as $k | $to_fill | index($k)) then .value = "${\(.key | ascii_upcase | gsub("[^A-Z0-9]"; "_"))}"
-                    else .value |= gsub("\\$"; "\\$") end)' \
-                | sed -E 's/"\$\{([A-Z0-9_]+)\}"/"${\1}"/; s/\\\\\$/\\$/g'
+                    if (.key as $k | $to_fill | index($k)) then .value = "@@PG_FILL@@\(.key | ascii_upcase | gsub("[^A-Z0-9]"; "_"))@@"
+                    else . end)' \
+                | sed -E 's/\\/\\\\/g; s/`/\\`/g; s/\$/\\$/g; s/"@@PG_FILL@@([A-Z0-9_]+)@@"/"${\1}"/g'
             echo "EOF"
         fi
         ;;
@@ -74559,6 +74565,17 @@ playground_connector_smt_test_command() {
   eval "smt_plugins=(${args[--smt-plugin]:-})"
   eval "smt_jars=(${args[--smt-jar]:-})"
 
+  # --json: the json document is the only thing on stdout (fd 3), the logs go to stderr and the harness output is dropped
+  # the harness writes to fd 4, a copy of the descriptor: '> /dev/stdout' would reopen the file with O_TRUNC on linux
+  # and wipe what was printed before when stdout is a file ('smt test ... > out.log', the deep dive lab)
+  if [[ -n "$json" ]]
+  then
+      exec 3>&1 1>&2
+      exec 4>/dev/null
+  else
+      exec 4>&1
+  fi
+
   # docker desktop does not share every temporary folder: work under $HOME
   mkdir -p "$SMT_TESTER_CACHE"
   work=$(mktemp -d "$SMT_TESTER_CACHE/run-XXXXXX")
@@ -74671,7 +74688,6 @@ playground_connector_smt_test_command() {
   fi
 
   harness_args=(--type "$type")
-  [[ -n "$json" ]] && harness_args+=(--json)
 
   # the files keep their mode and owner when copied into a container: a --config @file or --record @file made by
   # mktemp (0600) could not be read by the user of the image (AccessDeniedException on /tmp/smt-tester/config.json)
@@ -74705,7 +74721,7 @@ playground_connector_smt_test_command() {
       local priority="${container_plugins#,}"
       local stderr_target="/dev/null"
       [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
-      playground --output-level ERROR container exec --container "$smt_connect_container" --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' $smt_connect_container)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target"
+      playground --output-level ERROR container exec --container "$smt_connect_container" --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' $smt_connect_container)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target" >&4
       local ret=$?
       playground --output-level ERROR container cp --source "$smt_connect_container":/tmp/smt-tester/result.json --destination "$work/result-worker.json" > /dev/null 2>&1
       return $ret
@@ -74733,11 +74749,16 @@ playground_connector_smt_test_command() {
           plugin_path="$plugin_path,/smt-plugins/$(basename "$dir")"
       done
       plugin_path="${plugin_path#,}"
-      local stderr_target="/dev/null"
-      [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
+      # fd 5: stderr with --verbose, /dev/null otherwise (a copy of the descriptor, never the /dev/stderr path)
+      if [[ -n "$verbose" ]]
+      then
+          exec 5>&2
+      else
+          exec 5>/dev/null
+      fi
       docker run --rm ${network:+--network "$network"} -e "SMT_TESTER_VERBOSE=${verbose}" -v "$classes:/smt-tester" -v "$work:/smt-work" "${mounts[@]}" --entrypoint java "$image" \
           -cp "/smt-tester:/etc/kafka-connect/jars/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*:/usr/share/java/confluent-common/*:/usr/share/java/kafka-serde-tools/*:/usr/share/java/monitoring-interceptors/*" \
-          SmtTester --config /smt-work/config.json --record /smt-work/record.json --worker-config /smt-work/worker.properties --plugin-path "$plugin_path" --priority-plugin-path "$plugin_path" --label "CP $version" --json-out "/smt-work/result-$version.json" "${harness_args[@]}" 2> $stderr_target
+          SmtTester --config /smt-work/config.json --record /smt-work/record.json --worker-config /smt-work/worker.properties --plugin-path "$plugin_path" --priority-plugin-path "$plugin_path" --label "CP $version" --json-out "/smt-work/result-$version.json" "${harness_args[@]}" 2>&5 >&4
   }
 
   # html report of the run(s), opened in the browser in an interactive terminal
@@ -74770,11 +74791,33 @@ playground_connector_smt_test_command() {
       fi
   }
 
+  # --json: one result as a json object, or an array of them with several --cp-version (a version without a
+  # result file is {"label": "CP <version>", "error": "no result"})
+  function print_json_results () {
+      local file label
+      {
+          for file in "$@"
+          do
+              if [ -f "$file" ]
+              then
+                  cat "$file"
+              else
+                  label=$(basename "$file" .json)
+                  label="${label#result-}"
+                  [ "$label" == "worker" ] || label="CP $label"
+                  jq -n --arg l "$label" '{label: $l, error: "no result"}'
+              fi
+          done
+      } | if [ $# -gt 1 ]; then jq -s .; else jq .; fi >&3
+  }
+
   ret=0
   if [ ${#cp_versions[@]} -eq 0 ]
   then
       run_in_worker || ret=$?
+      [ -f "$work/result-worker.json" ] || ret=1
       smt_report "$work/result-worker.json"
+      [[ -n "$json" ]] && print_json_results "$work/result-worker.json"
       exit $ret
   fi
 
@@ -74807,7 +74850,16 @@ playground_connector_smt_test_command() {
               echo "   CP $version: no result"
           fi
       done
-      if [ "$(for v in "${cp_versions[@]}"; do [ -f "$work/result-$v.json" ] && jq -S -c '[.steps[] | {alias, error: (.error // null | if . then (. | split(":")[0]) else null end), dropped, record: (.record // null | if . then {topic, key: (.key | try fromjson catch .), value: (.value | try fromjson catch .), headers} else null end)}]' "$work/result-$v.json"; done | sort -u | wc -l | tr -d ' ')" -le 1 ]
+      missing_results=0
+      for version in "${cp_versions[@]}"
+      do
+          [ -f "$work/result-$version.json" ] || missing_results=1
+      done
+      if [ $missing_results -eq 1 ]
+      then
+          # a version without a result cannot be compared: never report it as the same result
+          logwarn "⚠️ the CP versions give different results (at least one version has no result)"
+      elif [ "$(for v in "${cp_versions[@]}"; do [ -f "$work/result-$v.json" ] && jq -S -c '[.steps[] | {alias, error: (.error // null | if . then (. | split(":")[0]) else null end), dropped, record: (.record // null | if . then {topic, key: (.key | try fromjson catch .), value: (.value | try fromjson catch .), headers} else null end)}]' "$work/result-$v.json"; done | sort -u | wc -l | tr -d ' ')" -le 1 ]
       then
           log "✅ same result with all the CP versions"
       else
@@ -74818,8 +74870,10 @@ playground_connector_smt_test_command() {
   for version in "${cp_versions[@]}"
   do
       report_files+=("$work/result-$version.json")
+      [ -f "$work/result-$version.json" ] || ret=1
   done
   smt_report "${report_files[@]}"
+  [[ -n "$json" ]] && print_json_results "${report_files[@]}"
   exit $ret
 
 }
@@ -78978,112 +79032,90 @@ playground_connector_show_config_command() {
       fi
   fi
 
-  items=($connector)
-  length=${#items[@]}
-  if ((length > 1))
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
   then
-      log "✨ --connector flag was not provided, applying command to all connectors"
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
-  for connector in "${items[@]}"
-  do
-      if [[ "$environment" == cfk* ]]
+
+  # prints the config as a create-or-update heredoc, and copies it to the clipboard (macOS)
+  function print_config () {
+      local connector="$1" config_json="$2"
+      if [[ -n "$no_clipboard" ]]
       then
-          log "🧰 Current config for $connector_type connector $connector (using CFK Connector CR)"
-          log "☸️ kubectl -n confluent get connector $connector -o json"
-          curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c '.spec.configs // {}')
-          if [[ -z "$curl_output" ]] || [[ "$curl_output" == "null" ]]
-          then
-              logerror "❌ Could not get config from CFK Connector CR $connector"
-              exit 1
-          fi
-          echo "$curl_output" | jq .
-      fi
-
-      if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
-      then
-          log "🧰 Current config for $connector_type connector $connector"
-          if [[ -n "$no_clipboard" ]]
-          then
-              echo "playground connector create-or-update$cluster_flag --connector $connector --no-clipboard << 'EOF'"
-        else
-            echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'"
-        fi
-        cat "/tmp/config-$connector" | jq -S .
-        echo "EOF"
-
-        if [[ "$OSTYPE" == "darwin"* ]]
-        then
-            clipboard=$(playground config get clipboard)
-            if [ "$clipboard" == "" ]
-            then
-                playground config set clipboard true
-            fi
-
-            if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
-            then
-                tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-                if [ -z "$PG_VERBOSE_MODE" ]
-                then
-                    trap 'rm -rf $tmp_dir' EXIT
-                else
-                    log "🐛📂 not deleting tmp dir $tmp_dir"
-                fi
-                echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'" > $tmp_dir/tmp
-                cat "/tmp/config-$connector" | jq -S . >> $tmp_dir/tmp
-                echo "EOF" >> $tmp_dir/tmp
-
-                cat $tmp_dir/tmp | pbcopy
-                log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
-            fi
-        fi
+          echo "playground connector create-or-update$cluster_flag --connector $connector --no-clipboard << 'EOF'"
     else
-        log "🧰 Current config for $connector_type connector $connector (using REST API /config endpoint)"
+        echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'"
+    fi
+    echo "$config_json" | jq -S .
+    echo "EOF"
 
-        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        clipboard=$(playground config get clipboard)
+        if [ "$clipboard" == "" ]
         then
-            get_ccloud_connect
-            handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
-        else
-            get_connect_url_and_security
-            handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
+            playground config set clipboard true
         fi
 
-        if [[ -n "$no_clipboard" ]]
+        if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
         then
-            echo "playground connector create-or-update$cluster_flag --connector $connector --no-clipboard << 'EOF'"
-        else
-            echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'"
-        fi
-        echo "$curl_output" | jq -S .
-        echo "EOF"
-
-        if [[ "$OSTYPE" == "darwin"* ]]
-        then
-            clipboard=$(playground config get clipboard)
-            if [ "$clipboard" == "" ]
-            then
-                playground config set clipboard true
-            fi
-
-            if ( [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] ) && [[ ! -n "$no_clipboard" ]]
-            then
-                tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-                if [ -z "$PG_VERBOSE_MODE" ]
-                then
-                    trap 'rm -rf $tmp_dir' EXIT
-                else
-                    log "🐛📂 not deleting tmp dir $tmp_dir"
-                fi
-                echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'" > $tmp_dir/tmp
-                echo "$curl_output" | jq -S . >> $tmp_dir/tmp
-                echo "EOF" >> $tmp_dir/tmp
-
-                cat $tmp_dir/tmp | pbcopy
-                log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
-            fi
+            {
+                echo "playground connector create-or-update$cluster_flag --connector $connector << 'EOF'"
+                echo "$config_json" | jq -S .
+                echo "EOF"
+            } > "$tmp_dir/clipboard-$connector"
+            pbcopy < "$tmp_dir/clipboard-$connector"
+            log "📋 $connector_type connector config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
     fi
+}
+
+is_ccloud_connector=0
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    is_ccloud_connector=1
+fi
+
+items=($connector)
+length=${#items[@]}
+if ((length > 1))
+then
+    log "✨ --connector flag was not provided, applying command to all connectors"
+fi
+for connector in "${items[@]}"
+do
+    if [[ "$environment" == cfk* ]] && [ $is_ccloud_connector -eq 0 ]
+    then
+        log "🧰 Current config for $connector_type connector $connector (using CFK Connector CR)"
+        log "☸️ kubectl -n confluent get connector $connector -o json"
+        # spec.configs, plus connector.class and tasks.max (spec.class and spec.taskMax of the CR)
+        if ! get_connector_config_json "$connector"
+        then
+            logerror "❌ Could not get config from CFK Connector CR $connector"
+            exit 1
+        fi
+        print_config "$connector" "$curl_output"
+        continue
+    fi
+
+    if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
+    then
+        log "🧰 Current config for $connector_type connector $connector"
+        print_config "$connector" "$(cat "/tmp/config-$connector")"
+    else
+        log "🧰 Current config for $connector_type connector $connector (using REST API /config endpoint)"
+        if ! get_connector_config_json "$connector"
+        then
+            logerror "❌ Could not get config of $connector_type connector $connector from the REST API"
+            exit 1
+        fi
+        print_config "$connector" "$curl_output"
+    fi
 done
+
 }
 
 # :command.function
@@ -79148,7 +79180,8 @@ playground_connector_show_config_parameters_command() {
       class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
 
       version="unknown"
-      if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+      # an empty connector type: the environment was started with 'playground start-environment', not 'playground run'
+      if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ] || [ -z "$connector_type" ]
       then
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" $connect_url/connector-plugins/"
@@ -79202,7 +79235,14 @@ playground_connector_show_config_parameters_command() {
           fi
       fi
 
-      if [[ -n "$force_refresh" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
+      # a fully managed plugin has no version to key the cache with: refreshed after a week (for this connector only)
+      refresh_this_connector=""
+      if [ "$version" == "unknown" ] && [ -f "$filename" ] && [ -n "$(find "$filename" -mtime +7 2>/dev/null)" ]
+      then
+          log "🔄 cached parameters of $connector_class are more than a week old, refreshing them"
+          refresh_this_connector=1
+      fi
+      if [[ -n "$force_refresh" ]] || [[ -n "$refresh_this_connector" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
       then
           if [ -f $filename ]
           then
@@ -79227,7 +79267,7 @@ playground_connector_show_config_parameters_command() {
           if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
           then
               set +e
-              json_file=/tmp/json
+              json_file=$tmp_dir/invalid.json
               echo "$curl_output" > $json_file
               jq_output=$(jq . "$json_file" 2>&1)
               error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
@@ -79250,20 +79290,20 @@ playground_connector_show_config_parameters_command() {
               exit 1
           fi
 
-          echo "$curl_output" > /tmp/tmp-validate.json
-          write_connector_config_reference /tmp/tmp-validate.json "$filename" "$json_filename"
-          rm -f /tmp/tmp-validate.json
+          # $tmp_dir, not a shared /tmp path: this runs on every create-or-update, possibly in several sessions at once
+          echo "$curl_output" > "$tmp_dir/validate-$connector.json"
+          write_connector_config_reference "$tmp_dir/validate-$connector.json" "$filename" "$json_filename"
       fi
 
       if [ ! -f $filename ]
       then
-          logwarn "❌ there was no specific config for this $connector_type connector"
-          exit 0
+          logwarn "❌ there was no specific config for this $connector_type connector $connector"
+          continue
       fi
 
       # fix unwanted commits like this one #7231
-      cat $filename | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > /tmp/tmp
-      mv /tmp/tmp "$filename"
+      cat $filename | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > "$tmp_dir/dated-$connector.txt"
+      mv "$tmp_dir/dated-$connector.txt" "$filename"
 
       if [[ -n "$open" ]]
       then
@@ -79271,8 +79311,10 @@ playground_connector_show_config_parameters_command() {
           then
               filename=$json_filename
           else
-              cat $filename > "/tmp/config-$connector_class-$version.txt"
-              filename="/tmp/config-$connector_class-$version.txt"
+              # outside $tmp_dir (removed on exit, before a non-blocking editor reads it), and unique to this run
+              open_file=$(mktemp "/tmp/config-$connector_class-$version-XXXXXX")
+              cat $filename > "$open_file"
+              filename="$open_file"
               cat $json_filename >> $filename
               echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
           fi
@@ -79287,7 +79329,7 @@ playground_connector_show_config_parameters_command() {
               else
                   cat $json_filename
               fi
-              return
+              continue
           fi
 
           if [[ -n "$only_show_file_path" ]]
@@ -80141,6 +80183,14 @@ playground_connector_select_config_command() {
   log "🗜️ Easily select config from all possible configuration parameters"
   log "🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm"
 
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
   items=($connector)
   length=${#items[@]}
   if ((length > 1))
@@ -80163,7 +80213,7 @@ playground_connector_select_config_command() {
           fzf_option_pointer="--pointer=👉"
           fzf_option_rounded="--border=rounded"
       else
-          fzf_options=""
+          fzf_option_wrap=""
           fzf_option_pointer=""
           fzf_option_rounded=""
       fi
@@ -80171,10 +80221,17 @@ playground_connector_select_config_command() {
       set +e
       res=$(cat $json_file | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗜️" --header="<enter> to confirm, <esc> to cancel" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
+      set -e
+      if [ -z "$res" ]
+      then
+          # <esc>: nothing selected, the clipboard is left as it is
+          log "💤 no config parameter selected for connector $connector"
+          continue
+      fi
+
       log "🗜️ selected config parameter(s) for connector $connector"
       echo "$res"
 
-      set -e
       if [[ "$OSTYPE" == "darwin"* ]]
       then
           clipboard=$(playground config get clipboard)
@@ -80185,16 +80242,8 @@ playground_connector_select_config_command() {
 
           if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
           then
-              tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-              if [ -z "$PG_VERBOSE_MODE" ]
-              then
-                  trap 'rm -rf $tmp_dir' EXIT
-              else
-                  log "🐛📂 not deleting tmp dir $tmp_dir"
-              fi
-              echo "$res" > $tmp_dir/tmp
-
-              cat $tmp_dir/tmp | pbcopy
+              echo "$res" > "$tmp_dir/selected-$connector"
+              pbcopy < "$tmp_dir/selected-$connector"
               log "📋 config has been copied to the clipboard (disable with 'playground config clipboard false')"
           fi
       fi
@@ -80215,6 +80264,15 @@ playground_connector_snippets_command() {
   else
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
+
+  # $1: schema registry host (default schema-registry)
+  function plaintext_schema_registry_snippet () {
+      local sr_host="${1:-schema-registry}"
+      echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file
+      echo -e "    \"key.converter.schema.registry.url\": \"http://$sr_host:8081\"," >> $converter_file
+      echo -e "    \"value.converter\": \"$converter_class\"," >> $converter_file
+      echo -e "    \"value.converter.schema.registry.url\": \"http://$sr_host:8081\"," >> $converter_file
+  }
 
   if [[ ! -n "$converter" ]] && [[ ! -n "$dlq" ]]
   then
@@ -80282,10 +80340,7 @@ playground_connector_snippets_command() {
 
               case "${environment}" in
               plaintext|sasl-plain|ldap-authorizer-sasl-plain|ldap-sasl-plain|sasl-scram|kerberos|ssl_kerberos)
-                  echo -e "    \"key.converter\": \"$converter_class\"," >> $converter_file
-                  echo -e "    \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $converter_file
-                  echo -e "    \"value.converter\": \"$converter_class\"," >> $converter_file
-                  echo -e "    \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $converter_file
+                  plaintext_schema_registry_snippet
               ;;
               ccloud)
                   if [ -f $root_folder/.ccloud/env.delta ]
@@ -80332,8 +80387,20 @@ playground_connector_snippets_command() {
                   echo -e "    \"value.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
                   echo -e "    \"value.converter.basic.auth.user.info\": \"connectorSA:connectorSA\"," >> $converter_file
                   ;;
+              mdc*)
+                  # one schema registry per cluster: schema-registry-us / schema-registry-europe
+                  sr_cluster="${PLAYGROUND_CLUSTER:-$(playground state get run.cluster 2> /dev/null)}"
+                  if [[ "$sr_cluster" != "europe" ]]
+                  then
+                      [[ "$sr_cluster" != "us" ]] && log "🌍 $environment: showing the schema registry of cluster us (set PLAYGROUND_CLUSTER=europe for the other one)"
+                      sr_cluster="us"
+                  fi
+                  plaintext_schema_registry_snippet "schema-registry-$sr_cluster"
+              ;;
               *)
-                  return
+                  # cfk...: the plaintext schema registry url ('connector create-or-update' rewrites it on cfk)
+                  logwarn "⚠️ no specific converter snippet for environment $environment, showing the plaintext one"
+                  plaintext_schema_registry_snippet
               ;;
               esac
           ;;
@@ -80798,7 +80865,6 @@ playground_connector_translate_command() {
   else
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
-  json_file=$tmp_dir/connector.json
 
   items=($connector)
   length=${#items[@]}
@@ -80808,21 +80874,26 @@ playground_connector_translate_command() {
   fi
   for connector in "${items[@]}"
   do
-      playground --output-level WARN connector show-config --connector "$connector" --no-clipboard | grep -v "EOF" | sed 's/\\//g' >> $json_file
-      if [ $? -ne 0 ]
+      # one file per connector: the config is read as JSON from the REST API (or the CR on cfk), never from the
+      # show-config heredoc, so backslashes and quotes inside values reach the translate API untouched
+      json_file="$tmp_dir/connector-$connector.json"
+      if ! get_connector_config_json "$connector"
       then
-          logerror "❌ playground connector show-config --connector $connector failed with:"
-          cat $file
+          logerror "❌ could not read the config of connector $connector"
           exit 1
       fi
-
-      # connector_class=$(cat "$json_file" | jq -r '."connector.class"')
-      # class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
+      echo "$curl_output" > "$json_file"
 
       log "💱 Translating $connector_type connector $connector ($connector_plugin)"
       get_ccloud_connect
       handle_ccloud_connect_rest_api "curl -s --request PUT -H \"Content-Type: application/json\" --data @$json_file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_plugin/config/translate\" --header \"authorization: Basic $authorization\""
+      # the helper prints the answer itself when it has errors or warnings, print it otherwise
+      if ! echo "$curl_output" | jq -e 'has("errors") or has("warnings")' > /dev/null 2>&1
+      then
+          echo "$curl_output" | jq .
+      fi
   done
+
 }
 
 # :command.function
@@ -80851,7 +80922,7 @@ playground_connector_connect_migration_utility_discovery_command() {
 
   set +e
   docker pull vdesabou/docker-connect-migration-utility:latest > /dev/null 2>&1
-  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --redact --environment-id $environment --cluster-id $cluster && chown -R $(id -u $USER):$(id -g $USER) /discovery_output_dir" > "$output_log" 2>&1
+  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/discovery_script.py --worker-urls '$connect_url' --output-dir /discovery_output_dir --disable-ssl-verify --redact --environment-id $environment --cluster-id $cluster && chown -R $(id -u $USER):$(id -g $USER) /discovery_output_dir" > "$output_log" 2>&1
   ret=$?
   set -e
 
@@ -80928,21 +80999,11 @@ playground_connector_connect_migration_utility_migrate_command() {
   discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
   if [ ! -d "$discovery_output_dir" ]
   then
-  	logerror "❌ $discovery_output_dir does not exist, please run playground connect-migration-utility discovery first !"
+  	logerror "❌ $discovery_output_dir does not exist, please run playground connector connect-migration-utility discovery first !"
   	exit 1
   fi
 
   log "🪄 Migrate discovered local connectors in $discovery_output_dir as fully managed connectors"
-
-  get_environment_used
-  if [ "$migration_mode" == "stop_create_latest_offset" ] ||  [ "$migration_mode" == "create_latest_offset" ]
-  then
-  	if [ "$environment" != "ccloud" ]
-  	then
-  		logerror "❌ --migration-mode $migration_mode is only supported with --environment ccloud"
-  		exit 1
-  	fi
-  fi
 
   log "🔌 bootstrapping ccloud environment"
   bootstrap_ccloud_environment "" "" "true"
@@ -80962,20 +81023,39 @@ playground_connector_connect_migration_utility_migrate_command() {
       then
           for sensitive_prop in "${sensitive_property[@]}"
           do
-              json_key=$(echo "$sensitive_prop" | cut -d'=' -f1)
-              shell_var_name=$(echo "$sensitive_prop" | cut -d'=' -f2)
-              actual_secret_value=$(eval echo "$shell_var_name")
+              # key=value: the value is everything after the first '=' (base64 secrets end with '='), and a value
+              # written $NAME or ${NAME} is the value of that variable (never evaluated as shell code)
+              json_key="${sensitive_prop%%=*}"
+              actual_secret_value="${sensitive_prop#*=}"
+              if [[ "$sensitive_prop" != *=* ]] || [ -z "$json_key" ]
+              then
+                  logerror "❌ --sensitive-property should be key=value (got $json_key)"
+                  exit 1
+              fi
+              if [[ "$actual_secret_value" =~ ^\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?$ ]]
+              then
+                  var_name="${BASH_REMATCH[1]}"
+                  actual_secret_value="${!var_name}"
+                  if [ -z "$actual_secret_value" ]
+                  then
+                      logwarn "⚠️ --sensitive-property $json_key: variable $var_name is empty"
+                  fi
+              fi
               secret_values+=("$actual_secret_value")
-              escaped_secret_value=$(echo "$actual_secret_value" | sed 's/[\/&]/\\&/g')
-              escaped_key=$(echo "$json_key" | sed 's/[\/&]/\\&/g')
 
-              if [ -f "$json_file" ]; then
-                  # Use a temporary file for sed replacement
-                  temp_file=$(mktemp)
-                  sed -E "s@(\"$escaped_key\":[[:space:]]*)\"[^\"]*\"@\1\"$escaped_secret_value\"@" "$json_file" > "$temp_file"
-                  cp "$temp_file" "$json_file"
-                  rm -f "$temp_file"
-                  log "🔐 Updated $json_key in $(basename "$json_file")"
+              if [ -f "$json_file" ]
+              then
+                  # jq: any character of the value is kept as is (quotes, backslashes, @, &...)
+                  if jq -e --arg k "$json_key" '[.. | objects | select(has($k))] | length > 0' "$json_file" > /dev/null 2>&1
+                  then
+                      temp_file=$(mktemp)
+                      jq --arg k "$json_key" --arg v "$actual_secret_value" 'walk(if type == "object" and has($k) then .[$k] = $v else . end)' "$json_file" > "$temp_file"
+                      cat "$temp_file" > "$json_file"
+                      rm -f "$temp_file"
+                      log "🔐 Updated $json_key in $(basename "$json_file")"
+                  else
+                      logwarn "⚠️ $json_key is not in $(basename "$json_file"), --sensitive-property ignored for it"
+                  fi
               fi
           done
       fi
@@ -80992,7 +81072,7 @@ playground_connector_connect_migration_utility_migrate_command() {
   done
 
   set +e
-  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > "$output_log" 2>&1
+  docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/migrate_connector_script.py --worker-urls '$connect_url' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > "$output_log" 2>&1
   ret=$?
   set -e
   if [ $ret -ne 0 ]
@@ -81087,12 +81167,8 @@ playground_connector_create_or_update_command() {
   function wait_for_created_connector () {
       if [ $is_ccloud_connector -eq 1 ]
       then
-          if [[ -n "$initial_state" ]] && [ "$initial_state" != "RUNNING" ]
-          then
-              playground connector wait --connector "$connector" --state "$initial_state" --max-wait "${max_wait:-600}" || exit 1
-          else
-              wait_for_ccloud_connector_up "$connector" "${max_wait:-600}"
-          fi
+          # --initial-state is refused for Confluent Cloud connectors (checked above)
+          wait_for_ccloud_connector_up "$connector" "${max_wait:-600}"
           return
       fi
 
@@ -81381,6 +81457,20 @@ then
     exit 1
 fi
 
+# --validate before the service account and its ACLs are created: an invalid config leaves nothing behind
+if [[ -n "$validate" ]]
+then
+    log "✅ --validate is set"
+    set +e
+    validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
+    ret=$?
+    set -e
+    if [ $ret -eq 1 ]
+    then
+        exit 1
+    fi
+fi
+
 # playground run --ccloud-service-account: kafka.auth.mode=SERVICE_ACCOUNT, with a service account
 # and the ACLs of the documentation
 if [ "$PG_CCLOUD_SERVICE_ACCOUNT" == "true" ] && [ $is_ccloud_connector -eq 1 ]
@@ -81392,19 +81482,6 @@ then
         get_ccloud_connect
         ccloud_connector_service_account_setup "$connector" "$json_content" "$is_create" || exit 1
         printf '%s\n' "$json_content" > $json_file
-    fi
-fi
-
-if [[ -n "$validate" ]]
-then
-    log "✅ --validate is set"
-    set +e
-    validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
-    ret=$?
-    set -e
-    if [ $ret -eq 1 ]
-    then
-        exit 1
     fi
 fi
 
@@ -81428,6 +81505,12 @@ then
 
     log "✅ Connector $connector successfully deployed using Terraform"
     log "📂 Terraform state saved in: $terraform_dir"
+
+    # read by 'connector show-config', and by wait_for_ccloud_connector_up: the .terraform marker tells it that terraform
+    # owns the connector (it only polls the status, it never re-applies it through the REST API)
+    rm -f "/tmp/config-$connector"
+    (umask 077 && echo "$json_content" > "/tmp/config-$connector")
+    touch "/tmp/config-$connector.terraform"
 
     # Show connector status
     if [ -z "$GITHUB_RUN_NUMBER" ]
@@ -81669,7 +81752,7 @@ else
 fi
 
 # read by 'connector show-config' and the restart helpers: it can hold passwords, only readable by you
-rm -f "/tmp/config-$connector"
+rm -f "/tmp/config-$connector" "/tmp/config-$connector.terraform"
 (umask 077 && echo "$json_content" > "/tmp/config-$connector")
 
 if [ -z "$GITHUB_RUN_NUMBER" ]
@@ -81787,6 +81870,11 @@ playground_connector_update_command() {
       fi
   fi
 
+  # the file is only applied if it was saved with a change: editors that do not block (subl, ...) return at once
+  function file_checksum () {
+      cksum < "$1"
+  }
+
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
   then
@@ -81844,7 +81932,13 @@ playground_connector_update_command() {
           } > "$file"
 
           log "✨ Update the CFK Connector CR as needed, save and close the file to continue"
+          checksum_before=$(file_checksum "$file")
           playground open --file "${file}" --wait
+          if [ "$(file_checksum "$file")" == "$checksum_before" ]
+          then
+              log "💤 the CFK Connector CR of $connector was not changed, nothing applied"
+              continue
+          fi
           log "☸️ kubectl -n confluent apply -f $file"
           kubectl -n confluent apply -f "$file"
           log "✅ CFK Connector CR $connector was updated"
@@ -81856,14 +81950,28 @@ playground_connector_update_command() {
           echo -e "" >> $file
           echo -e "##########################" >> $file
           echo "# this is the part to edit" >> $file
-          playground connector show-config --connector "$connector" --no-clipboard | grep -v "Current config for" >> $file
+          # captured first: in a pipeline, $? would be the status of the last command, not of show-config
+          current_config=$(playground connector show-config --connector "$connector" --no-clipboard)
           if [ $? -ne 0 ]
           then
               logerror "❌ playground connector show-config --connector $connector failed with:"
-              cat $file
+              echo "$current_config"
               exit 1
           fi
           set -e
+          # a Confluent Cloud connector config read from the REST API has its secrets masked: applying it would replace
+          # the real values with the mask
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+          then
+              masked_keys=$(echo "$current_config" | grep -E '"[^"]+" *: *"\*{3,}"' | sed -E 's/^ *"([^"]+)".*/\1/' | paste -sd ' ' -)
+              if [ -n "$masked_keys" ]
+              then
+                  logerror "❌ the config of $connector_type connector $connector comes from the REST API, which masks secrets ($masked_keys): updating it would overwrite them with the mask"
+                  logerror "👉 run 'playground connector create-or-update --connector $connector' with the full config instead (once it is done, 'connector update' reuses it)"
+                  exit 1
+              fi
+          fi
+          echo "$current_config" | grep -v "Current config for" >> $file
           echo "# end of part to edit" >> $file
           echo -e "##########################" >> $file
           echo -e "" >> $file
@@ -81888,7 +81996,13 @@ playground_connector_update_command() {
           playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
           log "✨ Update the connector config as per your needs, save and close the file to continue"
+          checksum_before=$(file_checksum "$file")
           playground open --file "${file}" --wait
+          if [ "$(file_checksum "$file")" == "$checksum_before" ]
+          then
+              log "💤 the config of $connector_type connector $connector was not changed, nothing applied"
+              continue
+          fi
           bash $file
       fi
   done
@@ -130909,21 +131023,6 @@ playground_connector_translate_parse_requirements() {
     esac
   done
 
-  # :command.dependencies_filter
-  missing_deps=
-  # :dependency.filter
-  if ! command -v confluent >/dev/null 2>&1; then
-    printf "missing dependency: confluent\n" >&2
-    printf "%s\n\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
-    missing_deps=1
-  else
-    deps['confluent']="$(command -v confluent | head -n1)"
-  fi
-
-  if [[ -n $missing_deps ]]; then
-    exit 1
-  fi
-
   # :command.command_filter
   action="connector translate"
 
@@ -130999,6 +131098,13 @@ playground_connector_translate_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--connector-plugin']+x} ]]; then
     printf "missing required flag: --connector-plugin CONNECTOR-PLUGIN\n" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
     exit 1
   fi
 

@@ -2776,7 +2776,13 @@ function create_ccloud_connector() {
 
 function validate_ccloud_connector_up() {
   connector="$1"
-  if [ -f "/tmp/config-$connector" ]
+  if [ -f "/tmp/config-$connector.terraform" ]
+  then
+    # deployed with 'create-or-update --terraform': terraform owns it, never re-applied through the REST API, and a
+    # terraform apply on every retry (each 5 seconds) is too slow: only poll the status below
+    echo "⏳"
+    set +e
+  elif [ -f "/tmp/config-$connector" ]
   then
     set +e
     PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard --no-wait < "/tmp/config-$connector" > /tmp/output.log 2>&1

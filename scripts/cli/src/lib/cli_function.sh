@@ -8093,7 +8093,7 @@ function smt_tester_hub_plugin () {
 }
 
 # config of a running connector as a JSON object in $curl_output (REST API /config endpoint, or the Connector CR on cfk)
-# returns 1 if it could not be read
+# returns 1 if it could not be read (the REST helpers log the error: called in an 'if', set -e does not stop on it)
 function get_connector_config_json () {
   local connector="$1" connector_type env_used
   connector_type=$(playground state get run.connector_type)
@@ -8102,14 +8102,14 @@ function get_connector_config_json () {
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
     get_ccloud_connect
-    handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
+    handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" || return 1
   elif [[ "$env_used" == cfk* ]]
   then
     # connector.class and tasks.max are not in spec.configs: they are spec.class and spec.taskMax of the CR
     curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c 'select(.spec != null) | (.spec.configs // {}) + {"connector.class": .spec.class, "tasks.max": (.spec.taskMax // 1 | tostring)}' 2>/dev/null)
   else
     get_connect_url_and_security
-    handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
+    handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\"" || return 1
   fi
   if [ -z "$curl_output" ] || ! echo "$curl_output" | jq -e 'type == "object"' > /dev/null 2>&1
   then

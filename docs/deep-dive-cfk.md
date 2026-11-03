@@ -78,7 +78,7 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | --- | --- |
 | `connector create-or-update` | builds a `Connector` CR (`spec.class`, `spec.taskMax`, `spec.configs`, `connectClusterRef: connect`) and `kubectl apply`s it, then waits for the CR to be ready and (default, or `--wait`) for the tasks to be RUNNING. `--dry-run` prints the CR. Locally, the CR is printed on every apply (`📄 Generated Connector CRD manifest used for apply:`) |
 | `connector status` | `kubectl get connector` (state, connector status, tasks ready, `app-ready` condition) **and** the usual status from the Connect REST API |
-| `connector show-config` | `spec.configs` of the CR (`using CFK Connector CR`) |
+| `connector show-config` | `spec.configs` of the CR plus `connector.class` and `tasks.max` (`spec.class`, `spec.taskMax`), as a `create-or-update` heredoc (`using CFK Connector CR`) |
 | `connector update` | opens the CR in your editor (interactive), then `kubectl apply` |
 | `connector pause` / `resume` / `restart` | `kubectl annotate connector <c> platform.confluent.io/pause-connector=true` / `resume-connector=true` / `restart-connector=true` (`restart-task=<id>` with `--task-id`) |
 | `connector delete` | `kubectl delete connector` |
@@ -386,7 +386,9 @@ EOF
 # ❌ with CFK, the connector name is the name of a Kubernetes Connector resource: lower case letters, digits, '-' and '.' only (FileStream_Sink is not valid)
 playground connector show-config -c filestream-sink
 # 🧰 Current config for 🌎onprem connector filestream-sink (using CFK Connector CR)
-# { "file": "/tmp/output.json", "key.converter": "org.apache.kafka.connect.storage.StringConverter", "topics": "filestream", … }
+# playground connector create-or-update --connector filestream-sink << 'EOF'
+# { "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector", "file": "/tmp/output.json", …, "tasks.max": "1", "topics": "filestream" }
+# EOF
 playground connector validate -c filestream-sink
 # ⚠️ validation with CFK currently performs basic checks only (no Connect REST validation endpoint)
 # ✅ Basic CFK validation passed
