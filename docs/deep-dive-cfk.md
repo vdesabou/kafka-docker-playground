@@ -36,7 +36,8 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
    confluentinc/confluent-for-kubernetes`, `CFK_VERSION`, default `3.3.0`, mapped to its chart version), then applies
    the CRs of [`environment/cfk/confluent-platform.yaml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/cfk/confluent-platform.yaml):
    `KRaftController`, `Kafka`, `Connect`, `SchemaRegistry` (and `ControlCenter` with `--enable-control-center`).
-   KRaft only, one replica each, the CP images of `--tag` (the broker is always `cp-server`). The images are pulled
+   KRaft, or with `cfk` and CP < 8 (without `--enable-kraft`) a `Zookeeper` CR instead of the `KRaftController`, like
+   the docker environments. One replica each, the CP images of `--tag` (the broker is always `cp-server`). The images are pulled
    (and the connect one patched with the playground tools) in your Docker daemon, then copied into the node with
    `k3d image import`: the cluster doesn't pull them itself. The cluster and the operator are **kept between runs**:
    the next run empties the namespace (CRs, pods, PVCs) but keeps the operator (`♻️ Reusing Confluent for Kubernetes
@@ -112,8 +113,8 @@ Not supported, or different:
 | `connector diff --defaults` | refused (no validation endpoint to read the defaults from) |
 | `topic produce --validate` | needs a local connect container: refused |
 | `--enable-jmx-grafana`, `--enable-kcat`, `--enable-conduktor`, `--enable-flink` | `⚠️ … is not implemented in environment/cfk/start.sh` |
-| `ENABLE_ZOOKEEPER` | ignored: the CFK deployment is KRaft only |
-| `--enable-multiple-controllers` | `replicas: 3` on the `KRaftController` CR (pods `kraftcontroller-0`, `kraftcontroller-1`, `kraftcontroller-2`; `-c controller2` resolves to `kraftcontroller-1`) |
+| ZooKeeper mode (CP < 8 without `--enable-kraft`) | `cfk`: a `Zookeeper` CR (pod `zookeeper-0`, image `cp-zookeeper`) instead of the `KRaftController`, the `Kafka` CR depends on `zookeeper.confluent.svc.cluster.local:2181`. `cfk-rbac`: ignored (KRaft only, MDS runs on the KRaft controller), with `⚠️ ENABLE_ZOOKEEPER is ignored in cfk-rbac` |
+| `--enable-multiple-controllers` | `replicas: 3` on the `KRaftController` CR (pods `kraftcontroller-0`, `kraftcontroller-1`, `kraftcontroller-2`; `-c controller2` resolves to `kraftcontroller-1`), or on the `Zookeeper` CR in ZooKeeper mode (pods `zookeeper-0`, `-1`, `-2`) |
 | `--enable-ksqldb`, `--enable-rest-proxy` | plain Deployments on `cfk`, `KsqlDB` / `KafkaRestProxy` CRs on `cfk-rbac` |
 | `--enable-multiple-brokers`, `--enable-multiple-connect-workers` | `replicas: 3` on the `Kafka` / `Connect` CR (pods `connect-0`, `connect-1`, `connect-2`) |
 

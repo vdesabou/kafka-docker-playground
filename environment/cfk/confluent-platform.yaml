@@ -19,6 +19,20 @@ spec:
     server:
       - default.replication.factor=1
 ---
+# ZooKeeper mode only (CP < 8 without --enable-kraft): replaces the KRaftController above
+apiVersion: platform.confluent.io/v1beta1
+kind: Zookeeper
+metadata:
+  name: zookeeper
+  namespace: confluent
+spec:
+  replicas: 1
+  image:
+    application: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  dataVolumeCapacity: 10Gi
+  logVolumeCapacity: 10Gi
+---
 apiVersion: platform.confluent.io/v1beta1
 kind: Kafka
 metadata:
@@ -34,10 +48,16 @@ spec:
   metricReporter:
     enabled: true
   dependencies:
+    # cfk-kraft-begin
     kRaftController:
       clusterRef:
         name: kraftcontroller
         namespace: confluent
+    # cfk-kraft-end
+    # cfk-zookeeper-begin
+    zookeeper:
+      endpoint: zookeeper.confluent.svc.cluster.local:2181
+    # cfk-zookeeper-end
   configOverrides:
     server:
       - offsets.topic.replication.factor=1

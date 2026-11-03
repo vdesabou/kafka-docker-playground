@@ -136,6 +136,12 @@ function resolve_container_name_for_environment() {
     controller3)
       mapped_name="kraftcontroller-2"
       ;;
+    zookeeper2)
+      mapped_name="zookeeper-1"
+      ;;
+    zookeeper3)
+      mapped_name="zookeeper-2"
+      ;;
     schema-registry|schemaregistry)
       mapped_name="schemaregistry-0"
       ;;

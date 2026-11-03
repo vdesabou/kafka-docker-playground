@@ -2515,6 +2515,12 @@ EOF
   return 0
 }
 
+# ZooKeeper mode on cfk: ENABLE_ZOOKEEPER is set by determine_kraft_mode for CP < 8 without --enable-kraft.
+# cfk-rbac stays KRaft (its manifest runs MDS on the KRaft controller)
+function cfk_zookeeper_mode() {
+  [[ -n "$ENABLE_ZOOKEEPER" ]] && [[ -z "$ENABLE_KRAFT" ]] && [[ "$CFK_ENVIRONMENT" != "cfk-rbac" ]]
+}
+
 function build_cfk_manifest() {
   local output_file="$1"
   local rendered_file
@@ -2525,11 +2531,12 @@ function build_cfk_manifest() {
   local kafka_replicas=1
   local connect_replicas=1
   local controller_replicas=1
+  local zookeeper_mode=0
 
   rendered_file=$(mktemp)
   base_manifest_file=$(mktemp)
 
-  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION} ${CP_KSQL_IMAGE} ${CP_KSQL_TAG} ${CP_REST_PROXY_IMAGE} ${CP_REST_PROXY_TAG} ${CP_C3_PROMETHEUS_IMAGE} ${CP_C3_ALERTMANAGER_IMAGE}' < "$CFK_MANIFEST_TEMPLATE" > "$rendered_file"
+  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_ZOOKEEPER_IMAGE} ${CP_ZOOKEEPER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION} ${CP_KSQL_IMAGE} ${CP_KSQL_TAG} ${CP_REST_PROXY_IMAGE} ${CP_REST_PROXY_TAG} ${CP_C3_PROMETHEUS_IMAGE} ${CP_C3_ALERTMANAGER_IMAGE}' < "$CFK_MANIFEST_TEMPLATE" > "$rendered_file"
 
   if [[ -n "$ENABLE_CONTROL_CENTER" ]]
   then
@@ -2562,10 +2569,24 @@ function build_cfk_manifest() {
     log "🥉 Connect replicas set to 3 for CFK deployment"
   fi
 
+  # ZooKeeper mode (CP < 8 without --enable-kraft, see determine_kraft_mode): a Zookeeper CR instead of the
+  # KRaftController, and the Kafka CR depends on it. cfk only: the cfk-rbac manifest (MDS on the KRaft
+  # controller) has no ZooKeeper variant
+  if cfk_zookeeper_mode
+  then
+    zookeeper_mode=1
+    log "👨‍🦳 ZooKeeper mode for CFK deployment: Zookeeper CR instead of KRaftController"
+  fi
+
   if [[ -n "$ENABLE_CONTROLLER_NODES" ]]
   then
     controller_replicas=3
-    log "🗳️  KRaft controller replicas set to 3 for CFK deployment"
+    if [[ "$zookeeper_mode" -eq 1 ]]
+    then
+      log "🗳️  ZooKeeper replicas set to 3 for CFK deployment"
+    else
+      log "🗳️  KRaft controller replicas set to 3 for CFK deployment"
+    fi
   fi
 
   local include_c3_next_gen=0
@@ -2574,10 +2595,10 @@ function build_cfk_manifest() {
     include_c3_next_gen=1
   fi
 
-  # Filter ControlCenter (and the KsqlDB / KafkaRestProxy resources of cfk-rbac) and patch KRaftController/Kafka/Connect replicas
+  # Filter ControlCenter (and the KsqlDB / KafkaRestProxy resources of cfk-rbac), KRaftController or Zookeeper, and patch their replicas and the Kafka/Connect ones
   # based on set_profiles options. Lines between "# cfk-<feature>-begin" and "# cfk-<feature>-end" markers are
   # removed when the feature is disabled.
-  awk -v include_control_center="$include_control_center" -v include_c3_next_gen="$include_c3_next_gen" -v include_ksqldb="$include_ksqldb" -v include_restproxy="$include_restproxy" -v include_license="${CFK_INCLUDE_LICENSE:-0}" -v kafka_replicas="$kafka_replicas" -v connect_replicas="$connect_replicas" -v controller_replicas="$controller_replicas" '
+  awk -v include_control_center="$include_control_center" -v include_c3_next_gen="$include_c3_next_gen" -v include_ksqldb="$include_ksqldb" -v include_restproxy="$include_restproxy" -v include_license="${CFK_INCLUDE_LICENSE:-0}" -v kafka_replicas="$kafka_replicas" -v connect_replicas="$connect_replicas" -v controller_replicas="$controller_replicas" -v zookeeper_mode="$zookeeper_mode" '
     function strip_block(d, feature,    n, lines, i, out, skipping) {
       n = split(d, lines, "\n")
       out = ""
@@ -2607,6 +2628,20 @@ function build_cfk_manifest() {
         return
       }
 
+      if (d ~ /kind:[[:space:]]*KRaftController([[:space:]]|$)/ && zookeeper_mode == 1) {
+        return
+      }
+
+      if (d ~ /kind:[[:space:]]*Zookeeper([[:space:]]|$)/ && zookeeper_mode != 1) {
+        return
+      }
+
+      if (zookeeper_mode == 1) {
+        d = strip_block(d, "kraft")
+      } else {
+        d = strip_block(d, "zookeeper")
+      }
+
       if (include_c3_next_gen != 1) {
         d = strip_block(d, "c3-next-gen")
       }
@@ -2627,7 +2662,7 @@ function build_cfk_manifest() {
         sub(/replicas:[[:space:]]*[0-9]+/, "replicas: " connect_replicas, d)
       }
 
-      if (d ~ /kind:[[:space:]]*KRaftController([[:space:]]|$)/) {
+      if (d ~ /kind:[[:space:]]*(KRaftController|Zookeeper)([[:space:]]|$)/) {
         sub(/replicas:[[:space:]]*[0-9]+/, "replicas: " controller_replicas, d)
       }
 
@@ -2835,9 +2870,9 @@ function merge_connect_patches_into_manifest() {
 }
 
 function log_unsupported_cfk_profile_options() {
-  if [[ -n "$ENABLE_ZOOKEEPER" ]]
+  if [[ -n "$ENABLE_ZOOKEEPER" ]] && [[ "$CFK_ENVIRONMENT" == "cfk-rbac" ]]
   then
-    logwarn "⚠️ ENABLE_ZOOKEEPER is ignored in CFK mode (CFK deployment is KRaft-only)"
+    logwarn "⚠️ ENABLE_ZOOKEEPER is ignored in cfk-rbac (KRaft only): use --environment cfk for ZooKeeper, or CP >= 8"
   fi
 
   if [[ -n "$ENABLE_JMX_GRAFANA" ]]
@@ -3409,7 +3444,8 @@ for base_image in \
   "${CP_SERVER_IMAGE}:${CP_SERVER_TAG}" \
   "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" \
   "${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}" \
-  "${CP_INIT_IMAGE}:${CP_INIT_TAG}"
+  "${CP_INIT_IMAGE}:${CP_INIT_TAG}" \
+  $(cfk_zookeeper_mode && echo "${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}")
 do
   # Pull the image into the local daemon only when it is missing, so the docker image inspect gate below
   # succeeds on a fresh CI runner (k3s's routing to external registries is unreliable under podman+k3d).
