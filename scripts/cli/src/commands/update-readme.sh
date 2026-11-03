@@ -487,7 +487,11 @@ do
 
     if [ "$environment_suffix" = "-cfk" ]
     then
-      if [ ${ci_cfk_nb_fail} -eq 0 ] && [ ${ci_cfk_nb_skipped} -eq 0 ]
+      # cfk only runs connect/ examples (see run-tests.sh / ci.yml SKIP_JOB): for any other test there is
+      # no -cfk result file, every image_version hits the "continue" above (nb_tests counts them, nb_success
+      # does not), and ci_cfk stays empty. Requiring nb_success == nb_tests avoids a false "0/N cfk ok!" badge
+      # (leaving ci_cfk empty, so no cfk badge is shown for a test cfk never ran).
+      if [ ${nb_tests} -gt 0 ] && [ ${nb_success} -eq ${nb_tests} ] && [ ${ci_cfk_nb_fail} -eq 0 ] && [ ${ci_cfk_nb_skipped} -eq 0 ]
       then
         ci_cfk="[![CI_CFK ok](https://img.shields.io/badge/$nb_success/$nb_tests-cfk_ok!-green)]($html_url)"
       elif [ ${ci_cfk_nb_fail} -eq ${nb_image_versions} ]
@@ -495,7 +499,7 @@ do
         ci_cfk="[![CI_CFK fail](https://img.shields.io/badge/$nb_success/$nb_tests-cfk_fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
       fi
     else
-      if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
+      if [ ${nb_tests} -gt 0 ] && [ ${nb_success} -eq ${nb_tests} ] && [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
       then
         ci="[![CI ok](https://img.shields.io/badge/$nb_success/$nb_tests-ok!-green)]($html_url)"
       elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
