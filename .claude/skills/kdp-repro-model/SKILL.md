@@ -66,3 +66,9 @@ bootstrap, or `playground repro status -f <model> --expected … --actual …`),
 then `playground repro bisect --from <version> --to <version>` finds the version where the verdict changes),
 and never include customer-sensitive data.
 
+After every run that gives a result, paste its decisive output lines into the model itself: a `# 📋 run output`
+comment block after `exit 0` (never executed), with one `# 🧪 run <n> - <date> - <command>` section per run (the
+versions, the verbatim lines that show the symptom or its absence, the commands run by hand on the same environment,
+and the verdict). Add a `# 📋 run output: see the block after 'exit 0'` line under `# 💬 comments:`. `repro export`
+puts the block in the hand-off report (`## 📋 Run output`). Format: "Its evidence" in `docs/deep-dive-reproduction-models.md`.
+

@@ -14,6 +14,18 @@ then
     exec 3>&1 1>&2
 fi
 
+# the '# 📋 run output' comment block written after 'exit 0' of a model ($1 script), without its '# ' prefixes:
+# from the line after its title (and the frame line that closes it) to the next frame line or non-comment line
+function repro_run_output () {
+    awk '
+        /^exit 0[[:space:]]*$/ { after = 1; next }
+        after && !on && /^# 📋 run output/ { on = 1; frame = 1; next }
+        on && frame && /^#####/ { frame = 0; next }
+        on && (/^#####/ || !/^#/) { exit }
+        on { frame = 0; print }
+    ' "$1" | sed -E 's/^# ?//' | awk 'NF { started = 1 } started' | awk '{ lines[NR] = $0 } NF { last = NR } END { for (i = 1; i <= last; i++) print lines[i] }'
+}
+
 # the hand-off report of a model ($1 script, $2 its entry of the manifest, $3 name of the bundle), in Markdown
 function repro_write_report () {
     local script="$1" model="$2" bundle="$3"
@@ -46,13 +58,28 @@ function repro_write_report () {
     echo ""
     echo "${actual:-_not written in the header of the model (\`# 💥 actual:\`)_}"
     echo ""
+    # the output of the runs, pasted in the model as a '# 📋 run output' comment block after 'exit 0'
+    local run_output run_output_title
+    run_output=$(repro_run_output "$script")
     # free text of the header: the lines under '# 💬 comments:' that are not fields
-    comments=$(awk '/^# [^ ]+ comments:/ { on = 1; next } on && /^#####/ { exit } on' "$script" | grep -vE '^# [^ ]+ (expected|actual|jira|status):|^#[[:space:]]*$' | sed -E 's/^# ?//')
+    # (nor the pointer to the run output block, shown in its own section below)
+    comments=$(awk '/^# [^ ]+ comments:/ { on = 1; next } on && /^#####/ { exit } on' "$script" | grep -vE '^# [^ ]+ (expected|actual|jira|status):|^#[[:space:]]*$' | { if [ -n "$run_output" ]; then grep -vE '^# 📋 run output:' || true; else cat; fi; } | sed -E 's/^# ?//')
     if [ -n "$comments" ]
     then
         echo "## 💬 Comments"
         echo ""
         echo "$comments"
+        echo ""
+    fi
+    if [ -n "$run_output" ]
+    then
+        run_output_title=$(awk '/^exit 0[[:space:]]*$/ { after = 1; next } after && /^# 📋 run output/ { sub(/^# 📋 run output[[:space:]]*/, ""); print; exit }' "$script")
+        echo "## 📋 Run output"
+        echo ""
+        [ -n "$run_output_title" ] && echo "_${run_output_title}_" && echo ""
+        echo '````text'
+        echo "$run_output"
+        echo '````'
         echo ""
     fi
     echo "## ▶️ How to run it"
