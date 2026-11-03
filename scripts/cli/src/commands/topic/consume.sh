@@ -612,16 +612,14 @@ fi
 
 if [[ -n "$last" ]] || [[ -n "$from_timestamp" ]] || [[ -n "$partition" && ! -n "$tail" ]]
 then
-  if ! version_gt "$CP_CONNECT_TAG" "6.9.9"
+  # GetOffsetShell runs where run_kafka_admin_tool runs it: its version decides the class name
+  get_offsets_tool_tag=$(get_admin_tool_cp_tag)
+  if ! version_gt "$get_offsets_tool_tag" "6.9.9"
   then
-    logerror "❌ --last, --from-timestamp and --partition require CP 7.0 or later (it is $CP_CONNECT_TAG)"
+    logerror "❌ --last, --from-timestamp and --partition require CP 7.0 or later (it is $get_offsets_tool_tag)"
     exit 1
   fi
-  get_offsets_class="kafka.tools.GetOffsetShell"
-  if version_gt "$CP_CONNECT_TAG" "7.6.99"
-  then
-    get_offsets_class="org.apache.kafka.tools.GetOffsetShell"
-  fi
+  get_offsets_class=$(get_offset_shell_class "$get_offsets_tool_tag")
 fi
 
 # "partition offset" lines of the partitions of $topic, for --time $1: -2 earliest, -1 latest, or a timestamp in ms

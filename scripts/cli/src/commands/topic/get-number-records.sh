@@ -83,13 +83,48 @@ if [[ "$environment" == "ccloud" ]]; then
     grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
 
     # FIXED: Added --entrypoint to override the default 'kcat' entrypoint
-    docker run -d --rm --name "$kcat_container_name" --network=host \
+    if ! kcat_error=$(docker run -d --rm --name "$kcat_container_name" --network=host \
         -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
         --entrypoint tail \
-        confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
+        confluentinc/cp-kcat:latest -f /dev/null 2>&1)
+    then
+        # without it, every count was 0 and 'consume --min-expected-messages' waited until its timeout
+        logerror "❌ could not start the kcat container that counts the records: $kcat_error"
+        exit 1
+    fi
 
     trap "docker stop $kcat_container_name > /dev/null 2>&1; rm -f $offsets_err_file" EXIT
 fi
+
+# read_committed: the offsets include the aborted records and the transaction markers, the records are counted with a
+# read_committed console consumer instead (ccloud: kcat, below)
+committed_consumer_args=()
+if [ "$isolation_level" == "read_committed" ] && [[ "$environment" != "ccloud" ]]
+then
+    committed_tag="$cached_tag"
+    if [[ "$environment" == cfk* ]]
+    then
+        committed_tag="$cached_cfk_tag"
+    else
+        container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+        if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+        then
+            committed_tag="$container_tag"
+        fi
+    fi
+    if version_gt "$committed_tag" "8.1.99"
+    then
+        get_security_broker "--command-config"
+        committed_property="--formatter-property"
+    else
+        get_security_broker "--consumer.config"
+        committed_property="--property"
+    fi
+    committed_consumer_args=(kafka-console-consumer --bootstrap-server "$bootstrap_server" $security --from-beginning --isolation-level read_committed --timeout-ms 10000 "$committed_property" print.value=false "$committed_property" print.offset=true)
+fi
+
+# listed once: the loop used to list the topics again for each topic
+existing_topics=$(playground get-topic-list)
 
 # ------------------------------------------------------
 # MAIN LOOP
@@ -99,7 +134,6 @@ for topic in "${items[@]}"
 do
     log "💯 Get number of records in topic $topic"
     set +e
-    existing_topics=$(playground get-topic-list)
     if ! echo "$existing_topics" | grep -qFx "$topic"
     then
         logwarn "topic $topic does not exist !"
@@ -131,6 +165,15 @@ do
             echo "${count:-0}"
         fi
 
+    elif [ ${#committed_consumer_args[@]} -ne 0 ]
+    then
+        # one "Offset:N" line per committed record (print.value=false: a value with new lines counts once)
+        if [[ "$environment" == cfk* ]]
+        then
+            kubectl -n confluent exec "$container" -c connect -- "${committed_consumer_args[@]}" --topic "$topic" 2>/dev/null | grep -c "Offset:"
+        else
+            docker exec "$container" "${committed_consumer_args[@]}" --topic "$topic" 2>/dev/null | grep -c "Offset:"
+        fi
     elif [[ "$environment" == cfk* ]]
     then
         cfk_class_name="kafka.tools.GetOffsetShell"

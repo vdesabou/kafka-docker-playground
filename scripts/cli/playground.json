@@ -5689,7 +5689,7 @@
         },
         {
           "name": "compare",
-          "description": "🔀 Compare a topic with its replica: is everything replicated?\n\nEarliest and latest offsets and number of records of every partition, on\nboth sides, and what the destination misses. In an mdc-* environment\nthe two sides are the clusters given with --from and --to (Replicator,\nMirrorMaker 2, Cluster Linking); elsewhere, two topics of the same\ncluster (--to-topic).\n\nExits 1 when the destination has fewer records than the source. The\ncounts come from the offsets: transaction markers and compaction make\nthem approximate.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication",
+          "description": "🔀 Compare a topic with its replica: is everything replicated?\n\nEarliest and latest offsets and number of records of every partition, on\nboth sides, and what the destination misses. In an mdc-* environment\nthe two sides are the clusters given with --from and --to (Replicator,\nMirrorMaker 2, Cluster Linking); elsewhere, two topics of the same\ncluster (--to-topic).\n\nExits 1 when the destination misses records: partition by partition\nwhen both topics have the same number of partitions (duplicates in\none partition don't hide missing records in another), in total\notherwise. The counts come from the offsets: transaction markers and\ncompaction make them approximate.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication",
           "usage": "playground topic compare [OPTIONS]",
           "options": [
             {

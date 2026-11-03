@@ -160,7 +160,7 @@ Gotchas:
 - `get-number-records` on a missing topic prints `topic … does not exist !` (a warning) and exits 0: check the number,
   not the exit code. When the offsets can't be read (broker down, authentication), it prints
   `❌ could not get the offsets of topic orders (exit code 1)` and exits 1, instead of a `0`.
-- `get-offsets` needs CP 7.0+.
+- `get-offsets` needs CP 7.0+: the version of the container that runs the tool (the broker), not the one of connect.
 - **To assert data in a script, prefer `topic consume --min-expected-messages N`** (counts real records, then shows
   them) to `wait-for-records` + a count.
 

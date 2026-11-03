@@ -8646,9 +8646,11 @@ commands:
         MirrorMaker 2, Cluster Linking); elsewhere, two topics of the same
         cluster (--to-topic).
 
-        Exits 1 when the destination has fewer records than the source. The
-        counts come from the offsets: transaction markers and compaction make
-        them approximate.
+        Exits 1 when the destination misses records: partition by partition
+        when both topics have the same number of partitions (duplicates in
+        one partition don't hide missing records in another), in total
+        otherwise. The counts come from the offsets: transaction markers and
+        compaction make them approximate.
 
         🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication
       flags:

@@ -1182,6 +1182,34 @@ function get_catalog_topic_qualified_name() {
 # throwaway connect image container (ccloud).
 # Honors $verbose to print the command.
 # Usage: run_kafka_admin_tool <tool> [args...]
+# CP version of the kafka-* tools run by run_kafka_admin_tool: the image of the container they run in (the broker,
+# the kerberos client, connect-us…), not the version of connect (--connect-tag can differ). It decides the class names
+# and the options of the tools (GetOffsetShell moved to org.apache.kafka.tools in 7.7)
+function get_admin_tool_cp_tag() {
+  local tag=""
+  get_environment_used
+  if [[ "$environment" != "ccloud" ]] && [[ "$environment" != cfk* ]]
+  then
+    tag=$(get_security_broker "--command-config" > /dev/null 2>&1; docker inspect -f '{{.Config.Image}}' "$container" 2> /dev/null | awk -F ':' '{print $NF}')
+  fi
+  if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+  then
+    get_connect_image
+    tag="$CP_CONNECT_TAG"
+  fi
+  echo "$tag"
+}
+
+# GetOffsetShell class for the CP version $1
+function get_offset_shell_class() {
+  if version_gt "$1" "7.6.99"
+  then
+    echo "org.apache.kafka.tools.GetOffsetShell"
+  else
+    echo "kafka.tools.GetOffsetShell"
+  fi
+}
+
 function run_kafka_admin_tool() {
   tool="$1"
   shift

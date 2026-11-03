@@ -46,9 +46,15 @@ then
     maybe_verbose="--verbose"
 fi
 
-# "<partition> <earliest> <latest>" for every partition of topic $1 in cluster $2 (empty: the cluster of the environment)
+# "<partition> <earliest> <latest>" for every partition of topic $1 in cluster $2 (empty: the cluster of the environment).
+# The other lines of get-offsets (an error, CP < 7.0) are kept in $tmp_dir/offsets_errors, shown when nothing comes back
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+trap 'rm -rf $tmp_dir' EXIT
 function compare_get_offsets () {
-    PLAYGROUND_CLUSTER="$2" playground --output-level ERROR topic get-offsets --topic "$1" $maybe_verbose 2> /dev/null | awk 'NF == 4 && $1 ~ /^[0-9]+$/ { print $1, $2, $3 }'
+    local output
+    output=$(PLAYGROUND_CLUSTER="$2" playground --output-level ERROR topic get-offsets --topic "$1" $maybe_verbose 2>&1)
+    echo "$output" | awk 'NF == 4 && $1 ~ /^[0-9]+$/ { print $1, $2, $3 }'
+    echo "$output" | grep -v -E '^(PARTITION|TOTAL|[0-9]+) ' | grep -v '^$' > "$tmp_dir/offsets_errors" || true
 }
 
 start_time=$SECONDS
@@ -58,6 +64,10 @@ do
     if [[ -z "$from_offsets" ]]
     then
         logerror "❌ topic $from_label does not exist or has no partition"
+        if [ -s "$tmp_dir/offsets_errors" ]
+        then
+            tail -5 "$tmp_dir/offsets_errors"
+        fi
         exit 1
     fi
     to_offsets=$(compare_get_offsets "$to_topic" "$to")
@@ -70,9 +80,19 @@ do
         <(echo "$from_offsets") <(echo "$to_offsets") | sort -n)
     from_records=$(echo "$rows" | awk '$2 != "-" { n += $3 - $2 } END { print n + 0 }')
     to_records=$(echo "$rows" | awk '$4 != "-" { n += $5 - $4 } END { print n + 0 }')
-    missing=$((from_records - to_records))
     from_partitions=$(echo "$from_offsets" | grep -c . || true)
     to_partitions=$(echo "$to_offsets" | grep -c . || true)
+    if [ "$from_partitions" == "$to_partitions" ]
+    then
+        # partition by partition: extra records in one partition (duplicates) don't hide missing ones in another
+        missing=$(echo "$rows" | awk '{ f = ($2 == "-") ? 0 : $3 - $2; t = ($4 == "-") ? 0 : $5 - $4; if (f > t) n += f - t } END { print n + 0 }')
+        if [ $missing -eq 0 ] && [ $to_records -lt $from_records ]
+        then
+            missing=$((from_records - to_records))
+        fi
+    else
+        missing=$((from_records - to_records))
+    fi
 
     if [[ -z "$wait" ]] || { [[ -n "$to_offsets" ]] && [ $missing -le 0 ]; } || [ $((SECONDS - start_time)) -ge $max_wait ]
     then
@@ -103,12 +123,12 @@ then
         --arg to_cluster "$to" --arg to_topic "$to_topic" \
         --argjson from_records "$from_records" --argjson to_records "$to_records" \
         --argjson to_exists "$([[ -n "$to_offsets" ]] && echo true || echo false)" \
-        --argjson in_sync "$in_sync" '
+        --argjson in_sync "$in_sync" --argjson missing "$missing" '
         def side(e; l): if e == "-" then null else {earliest: (e | tonumber), latest: (l | tonumber), records: ((l | tonumber) - (e | tonumber))} end;
         {
             from: {cluster: (if $from_cluster == "" then null else $from_cluster end), topic: $from_topic, records: $from_records},
             to: {cluster: (if $to_cluster == "" then null else $to_cluster end), topic: $to_topic, exists: $to_exists, records: $to_records},
-            missing: ($from_records - $to_records),
+            missing: $missing,
             in_sync: $in_sync,
             partitions: (split("\n") | map(select(length > 0) | split(" ") | {
                 partition: (.[0] | tonumber),
@@ -138,13 +158,22 @@ then
 fi
 if [ $missing -gt 0 ]
 then
-    [[ -z "$json" ]] && logerror "❌ $to_label misses $missing records of $from_label ($to_records of $from_records)"
+    if [[ -z "$json" ]]
+    then
+        if [ $to_records -ge $from_records ]
+        then
+            logerror "❌ $to_label misses $missing records of $from_label in some partitions, even if it has $to_records records in total ($from_records in the source): see the partitions above"
+        else
+            logerror "❌ $to_label misses $missing records of $from_label ($to_records of $from_records)"
+        fi
+    fi
     exit 1
 fi
 if [[ -z "$json" ]]
 then
-    if [ $missing -lt 0 ]
+    if [ $to_records -gt $from_records ]
     then
+        missing=$((from_records - to_records))
         logwarn "⚠️ $to_label has $((-missing)) more records than $from_label: duplicates (a replication that restarted), other producers on the destination, or records already deleted by retention in the source"
     else
         log "✅ $to_label has as many records as $from_label ($from_records)"

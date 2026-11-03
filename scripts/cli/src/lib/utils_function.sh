@@ -1237,6 +1237,19 @@ function get_tool_jdk_jvm_args() {
 function get_connect_image() {
   set +e
   CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  # mdc-* environments have no connect container but connect-us and connect-europe (same version): without them, the
+  # default TAG was used, and a 7.x environment got the options of the CP 8.2+ tools
+  if [ -z "$CP_CONNECT_TAG" ]
+  then
+    for mdc_connect_container in "connect-${PLAYGROUND_CLUSTER:-us}" connect-us connect-europe
+    do
+      CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' "$mdc_connect_container" 2> /dev/null | cut -d ":" -f 2)
+      if [ -n "$CP_CONNECT_TAG" ]
+      then
+        break
+      fi
+    done
+  fi
   # If docker inspect failed, try kubectl for Kubernetes/CFK environment
   if [ -z "$CP_CONNECT_TAG" ] && command -v kubectl &> /dev/null; then
     CP_CONNECT_TAG=$(kubectl get pod -l app=connect -o jsonpath='{.items[0].spec.containers[0].image}' 2> /dev/null | cut -d ":" -f 2)

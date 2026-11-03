@@ -105,8 +105,9 @@ Gotchas:
   `...<truncated, only showing first 3000 characters, out of 2001234>...`.
 - New lines in a header, a key or a value are displayed as `\n`, so that a record stays on one line (`--json` keeps
   them in the value).
-- `--isolation-level read_committed` hides aborted transactional records. The count of the first log line follows
-  the same isolation level.
+- `--isolation-level read_committed` hides aborted transactional records. The count of the first log line, and the
+  wait of `--min-expected-messages`, follow the same isolation level: committed records are counted with a
+  `read_committed` consumer, not from the offsets (which include aborted records and transaction markers).
 
 ---
 

@@ -12561,7 +12561,7 @@ playground_topic_get_offsets_usage() {
 playground_topic_compare_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic compare\n\n"
-    printf "  🔀 Compare a topic with its replica: is everything replicated?\n  \n  Earliest and latest offsets and number of records of every partition, on\n  both sides, and what the destination misses. In an mdc-* environment\n  the two sides are the clusters given with --from and --to (Replicator,\n  MirrorMaker 2, Cluster Linking); elsewhere, two topics of the same\n  cluster (--to-topic).\n  \n  Exits 1 when the destination has fewer records than the source. The\n  counts come from the offsets: transaction markers and compaction make\n  them approximate.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication\n\n"
+    printf "  🔀 Compare a topic with its replica: is everything replicated?\n  \n  Earliest and latest offsets and number of records of every partition, on\n  both sides, and what the destination misses. In an mdc-* environment\n  the two sides are the clusters given with --from and --to (Replicator,\n  MirrorMaker 2, Cluster Linking); elsewhere, two topics of the same\n  cluster (--to-topic).\n  \n  Exits 1 when the destination misses records: partition by partition\n  when both topics have the same number of partitions (duplicates in\n  one partition don't hide missing records in another), in total\n  otherwise. The counts come from the offsets: transaction markers and\n  compaction make them approximate.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication\n\n"
   else
     printf "playground topic compare - 🔀 Compare a topic with its replica: is everything replicated?\n\n"
   fi
@@ -22159,6 +22159,34 @@ function get_catalog_topic_qualified_name() {
 # throwaway connect image container (ccloud).
 # Honors $verbose to print the command.
 # Usage: run_kafka_admin_tool <tool> [args...]
+# CP version of the kafka-* tools run by run_kafka_admin_tool: the image of the container they run in (the broker,
+# the kerberos client, connect-us…), not the version of connect (--connect-tag can differ). It decides the class names
+# and the options of the tools (GetOffsetShell moved to org.apache.kafka.tools in 7.7)
+function get_admin_tool_cp_tag() {
+  local tag=""
+  get_environment_used
+  if [[ "$environment" != "ccloud" ]] && [[ "$environment" != cfk* ]]
+  then
+    tag=$(get_security_broker "--command-config" > /dev/null 2>&1; docker inspect -f '{{.Config.Image}}' "$container" 2> /dev/null | awk -F ':' '{print $NF}')
+  fi
+  if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+  then
+    get_connect_image
+    tag="$CP_CONNECT_TAG"
+  fi
+  echo "$tag"
+}
+
+# GetOffsetShell class for the CP version $1
+function get_offset_shell_class() {
+  if version_gt "$1" "7.6.99"
+  then
+    echo "org.apache.kafka.tools.GetOffsetShell"
+  else
+    echo "kafka.tools.GetOffsetShell"
+  fi
+}
+
 function run_kafka_admin_tool() {
   tool="$1"
   shift
@@ -33025,6 +33053,19 @@ function get_tool_jdk_jvm_args() {
 function get_connect_image() {
   set +e
   CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  # mdc-* environments have no connect container but connect-us and connect-europe (same version): without them, the
+  # default TAG was used, and a 7.x environment got the options of the CP 8.2+ tools
+  if [ -z "$CP_CONNECT_TAG" ]
+  then
+    for mdc_connect_container in "connect-${PLAYGROUND_CLUSTER:-us}" connect-us connect-europe
+    do
+      CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' "$mdc_connect_container" 2> /dev/null | cut -d ":" -f 2)
+      if [ -n "$CP_CONNECT_TAG" ]
+      then
+        break
+      fi
+    done
+  fi
   # If docker inspect failed, try kubectl for Kubernetes/CFK environment
   if [ -z "$CP_CONNECT_TAG" ] && command -v kubectl &> /dev/null; then
     CP_CONNECT_TAG=$(kubectl get pod -l app=connect -o jsonpath='{.items[0].spec.containers[0].image}' 2> /dev/null | cut -d ":" -f 2)
@@ -62777,13 +62818,48 @@ playground_topic_get_number_records_command() {
       grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
 
       # FIXED: Added --entrypoint to override the default 'kcat' entrypoint
-      docker run -d --rm --name "$kcat_container_name" --network=host \
+      if ! kcat_error=$(docker run -d --rm --name "$kcat_container_name" --network=host \
           -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
           --entrypoint tail \
-          confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
+          confluentinc/cp-kcat:latest -f /dev/null 2>&1)
+      then
+          # without it, every count was 0 and 'consume --min-expected-messages' waited until its timeout
+          logerror "❌ could not start the kcat container that counts the records: $kcat_error"
+          exit 1
+      fi
 
       trap "docker stop $kcat_container_name > /dev/null 2>&1; rm -f $offsets_err_file" EXIT
   fi
+
+  # read_committed: the offsets include the aborted records and the transaction markers, the records are counted with a
+  # read_committed console consumer instead (ccloud: kcat, below)
+  committed_consumer_args=()
+  if [ "$isolation_level" == "read_committed" ] && [[ "$environment" != "ccloud" ]]
+  then
+      committed_tag="$cached_tag"
+      if [[ "$environment" == cfk* ]]
+      then
+          committed_tag="$cached_cfk_tag"
+      else
+          container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+          if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+          then
+              committed_tag="$container_tag"
+          fi
+      fi
+      if version_gt "$committed_tag" "8.1.99"
+      then
+          get_security_broker "--command-config"
+          committed_property="--formatter-property"
+      else
+          get_security_broker "--consumer.config"
+          committed_property="--property"
+      fi
+      committed_consumer_args=(kafka-console-consumer --bootstrap-server "$bootstrap_server" $security --from-beginning --isolation-level read_committed --timeout-ms 10000 "$committed_property" print.value=false "$committed_property" print.offset=true)
+  fi
+
+  # listed once: the loop used to list the topics again for each topic
+  existing_topics=$(playground get-topic-list)
 
   # ------------------------------------------------------
   # MAIN LOOP
@@ -62793,7 +62869,6 @@ playground_topic_get_number_records_command() {
   do
       log "💯 Get number of records in topic $topic"
       set +e
-      existing_topics=$(playground get-topic-list)
       if ! echo "$existing_topics" | grep -qFx "$topic"
       then
           logwarn "topic $topic does not exist !"
@@ -62825,6 +62900,15 @@ playground_topic_get_number_records_command() {
               echo "${count:-0}"
           fi
 
+      elif [ ${#committed_consumer_args[@]} -ne 0 ]
+      then
+          # one "Offset:N" line per committed record (print.value=false: a value with new lines counts once)
+          if [[ "$environment" == cfk* ]]
+          then
+              kubectl -n confluent exec "$container" -c connect -- "${committed_consumer_args[@]}" --topic "$topic" 2>/dev/null | grep -c "Offset:"
+          else
+              docker exec "$container" "${committed_consumer_args[@]}" --topic "$topic" 2>/dev/null | grep -c "Offset:"
+          fi
       elif [[ "$environment" == cfk* ]]
       then
           cfk_class_name="kafka.tools.GetOffsetShell"
@@ -62970,17 +63054,15 @@ playground_topic_get_offsets_command() {
       fi
   fi
 
-  get_connect_image
-  if ! version_gt "$CP_CONNECT_TAG" "6.9.9"
+  # GetOffsetShell runs in the container of the admin tools (the broker, the kerberos client…): its version, not the one
+  # of connect (--connect-tag), decides the class name
+  tool_tag=$(get_admin_tool_cp_tag)
+  if ! version_gt "$tool_tag" "6.9.9"
   then
-      logerror "❌ playground topic get-offsets requires CP 7.0 or later (it is $CP_CONNECT_TAG)"
+      logerror "❌ playground topic get-offsets requires CP 7.0 or later (it is $tool_tag)"
       exit 1
   fi
-  class_name="kafka.tools.GetOffsetShell"
-  if version_gt "$CP_CONNECT_TAG" "7.6.99"
-  then
-      class_name="org.apache.kafka.tools.GetOffsetShell"
-  fi
+  class_name=$(get_offset_shell_class "$tool_tag")
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
@@ -63068,9 +63150,15 @@ playground_topic_compare_command() {
       maybe_verbose="--verbose"
   fi
 
-  # "<partition> <earliest> <latest>" for every partition of topic $1 in cluster $2 (empty: the cluster of the environment)
+  # "<partition> <earliest> <latest>" for every partition of topic $1 in cluster $2 (empty: the cluster of the environment).
+  # The other lines of get-offsets (an error, CP < 7.0) are kept in $tmp_dir/offsets_errors, shown when nothing comes back
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  trap 'rm -rf $tmp_dir' EXIT
   function compare_get_offsets () {
-      PLAYGROUND_CLUSTER="$2" playground --output-level ERROR topic get-offsets --topic "$1" $maybe_verbose 2> /dev/null | awk 'NF == 4 && $1 ~ /^[0-9]+$/ { print $1, $2, $3 }'
+      local output
+      output=$(PLAYGROUND_CLUSTER="$2" playground --output-level ERROR topic get-offsets --topic "$1" $maybe_verbose 2>&1)
+      echo "$output" | awk 'NF == 4 && $1 ~ /^[0-9]+$/ { print $1, $2, $3 }'
+      echo "$output" | grep -v -E '^(PARTITION|TOTAL|[0-9]+) ' | grep -v '^$' > "$tmp_dir/offsets_errors" || true
   }
 
   start_time=$SECONDS
@@ -63080,6 +63168,10 @@ playground_topic_compare_command() {
       if [[ -z "$from_offsets" ]]
       then
           logerror "❌ topic $from_label does not exist or has no partition"
+          if [ -s "$tmp_dir/offsets_errors" ]
+          then
+              tail -5 "$tmp_dir/offsets_errors"
+          fi
           exit 1
       fi
       to_offsets=$(compare_get_offsets "$to_topic" "$to")
@@ -63092,9 +63184,19 @@ playground_topic_compare_command() {
           <(echo "$from_offsets") <(echo "$to_offsets") | sort -n)
       from_records=$(echo "$rows" | awk '$2 != "-" { n += $3 - $2 } END { print n + 0 }')
       to_records=$(echo "$rows" | awk '$4 != "-" { n += $5 - $4 } END { print n + 0 }')
-      missing=$((from_records - to_records))
       from_partitions=$(echo "$from_offsets" | grep -c . || true)
       to_partitions=$(echo "$to_offsets" | grep -c . || true)
+      if [ "$from_partitions" == "$to_partitions" ]
+      then
+          # partition by partition: extra records in one partition (duplicates) don't hide missing ones in another
+          missing=$(echo "$rows" | awk '{ f = ($2 == "-") ? 0 : $3 - $2; t = ($4 == "-") ? 0 : $5 - $4; if (f > t) n += f - t } END { print n + 0 }')
+          if [ $missing -eq 0 ] && [ $to_records -lt $from_records ]
+          then
+              missing=$((from_records - to_records))
+          fi
+      else
+          missing=$((from_records - to_records))
+      fi
 
       if [[ -z "$wait" ]] || { [[ -n "$to_offsets" ]] && [ $missing -le 0 ]; } || [ $((SECONDS - start_time)) -ge $max_wait ]
       then
@@ -63125,12 +63227,12 @@ playground_topic_compare_command() {
           --arg to_cluster "$to" --arg to_topic "$to_topic" \
           --argjson from_records "$from_records" --argjson to_records "$to_records" \
           --argjson to_exists "$([[ -n "$to_offsets" ]] && echo true || echo false)" \
-          --argjson in_sync "$in_sync" '
+          --argjson in_sync "$in_sync" --argjson missing "$missing" '
           def side(e; l): if e == "-" then null else {earliest: (e | tonumber), latest: (l | tonumber), records: ((l | tonumber) - (e | tonumber))} end;
           {
               from: {cluster: (if $from_cluster == "" then null else $from_cluster end), topic: $from_topic, records: $from_records},
               to: {cluster: (if $to_cluster == "" then null else $to_cluster end), topic: $to_topic, exists: $to_exists, records: $to_records},
-              missing: ($from_records - $to_records),
+              missing: $missing,
               in_sync: $in_sync,
               partitions: (split("\n") | map(select(length > 0) | split(" ") | {
                   partition: (.[0] | tonumber),
@@ -63160,13 +63262,22 @@ playground_topic_compare_command() {
   fi
   if [ $missing -gt 0 ]
   then
-      [[ -z "$json" ]] && logerror "❌ $to_label misses $missing records of $from_label ($to_records of $from_records)"
+      if [[ -z "$json" ]]
+      then
+          if [ $to_records -ge $from_records ]
+          then
+              logerror "❌ $to_label misses $missing records of $from_label in some partitions, even if it has $to_records records in total ($from_records in the source): see the partitions above"
+          else
+              logerror "❌ $to_label misses $missing records of $from_label ($to_records of $from_records)"
+          fi
+      fi
       exit 1
   fi
   if [[ -z "$json" ]]
   then
-      if [ $missing -lt 0 ]
+      if [ $to_records -gt $from_records ]
       then
+          missing=$((from_records - to_records))
           logwarn "⚠️ $to_label has $((-missing)) more records than $from_label: duplicates (a replication that restarted), other producers on the destination, or records already deleted by retention in the source"
       else
           log "✅ $to_label has as many records as $from_label ($from_records)"
@@ -64379,16 +64490,14 @@ playground_topic_consume_command() {
 
   if [[ -n "$last" ]] || [[ -n "$from_timestamp" ]] || [[ -n "$partition" && ! -n "$tail" ]]
   then
-    if ! version_gt "$CP_CONNECT_TAG" "6.9.9"
+    # GetOffsetShell runs where run_kafka_admin_tool runs it: its version decides the class name
+    get_offsets_tool_tag=$(get_admin_tool_cp_tag)
+    if ! version_gt "$get_offsets_tool_tag" "6.9.9"
     then
-      logerror "❌ --last, --from-timestamp and --partition require CP 7.0 or later (it is $CP_CONNECT_TAG)"
+      logerror "❌ --last, --from-timestamp and --partition require CP 7.0 or later (it is $get_offsets_tool_tag)"
       exit 1
     fi
-    get_offsets_class="kafka.tools.GetOffsetShell"
-    if version_gt "$CP_CONNECT_TAG" "7.6.99"
-    then
-      get_offsets_class="org.apache.kafka.tools.GetOffsetShell"
-    fi
+    get_offsets_class=$(get_offset_shell_class "$get_offsets_tool_tag")
   fi
 
   # "partition offset" lines of the partitions of $topic, for --time $1: -2 earliest, -1 latest, or a timestamp in ms

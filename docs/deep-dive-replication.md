@@ -160,8 +160,10 @@ playground consumer-group describe --cluster us --group my-app
 ```
 
 - **Is everything replicated?** `playground topic compare --topic sales_EUROPE --from europe --to us` prints the
-  earliest and latest offsets and the records of every partition on both sides, and exits 1 when the destination has
-  fewer records (`--to-topic EUROPE.sales_EUROPE` for MirrorMaker 2, `--wait --max-wait 180` to wait for the
+  earliest and latest offsets and the records of every partition on both sides, and exits 1 when the destination
+  misses records. With the same number of partitions, they are compared partition by partition, so duplicates in one
+  partition don't hide records missing in another (`missing` in `--json`). With different numbers of partitions, only
+  the totals are compared (`--to-topic EUROPE.sales_EUROPE` for MirrorMaker 2, `--wait --max-wait 180` to wait for the
   replication, `--json`). The counts come from the offsets: transaction markers and compaction make them approximate.
   Outside the mdc environments it compares two topics of the cluster (`--topic test-topic --to-topic test-topic-duplicate`).
 - `playground status` shows the connectors and the topics of each cluster (`🌍 Cluster us`, `🌍 Cluster europe`),
