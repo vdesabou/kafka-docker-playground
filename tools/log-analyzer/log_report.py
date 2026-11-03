@@ -203,7 +203,9 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
         where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
                  else f"in {first_f['label']} (first at {first})")
         hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
-                "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}"}
+                "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}",
+                # the records it matched (index set by analyze()): how much of it is in the current selection
+                "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
         if title == KILLED_TASK_TITLE:
             # the exception that killed the tasks is what to fix: one line per distinct chain
             chains = killed_task_chains(matches)
@@ -234,6 +236,35 @@ def short_message(message: str) -> str:
     return re.sub(r"\s*\([\w$.]+:\d+\)\s*$", "", m)
 
 
+def epochs(timestamps: List[str]) -> List[int]:
+    """Sorted epoch seconds of the timestamps that parse, the same conversion as the occurrences chart."""
+    out = []
+    for ts in timestamps:
+        try:
+            out.append(int(datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S").timestamp()))
+        except ValueError:
+            pass
+    out.sort()
+    return out
+
+
+B36 = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+
+def encode_times(times: List[int]) -> str:
+    """The epoch seconds of the occurrences of one record: the first value then the deltas, in base 36 (the plain
+    numbers would add megabytes to the report). Decoded by pgTimes() of FILTER_SCRIPT."""
+    parts, prev = [], 0
+    for t in times:
+        d, s = t - prev, ""
+        prev = t
+        while d:
+            d, rem = divmod(d, 36)
+            s = B36[rem] + s
+        parts.append(s or "0")
+    return " ".join(parts)
+
+
 def root_causes(files: List[dict]) -> List[dict]:
     """Records grouped by their deepest exception, or by their message when they have none."""
     causes: Dict[str, dict] = {}
@@ -242,10 +273,14 @@ def root_causes(files: List[dict]) -> List[dict]:
         key = (f"{r['root_cause']}: {re.sub(r'[0-9]+', '#', r['root_cause_message'])[:100]}" if r["root_cause"]
                else short_message(r["message"])[:160])
         c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": key, "occurrences": 0, "records": 0, "files": OrderedDict(),
-                                    "connectors": OrderedDict(), "example": r["root_cause_message"] or short_message(r["message"]), "level": r["level"]})
+                                    "connectors": OrderedDict(), "example": r["root_cause_message"] or short_message(r["message"]), "level": r["level"],
+                                    "records_meta": []})
         c["occurrences"] += r["count"]
         c["records"] += 1
         c["files"][f["label"]] = True
+        # level, connector, count and epoch seconds of each record, for the filters of the HTML report
+        c["records_meta"].append((r["level"], r.get("connector") or "", r["count"], epochs(r["timestamps"]),
+                                  r.get("index", -1), r.get("file_index", -1)))
         if r["connector"]:
             c["connectors"][r["connector"]] = c["connectors"].get(r["connector"], 0) + r["count"]
         else:
@@ -264,7 +299,7 @@ def root_causes(files: List[dict]) -> List[dict]:
 
 def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int = 5, unit: str = "file") -> List[dict]:
     """Known causes first, then the most frequent root causes no known cause explains."""
-    res = [{k: h[k] for k in ("severity", "text", "details") if k in h} for h in hints]
+    res = [{k: h[k] for k in ("severity", "text", "details", "records") if k in h} for h in hints]
     explained = [re.compile(p) for p, _, _, _ in HINTS]
     added = 0
     for c in causes:
@@ -275,7 +310,8 @@ def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int 
         sev = "CRITICAL" if c["level"] == "FATAL" else "HIGH" if c["level"] == "ERROR" else "MEDIUM"
         where = f"{len(c['files'])} {unit}s" if len(c["files"]) > 1 else c["files"][0]
         what = f"{c['root_cause']}: {c['example']}" if c["root_cause"] else c["example"]
-        res.append({"severity": sev, "text": f"{c['level']} ×{c['occurrences']} in {where}: {what[:300]}"})
+        res.append({"severity": sev, "text": f"{c['level']} ×{c['occurrences']} in {where}: {what[:300]}",
+                    "records": [m[4] for m in c["records_meta"] if m[4] >= 0]})
         added += 1
     res.sort(key=lambda x: SEVERITY_ORDER.index(x["severity"]))
     return res
@@ -346,6 +382,13 @@ def drop_alternating_changes(config: dict, window: int = 60) -> None:
 def analyze(files: List[dict], unit: str = "file") -> dict:
     """unit: what a label is (file, container, script), for the texts of the findings"""
     shorten_labels(files)
+    # the records and the files with findings are numbered in the order they are rendered: data-rec of each block and
+    # data-file of each row of the files table, indexes 5 and 6 of occurrences_json
+    index = 0
+    for file_index, f in enumerate(x for x in files if x["records"]):
+        for r in f["records"]:
+            r["index"], r["file_index"] = index, file_index
+            index += 1
     hints = match_hints(files, unit)
     causes = root_causes(files)
     # the "<Class>Config values:" dumps of the logs and the config files of the input (.properties, connector JSON)
@@ -513,14 +556,40 @@ def timeline(files: List[dict]) -> Tuple[List[Tuple[datetime, str]], bool]:
     return points, capped
 
 
+def cause_label(c: dict) -> str:
+    return f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"]
+
+
+def occurrences_json(causes: List[dict]) -> str:
+    """Every record of the report as [root cause index, level, connector index, occurrences, epoch seconds, record
+    index (data-rec of its block), file index (data-file of its row of the files table)]: what the
+    📈 occurrences chart, the 🔝 top causes chart, the 🌳 root causes table and the records are all counted again from
+    when a level,
+    a connector or a period is selected (pgRecords() of FILTER_SCRIPT). The timestamps are here once, not in the chart
+    (its "times" is empty, window.pgChartTimes fills it) nor on the rows of the table."""
+    names: Dict[str, int] = {}
+    records = []
+    for i, c in enumerate(causes):
+        for level, connector, count, times, index, file_index in c["records_meta"]:
+            if connector and connector not in names:
+                names[connector] = len(names)
+            records.append([i, LEVEL_ORDER.get(level, 9), names[connector] if connector else -1, count,
+                            encode_times(times), index, file_index])
+    return json.dumps({"connectors": list(names), "records": records}, separators=(",", ":"))
+
+
 def charts_html(files: List[dict], causes: List[dict]) -> str:
     points, capped = timeline(files)
-    rows = [(f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"],
-             c["occurrences"], f"{c['root_cause'] + ': ' + c['example'] if c['root_cause'] else c['label']}: {c['occurrences']} occurrence(s)")
-            for c in causes[:10]]
-    return charts_grid([("📈 Occurrences over time", time_chart(points, [("errors", "ERROR/FATAL", SERIES_1), ("warnings", "WARN", SERIES_2)],
-                                                                 " · first 1000 occurrences of each record" if capped else "")),
-                        ("🔝 Root causes (occurrences)", svg_hbars(rows))])
+    rows = [(cause_label(c), c["occurrences"], f"{cause_label(c)}: {c['occurrences']} occurrence(s)") for c in causes[:10]]
+    # the series are built by pgChartTimes() from the records of the selected levels and connector, not embedded here
+    chart = time_chart(points, [("errors", "ERROR/FATAL", SERIES_1), ("warnings", "WARN", SERIES_2)],
+                       " · first 1000 occurrences of each record" if capped else "",
+                       # which record levels each series counts, by label (a series without any point is left out)
+                       chart_id=TIME_CHART_ID, embed_times=False,
+                       extra={"pgLevels": {"ERROR/FATAL": [LEVEL_ORDER["FATAL"], LEVEL_ORDER["ERROR"]],
+                                           "WARN": [LEVEL_ORDER["WARN"]]}})
+    return charts_grid([("📈 Occurrences over time", chart),
+                        ("🔝 Root causes (occurrences)", f"<div class='top-causes'>{svg_hbars(rows)}</div>" if rows else "")])
 
 
 def level_badge(level: str) -> str:
@@ -538,7 +607,8 @@ def connectors_attr(names: List[str], none: bool = False) -> str:
 def records_html(records: List[dict], open_first: int = 3, highlight: Optional[str] = None,
                  viewers: Optional[Dict[str, str]] = None, label: str = "") -> str:
     """One collapsible block per distinct record; highlight: name that marks the records mentioning it; viewers: label ->
-    page of the file (log_viewer), its line numbers link to it."""
+    page of the file (log_viewer), its line numbers link to it. A record with an "index" (set by analyze()) carries it
+    as data-rec, and its count is in a .rec-count span: the filters of the report hide it and count it again."""
     viewers = viewers or {}
     out = []
     for i, r in enumerate(records):
@@ -551,7 +621,9 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
         msg = short_message(r["message"])
         conn = f"<span class='legend mono'>[{e(r['connector'])}]</span> " if r.get("connector") else ""
         out.append(f"<details data-level='{e(r['level'])}'{connectors_attr([r['connector']] if r.get('connector') else [])}"
-                   f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} ×{r['count']}{mine} "
+                   + (f" data-rec='{r['index']}'" if r.get("index") is not None else "")
+                   + f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} "
+                   f"<span class='rec-count'>×{r['count']}</span>{mine} "
                    f"{conn}<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {when}</span></summary>"
                    f"<pre>{log_html(r['text'])}</pre>"
                    + (f"<details><summary>📋 Show context</summary><pre>{log_html(r['context'])}</pre></details>" if r.get("context") else "")
@@ -559,35 +631,267 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
     return "".join(out)
 
 
+# id of the 📈 Occurrences over time chart: the 🌳 Root causes table follows the period selected on it
+TIME_CHART_ID = "occurrences-chart"
+
 # filter bar of the log report: hides the root causes and the records of the levels switched off, and of the
 # connectors not selected (the [connector|task-0] MDC context of the records)
 FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;"
               "padding:8px 12px;margin-bottom:14px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
               "font-size:.78rem;color:#475569}.lvl-chip{border:0;cursor:pointer;font-family:inherit;font-size:.75rem}"
-              ".lvl-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}[data-level][hidden]{display:none}"
+              ".lvl-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}"
               ".conn-filter{font-family:inherit;font-size:.75rem;max-width:420px;padding:2px 4px;border-radius:6px}"
               ".lvl-filter .sep{margin-left:10px}"
-              ".file-records[hidden]{display:none}html[data-theme=dark] .lvl-filter{background:#1e293b;color:#94a3b8}</style>")
-FILTER_SCRIPT = """<script>
-function pgApplyFilters() {
-  const off = new Set([...document.querySelectorAll(".lvl-chip[aria-pressed=false]")].map(c => c.dataset.level));
+              "html[data-theme=dark] .lvl-filter{background:#1e293b;color:#94a3b8}</style>")
+
+# always emitted: the level, connector and period filters. Everything below the filter bar is counted again from the
+# same index of records (occurrences_json): the 📈 occurrences chart, the 🔝 top causes chart, the 🌳 root causes
+# table and the records of each file. The verdict and the tiles above the bar stay the figures of the whole report.
+FILTER_SCRIPT = ("<style>[data-level][hidden]{display:none}.file-records[hidden]{display:none}tr.file-row[hidden]{display:none}"
+                 ".rc-range{font-weight:400;font-size:.75rem;color:#64748b;margin-left:8px}"
+                 ".rc-reset{font-family:inherit;font-size:.72rem;margin-left:8px;padding:1px 7px;border-radius:6px;"
+                 "border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer}"
+                 "html[data-theme=dark] .rc-reset{background:#0f172a;color:#cbd5e1;border-color:#334155}"
+                 ".rec-scope:not(:empty){display:block;margin-top:4px;font-size:.75rem;color:#64748b}"
+                 ".rec-card.out{opacity:.45}.fi-scope{font-weight:400;font-size:.78rem;opacity:.75}</style>") + """<script>
+// ── the filters of the report: levels, connector, and the period selected on the occurrences chart ──────────────
+// pgOccurrences: {connectors: [name], records: [[root cause index, level (0 FATAL, 1 ERROR, 2 WARN), connector index
+// (-1: none), occurrences, epoch seconds]]} - occurrences_json() of log_report.py. The times of a record are the
+// first value then the deltas, in base 36, and are at most the first 1000 occurrences: an occurrence without a time
+// of its own counts in the totals but cannot be placed in a period.
+var pgOcc = JSON.parse(document.getElementById("pg-occurrences").textContent);
+var PG_LEVELS = ["FATAL", "ERROR", "WARN"];
+var pgByRecord = null;    // record index -> its entry of pgOcc.records, for the findings
+var pgWindow = null;      // [from, to] epoch seconds, null for the whole report
+var pgRedrawing = false;  // the chart is being drawn again with other series, its "zoomchange" is not a new period
+var pgLevelsOff = null;   // Set of the level codes switched off
+var pgConnector = "";     // "" all, "-" the records without a connector context, else a connector name
+var pgConnIdx = -1;       // index of pgConnector in pgOcc.connectors
+function pgTimes(rec) {
+  if (rec.times === undefined) {
+    let t = 0;
+    rec.times = rec[4] === "" ? [] : rec[4].split(" ").map(function (d) { t += parseInt(d, 36); return t; });
+  }
+  return rec.times;
+}
+function pgKeeps(rec) {
+  if (pgLevelsOff && pgLevelsOff.has(rec[1])) return false;
+  if (pgConnector === "") return true;
+  return pgConnector === "-" ? rec[2] === -1 : rec[2] === pgConnIdx;
+}
+// occurrences of a record in the selected period, and whether it is in it at all (a record whose occurrences have no
+// time of their own cannot be placed: it stays, with its total)
+function pgInWindow(rec) {
+  if (!pgWindow) return [rec[3], true];
+  const times = pgTimes(rec);
+  if (!times.length) return [rec[3], true];
+  let n = 0;
+  for (const t of times) if (t >= pgWindow[0] && t <= pgWindow[1]) n++;
+  return [n, n > 0];
+}
+function pgRead() {
+  const off = [...document.querySelectorAll(".lvl-chip[aria-pressed=false]")].map(c => +c.dataset.levelCode);
+  pgLevelsOff = off.length ? new Set(off) : null;
   const sel = document.querySelector(".conn-filter");
-  const conn = sel ? sel.value : "";
-  document.querySelectorAll("[data-level]:not(.lvl-chip)").forEach(el => {
-    const names = (el.dataset.connectors || "-").split(" ");
-    el.hidden = off.has(el.dataset.level) || (conn !== "" && !names.includes(conn));
+  pgConnector = sel ? sel.value : "";
+  pgConnIdx = pgOcc.connectors.indexOf(pgConnector);
+}
+function pgStamp(t) {
+  const d = new Date(Math.round(t * 1000)), p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " +
+    p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+}
+// the series of the occurrences chart, from the records kept: zoom_chart.js asks for them before the first draw
+window.pgChartTimes = function (box, chart) {
+  if (box.id !== "@@CHART@@") return null;
+  const levels = (chart.series || []).map(s => (chart.pgLevels || {})[s.label] || []);
+  const out = levels.map(() => []);
+  for (const rec of pgOcc.records) {
+    if (!pgKeeps(rec)) continue;
+    const times = pgTimes(rec);
+    if (!times.length) continue;
+    for (let i = 0; i < levels.length; i++) if (levels[i].indexOf(rec[1]) >= 0) { for (const t of times) out[i].push(t); break; }
+  }
+  return out.map(a => a.sort((x, y) => x - y));
+};
+// 🔝 Root causes (occurrences): the same horizontal bars as svg_hbars() of report_html.py, top 10 of what is kept
+function pgTopCauses(byCause) {
+  const holder = document.querySelector(".top-causes");
+  if (!holder) return;
+  const rows = [];
+  document.querySelectorAll("tr.rc-row").forEach(function (tr) {
+    const n = byCause[+tr.dataset.cause];
+    if (tr.hidden || !n || !n[0]) return;
+    const cls = tr.cells[1].textContent, msg = tr.cells[2].textContent;
+    rows.push([cls === "—" ? msg : cls + ": " + msg, n[0], n[2]]);
+  });
+  rows.sort((a, b) => a[2] - b[2] || b[1] - a[1]);
+  const top = rows.slice(0, 10);
+  if (!top.length) { holder.innerHTML = "<p class='legend'>No root cause left with these filters.</p>"; return; }
+  const W = 600, rowh = 22, L = 300, H = 10 + rowh * top.length, mx = top[0][1] || 1;
+  const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const o = ['<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img">'];
+  top.forEach(function (r, i) {
+    const y = 5 + i * rowh, w = (W - L - 70) * r[1] / mx;
+    o.push('<text x="' + (L - 6) + '" y="' + (y + 14) + '" font-size="10" fill="#334155" text-anchor="end">' + esc(r[0].slice(0, 52)) + "</text>" +
+      '<rect x="' + L + '" y="' + (y + 3) + '" width="' + Math.max(1, w).toFixed(1) + '" height="15" rx="2" fill="@@COLOR@@">' +
+      "<title>" + esc(r[0] + ": " + r[1] + " occurrence(s)") + "</title></rect>" +
+      '<text x="' + (L + w + 5).toFixed(1) + '" y="' + (y + 14) + '" font-size="10" fill="#475569">' + r[1] + "</text>");
+  });
+  o.push("</svg>");
+  holder.innerHTML = o.join("");
+}
+// the 🌳 root causes table: occurrences and records counted again for the levels, connector and period selected
+function pgRootCauses() {
+  const byCause = {};
+  for (const rec of pgOcc.records) {
+    if (!pgKeeps(rec)) continue;
+    const n = pgInWindow(rec);
+    if (!n[1]) continue;
+    const slot = byCause[rec[0]] || (byCause[rec[0]] = [0, 0, 9]);
+    slot[0] += n[0];
+    slot[1] += 1;
+    if (rec[1] < slot[2]) slot[2] = rec[1];
+  }
+  const note = document.querySelector(".rc-range"), reset = document.querySelector(".rc-reset");
+  const rows = document.querySelectorAll("tr.rc-row");
+  let kept = 0, occurrences = 0;
+  rows.forEach(function (tr) {
+    const n = byCause[+tr.dataset.cause];
+    tr.hidden = !n;
+    if (!n) return;
+    tr.querySelector(".rc-occ").textContent = n[0];
+    tr.querySelector(".rc-rec").textContent = n[1];
+    const badge = tr.querySelector("td .st"), lvl = PG_LEVELS[n[2]];
+    if (badge && lvl && badge.textContent !== lvl) { badge.textContent = lvl; badge.className = "st " + lvl.toLowerCase(); }
+    kept++;
+    occurrences += n[0];
+  });
+  if (note) {
+    const what = kept ? kept + " of " + rows.length + " root cause(s) · " + occurrences + " occurrence(s)"
+      : "no root cause left";
+    note.textContent = pgWindow ? "⏱ " + pgStamp(pgWindow[0]) + " → " + pgStamp(pgWindow[1]) + " · " + what
+      : (pgLevelsOff || pgConnector !== "") ? what : "";
+    if (reset) reset.hidden = !pgWindow;
+  }
+  return byCause;
+}
+// the record blocks of each file: hidden when they are out of the filters, with their ×count in the period
+function pgRecordBlocks() {
+  const keep = {};
+  for (const rec of pgOcc.records) {
+    if (rec[5] < 0 || !pgKeeps(rec)) continue;
+    const n = pgInWindow(rec);
+    if (n[1]) keep[rec[5]] = n[0];
+  }
+  document.querySelectorAll("details[data-rec]").forEach(function (el) {
+    const n = keep[+el.dataset.rec];
+    el.hidden = n === undefined;
+    const span = el.querySelector(".rec-count");
+    if (span) {
+      if (span.dataset.all === undefined) span.dataset.all = span.textContent;
+      span.textContent = n === undefined ? span.dataset.all : "×" + n;
+      span.title = n === undefined || !pgWindow ? "" : "in this period · " + span.dataset.all + " in the whole report";
+    }
   });
   // a file whose records are all hidden
-  document.querySelectorAll(".file-records").forEach(card => { card.hidden = !card.querySelector("details[data-level]:not([hidden])"); });
+  document.querySelectorAll(".file-records").forEach(card => { card.hidden = !card.querySelector("details[data-rec]:not([hidden])"); });
 }
+// 🗂️ the files with findings: distinct records, occurrences and per-level counts of what is kept
+function pgFilesTable() {
+  const rows = document.querySelectorAll("tr.file-row");
+  if (!rows.length) return;
+  const by = {};
+  for (const rec of pgOcc.records) {
+    if (rec[6] < 0 || !pgKeeps(rec)) continue;
+    const n = pgInWindow(rec);
+    if (!n[1]) continue;
+    const slot = by[rec[6]] || (by[rec[6]] = {distinct: 0, occ: 0, 0: 0, 1: 0, 2: 0});
+    slot.distinct += 1;
+    slot.occ += n[0];
+    slot[rec[1]] += n[0];
+  }
+  rows.forEach(function (tr) {
+    const n = by[+tr.dataset.file];
+    tr.hidden = !n;
+    if (!n) return;
+    tr.querySelector(".fr-distinct").textContent = n.distinct;
+    tr.querySelector(".fr-occ").textContent = n.occ;
+    tr.querySelector(".fr-fatal").textContent = n[0] || "";
+    tr.querySelector(".fr-error").textContent = n[1] || "";
+    tr.querySelector(".fr-warn").textContent = n[2] || "";
+  });
+}
+// 🔎 Findings: their text stays the figures of the whole report (they are the diagnosis of the bundle, above the
+// filter bar, with the verdict and the tiles) - each card only says how much of it is in the current selection
+function pgFindings() {
+  const cards = document.querySelectorAll(".rec-card[data-recs]");
+  if (!cards.length) return;
+  if (!pgByRecord) { pgByRecord = {}; for (const rec of pgOcc.records) if (rec[5] >= 0) pgByRecord[rec[5]] = rec; }
+  const filtered = pgWindow !== null || pgLevelsOff !== null || pgConnector !== "";
+  cards.forEach(function (card) {
+    const span = card.querySelector(".rec-scope");
+    if (!span) return;
+    if (!filtered) { span.textContent = ""; card.classList.remove("out"); return; }
+    if (card._pgRecs === undefined) card._pgRecs = card.dataset.recs.split(" ").map(Number);
+    let here = 0, all = 0;
+    for (const i of card._pgRecs) {
+      const rec = pgByRecord[i];
+      if (!rec) continue;
+      all += rec[3];
+      if (!pgKeeps(rec)) continue;
+      const n = pgInWindow(rec);
+      if (n[1]) here += n[0];
+    }
+    span.textContent = here ? "▸ " + here + " of " + all + " occurrence(s) here" : "▸ nothing in this selection";
+    card.classList.toggle("out", here === 0);
+  });
+  const scope = document.querySelector(".fi-scope");
+  if (scope) {
+    const bits = [];
+    if (pgWindow) bits.push("⏱ " + pgStamp(pgWindow[0]) + " → " + pgStamp(pgWindow[1]));
+    if (pgConnector === "-") bits.push("no connector context");
+    else if (pgConnector !== "") bits.push(pgConnector);
+    if (pgLevelsOff) bits.push([...pgLevelsOff].map(l => PG_LEVELS[l]).join(" + ") + " off");
+    scope.textContent = bits.length ? " · selection: " + bits.join(" · ") : "";
+  }
+}
+function pgApply() {
+  pgTopCauses(pgRootCauses());
+  pgRecordBlocks();
+  pgFilesTable();
+  pgFindings();
+}
+function pgApplyFilters() {
+  pgRead();
+  pgApply();
+  const box = document.getElementById("@@CHART@@");
+  if (box && box.setTimes) {
+    pgRedrawing = true;  // its "zoomchange" is this redraw, not a new period
+    try { box.setTimes(window.pgChartTimes(box, JSON.parse(box.dataset.chart))); } finally { pgRedrawing = false; }
+  }
+}
+// drag over the occurrences chart (or ◀ ▶ / double-click): everything below the filter bar follows
+document.addEventListener("zoomchange", function (ev) {
+  if (!ev.target || ev.target.id !== "@@CHART@@" || pgRedrawing) return;
+  pgWindow = ev.detail.all ? null : [ev.detail.from, ev.detail.to];
+  pgRead();
+  pgApply();
+});
 document.addEventListener("click", function (ev) {
+  if (ev.target.closest(".rc-reset")) {
+    const all = document.querySelector("#@@CHART@@ [data-zoom='all']");
+    if (all) all.click(); else { pgWindow = null; pgApplyFilters(); }
+    return;
+  }
   const chip = ev.target.closest(".lvl-chip");
   if (!chip) return;
   chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "false" ? "true" : "false");
   pgApplyFilters();
 });
 document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
-</script>"""
+document.addEventListener("DOMContentLoaded", function () { pgRead(); pgApply(); });
+</script>""".replace("@@CHART@@", TIME_CHART_ID).replace("@@COLOR@@", SERIES_1)
 
 
 CONFIG_CSS = ("<style>.cfg-search{font-family:inherit;font-size:.8rem;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;"
@@ -668,11 +972,12 @@ def config_block_html(c: dict, viewers: Optional[Dict[str, str]] = None) -> str:
 
 def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_connector: int) -> str:
     """Chips FATAL / ERROR / WARN with their occurrences when the report has 2 levels or more, and a connector picker
-    when records have a connector context"""
+    when records have a connector context. FILTER_SCRIPT, which applies them, is emitted by html_report()."""
     present = [lvl for lvl in LEVEL_ORDER if by_level.get(lvl)]
     parts = []
     if len(present) >= 2:
-        parts.append("Levels:" + "".join(f"<button type='button' class='st {lvl.lower()} lvl-chip' data-level='{lvl}' aria-pressed='true' "
+        parts.append("Levels:" + "".join(f"<button type='button' class='st {lvl.lower()} lvl-chip' data-level='{lvl}' "
+                                         f"data-level-code='{LEVEL_ORDER[lvl]}' aria-pressed='true' "
                                          f"title='show / hide the {lvl} records'>{lvl} ({by_level[lvl]})</button>" for lvl in present))
     if by_connector:
         options = [f"<option value=''>all ({len(by_connector)} connector(s){' + no connector' if without_connector else ''})</option>"]
@@ -684,7 +989,7 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
                      + "".join(options) + "</select>")
     if not parts:
         return ""
-    return FILTER_CSS + "<div class='lvl-filter'>" + "".join(parts) + "</div>" + FILTER_SCRIPT
+    return FILTER_CSS + "<div class='lvl-filter'>" + "".join(parts) + "</div>"
 
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
@@ -737,26 +1042,42 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     ])
     body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), findings_html(res["findings"])]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
-    body.append(charts_html(res["files"], res["root_causes"]))
+    # the filter bar first: everything under it (the charts, the root causes, the records) follows the filters
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
     body.append(filter_html(s["by_level"], s["by_connector"], without_connector))
+    body.append(charts_html(res["files"], res["root_causes"]))
     with_conn = bool(s["by_connector"])
     if res["root_causes"]:
-        rows = "".join(f"<tr data-level='{e(c['level'])}'{connectors_attr(c['connectors'], c.get('no_connector', False))}><td>{level_badge(c['level'])}</td><td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
-                       f"<td class='mono'>{e(c['example'][:300])}</td><td class='num'>{c['occurrences']}</td>"
-                       f"<td class='num'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x)) for x in c['files'][:5])}"
+        rows = "".join(f"<tr class='rc-row' data-level='{e(c['level'])}' data-cause='{i}'><td>{level_badge(c['level'])}</td>"
+                       f"<td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
+                       f"<td class='mono'>{e(c['example'][:300])}</td><td class='num rc-occ'>{c['occurrences']}</td>"
+                       f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x)) for x in c['files'][:5])}"
                        f"{e(' …' if len(c['files']) > 5 else '')}</td>"
                        + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
-                       + "</tr>" for c in res["root_causes"])
-        body.append("<div class='table-card'><h2>🌳 Root causes (deepest exception of each record)</h2><table><tr><th>Level</th>"
+                       + "</tr>" for i, c in enumerate(res["root_causes"]))
+        untimed = sum(count - len(times) for c in res["root_causes"] for _, _, count, times, _, _ in c["records_meta"]
+                      if count > len(times))
+        follows = ("<p class='legend'>⏱ Drag over 📈 Occurrences over time to select a period: this table, the charts and "
+                   "the records below then only show that period, with the occurrences counted in it (double-click the "
+                   "chart, or ⤺ whole period, to go back). The Levels chips and the Connector picker filter the charts "
+                   "too."
+                   + (f" {untimed} occurrence(s) have no timestamp of their own (undated line, or beyond the first 1000 "
+                      "occurrences kept per record): they are not counted in a period, and a root cause that has only "
+                      "those stays shown." if untimed else "")
+                   + "</p>")
+        body.append("<div class='table-card'><h2>🌳 Root causes (deepest exception of each record)"
+                    "<span class='rc-range'></span><button type='button' class='rc-reset' hidden>⤺ whole period</button>"
+                    f"</h2>{follows}<table><tr><th>Level</th>"
                     "<th>Root cause</th><th>Message</th><th class='num'>Occurrences</th><th class='num'>Records</th>"
                     f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}</tr>"
                     f"{rows}</table></div>")
     if res["files"]:
-        rows = "".join(f"<tr><td class='mono'>{log_viewer.link(viewers, f['label'], e(f['label']))}</td><td class='num'>{f['lines']}</td><td class='num'>{f['distinct']}</td>"
-                       f"<td class='num'>{f['occurrences']}</td>"
-                       + "".join(f"<td class='num'>{sum(r['count'] for r in f['records'] if r['level'] == lvl) or ''}</td>" for lvl in ("FATAL", "ERROR", "WARN"))
-                       + "</tr>" for f in res["files"])
+        rows = "".join(f"<tr class='file-row' data-file='{i}'><td class='mono'>{log_viewer.link(viewers, f['label'], e(f['label']))}</td>"
+                       f"<td class='num'>{f['lines']}</td><td class='num fr-distinct'>{f['distinct']}</td>"
+                       f"<td class='num fr-occ'>{f['occurrences']}</td>"
+                       + "".join(f"<td class='num fr-{lvl.lower()}'>{sum(r['count'] for r in f['records'] if r['level'] == lvl) or ''}</td>"
+                                 for lvl in ("FATAL", "ERROR", "WARN"))
+                       + "</tr>" for i, f in enumerate(res["files"]))
         body.append(f"<div class='table-card'><h2>🗂️ {Unit}s with findings</h2><table><tr><th>{Unit}</th><th class='num'>Lines</th>"
                     "<th class='num'>Distinct</th><th class='num'>Occurrences</th><th class='num'>FATAL</th><th class='num'>ERROR</th>"
                     f"<th class='num'>WARN</th></tr>{rows}</table>"
@@ -769,6 +1090,10 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             body.append(f"<div class='table-card file-records'><h2>📄 {file_title}</h2>"
                         f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
     body.append(config_html(res.get("configuration") or [], viewers))
+    # last: the index of the records the filters count again from, then the filters themselves
+    body.append("<script type='application/json' id='pg-occurrences'>"
+                + occurrences_json(res["root_causes"]).replace("<", "\\u003c") + "</script>")
+    body.append(FILTER_SCRIPT)
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
     if res.get("filter"):
         meta.append(f"🔌 --connector {e(' '.join(res['filter']['connectors']))}" + (" --with-worker" if res["filter"]["with_worker"] else ""))
@@ -840,9 +1165,12 @@ def main() -> int:
     res["summary"]["binary_files_skipped"] = args.skipped
     res["summary"]["levels"] = args.levels
     if args.json:
-        # the timestamps of every occurrence are only for the timeline of the HTML report
-        compact = dict(res, files=[dict(f, records=[{k: v for k, v in r.items() if k != "timestamps"} for r in f["records"]])
-                                   for f in res["files"]])
+        # the timestamps of every occurrence are only for the timeline and the time filter of the HTML report
+        compact = dict(res, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
+                                   for f in res["files"]],
+                       root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
+                       known_causes=[{k: v for k, v in h.items() if k != "records"} for h in res["known_causes"]],
+                       findings=[{k: v for k, v in f.items() if k != "records"} for f in res["findings"]])
         if args.json_sections:
             sections = [x.strip() for x in args.json_sections.split(",") if x.strip()]
             compact = {k: v for k, v in compact.items() if k in sections}

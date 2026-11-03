@@ -23,7 +23,20 @@ occurrence, from the `@@PGCTX@@` lines of the records file) and the ⚙️ confi
 dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys changed between two dumps of the same
 config from the `@@PGCFGCHG@@` lines, and the `.properties` / connector JSON files that `analyze logs` appends), with a
 level and connector filter (connector taken from the
-`[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`). `tools/connector-diagnose/diagnose_report.py` imports it for the
+`[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`)
+and a period filter (drag over the 📈 occurrences chart). The three filters drive **everything below the filter bar**
+from one index of records written once in the page, `occurrences_json()`: `<script type="application/json"
+id="pg-occurrences">` holds `[root cause index, level, connector index, occurrences, epoch seconds, record index, file
+index]` per record, the times being the first value then the deltas in base 36 (`encode_times()` / `pgTimes()`). On
+each change `FILTER_SCRIPT` counts them again and redraws the 📈 chart (`window.pgChartTimes()` builds its series and
+`box.setTimes()` of `zoom_chart.js` draws them, the x axis pinned by `xmin` / `xmax`), the 🔝 top causes bars, the 🌳
+root causes rows (`tr.rc-row[data-cause]`), the 🗂️ files rows (`tr.file-row[data-file]`) and the record blocks
+(`details[data-rec]`, `.rec-count`). The period comes from the `zoomchange` event of the chart (id
+`occurrences-chart`). The 🔎 findings are the exception: their text is never rewritten (it is the diagnosis of the
+bundle), each card only gets `▸ N of M occurrence(s) here` in its `.rec-scope` span, or is dimmed (`.out`) when none
+of it is in the selection - from the `data-recs` indexes that `findings_html()` writes for an item with `records`. Occurrences beyond the 1000 kept per record have no time of their own: they count in the totals
+but not in a period, and the legend of the root causes says how many there are.
+`tools/connector-diagnose/diagnose_report.py` imports it for the
 errors section of the `playground connector diagnose` report. `get-ci-result --logs`, `container logs --errors --html`
 and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last
 lines of a failed CI script, `--link` for the issue and the job).
