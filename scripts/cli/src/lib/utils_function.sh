@@ -1088,8 +1088,8 @@ function set_profiles() {
     playground state del flags.ENABLE_CONTROLLER_NODES
   elif [ -n "$PLAYGROUND_CFK_MODE" ]
   then
-    # CFK mode scales the KRaft controllers via the replicas of the KRaftController CR, not docker-compose profiles.
-    log "🗳️  Multiple controllers mode is enabled for CFK (3 KRaft controller pods)"
+    # CFK mode scales the KRaftController (or Zookeeper) CR replicas, not docker-compose profiles.
+    log "🗳️  Multiple controllers mode is enabled for CFK (3 KRaft controller or ZooKeeper pods)"
     playground state set flags.ENABLE_CONTROLLER_NODES 1
   elif [ -n "$ENABLE_KRAFT" ]
   then
