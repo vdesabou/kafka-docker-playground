@@ -33,7 +33,7 @@ aws ec2 authorize-security-group-ingress --group-name $group --protocol tcp --po
 
 Download Oracle Database 19c (19.3) for Linux x86-64 `LINUX.X64_193000_db_home.zip` from this [page](https://www.oracle.com/database/technologies/oracle19c-linux-downloads.html) and place it in this folder.
 
-The first time you run the script, it builds (using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md)) the Docker image `oracle/database:19.3.0-ee`, then a prebuilt database image. It takes about 10 minutes. Confluent employees can instead get the prebuilt image from the playground S3 bucket (AWS credentials required): please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900) and also [here](https://confluent.slack.com/archives/C0116NM415F/p1636389483030900).
+The first time you run the script, it builds (using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md)) the Docker image `oracle/database:19.3.0-ee`, then a prebuilt database image. It takes about 10 minutes. Confluent employees can instead get the prebuilt image from the playground ECR repository or its S3 bucket (AWS credentials required): please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900) and also [here](https://confluent.slack.com/archives/C0116NM415F/p1636389483030900).
 
 ## How to run
 

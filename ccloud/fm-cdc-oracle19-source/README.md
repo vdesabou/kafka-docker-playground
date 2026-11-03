@@ -16,7 +16,7 @@ See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?i
 
 ### Oracle image
 
-Confluent employees get a prebuilt Oracle image from the playground S3 bucket automatically (requires AWS credentials).
+Confluent employees get a prebuilt Oracle image from the playground ECR repository or its S3 bucket automatically (requires AWS credentials).
 Otherwise, download Oracle Database 19c (19.3) for Linux x86-64 `LINUX.X64_193000_db_home.zip` from this [page](https://www.oracle.com/database/technologies/oracle19c-linux-downloads.html) and place it in `./LINUX.X64_193000_db_home.zip`.
 The first time you run the script, it builds the docker image `oracle/database:19.3.0-ee` using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md). It takes about 10 minutes.
 

@@ -9,7 +9,7 @@ Quickly test the [Oracle CDC Source](https://docs.confluent.io/kafka-connectors/
 The scripts need an Oracle 21c Docker image. They look for it in this order:
 
 1. A prebuilt image already present locally.
-2. A prebuilt image downloaded from the Confluent S3 bucket (Confluent employees only, requires AWS credentials). If you're a Confluent employee, check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900) and also [here](https://confluent.slack.com/archives/C0116NM415F/p1636389483030900).
+2. A prebuilt image pulled from the Confluent ECR repository, or else downloaded from the Confluent S3 bucket (Confluent employees only, requires AWS credentials). If you're a Confluent employee, check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900) and also [here](https://confluent.slack.com/archives/C0116NM415F/p1636389483030900).
 3. Otherwise, the image is built using the [oracle/docker-images](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md) project. Download Oracle Database 21c (21.3) for Linux x86-64 `LINUX.X64_213000_db_home.zip` from this [page](https://www.oracle.com/database/technologies/oracle21c-linux-downloads.html) and place it in this folder. The first build takes about 10 minutes.
 
 **Make sure to increase the Docker disk image size (96 GB is known to be working)**:
