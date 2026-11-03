@@ -90,12 +90,12 @@ The name that is passed to the `Context.lookup <https://docs.oracle.com/javase/7
 
 🔘 java.naming.security.principal
 
+The security principal to connect with. This is typically a username. See `Context.SECURITY_PRINCIPAL <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#SECURITY_PRINCIPAL>`_ for more details. The documentation for your JMS provider will be helpful as well.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The security principal to connect with. This is typically a username. See `Context.SECURITY_PRINCIPAL <https://docs.oracle.com/javase/7/docs/api/javax/naming/Context.html#SECURITY_PRINCIPAL>`_ for more details. The documentation for your JMS provider will be helpful as well.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 java.naming.security.credentials
 
@@ -201,21 +201,21 @@ Whether the subscription of the connector tasks to a JMS topic is durable or not
 
 🔘 jms.subscription.name
 
+The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 jms.message.selector
 
+The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Retry
@@ -321,4 +321,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 
