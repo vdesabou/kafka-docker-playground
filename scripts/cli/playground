@@ -13251,7 +13251,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-messages NB-MESSAGES")"
-    printf "    💯 Number of messages to produce (default is 1)\n       \n    🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages\n    will be sent in batches of <value of --max-nb-messages-per-batch> (default\n    300000) records\n        - if you set it to -1, an infinite number of records will also be sent\n    in batches\n"
+    printf "    💯 Number of messages to produce (default is 1), greater than 0 or -1\n       \n    🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages\n    will be sent in batches of <value of --max-nb-messages-per-batch> (default\n    300000) records\n        - if you set it to -1, an infinite number of records will also be sent\n    in batches\n"
     printf "    %s\n" "Default: 1"
     echo
 
@@ -13263,7 +13263,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-nb-messages-to-generate MAX-NB-MESSAGES-TO-GENERATE")"
-    printf "    🔨 Max number of different messages to generate.\n    \n       - when protobuf is used, default is 50 as protobuf generation is really\n    slow\n       - when json or sql datagen format is used, default is 1000\n       - when --record-size is set, default is 100\n       --when nb-messages is set to -1, default is 1000\n       - otherwise default is 100000\n"
+    printf "    🔨 Max number of different messages to generate.\n    \n       - when protobuf is used, default is 50 as protobuf generation is really\n    slow\n       - when json or sql datagen format is used, default is 1000\n       - when --record-size is set (avro, json-schema, datagen), default is 100\n       - when --nb-messages is set to -1, default is 1000 (at most)\n       - otherwise default is 100000\n"
     echo
 
     # :flag.usage
@@ -13280,8 +13280,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-partitions NB-PARTITIONS")"
-    printf "    🔢 Number of partitions for the topic. (default is 1)\n    \n    ❌ Important: if the topic exists with another number of partitions, it is\n    re-created when it\n    is empty, and the command fails when it is not.\n"
-    printf "    %s\n" "Default: 1"
+    printf "    🔢 Number of partitions for the topic. (default is 1 when the topic is\n    created)\n    \n    ❌ Important: if the topic exists with another number of partitions, it is\n    re-created when it\n    is empty, and the command fails when it is not.\n"
     echo
 
     # :flag.usage
@@ -13315,7 +13314,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--forced-key FORCED-KEY")"
-    printf "    ☢️ Key to use for all records. \n    \n    🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get\n    skeleton of messages and then use --forced-key to send the message you need.\n"
+    printf "    ☢️ Key to use for all records. Without --key, it is sent as a string (no\n    schema).\n    \n    🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get\n    skeleton of messages and then use --forced-key to send the message you need.\n"
     echo
 
     # :flag.usage
@@ -13335,7 +13334,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--schema-id-in-header")"
-    printf "    🎯 Include schema ID in kafka header. \n    \n    Uses HeaderSchemaIdSerializer for schema.id.seserializer\n    \n    Note: CP 8.1.1+ is required.\n"
+    printf "    🎯 Include schema ID in kafka header. \n    \n    Uses HeaderSchemaIdSerializer for value.schema.id.serializer\n    \n    Note: CP 8.1.1+ is required, and a value with a schema (avro, json-schema or\n    protobuf).\n"
     echo
 
     # :flag.usage
@@ -65001,7 +65000,7 @@ playground_topic_produce_command() {
       then
           log "🔮 $type schema was identified as avro"
           schema_type=avro
-      elif grep -xq "\".*\"" $schema_file
+      elif grep -xqE '"(null|boolean|int|long|float|double|bytes|string)"' $schema_file
       then
           log "🔮 $type schema was identified as avro (single line surrounded by double quotes)"
           schema_type=avro
@@ -65012,19 +65011,59 @@ playground_topic_produce_command() {
   }
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
+  if [ -n "$PG_VERBOSE_MODE" ]
   then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
-
   # debug
   if [[ -n "$debug" ]]
   then
       log "🐞 debug mode is on"
-      trap 'code $tmp_dir' EXIT
   fi
+
+  # files copied into a container ($container_files_owner:$container_files), and the staging topic of --transactional-id
+  # ($staging_topic): removed at exit, whatever the way out (failure, ctrl-c)
+  container_files_owner=""
+  container_files=()
+  staging_topic=""
+  function produce_cleanup() {
+      if [[ -n "$staging_topic" ]]
+      then
+          playground topic delete --topic "$staging_topic" > /dev/null 2>&1 || true
+      fi
+      if [[ -n "$container_files_owner" ]] && [ ${#container_files[@]} -ne 0 ]
+      then
+          if [[ "$environment" == cfk* ]]
+          then
+              kubectl -n confluent exec "$container_files_owner" -- rm -f "${container_files[@]}" > /dev/null 2>&1 || true
+          else
+              # as root: docker cp keeps the uid of the host, and /tmp has the sticky bit
+              docker exec -u 0 "$container_files_owner" rm -f "${container_files[@]}" > /dev/null 2>&1 || true
+          fi
+      fi
+      if [[ -n "$debug" ]]
+      then
+          code $tmp_dir
+      elif [ -z "$PG_VERBOSE_MODE" ]
+      then
+          rm -rf $tmp_dir
+      fi
+  }
+  trap produce_cleanup EXIT
+  # unique per run, for the files copied into a container: two runs at the same time (an infinite producer in the
+  # background and another produce) must not overwrite each other's schema
+  run_id="pg-produce-$$-$RANDOM"
+
+  # copies $1 to $2:$3, fails the command when it can't (the console producer would then read another run's file)
+  function copy_to_container() {
+      if ! playground container cp --source "$1" --destination "$2:$3" > /dev/null 2>&1
+      then
+          logerror "❌ could not copy $1 to container $2 ($3)"
+          exit 1
+      fi
+      container_files_owner="$2"
+      container_files+=("$3")
+  }
 
   ref_schema_file=$tmp_dir/ref_schema
 
@@ -65073,18 +65112,23 @@ playground_topic_produce_command() {
   then
       if [[ ! -n "$tombstone" ]]
       then
-          # stdin
-          if [ -t 0 ] && [[ -n "$forced_value" ]]
+          # stdin: a terminal, or an empty stdin (a script, CI, an agent: stdin is not a terminal but has nothing) is
+          # the same, no schema was given
+          value_content=""
+          if [ ! -t 0 ]
+          then
+              value_content=$(cat "$value")
+          fi
+          if [[ -n "${value_content//[[:space:]]/}" ]]
+          then
+              echo "$value_content" > $value_schema_file
+          elif [[ -n "$forced_value" ]]
           then
               # --forced-value alone: the payload is the schema-less value itself
               echo "$forced_value" > $value_schema_file
-          elif [ -t 0 ]
-          then
+          else
               logerror "❌ stdin is empty you probably forgot to set --value !"
               exit 1
-          else
-              value_content=$(cat "$value")
-              echo "$value_content" > $value_schema_file
           fi
       fi
   else
@@ -65112,6 +65156,12 @@ playground_topic_produce_command() {
 
   get_environment_used
   get_sr_url_and_security
+
+  if [ "$nb_messages" -lt 1 ] && [ "$nb_messages" != "-1" ]
+  then
+      logerror "❌ --nb-messages must be greater than 0, or -1 for an infinite flow"
+      exit 1
+  fi
 
   if [[ -n "$transactional_id" ]]
   then
@@ -65383,6 +65433,12 @@ playground_topic_produce_command() {
 
   fi
 
+  if [[ ! -n "$key" ]] && [[ -n "$forced_key" ]]
+  then
+      # --forced-key alone: the key itself (with --key, the key schema decides how it is serialized)
+      key="$forced_key"
+  fi
+
   if [[ -n "$key" ]]
   then
       if [ -f "$key" ]
@@ -65509,11 +65565,60 @@ playground_topic_produce_command() {
 
       if ([ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]) &&
 
-          ([ "$value_schema_type" = "raw" ] || [ "$value_schema_type" = "json" ] || [ "$value_schema_type" = "sql" ])
+          ([ "$value_schema_type" = "raw" ] || [ "$value_schema_type" = "json" ] || [ "$value_schema_type" = "sql" ] || [ "$value_schema_type" = "datagen" ])
       then
           logerror "❌ key is set with schema registry aware converter, but not value"
           exit 1
       fi
+  fi
+
+  # flag combinations checked before anything is built, created or registered
+  if [[ ! -n "$key" ]] && [[ -n "$key_subject_name_strategy" ]]
+  then
+      logerror "❌ --key-subject-name-strategy is set but not --key"
+      exit 1
+  fi
+
+  if [ "$key_schema_type" != "" ]
+  then
+      case "${key_schema_type}" in
+          avro|json-schema|protobuf)
+
+          ;;
+          *)
+              if [[ -n "$key_subject_name_strategy" ]]
+              then
+                  logerror "❌ --key-subject-name-strategy is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
+                  exit 1
+              fi
+          ;;
+      esac
+  fi
+
+  if [[ ! -n "$tombstone" ]]
+  then
+      case "${value_schema_type}" in
+          avro|json-schema|protobuf)
+
+          ;;
+          *)
+              if [[ -n "$validate" ]]
+              then
+                  logerror "❌ --validate is set but $value_schema_type is used. This is only valid for avro|json-schema|protobuf"
+                  exit 1
+              fi
+              if [[ -n "$value_subject_name_strategy" ]]
+              then
+                  logerror "❌ --value-subject-name-strategy is set but $value_schema_type is used. This is only valid for avro|json-schema|protobuf"
+                  exit 1
+              fi
+              if [[ -n "$schema_id_in_header" ]]
+              then
+                  logerror "❌ --schema-id-in-header is set but $value_schema_type is used. This is only valid for avro|json-schema|protobuf"
+                  exit 1
+              fi
+          ;;
+      esac
   fi
 
   if [[ -n "$validate" ]]
@@ -65684,20 +65789,17 @@ playground_topic_produce_command() {
                   echo $line > $record_size_temp_file_line
                   new_value="PLACEHOLDER"
 
-                  first_string_field=$(echo "$line" | jq -r 'path(.. | select(type == "string")) | .[-1]' | head -1)
+                  # full path of the first string (a nested field, the "string" branch of an avro union, an array item):
+                  # only that one is replaced, with setpath, whatever the field names
+                  first_string_path=$(echo "$line" | jq -c '[paths(type == "string")] | first // empty')
 
-                  if [ "$first_string_field" != "" ]
+                  if [ "$first_string_path" != "" ]
                   then
                       if [ $lines_count -eq 0 ]
                       then
-                          log "🔮 Replacing first string field $first_string_field value with long payload"
+                          log "🔮 Replacing first string field $(echo "$first_string_path" | jq -r 'map(tostring) | join(".")') value with long payload"
                       fi
-                      if [ "$first_string_field" == "string" ]
-                      then
-                          jq -c --arg new_val "$new_value" 'walk(if type == "object" and has("string") then .string = $new_val else . end)' $record_size_temp_file_line > $record_size_temp_file_output
-                      else
-                          jq -c --arg new_val "$new_value" ".${first_string_field} |= \$new_val" $record_size_temp_file_line > $record_size_temp_file_output
-                      fi
+                      jq -c --argjson path "$first_string_path" --arg new_val "$new_value" 'setpath($path; $new_val)' $record_size_temp_file_line > $record_size_temp_file_output
                   else
 
                       cat "$record_size_temp_file_line" > $record_size_temp_file_output
@@ -65722,7 +65824,7 @@ playground_topic_produce_command() {
 
                   # Replace placeholder with the content of new_value.txt file in $record_size_temp_file_output
                   # Perl can handle very large arguments and perform replacement effectively
-                  NEW_VALUE_FILE="$tmp_dir/new_value.txt" perl -pi -e 'BEGIN{undef $/; open(my $fh, "<", $ENV{NEW_VALUE_FILE}) or die; $v = <$fh>; close($fh);} s/PLACEHOLDER/$v/gs' $record_size_temp_file_output
+                  NEW_VALUE_FILE="$tmp_dir/new_value.txt" perl -pi -e 'BEGIN{undef $/; open(my $fh, "<", $ENV{NEW_VALUE_FILE}) or die; $v = <$fh>; close($fh);} s/PLACEHOLDER/$v/s' $record_size_temp_file_output
 
                   cat $record_size_temp_file_output >> "$input2_file"
               else
@@ -65740,6 +65842,14 @@ playground_topic_produce_command() {
               fi
               counter=$((counter+1))
           done < "$input_file"
+      fi
+
+      # the loops below repeat the records forever: with no record at all, they would never end
+      if [ ! -s "$input2_file" ]
+      then
+          logerror "❌ $(echo "$type" | tr '[:upper:]' '[:lower:]') records could not be generated!"
+          cat "$input_file" 2>/dev/null | head -5
+          exit 1
       fi
 
       if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
@@ -65823,7 +65933,7 @@ playground_topic_produce_command() {
       exit 1
   fi
 
-  if [[ -n "$key" ]] && [ "$key_schema_type" = "raw" ]
+  if [[ -n "$key" ]] && [ "$key_schema_type" = "raw" ] && [[ ! -n "$forced_key" ]]
   then
       if [[ $key =~ ^([^0-9]*)([0-9]+)([^0-9]*)$ ]]; then
           prefix="${BASH_REMATCH[1]}"
@@ -65945,9 +66055,12 @@ playground_topic_produce_command() {
       build_java_component_with_retry "schema-validator" docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator:/usr/src/schema-validator:ro" -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/target" maven:3.9.11-eclipse-temurin-17 bash -c "mkdir -p /usr/src/mymaven && cp -r /usr/src/schema-validator/pom.xml /usr/src/schema-validator/src /usr/src/mymaven/ && cd /usr/src/mymaven && mvn -s /tmp/settings.xml -Dkafka.tag=$tag package && cp target/schema-validator-1.0.0-jar-with-dependencies.jar /usr/src/target/"
       set -e
 
-      playground container cp --source ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar --destination $connect_container:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
-      playground container cp --source $value_schema_file --destination $connect_container:/tmp/schema > /dev/null 2>&1
-      playground container cp --source $output_value_file --destination $connect_container:/tmp/message.json > /dev/null 2>&1
+      validator_jar="/tmp/$run_id-schema-validator.jar"
+      validator_schema="/tmp/$run_id-schema"
+      validator_message="/tmp/$run_id-message.json"
+      copy_to_container "${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar" "$connect_container" "$validator_jar"
+      copy_to_container "$value_schema_file" "$connect_container" "$validator_schema"
+      copy_to_container "$output_value_file" "$connect_container" "$validator_message"
       env_list=""
       for conf in "${validate_config[@]}"
       do
@@ -66005,7 +66118,7 @@ playground_topic_produce_command() {
       done
 
       validator_jvm_args=$(get_tool_jdk_jvm_args "$connect_container")
-      docker exec $env_list -e SCHEMA_TYPE=$value_schema_type $connect_container bash -c "java $validator_jvm_args -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar" > $tmp_dir/result.log
+      docker exec $env_list -e SCHEMA_TYPE=$value_schema_type -e SCHEMA_FILE=$validator_schema -e MESSAGE_FILE=$validator_message $connect_container bash -c "java $validator_jvm_args -jar $validator_jar" > $tmp_dir/result.log
       set +e
       nb=$(grep -c "ERROR" $tmp_dir/result.log)
       if [ $nb -ne 0 ]
@@ -66024,43 +66137,41 @@ playground_topic_produce_command() {
   if ! echo "$existing_topics" | grep -qFx "$topic"
   then
       log "✨ topic $topic does not exist, it will be created.."
-      if [[ "$environment" == "ccloud" ]]
+      if [[ -n "$nb_partitions" ]]
       then
-          if [ "$nb_partitions" != "1" ]
-          then
-              log "⛅ creating topic in confluent cloud with $nb_partitions partitions"
-              playground topic create --topic $topic --nb-partitions $nb_partitions
-          else
-              log "⛅ creating topic in confluent cloud"
-              playground topic create --topic $topic --nb-partitions 1
-          fi
-      else
-          if [ "$nb_partitions" != "1" ]
-          then
-              log "--nb-partitions is set, creating topic with $nb_partitions partitions"
-              playground topic create --topic $topic --nb-partitions $nb_partitions
-          else
-              playground topic create --topic $topic
-          fi
+          log "--nb-partitions is set, creating topic with $nb_partitions partitions"
+      fi
+      if ! playground topic create --topic $topic --nb-partitions ${nb_partitions:-1}
+      then
+          logerror "❌ could not create topic $topic"
+          exit 1
       fi
   else
       current_nb_partitions=""
-      if [ "$nb_partitions" != "1" ]
+      if [[ -n "$nb_partitions" ]]
       then
           # PartitionCount: 3 (kafka-topics), Partition Count: 3 (cfk kafkatopic)
           current_nb_partitions=$(playground topic describe --topic $topic 2>/dev/null | grep -oE 'Partition ?Count: *[0-9]+' | head -1 | grep -oE '[0-9]+')
       fi
-      if [ "$nb_partitions" != "1" ] && [ "$current_nb_partitions" == "$nb_partitions" ]
+      if [[ -n "$nb_partitions" ]] && [ "$current_nb_partitions" == "$nb_partitions" ]
       then
           log "🔢 topic $topic already has $nb_partitions partitions"
-      elif [ "$nb_partitions" != "1" ]
+      elif [[ -n "$nb_partitions" ]]
       then
           nb=$(playground topic get-number-records -t $topic | tail -1)
-          if [ $nb == 0 ]
+          if [ "$nb" == "0" ]
           then
               log "--nb-partitions is set and topic is empty, re-creating it with $nb_partitions partitions..."
               playground topic delete --topic $topic
-              playground topic create --topic $topic --nb-partitions $nb_partitions
+              if ! playground topic create --topic $topic --nb-partitions $nb_partitions
+              then
+                  logerror "❌ could not create topic $topic"
+                  exit 1
+              fi
+          elif [[ ! "$nb" =~ ^[0-9]+$ ]]
+          then
+              logerror "❌ could not count the records of topic $topic: $nb"
+              exit 1
           else
               logerror "--nb-partitions is set, but topic is not empty, delete it first and retry"
               echo "playground topic delete --topic $topic"
@@ -66086,56 +66197,14 @@ playground_topic_produce_command() {
       then
           playground topic delete --topic "$producer_topic" > /dev/null 2>&1
       fi
-      playground topic create --topic "$producer_topic" --nb-partitions "${staging_nb_partitions:-1}" > /dev/null
+      if ! playground topic create --topic "$producer_topic" --nb-partitions "${staging_nb_partitions:-1}" > /dev/null
+      then
+          logerror "❌ could not create staging topic $producer_topic"
+          exit 1
+      fi
+      # deleted at exit, with its subjects, whatever happens next
+      staging_topic="$producer_topic"
   fi
-
-  if [[ ! -n "$key" ]] && [[ -n "$key_subject_name_strategy" ]]
-  then
-      logerror "❌ --key-subject-name-strategy is set but not --key"
-      exit 1
-
-  fi
-
-  if [ "$key_schema_type" != "" ]
-  then
-      case "${key_schema_type}" in
-          avro|json-schema|protobuf)
-
-          ;;
-          *)
-              if [[ -n "$validate" ]]
-              then
-                  logerror "❌ --validate is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
-                  exit 1
-              fi
-              if [[ -n "$key_subject_name_strategy" ]]
-              then
-                  logerror "❌ --key-subject-name-strategy is set but $key_schema_type is used. This is only valid for avro|json-schema|protobuf"
-                  exit 1
-
-              fi
-          ;;
-      esac
-  fi
-
-  case "${value_schema_type}" in
-      avro|json-schema|protobuf)
-
-      ;;
-      *)
-          if [[ -n "$validate" ]]
-          then
-              logerror "❌ --validate is set but $value_schema_type is used. This is only valid for avro|json-schema|protobuf"
-              exit 1
-          fi
-          if [[ -n "$value_subject_name_strategy" ]]
-          then
-              logerror "❌ --value-subject-name-strategy is set but $value_schema_type is used. This is only valid for avro|json-schema|protobuf"
-              exit 1
-
-          fi
-      ;;
-  esac
 
   # producer options common to every command: they go after the options of the console producer command
   producer_args=()
@@ -66284,15 +66353,21 @@ playground_topic_produce_command() {
           else
               playground --output-level ERROR container exec -c "$container" --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1" --root
           fi
-          key_schema_path="/tmp/key_schema_file"
-          value_schema_path="/tmp/value_schema_file"
+          # per run: in batch mode, each batch starts a console producer that reads them again
+          key_schema_path="/tmp/$run_id-key_schema"
+          value_schema_path="/tmp/$run_id-value_schema"
+          schema_container="$container"
+          if [[ "$environment" == cfk* ]]
+          then
+              schema_container="connect-0"
+          fi
           if [ -f $key_schema_file ]
           then
-              playground container cp --source $key_schema_file --destination $container:$key_schema_path > /dev/null 2>&1
+              copy_to_container "$key_schema_file" "$schema_container" "$key_schema_path"
           fi
           if [ -f $value_schema_file ]
           then
-              playground container cp --source $value_schema_file --destination $container:$value_schema_path > /dev/null 2>&1
+              copy_to_container "$value_schema_file" "$schema_container" "$value_schema_path"
           fi
           producer_cmd+=("${tool_env[@]}" "kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli")
       else
@@ -66308,7 +66383,14 @@ playground_topic_produce_command() {
 
   if [ $is_schema_producer = 1 ]
   then
-      producer_cmd+=("$property_name" "value.schema.file=$value_schema_path")
+      if [[ -n "$tombstone" ]]
+      then
+          # no value schema with --tombstone (the values are null), but the reader needs one: the key schema has the
+          # right format, and a null value is never serialized
+          producer_cmd+=("$property_name" "value.schema.file=$key_schema_path")
+      else
+          producer_cmd+=("$property_name" "value.schema.file=$value_schema_path")
+      fi
   fi
 
   if [[ -n "$key" ]]
@@ -66436,9 +66518,9 @@ playground_topic_produce_command() {
 
       if [[ -n "$verbose" ]]
       then
-          render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" > /tmp/verbose_input_file.txt
-          log "🐞 CLI command used to produce data"
-          echo "cat /tmp/verbose_input_file.txt | $(printf '%q ' "${producer_cmd[@]}")"
+          render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" > "$tmp_dir/verbose_input_file.txt"
+          log "🐞 CLI command used to produce data (the input file is deleted at the end, unless PG_VERBOSE_MODE is set)"
+          echo "cat $tmp_dir/verbose_input_file.txt | $(printf '%q ' "${producer_cmd[@]}")"
       fi
 
       # the stderr of the producer is shown as it comes and kept: a record it could not send (RecordTooLargeException,
@@ -66496,7 +66578,10 @@ playground_topic_produce_command() {
       log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
   fi
 
-  if [[ -n "$transactional_id" ]]
+  if [[ -n "$transactional_id" ]] && [ $interrupted = 1 ]
+  then
+      logwarn "💱 interrupted with ctrl-c: the records of staging topic $producer_topic are not copied to topic $topic, nothing was committed"
+  elif [[ -n "$transactional_id" ]]
   then
       rc=0
       # the schemas were registered under the subjects of the staging topic: same schema, same id, under the subjects of the topic
@@ -66527,6 +66612,7 @@ playground_topic_produce_command() {
           run_transactional_copier "$producer_topic" "$topic" "$transactional_id" "$transaction" "$transaction_timeout" || rc=$?
       fi
       playground topic delete --topic "$producer_topic" > /dev/null 2>&1 || true
+      staging_topic=""
       if [ $rc -ne 0 ]
       then
           exit 1
@@ -113719,7 +113805,6 @@ playground_topic_produce_parse_requirements() {
   [[ -n ${args['--max-nb-messages-per-batch']:-} ]] || args['--max-nb-messages-per-batch']="300000"
   [[ -n ${args['--sleep-time-between-batch']:-} ]] || args['--sleep-time-between-batch']="0"
   [[ -n ${args['--throughput']:-} ]] || args['--throughput']="0"
-  [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']="1"
   [[ -n ${args['--record-size']:-} ]] || args['--record-size']="0"
   [[ -n ${args['--transaction']:-} ]] || args['--transaction']="commit"
   [[ -n ${args['--transaction-timeout']:-} ]] || args['--transaction-timeout']="60000"

@@ -6428,11 +6428,11 @@ subcommands:
     - names:
       - "--nb-messages"
       argument: NB-MESSAGES
-      description: "\U0001F4AF Number of messages to produce (default is 1)\n   \n\U0001F393
-        \ - if > <value of --max-nb-messages-per-batch> (default 300000), messages
-        will be sent in batches of <value of --max-nb-messages-per-batch> (default
-        300000) records\n    - if you set it to -1, an infinite number of records
-        will also be sent in batches\n\nDefault value: 1"
+      description: "\U0001F4AF Number of messages to produce (default is 1), greater
+        than 0 or -1\n   \n\U0001F393  - if > <value of --max-nb-messages-per-batch>
+        (default 300000), messages will be sent in batches of <value of --max-nb-messages-per-batch>
+        (default 300000) records\n    - if you set it to -1, an infinite number of
+        records will also be sent in batches\n\nDefault value: 1"
     - names:
       - "--max-nb-messages-per-batch"
       argument: MAX-NB-MESSAGES-PER-BATCH
@@ -6446,8 +6446,8 @@ subcommands:
       description: "\U0001F528 Max number of different messages to generate.\n\n   -
         when protobuf is used, default is 50 as protobuf generation is really slow\n
         \  - when json or sql datagen format is used, default is 1000\n   - when --record-size
-        is set, default is 100\n   --when nb-messages is set to -1, default is 1000\n
-        \  - otherwise default is 100000"
+        is set (avro, json-schema, datagen), default is 100\n   - when --nb-messages
+        is set to -1, default is 1000 (at most)\n   - otherwise default is 100000"
     - names:
       - "--sleep-time-between-batch"
       argument: SLEEP-TIME-BETWEEN-BATCH
@@ -6463,10 +6463,10 @@ subcommands:
     - names:
       - "--nb-partitions"
       argument: NB-PARTITIONS
-      description: "\U0001F522 Number of partitions for the topic. (default is 1)\n\n❌
-        Important: if the topic exists with another number of partitions, it is re-created
-        when it\nis empty, and the command fails when it is not.\n\nDefault value:
-        1"
+      description: "\U0001F522 Number of partitions for the topic. (default is 1 when
+        the topic is created)\n\n❌ Important: if the topic exists with another number
+        of partitions, it is re-created when it\nis empty, and the command fails when
+        it is not."
     - names:
       - "--compression-codec"
       argument: COMPRESSION-CODEC
@@ -6504,9 +6504,10 @@ subcommands:
     - names:
       - "--forced-key"
       argument: FORCED-KEY
-      description: "☢️ Key to use for all records. \n\n\U0001F393 Tip: use --generate-only
-        first with avro, json-schema or protobuf to get skeleton of messages and then
-        use --forced-key to send the message you need."
+      description: "☢️ Key to use for all records. Without --key, it is sent as a
+        string (no schema).\n\n\U0001F393 Tip: use --generate-only first with avro,
+        json-schema or protobuf to get skeleton of messages and then use --forced-key
+        to send the message you need."
     - names:
       - "--forced-value"
       argument: FORCED-VALUE
@@ -6529,7 +6530,8 @@ subcommands:
       - "--schema-id-in-header"
       argument: ''
       description: "\U0001F3AF Include schema ID in kafka header. \n\nUses HeaderSchemaIdSerializer
-        for schema.id.seserializer\n\nNote: CP 8.1.1+ is required."
+        for value.schema.id.serializer\n\nNote: CP 8.1.1+ is required, and a value
+        with a schema (avro, json-schema or protobuf)."
     - names:
       - "--validate"
       argument: ''

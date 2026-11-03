@@ -37,7 +37,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.generic.GenericDatumReader;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -59,6 +59,8 @@ public class SchemaValidator {
     private final Logger logger = LoggerFactory.getLogger(SchemaValidator.class);
     private final Map<String, String> properties;
     private final String schemaType;
+    private final String schemaFile;
+    private final String messageFile;
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         SchemaValidator schemaValidator = new SchemaValidator();
@@ -68,6 +70,9 @@ public class SchemaValidator {
     public SchemaValidator() throws ExecutionException, InterruptedException {
         properties = buildProperties(defaultProps, System.getenv(), KAFKA_ENV_PREFIX);
         schemaType = System.getenv().getOrDefault("SCHEMA_TYPE", "");
+        // per run paths, so that two 'playground topic produce --validate' running at the same time don't read each other's files
+        schemaFile = System.getenv().getOrDefault("SCHEMA_FILE", "/tmp/schema");
+        messageFile = System.getenv().getOrDefault("MESSAGE_FILE", "/tmp/message.json");
     }
 
     private void start() throws InterruptedException {
@@ -77,9 +82,9 @@ public class SchemaValidator {
         SchemaAndValue connectSchema =  null;
         try {
             if (schemaType.equals("json-schema")) {
-                JsonNode rawSchemaJson = readJsonNode("/tmp/schema");
+                JsonNode rawSchemaJson = readJsonNode(schemaFile);
                 ObjectMapper mapper = new ObjectMapper();
-                File from = new File("/tmp/message.json");
+                File from = new File(messageFile);
                 JsonNode masterJSON = mapper.readTree(from);
                 CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000,
                         Collections.singletonList(new JsonSchemaProvider()), null);
@@ -94,10 +99,11 @@ public class SchemaValidator {
                 converter.configure(properties, false);
                 connectSchema = converter.toConnectData(randomName, serializedRecord1);
             } else if (schemaType.equals("avro")) {
-                Schema schema = new Schema.Parser().parse(new File("/tmp/schema"));
-                String json = new String(Files.readAllBytes(Paths.get("/tmp/message.json")));
+                Schema schema = new Schema.Parser().parse(new File(schemaFile));
+                String json = new String(Files.readAllBytes(Paths.get(messageFile)));
                 Decoder decoder = DecoderFactory.get().jsonDecoder(schema, json);
-                DatumReader<GenericRecord> reader = new SpecificDatumReader<>(schema);
+                // GenericDatumReader: no logical type conversion, the serializer expects the raw types (long for timestamp-millis)
+                DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
                 GenericRecord record = reader.read(null, decoder);
                 CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
                 schemaRegistryClient.register(randomName+"-value", new AvroSchema(schema));
@@ -108,10 +114,10 @@ public class SchemaValidator {
                 converter.configure(properties, false);
                 connectSchema = converter.toConnectData(randomName, serializedRecord1);
             } else if (schemaType.equals("protobuf")) {
-                String jsonMessagePath = "/tmp/message.json";
+                String jsonMessagePath = messageFile;
                 String jsonMessageString = new String(Files.readAllBytes(Paths.get(jsonMessagePath)));
 
-                String jsonSchemaPath = "/tmp/schema";
+                String jsonSchemaPath = schemaFile;
                 String jsonSchemaString = new String(Files.readAllBytes(Paths.get(jsonSchemaPath)));
 
                 SchemaProvider protobufSchemaProvider = new ProtobufSchemaProvider();

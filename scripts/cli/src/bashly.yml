@@ -9303,7 +9303,7 @@ commands:
         required: false
         default: "1"
         help: |-
-          💯 Number of messages to produce (default is 1)
+          💯 Number of messages to produce (default is 1), greater than 0 or -1
              
           🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages will be sent in batches of <value of --max-nb-messages-per-batch> (default 300000) records
               - if you set it to -1, an infinite number of records will also be sent in batches
@@ -9325,8 +9325,8 @@ commands:
 
              - when protobuf is used, default is 50 as protobuf generation is really slow
              - when json or sql datagen format is used, default is 1000
-             - when --record-size is set, default is 100
-             --when nb-messages is set to -1, default is 1000
+             - when --record-size is set (avro, json-schema, datagen), default is 100
+             - when --nb-messages is set to -1, default is 1000 (at most)
              - otherwise default is 100000
       - long: --sleep-time-between-batch
         arg: sleep-time-between-batch
@@ -9351,9 +9351,8 @@ commands:
         arg: nb-partitions
         validate: integer
         required: false
-        default: "1"
         help: |-
-          🔢 Number of partitions for the topic. (default is 1)
+          🔢 Number of partitions for the topic. (default is 1 when the topic is created)
           
           ❌ Important: if the topic exists with another number of partitions, it is re-created when it
           is empty, and the command fails when it is not.
@@ -9418,7 +9417,7 @@ commands:
         arg: forced-key
         required: false
         help: |-
-          ☢️ Key to use for all records. 
+          ☢️ Key to use for all records. Without --key, it is sent as a string (no schema).
           
           🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-key to send the message you need. 
       - long: --forced-value
@@ -9448,9 +9447,9 @@ commands:
         help: |-
           🎯 Include schema ID in kafka header. 
           
-          Uses HeaderSchemaIdSerializer for schema.id.seserializer
+          Uses HeaderSchemaIdSerializer for value.schema.id.serializer
 
-          Note: CP 8.1.1+ is required.
+          Note: CP 8.1.1+ is required, and a value with a schema (avro, json-schema or protobuf).
       - long: --validate
         required: false
         help: |-

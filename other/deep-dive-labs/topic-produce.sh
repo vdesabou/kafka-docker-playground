@@ -28,6 +28,13 @@ lab_expect_exit 0
 lab_expect_contains 'Headers:source:web,version:2|Key:order-007|Value:{"id": 1}'
 lab_expect_contains 'Headers:source:web,version:2|Key:order-008|Value:{"id": 2}'
 lab_expect_contains 'Headers:source:web,version:2|Key:order-009|Value:{"id": 3}'
+lab_run playground topic produce -t lab-forced-key --nb-messages 2 --forced-key 'fk1' --value 'v%g'
+lab_expect_exit 0
+lab_expect_contains "fk1|v1"
+lab_expect_contains "fk1|v2"
+lab_run bash -c "$playground_cli topic produce -t lab-empty < /dev/null"
+lab_expect_exit 1
+lab_expect_contains "❌ stdin is empty you probably forgot to set --value !"
 
 log "Step 3: datagen is JSON, not Avro"
 lab_run playground topic produce -t lab-trades --nb-messages 2 < "$schemas/datagen/stock_trades_schema.avro"
