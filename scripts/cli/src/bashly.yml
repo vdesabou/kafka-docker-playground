@@ -8879,6 +8879,7 @@ commands:
         help: |-
           ⏳ Maximum time to wait for the reassignment, in seconds (default 300)
       - *verbose
+      - *cluster
       examples:
       - playground topic reassign --topic orders --replicas 2,3
       - playground topic reassign --topic orders --partition 0 --replicas 3,1,2
@@ -8933,6 +8934,7 @@ commands:
         help: |-
           ☢️ Unclean leader election (an out-of-sync replica can become leader)
       - *verbose
+      - *cluster
       examples:
       - playground topic elect-leader --topic orders
       - playground topic elect-leader --topic orders --partition 0 --leader 2
@@ -10112,6 +10114,10 @@ commands:
         default: "1"
         help: |-
           Number of partitions for the topic. (default is 1)
+      - long: --if-not-exists
+        required: false
+        help: |-
+          ✅ Do nothing, and succeed, when the topic already exists (default: fail)
       - *cluster
       catch_all:
         label: arguments
@@ -10121,6 +10127,7 @@ commands:
       examples: |
         playground topic create --topic atopic
         playground topic create --topic atopic --nb-partitions 8 --config retention.ms=30000 --config cleanup.policy=compact
+        playground topic create --topic atopic --if-not-exists
         
     - name: delete
       group: Topic
@@ -10134,7 +10141,9 @@ commands:
         its leftover key and value subjects are still deleted.
 
         A regex is accepted, matched in full, to clean up a family of topics
-        at once.
+        at once. A regex never matches the internal topics (_schemas,
+        __consumer_offsets, connect-configs…): give the exact name to delete
+        one of them.
 
         🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
         🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception

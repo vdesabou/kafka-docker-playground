@@ -6114,6 +6114,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: elect-leader
     description: "\U0001F451 Elect the leaders of a topic\n\nWraps kafka-leader-election.
       By default, a preferred leader\nelection: each partition gets back its first
@@ -6153,6 +6160,13 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: set-schema-compatibility
     description: "\U0001F6E1️ Change topic's schema compatibility\n\nSets the compatibility
       level on the value subject of the topic\n(<topic>-value), and on its key subject
@@ -6652,6 +6666,11 @@ subcommands:
 
         Default value: 1
     - names:
+      - "--if-not-exists"
+      argument: ''
+      description: "✅ Do nothing, and succeed, when the topic already exists (default:
+        fail)"
+    - names:
       - "--cluster"
       argument: CLUSTER
       description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -6665,7 +6684,9 @@ subcommands:
       compatibility rules and the old schema history.\nKeep them with --skip-delete-schema.
       When the topic no longer exists,\nits leftover key and value subjects are still
       deleted.\n\nA regex is accepted, matched in full, to clean up a family of topics\nat
-      once.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      once. A regex never matches the internal topics (_schemas,\n__consumer_offsets,
+      connect-configs…): give the exact name to delete\none of them.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic delete [OPTIONS]
     options:

@@ -8,8 +8,10 @@ verbose="${args[--verbose]}"
 get_environment_used
 get_sr_url_and_security
 
+all_topics=""
 if [[ ! -n "$topic" ]]
 then
+    all_topics=1
     logwarn "--topic flag was not provided, applying command to all topics"
     check_if_continue
     topic=$(playground get-topic-list --skip-internal-topics)
@@ -32,6 +34,11 @@ for topic in ${items[@]}
 do
     for suffix in $suffixes
     do
+        # without --topic, only the subjects that exist: most topics have no schema, each of them was an error
+        if [[ -n "$all_topics" ]] && ! sr_request GET "/subjects/$(urlencode "${topic}-${suffix}")/versions" > /dev/null 2>&1
+        then
+            continue
+        fi
         log "🛡️ Set compatibility for subject ${topic}-${suffix} to $compatibility"
         if sr_request PUT "/config/$(urlencode "${topic}-${suffix}")" "{\"compatibility\": \"$compatibility\"}"
         then

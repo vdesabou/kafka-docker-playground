@@ -95,6 +95,16 @@ lab_expect_contains "lab-orders"
 lab_run playground topic delete -t lab-nope
 lab_expect_exit 0
 lab_expect_contains "❌ topic lab-nope does not exist and regex does not match any topic !"
+lab_run playground topic delete -t '_schem.*'
+lab_expect_exit 0
+lab_expect_contains "🫥 --topic _schem.* only matches internal topics"
+lab_run playground topic list --show-internal
+lab_expect_contains "_schemas"
+lab_run playground topic create -t lab-orders --if-not-exists
+lab_expect_exit 0
+lab_run playground topic create -t lab-orders --if-not-exists
+lab_expect_exit 0
+lab_expect_contains "✅ topic lab-orders already exists (--if-not-exists)"
 
 log "Step 7: dynamic broker config, without restart"
 lab_run playground broker config set --key log.retention.ms --value 60000

@@ -12897,6 +12897,12 @@ playground_topic_reassign_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12957,6 +12963,12 @@ playground_topic_elect_leader_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
     echo
 
     # :command.usage_fixed_flags
@@ -13474,6 +13486,11 @@ playground_topic_create_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--if-not-exists")"
+    printf "    ✅ Do nothing, and succeed, when the topic already exists (default: fail)\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -13493,7 +13510,7 @@ playground_topic_create_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground topic create --topic atopic\n  playground topic create --topic atopic --nb-partitions 8 --config\n  retention.ms=30000 --config cleanup.policy=compact\n"
+    printf "  playground topic create --topic atopic\n  playground topic create --topic atopic --nb-partitions 8 --config\n  retention.ms=30000 --config cleanup.policy=compact\n  playground topic create --topic atopic --if-not-exists\n"
     echo
 
   fi
@@ -13503,7 +13520,7 @@ playground_topic_create_usage() {
 playground_topic_delete_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic delete\n\n"
-    printf "  ❌ Delete topic and associated schema/subject if applicable\n  \n  Also removes the key and value subjects from the schema registry,\n  which is what you usually want: a topic re-created with a leftover\n  subject keeps the old compatibility rules and the old schema history.\n  Keep them with --skip-delete-schema. When the topic no longer exists,\n  its leftover key and value subjects are still deleted.\n  \n  A regex is accepted, matched in full, to clean up a family of topics\n  at once.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-topic-administration\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%AA%%9B-a-producer-gets-recordtoolargeexception\n\n"
+    printf "  ❌ Delete topic and associated schema/subject if applicable\n  \n  Also removes the key and value subjects from the schema registry,\n  which is what you usually want: a topic re-created with a leftover\n  subject keeps the old compatibility rules and the old schema history.\n  Keep them with --skip-delete-schema. When the topic no longer exists,\n  its leftover key and value subjects are still deleted.\n  \n  A regex is accepted, matched in full, to clean up a family of topics\n  at once. A regex never matches the internal topics (_schemas,\n  __consumer_offsets, connect-configs…): give the exact name to delete\n  one of them.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-topic-administration\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%AA%%9B-a-producer-gets-recordtoolargeexception\n\n"
   else
     printf "playground topic delete - ❌ Delete topic and associated schema/subject if applicable\n\n"
   fi
@@ -32352,7 +32369,12 @@ function check_if_continue()
       # running with github actions, continue
       return
   fi
-  read -p "Continue (y/n)?" choice
+  # no answer can come (stdin closed: a script, an agent): asking again called this function forever
+  if ! read -p "Continue (y/n)?" choice
+  then
+    logerror "❌ no answer to 'Continue (y/n)?': stdin is closed, answer it in a terminal"
+    exit 1
+  fi
   case "$choice" in
   y|Y ) ;;
   n|N ) exit 0;;
@@ -63294,7 +63316,7 @@ playground_topic_display_consumer_offsets_command() {
   get_environment_used
   verbose="${args[--verbose]}"
 
-  log "Display content of __consumer_offsets topic, press crtl-c to stop..."
+  log "Display content of __consumer_offsets topic, press ctrl-c to stop..."
   if [[ "$environment" == "ccloud" ]]
   then
       logerror " __consumer_offsets topic is not readable in cloud"
@@ -63524,12 +63546,7 @@ playground_topic_describe_command() {
   if [[ ! -n "$topic" ]]
   then
       log "✨ --topic flag was not provided, applying command to all topics"
-      if [[ "$environment" == cfk* ]]
-      then
-          topic=$(kubectl -n confluent exec connect-0 -- kafka-topics --bootstrap-server kafka:9071 $security --list 2>/dev/null | grep -v '^_' | grep -v 'connect-')
-      else
-          topic=$(playground get-topic-list --skip-internal-topics)
-      fi
+      topic=$(playground get-topic-list --skip-internal-topics)
       if [ "$topic" == "" ]
       then
           logerror "❌ No topic found !"
@@ -63537,6 +63554,7 @@ playground_topic_describe_command() {
       fi
   fi
 
+  failed=0
   items=($topic)
   for topic in ${items[@]}
   do
@@ -63564,32 +63582,32 @@ playground_topic_describe_command() {
               echo "kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
           fi
           get_connect_image
-          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties || failed=1
       elif [[ "$environment" == cfk* ]]
       then
-          if [[ -n "$verbose" ]]
+          # the KafkaTopic resource only when the topic has one: most topics (producers, connectors) have none
+          if kubectl -n confluent get kafkatopic "$topic" > /dev/null 2>&1
           then
-              log "🐞 CLI command used"
-              echo "kubectl -n confluent describe kafkatopic $topic"
+              log "🎰 kubectl -n confluent describe kafkatopic $topic"
+              kubectl -n confluent describe kafkatopic $topic
           fi
-          log "🎰 kubectl -n confluent describe kafkatopic $topic"
-          kubectl -n confluent describe kafkatopic $topic
 
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
               echo "kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server"
           fi
-          kubectl -n confluent exec $container -- kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security
+          kubectl -n confluent exec $container -- kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security || failed=1
       else
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
               echo "kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security"
           fi
-          docker exec $container kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security
+          docker exec $container kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security || failed=1
       fi
   done
+  exit $failed
 }
 
 # :command.function
@@ -63832,8 +63850,10 @@ playground_topic_set_schema_compatibility_command() {
   get_environment_used
   get_sr_url_and_security
 
+  all_topics=""
   if [[ ! -n "$topic" ]]
   then
+      all_topics=1
       logwarn "--topic flag was not provided, applying command to all topics"
       check_if_continue
       topic=$(playground get-topic-list --skip-internal-topics)
@@ -63856,6 +63876,11 @@ playground_topic_set_schema_compatibility_command() {
   do
       for suffix in $suffixes
       do
+          # without --topic, only the subjects that exist: most topics have no schema, each of them was an error
+          if [[ -n "$all_topics" ]] && ! sr_request GET "/subjects/$(urlencode "${topic}-${suffix}")/versions" > /dev/null 2>&1
+          then
+              continue
+          fi
           log "🛡️ Set compatibility for subject ${topic}-${suffix} to $compatibility"
           if sr_request PUT "/config/$(urlencode "${topic}-${suffix}")" "{\"compatibility\": \"$compatibility\"}"
           then
@@ -66747,6 +66772,7 @@ playground_topic_create_command() {
   topic="${args[--topic]}"
   nb_partitions="${args[--nb-partitions]}"
   verbose="${args[--verbose]}"
+  if_not_exists="${args[--if-not-exists]}"
 
   get_security_broker "--command-config"
   get_environment_used
@@ -66784,34 +66810,14 @@ playground_topic_create_command() {
           record_ccloud_created_topic "$topic"
       elif [[ "$environment" == cfk* ]]
       then
-          if [[ -z "$nb_partitions" ]]
-          then
-              nb_partitions=1
-          fi
+          # kafka-topics in the pod, like on the other environments: a KafkaTopic resource ignored the extra arguments
+          # (--config…), was created asynchronously, and its name must be a DNS-1123 name (no _ nor upper case)
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "kubectl -n confluent apply -f - << EOF"
-            echo "apiVersion: platform.confluent.io/v1beta1"
-            echo "kind: KafkaTopic"
-            echo "metadata:"
-            echo "  name: $topic"
-            echo "  namespace: confluent"
-            echo "spec:"
-            echo "  replicas: 1"
-            echo "  partitionCount: $nb_partitions"
-            echo "EOF"
-        fi
-        kubectl -n confluent apply -f - << EOF
-apiVersion: platform.confluent.io/v1beta1
-kind: KafkaTopic
-metadata:
-  name: $topic
-  namespace: confluent
-spec:
-  replicas: 1
-  partitionCount: $nb_partitions
-EOF
+              echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}"
+          fi
+          kubectl -n confluent exec $container -- kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}
       else
           if [[ -n "$verbose" ]]
           then
@@ -66820,6 +66826,9 @@ EOF
           fi
           docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}
       fi
+  elif [[ -n "$if_not_exists" ]]
+  then
+      log "✅ topic $topic already exists (--if-not-exists)"
   else
       logerror "❌ topic $topic already exist !"
       exit 1
@@ -66843,8 +66852,14 @@ playground_topic_delete_command() {
       topics_to_delete="$topic_pattern"
   else
       regex_pattern="^(${topic_pattern})$"
-      topics_to_delete=$(echo "$existing_topics" | grep -E -- "$regex_pattern")
+      # a regex never matches the internal topics (_schemas, __consumer_offsets, connect-configs…): '.*' deleted them
+      # too. Give their exact name to delete one of them
+      topics_to_delete=$(playground get-topic-list --skip-internal-topics | grep -E -- "$regex_pattern")
       grep_status=$?
+      if [ $grep_status -eq 1 ] && echo "$existing_topics" | grep -qE -- "$regex_pattern"
+      then
+          logwarn "🫥 --topic $topic_pattern only matches internal topics: they are never deleted with a regex, give the exact name"
+      fi
 
       if [ $grep_status -eq 2 ]; then
           logerror "❌ Invalid regex provided for --topic: $topic_pattern"
@@ -66911,7 +66926,7 @@ playground_topic_delete_command() {
               echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
           elif [[ "$environment" == cfk* ]]
           then
-              echo "kubectl -n confluent delete kafkatopic $topic"
+              echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security (and kubectl -n confluent delete kafkatopic $topic when it has a KafkaTopic resource)"
           else
               echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security"
           fi
@@ -66924,7 +66939,13 @@ playground_topic_delete_command() {
           forget_ccloud_recorded_topic "$(get_ccloud_kafka_cluster_id)" "$topic"
       elif [[ "$environment" == cfk* ]]
       then
-          kubectl -n confluent delete kafkatopic $topic
+          # the KafkaTopic resource first, if the topic has one (the operator would create the topic again), then the
+          # topic itself: most topics (producers, connectors) have no resource
+          if kubectl -n confluent get kafkatopic "$topic" > /dev/null 2>&1
+          then
+              kubectl -n confluent delete kafkatopic "$topic"
+          fi
+          kubectl -n confluent exec $container -- kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security 2>/dev/null || true
       else
           docker exec $container kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security
       fi
@@ -67372,8 +67393,21 @@ playground_topic_tag_search_command() {
 
   log "🔎 Topics with tag $tag"
   encoded_tag=$(jq -rn --arg tag "$tag" '$tag | @uri')
-  handle_catalog_rest_api GET "/catalog/v1/search/basic?types=kafka_topic&tag=$encoded_tag&limit=500" || exit 1
-  topics=$(echo "$curl_output" | jq -r '.entities[]? | .attributes.qualifiedName' | sort)
+  # 500 entities per page at most: read the next pages until one is not full
+  topics=""
+  search_offset=0
+  while true
+  do
+      handle_catalog_rest_api GET "/catalog/v1/search/basic?types=kafka_topic&tag=$encoded_tag&limit=500&offset=$search_offset" || exit 1
+      page=$(echo "$curl_output" | jq -r '.entities[]? | .attributes.qualifiedName')
+      topics=$(printf '%s\n%s' "$topics" "$page" | grep -v '^$' || true)
+      if [ "$(echo "$curl_output" | jq '.entities | length' 2>/dev/null || echo 0)" -lt 500 ]
+      then
+          break
+      fi
+      search_offset=$((search_offset + 500))
+  done
+  topics=$(echo "$topics" | sort)
   if [ -z "$topics" ]
   then
       log "💤 No topic has tag $tag"
@@ -112527,6 +112561,20 @@ playground_topic_reassign_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112591,6 +112639,12 @@ playground_topic_reassign_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-wait MAX-WAIT" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
   # :command.user_filter
@@ -112698,6 +112752,20 @@ playground_topic_elect_leader_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112750,6 +112818,12 @@ playground_topic_elect_leader_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--leader BROKER" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
   fi
 
   # :command.user_filter
@@ -114121,6 +114195,14 @@ playground_topic_create_parse_requirements() {
           printf "%s\n" "--nb-partitions requires an argument: --nb-partitions NB-PARTITIONS" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --if-not-exists)
+
+        # :flag.case_no_arg
+        args['--if-not-exists']=1
+        shift
         ;;
 
       # :flag.case
@@ -147164,6 +147246,21 @@ playground_topic_reassign_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -147182,6 +147279,7 @@ playground_topic_reassign_completion() {
     completion_flag_candidates --verify-only "$completion_current" --verify-only
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -147242,6 +147340,21 @@ playground_topic_elect_leader_completion() {
 
         shift
         ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
       *)
         return
         ;;
@@ -147255,6 +147368,7 @@ playground_topic_elect_leader_completion() {
     completion_flag_candidates --leader "$completion_current" --leader
     completion_flag_candidates --unclean "$completion_current" --unclean
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -148110,6 +148224,11 @@ playground_topic_create_completion() {
         completion_blocked_flags["--nb-partitions"]=1
 
         ;;
+      --if-not-exists)
+        completion_blocked_flags["--if-not-exists"]=1
+
+        shift
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -148136,6 +148255,7 @@ playground_topic_create_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --nb-partitions "$completion_current" --nb-partitions
+    completion_flag_candidates --if-not-exists "$completion_current" --if-not-exists
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 

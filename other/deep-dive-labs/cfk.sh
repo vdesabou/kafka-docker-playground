@@ -25,7 +25,8 @@ lab_expect_contains "kraftcontroller-0"
 lab_expect_contains "schemaregistry-0"
 lab_run playground topic produce -t filestream --nb-messages 5 --value '{"id": %g, "name": "name-%g"}'
 lab_expect_exit 0
-lab_expect_contains "kafkatopic.platform.confluent.io/filestream created"
+lab_expect_contains "Created topic filestream."
+lab_expect_not_contains "kafkatopic.platform.confluent.io" "topics are created with kafka-topics, not a KafkaTopic resource"
 lab_create_filestream_sink
 lab_run playground connector status -c filestream-sink
 lab_expect_contains "☸️ kubectl -n confluent get connector filestream-sink"
@@ -77,8 +78,7 @@ lab_run playground container recreate
 lab_expect_exit 1
 lab_expect_contains "❌ container recreate is not supported in cfk mode"
 lab_run playground topic describe -t filestream
-lab_expect_contains "🎰 kubectl -n confluent describe kafkatopic filestream"
-lab_expect_contains "Kind: KafkaTopic"
+lab_expect_not_contains "describe kafkatopic" "no KafkaTopic resource for a topic created by topic produce"
 lab_expect_contains "PartitionCount: 1"
 
 log "Step 3: pause, resume, restart: annotations and pod deletions"

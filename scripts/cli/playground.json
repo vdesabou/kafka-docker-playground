@@ -5938,6 +5938,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -5983,6 +5990,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6471,6 +6485,13 @@
             },
             {
               "names": [
+                "--if-not-exists"
+              ],
+              "argument": "",
+              "description": "✅ Do nothing, and succeed, when the topic already exists (default: fail)"
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -6480,7 +6501,7 @@
         },
         {
           "name": "delete",
-          "description": "❌ Delete topic and associated schema/subject if applicable\n\nAlso removes the key and value subjects from the schema registry,\nwhich is what you usually want: a topic re-created with a leftover\nsubject keeps the old compatibility rules and the old schema history.\nKeep them with --skip-delete-schema. When the topic no longer exists,\nits leftover key and value subjects are still deleted.\n\nA regex is accepted, matched in full, to clean up a family of topics\nat once.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception",
+          "description": "❌ Delete topic and associated schema/subject if applicable\n\nAlso removes the key and value subjects from the schema registry,\nwhich is what you usually want: a topic re-created with a leftover\nsubject keeps the old compatibility rules and the old schema history.\nKeep them with --skip-delete-schema. When the topic no longer exists,\nits leftover key and value subjects are still deleted.\n\nA regex is accepted, matched in full, to clean up a family of topics\nat once. A regex never matches the internal topics (_schemas,\n__consumer_offsets, connect-configs…): give the exact name to delete\none of them.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception",
           "usage": "playground topic delete [OPTIONS]",
           "options": [
             {

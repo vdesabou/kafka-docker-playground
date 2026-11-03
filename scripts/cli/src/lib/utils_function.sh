@@ -536,7 +536,12 @@ function check_if_continue()
       # running with github actions, continue
       return
   fi
-  read -p "Continue (y/n)?" choice
+  # no answer can come (stdin closed: a script, an agent): asking again called this function forever
+  if ! read -p "Continue (y/n)?" choice
+  then
+    logerror "❌ no answer to 'Continue (y/n)?': stdin is closed, answer it in a terminal"
+    exit 1
+  fi
   case "$choice" in
   y|Y ) ;;
   n|N ) exit 0;;

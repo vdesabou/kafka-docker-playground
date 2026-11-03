@@ -69,7 +69,8 @@ playground topic alter -t orders --add-config retention.ms=1000,segment.ms=1000
 
 Gotchas:
 
-- **`create` fails on an existing topic**: `❌ topic orders already exist !`, exit 1. Delete it first, or use
+- **`create` fails on an existing topic**: `❌ topic orders already exist !`, exit 1 (`--if-not-exists` succeeds
+  instead: `✅ topic orders already exists`). Delete it first, or use
   `alter` for configs.
 - **`alter` on a missing topic creates it first** (`🆕 topic orders does not exist, creating it...`), with 1 partition,
   then applies the configs. A config that `kafka-configs` refuses fails the command:
@@ -118,8 +119,8 @@ Gotchas:
   sum of its partitions. A freshly written topic can show 0 until the segment is flushed. On Confluent Cloud, sizes come
   from the Metrics API (`retained_bytes`, a few minutes late) and need `CONFLUENT_CLOUD_API_KEY` /
   `CONFLUENT_CLOUD_API_SECRET`.
-- On CFK, `describe` shows the `KafkaTopic` custom resource (`kubectl describe kafkatopic`) **and** `kafka-topics
-  --describe`.
+- On CFK, `describe` runs `kafka-topics --describe` in connect-0, and also shows the `KafkaTopic` custom resource
+  (`kubectl describe kafkatopic`) when the topic has one.
 
 ---
 
@@ -181,7 +182,9 @@ Gotchas:
   be decoded any more. That's usually what a repro wants; `--skip-delete-schema` when it isn't. Subjects of other
   naming strategies (`<topic>-<record>`) are not touched. See the [schema deep dive](/deep-dive-schema.md).
 - **`--topic` is a regex when no topic has that exact name**, matched in full (`^(…)$`): `lab-.*` deletes every topic
-  starting with `lab-`, internal ones included if they match. The matching topics are printed before they're deleted.
+  starting with `lab-`. A regex never matches the internal topics (`_schemas`, `__consumer_offsets`,
+  `connect-configs`…): `.*` used to delete them too; give the exact name to delete one of them. The matching topics
+  are printed before they're deleted.
 - **Nothing matching is not an error**: `❌ topic lab-nope does not exist and regex does not match any topic !`, exit 0.
   When `--topic` is a plain topic name (no regex characters other than `.`), leftover `<topic>-key` / `<topic>-value`
   subjects are still deleted (`🔰 Delete subject <topic>-value (its topic does not exist)`): a subject that outlived its
