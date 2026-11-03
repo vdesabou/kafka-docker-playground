@@ -136,6 +136,15 @@ lab_expect_contains '"warnings":[]'
 perl -i -ne 'print unless /AKIAABCDEFGHIJKLMNOP/' "$model"
 
 log "Step 4: export"
+# the output of a run, pasted after 'exit 0': exported in the bundle and shown in the hand-off report
+{
+    echo ''
+    echo '#################################################################################################'
+    echo '# 📋 run output (key lines, verbatim)'
+    echo '#################################################################################################'
+    echo '# 🧪 run 1 - lab - playground run -f <this file>'
+    echo '# 12:00:00 ℹ️ ✅ NOT REPRODUCED: the command failed: false'
+} >> "$model"
 lab_run playground repro export -f "$model" --dry-run
 lab_expect_exit 0
 lab_expect_contains "no 'playground run' found in playground-run-history, the bundle will not say which flags to use"
@@ -156,6 +165,10 @@ lab_expect_contains "connect-connect-filestream-sink/docker-compose.plaintext.re
 lab_expect_contains "connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab-ci.REPRO.md" "the hand-off report"
 lab_run bash -c "playground repro export -f '$model' --report-only 2> /dev/null"
 lab_expect_exit 0
+lab_expect_contains "## 📋 Run output" "the run output block after 'exit 0' goes in the hand-off report"
+lab_expect_contains "_(key lines, verbatim)_"
+lab_expect_contains "🧪 run 1 - lab - playground run -f <this file>"
+lab_expect_contains "12:00:00 ℹ️ ✅ NOT REPRODUCED: the command failed: false"
 lab_expect_contains "# 🐞 000000 deep dive lab ci"
 lab_expect_contains "| 🩹 status | lab only |"
 lab_expect_contains "| 🧪 last verdict | 🐞 reproduced on"

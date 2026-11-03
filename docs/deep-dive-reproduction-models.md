@@ -222,6 +222,31 @@ playground repro assert --reproduced-if-command "<shell test>" --message "rows m
   runs the bundle knows what to expect. The CP and connector versions are the ones of the run (`TAG`, `CONNECTOR_TAG`,
   or the `--connector-zip` / `--connector-jar` file): run it with `playground run -f <model>`.
 
+### Its evidence: the `📋 run output` block
+
+The verdict says *whether* it reproduces. The log lines say *what* happened (the measurements, the error, the timing),
+and they disappear with `/tmp`. Paste them into the model itself, as a comment block **after `exit 0`** (never
+executed), with one `🧪 run` section per run:
+
+```bash
+exit 0
+
+#################################################################################################
+# 📋 run output (key lines, verbatim)
+#################################################################################################
+# 🧪 run 1 - 2026-11-03 - playground run -f <this file> --tag 7.9.9 --connector-tag 1.6.0
+#    versions: CP 7.9.9, connector 1.6.0, Oracle 19.19
+# 13:43:10 ℹ️ ✅ NOT REPRODUCED: the command failed: test 0 -gt 15000 (CP 7.9.9, connector 1.6.0)
+# <commands run by hand on the same environment, with their output>
+```
+
+- `repro export` puts it in the hand-off report, in a `## 📋 Run output` section. That covers the lines from the
+  title to the next frame line (`#####…`) or the first line that is not a comment.
+- Keep the decisive lines (about 20 to 60), not the whole log. Like the rest of the model: neutral names, no
+  customer data, no secret (`repro check` scans it).
+- A header line `# 📋 run output: see the block after 'exit 0'` under `# 💬 comments:` points to it. The report
+  leaves that line out of its comments, because the section is already there.
+
 ### Which version: `repro bisect`
 
 "Is it fixed in 2.14.5? Since when is it broken?" With a verdict at the end of the model, the question answers itself:
@@ -382,7 +407,7 @@ What goes in a bundle:
 | --- | --- |
 | the script, its support files (`README.md`, `stop.sh`, `config-*`, `benchmark-load.bash`, `.gitignore`), and every entry of its folder whose **name appears** in the script or in a compose file it mentions | git-ignored files, `target/`, dumps (`*.hprof`, `*.jfr`), logs, archives, credential files, files over 50 MB |
 | symlinks, **stored as their content** (the bundle doesn't depend on the version of the public example) | files outside the repository (connector zip, `~/Downloads/config.json`): listed only, packed under `<folder>/artifacts/` with `--include-artifacts` |
-| `<model>.REPRO.md`, the **hand-off report** of each model: case, jira, status, author, base example, last verdict, 🎯 expected, 💥 actual, the free comments of the header, the commands to import and run it with the credentials it needs, and the `diff` of its scenario (no header, no cheat sheet) and of its compose override with the ones of the base example. Listed in the manifest like the other files, so an older playground imports it too (`--no-report` to leave it out) | |
+| `<model>.REPRO.md`, the **hand-off report** of each model: case, jira, status, author, base example, last verdict, 🎯 expected, 💥 actual, the free comments of the header, the `📋 run output` block after `exit 0` when there is one, the commands to import and run it with the credentials it needs, and the `diff` of its scenario (no header, no cheat sheet) and of its compose override with the ones of the base example. Listed in the manifest like the other files, so an older playground imports it too (`--no-report` to leave it out) | |
 | `repro-manifest.json`: per model the last `playground run` line (from `playground-run-history`, without `--cluster-creds`), case number, author, base example, the header fields (`expected`, `actual`, `jira`, `status`), credential **names**, external files; the playground commit; the sha256 of every file | credential values |
 
 What import does:
