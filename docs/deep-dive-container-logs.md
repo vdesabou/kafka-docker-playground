@@ -242,17 +242,38 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | --- | --- |
 | verdict and tiles | files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
 | 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings) |
-| 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records |
+| 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records. **Drag over it to zoom on a range** (◀ ▶ to move the window, double-click or **All** to zoom out): the buckets are counted again for the window, so zooming on a burst shows it per minute, then per second |
+| 🔝 root causes (occurrences) | the 10 most frequent root causes of what is kept, as horizontal bars |
 | 🌳 root causes | records grouped by their deepest exception (or by message when they have none), with occurrences, files and connectors |
+| 🗂️ files with findings | lines, distinct records and occurrences per level, one row per file |
 | 📄 one card per file | every distinct record, with its count, connector, first and last line and timestamp, and its exception chain; **📋 Show context** unfolds the raw lines around its first occurrence (2 before, the record with its full stack trace up to 30 lines, 2 after), with their line numbers (`▶` on the first line of the record), also in `.files[].records[].context` of `--json` |
 | ⚙️ configuration | the configs the components log when they start (`KafkaConfig values:`, `DistributedConfig`, `SchemaRegistryConfig`, the config of each connector and of its tasks with their `[connector|task-0]` context, `ProducerConfig` of a client app…, defaults included, the last one of each class / context / `client.id`, 50 per file), and the config files of the input (`.properties`, connector JSON: a connector config, `{"name", "config"}` or the output of `/connectors?expand=info`), grouped by config files, components, connector and clients, with a key / value filter, also in `.configuration` of `--json`. Sanitized like the records |
 
-A sticky bar above the root causes filters them and the records: FATAL / ERROR / WARN chips with several levels
-(`--include-warnings`), and a **Connector** picker when the records carry the connector context of the Connect log
-line (`ERROR [my-connector|task-0] …`, `[my-connector|task-0|offsets]`, `[my-connector|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent
-first, with "no connector context" for the worker records. On a worker running dozens of connectors, pick one to see
-only its errors. `--json` gives the same in `.summary.by_connector`, `.root_causes[].connectors` and
-`.files[].records[].connector`.
+🎚️ **Everything below the sticky filter bar is one view of the same records**: the two charts, the root causes, the
+files with findings and the record cards are all counted again whenever you change a filter. The verdict and the tiles
+above the bar stay the figures of the whole report. There are three filters, and they combine:
+
+| Filter | Where | What it keeps |
+| --- | --- | --- |
+| **Levels** | FATAL / ERROR / WARN chips of the bar, with several levels (`--include-warnings`) | the records of the levels still pressed |
+| **Connector** | picker of the bar, when the records carry the connector context of the Connect log line (`ERROR [my-connector\|task-0] …`, `[my-connector\|task-0\|offsets]`, `[my-connector\|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent first, with "no connector context" for the worker records | the records of that connector |
+| **Period** | drag over the 📈 chart | the occurrences between the two times |
+
+On a worker running dozens of connectors, pick one to see only its errors — the chart then shows only its occurrences
+over time. Pick one connector, switch WARN off and drag over the burst of 20:23, and what is left everywhere is the
+ERRORs that connector logged in that minute, with `⏱ <from> → <to> · N of M root cause(s) · K occurrence(s)` in the
+header of the root causes; **⤺ whole period** (or a double-click on the chart) puts the period back. `--json` gives
+the per-connector counts in `.summary.by_connector`, `.root_causes[].connectors` and `.files[].records[].connector`.
+
+🔎 The **findings are never rewritten**: they are the diagnosis of the bundle, so each one keeps the figures of the
+whole report (`🧨 A connector task was killed: 1200 occurrence(s) in 12 files (first at connect-0.log line 88,
+2026-11-02 20:03:14)`). They only say how much of themselves is in what you selected — `▸ 340 of 1200 occurrence(s)
+here` under the card, `▸ nothing in this selection` and the card dimmed when none of it is. So picking a connector
+never hides a problem of the cluster, it tells you which of them that connector is actually hit by.
+
+Occurrences beyond the first 1000 kept per record (and lines without a timestamp) have no time of their own: they are
+not counted in a period, the legend of the root causes says how many there are, and a record that has only those stays
+shown. That is also why the chart totals can be lower than the Occurrences column when no period is selected.
 
 🔗 The file names and line numbers of the report (`line 33` of a record, a file of the root causes, the `file:line` of a
 config) are **links**: they open the file at that line in a page written next to the report, in `<report>-files/` (one

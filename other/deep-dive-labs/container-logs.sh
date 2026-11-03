@@ -90,6 +90,14 @@ lab_expect_contains "1 file(s) with findings out of 1 scanned (binary files skip
 lab_expect_contains "✅ HTML report saved: $report_dir/lab-connect-$$-log-report.html"
 lab_expect_equals "$(grep -o 'A connector task was killed' "$report_dir/lab-connect-$$-log-report.html" | head -1)" "A connector task was killed" "known cause in the HTML report"
 lab_expect_equals "$(grep -o "<option value='bad-sink'>" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "<option value='bad-sink'>" "connector filter in the HTML report"
+# the charts, the root causes, the files and the records all follow the levels, the connector and the period selected
+# on the 📈 chart: they are counted again from one index of records written in the page
+lab_expect_equals "$(grep -o "id='occurrences-chart'" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "id='occurrences-chart'" "occurrences chart id in the HTML report"
+lab_expect_equals "$(grep -o "id='pg-occurrences'" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "id='pg-occurrences'" "index of the records the filters recount from, in the HTML report"
+lab_expect_equals "$(grep -o "<tr class='rc-row' data-level='[A-Z]*' data-cause='0'" "$report_dir/lab-connect-$$-log-report.html" | head -1 | sed 's/data-level=.[A-Z]*. //')" "<tr class='rc-row' data-cause='0'" "root cause rows wired to that index"
+lab_expect_equals "$(grep -o "Drag over 📈 Occurrences over time to select a period" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "Drag over 📈 Occurrences over time to select a period" "period filter of the root causes in the HTML report"
+# the findings keep the figures of the whole report, and only say how much of each of them is in the selection
+lab_expect_equals "$(grep -o 'data-recs="[0-9]' "$report_dir/lab-connect-$$-log-report.html" | head -1 | cut -c1-11)" 'data-recs="' "findings wired to the records they were built from"
 lab_expect_contains "🧭 Summary:"
 lab_expect_contains "🧠 Known causes"
 lab_expect_contains "🧨 A connector task was killed"

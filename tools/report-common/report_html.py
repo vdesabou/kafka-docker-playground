@@ -296,7 +296,10 @@ if (!window.pgFindingsFilter) {
 
 def findings_html(items: List[dict]) -> str:
     """items: {severity, text}, plus an optional details list shown as bullets under the text; with 2 severities or more,
-    chips above the cards filter them by severity"""
+    chips above the cards filter them by severity. An item with "records" (indexes of the records it was built from)
+    carries them as data-recs and gets a .rec-scope span: a page that filters the records (the log report) writes in it
+    how much of the finding is in the current selection. The text of a finding is never rewritten: it stays the figures
+    of the whole report."""
     if not items:
         return ""
     counts = {s: sum(1 for f in items if f["severity"] == s) for s in SEVERITY_ORDER}
@@ -307,10 +310,15 @@ def findings_html(items: List[dict]) -> str:
                  + "".join(f"<button type='button' class='rec-badge {s.lower()} sev-chip' data-sev='{s}' aria-pressed='true' "
                            f"title='show / hide the {s} findings'>{SEVERITY_ICONS.get(s, '')} {s} ({counts[s]})</button>" for s in present)
                  + f"</div>{FINDINGS_FILTER_SCRIPT}")
-    return ("<div class='findings'><div class='section-title'>🔎 Findings</div>" + chips + "<div class='recs-list'>"
-            + "".join(f'<div class="rec-card {f["severity"].lower()}" data-sev="{e(f["severity"])}"><span class="rec-badge {f["severity"].lower()}">'
+    scoped = any(f.get("records") for f in items)
+    return ("<div class='findings'><div class='section-title'>🔎 Findings"
+            + ("<span class='fi-scope'></span>" if scoped else "") + "</div>" + chips + "<div class='recs-list'>"
+            + "".join(f'<div class="rec-card {f["severity"].lower()}" data-sev="{e(f["severity"])}"'
+                      + (f' data-recs="{" ".join(str(i) for i in f["records"])}"' if f.get("records") else "")
+                      + f'><span class="rec-badge {f["severity"].lower()}">'
                       f'{SEVERITY_ICONS.get(f["severity"], "")} {e(f["severity"])}</span><span class="rec-text">{e(f["text"])}'
                       + ("<ul class='rec-details'>" + "".join(f"<li>{e(d)}</li>" for d in f["details"]) + "</ul>" if f.get("details") else "")
+                      + ("<span class='rec-scope'></span>" if f.get("records") else "")
                       + "</span></div>"
                       for f in items)
             + "</div></div>")
@@ -445,10 +453,15 @@ def zoom_chart(chart: dict, fallback: str, presets: Sequence[Tuple[str, float]] 
 
 
 def time_chart(points: List[Tuple[datetime, str]], series: Sequence[Tuple[str, str, str]], note: str = "",
-               ms: bool = False, max_points: int = 100000) -> str:
+               ms: bool = False, max_points: int = 100000, chart_id: str = "", embed_times: bool = True,
+               extra: Optional[dict] = None) -> str:
     """Occurrences over time, zoomable: time_bins() + svg_time_columns() without JavaScript, counted again per bucket of the
     visible window by zoom_chart.js (zooming on a burst shows it per minute, then per second). series: (key, label, color);
-    the series without any point are left out; ms: the times have milliseconds (zoom down to 1 ms buckets). "" without points."""
+    the series without any point are left out; ms: the times have milliseconds (zoom down to 1 ms buckets). "" without points.
+    chart_id: id of the chart, to follow its "zoomchange" event (the time filter of the log report).
+    embed_times: False leaves the series out of the page and the chart asks window.pgChartTimes() for them, for a page
+    that builds them itself and replaces them with box.setTimes() (the level and connector filters of the log report);
+    extra: more keys of the chart, for that page."""
     tl = time_bins(points, [k for k, _, _ in series])
     if not tl:
         return ""
@@ -456,10 +469,12 @@ def time_chart(points: List[Tuple[datetime, str]], series: Sequence[Tuple[str, s
     for ts, key in points:
         times[key].append(round(ts.timestamp(), 3) if ms else int(ts.timestamp()))
     shown = [s for s in series if times[s[0]]] or list(series[:1])
-    data = [sorted(times[k])[:max_points] for k, _, _ in shown]
+    data = [sorted(times[k])[:max_points] if embed_times else [] for k, _, _ in shown]
+    every = [t for k, _, _ in series for t in times[k]]
     chart = {"type": "events", "series": [{"label": l, "color": c} for _, l, c in shown], "times": data, "W": 600, "H": 190,
-             "L": 44, "note": note, "ms": ms}
-    return zoom_chart(chart, svg_time_columns(tl, series, note))
+             "L": 44, "note": note, "ms": ms, "xmin": min(every), "xmax": max(every)}
+    chart.update(extra or {})
+    return zoom_chart(chart, svg_time_columns(tl, series, note), chart_id=chart_id)
 
 
 def svg_hbars(rows: Sequence[Tuple[str, float, str]], fmt: Optional[Callable[[float], str]] = None) -> str:

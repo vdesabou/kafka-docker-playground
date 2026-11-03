@@ -7,7 +7,10 @@
 //            array per slot, one value per series)
 //   events   "times": one sorted array of epoch seconds per series, counted again per time bucket (at most 60 buckets)
 //            for the visible window, so that zooming shows the detail of a burst; "ms": true when the times have
-//            milliseconds (buckets down to 1 ms)
+//            milliseconds (buckets down to 1 ms). "xmin"/"xmax" pin the x axis to the whole data, so that it does not
+//            move when the series are replaced: box.setTimes([...]) draws the chart again with other arrays (the level
+//            and connector filters of the log report), and window.pgChartTimes(box, chart), when a page defines it,
+//            gives the arrays before the first draw (a chart whose series are built by the page, "times": [])
 //   xy       "layers": {kind: dots|line, label, color, r, points: [[x, y], ...]}, "hline": {y, label, color},
 //            "xlabel", "ylabel"
 // Common keys: series [{label, color}] (columns, events), fmt (money|int|num), W, H, presets [[label, span]], group,
@@ -98,8 +101,10 @@
     const pw = W - L - R, ph = H - T - B;
     const holder = box.querySelector(".zoom-svg"), info = box.querySelector(".zoom-info");
     const series = c.series || [];
+    if (type === "events" && window.pgChartTimes) c.times = window.pgChartTimes(box, c) || c.times;
     let lo, hi;
     if (type === "columns") { lo = 0; hi = c.x.length; }
+    else if (type === "events" && c.xmin !== undefined) { lo = c.xmin; hi = c.xmax + (c.ms ? 0.001 : 1); }
     else if (type === "events") { [lo, hi] = minMax(c.times); hi += c.ms ? 0.001 : 1; }
     else { lo = 0; hi = minMax(c.layers.map(l => l.points.map(p => p[0])))[1] || 1; }
     const minSpan = type === "columns" ? 1 : type === "events" ? (c.ms ? 0.05 : 10) : (hi - lo) / 1000;
@@ -116,6 +121,8 @@
       if (c.group && !fromGroup) groups[c.group].forEach(o => { if (o !== self) o.show(a, b, true); });
     }
     self.show = show;
+    // draw the chart again with other series (events): the x axis and the visible window do not move
+    box.setTimes = function (arrays) { c.times = arrays; draw(); };
     // zoom on [from, to): x values (ISO days of a columns chart); false when nothing of the chart is in that range
     box.zoomTo = function (from, to) {
       if (type !== "columns") { if (+to <= lo || +from >= hi) return false; show(+from, +to); return true; }
