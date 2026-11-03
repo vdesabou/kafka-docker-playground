@@ -6,3 +6,9 @@ services:
   # (community cp-kafka image for CP >= 8) refuses to start a controller with it
   controller:
     command: bash -c "unset KAFKA_ADVERTISED_LISTENERS && exec /etc/confluent/docker/run"
+
+  controller2:
+    command: bash -c "unset KAFKA_ADVERTISED_LISTENERS && exec /etc/confluent/docker/run"
+
+  controller3:
+    command: bash -c "unset KAFKA_ADVERTISED_LISTENERS && exec /etc/confluent/docker/run"

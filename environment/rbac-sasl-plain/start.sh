@@ -32,10 +32,14 @@ if [ ! -z $ENABLE_KRAFT ]
 then
   # KRAFT mode
   INITIAL_CONTAINER_LIST="controller broker openldap"
+  # the 3 voters of --enable-multiple-controllers: the quorum needs 2 of them
+  INITIAL_CONTAINER_LIST="${INITIAL_CONTAINER_LIST} ${controller_nodes_containers}"
   KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR}/../../environment/rbac-sasl-plain/docker-compose-kraft.yml"
 else
   # Zookeeper mode
   INITIAL_CONTAINER_LIST="zookeeper broker openldap"
+  # the 3 nodes of --enable-multiple-controllers: the ensemble needs 2 of them
+  INITIAL_CONTAINER_LIST="${INITIAL_CONTAINER_LIST} ${controller_nodes_containers}"
   KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE=""
 fi
 
@@ -172,10 +176,10 @@ then
   (source "$RBAC_ROLE_BINDINGS_FILE")
 fi
 
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} build
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull $SERVICES_ARGS
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_controller_nodes_command} ${profile_connect_nodes_command} build
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} ${profile_controller_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull $SERVICES_ARGS
 log "📝 To see the actual properties file, use cli command 'playground container get-properties -c <container>'"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull $SERVICES_ARGS"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} ${profile_controller_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull $SERVICES_ARGS"
 playground state set run.docker_command "$command"
 playground state set run.environment "rbac-sasl-plain"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"

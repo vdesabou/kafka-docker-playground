@@ -50,6 +50,46 @@ services:
         # -Djdk.security.allowNonCaAnchor=true
         # -Dsun.security.krb5.disableReferrals=true
 
+  zookeeper2:
+    hostname: zookeeper2.kerberos-demo.local
+    depends_on:
+      - kdc
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/kerberos/zookeeper/zookeeper2.sasl.jaas.config:/etc/kafka/zookeeper.sasl.jaas.config
+    environment:
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper.sasl.jaas.config
+        -Djava.security.krb5.conf=/etc/krb5.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+        -Dsun.security.krb5.debug=true
+        -Dzookeeper.allowSaslFailedClients=false
+        -Dzookeeper.requireClientAuthScheme=sasl
+        # -Djdk.security.allowNonCaAnchor=true
+        # -Dsun.security.krb5.disableReferrals=true
+
+  zookeeper3:
+    hostname: zookeeper3.kerberos-demo.local
+    depends_on:
+      - kdc
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/kerberos/zookeeper/zookeeper3.sasl.jaas.config:/etc/kafka/zookeeper.sasl.jaas.config
+    environment:
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper.sasl.jaas.config
+        -Djava.security.krb5.conf=/etc/krb5.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+        -Dsun.security.krb5.debug=true
+        -Dzookeeper.allowSaslFailedClients=false
+        -Dzookeeper.requireClientAuthScheme=sasl
+        # -Djdk.security.allowNonCaAnchor=true
+        # -Dsun.security.krb5.disableReferrals=true
+
   broker:
     hostname: broker.kerberos-demo.local
     depends_on:
@@ -65,7 +105,7 @@ services:
       # bootstrap host, and only Docker's reverse DNS turns a short name into
       # broker.kerberos-demo.local (podman answers the bare container name)
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_ZOOKEEPER_CONNECT: ${PLAYGROUND_ZOOKEEPER_CONNECT_KERBEROS:-zookeeper.kerberos-demo.local:2181}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker.kerberos-demo.local:9092
       KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
@@ -110,7 +150,7 @@ services:
       - ../../environment/kerberos/kafka/broker2.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
     environment:
       KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_ZOOKEEPER_CONNECT: ${PLAYGROUND_ZOOKEEPER_CONNECT_KERBEROS:-zookeeper.kerberos-demo.local:2181}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker2.kerberos-demo.local:9092
@@ -168,7 +208,7 @@ services:
       - ../../environment/kerberos/kafka/broker3.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
     environment:
       KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_ZOOKEEPER_CONNECT: ${PLAYGROUND_ZOOKEEPER_CONNECT_KERBEROS:-zookeeper.kerberos-demo.local:2181}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker3.kerberos-demo.local:9092

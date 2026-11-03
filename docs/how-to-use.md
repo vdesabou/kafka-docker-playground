@@ -504,6 +504,17 @@ By default, there is only one kafka node enabled. To enable three nodes, select 
 
 With three nodes, the internal topics (`__consumer_offsets`, `__transaction_state`, `connect-offsets`, `connect-configs`, `connect-status`, `_confluent-license`, `_confluent-link-metadata`…) are created with 3 replicas and a min ISR of 2, like in production: a broker can be stopped (`playground broker stop`) or restarted (`playground broker rolling-restart`) without making them unavailable. With one node, they have 1 replica. See the [brokers and transactions deep dive](/deep-dive-broker.md).
 
+### 🗳️ Enabling multiple controllers
+
+By default, there is only one KRaft controller (or, with CP < 8 in ZooKeeper mode, one ZooKeeper node). To get a quorum of three, select it in menu or use `--enable-multiple-controllers` option of [playground run](/playground%20run):
+
+| Mode | Containers | Settings |
+| --- | --- | --- |
+| KRaft (CP ≥ 8, or `--enable-kraft`) | `controller`, `controller2`, `controller3` (node ids 4, 5 and 6, JMX ports 10005, 12005, 13005) | `controller.quorum.voters=4@controller:9093,5@controller2:9093,6@controller3:9093` |
+| ZooKeeper | `zookeeper`, `zookeeper2`, `zookeeper3` (JMX ports 9999, 12999, 13999) | `zookeeper.connect=zookeeper:2181,zookeeper2:2181,zookeeper3:2181` |
+
+One node of the quorum can then be stopped (`playground container kill -c controller2`) without making the cluster unavailable: `playground broker health` shows the KRaft quorum, its leader and the lag of each voter. It works with every environment except the `mdc-*` ones (one ZooKeeper / controller per cluster) and `cfk`, where it is ignored. Combine it with `--enable-multiple-brokers` for a cluster without any single point of failure.
+
 ### 🥉 Enabling multiple connect workers
 
 By default, there is only one connect node enabled. To enable three connect nodes, select it in menu or use `--enable-multiple-connect-workers` option of [playground run](/playground%20run).

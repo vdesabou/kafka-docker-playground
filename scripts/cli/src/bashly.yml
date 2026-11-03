@@ -2286,6 +2286,24 @@ commands:
       🥉 Enable multiple connect worker node
 
       By default, there is only one connect worker node enabled
+  - &enable-multiple-controllers
+    long: --enable-multiple-controllers
+    required: false
+
+    help: |-
+      🗳️ Enable multiple controllers
+
+      By default, there is only one KRaft controller (or one ZooKeeper node
+      with CP < 8 in ZooKeeper mode). With this flag, the quorum has 3 nodes,
+      so that one of them can stop without making the cluster unavailable:
+
+      - KRaft mode: controllers controller, controller2 and controller3
+        (node ids 4, 5 and 6)
+
+      - ZooKeeper mode: zookeeper, zookeeper2 and zookeeper3
+
+      ❗ not supported with ccloud examples, ignored with the mdc-* and cfk
+      environments
   - &enable-jmx-grafana
     long: --enable-jmx-grafana
     required: false

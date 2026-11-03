@@ -15,6 +15,24 @@ services:
                 -Dzookeeper.allowSaslFailedClients=false
                 -Dzookeeper.requireClientAuthScheme=sasl
 
+    zookeeper2:
+        volumes:
+        - ../../environment/sasl-plain/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf
+        environment:
+            KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
+                -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+                -Dzookeeper.allowSaslFailedClients=false
+                -Dzookeeper.requireClientAuthScheme=sasl
+
+    zookeeper3:
+        volumes:
+        - ../../environment/sasl-plain/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf
+        environment:
+            KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
+                -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+                -Dzookeeper.allowSaslFailedClients=false
+                -Dzookeeper.requireClientAuthScheme=sasl
+
     broker:
         volumes:
             - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf

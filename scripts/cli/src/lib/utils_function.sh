@@ -1078,6 +1078,32 @@ function set_profiles() {
   fi
   set_internal_topics_replication
 
+  # 3 KRaft controllers (KRaft mode) or 3 ZooKeeper nodes (ZooKeeper mode), so that one of them can stop
+  # without losing the quorum. controller_nodes_containers is for the environments that start a first set of
+  # containers before the others (sasl-scram, rbac-sasl-plain): the quorum needs 2 of the 3 nodes
+  profile_controller_nodes_command=""
+  controller_nodes_containers=""
+  if [ -z "$ENABLE_CONTROLLER_NODES" ]
+  then
+    playground state del flags.ENABLE_CONTROLLER_NODES
+  elif [ -n "$PLAYGROUND_CFK_MODE" ]
+  then
+    logwarn "⚠️ ENABLE_CONTROLLER_NODES (--enable-multiple-controllers) is ignored in CFK mode"
+    playground state del flags.ENABLE_CONTROLLER_NODES
+  elif [ -n "$ENABLE_KRAFT" ]
+  then
+    log "🗳️  Multiple controllers enabled, controller2 and controller3 containers will be started (KRaft quorum of 3 voters)"
+    profile_controller_nodes_command="--profile controller_nodes"
+    controller_nodes_containers="controller2 controller3"
+    playground state set flags.ENABLE_CONTROLLER_NODES 1
+  else
+    log "🗳️  Multiple controllers enabled, zookeeper2 and zookeeper3 containers will be started (ZooKeeper ensemble of 3 nodes)"
+    profile_controller_nodes_command="--profile zookeeper_nodes"
+    controller_nodes_containers="zookeeper2 zookeeper3"
+    playground state set flags.ENABLE_CONTROLLER_NODES 1
+  fi
+  set_controller_nodes_settings
+
   # defined 3 Connect variable and when profile is included/excluded
   profile_connect_nodes_command=""
   if [ -z "$ENABLE_CONNECT_NODES" ]
@@ -1381,6 +1407,26 @@ function set_internal_topics_replication() {
   else
     export PLAYGROUND_INTERNAL_TOPICS_REPLICATION_FACTOR=1
     export PLAYGROUND_INTERNAL_TOPICS_MIN_ISR=1
+  fi
+}
+
+# ZooKeeper connect strings, ZooKeeper ensemble and KRaft quorum voters, used by the docker compose files of the
+# environments: 3 nodes with --enable-multiple-controllers (ENABLE_CONTROLLER_NODES, or $1 set), 1 otherwise.
+# Exported in both modes: each docker compose file only reads the ones of its mode
+function set_controller_nodes_settings() {
+  if [ -n "$ENABLE_CONTROLLER_NODES" ] || [ -n "$1" ]
+  then
+    export PLAYGROUND_ZOOKEEPER_CONNECT="zookeeper:2181,zookeeper2:2181,zookeeper3:2181"
+    # kerberos environments: the client builds the ZooKeeper principal from the host of the connect string
+    export PLAYGROUND_ZOOKEEPER_CONNECT_KERBEROS="zookeeper.kerberos-demo.local:2181,zookeeper2.kerberos-demo.local:2181,zookeeper3.kerberos-demo.local:2181"
+    export PLAYGROUND_ZOOKEEPER_SERVERS="zookeeper:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888"
+    export PLAYGROUND_CONTROLLER_QUORUM_VOTERS="4@controller:9093,5@controller2:9093,6@controller3:9093"
+  else
+    export PLAYGROUND_ZOOKEEPER_CONNECT="zookeeper:2181"
+    export PLAYGROUND_ZOOKEEPER_CONNECT_KERBEROS="zookeeper.kerberos-demo.local:2181"
+    # empty: standalone ZooKeeper (the cp-zookeeper image only writes server.N lines when it is set)
+    export PLAYGROUND_ZOOKEEPER_SERVERS=""
+    export PLAYGROUND_CONTROLLER_QUORUM_VOTERS="4@controller:9093"
   fi
 }
 
@@ -1741,8 +1787,18 @@ function display_jmx_info() {
   if [ ! -z $ENABLE_KRAFT ]
   then
     log "    - kraft-controller : 10005"
+    if [ -n "$ENABLE_CONTROLLER_NODES" ]
+    then
+      log "    - kraft-controller2: 12005"
+      log "    - kraft-controller3: 13005"
+    fi
   else
     log "    - zookeeper       : 9999"
+    if [ -n "$ENABLE_CONTROLLER_NODES" ]
+    then
+      log "    - zookeeper2      : 12999"
+      log "    - zookeeper3      : 13999"
+    fi
   fi
   log "    - broker          : 10000"
   log "    - schema-registry : 10001"
@@ -1790,7 +1846,7 @@ function get_jmx_metrics() {
       connect3)
         target_container="connect-2"
       ;;
-      connect|connect-[0-9]*|broker|schema-registry|controller|zookeeper)
+      connect|connect-[0-9]*|broker|schema-registry|controller|controller2|controller3|zookeeper|zookeeper2|zookeeper3)
         target_container="$container"
       ;;
       *)
@@ -1812,6 +1868,18 @@ function get_jmx_metrics() {
   controller )
     port=10005
   ;;
+  zookeeper2 )
+    port=12999
+  ;;
+  zookeeper3 )
+    port=13999
+  ;;
+  controller2 )
+    port=12005
+  ;;
+  controller3 )
+    port=13005
+  ;;
   broker )
     port=10000
   ;;
@@ -1831,7 +1899,7 @@ function get_jmx_metrics() {
     port=10002
   ;;
   n|N ) ;;
-  * ) logerror "invalid container $container! it should be one of zookeeper, broker, schema-registry, connect, connect2, connect3 or connect-<n>";exit 1;;
+  * ) logerror "invalid container $container! it should be one of zookeeper, zookeeper2, zookeeper3, controller, controller2, controller3, broker, schema-registry, connect, connect2, connect3 or connect-<n>";exit 1;;
   esac
 
   if [[ "$environment" == cfk* ]]
@@ -5333,7 +5401,7 @@ function force_enable () {
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,ENABLE_SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,ENABLE_SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES,ENABLE_CONTROLLER_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]
