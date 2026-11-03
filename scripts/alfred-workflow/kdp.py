@@ -16,8 +16,9 @@ Sub-commands (first word of the query):
   status              playground status, connector status / diagnose, connect errors
 
 Keys on result items (same meaning everywhere when they apply):
-  ↩ copy the command      ⌘ open in VS Code      ⌃ run in the terminal
+  ↩ copy the command (or open)      ⌘ open in VS Code      ⌃ run in the terminal
   ⌥ / ⇧ depend on the mode (shown in the subtitle when the key is held)
+  Scripts (find, repro, history): ↩ opens the script in VS Code, ⌘ copies 'playground run -f …' 
 
 Never runs an example by itself: running one stops the environment that is up.
 Only ⌃ (an explicit choice, with a warning) sends `playground run` to the terminal.
@@ -268,14 +269,20 @@ def stop_warning():
 
 
 def script_mods(script, run_command, alt=None, shift=None):
-    """⌘ VS Code, ⌃ run in terminal, ⌥ README (default), ⇧ copy repro bootstrap (default)."""
+    """⌘ copy the run command, ⌃ run in terminal, ⌥ README (default), ⇧ copy repro bootstrap (default)."""
     readme = readme_of(script)
     return {
-        "cmd": mod("⌘ open the script in VS Code", "code", script),
+        "cmd": mod("⌘ copy: " + short(run_command, 120), "copy", run_command),
         "alt": alt or (mod("⌥ open the README", "open", readme) if readme else mod("⌥ no README in this folder")),
         "shift": shift or mod("⇧ copy: playground repro bootstrap -f … --no-run", "copy", bootstrap_cmd(script)),
         "ctrl": mod("⌃ ▶️ run it in the terminal · " + stop_warning(), "terminal", notified(run_command)),
     }
+
+
+def script_item(title, subtitle, script, run_command, alt=None, shift=None, **kw):
+    """A result that is a script (example or repro model): ↩ opens it in VS Code, ⌘C / large type: the run command."""
+    return item(title, subtitle, "code", script, copy=run_command,
+                mods=script_mods(script, run_command, alt=alt, shift=shift), **kw)
 
 
 def example_actions(script, flags="", extra=None):
@@ -290,8 +297,8 @@ def example_actions(script, flags="", extra=None):
         item("▶️ Run " + os.path.basename(script) + (" without these flags" if flags else ""),
              "in the terminal, notification when it ends · " + warn, "terminal",
              notified("playground run -f {}".format(q(script)))),
-        item("📋 Copy the run command", run, "copy", run),
         item("📝 Open in VS Code", script, "code", script),
+        item("📋 Copy the run command", run, "copy", run),
     ]
     if readme:
         items.append(item("📖 Open the README", readme, "open", readme))
@@ -368,17 +375,14 @@ def repro_item(m):
     if m.get("expected") or m.get("actual"):
         bits.append("🎯 {} 💥 {}".format(short(m.get("expected"), 40), short(m.get("actual"), 40)))
     case = m.get("case")
-    return item(
+    return script_item(
         short(m.get("description") or os.path.basename(script), 100),
         " · ".join(bits) or m.get("path", ""),
-        "copy", run, autocomplete="repro @{} ".format(script),
-        mods=script_mods(
-            script, run,
-            alt=mod("⌥ hand-off report (repro export --report-only)", "output",
-                    in_root("playground repro export -f {} --report-only".format(q(script)))),
-            shift=mod("⇧ open ticket " + case, "open", ticket_url(case)) if ticket_url(case)
-            else mod("⇧ no case number on this model" if not case else "⇧ set ticket_url to open ticket " + case),
-        ),
+        script, run, autocomplete="repro @{} ".format(script),
+        alt=mod("⌥ hand-off report (repro export --report-only)", "output",
+                in_root("playground repro export -f {} --report-only".format(q(script)))),
+        shift=mod("⇧ open ticket " + case, "open", ticket_url(case)) if ticket_url(case)
+        else mod("⇧ no case number on this model" if not case else "⇧ set ticket_url to open ticket " + case),
         quicklook=script,
     )
 
@@ -532,9 +536,9 @@ def mode_find(rest):
         script = h["script"]
         path = h.get("path") or script
         sub = " · ".join(x for x in [h.get("title"), os.path.dirname(path)] if x)
-        items.append(item(
-            os.path.basename(path), sub + " · Tab: ▶️ run it, README…", "copy", h["run_command"],
-            mods=script_mods(script, h["run_command"]), quicklook=readme_of(script) or script,
+        items.append(script_item(
+            os.path.basename(path), sub + " · Tab: ▶️ run it, README…", script, h["run_command"],
+            quicklook=readme_of(script) or script,
             autocomplete="find @{} ".format(script),
         ))
     return {"items": items}
@@ -550,8 +554,8 @@ def repro_actions(rest, models):
     items = [
         item("▶️ Run " + os.path.basename(script), "in the terminal, notification when it ends · " + stop_warning(),
              "terminal", notified(run)),
-        item("📋 Copy the run command", run, "copy", run),
         item("📝 Open in VS Code", script, "code", script),
+        item("📋 Copy the run command", run, "copy", run),
         item("🔀 What it changes vs its base example", "repro diff --summary ({})".format(m.get("base_example") or "base example"),
              "output", in_root("playground repro diff -f {} --summary".format(f))),
         item("🔀 Full diff vs its base example", "repro diff (connector keys and compose override)", "output",
@@ -624,9 +628,9 @@ def mode_history(rest):
         if not r.get("exists", True):
             items.append(info("⚠️ " + r.get("path", script), "script no longer exists · " + " · ".join(bits)))
             continue
-        items.append(item(r.get("path", script), " · ".join(bits), "copy", cmd,
-                          mods=script_mods(script, cmd), quicklook=readme_of(script) or script,
-                          autocomplete="history @{} {}".format(script, flags).rstrip() + " "))
+        items.append(script_item(r.get("path", script), " · ".join(bits), script, cmd,
+                                 quicklook=readme_of(script) or script,
+                                 autocomplete="history @{} {}".format(script, flags).rstrip() + " "))
     if not items:
         items = [info("🤷 No run in the history matches: " + rest)]
     return {"items": items}

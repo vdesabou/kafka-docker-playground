@@ -554,6 +554,7 @@ Keyword **kdp** (the first line says what is running: ↩ status, ⌘ re-run, �
 | `kdp case &lt;number&gt;` (or `kdp &lt;number&gt;`) | ticket link (`ticket_url`), notes and repro models of the case |
 
 Keys: ↩ copy the command (or open), ⌘ VS Code, ⌃ run in the terminal, ⌥ / ⇧ depend on the mode (hold the key to see the subtitle).
+On a script (`find`, `repro`, `history`): ↩ opens it in VS Code, ⌘ copies `playground run -f …` (also ⌘C).
 ⌃ on an example runs `playground run`, which stops the environment that is running.
 
 Read-only commands (`plugin`, `key`, `status`, the repro hand-off report) show their output in the Alfred window, streamed while they run (↩ runs it again, `watch` + ↩ every 5 s, text + ↩ filters the lines, ⇧↩ opens the HTML report, ⌘↩ copies the output, ⌥↩ the command), unless **Show output** says terminal. Interactive ones (`playground run`, `claude`) always go to the terminal.
