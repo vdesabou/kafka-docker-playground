@@ -89,20 +89,21 @@ def ticket_url(n):
     return TICKET_URL.replace("{}", n) if "{}" in TICKET_URL else TICKET_URL + n
 
 SUBCOMMANDS = [
+    ("status", "🚦", "What is running right now", "status, connector status / diagnose, connect errors"),
+    ("connector", "🧩", "Running connectors: status, diagnose, tasks, metrics, history…", "kdp connector [words]: pick a connector"),
+    ("topic", "🧵", "Topics: describe, records, last records, DLQ", "kdp topic [words]: pick a topic"),
+    ("schema", "📐", "Schema Registry subjects: describe, history, diff", "kdp schema [words]: pick a subject"),
+    ("logs", "📜", "Container logs: errors, last lines, grep", "kdp logs [container] [pattern]"),
     ("find", "🔎", "Find an example or a reproduction model", "find-example, ↩ copies playground run -f"),
     ("repro", "🧪", "Reproduction models (mine first)", "repro list, cached"),
     ("history", "🕘", "Replay a playground run", "playground history"),
-    ("case", "🎫", "Everything about a support case", "ticket, notes, repro models of the case"),
-    ("notes", "📝", "Search notes", "open a note, resume the Claude Code session that wrote it"),
     ("plugin", "🔌", "Connector plugin: info, changelog, source code, jars, CVEs", "kdp plugin <words> to pick it in the list, then [version]"),
     ("key", "🔑", "Connector config key: doc, default, since when", "kdp key <words> to pick it in the list, then a connector"),
+    ("case", "🎫", "Everything about a support case", "ticket, notes, repro models of the case"),
+    ("notes", "📝", "Search notes", "open a note, resume the Claude Code session that wrote it"),
     ("docs", "🍪", "Deep dive pages", "kafka-docker-playground.io"),
-    ("connector", "🧩", "Running connectors: status, diagnose, tasks, metrics, history…", "kdp connector [words]: pick a connector"),
-    ("logs", "📜", "Container logs: errors, last lines, grep", "kdp logs [container] [pattern]"),
-    ("topic", "🧵", "Topics: describe, records, last records, DLQ", "kdp topic [words]: pick a topic"),
-    ("schema", "📐", "Schema Registry subjects: describe, history, diff", "kdp schema [words]: pick a subject"),
     ("ci", "🤖", "CI result of a test directory", "kdp ci [words]: pick a test of the CI matrix"),
-    ("status", "🚦", "What is running right now", "status, connector status / diagnose, connect errors"),
+
 ]
 
 AVAILABLE = {
