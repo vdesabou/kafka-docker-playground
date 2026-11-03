@@ -82,7 +82,7 @@ tools that read the database side for you. Takes about 15 minutes to read, the l
 What the CDC examples have in common:
 
 - **The Oracle image** is a prebuilt `db-prebuilt-<checksum of the setup script>:19.3.0-ee` image
-  (`create_or_get_oracle_image`): taken from the local Docker images, else downloaded from the playground S3 bucket
+  (`create_or_get_oracle_image`): taken from the local Docker images, else pulled from the playground private ECR repository (us-west-2, about 4 GB of compressed layers), else downloaded from its S3 bucket
   (Confluent employees, AWS credentials), else built from `oracle/docker-images` with the database zip you downloaded
   (`LINUX.X64_193000_db_home.zip`, about 10 minutes the first time). The database is ready when its log says
   `DATABASE IS READY TO USE` (the scripts wait up to 600 s for it). Give Docker a big disk (96 GB is known to work).

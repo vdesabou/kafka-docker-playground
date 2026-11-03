@@ -2028,6 +2028,73 @@ function remove_cdb_oracle_image() {
   export ORACLE_IMAGE_TO_REMOVE="$ORACLE_IMAGE"
 }
 
+# Private ECR repository holding the Oracle prebuilt images (pull allowed to the Confluent AWS organization only).
+# The tag is the local image name with ':' replaced by '-': db-prebuilt-2943665357:19.3.0-ee -> db-prebuilt-2943665357-19.3.0-ee
+# It is in us-west-2 because the engineering Semaphore agents run there: same-region pulls are free and go through their VPC endpoints.
+# Images are pushed there by hand (skopeo, gzip layers). An image built by CI for a new 01_user-setup.sh checksum is only
+# uploaded to the S3 bucket, which stays the fallback until it is pushed to ECR too.
+ORACLE_ECR_REGION="us-west-2"
+ORACLE_ECR_REGISTRY="995646271469.dkr.ecr.${ORACLE_ECR_REGION}.amazonaws.com"
+ORACLE_ECR_REPOSITORY="kafka-docker-playground/oracle-db-prebuilt"
+
+function oracle_ecr_image() {
+  local image="$1"
+  echo "${ORACLE_ECR_REGISTRY}/${ORACLE_ECR_REPOSITORY}:${image/:/-}"
+}
+
+function oracle_ecr_login() {
+  aws ecr get-login-password --region "$ORACLE_ECR_REGION" 2>/dev/null | docker login --username AWS --password-stdin "$ORACLE_ECR_REGISTRY" > /dev/null 2>&1
+}
+
+# pull $1 (local image name) from the ECR repository and tag it with its local name, returns 1 when it is not possible
+function pull_oracle_image_from_ecr() {
+  local image="$1"
+  local ecr_image
+  ecr_image=$(oracle_ecr_image "$image")
+
+  if ! command -v aws > /dev/null 2>&1
+  then
+    return 1
+  fi
+
+  # a private address means the pull goes through a VPC endpoint (no NAT gateway), useful on CI agents running in AWS
+  if command -v getent > /dev/null 2>&1
+  then
+    local host
+    for host in "api.ecr.${ORACLE_ECR_REGION}.amazonaws.com" "$ORACLE_ECR_REGISTRY"
+    do
+      log "🌐 $host resolves to $(getent hosts "$host" | awk '{ print $1 }' | tr '\n' ' ')"
+    done
+  fi
+
+  log "attempting to pull the Oracle prebuilt docker image from Confluent ECR (only works for Confluent employees)..."
+  log "command is <docker pull $ecr_image>"
+  if ! oracle_ecr_login
+  then
+    logwarn "could not log in to ECR registry $ORACLE_ECR_REGISTRY (no AWS credentials, or not in the Confluent AWS organization), falling back to S3 bucket"
+    return 1
+  fi
+
+  local start=$SECONDS
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+    docker pull -q "$ecr_image" > /dev/null
+  else
+    docker pull "$ecr_image"
+  fi
+  if [ $? -ne 0 ]
+  then
+    logwarn "could not pull $ecr_image from ECR, falling back to S3 bucket"
+    return 1
+  fi
+
+  docker tag "$ecr_image" "$image" || return 1
+  # only removes the ECR tag, the image stays under its local name
+  docker image rm "$ecr_image" > /dev/null 2>&1
+  log "📄 image $image has been pulled from ECR in $(( SECONDS - start )) seconds"
+  return 0
+}
+
 function create_or_get_oracle_image() {
   local ZIP_FILE="$1"
   local SETUP_FOLDER="$2"
@@ -2075,9 +2142,17 @@ function create_or_get_oracle_image() {
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
     set +e
+    handle_aws_credentials
+    # ECR first: compressed layers (4 GB instead of the 11 GB tar), and free for the CI agents running in us-west-2
+    pull_oracle_image_from_ecr "$ORACLE_IMAGE"
+    set -e
+  fi
+
+  if test -z "$(docker images -q $ORACLE_IMAGE)"
+  then
+    set +e
     log "attempting to get the Oracle prebuilt docker image from Confluent S3 bucket (only works for Confluent employees)..."
     log "command is <aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar>"
-    handle_aws_credentials
     aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar
     if [ $? -eq 0 ]
     then
