@@ -3,7 +3,8 @@ name: playground
 description: "\U0001F9E0 CLI for Kafka Docker Playground \U0001F433\n\n\U0001F449
   Check documentation https://kafka-docker-playground.io/#/cli\n\n\U0001F3AC Bite
   size sessions (short videos): https://kafka-docker-playground.io/#/sessions\n\U0001F36A
-  Deep dives (one family of commands each): https://kafka-docker-playground.io/#/deep-dives"
+  Deep dives (one family of commands each): https://kafka-docker-playground.io/#/deep-dives\n\U0001F9ED
+  Which command answers my question? playground find-command \"<question>\""
 usage: playground [OPTIONS] COMMAND
 options:
 - names:
@@ -1406,7 +1407,7 @@ subcommands:
     body. Every word of the query must match somewhere; matches in\nthe path and connector
     class rank higher than matches in the body.\n\nPrints the ready-to-paste 'playground
     run -f' command for each hit, best\nfirst. Use 'playground run' instead to browse
-    examples interactively."
+    examples interactively.\nUse 'playground find-command' to find a command instead."
   usage: playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]
   options:
   - names:
@@ -1428,6 +1429,33 @@ subcommands:
       (README), connector_classes, environment, score and run_command.\nNo hit prints
       [] and exits with code 1.\n\n\U0001F393 Tip: use it in scripts and from AI agents,
       for example with\njq -r '.[0].script'"
+- name: find-command
+  description: "\U0001F9ED Find the playground command that answers a question, without
+    reading the docs\n\nDescribe what you want to know or the symptom, in your own
+    words (\"why is\nmy connector not working\", \"customer support bundle cfk\",
+    \"which version\nfixes this CVE\", \"kafka-consumer-groups reset offsets\"). It
+    searches, best\nweighted first:\n\n- the question to command catalog: https://kafka-docker-playground.io/#/which-command\n-
+    the \"Recipes for support repros\" table of every deep dive\n- the help of every
+    command\n\nand prints one entry per command, best first, with the question or
+    symptom\nit matched, how to call it and the deep dive to read next. Common words\n(why,
+    is, my, the...) are ignored, plurals and -ing / -ed forms match.\n\nUse 'playground
+    find-example' to find an example to run instead.\n\n\U0001F36A Deep dives: https://kafka-docker-playground.io/#/deep-dives"
+  usage: playground find-command QUERY [OPTIONS] [--] [MORE QUERY WORDS...]
+  options:
+  - names:
+    - "--limit"
+    argument: LIMIT
+    description: "\U0001F522 Maximum number of commands (default 5)\n\nDefault value:
+      5"
+  - names:
+    - "--json"
+    argument: ''
+    description: "\U0001F4D7 Print the hits as a JSON array, best first, and nothing
+      else\n\nEach hit has command, matched (the question, symptom or help summary\nthat
+      matched), usage (how to call it, from the catalog or the deep\ndive), deep_dive,
+      source (catalog, deep dive or help), score and\nhelp_command. No hit prints
+      [] and exits with code 1.\n\n\U0001F393 Tip: use it from scripts and AI agents,
+      for example with\njq -r '.[0].command'"
 - name: switch-ccloud
   description: "\U0001F329️  Switch to ccloud environment.\n\nIt will bootstrap ccloud
     environment based on your previously ran ccloud example.\n\nPoints the CLI at

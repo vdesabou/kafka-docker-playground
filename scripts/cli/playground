@@ -28,6 +28,7 @@ playground_usage() {
     echo "👉 Documentation: https://kafka-docker-playground.io/#/cli"
     echo "🎬 Bite size sessions (short videos): https://kafka-docker-playground.io/#/sessions"
     echo "🍪 Deep dives (one family of commands each): https://kafka-docker-playground.io/#/deep-dives"
+    echo "🧭 Which command answers my question? playground find-command \"<question>\""
     echo
 
   else
@@ -123,6 +124,7 @@ playground_usage() {
   printf "  %s   🤖 get CI result for current example\n" "$(green "get-ci-result")                             "
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                   "
   printf "  %s   🔎 Find examples matching a free-text query, without the interactive picker\n" "$(green "find-example")                              "
+  printf "  %s   🧭 Find the playground command that answers a question, without reading the docs\n" "$(green "find-command")                              "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n" "$(green "start-environment")                         "
   printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
   printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
@@ -4898,7 +4900,7 @@ playground_history_usage() {
 playground_find_example_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground find-example\n\n"
-    printf "  🔎 Find examples matching a free-text query, without the interactive picker\n  \n  Searches every runnable example script (connect/, ccloud/, ksqldb/,\n  flink/, reproduction-models/, ...) by path, connector class, README title\n  and script body. Every word of the query must match somewhere; matches in\n  the path and connector class rank higher than matches in the body.\n  \n  Prints the ready-to-paste 'playground run -f' command for each hit, best\n  first. Use 'playground run' instead to browse examples interactively.\n\n"
+    printf "  🔎 Find examples matching a free-text query, without the interactive picker\n  \n  Searches every runnable example script (connect/, ccloud/, ksqldb/,\n  flink/, reproduction-models/, ...) by path, connector class, README title\n  and script body. Every word of the query must match somewhere; matches in\n  the path and connector class rank higher than matches in the body.\n  \n  Prints the ready-to-paste 'playground run -f' command for each hit, best\n  first. Use 'playground run' instead to browse examples interactively.\n  Use 'playground find-command' to find a command instead.\n\n"
   else
     printf "playground find-example - 🔎 Find examples matching a free-text query, without the interactive picker\n\n"
   fi
@@ -4958,6 +4960,69 @@ playground_find_example_usage() {
 
     # :command.footer
     printf "Example output:\n  $ playground find-example \"oracle cdc ssl\" --limit 2\n  17:22:22 ℹ️ 🔎 examples matching \"oracle cdc ssl\", best first\n  playground run -f ~/kafka-docker-playground/connect/connect-cdc-xstream-oracle19-source/cdc-xstream-oracle19-ssl.sh\n      Oracle XStream CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector · plaintext\n  playground run -f ~/kafka-docker-playground/connect/connect-cdc-oracle19-source/cdc-oracle19-cdb-table-ssl.sh\n      Oracle CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.cdc.OracleCdcSourceConnector · plaintext\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_find_command_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground find-command\n\n"
+    printf "  🧭 Find the playground command that answers a question, without reading the\n  docs\n  \n  Describe what you want to know or the symptom, in your own words (\"why is\n  my connector not working\", \"customer support bundle cfk\", \"which version\n  fixes this CVE\", \"kafka-consumer-groups reset offsets\"). It searches, best\n  weighted first:\n  \n  - the question to command catalog:\n  https://kafka-docker-playground.io/#/which-command\n  - the \"Recipes for support repros\" table of every deep dive\n  - the help of every command\n  \n  and prints one entry per command, best first, with the question or symptom\n  it matched, how to call it and the deep dive to read next. Common words\n  (why, is, my, the...) are ignored, plurals and -ing / -ed forms match.\n  \n  Use 'playground find-example' to find an example to run instead.\n  \n  🍪 Deep dives: https://kafka-docker-playground.io/#/deep-dives\n\n"
+  else
+    printf "playground find-command - 🧭 Find the playground command that answers a question, without reading the docs\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground find-command QUERY [OPTIONS] [--] [MORE QUERY WORDS...]\n"
+  printf "  playground find-command --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--limit LIMIT")"
+    printf "    🔢 Maximum number of commands (default 5)\n"
+    printf "    %s\n" "Default: 5"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the hits as a JSON array, best first, and nothing else\n    \n    Each hit has command, matched (the question, symptom or help summary\n    that matched), usage (how to call it, from the catalog or the deep\n    dive), deep_dive, source (catalog, deep dive or help), score and\n    help_command. No hit prints [] and exits with code 1.\n    \n    🎓 Tip: use it from scripts and AI agents, for example with\n    jq -r '.[0].command'\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "QUERY")"
+    printf "    🔤 Question or symptom, e.g. \"connector stuck high cpu\", \"who deleted the\n    schema\" or \"docker logs\"\n"
+    echo
+
+    echo "  MORE QUERY WORDS..."
+    printf "    extra words are appended to the query, so quoting it is optional\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground find-command \"why is my connector not working\"\n"
+    printf "  playground find-command customer support bundle cfk\n"
+    printf "  playground find-command \"which version fixes this CVE\" --limit 3\n"
+    printf "  playground find-command \"kafka-consumer-groups reset offsets\" --json | jq -r\n  '.[0].command'\n"
+    echo
+
+    # :command.footer
+    printf "Example output:\n  $ playground find-command \"why is my connector not working\" --limit 2\n  11:12:18 ℹ️ 🧭 commands matching \"why is my connector not working\", best first\n\n  playground connector diagnose\n      ❓ why is this connector not working?\n      👉 playground connector diagnose [--connector <c>] (status + error digest + lag/offsets + next steps, HTML report in /tmp/playground-diagnose, --no-open)\n      🍪 https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n  playground connector tasks\n      ❓ why does one task do all the work? which worker / partitions / tables does each task get? which topics does it use?\n      👉 playground connector tasks [--connector <c>] (state, worker, the config keys that differ per task, partitions of each sink task, --all-keys, --json) / playground connector topics (active topics, --reset); playground connector restart --only-failed restarts only what is FAILED\n      🍪 https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n  11:12:18 ℹ️ 🎓 playground <command> --help shows every flag and an example output\n"
     echo
 
   fi
@@ -27929,6 +27994,166 @@ function find_examples() {
         | head -n "$limit"
 }
 
+# Ranked search over what the CLI can do, for 'playground find-command'.
+# Sources, best weighted first:
+#   1. the tables of docs/which-command.md (question -> command, raw command -> playground command)
+#   2. the "Recipes for support repros" tables of docs/deep-dive-*.md (symptom -> commands)
+#   3. the help of every public command (scripts/cli/playground.json)
+# Every hit is attached to the command it uses (longest known command path), one line per command.
+# Output: one line per command, best first, fields separated by \037 (not a tab: read would merge empty fields):
+# score, command, matched text, usage, deep dive URL, source
+# $1: query, $2: limit
+function find_commands() {
+    local query="$1"
+    local limit="${2:-5}"
+    local catalog="$root_folder/docs/which-command.md"
+    local spec="$root_folder/scripts/cli/playground.json"
+
+    if [ ! -f "$spec" ]
+    then
+        logerror "❌ $spec not found"
+        return 1
+    fi
+
+    local commands_tsv
+    commands_tsv=$(mktemp)
+    # path, summary (first line of the help), aliases + full help on one line, first deep dive URL of the help
+    jq -r '
+        def cmds(p): (.subcommands // [])[] | (p + [.name]) as $q
+            | {path: ($q | join(" ")), names: (.names // [.name]), desc: (.description // "")}, cmds($q);
+        cmds([]) | select(.path != "help")
+        | [.path,
+           (.desc | split("\n")[0]),
+           ((.names | join(" ")) + " " + (.desc | gsub("[\t\n\r]+"; " "))),
+           ((.desc | capture("Deep dive: (?<u>https://[^ \n)]+)") | .u) // "")]
+        | @tsv' "$spec" > "$commands_tsv"
+
+    local recipes=()
+    local f
+    for f in "$root_folder"/docs/deep-dive-*.md
+    do
+        [ -f "$f" ] && recipes+=("$f")
+    done
+
+    awk -v query="$query" -v limit="$limit" -v catalog="$catalog" '
+    function stem(w) {
+        if (length(w) > 5 && w ~ /ing$/) return substr(w, 1, length(w) - 3)
+        if (length(w) > 4 && w ~ /ed$/) return substr(w, 1, length(w) - 2)
+        if (length(w) > 4 && w ~ /es$/) return substr(w, 1, length(w) - 2)
+        if (length(w) > 3 && w ~ /s$/ && w !~ /ss$/) return substr(w, 1, length(w) - 1)
+        return w
+    }
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    # longest known command path used in a table cell: `playground a b ...` or a bare `a b ...` in backticks
+    function command_of(cell,    rest, seg, words, n, i, cand, best_here) {
+        rest = cell
+        while (match(rest, /`[^`]+`/)) {
+            seg = substr(rest, RSTART + 1, RLENGTH - 2)
+            rest = substr(rest, RSTART + RLENGTH)
+            sub(/^playground[ \t]+/, "", seg)
+            n = split(seg, words, /[ \t]+/)
+            cand = ""
+            best_here = ""
+            for (i = 1; i <= n && i <= 4; i++) {
+                cand = (i == 1 ? words[1] : cand " " words[i])
+                if (cand in known) best_here = cand
+                else if (i > 1) break
+            }
+            if (best_here != "") return best_here
+        }
+        return ""
+    }
+    # text is searched with weight, extra (the usage, with its flags) with weight 1
+    function add(cmd, matched, usage, url, source, weight, text, extra,    t, low, lowx, hits, score, path_hits, need, s) {
+        if (cmd == "" || !(cmd in known)) return
+        low = tolower(text)
+        lowx = tolower(extra)
+        hits = 0; score = 0; path_hits = 0
+        for (t = 1; t <= nterms; t++) {
+            if (index(low, terms[t]) > 0) { hits++; score += weight }
+            else if (lowx != "" && index(lowx, terms[t]) > 0) { hits++; score += 1 }
+            if (index(" " cmd, " " terms[t]) > 0) { path_hits++; score += 2 }
+        }
+        need = (nterms <= 2 ? 1 : int((nterms + 1) / 2))
+        if (hits < need && path_hits < need) return
+        s = score * ((hits > path_hits ? hits : path_hits) / nterms)
+        if (!(cmd in best) || s > best[cmd]) {
+            best[cmd] = s
+            bmatched[cmd] = matched; busage[cmd] = usage; bsource[cmd] = source
+            if (url != "") burl[cmd] = url
+        }
+        count[cmd]++
+    }
+    BEGIN {
+        split("a an and are as at be by can could do does doing for from get got how i if in into is it its me my no not of on or show so tell that the their them there these this to was we what when where which who why will with without you your", sw, " ")
+        for (i in sw) stop[sw[i]] = 1
+        n = split(tolower(query), raw, /[^a-z0-9._+-]+/)
+        nterms = 0
+        for (i = 1; i <= n; i++) {
+            w = raw[i]; gsub(/^[-.]+|[-.]+$/, "", w)
+            if (length(w) < 2 || (w in stop)) continue
+            w = stem(w)
+            if (!(w in seen)) { seen[w] = 1; terms[++nterms] = w }
+        }
+        if (nterms == 0) exit
+        FS = "\t"
+    }
+    # 1. help of every command
+    FILENAME == ARGV[1] {
+        known[$1] = 1; summary[$1] = $2; help_text[$1] = $3; help_url[$1] = $4
+        next
+    }
+    FNR == 1 && FILENAME != ARGV[1] && !help_done {
+        help_done = 1
+        for (c in known) add(c, summary[c], "", help_url[c], "help", 1, summary[c] " " help_text[c], "")
+    }
+    # 2. catalog and deep-dive recipe tables (markdown rows)
+    FNR == 1 { in_recipes = 0; page = FILENAME; sub(/^.*\//, "", page); sub(/\.md$/, "", page) }
+    /^## / { in_recipes = (FILENAME != catalog && $0 ~ /[Rr]ecipes/) }
+    /^\| *--- *\|/ { next }
+    /^\| / {
+        if (FILENAME != catalog && !in_recipes) next
+        line = $0
+        gsub(/\\\|/, "\001", line)
+        nc = split(line, cells, /[ \t]*\|[ \t]*/)
+        c1 = cells[2]; c2 = cells[3]; c3 = (nc > 4 ? cells[4] : "")
+        gsub(/\001/, "|", c1); gsub(/\001/, "|", c2); gsub(/\001/, "|", c3)
+        if (c1 ~ /^(Question|Instead of|Customer symptom|Symptom)/) next
+        if (FILENAME == catalog) {
+            if (c3 != "") {
+                # question | command | instead of (the flags of the command are searched in its help)
+                add(command_of(c2), c1, c2, "", "catalog", 3, c1 " " c1 " " c3, c2)
+            } else {
+                # instead of | use
+                add(command_of(c2), "instead of " c1, c2, "", "catalog", 3, c1 " " c1, c2)
+            }
+        } else {
+            add(command_of(c2), c1, c2, "https://kafka-docker-playground.io/#/" page, "deep dive", 2, c1 " " c1, c2)
+        }
+        next
+    }
+    END {
+        if (nterms == 0) exit
+        top = 0
+        for (c in best) { total[c] = best[c] + (count[c] - 1) * 0.5; if (total[c] > top) top = total[c] }
+        for (c in best) {
+            # drop the long tail: weak matches far below the best one
+            if (total[c] < top * 0.3) continue
+            url = (c in burl ? burl[c] : help_url[c])
+            if (url == "") {
+                # inherit the deep dive of the parent command
+                p = c; while (url == "" && sub(/ [^ ]+$/, "", p)) url = help_url[p]
+            }
+            m = bmatched[c]; u = busage[c]
+            gsub(/[\t\r\n\037]+/, " ", m); gsub(/[\t\r\n\037]+/, " ", u)
+            if (m ~ /^".*"$/) m = substr(m, 2, length(m) - 2)
+            printf "%.1f\037%s\037%s\037%s\037%s\037%s\n", total[c], c, m, u, url, bsource[c]
+        }
+    }' "$commands_tsv" "$catalog" "${recipes[@]}" | sort -t $'\037' -k1,1nr -k2,2 | head -n "$limit"
+
+    rm -f "$commands_tsv"
+}
+
 # shared by switch-podman / switch-docker: the docker context is what the docker CLI,
 # docker compose, k3d and the playground follow, unless DOCKER_HOST overrides it
 function warn_container_engine_switch() {
@@ -47077,6 +47302,71 @@ playground_find_example_command() {
           echo "    ${details}"
       fi
   done <<< "$hits"
+
+}
+
+# :command.function
+playground_find_command_command() {
+
+  # src/commands/find-command.sh
+  query="${args[query]}"
+  limit="${args[--limit]}"
+  json="${args[--json]}"
+
+  if [ ${#other_args[@]} -gt 0 ]
+  then
+      query="$query ${other_args[*]}"
+  fi
+
+  hits=$(find_commands "$query" "$limit")
+
+  if [[ -n "$json" ]]
+  then
+      if [ -z "$hits" ]
+      then
+          echo "[]"
+          exit 1
+      fi
+      echo "$hits" | jq -R -s '
+          split("\n") | map(select(length > 0) | split("\u001f")) | map({
+              command: ("playground " + .[1]),
+              matched: .[2],
+              usage: (.[3] // ""),
+              deep_dive: (.[4] // ""),
+              source: (.[5] // ""),
+              score: (.[0] | tonumber),
+              help_command: ("playground " + .[1] + " --help")
+          })'
+      exit 0
+  fi
+
+  if [ -z "$hits" ]
+  then
+      logwarn "❌ no command matches \"$query\""
+      log "🎓 try other words, browse https://kafka-docker-playground.io/#/which-command or run playground --help"
+      exit 1
+  fi
+
+  log "🧭 commands matching \"$query\", best first"
+  while IFS=$'\037' read -r score command matched usage url source
+  do
+      echo ""
+      echo "playground $command"
+      if [[ -n "$matched" ]]
+      then
+          echo "    ❓ $matched"
+      fi
+      if [[ -n "$usage" ]]
+      then
+          echo "    👉 ${usage//\`/}"
+      fi
+      if [[ -n "$url" ]]
+      then
+          echo "    🍪 $url"
+      fi
+  done <<< "$hits"
+  echo ""
+  log "🎓 playground <command> --help shows every flag and an example output"
 
 }
 
@@ -82052,6 +82342,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    find-command)
+      action="find-command"
+      shift
+      playground_find_command_parse_requirements "$@"
+      shift $#
+      ;;
+
     start-environment)
       action="start-environment"
       shift
@@ -92691,6 +92988,112 @@ playground_find_example_parse_requirements() {
   if [[ ${args['--category']:-} ]] && [[ ! ${args['--category']:-} =~ ^(connect|ccloud|ksqldb|flink|schema-registry|rest-proxy|multi-data-center|other|operator|academy|environment|reproduction-models)$ ]]; then
     printf "%s\n" "--category must be one of: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_find_command_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_find_command_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="find-command"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --limit)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--limit']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--limit requires an argument: --limit LIMIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
+
+      -?*)
+        other_args+=("$1")
+        shift
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_catch_all
+        # :argument.case
+        if [[ -z ${args['query']+x} ]]; then
+          args['query']=$1
+          shift
+        else
+          other_args+=("$1")
+          shift
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['query']+x} ]]; then
+    printf "missing required argument: QUERY\nusage: playground find-command QUERY [OPTIONS] [--] [MORE QUERY WORDS...]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground find-command \"why is my connector not working\"\n" >&2
+    printf "  playground find-command customer support bundle cfk\n" >&2
+    printf "  playground find-command \"which version fixes this CVE\" --limit 3\n" >&2
+    printf "  playground find-command \"kafka-consumer-groups reset offsets\" --json | jq -r\n  '.[0].command'\n" >&2
+
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--limit']:-} ]] || args['--limit']="5"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--limit'] ]]; then
+    validation_output="$(validate_integer "${args['--limit']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--limit LIMIT" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -131953,6 +132356,11 @@ playground_completion() {
         playground_find_example_completion "$completion_current" "$@"
         return
         ;;
+      find-command)
+        shift
+        playground_find_command_completion "$completion_current" "$@"
+        return
+        ;;
       switch-ccloud)
         shift
         playground_switch_ccloud_completion "$completion_current" "$@"
@@ -132152,7 +132560,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker consumer-group flink ksqldb rbac connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker consumer-group flink ksqldb rbac connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -136774,6 +137182,52 @@ playground_find_example_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --category "$completion_current" --category
+    completion_flag_candidates --limit "$completion_current" --limit
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
+playground_find_command_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --limit)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--limit"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --limit "$completion_current" --limit
     completion_flag_candidates --json "$completion_current" --json
   fi
@@ -157300,6 +157754,7 @@ run() {
     "get-ci-result") playground_get_ci_result_command ;;
     "history") playground_history_command ;;
     "find-example") playground_find_example_command ;;
+    "find-command") playground_find_command_command ;;
     "start-environment") playground_start_environment_command ;;
     "switch-ccloud") playground_switch_ccloud_command ;;
     "switch-back") playground_switch_back_command ;;

@@ -73,7 +73,7 @@ Both:
 - `playground` CLI only: `playground connector create-or-update` (heredoc, unquoted `EOF` for `$VAR`),
   `playground topic produce` (schema with quoted `<< 'EOF'`), `playground topic consume
   --min-expected-messages N --timeout 60`. No raw `docker`, `curl` on Connect/SR, or `kafka-*` (see the
-  mapping table in `CLAUDE.md`).
+  🥈 mapping table in `docs/which-command.md`).
 - **Assert the result**: data landed in the target (sink), or records consumed (source), with a bounded
   wait loop (`MAX_WAIT`, `CUR_WAIT`, `logerror` + `exit 1` on timeout), not just `sleep`.
 - `log` / `logwarn` / `logerror`, never bare `echo` for messages.
@@ -106,7 +106,7 @@ fully managed, check that the cleanup deleted the external resources.
 
 ## 5. Issue and PR
 
-Follow "Contributing: issues and pull requests" in `CLAUDE.md`. Fully managed title:
+Follow the `kdp-contributing` skill (`.claude/skills/kdp-contributing/SKILL.md`). Fully managed title:
 `👾 Add <Connector name> Fully Managed Connector example`; self-managed:
 `👾 Add <Connector name> connector example`. Ask before creating the issue and the PR. The PR body lists
 what was run and its result, the CI matrix line, and any GitHub `vars`/`secrets` the owner must create.

@@ -13,7 +13,7 @@ description: |
 
 # kafka-docker-playground PR review
 
-Complements `/code-review` (generic bugs). This skill checks the **repo conventions** in `CLAUDE.md`.
+Complements `/code-review` (generic bugs). This skill checks the **repo conventions** in `CLAUDE.md`, the `kdp-contributing` skill and the 🥈 table of `docs/which-command.md`.
 
 ## 1. Get the diff
 

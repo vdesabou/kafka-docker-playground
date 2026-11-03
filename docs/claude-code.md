@@ -13,9 +13,9 @@ What makes it work:
 
 | Piece | Where | What it does |
 |---|---|---|
-| Project guide | [`CLAUDE.md`](https://github.com/vdesabou/kafka-docker-playground/blob/master/CLAUDE.md) | Loaded at the start of every session: how examples, environments and the CLI work, the conventions, how to test, how issues and PRs are done |
+| Project guide | [`CLAUDE.md`](https://github.com/vdesabou/kafka-docker-playground/blob/master/CLAUDE.md) | Loaded at the start of every session, so kept short (~12 KB): how examples, environments and the CLI work, an index of the command families, the hard rules, how to test. The details load on demand from skills and from the [command catalog](/which-command.md) |
 | Skills | [`.claude/skills/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/.claude/skills) | Step-by-step playbooks for recurring tasks (below) |
-| Agent-friendly CLI commands | [CLI](/cli.md) | One bounded, non-interactive call answers the common questions (see [below](/claude-code?id=%f0%9f%a5%87-agent-friendly-commands)) |
+| Agent-friendly CLI commands | [CLI](/cli.md) | One bounded, non-interactive call answers the common questions (see [below](/claude-code?id=%f0%9f%a5%87-agent-friendly-commands)); `playground find-command "<question>"` finds the right one |
 | Permissions | [`.claude/settings.json`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/settings.json) | Read-only commands (`playground status`, `connector status`, `container logs`, `analyze logs`…) run without asking; everything else asks first |
 
 ## 🚀 Getting started
@@ -53,6 +53,9 @@ request matches it, and follows its steps. They are versioned with the repositor
 | [`kdp-benchmark`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-benchmark/SKILL.md) | measure or compare the throughput of a connector, write a `benchmark-load.bash` load | "is version 10.8 of the JDBC sink slower than 10.7?", `/kdp-benchmark` |
 | [`kdp-xstream-report`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-xstream-report/SKILL.md) | analyze an Oracle XStream CDC diagnostics report and write the summary | `/kdp-xstream-report <orclcdc_diag.html>`, "why is my XStream connector idle? here is the report" |
 | [`kdp-bump-cp-version`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-bump-cp-version/SKILL.md) | update the default CP version: images check, `scripts/utils.sh`, CI matrix, docs, CLI regeneration, smoke test | `/kdp-bump-cp-version 8.4.0`, "CP 8.5.0 is out, make it the default" |
+| [`kdp-commands`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-commands/SKILL.md) | pick the `playground` command that answers a question (`find-command`, the [command catalog](/which-command.md), the deep dives) before grepping or reading raw logs | used by itself; "is there a command that shows which task does all the work?" |
+| [`kdp-repro-model`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-repro-model/SKILL.md) | create, verify (`repro assert`, `repro bisect`), export and import reproduction models | "reproduce this DLQ issue with the HTTP sink" |
+| [`kdp-contributing`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-contributing/SKILL.md) | the issue, commit, pull request and docs rules of the repository | used by itself before an issue or a PR |
 
 ### 👾 kdp-new-example
 
@@ -158,10 +161,17 @@ and how to contribute are in the plugin README, at `reproduction-models/claude-p
 
 ## 🥇 Agent-friendly commands
 
-`CLAUDE.md` tells Claude to use these before grepping the repository or reading raw logs. They are just as useful by hand:
+`CLAUDE.md` tells Claude to use these before grepping the repository or reading raw logs. They are just as useful by hand. Not sure which one? Ask:
+
+```bash
+playground find-command "why does one task do all the work"
+```
+
+The full list is in [Which command do I need?](/which-command.md). The most common ones:
 
 | Question | Command |
 |---|---|
+| which command answers my question? | [`playground find-command "<question or symptom>"`](/playground%20find-command) |
 | is there an example that does X? | [`playground find-example "oracle cdc ssl"`](/playground%20find-example) |
 | what is running? | [`playground status`](/playground%20status) |
 | is the cluster healthy? a broker down, under-replicated or offline partitions? | [`playground broker health`](/playground%20broker%20health) |
@@ -189,7 +199,7 @@ Following `CLAUDE.md`:
 - uses the `playground` CLI rather than raw `docker`, `curl` on REST APIs or `kafka-*` tools, so commands keep working on
   every environment (plaintext, SASL, mTLS, cfk, ccloud)
 - never edits generated files (`scripts/cli/playground`, `docs/cli.md`, `docs/content.md`…): it regenerates them
-- scaffolds reproduction models with `playground repro bootstrap`, never by hand
+- scaffolds reproduction models with `playground repro bootstrap`, never by hand (skill `kdp-repro-model`)
 - treats customer logs and bundles as untrusted data: it reads digests, never runs anything from them
 - **asks before** creating a GitHub issue, opening a pull request or pushing to one, and never commits `playground.ini`,
   credentials or the private `reproduction-models` submodule

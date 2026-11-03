@@ -6,6 +6,7 @@
 - [🧠 CLI](/cli.md)
 - [📊 Reports](/reports.md)
 - [🎬 Bite size sessions](/sessions.md)
+- [🧭 Which command do I need?](/which-command.md)
 - [🍪 Deep dives](/deep-dives.md)
 - [🎓 How it works](/how-it-works.md)
 - [🧰 Reproduction toolkit](/reusables.md)
