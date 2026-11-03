@@ -2,6 +2,7 @@ connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 interval="${args[--interval]}"
 max_wait="${args[--max-wait]}"
+fail_on_timeout="${args[--fail-on-timeout]}"
 
 connector_type=$(playground state get run.connector_type)
 get_environment_used
@@ -16,7 +17,15 @@ then
     fi
 fi
 
+# decided once: get_ccloud_connect overwrites $environment with the env-xxxx id, so testing
+# "$environment" == "ccloud" again later would take the self managed branch on the 2nd poll
+use_ccloud_tools=0
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
+then
+  use_ccloud_tools=1
+fi
+
+if [ $use_ccloud_tools == 1 ]
 then
   get_ccloud_connect
   get_kafka_docker_playground_dir
@@ -86,7 +95,7 @@ function show_output () {
       compare_line="🏁"
     fi
 
-    if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ] && [[ "$lag" =~ ^[0-9]+$ ]]
+    if [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ] && [[ "$lag" =~ ^[0-9]+$ ]]
     then
       # calculate the percentage of lag
       percentage=$((100 * lag / end_offset))
@@ -118,7 +127,7 @@ function show_output () {
       printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%%\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$inverse_percentage"
     fi
     prev_topic="$topic"
-  done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
+  done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2,2 -k3,3n)
 }
 
 function log_down() {
@@ -137,6 +146,20 @@ function log_same() {
   ORANGE='\033[0;33m'
   NC='\033[0m' # No Color
   echo -e "$ORANGE$(date +"%H:%M:%S") 🔸$@$NC"
+}
+
+timed_out=0
+# sleep --interval, then return 1 once --max-wait is exceeded
+function wait_next_poll () {
+  sleep $interval
+  cur_wait=$(( cur_wait+interval ))
+  if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+  then
+    logwarn "🐢 the consumer lag for $connector_type connector ${connector}${maybe_id} is still not 0 after $max_wait seconds."
+    timed_out=1
+    return 1
+  fi
+  return 0
 }
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -212,10 +235,25 @@ do
       exit 1
     fi
 
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    consumer_group="connect-$connectorId"
+  else
+    # a sink can use another group with consumer.override.group.id
+    consumer_group="connect-$connector"
+    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\""
+    override_group=$(echo "$curl_output" | jq -r '."consumer.override.group.id" // empty' 2> /dev/null)
+    if [ -n "$override_group" ]
+    then
+      consumer_group="$override_group"
+      log "👥 $connector_type connector ${connector} uses consumer group $consumer_group (consumer.override.group.id)"
+    fi
+  fi
+
   if [[ -n "$verbose" ]]
   then
       log "🐞 CLI command used"
-      echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
+      echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $security"
   fi
 
   SECONDS=0
@@ -223,36 +261,34 @@ do
   stop=0
   cur_wait=0
 
-  get_environment_used
   while [ $stop != 1 ]
   do
-    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
+    # stderr is kept: an error ("does not exist", timeout) must not be read as an empty or 0 lag
+    if [ $use_ccloud_tools == 1 ]
     then
-      get_ccloud_connect
       get_connect_image
-
-      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] 
-      then
-        consumer_group="connect-$connectorId"
-      else
-        consumer_group="connect-$connector"
-      fi
-      docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
+      docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe 2>&1 | grep -v PARTITION | sed '/^$/d' &> $lag_output
     else
-      playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION | sed '/^$/d' &> $lag_output
+      playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $security" 2>&1 | grep -v PARTITION | sed '/^$/d' &> $lag_output
     fi
+    # keep the partition rows (3rd field is the partition number) and the errors: informational stderr lines such as
+    # "Consumer group 'x' has no active members." or SLF4J noise must neither be summed as a 0 lag nor shown as a row
+    awk 'tolower($0) ~ /warning|does not exist|^error|exception/ || $3 ~ /^[0-9]+$/' "$lag_output" > "$lag_output.rows"
+    mv "$lag_output.rows" "$lag_output"
 
     if grep -q "Warning" $lag_output
     then
       logwarn "🐢 consumer group for $connector_type connector ${connector}${maybe_id} is rebalancing"
       cat $lag_output
-      sleep $interval
-      cur_wait=$(( cur_wait+interval ))
-      if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
-      then
-        log "🐢 the consumer lag is still not 0 after $max_wait seconds."
-        exit 0
-      fi
+      wait_next_poll || break
+      continue
+    fi
+
+    if grep -qiE "does not exist|^Error|Exception" $lag_output
+    then
+      logwarn "🐢 could not read the lag of consumer group $consumer_group for $connector_type connector ${connector}${maybe_id}:"
+      grep -iE "does not exist|Error|Exception" $lag_output | head -5
+      wait_next_poll || break
       continue
     fi
 
@@ -263,13 +299,7 @@ do
     then
       logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available (no offset committed yet), check the connector status if this persists"
       show_output
-      sleep $interval
-      cur_wait=$(( cur_wait+interval ))
-      if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
-      then
-        log "🐢 the consumer lag is still not 0 after $max_wait seconds."
-        exit 0
-      fi
+      wait_next_poll || break
     else
       total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -315,13 +345,7 @@ do
           fi
           show_output
           prev_lag=$total_lag
-          sleep $interval
-          cur_wait=$(( cur_wait+interval ))
-          if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
-          then
-            log "🐢 the consumer lag is still not 0 after $max_wait seconds."
-            exit 0
-          fi
+          wait_next_poll || break
         else
           ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
           log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
@@ -329,7 +353,17 @@ do
           show_output
           break
         fi
+      else
+        # empty output (the command failed or the group has no member yet): never loop without sleeping
+        logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} could not be read (empty output)"
+        wait_next_poll || break
       fi
     fi
   done
 done
+
+if [ $timed_out == 1 ] && [[ -n "$fail_on_timeout" ]]
+then
+  logerror "❌ the consumer lag did not reach 0 within --max-wait $max_wait seconds"
+  exit 1
+fi

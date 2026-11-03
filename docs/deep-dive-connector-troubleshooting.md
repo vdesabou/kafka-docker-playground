@@ -75,7 +75,7 @@ playground connector diagnose --connector orders-sink --since 10m --max-findings
 | 🗺️ 1/4 status | `connector status`: connector and task states, with the trace of a failed task | same, from the Confluent Cloud API |
 | 🔥 2/4 errors | `container logs -c connect --errors --since 1h`: de-duplicated ERROR/FATAL records of the **whole worker**, collapsed to their `Caused by:` chain | `connector error-recommendations`, plus a check of the service account ACLs |
 | 🐢 3/4 progress | sink `RUNNING`: one `show-lag` snapshot. Sink not `RUNNING`: its committed offsets (`offsets get`). Source: its offsets | same |
-| 👉 4/4 next steps | `restart` if FAILED, `resume` if PAUSED, otherwise run again / thread dump; `show-config`, `container logs --grep`, `debug log-level`, `debug thread-dump` | `show-config`, `connector logs` |
+| 👉 4/4 next steps | `restart` if FAILED, `resume` if PAUSED, otherwise run again / thread dump; `show-config`, `container logs --grep`, `connector log-level`, `debug thread-dump` (with `--cluster` in mdc) | `show-config`, `connector logs` |
 
 Then it writes a self-contained **HTML report** to attach to a case, `connector-diagnose-<connector>-<date>.html` in
 `--output-dir` (default `/tmp/playground-diagnose`), opened in the browser from a terminal (`--no-open` to skip). It

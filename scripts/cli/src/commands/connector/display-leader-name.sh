@@ -7,26 +7,30 @@ fi
 
 get_environment_used
 
-# Check if multiple connect workers are enabled
-enable_connect_nodes=$(playground state get flags.ENABLE_CONNECT_NODES)
-
-# Build list of connect containers to try
+# Build list of connect containers to try: the running workers, rather than the ENABLE_CONNECT_NODES flag (same
+# detection as playground connector status)
 connect_containers=()
 if [[ "$environment" == cfk* ]]
 then
     # CFK uses numbered pods: connect-0, connect-1, connect-2, etc.
-    connect_containers=("connect-0")
-    if [[ -n "$enable_connect_nodes" ]]
+    connect_containers=($(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | grep -E '^connect-[0-9]+$' || true))
+    if [ ${#connect_containers[@]} -eq 0 ]
     then
-        connect_containers+=("connect-1" "connect-2")
+        connect_containers=("connect-0")
     fi
 else
     # Docker uses: connect, connect2, connect3, etc.
     get_connect_container
     connect_containers=("$connect_container")
-    if [[ -n "$enable_connect_nodes" ]]
+    if ! is_mdc_environment && is_multiple_connect_workers_running
     then
-        connect_containers+=("connect2" "connect3")
+        for worker in connect2 connect3
+        do
+            if is_container_running "$worker"
+            then
+                connect_containers+=("$worker")
+            fi
+        done
     fi
 fi
 

@@ -60,6 +60,28 @@ else
         leader_name=$(echo "$leader_name" | tr -d '[:space:]')
     fi
 fi
+# decorate every task state (an if/elif chain only decorated the first state found: 0:🟢 RUNNING,1:FAILED)
+function decorate_task_states() {
+    if [ -z "$1" ]
+    then
+        echo "🤔 N/A"
+        return
+    fi
+    echo "$1" | sed -e 's/:RUNNING/:🟢 RUNNING/g' \
+        -e 's/:PAUSED/:⏸️  PAUSED/g' \
+        -e 's/:STOPPED/:⏹️  STOPPED/g' \
+        -e 's/:FAILED/:🛑 FAILED/g' \
+        -e 's/:UNASSIGNED/:⌛ UNASSIGNED/g' \
+        -e 's/:RESTARTING/:🔄 RESTARTING/g' \
+        -e 's/:USER_ACTIONABLE_ERROR/:💪 USER_ACTIONABLE_ERROR/g'
+}
+
+# true when the REST API answered "not found": retrying will not help
+function is_not_found() {
+    # self-managed: {"error_code":404}, Confluent Cloud API: {"error":{"code":404}}
+    [ "$(echo "$curl_output" | jq -r '(.error_code // .error.code?) // empty' 2> /dev/null)" == "404" ]
+}
+
 for connector in "${items[@]}"
 do
     set +e
@@ -127,6 +149,9 @@ do
             if [ "$status" != "null" ] && [ -n "$status" ]; then
                 break # Valid status found, exit retry loop
             fi
+            if is_not_found; then
+                break
+            fi
 
             if [ $attempt -lt $MAX_RETRIES ]; then
                 log "⚠️  API did not return a valid status (attempt $attempt/$MAX_RETRIES). Retrying in ${RETRY_INTERVAL}s..."
@@ -135,7 +160,7 @@ do
             ((attempt++))
         done
 
-        printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+        printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
         echo "-------------------------------------------------------------------------------------------------------------"
         
         # Status mapping (using the status retrieved from the loop)
@@ -145,18 +170,12 @@ do
         elif [ "$status" == "UNASSIGNED" ]; then status="⌛ UNASSIGNED"
         elif [ "$status" == "STOPPED" ]; then status="🛑 STOPPED"
         elif [ "$status" == "PROVISIONING" ]; then status="🏭 PROVISIONING"
+        elif is_not_found; then status="🤔 NOT FOUND"
         else status="🤔 UNKNOWN (API Error)"; fi
         
         tasks=$(echo "$curl_output" | jq -r '.tasks[]? | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
         
-        # Task Mapping
-        if [[ "$tasks" == *"RUNNING"* ]]; then tasks="${tasks//RUNNING/🟢 RUNNING}"
-        elif [[ "$tasks" == *"PAUSED"* ]]; then tasks="${tasks//PAUSED/⏸️  PAUSED}"
-        elif [[ "$tasks" == *"STOPPED"* ]]; then tasks="${tasks//STOPPED/🛑  STOPPED}"
-        elif [[ "$tasks" == *"FAILED"* ]]; then tasks="${tasks//FAILED/🛑 FAILED}"
-        elif [[ "$tasks" == *"UNASSIGNED"* ]]; then tasks="${tasks//UNASSIGNED/⌛ UNASSIGNED}"
-        elif [[ "$tasks" == *"USER_ACTIONABLE_ERROR"* ]]; then tasks="${tasks//USER_ACTIONABLE_ERROR/💪 USER_ACTIONABLE_ERROR}"
-        else tasks="🤔 N/A"; fi
+        tasks=$(decorate_task_states "$tasks")
         
         # Stacktrace Extraction
         stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace? // empty')
@@ -194,6 +213,9 @@ do
             if [ "$status" != "null" ] && [ -n "$status" ]; then
                 break # Valid status found
             fi
+            if is_not_found; then
+                break
+            fi
 
             if [ $attempt -lt $MAX_RETRIES ]; then
                 log "⚠️  API did not return a valid status (attempt $attempt/$MAX_RETRIES). Retrying in ${RETRY_INTERVAL}s..."
@@ -207,6 +229,8 @@ do
         elif [ "$status" == "FAILED" ]; then status="❌ FAILED"
         elif [ "$status" == "UNASSIGNED" ]; then status="⌛ UNASSIGNED"
         elif [ "$status" == "STOPPED" ]; then status="🛑 STOPPED"
+        elif [ "$status" == "RESTARTING" ]; then status="🔄 RESTARTING"
+        elif is_not_found; then status="🤔 NOT FOUND"
         else status="🤔 UNKNOWN (API Error)"; fi
         
         status_display="$status"
@@ -231,15 +255,10 @@ do
             fi
         fi
 
-        printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+        printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
         echo "-------------------------------------------------------------------------------------------------------------"
         
-        if [[ "$tasks" == *"RUNNING"* ]]; then tasks="${tasks//RUNNING/🟢 RUNNING}"
-        elif [[ "$tasks" == *"PAUSED"* ]]; then tasks="${tasks//PAUSED/⏸️  PAUSED}"
-        elif [[ "$tasks" == *"STOPPED"* ]]; then tasks="${tasks//STOPPED/🛑  STOPPED}"
-        elif [[ "$tasks" == *"FAILED"* ]]; then tasks="${tasks//FAILED/🛑 FAILED}"
-        elif [[ "$tasks" == *"UNASSIGNED"* ]]; then tasks="${tasks//UNASSIGNED/⌛ UNASSIGNED}"
-        else tasks="🤔 N/A"; fi
+        tasks=$(decorate_task_states "$tasks")
         
         stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace? // empty' | sed '/^$/d')
         stacktrace_tasks=$(echo "$curl_output" | jq -r '.tasks[]?.trace? // empty' | sed '/^$/d')

@@ -28,31 +28,39 @@ then
     status_topic=${status_topic:-connect-status}
 fi
 
-# prints the records of internal topic $1 as "<timestamp ms>|<key>|<value>" lines (a tombstone value is "null")
+# checked here, not in read_internal_topic: its output goes through a pipe filtered by awk, which would swallow
+# the error and turn it into "No record found"
+if [[ "$environment" == "ccloud" ]]
+then
+    get_kafka_docker_playground_dir
+    if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta ] || [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+    then
+        logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta or ak-tools-ccloud.delta has not been generated"
+        exit 1
+    fi
+fi
+
+# prints the records of internal topic $1 as "<timestamp ms>|<key>|<value>" lines (a tombstone value is "null"), the
+# errors of the consumer go to file $2
 function read_internal_topic() {
     local topic="$1"
+    local errfile="$2"
     # --property works with every version (only deprecated in favor of --formatter-property since Kafka 4.0)
     local consumer_args=(--topic "$topic" --from-beginning --timeout-ms 6000 --property print.key=true --property print.timestamp=true --property key.separator='|')
     if [[ "$environment" == "ccloud" ]]
     then
-        get_kafka_docker_playground_dir
-        if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta ] || [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
-        then
-            logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta or ak-tools-ccloud.delta has not been generated"
-            exit 1
-        fi
         source $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
         get_connect_image
         [[ -n "$verbose" ]] && log "🐞 kafka-console-consumer ${consumer_args[*]} --bootstrap-server $BOOTSTRAP_SERVERS --consumer.config /tmp/configuration/ccloud.properties"
-        docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $BOOTSTRAP_SERVERS --consumer.config /tmp/configuration/ccloud.properties 2> /dev/null
+        docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $BOOTSTRAP_SERVERS --consumer.config /tmp/configuration/ccloud.properties 2>> "$errfile"
     else
         get_security_broker "--consumer.config"
         [[ -n "$verbose" ]] && log "🐞 kafka-console-consumer ${consumer_args[*]} --bootstrap-server $bootstrap_server $security (in $container)"
         if [[ "$environment" == cfk* ]]
         then
-            kubectl -n confluent exec -i $container -- kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2> /dev/null
+            kubectl -n confluent exec -i $container -- kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2>> "$errfile"
         else
-            docker exec -i $container kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2> /dev/null
+            docker exec -i $container kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2>> "$errfile"
         fi
     fi | awk '/^(CreateTime|LogAppendTime):[0-9]+\|/ { sub(/^[A-Za-z]+:/, ""); print }'
 }
@@ -64,14 +72,21 @@ fi
 # both at once: each read ends after 6 seconds without a new record
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT
-read_internal_topic "$config_topic" > "$tmp_dir/config" &
-read_internal_topic "$status_topic" > "$tmp_dir/status" &
+read_internal_topic "$config_topic" "$tmp_dir/config.err" > "$tmp_dir/config" &
+read_internal_topic "$status_topic" "$tmp_dir/status.err" > "$tmp_dir/status" &
 wait
 config_records=$(cat "$tmp_dir/config")
 status_records=$(cat "$tmp_dir/status")
 if [[ -z "$config_records" ]] && [[ -z "$status_records" ]]
 then
     logerror "❌ No record found in $config_topic and $status_topic: wrong topic names? (--config-topic, --status-topic)"
+    # the consumer errors (container not running, authentication, unknown topic...) say which one it is
+    errors=$(cat "$tmp_dir/config.err" "$tmp_dir/status.err" 2> /dev/null | grep -v -E "^Processed a total of|^[[:space:]]+at |TimeoutException|Error processing message, terminating consumer process" | sort -u | tail -10)
+    if [[ -n "$errors" ]]
+    then
+        logerror "❌ the consumer reported:"
+        echo "$errors"
+    fi
     exit 1
 fi
 

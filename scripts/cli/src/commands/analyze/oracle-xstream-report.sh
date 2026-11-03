@@ -48,7 +48,8 @@ if [[ -n "$container" ]]; then
     fi
     rm -f /tmp/orclcdc_diag.html
     log "⚙️ Generating the diagnostics report in container $container"
-    playground --output-level ERROR connector oracle-cdc-xstream generate-report > /dev/null 2>&1
+    # generate-report exits 1 on failure: the check below gives the message (set -e)
+    playground --output-level ERROR connector oracle-cdc-xstream generate-report > /dev/null 2>&1 || true
     if [[ ! -f /tmp/orclcdc_diag.html ]]; then
         logerror "❌ the diagnostics report could not be generated, run 'playground connector oracle-cdc-xstream generate-report' to see why"
         exit 1
