@@ -129,11 +129,15 @@ Gotchas:
 | `offsets get` | KIP-875 REST, synchronous | Confluent Cloud offsets API |
 | `offsets alter\|reset` | stop → change → resume | request posted, then `offsets get-offsets-request-status` until it's applied |
 | `pause` / `resume` / `restart` / `delete` | REST | API (a restart of a task: `--task-id`) |
-| `stop`, `log-level`, `debug …`, `analyze … -c` | ✅ | ❌ no worker to reach |
+| `stop`, `log-level`, `tasks` (custom), `topics`, `history`, `debug …`, `analyze … -c` | ✅ | ❌ no worker to reach (`connector` commands exit 1 with an error) |
+| `metrics` | JMX task metrics | the Telemetry API (`display-metrics-api`) |
+| `versions` | latest on Confluent Hub | the connector version of each cc-connect image (`connector-plugin fm-versions`, Confluent employees) |
+| `open-docs` | the documentation of the plugin | the Confluent Cloud page of the connector (from the README of the example) |
+| `snippets` | converters | `input.data.format` / `output.data.format` |
 | `diagnose` | status + log digest + lag | status + `error-recommendations` + a check of the service account ACLs |
 | `topic dlq inspect --connector` | `errors.deadletterqueue.topic.name` | `dlq-<lcc id>` by default (or its `errors.deadletterqueue.topic.name`, `${connector}` being the lcc id) |
 | `display-metrics-api` | ❌ | Telemetry API: connector / task status and the non-zero metrics |
-| `open-ccloud-connector-in-browser` | ❌ | the connector's page in the console |
+| `open-ccloud-connector-in-browser` | ❌ | the connector's page in the console (`--only-show-url` to print it) |
 
 Gotchas:
 

@@ -1,10 +1,43 @@
 test_file=$(playground state get run.test_file)
 
 connector_type=$(playground state get run.connector_type)
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "connector versions command is not supported with $connector_type connector"
-    exit 0
+    logerror "❌ connector versions command is not supported with $connector_type connector"
+    exit 1
+fi
+
+# fully managed: no Confluent Hub version, the connector version comes with the cc-connect image
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+then
+    connectors=$(playground get-connector-list)
+    if [ -z "$connectors" ]
+    then
+        log "💤 No $connector_type connector is running !"
+        exit 1
+    fi
+    failed=0
+    for connector in $connectors
+    do
+        connector_class=""
+        if get_connector_config_json "$connector" > /dev/null 2>&1
+        then
+            connector_class=$(echo "$curl_output" | jq -r '."connector.class" // empty' 2> /dev/null)
+        fi
+        if [ -z "$connector_class" ] && [ -f "$test_file" ]
+        then
+            connector_class=$(grep "connector.class" "$test_file" | head -1 | cut -d '"' -f4)
+        fi
+        if [ -z "$connector_class" ]
+        then
+            logerror "❌ could not find the connector.class of $connector_type connector $connector"
+            failed=1
+            continue
+        fi
+        log "☁️ $connector_type connector $connector ($connector_class): connector version shipped by the last cc-connect images (Confluent employees: gh logged in and Confluent VPN)"
+        playground connector-plugin fm-versions --connector-plugin "confluentinc/$connector_class" --last 5 || failed=1
+    done
+    exit $failed
 fi
 
 if [ ! -f "$test_file" ]

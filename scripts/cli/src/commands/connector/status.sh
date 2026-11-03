@@ -1,5 +1,15 @@
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
+json="${args[--json]}"
+fail_on_error="${args[--fail-on-error]}"
+
+# --json: the table and the nested commands write to stderr, only the JSON array goes to stdout (fd 3)
+if [[ -n "$json" ]]
+then
+    exec 3>&1 1>&2
+fi
+json_entries=()
+unhealthy=0
 
 # Configuration for retries
 MAX_RETRIES=5
@@ -56,7 +66,7 @@ else
 
     if [[ "$multiple_connect_workers_running" == true ]] && [[ "$environment" != cfk* ]]
     then
-        leader_name=$(playground --output-level WARN connector display-leader-name)
+        leader_name=$(playground --output-level WARN connector display-leader-name || true)
         leader_name=$(echo "$leader_name" | tr -d '[:space:]')
     fi
 fi
@@ -86,6 +96,8 @@ for connector in "${items[@]}"
 do
     set +e
     maybe_id=""
+    connectorId=""
+    curl_output=""
     
     if [[ "$environment" == cfk* ]]
     then
@@ -118,6 +130,8 @@ do
                 if [[ "$reason" == "CreateFailed" ]]
                 then
                     logerror "❌ CFK connector creation failed"
+                    json_entries+=("$(jq -cn --arg name "$connector" --arg type "$connector_type" --arg message "$message" '{name: $name, type: $type, id: null, state: "CREATE_FAILED", worker_id: null, trace: $message, tasks: [], healthy: false}')")
+                    unhealthy=$((unhealthy + 1))
                     if [ -z "$GITHUB_RUN_NUMBER" ]
                     then
                         # not running with CI
@@ -271,6 +285,33 @@ do
         echo "-------------------------------------------------------------------------------------------------------------"
     fi
 
+    # one JSON object per connector, for --json and --fail-on-error
+    status_answer="$curl_output"
+    if ! echo "$status_answer" | jq -e 'type == "object"' > /dev/null 2>&1
+    then
+        status_answer='{}'
+    fi
+    not_found=false
+    if is_not_found; then not_found=true; fi
+    json_entry=$(echo "$status_answer" | jq -c --arg name "$connector" --arg type "$connector_type" --arg id "$connectorId" --argjson not_found "$not_found" '
+        {
+            name: $name,
+            type: $type,
+            id: (if $id == "" then null else $id end),
+            state: (if $not_found then "NOT_FOUND" else (.connector.state // "UNKNOWN") end),
+            worker_id: (.connector.worker_id // null),
+            trace: (.connector.trace // null),
+            tasks: [.tasks[]? | {id: (.id | if type == "object" then .task else . end), state, worker_id: (.worker_id // null), trace: (.trace // null)}]
+        }
+        + (if .errors_from_trace then {errors_from_trace: .errors_from_trace} else {} end)
+        + (if .validation_errors then {validation_errors: .validation_errors} else {} end)
+        | .healthy = ((.state | IN("FAILED", "NOT_FOUND", "UNKNOWN") | not) and ([.tasks[].state] | index("FAILED") | not))')
+    json_entries+=("$json_entry")
+    if [ "$(echo "$json_entry" | jq -r '.healthy')" != "true" ]
+    then
+        unhealthy=$((unhealthy + 1))
+    fi
+
     # only when something failed, and not when called in a loop (PG_SKIP_ERROR_RECOMMENDATIONS) or by diagnose itself
     if [ -z "$PG_SKIP_DIAGNOSE_HINT" ] && [ -z "$PG_SKIP_ERROR_RECOMMENDATIONS" ] && echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | index("FAILED")' > /dev/null 2>&1
     then
@@ -278,3 +319,13 @@ do
     fi
     set -e
 done
+
+if [[ -n "$json" ]]
+then
+    printf '%s\n' "${json_entries[@]}" | jq -s '.' >&3
+fi
+if [[ -n "$fail_on_error" ]] && [ "$unhealthy" -gt 0 ]
+then
+    logerror "❌ $unhealthy connector(s) FAILED, with a FAILED task, or not found"
+    exit 1
+fi

@@ -484,6 +484,33 @@ function get_connect_url_and_security() {
   fi
 }
 
+# consumer group of a sink connector: connect-<lcc id> for a fully managed or custom connector, otherwise
+# consumer.override.group.id of its config, or connect-<connector>. Sets consumer_group, and consumer_group_override=1
+# when the group comes from consumer.override.group.id. Calls get_connect_url_and_security, which sets $security for
+# the connect REST API: save the broker $security of get_security_broker before calling it.
+function get_connector_consumer_group () {
+  local connector="$1" type override
+  type=$(playground state get run.connector_type)
+  consumer_group_override=""
+  if [ "$type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    consumer_group="connect-$(get_ccloud_connector_lcc "$connector" || true)"
+    return 0
+  fi
+  consumer_group="connect-$connector"
+  get_connect_url_and_security
+  if handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1
+  then
+    override=$(echo "$curl_output" | jq -r '."consumer.override.group.id" // empty' 2> /dev/null)
+    if [ -n "$override" ]
+    then
+      consumer_group="$override"
+      consumer_group_override=1
+    fi
+  fi
+  return 0
+}
+
 function generate_get_examples_add_emoji () {
   repro=""
   if [[ $file_path == *"reproduction-models"* ]]

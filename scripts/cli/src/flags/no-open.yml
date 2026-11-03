@@ -1,0 +1,4 @@
+long: --no-open
+required: false
+help: |-
+  🙈 Do not open the HTML report in the browser (it is still written, and its path printed)

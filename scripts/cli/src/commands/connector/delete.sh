@@ -72,5 +72,8 @@ do
         handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector\""
     fi
 
+    # the config saved by create-or-update would otherwise be shown by show-config, and re-applied by
+    # wait_for_ccloud_connector_up, for another connector created later with the same name
+    rm -f "/tmp/config-$connector" "/tmp/config-$connector.terraform"
     log "❌ $connector_type connector $connector has been deleted successfully"
 done

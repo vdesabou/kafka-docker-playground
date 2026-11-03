@@ -3,22 +3,53 @@ only_show_url="${args[--only-show-url]}"
 
 connector_type=$(playground state get run.connector_type)
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "connector open-docs command is not supported with $connector_type connector"
-    exit 0
+    logerror "❌ connector open-docs command is not supported with $connector_type connector"
+    exit 1
 fi
 
-if [ ! -f $test_file ]
-then 
+if [ ! -f "$test_file" ]
+then
     logerror "❌ File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
+fi
+
+# fully managed: the README of every ccloud/fm-* example links the Confluent Cloud page of its connector
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+then
+    readme="$(dirname "$test_file")/README.md"
+    short_url=""
+    if [ -f "$readme" ]
+    then
+        short_url=$(grep -oE 'https://docs\.confluent\.io/cloud/current/connectors/cc-[^ )"#]*' "$readme" | head -1)
+        if [ -z "$short_url" ]
+        then
+            short_url=$(grep -oE 'https://docs\.confluent\.io/cloud/current/connectors/[^ )"#]*' "$readme" | head -1)
+        fi
+    fi
+    if [ -z "$short_url" ]
+    then
+        logerror "❌ documentation could not be retrieved: no Confluent Cloud connector page in $readme"
+        exit 1
+    fi
+    if [[ -n "$only_show_url" ]] || ! can_open_url
+    then
+        log "🌐 documentation for $connector_type connector is available at:"
+        echo "$short_url"
+    else
+        log "🌐 opening documentation for $connector_type connector $short_url"
+        open_url "$short_url"
+    fi
+    # name@url entries separated by | and read word by word (connector update): no space in the name
+    playground state set run.connector_docs_links "fully-managed@$short_url"
+    exit 0
 fi
 
 get_connector_paths
 if [ "$connector_paths" == "" ]
 then
-    logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+    logwarn "❌ skipping as $test_file is not an example with a connector plugin"
     exit 1
 else
     doc_available=1

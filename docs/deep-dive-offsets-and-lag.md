@@ -14,7 +14,8 @@ Takes about 15 minutes to read and run.
 
 | You want | Command |
 | --- | --- |
-| to follow the lag of a sink until it reaches 0 | `playground connector show-lag --connector <c>` (`--interval 5`, `--max-wait 120`) |
+| to follow the lag of a sink until it reaches 0 | `playground connector show-lag --connector <c>` (`--interval 5`, `--max-wait 2m`) |
+| the lag right now, once (scripts, agents) | `playground connector show-lag --connector <c> --once` (`--json`: lag per partition and total) |
 | the offsets of a source or a sink | `playground connector offsets get --connector <c>` |
 | to move them to a given point | `playground connector offsets alter --connector <c>` (edit, save, close) |
 | to start over from the beginning | `playground connector offsets reset --connector <c>` |
@@ -89,7 +90,8 @@ Gotchas:
   the resume, and the lag only dropped to 0 at the next commit, 35 s later.
 - **It waits for the connector to be RUNNING first**, with a RUNNING task (60 s of checks; about 80 s in practice). A
   paused or failed connector ends with `❌ … instance is not in ✅ RUNNING state after 60s` (exit 1), whatever
-  `--max-wait`: resume or fix it before looking at the lag.
+  `--max-wait`: resume or fix it before looking at the lag. `--once` (and `--json`) skips that wait and reads the
+  committed offsets as they are.
 - **`--max-wait` is not an assertion by default**: when the lag is not 0 after `--max-wait` seconds it logs
   `🐢 the consumer lag for … connector <c> is still not 0 after N seconds.`, goes on with the next connector and
   exits **0**. Add `--fail-on-timeout` to exit 1 instead, or check the data with `topic consume --min-expected-messages`.

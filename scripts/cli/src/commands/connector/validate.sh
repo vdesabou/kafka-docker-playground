@@ -2,6 +2,14 @@ connector="${args[--connector]}"
 json=${args[json]}
 skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
+output_json="${args[--json]}"
+
+# --json: the verdict and the errors per key are the only thing on stdout (fd 3), everything else (log lines, nested
+# commands) goes to stderr
+if [[ -n "$output_json" ]]
+then
+    exec 3>&1 1>&2
+fi
 
 connector_type=$(playground state get run.connector_type)
 
@@ -73,9 +81,28 @@ else
 fi
 
 set +e
-validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
+if [[ -n "$output_json" ]]
+then
+    # the error messages of the helper go to stderr too, only the JSON verdict is on stdout
+    validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config" 1>&2
+else
+    validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
+fi
 ret=$?
 set -e
+if [[ -n "$output_json" ]]
+then
+    validate_answer="$curl_output"
+    if [ $ret -eq 2 ] || ! echo "$validate_answer" | jq -e '.configs' > /dev/null 2>&1
+    then
+        validate_answer='{"configs": []}'
+    fi
+    echo "$validate_answer" | jq --arg connector "$connector" --arg class "$(echo "$json_content" | jq -r '."connector.class" // empty' 2>/dev/null)" \
+        --arg type "$connector_type" --argjson ret "$ret" '
+        [.configs[]? | select((.value.errors // []) | length > 0) | {key: .value.name, value: .value.value, errors: .value.errors}] as $errors
+        | {connector: $connector, connector_class: $class, type: $type,
+           valid: ($ret != 1), basic_checks_only: ($ret == 2), error_count: ($errors | length), errors: $errors}' >&3
+fi
 if [ $ret -eq 1 ]
 then
     exit 1

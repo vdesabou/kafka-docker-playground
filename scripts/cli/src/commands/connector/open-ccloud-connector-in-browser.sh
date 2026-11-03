@@ -1,12 +1,13 @@
 connector="${args[--connector]}"
 browser="${args[--browser]}"
+only_show_url="${args[--only-show-url]}"
 
 connector_type=$(playground state get run.connector_type)
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "connector open-ccloud-connector-in-browser command is not supported with $connector_type connector"
-    exit 0
+    logerror "❌ connector open-ccloud-connector-in-browser command is not supported with $connector_type connector"
+    exit 1
 fi
 
 if [[ ! -n "$connector" ]]
@@ -24,7 +25,6 @@ length=${#items[@]}
 if ((length > 1))
 then
     log "✨ --connector flag was not provided, applying command to all connectors"
-    check_if_continue
 fi
 for connector in "${items[@]}"
 do
@@ -41,10 +41,14 @@ do
         TYPE="sources"
     fi
 
-    if ! can_open_url
+    url="https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+    if [[ -n "$only_show_url" ]]
+    then
+        echo "$url"
+    elif ! can_open_url
     then
         log "🔗 Cannot open browser, use url:"
-        echo "https://confluent.cloud/environments/$environment/clusters/$cluster/connectors/$TYPE/$connector?granularity=PT1M&interval=3600000&label=Last%20hour"
+        echo "$url"
     else
         if [[ -n "$browser" ]]
         then

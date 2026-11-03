@@ -35,6 +35,8 @@ then
 else
   get_security_broker "--command-config"
 fi
+# get_connect_url_and_security (connect REST API) overwrites $security: kafka-consumer-groups uses the broker one
+broker_security="$security"
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
@@ -141,7 +143,9 @@ do
             handle_first_class_offset || { failed=1; continue; }
             playground connector offsets get --connector $connector
         else
-            playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION
+            # connect-<connector>, or the group set with consumer.override.group.id (read before the connector is deleted)
+            get_connector_consumer_group "$connector"
+            playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $broker_security" | grep -v PARTITION
 
             if version_gt $tag "7.4.99"
             then
@@ -151,7 +155,7 @@ do
                 playground connector delete --connector $connector
             fi
 
-            playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute"
+            playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group $broker_security --to-earliest --reset-offsets --all-topics --execute"
 
             if version_gt $tag "7.4.99"
             then

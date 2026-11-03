@@ -1,8 +1,17 @@
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
-interval="${args[--interval]}"
-max_wait="${args[--max-wait]}"
+interval=$(duration_to_seconds "${args[--interval]}")
+max_wait=$(duration_to_seconds "${args[--max-wait]}")
 fail_on_timeout="${args[--fail-on-timeout]}"
+once="${args[--once]}"
+json="${args[--json]}"
+# --json: one shot, the JSON array goes to stdout (fd 3), everything else to stderr
+if [[ -n "$json" ]]
+then
+  once=1
+  exec 3>&1 1>&2
+fi
+lag_entries=()
 
 connector_type=$(playground state get run.connector_type)
 get_environment_used
@@ -46,6 +55,8 @@ then
 else
   get_security_broker "--command-config"
 fi
+# get_connect_url_and_security (connect REST API) overwrites $security: kafka-consumer-groups uses the broker one
+broker_security="$security"
 
 declare -A prev_lags
 prev_lags=()
@@ -210,7 +221,12 @@ do
     status_wait_elapsed=0
     connector_ready=0
 
-    while [ "$status_wait_elapsed" -le "$status_wait_timeout" ]
+    # --once: a snapshot of the lag, also when the tasks are not RUNNING (committed offsets)
+    if [[ -n "$once" ]]
+    then
+      connector_ready=1
+    fi
+    while [ "$connector_ready" -ne 1 ] && [ "$status_wait_elapsed" -le "$status_wait_timeout" ]
     do
       PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector status --connector $connector > $tmp_dir/result.log 2>&1
 
@@ -235,25 +251,17 @@ do
       exit 1
     fi
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  # connect-<connector>, connect-<lcc id>, or the group set with consumer.override.group.id
+  get_connector_consumer_group "$connector"
+  if [ -n "$consumer_group_override" ]
   then
-    consumer_group="connect-$connectorId"
-  else
-    # a sink can use another group with consumer.override.group.id
-    consumer_group="connect-$connector"
-    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\""
-    override_group=$(echo "$curl_output" | jq -r '."consumer.override.group.id" // empty' 2> /dev/null)
-    if [ -n "$override_group" ]
-    then
-      consumer_group="$override_group"
-      log "👥 $connector_type connector ${connector} uses consumer group $consumer_group (consumer.override.group.id)"
-    fi
+    log "👥 $connector_type connector ${connector} uses consumer group $consumer_group (consumer.override.group.id)"
   fi
 
   if [[ -n "$verbose" ]]
   then
       log "🐞 CLI command used"
-      echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $security"
+      echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $broker_security"
   fi
 
   SECONDS=0
@@ -269,12 +277,43 @@ do
       get_connect_image
       docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe 2>&1 | grep -v PARTITION | sed '/^$/d' &> $lag_output
     else
-      playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $security" 2>&1 | grep -v PARTITION | sed '/^$/d' &> $lag_output
+      playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $broker_security" 2>&1 | grep -v PARTITION | sed '/^$/d' &> $lag_output
     fi
     # keep the partition rows (3rd field is the partition number) and the errors: informational stderr lines such as
     # "Consumer group 'x' has no active members." or SLF4J noise must neither be summed as a 0 lag nor shown as a row
     awk 'tolower($0) ~ /warning|does not exist|^error|exception/ || $3 ~ /^[0-9]+$/' "$lag_output" > "$lag_output.rows"
     mv "$lag_output.rows" "$lag_output"
+
+    if [[ -n "$once" ]]
+    then
+      lag_error=""
+      partitions_json='[]'
+      if grep -qiE "Warning|does not exist|^Error|Exception" $lag_output
+      then
+        lag_error=$(grep -iE "Warning|does not exist|Error|Exception" $lag_output | head -3 | tr '\n' ' ')
+      else
+        partitions_json=$(grep -v PARTITION "$lag_output" | sed '/^$/d' | jq -R -s '
+          split("\n") | map(select(length > 0) | split(" ") | map(select(length > 0)))
+          | map(select(length >= 6 and (.[2] | test("^[0-9]+$")))) | map({topic: .[1], partition: (.[2] | tonumber), current_offset: (.[3] | tonumber? // null), end_offset: (.[4] | tonumber? // null), lag: (.[5] | tonumber? // null)})
+          | sort_by(.topic, .partition)')
+      fi
+      lag_entries+=("$(echo "$partitions_json" | jq -c --arg connector "$connector" --arg type "$connector_type" --arg group "$consumer_group" --arg error "$lag_error" '
+        {connector: $connector, type: $type, consumer_group: $group,
+         total_lag: (if length > 0 and all(.[]; .lag != null) then (map(.lag) | add) else null end),
+         partitions: .} + (if $error != "" then {error: $error} else {} end)')")
+      if [[ -z "$json" ]]
+      then
+        if [ -n "$lag_error" ]
+        then
+          logwarn "🐢 could not read the lag of consumer group $consumer_group for $connector_type connector ${connector}${maybe_id}: $lag_error"
+        else
+          total_lag=$(echo "${lag_entries[-1]}" | jq -r '.total_lag // "not available (no offset committed yet)"')
+          log "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is $total_lag"
+          show_output
+        fi
+      fi
+      break
+    fi
 
     if grep -q "Warning" $lag_output
     then
@@ -366,4 +405,14 @@ if [ $timed_out == 1 ] && [[ -n "$fail_on_timeout" ]]
 then
   logerror "❌ the consumer lag did not reach 0 within --max-wait $max_wait seconds"
   exit 1
+fi
+
+if [[ -n "$json" ]]
+then
+  if [ ${#lag_entries[@]} -eq 0 ]
+  then
+    echo "[]" >&3
+  else
+    printf '%s\n' "${lag_entries[@]}" | jq -s '.' >&3
+  fi
 fi

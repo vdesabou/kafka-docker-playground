@@ -1,5 +1,13 @@
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
+json="${args[--json]}"
+# --json: one JSON array with the offsets of each connector is the only thing on stdout (fd 3), everything else (log
+# lines, --verbose commands, nested commands) goes to stderr
+if [[ -n "$json" ]]
+then
+    exec 3>&1 1>&2
+fi
+offsets_entries=()
 
 connector_type=$(playground state get run.connector_type)
 get_environment_used
@@ -35,6 +43,8 @@ then
 else
   get_security_broker "--command-config"
 fi
+# get_connect_url_and_security (connect REST API) overwrites $security: kafka-consumer-groups uses the broker one
+broker_security="$security"
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
@@ -65,7 +75,12 @@ function handle_first_class_offset() {
         handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\"" || return 1
     fi
 
-    echo "$curl_output" | jq .
+    if [[ -n "$json" ]]
+    then
+        offsets_entries+=("$(echo "$curl_output" | jq -c --arg c "$connector" --arg t "$type" '{connector: $c, type: $t, offsets: (.offsets // .)}')")
+    else
+        echo "$curl_output" | jq .
+    fi
 }
 failed=0
 items=($connector)
@@ -98,12 +113,7 @@ do
     else
         ##
         # SINK CONNECTOR
-        ##        
-        if [[ -n "$verbose" ]]
-        then
-            log "🐞 CLI command used"
-            echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
-        fi
+        ##
         get_environment_used
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
         then
@@ -114,12 +124,34 @@ do
             then
                 handle_first_class_offset || { failed=1; continue; }
             else
-                playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
+                # connect-<connector>, or the group set with consumer.override.group.id
+                get_connector_consumer_group "$connector"
+                if [[ -n "$verbose" ]]
+                then
+                    log "🐞 CLI command used"
+                    echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $broker_security"
+                fi
+                consumer_groups_output=$(playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $broker_security")
+                if [[ -n "$json" ]]
+                then
+                    offsets_entries+=("$(jq -cn --arg c "$connector" --arg t "$type" --arg g "$consumer_group" --arg out "$consumer_groups_output" '{connector: $c, type: $t, consumer_group: $g, kafka_consumer_groups_describe: $out}')")
+                else
+                    echo "$consumer_groups_output"
+                fi
             fi
         fi
     fi
 done
 
+if [[ -n "$json" ]]
+then
+    if [ ${#offsets_entries[@]} -eq 0 ]
+    then
+        echo "[]" >&3
+    else
+        printf '%s\n' "${offsets_entries[@]}" | jq -s '.' >&3
+    fi
+fi
 if [ $failed -ne 0 ]
 then
     exit 1

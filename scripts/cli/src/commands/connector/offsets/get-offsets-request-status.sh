@@ -6,8 +6,8 @@ connector_type=$(playground state get run.connector_type)
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "connector offset get-offsets-request-status command is not supported with $connector_type connector"
-    exit 0
+    logerror "❌ connector offset get-offsets-request-status command is not supported with $connector_type connector"
+    exit 1
 fi
 
 if [[ ! -n "$connector" ]]

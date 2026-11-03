@@ -99,8 +99,10 @@ Gotchas:
   `errors.log.enable=true`. Look at the DLQ.
 - **The lag of a new sink reads `-` for up to a minute** (`consumer lag … is not available (no offset committed yet)`):
   sink offsets are committed every `offset.flush.interval.ms` (60 s by default). Run it again a minute later.
-- The exit code doesn't reflect the connector state (0, even with a FAILED task; 1 only when no connector exists):
-  read the output, or use `playground connector wait --state RUNNING` in a script.
+- The exit code doesn't reflect the connector state by default (0, even with a FAILED task; 1 only when no connector
+  exists): add `--fail-on-error` (exit 1 when the connector or a task is FAILED, or the connector is not found, also on
+  `connector status`), or use `playground connector wait --state RUNNING` in a script. `--json` prints the verdict,
+  the findings, the tasks, the lag or offsets and the next steps, with the path of the HTML report (written, not opened).
 - **You often don't need to run it**: when `connector create-or-update` or `connector wait` find a FAILED connector
   or task while waiting for RUNNING, they run `connector diagnose` themselves before failing, and open its report from
   an interactive terminal (`playground config open-diagnose-report-on-failure false` to only print its path,

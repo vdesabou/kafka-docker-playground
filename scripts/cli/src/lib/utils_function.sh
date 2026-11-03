@@ -33,7 +33,10 @@ function log() {
   verbose_begin
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$YELLOW$(date +"%H:%M:%S") ℹ️ $@$NC"
+  # PG_LOG_TO_STDERR (set for every command run with --json): stdout only holds the result
+  local log_fd=1
+  [ -n "$PG_LOG_TO_STDERR" ] && log_fd=2
+  echo -e "$YELLOW$(date +"%H:%M:%S") ℹ️ $@$NC" >&$log_fd
   verbose_end
 }
 
@@ -41,7 +44,9 @@ function logerror() {
   verbose_begin
   RED='\033[0;31m'
   NC='\033[0m' # No Color
-  echo -e "$RED$(date +"%H:%M:%S") 🔥 $@$NC"
+  local log_fd=1
+  [ -n "$PG_LOG_TO_STDERR" ] && log_fd=2
+  echo -e "$RED$(date +"%H:%M:%S") 🔥 $@$NC" >&$log_fd
   verbose_end
 }
 
@@ -57,7 +62,9 @@ function logwarn() {
   verbose_begin
   PURPLE='\033[0;35m'
   NC='\033[0m' # No Color
-  echo -e "$PURPLE`date +"%H:%M:%S"` ❗ $@$NC"
+  local log_fd=1
+  [ -n "$PG_LOG_TO_STDERR" ] && log_fd=2
+  echo -e "$PURPLE`date +"%H:%M:%S"` ❗ $@$NC" >&$log_fd
   verbose_end
 }
 
