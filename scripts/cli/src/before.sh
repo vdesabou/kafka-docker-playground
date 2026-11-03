@@ -9,6 +9,10 @@ DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 dir1=$(echo ${DIR_CLI%/*})
 root_folder=$(echo ${dir1%/*})
 
+# a free file descriptor on stderr for the --verbose output of the kafka-* tools (see log_verbose_command): unlike stdout
+# and stderr, $(...) and 2>&1 in the commands don't capture it
+exec {playground_verbose_fd}>&2
+
 vvv="${args[--vvv]}"
 level="${args[--output-level]}"
 

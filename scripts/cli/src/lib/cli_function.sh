@@ -1225,6 +1225,18 @@ function get_offset_shell_class() {
   fi
 }
 
+# --verbose: prints "🐞 CLI command used" and the command $1 on the file descriptor opened by before.sh, so that it is
+# shown even when the output of the tool is captured by the command
+function log_verbose_command() {
+  if [[ -n "$playground_verbose_fd" ]]
+  then
+    { log "🐞 CLI command used" ; echo "$1" ; } >&$playground_verbose_fd
+  else
+    log "🐞 CLI command used"
+    echo "$1"
+  fi
+}
+
 function run_kafka_admin_tool() {
   tool="$1"
   shift
@@ -1248,8 +1260,7 @@ function run_kafka_admin_tool() {
     fi
     if [[ -n "$verbose" ]]
     then
-      log "🐞 CLI command used"
-      echo "$tool $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+      log_verbose_command "$tool $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
     fi
     get_connect_image
     docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tool "$@" --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
@@ -1257,8 +1268,7 @@ function run_kafka_admin_tool() {
     get_security_broker "--command-config"
     if [[ -n "$verbose" ]]
     then
-      log "🐞 CLI command used"
-      echo "$tool $* --bootstrap-server $bootstrap_server $security"
+      log_verbose_command "$tool $* --bootstrap-server $bootstrap_server $security"
     fi
     if [[ "$environment" == cfk* ]]
     then
@@ -8928,7 +8938,7 @@ function get_connector_client_ids () {
   connector_kind=$(echo "$status" | jq -r '.type // empty' 2>/dev/null)
   if [[ -z "$connector_kind" ]]
   then
-    logerror "❌ connector $connector not found on $connect_url"
+    logerror "❌ connector $connector not found on $connect_url" >&2
     return 1
   fi
   role="consumer"
@@ -8975,6 +8985,11 @@ function get_quota_entities () {
       return 1
     fi
     client_ids=$(get_connector_client_ids "$connector") || return 1
+    if [[ -z "$client_ids" ]]
+    then
+      logerror "❌ connector $connector has no task, so no client id yet (playground connector status --connector $connector)"
+      return 1
+    fi
   elif [[ -n "$client_id" ]]
   then
     client_ids="$client_id"
@@ -9032,6 +9047,26 @@ function broker_config_entity () {
   else
     printf '%s\t%s\t%s' --entity-type brokers --entity-default
   fi
+}
+
+# reads kafka-configs --entity-type brokers --describe [--all] (one or several brokers, and the cluster-wide default)
+# on stdin, prints one "<broker id or default>\t<key>\t<value>\t<sensitive true|false>\t<source>\t<raw line>" per
+# config. source is the first synonym (DYNAMIC_BROKER_CONFIG, STATIC_BROKER_CONFIG, DEFAULT_CONFIG...), empty when
+# nothing sets the key
+function parse_broker_configs () {
+  awk 'BEGIN { OFS = "\t" }
+    /^(All|Dynamic) configs for broker [0-9]+ are:/ { b = $5 ; next }
+    /^Default configs for brokers in the cluster are:/ { b = "default" ; next }
+    /^[[:space:]]+[^ =]+=/ {
+      line = $0 ; sub(/^[[:space:]]+/, "", line)
+      eq = index(line, "=") ; k = substr(line, 1, eq - 1) ; rest = substr(line, eq + 1)
+      tail = ""
+      if (match(rest, / sensitive=(true|false) synonyms=[{].*[}]$/)) { v = substr(rest, 1, RSTART - 1) ; tail = substr(rest, RSTART + 1) } else { v = rest }
+      s = (tail ~ /^sensitive=true/) ? "true" : "false"
+      syn = tail ; sub(/^sensitive=(true|false) synonyms=[{]/, "", syn) ; sub(/[}]$/, "", syn)
+      src = syn ; sub(/:.*/, "", src)
+      print b, k, v, s, src, line
+    }'
 }
 
 # sets broker_config_ids to broker $1 (checking that it exists), or to every broker when $1 is empty: returns 1 on
@@ -9132,8 +9167,7 @@ function run_kafka_admin_subcommand_tool () {
   get_security_broker "--command-config"
   if [[ -n "$verbose" ]]
   then
-    log "🐞 CLI command used"
-    echo "$tool --bootstrap-server $bootstrap_server $security $subcommand $*"
+    log_verbose_command "$tool --bootstrap-server $bootstrap_server $security $subcommand $*"
   fi
   if [[ "$environment" == cfk* ]]
   then

@@ -12,7 +12,8 @@ fi
 
 if [[ -n "$brokers" ]]
 then
-    ids=$(echo "$brokers" | tr ',' '\n' | sed '/^$/d')
+    # in the given order, each broker once
+    ids=$(echo "$brokers" | tr -d ' ' | tr ',' '\n' | sed '/^$/d' | awk '!seen[$0]++')
     for id in $ids
     do
         get_broker_container_of_id "$id" || exit 1
@@ -48,7 +49,10 @@ do
     log "🔄 [$i/$nb] Restarting broker $id (container $container)"
     docker restart -t 60 "$container" > /dev/null || exit 1
     wait_for_broker_registered "$id" "$max_wait" || exit 1
-    wait_for_cluster_healthy $((max_wait - (SECONDS - broker_start_time))) || {
+    # at least 10s left for the health check, even when the registration took most of --max-wait
+    remaining=$((max_wait - (SECONDS - broker_start_time)))
+    [ $remaining -lt 10 ] && remaining=10
+    wait_for_cluster_healthy $remaining || {
         logerror "❌ rolling restart stopped after broker $id: the next brokers were not restarted"
         exit 1
     }

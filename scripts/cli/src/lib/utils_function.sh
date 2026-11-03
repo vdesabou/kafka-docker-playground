@@ -1810,154 +1810,131 @@ function display_jmx_info() {
     log "    - ksqldb-server   : 10003"
   fi
 }
+# prints the JMX metrics of the domains $2 (space separated, all of them when empty) of container $1 (docker container,
+# or cfk pod or docker-style name), with jmxterm run inside the container: saved to a file and opened when $3 is set.
+# returns 1 when the container or its JMX port can't be found
 function get_jmx_metrics() {
-  JMXTERM_VERSION="1.0.2"
-  JMXTERM_UBER_JAR="/tmp/jmxterm-$JMXTERM_VERSION-uber.jar"
-  if [ ! -f $JMXTERM_UBER_JAR ]
+  local container="$1" domains="$2" open="$3"
+  local JMXTERM_VERSION="1.0.2"
+  local JMXTERM_UBER_JAR="/tmp/jmxterm-$JMXTERM_VERSION-uber.jar"
+  local jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
+  local target_container="$container" port="" work_dir output_file domain
+
+  if [ ! -s "$JMXTERM_UBER_JAR" ]
   then
-    curl -L https://github.com/jiaqi/jmxterm/releases/download/v$JMXTERM_VERSION/jmxterm-$JMXTERM_VERSION-uber.jar -o $JMXTERM_UBER_JAR -s
+    # downloaded to a temporary file first: a failed download must not be cached as the jar
+    if ! curl -fsSL "https://github.com/jiaqi/jmxterm/releases/download/v$JMXTERM_VERSION/jmxterm-$JMXTERM_VERSION-uber.jar" -o "$JMXTERM_UBER_JAR.tmp"
+    then
+      rm -f "$JMXTERM_UBER_JAR.tmp"
+      logerror "❌ could not download jmxterm $JMXTERM_VERSION from github.com"
+      return 1
+    fi
+    mv "$JMXTERM_UBER_JAR.tmp" "$JMXTERM_UBER_JAR"
   fi
 
-  rm -f /tmp/commands
-  rm -f /tmp/jmx_metrics.log
-
-  container="$1"
-  domains="$2"
-  open="$3"
   get_environment_used
-
-  target_container="$container"
-  jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
-  jmx_exec() {
-    local args="$1"
-    if [[ "$environment" == cfk* ]]
-    then
-      kubectl -n confluent exec -i "$target_container" -- java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $args
-    else
-      docker exec -i "$container" java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $args
-    fi
-  }
 
   if [[ "$environment" == cfk* ]]
   then
     case "$container" in
-      connect2)
-        target_container="connect-1"
-      ;;
-      connect3)
-        target_container="connect-2"
-      ;;
-      connect|connect-[0-9]*|broker|schema-registry|controller|controller2|controller3|zookeeper|zookeeper2|zookeeper3)
-        target_container="$container"
-      ;;
-      *)
-        target_container=$(resolve_container_name_for_environment "$container")
-      ;;
+      connect2) target_container="connect-1" ;;
+      connect3) target_container="connect-2" ;;
+      broker2) target_container="kafka-1" ;;
+      broker3) target_container="kafka-2" ;;
+      *) target_container=$(resolve_container_name_for_environment "$container") ;;
     esac
+    if ! kubectl -n confluent get pod "$target_container" > /dev/null 2>&1
+    then
+      logerror "❌ pod $target_container does not exist, pods are: $(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | paste -sd, - | sed 's/,/, /g')"
+      return 1
+    fi
+    # CFK JMX defaults to 7203 on each component pod.
+    port=7203
+  else
+    if ! is_container_running "$container"
+    then
+      logerror "❌ container $container is not running, containers are: $(docker ps --format '{{.Names}}' | sort | paste -sd, - | sed 's/,/, /g')"
+      return 1
+    fi
+    # KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT, KSQL_JMX_PORT... set in the docker compose files of the environments
+    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    if [[ -z "$port" ]]
+    then
+      logerror "❌ JMX is not enabled on container $container (no *_JMX_PORT environment variable)"
+      return 1
+    fi
   fi
+
   if [ "$domains" = "" ]
   then
-    # non existing domain: all domains will be in output !
     logwarn "You did not specify a list of domains, all domains will be exported!"
+  fi
+
+  work_dir=$(mktemp -d -t playground-jmx.XXXXXX)
+  output_file="/tmp/jmx_metrics-$container.log"
+  rm -f "$output_file"
+
+  jmx_exec() {
+    if [[ "$environment" == cfk* ]]
+    then
+      kubectl -n confluent exec -i "$target_container" -- java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $1
+    else
+      docker exec -i "$container" java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $1
+    fi
+  }
+
+  playground container cp --source "$JMXTERM_UBER_JAR" --destination "$target_container:$JMXTERM_UBER_JAR"
+
+  if [ "$domains" = "" ]
+  then
+    log "This is the list of domains for container $container"
+    if ! printf 'domains\nexit\n' | jmx_exec "-v silent"
+    then
+      logwarn "JMX endpoint is unavailable for $container. JMX may be disabled. $jmx_disabled_hint"
+      rm -rf "$work_dir"
+      return 0
+    fi
+    # one pass on the beans of every domain
     domains="ALL"
   fi
 
-  case "$container" in
-  zookeeper )
-    port=9999
-  ;;
-  controller )
-    port=10005
-  ;;
-  zookeeper2 )
-    port=12999
-  ;;
-  zookeeper3 )
-    port=13999
-  ;;
-  controller2 )
-    port=12005
-  ;;
-  controller3 )
-    port=13005
-  ;;
-  broker )
-    port=10000
-  ;;
-  schema-registry )
-    port=10001
-  ;;
-  connect )
-    port=10002
-  ;;
-  connect2 )
-    port=10022
-  ;;
-  connect3 )
-    port=10032
-  ;;
-  connect-[0-9]* )
-    port=10002
-  ;;
-  n|N ) ;;
-  * ) logerror "invalid container $container! it should be one of zookeeper, zookeeper2, zookeeper3, controller, controller2, controller3, broker, schema-registry, connect, connect2, connect3 or connect-<n>";exit 1;;
-  esac
+  for domain in $domains
+  do
+    if [ "$domain" = "ALL" ]
+    then
+      printf 'beans\nexit\n'
+    else
+      printf 'domain %s\nbeans\nexit\n' "$domain"
+    fi | jmx_exec "-v silent" > "$work_dir/beans.log"
+    if [ ${PIPESTATUS[1]} -ne 0 ]
+    then
+      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
+      rm -rf "$work_dir"
+      return 0
+    fi
+    while read -r line
+    do
+      [[ -n "$line" ]] && echo "get * -b $line"
+    done < "$work_dir/beans.log" > "$work_dir/commands"
 
-  if [[ "$environment" == cfk* ]]
-  then
-    # CFK JMX defaults to 7203 on each component pod.
-    port=7203
-  fi
-
-  playground container cp --source $JMXTERM_UBER_JAR --destination $target_container:$JMXTERM_UBER_JAR
-  if [ "$domains" = "ALL" ]
-  then
-
-log "This is the list of domains for container $container"
-if ! jmx_exec "-v silent" << EOF
-domains
-exit
-EOF
-then
-  logwarn "JMX endpoint is unavailable for $container. JMX may be disabled. $jmx_disabled_hint"
-  return 0
-fi
-  fi
-
-for domain in `echo $domains`
-do
-if ! jmx_exec "-v silent" > /tmp/beans.log << EOF
-domain $domain
-beans
-exit
-EOF
-then
-  logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
-  return 0
-fi
-  while read line; do echo "get *"  -b $line; done < /tmp/beans.log >> /tmp/commands
+    if [[ -n "$open" ]]
+    then
+      echo "####### domain $domain ########" >> "$output_file"
+      jmx_exec "" < "$work_dir/commands" >> "$output_file" 2>&1
+    else
+      echo "####### domain $domain ########"
+      jmx_exec "" < "$work_dir/commands" 2>&1
+    fi || {
+      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
+      rm -rf "$work_dir"
+      return 0
+    }
+  done
+  rm -rf "$work_dir"
 
   if [[ -n "$open" ]]
   then
-    echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
-    if ! jmx_exec "" < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
-    then
-      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
-      return 0
-    fi
-  else
-    echo "####### domain $domain ########"
-    if ! jmx_exec "" < /tmp/commands 2>&1
-    then
-      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
-      return 0
-    fi
-  fi
-done
-
-  if [[ -n "$open" ]]
-  then
-    playground open --file "/tmp/jmx_metrics.log"
+    playground open --file "$output_file"
   fi
 }
 

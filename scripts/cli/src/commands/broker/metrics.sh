@@ -100,6 +100,10 @@ then
 fi
 
 log "📈 Broker metrics$([[ -n "$topic" ]] && echo " (rates and failed requests of topic $topic)")"
+if [[ -n "$topic" ]] && ! echo -n "$values" | awk -F'|' '$2 == "Messages in/s (1m)" && $3 != ""' | grep -q .
+then
+    logwarn "⚠️ no metric for topic $topic: it does not exist, or no broker received or served records of it since it started"
+fi
 {
     printf 'METRIC'
     for id in $ids

@@ -23,5 +23,8 @@ start_time=$SECONDS
 log "⏳ Waiting for broker $broker to be registered"
 wait_for_broker_registered "$broker" "$max_wait" || exit 1
 log "✅ broker $broker is registered, waiting for its replicas to be back in sync"
-wait_for_cluster_healthy $((max_wait - (SECONDS - start_time))) || exit 1
+# at least 10s left for the health check, even when the registration took most of --max-wait
+remaining=$((max_wait - (SECONDS - start_time)))
+[ $remaining -lt 10 ] && remaining=10
+wait_for_cluster_healthy $remaining || exit 1
 log "✅ cluster is healthy, broker $broker started in $((SECONDS - start_time))s"
