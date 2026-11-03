@@ -1472,6 +1472,8 @@ trap handle_signal SIGINT
 
 nb_messages_sent=0
 nb_messages_to_send=0
+producer_failed=0
+producer_rc=0
 stop=0
 should_stop=0
 while [ $stop != 1 ]
@@ -1512,7 +1514,17 @@ do
 
     # the stderr of the producer is shown as it comes and kept: a record it could not send (RecordTooLargeException,
     # authorization…) is only logged by the console producer, which still exits 0
-    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | { "${producer_cmd[@]}" 2>&1 1>&3 3>&- | tee -a "$tmp_dir/producer_stderr" >&2; } 3>&1
+    # its exit code is saved in a file: without pipefail, the status of the pipeline is the one of tee, and a producer
+    # that dies (SerializationException, schema refused by the registry, bad --producer-property) would go unnoticed.
+    # '|| rc=$?': a helper can leave set -e on, which would end the group before the exit code is saved
+    rm -f "$tmp_dir/producer_rc"
+    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | { { rc=0; "${producer_cmd[@]}" 2>&1 1>&3 3>&- || rc=$?; echo $rc > "$tmp_dir/producer_rc"; } | tee -a "$tmp_dir/producer_stderr" >&2; } 3>&1
+    producer_rc=$(cat "$tmp_dir/producer_rc" 2>/dev/null || echo 0)
+    if [ "$producer_rc" != "0" ] && [ $interrupted != 1 ]
+    then
+        producer_failed=1
+        stop=1
+    fi
 
     # Increment the number of sent messages: the records actually passed to the producer, fewer than
     # $nb_messages_to_send when the batch was interrupted
@@ -1535,6 +1547,11 @@ ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 if [ $interrupted = 1 ]
 then
     log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
+elif [ $producer_failed = 1 ]
+then
+    first_error=$(grep -m1 -E "^([a-zA-Z_$][a-zA-Z0-9_$.]*(Exception|Error)|Caused by|ERROR)( |:|$)" "$tmp_dir/producer_stderr" 2>/dev/null || true)
+    logerror "❌ the console producer failed (exit code $producer_rc) while producing to topic $topic${first_error:+: $first_error}"
+    exit 1
 else
     nb_send_errors=0
     if [ -f "$tmp_dir/producer_stderr" ]

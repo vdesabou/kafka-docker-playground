@@ -18,6 +18,24 @@ get_environment_used
 
 items=($topic)
 
+# sum of the offsets printed by GetOffsetShell (topic:partition:offset lines) for the command "$@", in $offsets_sum.
+# Fails when the tool fails (broker down, authentication): before, the sum of nothing was 0, and 'wait-for-records' or
+# 'consume --min-expected-messages' waited until their timeout for an empty topic that was in fact unreachable
+offsets_err_file=$(mktemp -t pg-offsets-XXXXXXXXXX)
+function sum_offsets() {
+    local out rc
+    out=$("$@" 2> "$offsets_err_file")
+    rc=$?
+    if [ $rc -ne 0 ]
+    then
+        logerror "❌ could not get the offsets of topic $topic (exit code $rc)"
+        grep -v -E "^$|SLF4J|No configuration found" "$offsets_err_file" | tail -5 >&2
+        return 1
+    fi
+    offsets_sum=$(echo "$out" | grep -E ':[0-9]+:-?[0-9]+$' | awk -F ":" '{sum += $NF} END {print sum+0}')
+}
+failed=0
+
 # ------------------------------------------------------
 # PREPARATION: Cache configs and Start Containers
 # ------------------------------------------------------
@@ -70,7 +88,7 @@ if [[ "$environment" == "ccloud" ]]; then
         --entrypoint tail \
         confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
 
-    trap "docker stop $kcat_container_name > /dev/null 2>&1" EXIT
+    trap "docker stop $kcat_container_name > /dev/null 2>&1; rm -f $offsets_err_file" EXIT
 fi
 
 # ------------------------------------------------------
@@ -128,8 +146,10 @@ do
         fi
 
         # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
-        latest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
-        earliest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
+        sum_offsets kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1" || { failed=1; continue; }
+        latest=$offsets_sum
+        sum_offsets kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2" || { failed=1; continue; }
+        earliest=$offsets_sum
         echo $((latest - earliest))
     else
         # --- ON-PREM / LOCAL LOGIC ---
@@ -165,9 +185,13 @@ do
             # broker:9092 by default, but the kerberized client container and the broker FQDN
             # with kerberos, whose client config needs a ticket and the real principal host
             # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
-            latest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
-            earliest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
+            sum_offsets docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 || { failed=1; continue; }
+            latest=$offsets_sum
+            sum_offsets docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 || { failed=1; continue; }
+            earliest=$offsets_sum
             echo $((latest - earliest))
         fi
     fi
 done
+rm -f "$offsets_err_file"
+exit $failed

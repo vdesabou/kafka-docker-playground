@@ -121,6 +121,11 @@ Gotchas:
 - `--tombstone` without `--key` sends a record with a null key **and** a null value (with a warning).
 - `--headers` and `--tombstone` need CP 7.2+, `--schema-id-in-header` CP 8.1.1+: the command fails early
   otherwise.
+- A console producer that dies fails the command: a record that doesn't match the schema (`SerializationException`), a
+  schema refused by the registry, a wrong `--producer-property`. The output is
+  `❌ the console producer failed (exit code 1) while producing to topic orders: <first exception>`, exit 1. A record
+  the producer could not send (`RecordTooLargeException`, authorization) is only logged by the console producer, which
+  still exits 0: that case is caught from its output (`❌ N record(s) could not be sent to topic …`).
 
 ### Transactions: `--transactional-id`
 

@@ -6337,11 +6337,11 @@ subcommands:
       - "--count"
       argument: ''
       description: "\U0001F522 Only print the number of records consumed (with --grep,
-        the number of records containing that string),\non stdout: logs go to stderr.
-        Without --topic, one \"<topic> <number>\" line per topic.\n\nUnlike playground
-        topic get-number-records, records are counted, not offsets (transaction markers,\ncompacted
-        records and records that cannot be deserialized do not count)\n\nConflicts
-        with: --tail, --open, --json"
+        the number of records containing that string,\n0 included: not a failure),
+        on stdout: logs go to stderr. Without --topic, one \"<topic> <number>\" line
+        per topic.\n\nUnlike playground topic get-number-records, records are counted,
+        not offsets (transaction markers,\ncompacted records and records that cannot
+        be deserialized do not count)\n\nConflicts with: --tail, --open, --json"
     - names:
       - "--no-decode"
       argument: ''

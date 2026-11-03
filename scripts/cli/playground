@@ -13157,7 +13157,7 @@ playground_topic_consume_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--count")"
-    printf "    🔢 Only print the number of records consumed (with --grep, the number of\n    records containing that string),\n    on stdout: logs go to stderr. Without --topic, one \"<topic> <number>\" line\n    per topic.\n    \n    Unlike playground topic get-number-records, records are counted, not offsets\n    (transaction markers,\n    compacted records and records that cannot be deserialized do not count)\n"
+    printf "    🔢 Only print the number of records consumed (with --grep, the number of\n    records containing that string,\n    0 included: not a failure), on stdout: logs go to stderr. Without --topic,\n    one \"<topic> <number>\" line per topic.\n    \n    Unlike playground topic get-number-records, records are counted, not offsets\n    (transaction markers,\n    compacted records and records that cannot be deserialized do not count)\n"
     printf "    %s\n" "Conflicts: --tail, --open, --json"
     echo
 
@@ -62714,6 +62714,24 @@ playground_topic_get_number_records_command() {
 
   items=($topic)
 
+  # sum of the offsets printed by GetOffsetShell (topic:partition:offset lines) for the command "$@", in $offsets_sum.
+  # Fails when the tool fails (broker down, authentication): before, the sum of nothing was 0, and 'wait-for-records' or
+  # 'consume --min-expected-messages' waited until their timeout for an empty topic that was in fact unreachable
+  offsets_err_file=$(mktemp -t pg-offsets-XXXXXXXXXX)
+  function sum_offsets() {
+      local out rc
+      out=$("$@" 2> "$offsets_err_file")
+      rc=$?
+      if [ $rc -ne 0 ]
+      then
+          logerror "❌ could not get the offsets of topic $topic (exit code $rc)"
+          grep -v -E "^$|SLF4J|No configuration found" "$offsets_err_file" | tail -5 >&2
+          return 1
+      fi
+      offsets_sum=$(echo "$out" | grep -E ':[0-9]+:-?[0-9]+$' | awk -F ":" '{sum += $NF} END {print sum+0}')
+  }
+  failed=0
+
   # ------------------------------------------------------
   # PREPARATION: Cache configs and Start Containers
   # ------------------------------------------------------
@@ -62766,7 +62784,7 @@ playground_topic_get_number_records_command() {
           --entrypoint tail \
           confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
 
-      trap "docker stop $kcat_container_name > /dev/null 2>&1" EXIT
+      trap "docker stop $kcat_container_name > /dev/null 2>&1; rm -f $offsets_err_file" EXIT
   fi
 
   # ------------------------------------------------------
@@ -62824,8 +62842,10 @@ playground_topic_get_number_records_command() {
           fi
 
           # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
-          latest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
-          earliest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
+          sum_offsets kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1" || { failed=1; continue; }
+          latest=$offsets_sum
+          sum_offsets kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2" || { failed=1; continue; }
+          earliest=$offsets_sum
           echo $((latest - earliest))
       else
           # --- ON-PREM / LOCAL LOGIC ---
@@ -62861,12 +62881,17 @@ playground_topic_get_number_records_command() {
               # broker:9092 by default, but the kerberized client container and the broker FQDN
               # with kerberos, whose client config needs a ticket and the real principal host
               # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
-              latest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
-              earliest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
+              sum_offsets docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 || { failed=1; continue; }
+              latest=$offsets_sum
+              sum_offsets docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 || { failed=1; continue; }
+              earliest=$offsets_sum
               echo $((latest - earliest))
           fi
       fi
   done
+  rm -f "$offsets_err_file"
+  exit $failed
+
 }
 
 # :command.function
@@ -62883,10 +62908,25 @@ playground_topic_wait_for_records_command() {
   last_count=""
   while true
   do
-      # a topic that does not exist yet prints nothing: counts as empty
+      # a topic that does not exist yet prints nothing and succeeds: counts as empty. A failure (environment down,
+      # authentication) is not an empty topic: fail after 3 in a row instead of waiting until --max-wait
       set +e
-      count=$(playground --output-level WARN topic get-number-records --topic "$topic" 2>/dev/null | grep -E '^[0-9]+$' | tail -1)
+      output=$(playground --output-level WARN topic get-number-records --topic "$topic" 2>&1)
+      rc=$?
       set -e
+      if [ $rc -ne 0 ]
+      then
+          nb_failures=$((${nb_failures:-0} + 1))
+          if [ $nb_failures -ge 3 ]
+          then
+              logerror "❌ could not count the records of topic $topic:"
+              echo "$output" | tail -10
+              exit 1
+          fi
+      else
+          nb_failures=0
+      fi
+      count=$(echo "$output" | grep -E '^[0-9]+$' | tail -1)
       count=${count:-0}
       elapsed=$((SECONDS - start_time))
 
@@ -64240,6 +64280,16 @@ playground_topic_consume_command() {
     fi
   fi
 
+  # a topic given with --topic that cannot be read fails the command; when all topics are consumed, a topic deleted in
+  # the meantime is skipped
+  topic_explicit=""
+  if [[ -n "$topic" ]]
+  then
+    topic_explicit=1
+  fi
+  # set when a topic fails (missing topic, --grep not found) and the next topics are still consumed: exit 1 at the end
+  failed=0
+
   if [[ ! -n "$topic" ]]
   then
       if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
@@ -64395,14 +64445,21 @@ playground_topic_consume_command() {
 
         if [[ ! $nb_messages =~ ^[0-9]+$ ]]
         then
-          echo $nb_messages | grep "does not exist" > /dev/null 2>&1
-          if [ $? == 0 ]
+          if [[ "$nb_messages" == *"does not exist"* ]]
           then
-            logwarn "❌ topic $topic does not exist !"
+            problem="topic $topic does not exist !"
           else
-            logwarn "❌ problem while getting number of messages: $nb_messages"
+            problem="problem while getting number of messages of topic $topic: $nb_messages"
           fi
-          # go on with the next topic when all topics are consumed
+          # an assertion (--topic, --grep, --count) on a topic that cannot be read fails; when all topics are consumed,
+          # go on with the next topic (deleted since the list was taken)
+          if [[ -n "$topic_explicit" ]] || [[ -n "$grep_string" ]] || [[ -n "$count" ]]
+          then
+            logerror "❌ $problem"
+            failed=1
+          else
+            logwarn "❌ $problem"
+          fi
           continue
         fi
       fi
@@ -64635,11 +64692,6 @@ playground_topic_consume_command() {
         else
           log "✨ topic $topic is empty"
         fi
-        if [[ -n "$grep_string" ]]
-        then
-          logerror "❌ could not find $grep_string in topic $topic"
-          exit 1
-        fi
         if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
         then
           logerror "❌ --min-expected-messages is set with $min_expected_messages but no record could be consumed from topic $topic"
@@ -64647,7 +64699,12 @@ playground_topic_consume_command() {
         fi
         if [[ -n "$count" ]]
         then
+          # with --count, 0 is the answer (also with --grep)
           print_count 0
+        elif [[ -n "$grep_string" ]]
+        then
+          logerror "❌ could not find $grep_string in topic $topic"
+          failed=1
         fi
         continue
       fi
@@ -64742,7 +64799,8 @@ playground_topic_consume_command() {
 
     if [ ! -n "$tail" ] && [ "$consumer_exit_code" != "0" ]
     then
-      if [[ -n "$min_expected_messages" && "$min_expected_messages" != "0" ]] || [[ -n "$grep_string" ]]
+      # an assertion, or an output read by a script (--count, --json), must not be built on a partial read
+      if [[ -n "$min_expected_messages" && "$min_expected_messages" != "0" ]] || [[ -n "$grep_string" ]] || [[ -n "$count" ]] || [[ -n "$json" ]]
       then
         logerror "❌ the consumer of topic $topic failed with exit code $consumer_exit_code"
         exit 1
@@ -64769,26 +64827,31 @@ playground_topic_consume_command() {
       fi
     fi
 
-    if [[ -n "$grep_string" ]]
-    then
-      if [ $nb_matched -eq 0 ]
-      then
-        logerror "❌ could not find $grep_string in topic $topic"
-        exit 1
-      fi
-      log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
-    fi
-
     if [[ -n "$count" ]]
     then
+      # with --count, the number of matching records is the answer, 0 included: no "could not find" failure
       if [[ -n "$grep_string" ]]
       then
+        if [ $nb_matched -gt 0 ]
+        then
+          log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
+        fi
         print_count "$nb_matched"
       else
         print_count "$nb_consumed"
       fi
+    elif [[ -n "$grep_string" ]]
+    then
+      if [ $nb_matched -eq 0 ]
+      then
+        logerror "❌ could not find $grep_string in topic $topic"
+        failed=1
+        continue
+      fi
+      log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
     fi
   done
+  exit $failed
 
 }
 
@@ -66277,6 +66340,8 @@ playground_topic_produce_command() {
 
   nb_messages_sent=0
   nb_messages_to_send=0
+  producer_failed=0
+  producer_rc=0
   stop=0
   should_stop=0
   while [ $stop != 1 ]
@@ -66317,7 +66382,17 @@ playground_topic_produce_command() {
 
       # the stderr of the producer is shown as it comes and kept: a record it could not send (RecordTooLargeException,
       # authorization…) is only logged by the console producer, which still exits 0
-      render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | { "${producer_cmd[@]}" 2>&1 1>&3 3>&- | tee -a "$tmp_dir/producer_stderr" >&2; } 3>&1
+      # its exit code is saved in a file: without pipefail, the status of the pipeline is the one of tee, and a producer
+      # that dies (SerializationException, schema refused by the registry, bad --producer-property) would go unnoticed.
+      # '|| rc=$?': a helper can leave set -e on, which would end the group before the exit code is saved
+      rm -f "$tmp_dir/producer_rc"
+      render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | { { rc=0; "${producer_cmd[@]}" 2>&1 1>&3 3>&- || rc=$?; echo $rc > "$tmp_dir/producer_rc"; } | tee -a "$tmp_dir/producer_stderr" >&2; } 3>&1
+      producer_rc=$(cat "$tmp_dir/producer_rc" 2>/dev/null || echo 0)
+      if [ "$producer_rc" != "0" ] && [ $interrupted != 1 ]
+      then
+          producer_failed=1
+          stop=1
+      fi
 
       # Increment the number of sent messages: the records actually passed to the producer, fewer than
       # $nb_messages_to_send when the batch was interrupted
@@ -66340,6 +66415,11 @@ playground_topic_produce_command() {
   if [ $interrupted = 1 ]
   then
       log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
+  elif [ $producer_failed = 1 ]
+  then
+      first_error=$(grep -m1 -E "^([a-zA-Z_$][a-zA-Z0-9_$.]*(Exception|Error)|Caused by|ERROR)( |:|$)" "$tmp_dir/producer_stderr" 2>/dev/null || true)
+      logerror "❌ the console producer failed (exit code $producer_rc) while producing to topic $topic${first_error:+: $first_error}"
+      exit 1
   else
       nb_send_errors=0
       if [ -f "$tmp_dir/producer_stderr" ]
@@ -66624,39 +66704,48 @@ playground_topic_alter_command() {
   if ! echo "$existing_topics" | grep -qFx "$topic"
   then
       logwarn "🆕 topic $topic does not exist, creating it..."
-      playground topic create --topic $topic
-
-      playground topic alter --topic $topic ${other_args[*]}
-  else
-      log "🪛 Altering topic $topic"
-      if [[ "$environment" == "ccloud" ]]
+      # created once, then altered below: no recursive call, which looped forever when the creation failed or when the
+      # topic only showed up later (asynchronous creation)
+      if ! playground topic create --topic "$topic"
       then
-          get_kafka_docker_playground_dir
-          DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
-
-          if [ -f $DELTA_CONFIGS_ENV ]
-          then
-              source $DELTA_CONFIGS_ENV
-          else
-              logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
-              exit 1
-          fi
-          if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
-          then
-              logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
-              exit 1
-          fi
-
-          get_connect_image
-          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]}
-      elif [[ "$environment" == cfk* ]]
-      then
-          kubectl -n confluent exec $container -- kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server $security ${other_args[*]}
-      else
-          docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server $security ${other_args[*]}
+          logerror "❌ could not create topic $topic"
+          exit 1
       fi
   fi
-  set -e
+
+  log "🪛 Altering topic $topic"
+  rc=0
+  if [[ "$environment" == "ccloud" ]]
+  then
+      get_kafka_docker_playground_dir
+      DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+
+      if [ -f $DELTA_CONFIGS_ENV ]
+      then
+          source $DELTA_CONFIGS_ENV
+      else
+          logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+          exit 1
+      fi
+      if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+      then
+          logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+          exit 1
+      fi
+
+      get_connect_image
+      docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties ${other_args[*]} || rc=$?
+  elif [[ "$environment" == cfk* ]]
+  then
+      kubectl -n confluent exec $container -- kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server $security ${other_args[*]} || rc=$?
+  else
+      docker exec $container kafka-configs --alter --entity-type topics --entity-name $topic --bootstrap-server $bootstrap_server $security ${other_args[*]} || rc=$?
+  fi
+  if [ $rc -ne 0 ]
+  then
+      logerror "❌ could not alter topic $topic (kafka-configs exit code $rc)"
+      exit 1
+  fi
 
 }
 

@@ -59,6 +59,10 @@ lab_run playground topic produce -t lab-raw --value '{"type": "record", "note": 
 lab_expect_exit 0
 lab_expect_contains "🔮 value schema type is set to raw with --value-format"
 lab_expect_contains "📤 produced 1 records to topic lab-raw"
+lab_run playground topic produce -t lab-wrong --forced-value '{"wrong": 1}' < "$schemas/avro/customer.avsc"
+lab_expect_exit 1
+lab_expect_contains "❌ the console producer failed (exit code 1) while producing to topic lab-wrong"
+lab_expect_not_contains "📤 produced" "no success message when the producer fails"
 
 log "Step 6: tombstone, then the partition guard"
 lab_run playground topic produce -t lab-keys --tombstone --key 'order-007'

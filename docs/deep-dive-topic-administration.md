@@ -72,7 +72,8 @@ Gotchas:
 - **`create` fails on an existing topic**: `❌ topic orders already exist !`, exit 1. Delete it first, or use
   `alter` for configs.
 - **`alter` on a missing topic creates it first** (`🆕 topic orders does not exist, creating it...`), with 1 partition,
-  then applies the configs.
+  then applies the configs. A config that `kafka-configs` refuses fails the command:
+  `❌ could not alter topic orders (kafka-configs exit code 1)`, exit 1.
 - **The replication factor is the broker's default**: 1 on the single-broker environments. Pass
   `--replication-factor 3` with `--enable-multiple-brokers`: on a single broker, creation fails.
 - **The number of partitions can't be changed with `alter`** (`kafka-configs` only touches configs). `topic produce
@@ -153,9 +154,12 @@ Gotchas:
 - **`wait-for-records` polls `get-number-records`** every `--interval` seconds (5) up to `--max-wait` (120): it
   inherits its counting, so it can return early on offsets that hold no readable record (a transaction marker). A topic
   that doesn't exist yet counts as 0, so you can call it before a source connector created its topic. On timeout:
-  `❌ topic orders contains 0 records after 10 seconds, expected at least 1`, exit 1.
+  `❌ topic orders contains 0 records after 10 seconds, expected at least 1`, exit 1. When the count itself fails 3
+  times in a row (environment down, authentication), it stops at once: `❌ could not count the records of topic orders:`
+  followed by the error, exit 1.
 - `get-number-records` on a missing topic prints `topic … does not exist !` (a warning) and exits 0: check the number,
-  not the exit code.
+  not the exit code. When the offsets can't be read (broker down, authentication), it prints
+  `❌ could not get the offsets of topic orders (exit code 1)` and exits 1, instead of a `0`.
 - `get-offsets` needs CP 7.0+.
 - **To assert data in a script, prefer `topic consume --min-expected-messages N`** (counts real records, then shows
   them) to `wait-for-records` + a count.

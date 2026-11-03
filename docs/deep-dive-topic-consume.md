@@ -129,7 +129,14 @@ Gotchas:
 
 - `--timeout` without `--min-expected-messages` is an error: the timeout is the wait for the records.
 - `--min-expected-messages` is a minimum: more records is fine. For an exact number, use `--count` and compare.
-- `--grep` only prints the matching records, and `--grep … --count` prints how many match.
+- `--grep` only prints the matching records, and `--grep … --count` prints how many match: `0` is an answer there, not
+  a failure (exit 0). Without `--count`, no match is `❌ could not find …`, exit 1; without `--topic`, every topic is
+  searched and the command exits 1 at the end when one of them has no match.
+- A topic that can't be read (it doesn't exist after the 60 s wait, the broker is down) fails the command with
+  `--topic`, `--grep` or `--count`: `❌ topic orders does not exist !`, exit 1. When all topics are consumed, a topic
+  deleted since the list was taken is skipped with a warning.
+- If the console consumer itself fails, the command fails with `--min-expected-messages`, `--grep`, `--count` or `--json`
+  (`❌ the consumer of topic orders failed with exit code 1`): a script never gets a partial count.
 - A source connector that writes nothing yet: `--min-expected-messages` waits for the topic to be created (60 s),
   then for the records (`--timeout`). That's the replacement for a `sleep` in a script.
 

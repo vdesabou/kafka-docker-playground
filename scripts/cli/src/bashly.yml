@@ -9133,8 +9133,8 @@ commands:
       - long: --count
         required: false
         help: |-
-          🔢 Only print the number of records consumed (with --grep, the number of records containing that string),
-          on stdout: logs go to stderr. Without --topic, one "<topic> <number>" line per topic.
+          🔢 Only print the number of records consumed (with --grep, the number of records containing that string,
+          0 included: not a failure), on stdout: logs go to stderr. Without --topic, one "<topic> <number>" line per topic.
 
           Unlike playground topic get-number-records, records are counted, not offsets (transaction markers,
           compacted records and records that cannot be deserialized do not count)

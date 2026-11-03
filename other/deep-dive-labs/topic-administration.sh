@@ -61,6 +61,9 @@ lab_run playground topic describe -t lab-orders
 lab_expect_not_contains "max.message.bytes=1000" "the override is gone"
 lab_run playground topic alter -t lab-created-by-alter --add-config retention.ms=60000
 lab_expect_contains "🆕 topic lab-created-by-alter does not exist, creating it..."
+lab_run playground topic alter -t lab-orders --add-config not.a.topic.config=1
+lab_expect_exit 1
+lab_expect_contains "❌ could not alter topic lab-orders (kafka-configs exit code 1)"
 
 log "Step 5: waiting for records that come, and records that don't"
 lab_run playground topic wait-for-records -t lab-later --min-expected-messages 1 --max-wait 10

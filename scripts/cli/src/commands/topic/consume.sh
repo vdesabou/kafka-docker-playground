@@ -511,6 +511,16 @@ then
   fi
 fi
 
+# a topic given with --topic that cannot be read fails the command; when all topics are consumed, a topic deleted in
+# the meantime is skipped
+topic_explicit=""
+if [[ -n "$topic" ]]
+then
+  topic_explicit=1
+fi
+# set when a topic fails (missing topic, --grep not found) and the next topics are still consumed: exit 1 at the end
+failed=0
+
 if [[ ! -n "$topic" ]]
 then
     if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
@@ -666,14 +676,21 @@ do
 
       if [[ ! $nb_messages =~ ^[0-9]+$ ]]
       then
-        echo $nb_messages | grep "does not exist" > /dev/null 2>&1
-        if [ $? == 0 ]
+        if [[ "$nb_messages" == *"does not exist"* ]]
         then
-          logwarn "❌ topic $topic does not exist !"
+          problem="topic $topic does not exist !"
         else
-          logwarn "❌ problem while getting number of messages: $nb_messages"
+          problem="problem while getting number of messages of topic $topic: $nb_messages"
         fi
-        # go on with the next topic when all topics are consumed
+        # an assertion (--topic, --grep, --count) on a topic that cannot be read fails; when all topics are consumed,
+        # go on with the next topic (deleted since the list was taken)
+        if [[ -n "$topic_explicit" ]] || [[ -n "$grep_string" ]] || [[ -n "$count" ]]
+        then
+          logerror "❌ $problem"
+          failed=1
+        else
+          logwarn "❌ $problem"
+        fi
         continue
       fi
     fi
@@ -906,11 +923,6 @@ do
       else
         log "✨ topic $topic is empty"
       fi
-      if [[ -n "$grep_string" ]]
-      then
-        logerror "❌ could not find $grep_string in topic $topic"
-        exit 1
-      fi
       if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
       then
         logerror "❌ --min-expected-messages is set with $min_expected_messages but no record could be consumed from topic $topic"
@@ -918,7 +930,12 @@ do
       fi
       if [[ -n "$count" ]]
       then
+        # with --count, 0 is the answer (also with --grep)
         print_count 0
+      elif [[ -n "$grep_string" ]]
+      then
+        logerror "❌ could not find $grep_string in topic $topic"
+        failed=1
       fi
       continue
     fi
@@ -1013,7 +1030,8 @@ do
 
   if [ ! -n "$tail" ] && [ "$consumer_exit_code" != "0" ]
   then
-    if [[ -n "$min_expected_messages" && "$min_expected_messages" != "0" ]] || [[ -n "$grep_string" ]]
+    # an assertion, or an output read by a script (--count, --json), must not be built on a partial read
+    if [[ -n "$min_expected_messages" && "$min_expected_messages" != "0" ]] || [[ -n "$grep_string" ]] || [[ -n "$count" ]] || [[ -n "$json" ]]
     then
       logerror "❌ the consumer of topic $topic failed with exit code $consumer_exit_code"
       exit 1
@@ -1040,23 +1058,28 @@ do
     fi
   fi
 
-  if [[ -n "$grep_string" ]]
-  then
-    if [ $nb_matched -eq 0 ]
-    then
-      logerror "❌ could not find $grep_string in topic $topic"
-      exit 1
-    fi
-    log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
-  fi
-
   if [[ -n "$count" ]]
   then
+    # with --count, the number of matching records is the answer, 0 included: no "could not find" failure
     if [[ -n "$grep_string" ]]
     then
+      if [ $nb_matched -gt 0 ]
+      then
+        log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
+      fi
       print_count "$nb_matched"
     else
       print_count "$nb_consumed"
     fi
+  elif [[ -n "$grep_string" ]]
+  then
+    if [ $nb_matched -eq 0 ]
+    then
+      logerror "❌ could not find $grep_string in topic $topic"
+      failed=1
+      continue
+    fi
+    log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
   fi
 done
+exit $failed

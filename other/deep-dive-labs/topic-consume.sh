@@ -45,6 +45,12 @@ lab_run playground topic consume -t ticks --grep '"tick": 7' --count
 lab_expect_exit 0
 lab_expect_contains '✅ found "tick": 7 in 1 record(s) of topic ticks'
 lab_expect_equals "$(echo "$LAB_OUTPUT" | tail -1)" "1" "--grep --count"
+lab_run playground topic consume -t ticks --grep 'nope' --count
+lab_expect_exit 0
+lab_expect_equals "$(echo "$LAB_OUTPUT" | tail -1)" "0" "--grep --count without a match"
+lab_run playground topic consume -t ticks --grep 'nope'
+lab_expect_exit 1
+lab_expect_contains "❌ could not find nope in topic ticks"
 
 log "Step 3: offsets are not records"
 playground topic produce -t orders --value 'not avro' --value-format raw
