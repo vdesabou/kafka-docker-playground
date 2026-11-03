@@ -306,7 +306,7 @@ Same as 'query' configuration but the query string is maskedUse this config to p
 
 🔘 quote.sql.identifiers
 
-When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``.
+When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``. Identifiers containing control characters are always rejected. With ``never``, identifiers also may not contain ``;``, SQL comment sequences (including ``#`` on MySQL and MariaDB), whitespace, quote characters, parentheses, or commas, since they cannot be used unquoted.
 
 	 - Type: STRING
 	 - Default: ALWAYS
