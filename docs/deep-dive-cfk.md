@@ -113,7 +113,7 @@ Not supported, or different:
 | `topic produce --validate` | needs a local connect container: refused |
 | `--enable-jmx-grafana`, `--enable-kcat`, `--enable-conduktor`, `--enable-flink` | `⚠️ … is not implemented in environment/cfk/start.sh` |
 | `ENABLE_ZOOKEEPER` | ignored: the CFK deployment is KRaft only |
-| `--enable-multiple-controllers` | ignored, with `⚠️ ENABLE_CONTROLLER_NODES (--enable-multiple-controllers) is ignored in CFK mode` |
+| `--enable-multiple-controllers` | `replicas: 3` on the `KRaftController` CR (pods `kraftcontroller-0`, `kraftcontroller-1`, `kraftcontroller-2`; `-c controller2` resolves to `kraftcontroller-1`) |
 | `--enable-ksqldb`, `--enable-rest-proxy` | plain Deployments on `cfk`, `KsqlDB` / `KafkaRestProxy` CRs on `cfk-rbac` |
 | `--enable-multiple-brokers`, `--enable-multiple-connect-workers` | `replicas: 3` on the `Kafka` / `Connect` CR (pods `connect-0`, `connect-1`, `connect-2`) |
 

@@ -1102,8 +1102,9 @@ subcommands:
       With this flag, the quorum has 3 nodes,\nso that one of them can stop without
       making the cluster unavailable:\n\n- KRaft mode: controllers controller, controller2
       and controller3\n  (node ids 4, 5 and 6)\n\n- ZooKeeper mode: zookeeper, zookeeper2
-      and zookeeper3\n\n❗ not supported with ccloud examples, ignored with the mdc-*
-      and cfk\nenvironments"
+      and zookeeper3\n\n- cfk / cfk-rbac: 3 replicas on the KRaftController CR (pods\n
+      \ kraftcontroller-0, kraftcontroller-1 and kraftcontroller-2)\n\n❗ not supported
+      with ccloud examples, ignored with the mdc-*\nenvironments"
   - names:
     - "--enable-jmx-grafana"
     argument: ''

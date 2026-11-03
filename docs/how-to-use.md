@@ -513,7 +513,7 @@ By default, there is only one KRaft controller (or, with CP < 8 in ZooKeeper mod
 | KRaft (CP ≥ 8, or `--enable-kraft`) | `controller`, `controller2`, `controller3` (node ids 4, 5 and 6, JMX ports 10005, 12005, 13005) | `controller.quorum.voters=4@controller:9093,5@controller2:9093,6@controller3:9093` |
 | ZooKeeper | `zookeeper`, `zookeeper2`, `zookeeper3` (JMX ports 9999, 12999, 13999) | `zookeeper.connect=zookeeper:2181,zookeeper2:2181,zookeeper3:2181` |
 
-One node of the quorum can then be stopped (`playground container kill -c controller2`) without making the cluster unavailable: `playground broker health` shows the KRaft quorum, its leader and the lag of each voter. It works with every environment except the `mdc-*` ones (one ZooKeeper / controller per cluster) and `cfk`, where it is ignored. Combine it with `--enable-multiple-brokers` for a cluster without any single point of failure.
+One node of the quorum can then be stopped (`playground container kill -c controller2`) without making the cluster unavailable: `playground broker health` shows the KRaft quorum, its leader and the lag of each voter. It works with every environment except the `mdc-*` ones (one ZooKeeper / controller per cluster), where it is ignored. On `cfk` and `cfk-rbac`, the `KRaftController` CR gets 3 replicas (pods `kraftcontroller-0`, `kraftcontroller-1`, `kraftcontroller-2`; `-c controller2` resolves to `kraftcontroller-1`). Combine it with `--enable-multiple-brokers` for a cluster without any single point of failure.
 
 ### 🥉 Enabling multiple connect workers
 

@@ -127,6 +127,15 @@ function resolve_container_name_for_environment() {
     broker|kafka)
       mapped_name="kafka-0"
       ;;
+    controller)
+      mapped_name="kraftcontroller-0"
+      ;;
+    controller2)
+      mapped_name="kraftcontroller-1"
+      ;;
+    controller3)
+      mapped_name="kraftcontroller-2"
+      ;;
     schema-registry|schemaregistry)
       mapped_name="schemaregistry-0"
       ;;
