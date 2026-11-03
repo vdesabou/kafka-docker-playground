@@ -17545,7 +17545,7 @@ playground_connector_plugin_sourcecode_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--log")"
-    printf "    📜 With 2 --connector-tag: the commits between the two versions, newest first\n    \n    From the GitHub compare API (gh when logged in, else GH_TOKEN / GITHUB_TOKEN\n    if set, else anonymous with\n    a low rate limit). Merge commits are left out. Complements playground\n    connector-plugin changelog, which is\n    only as complete as the docs, and works for partner and fully managed\n    plugins too.\n"
+    printf "    📜 With 2 --connector-tag: the commits between the two versions, newest first\n    \n    From the GitHub compare API (gh when logged in, then GH_TOKEN / GITHUB_TOKEN\n    if set, then anonymous with\n    a low rate limit, each tried when the previous one is refused). Merge\n    commits are left out. Complements playground connector-plugin changelog,\n    which is\n    only as complete as the docs, and works for partner and fully managed\n    plugins too.\n"
     printf "    %s\n" "Conflicts: --compile, --open, --checkout-only"
     echo
 
@@ -71414,21 +71414,38 @@ playground_connector_plugin_sourcecode_command() {
       esac
   }
 
-  # GET on the GitHub API: gh when it is logged in (private repositories, higher rate limit), else curl with GH_TOKEN / GITHUB_TOKEN if set
+  # GET on the GitHub API, first answer that works wins:
+  # 1. gh when it is logged in (private repositories, higher rate limit)
+  # 2. curl with GH_TOKEN / GITHUB_TOKEN if set
+  # 3. curl without a token (public repositories): a token can be refused for a repository that a logged in gh or a
+  #    token can't reach (SSO-protected organization, CI runner off the Confluent network) while the anonymous call works
   function sourcecode_github_api () {
-      local api_path="$1"
+      local api_path="$1" output
       if command -v gh > /dev/null 2>&1 && gh auth status > /dev/null 2>&1
       then
-          gh api -X GET "$api_path" 2>/dev/null
-      else
-          local token="${GH_TOKEN:-$GITHUB_TOKEN}"
-          if [[ -n "$token" ]]
+          # gh api prints the error body on stdout too: only forward it when the call worked
+          if output=$(gh api -X GET "$api_path" 2>/dev/null)
           then
-              curl -s -f -H "Authorization: Bearer $token" -H "Accept: application/vnd.github+json" "https://api.github.com/$api_path"
-          else
-              curl -s -f -H "Accept: application/vnd.github+json" "https://api.github.com/$api_path"
+              printf '%s\n' "$output"
+              return 0
           fi
+          log "ℹ️ gh api refused GET $api_path ($(echo "$output" | jq -r '.message // empty' 2>/dev/null | head -1)), falling back to curl" >&2
       fi
+      # never show the token: no set -x trace (--vvv) while it is expanded, and the header is read by curl on stdin (not in ps)
+      local xtrace=0 rc=1
+      [[ $- = *x* ]] && xtrace=1
+      { set +x; } 2>/dev/null
+      if [[ -n "${GH_TOKEN:-$GITHUB_TOKEN}" ]]
+      then
+          printf 'Authorization: Bearer %s\n' "${GH_TOKEN:-$GITHUB_TOKEN}" | curl -s -f -H @- -H "Accept: application/vnd.github+json" "https://api.github.com/$api_path"
+          rc=$?
+      fi
+      [[ $xtrace -eq 1 ]] && set -x
+      if [[ $rc -eq 0 ]]
+      then
+          return 0
+      fi
+      curl -s -f -H "Accept: application/vnd.github+json" "https://api.github.com/$api_path"
   }
 
   # --log / --files: commits and changed files between two tags, from the GitHub compare API

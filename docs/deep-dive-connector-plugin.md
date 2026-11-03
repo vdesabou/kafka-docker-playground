@@ -319,8 +319,9 @@ Gotchas:
   on hub 12.1.13`), not the version the customer runs: always pass theirs.
 - **The checkout is shallow** (`--depth 1`): `git log` inside has one commit. For the history between two versions, use
   `--log` / `--files`.
-- **`--log` and `--files` call the GitHub compare API**: through `gh` when it is logged in, else with `GH_TOKEN` /
-  `GITHUB_TOKEN` when set, else anonymously (60 requests per hour). Private repositories (proprietary and fully managed
+- **`--log` and `--files` call the GitHub compare API**: through `gh` when it is logged in, then with `GH_TOKEN` /
+  `GITHUB_TOKEN` when set, then anonymously (60 requests per hour): each one is tried when the previous one is refused
+  (a token not authorized for the SSO of the `confluentinc` organization, for example), and the refusal is logged. Private repositories (proprietary and fully managed
   connectors) need a token. Up to 1000 commits and files are read. `--log` is what the release notes don't say (refactors,
   reverts, the commits of a backport); the release notes say what was released, check both.
 - **A checkout emptied by the cleanup of `/tmp`** (macOS deletes the files untouched for 3 days, keeps the folders) is

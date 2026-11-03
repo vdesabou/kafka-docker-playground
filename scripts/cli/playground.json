@@ -9213,7 +9213,7 @@
                 "--log"
               ],
               "argument": "",
-              "description": "📜 With 2 --connector-tag: the commits between the two versions, newest first\n\nFrom the GitHub compare API (gh when logged in, else GH_TOKEN / GITHUB_TOKEN if set, else anonymous with\na low rate limit). Merge commits are left out. Complements playground connector-plugin changelog, which is\nonly as complete as the docs, and works for partner and fully managed plugins too.\n\nConflicts with: --compile, --open, --checkout-only"
+              "description": "📜 With 2 --connector-tag: the commits between the two versions, newest first\n\nFrom the GitHub compare API (gh when logged in, then GH_TOKEN / GITHUB_TOKEN if set, then anonymous with\na low rate limit, each tried when the previous one is refused). Merge commits are left out. Complements playground connector-plugin changelog, which is\nonly as complete as the docs, and works for partner and fully managed plugins too.\n\nConflicts with: --compile, --open, --checkout-only"
             },
             {
               "names": [

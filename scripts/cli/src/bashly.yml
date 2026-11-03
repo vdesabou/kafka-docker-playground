@@ -13057,8 +13057,8 @@ commands:
         help: |-
           📜 With 2 --connector-tag: the commits between the two versions, newest first
 
-          From the GitHub compare API (gh when logged in, else GH_TOKEN / GITHUB_TOKEN if set, else anonymous with
-          a low rate limit). Merge commits are left out. Complements playground connector-plugin changelog, which is
+          From the GitHub compare API (gh when logged in, then GH_TOKEN / GITHUB_TOKEN if set, then anonymous with
+          a low rate limit, each tried when the previous one is refused). Merge commits are left out. Complements playground connector-plugin changelog, which is
           only as complete as the docs, and works for partner and fully managed plugins too.
       - long: --files
         required: false
