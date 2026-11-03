@@ -30,12 +30,12 @@ The personal access token used to authenticate the user when connecting to Delta
 
 🔘 delta.lake.catalog
 
+The destination catalog under which the destination database and tables are located.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The destination catalog under which the destination database and tables are located.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 delta.lake.database
 
@@ -57,12 +57,12 @@ A format string for the destination table name, which may contain '${topic}' as 
 
 🔘 delta.lake.topic2table.map
 
+Map of topics to tables (optional). Create mapping as comma-separated tuples. For example: ``<topic-1>:<table-1>,<topic-2>:<table-2>,...``. If you use this property, the connector ignores any string entered for ``delta.lake.table.format``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Map of topics to tables (optional). Create mapping as comma-separated tuples. For example: ``<topic-1>:<table-1>,<topic-2>:<table-2>,...``. If you use this property, the connector ignores any string entered for ``delta.lake.table.format``.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 delta.lake.table.auto.create
 
@@ -75,21 +75,21 @@ Whether to automatically create the destination table based on record schema if 
 
 🔘 delta.lake.tables.location
 
+The underlying location where the data in the Delta Lake table(s) is stored.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The underlying location where the data in the Delta Lake table(s) is stored.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 delta.lake.table2partition.map
 
+Map of tables to partition fields (optional). Format: comma-separated tuples, e.g. <table-1>:<partition-1>, <table-2>:<partition-2>,... Note: multiple partitions can be specified per table, please add a separate tuple for each partition.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Map of tables to partition fields (optional). Format: comma-separated tuples, e.g. <table-1>:<partition-1>, <table-2>:<partition-2>,... Note: multiple partitions can be specified per table, please add a separate tuple for each partition.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 null
@@ -171,4 +171,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 
