@@ -72,12 +72,12 @@ This property specifies the IP or hostname and port (optional) of the message br
 
 🔘 solace.username
 
+The username used when connecting to Solace.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username used when connecting to Solace.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 solace.password
 
@@ -90,12 +90,12 @@ The password used when connecting to Solace.
 
 🔘 solace.vpn
 
+This property specifies the Message VPN to use when connecting to the message broker. This property applies to both the JNDI and data connections. The default value is blank, which means connect to the Message VPN ``default``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This property specifies the Message VPN to use when connecting to the message broker. This property applies to both the JNDI and data connections. The default value is blank, which means connect to the Message VPN ``default``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 solace.connect.retries
 
@@ -165,12 +165,12 @@ Solace Secure Connection
 ==========================
 🔘 solace.ssl.keystore.path
 
+Keystore path of SSL enabled VPN for Solace.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Keystore path of SSL enabled VPN for Solace.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 solace.ssl.keystore.password
 
@@ -183,12 +183,12 @@ Password of keystore path of SSL enabled VPN for Solace.
 
 🔘 solace.ssl.truststore.path
 
+Truststore path of SSL enabled VPN for Solace.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Truststore path of SSL enabled VPN for Solace.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 solace.ssl.truststore.password
 
@@ -324,21 +324,21 @@ Whether the subscription of the connector tasks to a JMS topic is durable or not
 
 🔘 jms.subscription.name
 
+The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 jms.message.selector
 
+The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Retry
@@ -411,4 +411,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 
