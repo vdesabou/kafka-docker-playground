@@ -6056,7 +6056,7 @@
                 "--max-messages"
               ],
               "argument": "MAX-MESSAGES",
-              "description": "Max number of messages to display (default is 100)\n\nYou can use -1 to display all messages\n\nDefault value: 100"
+              "description": "Max number of messages to display (default is 100)\n\nYou can use -1 to display all messages. With --grep, every record is searched and this limits the matching records displayed.\n\nDefault value: 100"
             },
             {
               "names": [
@@ -6070,14 +6070,14 @@
                 "--grep"
               ],
               "argument": "GREP",
-              "description": "Verify that topic content contains record which contains specified string\n\nIt is searched in the records as displayed (decoded when base64 encoded), and the command fails when no record contains it."
+              "description": "Verify that topic content contains record which contains specified string\n\nIt is searched in every record of the topic, as displayed (decoded when base64 encoded), and the command fails when no record contains it (with --count, 0 is printed instead)."
             },
             {
               "names": [
                 "--timeout"
               ],
               "argument": "TIMEOUT",
-              "description": "Max number of seconds to wait when --min-expected-messages is used.\n\nDefault is 60 seconds\n\nDefault value: 60"
+              "description": "Max number of seconds to wait when --min-expected-messages is used: for the topic to be created, then for the records.\n\nDefault is 60 seconds"
             },
             {
               "names": [
@@ -6105,7 +6105,7 @@
                 "--max-characters"
               ],
               "argument": "MAX-CHARACTERS",
-              "description": "Max characters per message to display (default is 3000, 0 for no limit)\n\nDefault value: 3000"
+              "description": "Max characters per message to display, the whole line: timestamp, headers, key and value (default is 3000, 0 for no limit)\n\nDefault value: 3000"
             },
             {
               "names": [
@@ -6113,7 +6113,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --max-characters, --tail, --min-expected-messages"
+              "description": "🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)\n\n--grep, --no-decode and --print-schema apply to the dump. Needs --topic.\n\nConflicts with: --max-characters, --tail, --min-expected-messages"
             },
             {
               "names": [

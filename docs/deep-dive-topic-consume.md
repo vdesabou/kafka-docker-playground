@@ -41,7 +41,8 @@ CFK, Confluent Cloud). Takes about 15 minutes to read and run.
    from `topic get-number-records`: end offset minus start offset, per partition. Transaction markers, compacted
    records and skipped records use offsets but are not records. `--min-expected-messages N`:
    1. waits (polling every second, up to `--timeout`, default 60 s) until the topic holds N offsets. A topic that
-      doesn't exist yet is waited for, up to 60 s.
+      doesn't exist yet is waited for within the same `--timeout`. With `--partition` or `--from-timestamp`, only the
+      offsets they select count (`… but topic orders contains 2 messages partition 1 (5 in the topic)`).
    2. consumes, and stops when no record arrives for 10 seconds (30 s on Confluent Cloud), so it never hangs on
       offsets that hold no record.
    3. fails unless at least N records were **actually consumed and deserialized**.
@@ -52,7 +53,9 @@ CFK, Confluent Cloud). Takes about 15 minutes to read and run.
    inside the `connect` container (`docker exec`), in `connect-0` with `kubectl exec` on CFK, or in a throw-away
    container of the connect image on Confluent Cloud, with the bootstrap server, Schema Registry URL and security
    properties added for you. Each call reads from the beginning in a new throw-away group (`console-consumer-<n>`, they
-   show up in `playground consumer-group list`): it never moves the offsets of your connectors or applications. `--verbose` prints the exact command, with the passwords masked.
+   show up in `playground consumer-group list`): it never moves the offsets of your connectors or applications. The
+   exception is `ldap-authorizer-sasl-plain`, whose ACLs only allow `test-consumer-group` (offsets never committed):
+   two consumes running at the same time share it, and each one gets only part of the partitions. `--verbose` prints the exact command, with the passwords masked.
 
 ---
 
@@ -98,7 +101,10 @@ Gotchas:
 - Values that look base64 encoded (the first record is valid base64 of printable UTF-8: bytes written by a
   `JsonConverter` or `ByteArrayConverter`) are decoded for display (`🤖 Data is base64 encoded, payload will be
   decoded`). Use `--no-decode` to see the bytes as stored.
-- A long record is cut at `--max-characters` (`...<truncated, only showing first 3000 characters, out of 2001234>...`).
+- A long record is cut at `--max-characters`, counted on the whole line (timestamp, headers, key and value):
+  `...<truncated, only showing first 3000 characters, out of 2001234>...`.
+- New lines in a header, a key or a value are displayed as `\n`, so that a record stays on one line (`--json` keeps
+  them in the value).
 - `--isolation-level read_committed` hides aborted transactional records. The count of the first log line follows
   the same isolation level.
 
@@ -137,8 +143,13 @@ Gotchas:
   deleted since the list was taken is skipped with a warning.
 - If the console consumer itself fails, the command fails with `--min-expected-messages`, `--grep`, `--count` or `--json`
   (`❌ the consumer of topic orders failed with exit code 1`): a script never gets a partial count.
-- A source connector that writes nothing yet: `--min-expected-messages` waits for the topic to be created (60 s),
-  then for the records (`--timeout`). That's the replacement for a `sleep` in a script.
+- A source connector that writes nothing yet: `--min-expected-messages` waits for the topic to be created, then for
+  the records, both within `--timeout`. That's the replacement for a `sleep` in a script. Without
+  `--min-expected-messages`, a missing topic is waited for 60 s.
+- `--grep` searches **every** record of the topic: `--max-messages` only limits how many matching records are
+  displayed.
+- If the Schema Registry can't be read (unreachable, 401), a warning says so (`⚠️ could not get subject orders-value
+  from schema registry …`) and the records are displayed without schema.
 
 ---
 

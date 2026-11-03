@@ -26,26 +26,34 @@ then
   exec 4>&1 1>&2
 fi
 
-# Optimized helpers (reduce repeated external calls and parsing) with caching
-declare -A SUBJECT_CACHE
+# format of the latest schema of subject $1 (avro, protobuf, json-schema), empty when the subject does not exist.
+# A registry that can't be read (unreachable, 401, 403) is reported: before, it silently meant "no schema", and the
+# records were displayed as raw bytes. Called in $(…): the warnings go to stderr
 get_subject_info() {
   local subject="$1"
-  if [ -n "${SUBJECT_CACHE[$subject]}" ]; then
-    echo "${SUBJECT_CACHE[$subject]}"; return 0
+  local json version schema_type error_code
+  if ! json=$(curl $sr_security -s "${sr_url}/subjects/$(urlencode "$subject")/versions/latest" 2>/dev/null)
+  then
+    logwarn "⚠️ could not reach schema registry $sr_url to get subject $subject: the records are displayed without schema" >&2
+    return 0
   fi
-  local json version schema_type out
-  json=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/latest" 2>/dev/null) || { SUBJECT_CACHE[$subject]=""; echo ""; return 0; }
-  version=$(jq -r .version <<< "$json" 2>/dev/null)
-  [ "$version" = "null" ] && { SUBJECT_CACHE[$subject]=""; echo ""; return 0; }
+  version=$(jq -r '.version // empty' <<< "$json" 2>/dev/null)
+  if [ -z "$version" ]
+  then
+    error_code=$(jq -r '.error_code // empty' <<< "$json" 2>/dev/null)
+    # 40401: subject not found, 40403: schema not found (soft deleted)
+    if [ "$error_code" != "40401" ] && [ "$error_code" != "40403" ]
+    then
+      logwarn "⚠️ could not get subject $subject from schema registry $sr_url: the records are displayed without schema. Response: $(echo "$json" | head -c 300)" >&2
+    fi
+    return 0
+  fi
   schema_type=$(jq -r '.schemaType // ""' <<< "$json" 2>/dev/null)
   case "$schema_type" in
-    JSON) out="json-schema" ;;
-    PROTOBUF) out="protobuf" ;;
-    AVRO|""|null) out="avro" ;;
-    *) out="" ;;
+    JSON) echo "json-schema" ;;
+    PROTOBUF) echo "protobuf" ;;
+    AVRO|""|null) echo "avro" ;;
   esac
-  SUBJECT_CACHE[$subject]="$out"
-  echo "$out"
 }
 
 if [[ -n "$key_subject" ]]
@@ -104,12 +112,10 @@ then
   # the GSSAPI client builds the broker principal from the bootstrap host: a short
   # name only becomes the FQDN through Docker's reverse DNS, not podman's
   bootstrap_server="${broker_container}.kerberos-demo.local:9092"
-  get_connect_container
-  container=$connect_container
-    container="client"
-    security="$consumer_config_name /etc/kafka/consumer.properties"
+  container="client"
+  security="$consumer_config_name /etc/kafka/consumer.properties"
 
-    docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 elif [[ "$environment" == *"ssl"* ]]
 then
   get_broker_container
@@ -131,8 +137,10 @@ then
   bootstrap_server="$broker_container:9092"
   get_connect_container
   container=$connect_container
-    # the ACLs only allow this group: never commit its offsets, --from-beginning would be ignored on the next consume
-    security="--group test-consumer-group $consumer_property_name enable.auto.commit=false $consumer_config_name /service/kafka/users/client.properties"
+    # the ACLs only allow this group: never commit its offsets, --from-beginning would be ignored on the next consume.
+    # Passed as group.id, not --group: the console consumer refuses --group with --partition and --offset (used by
+    # --partition, --last and --from-timestamp)
+    security="$consumer_property_name group.id=test-consumer-group $consumer_property_name enable.auto.commit=false $consumer_config_name /service/kafka/users/client.properties"
 elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
 then
   get_broker_container
@@ -290,27 +298,31 @@ function format_records() {
       return $decoded;
     }
 
+    # --max-characters applies to the whole line displayed (timestamp, headers, key and value): a long header (the
+    # stack trace of a dead letter queue record) is truncated too
     sub display {
-      my ($line, $payload_length) = @_;
-      if (!$output_json && $max_characters > 0 && $payload_length >= $max_characters) {
+      my ($line) = @_;
+      if (!$output_json && $max_characters > 0 && length($line) > $max_characters) {
         $line = substr($line, 0, $max_characters) . "...<truncated, only showing first $max_characters characters, out of " . length($line) . ">...";
       }
       print "$line\n";
     }
 
-    my $pending = "";
-    while (my $line = <STDIN>) {
-      chomp $line;
-      # a header or a key containing new lines (the stack trace header of a dead letter queue record) splits a record
-      # over several lines: join them until the record has all its fields (at least 5 separators)
-      if ($pending ne "") {
-        $line = "$pending\n$line";
-        $pending = "";
+    # a header, a key or a value containing new lines (the stack trace header of a dead letter queue record, a
+    # pretty-printed json value) spans several lines: a record is complete when the next one starts, or at the end
+    my $record_start_re = qr/^\w+(?::-?\d+)?\x1fPartition:\d+\x1fOffset:\d+\x1f/;
+    my $buffered;
+    sub next_record {
+      while (1) {
+        my $next = <STDIN>;
+        if (!defined $next) { my $record = $buffered; $buffered = undef; return $record; }
+        chomp $next;
+        if (!defined $buffered) { $buffered = $next; next; }
+        if ($next =~ $record_start_re) { my $record = $buffered; $buffered = $next; return $record; }
+        $buffered .= "\n$next";
       }
-      if ($line =~ /^\w+:-?\d+\x1fPartition:\d+\x1fOffset:\d+\x1f/ && $line !~ /\x1f$/ && ($line =~ tr/\x1f//) < 5) {
-        $pending = $line;
-        next;
-      }
+    }
+    while (defined(my $line = next_record())) {
       if ($has_value_schema_id) {
         # a record skipped with --skip-message-on-error leaves its first fields, without new line, before the next
         # record (or at the end of the output): drop them, the error is counted from stderr
@@ -320,10 +332,10 @@ function format_records() {
       }
       my @fields = split /\x1f/, $line, -1;
       if (@fields < 6 || $fields[0] !~ /^\w+(:-?\d+)?$/ || $fields[1] !~ /^Partition:/ || $fields[2] !~ /^Offset:/) {
-        # anything else on stdout, for example the next lines of a value containing new lines
+        # anything else on stdout (a record that never got all its fields, output interrupted): shown as it is
         next if $grep_string ne "" && index($line, $grep_string) < 0;
         if ($output_json) { print STDERR "$line\n"; next; }
-        display($line, length($line));
+        display($line);
         next;
       }
       $nb_records++;
@@ -359,9 +371,10 @@ function format_records() {
       $headers_display =~ tr/\x1d/,/;
       $headers_display =~ s/\n/\\n/g;
       (my $key_display = $key) =~ s/\n/\\n/g;
+      (my $value_display = $value) =~ s/\n/\\n/g;
       my @output = ($timestamp, $fields[1], $fields[2], "Headers:$headers_display", "Key:$key_display");
       push @output, "KeySchemaId:$key_schema_id" if defined $key_schema_id;
-      push @output, "Value:$value";
+      push @output, "Value:$value_display";
       push @output, "ValueSchemaId:$value_schema_id" if defined $value_schema_id;
       my $output = join("|", @output);
 
@@ -396,18 +409,14 @@ function format_records() {
       }
 
       if ($sort_keep ne "") {
-        push @sorted_records, [$timestamp_ms // 0, ($fields[1] =~ /(\d+)/)[0], ($fields[2] =~ /(\d+)/)[0], $output, length($value)];
+        push @sorted_records, [$timestamp_ms // 0, ($fields[1] =~ /(\d+)/)[0], ($fields[2] =~ /(\d+)/)[0], $output];
         next;
       }
 
       if ($display_limit < 0 || $nb_displayed < $display_limit) {
-        display($output, length($value));
+        display($output);
         $nb_displayed++;
       }
-    }
-    # a record that never got all its fields (output interrupted): shown as it is
-    if ($pending ne "" && !$output_json) {
-      display($pending, length($pending));
     }
     if ($sort_keep ne "") {
       my @records = sort { $a->[0] <=> $b->[0] || $a->[1] <=> $b->[1] || $a->[2] <=> $b->[2] } @sorted_records;
@@ -415,7 +424,7 @@ function format_records() {
         @records = $sort_keep eq "last" ? @records[-$display_limit .. -1] : @records[0 .. $display_limit - 1];
       }
       for my $record (@records) {
-        display($record->[3], $record->[4]);
+        display($record->[3]);
         $nb_displayed++;
       }
     }
@@ -502,13 +511,20 @@ function printable_command() {
   printf '%q ' "${printable[@]}"
 }
 
-if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
+if [[ -n "$timeout" ]]
 then
   if [[ ! -n "$min_expected_messages" ]] || [ "$min_expected_messages" == "0" ]
   then
     logerror "❌ --timeout was provided without specifying --min-expected-messages"
     exit 1
   fi
+fi
+timeout=${timeout:-60}
+
+if [ "$max_messages" -lt 1 ] && [ "$max_messages" != "-1" ]
+then
+  logerror "❌ --max-messages must be greater than 0, or -1 for all the records"
+  exit 1
 fi
 
 # a topic given with --topic that cannot be read fails the command; when all topics are consumed, a topic deleted in
@@ -523,6 +539,11 @@ failed=0
 
 if [[ ! -n "$topic" ]]
 then
+    if [[ -n "$open" ]]
+    then
+      logerror "--open was provided without specifying --topic (it would open one editor per topic)"
+      exit 1
+    fi
     if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
     then
       logerror "--min-expected-messages was provided without specifying --topic"
@@ -615,6 +636,26 @@ function get_partition_offsets() {
   (verbose=""; run_kafka_admin_tool kafka-run-class $get_offsets_class --topic "$topic" --time "$1" "${partition_args[@]}" 2>/dev/null) | grep -E ':[0-9]+:-?[0-9]+$' | awk -F: '{print $(NF-1), $NF}' | sort -n
 }
 
+# number of records that --partition (from --offset) or --from-timestamp selects, from the offsets: what
+# --min-expected-messages waits for with these flags, instead of the records of the whole topic
+function get_scope_record_count() {
+  local latest_offsets start_offsets
+  latest_offsets=$(get_partition_offsets -1)
+  if [[ -n "$from_timestamp" ]]
+  then
+    start_offsets=$(get_partition_offsets "$from_timestamp_ms")
+  else
+    case "${offset:-earliest}" in
+      earliest) start_offsets=$(get_partition_offsets -2) ;;
+      latest) start_offsets="$latest_offsets" ;;
+      *) start_offsets="$partition $offset" ;;
+    esac
+  fi
+  # a partition without any record from the timestamp is not in start_offsets: nothing to read there
+  awk 'NR == FNR { start[$1] = $2; next } ($1 in start) && $2 > start[$1] { n += $2 - start[$1] } END { print n + 0 }' \
+    <(echo "$start_offsets") <(echo "$latest_offsets")
+}
+
 items=($topic)
 for topic in ${items[@]}
 do
@@ -625,47 +666,56 @@ do
     if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
     then
       start_time=$(date +%s)
-      topic_missing_start_time=""
 
+      scope=""
+      if [[ -n "$partition" ]] || [[ -n "$from_timestamp" ]]
+      then
+        scope="${partition:+ partition $partition}${offset:+ from offset $offset}${from_timestamp:+ from $from_timestamp}"
+      fi
+
+      # --timeout is the deadline of the whole wait: for the topic to be created (a source connector creates it with
+      # its first records), then for the records
       while true; do
-        nb_messages=$(playground topic get-number-records -t $topic --isolation-level "$isolation_level" | tail -1)
+        nb_messages=$(get_topic_message_count "$topic")
+        elapsed_time=$(($(date +%s) - start_time))
 
         if [[ ! $nb_messages =~ ^[0-9]+$ ]]
         then
           if [[ "$nb_messages" == *"does not exist"* ]]
           then
-            if [[ -z "$topic_missing_start_time" ]]
+            if [ $elapsed_time -lt $timeout ]
             then
-              topic_missing_start_time=$(date +%s)
-            fi
-
-            current_time=$(date +%s)
-            topic_missing_elapsed=$((current_time - topic_missing_start_time))
-            if [ $topic_missing_elapsed -lt $TOPIC_NOT_FOUND_RETRY_SECONDS ]
-            then
-              logwarn "❌ topic $topic does not exist, retrying in 1 second (elapsed time: $topic_missing_elapsed seconds), waiting max for $TOPIC_NOT_FOUND_RETRY_SECONDS seconds" >&2
+              logwarn "❌ topic $topic does not exist, retrying in 1 second (elapsed time: $elapsed_time seconds), waiting max for $timeout seconds" >&2
               sleep 1
               continue
             fi
-
-            logwarn "❌ topic $topic does not exist !"
+            logerror "❌ topic $topic does not exist after $timeout seconds !"
           else
-            logwarn "❌ problem while getting number of messages: $nb_messages"
+            logerror "❌ problem while getting number of messages: $nb_messages"
           fi
           exit 1
         fi
 
-        if [ $nb_messages -ge $min_expected_messages ]
+        # with --partition or --from-timestamp, only the records they select count
+        nb_in_scope=$nb_messages
+        if [[ -n "$scope" ]] && [ $nb_messages -ge $min_expected_messages ]
+        then
+          nb_in_scope=$(get_scope_record_count)
+        fi
+
+        if [ $nb_in_scope -ge $min_expected_messages ]
         then
           break
         fi
 
-        current_time=$(date +%s)
-        elapsed_time=$((current_time - start_time))
-
         if [ $elapsed_time -ge $timeout ]
         then
-          logerror "❌ overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
+          if [[ -n "$scope" ]]
+          then
+            logerror "❌ overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_in_scope messages$scope ($nb_messages in the topic)"
+          else
+            logerror "❌ overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
+          fi
           exit 1
         fi
 
@@ -703,6 +753,9 @@ do
     log "📄 dumping topic content to $filename"
     # a full dump: no truncation, no log lines, same subjects and isolation level
     dump_args=(--topic "$topic" --max-messages -1 --max-characters 0 --isolation-level "$isolation_level")
+    [[ -n "$no_decode" ]] && dump_args+=(--no-decode)
+    [[ -n "$grep_string" ]] && dump_args+=(--grep "$grep_string")
+    [[ -n "$print_schema" ]] && dump_args+=(--print-schema)
     if [[ -n "$original_key_subject" ]]
     then
       dump_args+=(--key-subject "$original_key_subject")
@@ -823,6 +876,11 @@ do
     elif [ $max_messages -eq -1 ]
     then
       nb_records_to_consume=$nb_messages
+    elif [[ -n "$grep_string" ]]
+    then
+      # --grep searches every record: --max-messages only limits the matching records displayed
+      nb_records_to_consume=$nb_messages
+      display_limit=$max_messages
     else
       nb_records_to_consume=$max_messages
       display_limit=$max_messages
@@ -917,7 +975,10 @@ do
 
     if [ $nb_records_to_consume -eq 0 ]
     then
-      if [[ -n "$last" ]] || [[ -n "$from_timestamp" ]]
+      if [[ -n "$partition" ]] && [[ -z "$last" ]] && [[ -z "$from_timestamp" ]]
+      then
+        log "✨ no record in partition $partition of topic $topic from offset ${offset:-earliest}"
+      elif [[ -n "$last" ]] || [[ -n "$from_timestamp" ]]
       then
         log "✨ no record to display in topic $topic"
       else
@@ -996,12 +1057,13 @@ do
   fi
 
   rm -f "$tmp_dir/consume_counts" "$tmp_dir/consume_errors" "$tmp_dir/consumer_exit_code"
-  # stdout of the consumer to format_records, its stderr to filter_consumer_stderr
+  # stdout of the consumer to format_records, its stderr to filter_consumer_stderr ('|| rc=$?': a helper can leave
+  # set -e on, which would end the group before the exit code is saved)
   if [[ -n "$json" ]]
   then
-    { { run_consumers 2>&1 1>&3 3>&-; echo $? > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records >&4
+    { { rc=0; run_consumers 2>&1 1>&3 3>&- || rc=$?; echo $rc > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records >&4
   else
-    { { run_consumers 2>&1 1>&3 3>&-; echo $? > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records
+    { { rc=0; run_consumers 2>&1 1>&3 3>&- || rc=$?; echo $rc > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records
   fi
 
   consumer_exit_code=$(cat "$tmp_dir/consumer_exit_code" 2> /dev/null)

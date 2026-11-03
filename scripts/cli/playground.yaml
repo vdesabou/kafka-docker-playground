@@ -6219,7 +6219,7 @@ subcommands:
       description: |-
         Max number of messages to display (default is 100)
 
-        You can use -1 to display all messages
+        You can use -1 to display all messages. With --grep, every record is searched and this limits the matching records displayed.
 
         Default value: 100
     - names:
@@ -6239,16 +6239,14 @@ subcommands:
       description: |-
         Verify that topic content contains record which contains specified string
 
-        It is searched in the records as displayed (decoded when base64 encoded), and the command fails when no record contains it.
+        It is searched in every record of the topic, as displayed (decoded when base64 encoded), and the command fails when no record contains it (with --count, 0 is printed instead).
     - names:
       - "--timeout"
       argument: TIMEOUT
       description: |-
-        Max number of seconds to wait when --min-expected-messages is used.
+        Max number of seconds to wait when --min-expected-messages is used: for the topic to be created, then for the records.
 
         Default is 60 seconds
-
-        Default value: 60
     - names:
       - "--tail"
       argument: ''
@@ -6272,7 +6270,7 @@ subcommands:
       - "--max-characters"
       argument: MAX-CHARACTERS
       description: |-
-        Max characters per message to display (default is 3000, 0 for no limit)
+        Max characters per message to display, the whole line: timestamp, headers, key and value (default is 3000, 0 for no limit)
 
         Default value: 3000
     - names:
@@ -6280,7 +6278,8 @@ subcommands:
       - "-o"
       argument: ''
       description: "\U0001F516 Save full dump of topic to a file and open with text
-        editor set with playground config editor <editor> (default is code)\n\nConflicts
+        editor set with playground config editor <editor> (default is code)\n\n--grep,
+        --no-decode and --print-schema apply to the dump. Needs --topic.\n\nConflicts
         with: --max-characters, --tail, --min-expected-messages"
     - names:
       - "--isolation-level"

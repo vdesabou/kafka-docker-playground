@@ -8994,7 +8994,7 @@ commands:
         help: |-
           Max number of messages to display (default is 100)
 
-          You can use -1 to display all messages
+          You can use -1 to display all messages. With --grep, every record is searched and this limits the matching records displayed.
           
       - long: --min-expected-messages
         arg: min-expected-messages
@@ -9014,14 +9014,13 @@ commands:
         help: |-
           Verify that topic content contains record which contains specified string
 
-          It is searched in the records as displayed (decoded when base64 encoded), and the command fails when no record contains it.
+          It is searched in every record of the topic, as displayed (decoded when base64 encoded), and the command fails when no record contains it (with --count, 0 is printed instead).
       - long: --timeout
         arg: timeout
         validate: integer
         required: false
-        default: "60"
         help: |-
-          Max number of seconds to wait when --min-expected-messages is used.
+          Max number of seconds to wait when --min-expected-messages is used: for the topic to be created, then for the records.
 
           Default is 60 seconds
       - long: --tail
@@ -9058,12 +9057,14 @@ commands:
         required: false
         default: "3000"
         help: |-
-          Max characters per message to display (default is 3000, 0 for no limit)
+          Max characters per message to display, the whole line: timestamp, headers, key and value (default is 3000, 0 for no limit)
 
       - long: --open
         short: -o
         help: |- 
           🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)
+
+          --grep, --no-decode and --print-schema apply to the dump. Needs --topic.
         conflicts: [--max-characters, --tail, --min-expected-messages]
 
       - long: --isolation-level
