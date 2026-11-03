@@ -13,7 +13,13 @@ report in `<report>-files/`; the file names and line numbers of the report link 
 file in the editor of `PLAYGROUND_EDITOR` (`playground config editor`, VS Code by default): the input file itself, or a
 copy next to its page for a file extracted from an archive or a `.gz`.
 
-With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every distinct record to that file.
+With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every distinct record to that file, and
+the `@@PGFILE@@` line of each file ends with the **first and the last timestamped line of that file** (any level, not
+only the records): that is the period the logs cover, in `.summary.log_first_timestamp` / `.log_last_timestamp` /
+`.log_duration_seconds` of `--json`, in the 🕐 **Period covered** tile of the report and in its header. A window
+shorter than `SHORT_PERIOD_SECONDS` (10 min) turns the tile orange (`⚠️ short window`) and adds a line to the 🧭
+summary: the bundle may not even contain the incident. A records file written before that (no field 5 and 6) falls
+back to the span of the records.
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
 (task killed, with one line per distinct exception chain of the killed tasks, authentication, TLS, unknown magic byte,
 `OutOfMemoryError`…, each pointing at its earliest occurrence; the list is shared with the CFK analyzer, in
@@ -41,7 +47,7 @@ errors section of the `playground connector diagnose` report. `get-ci-result --l
 and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last
 lines of a failed CI script, `--link` for the issue and the job).
 
-For the terminal of `analyze logs`: `--text-summary` prints the bounded 🧭 summary (time range, per-connector counts,
+For the terminal of `analyze logs`: `--text-summary` prints the bounded 🧭 summary (time range, period covered, per-connector counts,
 known causes with their advice, root causes no known cause explains, configuration inventory and changes),
 `--show-config <name>` the configs of a connector / config class / client id, `--connector <name>` (repeatable,
 `--with-worker`) keeps only the records and configs of these connectors everywhere, and `--json-sections` picks the
@@ -58,7 +64,7 @@ Real logs of `connect/connect-cdc-xstream-oracle19-source`, CP 8.3.2, Oracle XSt
 
 | `--sample` | File | Content |
 | --- | --- | --- |
-| `connect_task_failure` | `samples/connect-oracle-xstream-task-failure.log` | 6 minutes of Connect worker log: a connector created with a wrong password (`ORA-01017`), one with an unknown outbound server, then a task failing after the outbound server was stopped with `DBMS_XSTREAM_ADM.STOP_OUTBOUND` |
+| `connect_task_failure` | `samples/connect-oracle-xstream-task-failure.log` | 5 minutes of Connect worker log (10:01:03 → 10:05:55): a connector created with a wrong password (`ORA-01017`), one with an unknown outbound server, then a task failing after the outbound server was stopped with `DBMS_XSTREAM_ADM.STOP_OUTBOUND` |
 | `support_bundle` | `samples/support-bundle.zip` | that log and the broker log of the same period (gzipped), as a customer would attach them: shows the archive extraction and that only files with findings are listed |
 
 Passwords are masked by Connect (`password=********`).

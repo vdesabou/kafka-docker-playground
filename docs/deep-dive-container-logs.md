@@ -204,6 +204,7 @@ After the digest of each file, a short **summary** gives what the HTML report sa
 
 ```text
 🧭 Summary: 6 occurrence(s) of 6 distinct record(s) in 1 file(s), 2026-10-14 10:03:58 → 2026-10-14 10:05:55
+   🕐 Period covered: 2026-10-14 10:01:03 → 10:05:55 (4 min 52 s) ⚠️ shorter than 10 min: the logs may not cover the incident
    🔌 by connector: cdc-xstream-oracle-source 1 · no connector context 5
 🧠 Known causes
    [HIGH] 🧨 A connector task was killed ×1 in connect-oracle-xstream-task-failure.log (first at line 5251, 2026-10-14 10:05:55)
@@ -240,7 +241,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 
 | Section | What it shows |
 | --- | --- |
-| verdict and tiles | files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
+| verdict and tiles | 🕐 **period covered**, files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
 | 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings) |
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records. **Drag over it to zoom on a range** (◀ ▶ to move the window, double-click or **All** to zoom out): the buckets are counted again for the window, so zooming on a burst shows it per minute, then per second |
 | 🔝 root causes (occurrences) | the 10 most frequent root causes of what is kept, as horizontal bars |
@@ -248,6 +249,15 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | 🗂️ files with findings | lines, distinct records and occurrences per level, one row per file |
 | 📄 one card per file | every distinct record, with its count, connector, first and last line and timestamp, and its exception chain; **📋 Show context** unfolds the raw lines around its first occurrence (2 before, the record with its full stack trace up to 30 lines, 2 after), with their line numbers (`▶` on the first line of the record), also in `.files[].records[].context` of `--json` |
 | ⚙️ configuration | the configs the components log when they start (`KafkaConfig values:`, `DistributedConfig`, `SchemaRegistryConfig`, the config of each connector and of its tasks with their `[connector|task-0]` context, `ProducerConfig` of a client app…, defaults included, the last one of each class / context / `client.id`, 50 per file), and the config files of the input (`.properties`, connector JSON: a connector config, `{"name", "config"}` or the output of `/connectors?expand=info`), grouped by config files, components, connector and clients, with a key / value filter, also in `.configuration` of `--json`. Sanitized like the records |
+
+🕐 The **Period covered** tile is the first question to ask of a bundle: *how much time do I actually have?* It is
+the first and the last timestamped line of the files scanned — every line, not only the records — with the duration
+it makes (`7 min 36 s`, `6 h 39 min`), the same in the header of the report next to the file name, in the 🧭 summary
+of the terminal, and in `.summary.log_first_timestamp` / `.log_last_timestamp` / `.log_duration_seconds` of `--json`.
+When the findings span less than that, the tile says so (`ERROR/FATAL over 1 h of it`). **Under 10 minutes the tile
+turns orange** (`⚠️ short window`): a bundle that short rarely contains what led to the incident, and the answer is
+usually to ask for an export that starts well before it rather than to read it. `unknown` means no line of the files
+starts with a date (a log without timestamps, `docker logs` without `--timestamps`).
 
 🎚️ **Everything below the sticky filter bar is one view of the same records**: the two charts, the root causes, the
 files with findings and the record cards are all counted again whenever you change a filter. The verdict and the tiles

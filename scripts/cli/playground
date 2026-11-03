@@ -27357,7 +27357,7 @@ function install_confluent_plugin() {
 # plus the records without connector context with PG_LOG_DIGEST_WITH_WORKER; the records file keeps them all.
 # When PG_LOG_DIGEST_RECORDS_FILE is set, every distinct record (not only the first $1) is also appended to that
 # file for the HTML reports (tools/log-analyzer/log_report.py), labelled with PG_LOG_DIGEST_LABEL:
-#   @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences
+#   @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences<tab>first timestamp of the file<tab>last one
 #   @@PGREC@@<tab>level<tab>count<tab>first line<tab>last line<tab>first timestamp<tab>last timestamp
 #   <the record as printed in the digest, on one or more lines>
 #   @@PGTS@@<tab>timestamps of the occurrences, space separated (1000 per record at most)
@@ -27570,6 +27570,15 @@ function summarize_log_errors() {
         prev2 = prev1
         prev1 = cur
         cur = $0
+        # period the file itself covers (first and last timestamped line, whatever its level): the reports say how
+        # long the logs span, not only the records. Only for the reports (one more match per line)
+        if (records_file != "") {
+            line_ts = timestamp_of($0)
+            if (line_ts != "") {
+                if (log_first_ts == "" || line_ts < log_first_ts) log_first_ts = line_ts
+                if (line_ts > log_last_ts) log_last_ts = line_ts
+            }
+        }
         # most lines of a big log have no level or exception word and do not continue a record: one regex (a
         # single pass over the line) sets them aside, as the start of a level-less record, without the work below
         if ($0 !~ /ERROR|FATAL|SEVERE|PANIC|WARN|level|Exception|Error|Throwable|[EFW][0-9][0-9][0-9][0-9] [0-9][0-9]:|^[ \t]|^Caused by:|\033|Config values:/) {
@@ -27602,7 +27611,7 @@ function summarize_log_errors() {
     END {
         flush()
         if (records_file != "") {
-            printf "@@PGFILE@@\t%s\t%d\t%d\t%d\n", label, NR, nkeys, total_occurrences >> records_file
+            printf "@@PGFILE@@\t%s\t%d\t%d\t%d\t%s\t%s\n", label, NR, nkeys, total_occurrences, log_first_ts, log_last_ts >> records_file
             for (i = 1; i <= nkeys; i++) {
                 k = order[i]
                 printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], text[k], substr(timestamps[k], 2) >> records_file

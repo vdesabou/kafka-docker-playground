@@ -5,7 +5,7 @@ HTML report and JSON of the ERROR/FATAL (and WARN) digest of log files, written 
 The records come from summarize_log_errors (scripts/cli/src/lib/cli_function.sh), the same parser as
 playground container logs --errors, run with PG_LOG_DIGEST_RECORDS_FILE set:
 
-  @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences
+  @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences<tab>first timestamp of the file<tab>last one
   @@PGREC@@<tab>level<tab>count<tab>first line<tab>last line<tab>first timestamp<tab>last timestamp
   <the record as printed in the digest, on one or more lines>
   @@PGTS@@<tab>timestamps of the occurrences, space separated
@@ -65,8 +65,12 @@ def parse_records(path: str) -> List[dict]:
             line = raw.rstrip("\n")
             if line.startswith("@@PGFILE@@\t"):
                 parts = line.split("\t")
+                # the period the file covers (first and last timestamped line) is only in the records files
+                # written by a recent summarize_log_errors: an older one has no field 5 and 6
+                parts += [""] * (7 - len(parts))
                 current = {"label": parts[1], "lines": int(parts[2]), "distinct": int(parts[3]),
-                           "occurrences": int(parts[4]), "records": [], "configs": []}
+                           "occurrences": int(parts[4]), "log_first_ts": parts[5] or None,
+                           "log_last_ts": parts[6] or None, "records": [], "configs": []}
                 files.append(current)
                 rec = done = None
             elif line.startswith("@@PGREC@@\t") and current is not None:
@@ -317,6 +321,46 @@ def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int 
     return res
 
 
+# a period shorter than this is flagged in the report: the logs were cut too narrow to hold the context of an
+# incident (a customer bundle of 3 minutes, a log rotated right after the error)
+SHORT_PERIOD_SECONDS = 10 * 60
+
+
+def duration_seconds(first: Optional[str], last: Optional[str]) -> Optional[int]:
+    """Seconds between two "2026-10-22T14:51:20" timestamps, None when one is missing or unparsable."""
+    if not first or not last:
+        return None
+    try:
+        a = datetime.strptime(first[:19], "%Y-%m-%dT%H:%M:%S")
+        b = datetime.strptime(last[:19], "%Y-%m-%dT%H:%M:%S")
+    except ValueError:
+        return None
+    return max(0, int((b - a).total_seconds()))
+
+
+def human_duration(seconds: Optional[int]) -> str:
+    """59 s, 12 min 30 s, 6 h 28 min, 3 d 4 h"""
+    if seconds is None:
+        return "unknown"
+    if seconds < 60:
+        return f"{seconds} s"
+    if seconds < 3600:
+        return f"{seconds // 60} min" + (f" {seconds % 60} s" if seconds % 60 else "")
+    if seconds < 86400:
+        return f"{seconds // 3600} h" + (f" {seconds % 3600 // 60} min" if seconds % 3600 // 60 else "")
+    return f"{seconds // 86400} d" + (f" {seconds % 86400 // 3600} h" if seconds % 86400 // 3600 else "")
+
+
+def period_text(first: Optional[str], last: Optional[str]) -> str:
+    """"2026-10-22 14:51:20 → 15:40:32", the date of the end repeated only when it is another day"""
+    if not first:
+        return "-"
+    out = first.replace("T", " ")
+    if last and last != first:
+        out += " → " + (last[11:] if last[:10] == first[:10] else last.replace("T", " "))
+    return out
+
+
 def summary(files: List[dict]) -> dict:
     by_level = {"FATAL": 0, "ERROR": 0, "WARN": 0}
     by_connector: Dict[str, int] = {}
@@ -329,11 +373,26 @@ def summary(files: List[dict]) -> dict:
             if ts:
                 first = ts if first is None or ts < first else first
                 last = ts if last is None or ts > last else last
+    # period the logs themselves cover: the first and the last timestamped line of every file scanned, findings or
+    # not (a short window is a bundle that may not even contain the incident)
+    log_first, log_last = None, None
+    for f in files:
+        for ts in (f.get("log_first_ts"), f.get("log_last_ts")):
+            if not ts:
+                continue
+            log_first = ts if log_first is None or ts < log_first else log_first
+            log_last = ts if log_last is None or ts > log_last else log_last
+    # a records file written before the period was recorded: fall back to the span of the records
+    if log_first is None:
+        log_first, log_last = first, last
     return {"files_scanned": len(files), "files_with_findings": sum(1 for f in files if f["records"]),
             "lines": sum(f["lines"] for f in files), "distinct": sum(f["distinct"] for f in files),
             "occurrences": sum(f["occurrences"] for f in files), "by_level": by_level,
             "by_connector": dict(sorted(by_connector.items(), key=lambda kv: (-kv[1], kv[0]))),
-            "first_timestamp": first, "last_timestamp": last}
+            "first_timestamp": first, "last_timestamp": last,
+            "log_first_timestamp": log_first, "log_last_timestamp": log_last,
+            "log_duration_seconds": duration_seconds(log_first, log_last),
+            "findings_duration_seconds": duration_seconds(first, last)}
 
 
 def shorten_labels(files: List[dict]) -> None:
@@ -456,6 +515,12 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     scope = f" (--connector {' '.join(connectors)})" if connectors else ""
     out.append(f"🧭 Summary{scope}: {s['occurrences']} occurrence(s) of {s['distinct']} distinct record(s) in "
                f"{s['files_with_findings']} file(s){span}")
+    # what the logs themselves cover, and whether that window is wide enough to hold the context of an incident
+    if s["log_duration_seconds"] is not None:
+        covered = f"   🕐 Period covered: {period_text(s['log_first_timestamp'], s['log_last_timestamp'])} ({human_duration(s['log_duration_seconds'])})"
+        if s["log_duration_seconds"] < SHORT_PERIOD_SECONDS:
+            covered += f" ⚠️ shorter than {human_duration(SHORT_PERIOD_SECONDS)}: the logs may not cover the incident"
+        out.append(covered)
     if s["by_connector"]:
         without = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
         names = list(s["by_connector"].items())
@@ -1025,12 +1090,24 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     s = res["summary"]
     Unit = unit[0].upper() + unit[1:]
     errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
-    span = "-"
-    if s["first_timestamp"]:
-        span = s["first_timestamp"].replace("T", " ")
-        if s["last_timestamp"] and s["last_timestamp"] != s["first_timestamp"]:
-            span += " → " + s["last_timestamp"].replace("T", " ")
+    # the period the logs cover (first and last timestamped line of the files, not only the records), the duration
+    # it makes, and a warning when that window is too short to hold the context of an incident
+    covered, covered_seconds = period_text(s["log_first_timestamp"], s["log_last_timestamp"]), s["log_duration_seconds"]
+    short_window = unit == "file" and covered_seconds is not None and covered_seconds < SHORT_PERIOD_SECONDS
+    span = covered if covered_seconds is None else f"{covered} ({human_duration(covered_seconds)})"
+    detail = [covered]
+    hover = (f"first and last timestamped line of the {unit}s scanned: {covered}" if covered_seconds is not None
+             else f"no line of the {unit}s scanned starts with a date: how long they cover is unknown")
+    if short_window:
+        detail.append("⚠️ short window")
+        hover += (f" — shorter than {human_duration(SHORT_PERIOD_SECONDS)}, the logs may not cover the incident itself: "
+                  f"ask for an export that starts well before it")
+    elif s["findings_duration_seconds"] is not None and covered_seconds and s["findings_duration_seconds"] < covered_seconds:
+        detail.append(f"{levels} over {human_duration(s['findings_duration_seconds'])} of it")
+        hover += f" — the {levels} records span {period_text(s['first_timestamp'], s['last_timestamp'])}"
     kpis = "".join([
+        kpi("🕐 Period covered", human_duration(covered_seconds), " · ".join(detail) if covered_seconds is not None
+            else "no timestamped line in the logs", "warn" if short_window else "", hover),
         kpi(f"🗂️ {Unit}s scanned", s["files_scanned"], f"{s['lines']} lines" + (f", {skipped} binary skipped" if unit == "file" else "")),
         kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok"),
         kpi("🧬 Distinct records", s["distinct"], "after de-duplication"),

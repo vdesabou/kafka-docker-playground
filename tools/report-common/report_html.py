@@ -260,8 +260,10 @@ def e(s) -> str:
     return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;"))
 
 
-def kpi(label, val, unit, cls="") -> str:
-    return (f'<div class="kpi-card {cls}"><div class="kpi-label">{e(label)}</div>'
+def kpi(label, val, unit, cls="", title="") -> str:
+    """title: what the tile means in full, on hover, when the unit line has to stay short"""
+    return (f'<div class="kpi-card {cls}"' + (f' title="{e(title)}"' if title else "")
+            + f'><div class="kpi-label">{e(label)}</div>'
             f'<div class="kpi-value">{e(val)}</div><div class="kpi-unit">{e(unit)}</div></div>')
 
 
