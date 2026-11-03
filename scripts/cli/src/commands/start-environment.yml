@@ -1,0 +1,107 @@
+name: start-environment
+private: true
+group: Run
+help: |-
+  🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:
+
+  - ccloud
+  - 2way-ssl
+  - cfk
+  - cfk-rbac
+  - kerberos
+  - ldap-authorizer-sasl-plain
+  - ldap-sasl-plain
+  - mdc-kerberos
+  - mdc-plaintext
+  - mdc-sasl-plain
+  - plaintext
+  - rbac-sasl-plain
+  - sasl-plain
+  - sasl-scram
+  - sasl-ssl
+  - ssl_kerberos
+
+  Note: when running an example with <playground run>, it is already automatically done
+
+  The environment brings up the Kafka cluster and its companions with the
+  right security configuration; the example then layers its own containers
+  on top with --docker-compose-override-file. Optional components
+  (control-center, ksqldb, flink, rest-proxy, grafana, kcat, conduktor) are
+  enabled with the --enable-* flags of 'playground run'.
+
+  Any running environment is stopped first, and the full docker compose
+  command is saved in playground.ini so that 'playground stop',
+  'playground container recreate' and 'playground re-run' can replay it.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication
+  🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac
+flags:
+  - &environment
+    long: --environment
+    required: false
+    default: "plaintext"
+    arg: environment
+    allowed: [ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+    help: |-
+      🔐 The environment to start . 
+      
+      - ccloud
+      - 2way-ssl
+      - cfk
+      - cfk-rbac
+      - kerberos
+      - ldap-authorizer-sasl-plain
+      - ldap-sasl-plain
+      - mdc-kerberos
+      - mdc-plaintext
+      - mdc-sasl-plain
+      - plaintext
+      - rbac-sasl-plain
+      - sasl-plain
+      - sasl-scram
+      - sasl-ssl
+      - ssl_kerberos
+
+      Default is plaintext
+  - long: --wait-for-control-center
+    help: |- 
+      😴 Wait for control-center instead of connect
+  - long: --service
+    arg: service
+    private: true
+    help: |-
+      service to start
+
+      Example: --service "oracle" --service "connect"
+    required: false
+    repeatable: true
+  - long: --no-stop
+    private: true
+    help: |- 
+      Do not stop the environment before starting it
+  - long: --docker-compose-override-file
+    short: -f
+    validate: file_exists
+    arg: docker-compose-override-file
+    help: |-
+      🔖 docker-compose override file
+
+      ❕ It must be absolute full path
+  - long: --rbac-role-bindings-file
+    validate: file_exists
+    arg: rbac-role-bindings-file
+    help: |-
+      🔐 rbac-sasl-plain only: bash file sourced right after the default role bindings are created, before connect, schema-registry, ksqldb and control-center start.
+
+      Use it for role bindings or ACLs a component needs at startup, with 'playground rbac' commands, for example:
+
+      playground rbac role-binding create --principal User:schemaregistryUser --role ResourceOwner --resource Topic:_schemas_acl
+
+      🎓 Tip: anything not needed at startup can simply be run after 'playground start-environment'.
+
+      ❕ It must be absolute full path (also settable with RBAC_ROLE_BINDINGS_FILE environment variable)
+examples:
+- playground start-environment
+- playground start-environment --environment rbac-sasl-plain
+- playground start-environment --environment rbac-sasl-plain --rbac-role-bindings-file "\$PWD/role-bindings.sh"

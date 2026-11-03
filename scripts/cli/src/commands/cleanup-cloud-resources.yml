@@ -1,0 +1,7 @@
+name: cleanup-cloud-resources
+private: true
+help: |-
+  🧹 Deprecated: use 'playground cloud-resources cleanup' (same flags)
+catch_all:
+  label: flags
+  help: flags of 'playground cloud-resources cleanup'

@@ -1,0 +1,12 @@
+name: get-tag-list
+help: Return some completion for confluent platform tag
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur
+flags:
+- long: --connect-only
+  required: false
+  help: |-
+    connect only

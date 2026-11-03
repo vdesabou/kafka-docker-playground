@@ -1,0 +1,5 @@
+name: help
+help: Show help about a command
+args:
+- name: command
+  help: 🆘 Help command

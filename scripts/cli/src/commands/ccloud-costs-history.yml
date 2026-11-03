@@ -1,0 +1,7 @@
+name: ccloud-costs-history
+private: true
+help: |-
+  👛 Deprecated: use 'playground cloud-resources ccloud costs-history' (same flags)
+catch_all:
+  label: flags
+  help: flags of 'playground cloud-resources ccloud costs-history'

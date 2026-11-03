@@ -76,7 +76,7 @@ grep -rn "$OLD" .github/ scripts/utils.sh CLAUDE.md docs/how-to-use.md other/dee
 
 (`sed -i ''` is the macOS form; on Linux use `sed -i`.)
 
-**Leave alone** the other `$OLD` hits of `grep -rn "$OLD" docs/ scripts/cli/src/bashly.yml tools/`: they are
+**Leave alone** the other `$OLD` hits of `grep -rn "$OLD" docs/ scripts/cli/src/ tools/`: they are
 captured outputs (`confluentinc/cp-server:$OLD` in `playground status`, `8.3.2-ce` plugin versions, analyzer
 samples recorded on that version, `--cp-version 7.9.0 --cp-version $OLD` examples). They stay true as written.
 

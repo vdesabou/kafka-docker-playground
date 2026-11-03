@@ -1,0 +1,3 @@
+name: generate-tag-list
+help: generate the confluent platform tag list
+private: true

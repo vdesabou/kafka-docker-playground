@@ -1,0 +1,11 @@
+name: get-specific-file-extension
+help: Return some completion for extension provided
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur
+flags:
+- long: --extension
+  required: false
+  arg: extension

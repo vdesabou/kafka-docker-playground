@@ -1,0 +1,14 @@
+long: --container
+short: -c
+alias: [--pod, -p]
+required: false
+default: "connect"
+arg: container
+repeatable: true
+completions:
+  dynamic:
+  - playground get-container-list
+help: |-
+  🐳 container name (or pod name when cfk environment is used)
+
+  🎓 Tip: you can pass multiple containers by specifying --container multiple times

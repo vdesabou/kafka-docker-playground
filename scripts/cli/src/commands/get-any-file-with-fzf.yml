@@ -1,0 +1,7 @@
+name: get-any-file-with-fzf
+help: Return some completion for any files
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

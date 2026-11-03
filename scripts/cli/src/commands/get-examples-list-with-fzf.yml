@@ -1,0 +1,32 @@
+name: get-examples-list-with-fzf
+help: Return some completion for examples list
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur
+flags:
+- long: --without-repro
+  required: false
+- long: --sink-only
+  required: false
+- long: --ccloud-only
+  required: false
+- long: --connector-only
+  required: false
+- long: --repro-only
+  required: false
+- long: --environment-only
+  required: false
+- long: --fully-managed-connector-only
+  required: false
+- long: --ksql-only
+  required: false
+- long: --schema-registry-only
+  required: false
+- long: --rest-proxy-only
+  required: false
+- long: --academy-only
+  required: false
+- long: --other-playgrounds-only
+  required: false

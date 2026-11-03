@@ -1,0 +1,900 @@
+name: connector-plugin
+expose: always
+group: Connector-Plugin
+help: |-
+  🔌 Connector-plugin commands
+
+  Questions about connector plugins on Confluent Hub, answered without a
+  running environment:
+
+    info                  one page: license, versions behind, examples and CI
+    versions              every released version of a plugin
+    changelog             what changed between two versions (release notes)
+    display-last-updated  what was published recently, by vendor
+    search-jar            which jars ship in it, and which class is where
+    dependencies          bundled libraries, and their changes between versions
+    cve-scan              known CVEs in its jars, fixed or not by a version
+    fm-versions           fully managed: connector version per cc-connect image
+    config-key            what a config key does, its default, since when, who sets it
+    config-diff           config keys added, removed, changed by an upgrade
+    sourcecode            the source at a version, commits and files between two
+
+  🎓 Tip: search-jar answers "is this class really in the plugin, and with
+  which signature", which is the question behind most NoSuchMethodError and
+  ClassNotFoundException reports; with --with-worker, also "does Connect
+  load the worker's copy instead".
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin
+  🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version
+commands:
+- name: search-jar
+  help: |-
+    ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/
+
+    Downloads the plugin and lists the jars it ships. With --class it also
+    finds which jar contains that class and prints its method signatures
+    with javap.
+
+    That answers the two questions a NoClassDefFoundError or a
+    NoSuchMethodError raises: is the class actually shipped, and does the
+    bundled version have the signature the code is calling. Run it again
+    with another --connector-tag to see when a dependency changed.
+
+    With --with-worker, the classes of the worker classpath (Kafka, Connect,
+    Confluent libraries of the connect image) are compared with the plugin:
+    a class of the plugin that Connect always loads from the worker
+    (org.apache.kafka.*, org.slf4j.*, java*…: the plugin isolation rules of
+    that worker) is flagged, its copy in the plugin is ignored. So is a
+    class on both sides in a package that the worker config hands to the
+    Kafka clients of the tasks (io.confluent.telemetry.* of metric.reporters,
+    interceptors, RBAC login handlers): the client mixes both copies, "class
+    X is not an instance of Y" / ClassCastException.
+
+    The jars are kept in /tmp/connector-plugin-jars, one folder per plugin
+    version, and reused on the next call (--force-refresh).
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
+  environment_variables:
+  - name: PG_JAVAP_IMAGE
+    help: "☕ JDK image used for javap when there is no local JDK (default eclipse-temurin:21-jdk)"
+  flags:
+  - long: --connector-plugin
+    short: -c
+    required: false
+    arg: connector-plugin
+    completions:
+      dynamic:
+      - playground get-connector-plugin "$completion_current" "onprem"
+    help: |-
+      🔌 Connector plugin name (or --connector-zip)
+
+      owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+      or a fully managed type (S3_SINK)
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - import: src/flags/connector-tag.yml
+  - import: src/flags/connector-zip.yml
+  - long: --class
+    arg: class
+    required: false
+    help: |- 
+      ☕ Java class to search for in all jars
+
+      A simple name (WebIdentityTokenCredentialsProvider) or a fully qualified
+      name finds the classes with exactly that name; when there is none, the
+      classes containing it (case insensitive) are listed. Method signatures
+      (javap) are shown for 5 classes at most.
+  - long: --with-worker
+    required: false
+    help: |-
+      🧱 Also look at the worker classpath of the connect image
+
+      Flags the classes of the plugin that Connect loads from the worker
+      instead (their copy in the plugin is ignored), and the ones the worker
+      config puts in the clients of the tasks (💥: metric.reporters,
+      interceptors…, two copies mixed), and with --class shows the worker's
+      copy of the class, with its signatures. The image is the one of
+      the running connect container, else the default one (--tag of the run).
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON
+  - import: src/flags/force-refresh.yml
+  examples: |
+    playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
+    playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --class io.confluent.connect.jdbc.dialect.PostgreSqlDatabaseDialect
+    playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-hdfs --with-worker
+    playground connector-plugin search-jar --connector-zip /path/to/customer-plugin.zip --class Producer --with-worker
+    playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-s3 --json
+  x_example_outputs:
+  - command: playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
+    output: |-
+      17:23:33 ℹ️ 🔌 Downloading connector plugin confluentinc/kafka-connect-s3:12.1.13
+      17:23:49 ℹ️ 🤎 158 jar(s), 41250 classes in /tmp/connector-plugin-jars/confluentinc-kafka-connect-s3-12.1.13/confluentinc-kafka-connect-s3-12.1.13/lib
+      accessors-smart-2.4.9.jar
+      aircompressor-2.0.3.jar
+      ...
+      17:23:51 ℹ️ 🔎 1 class(es) named WebIdentityTokenCredentialsProvider in the jars of confluentinc/kafka-connect-s3:12.1.13
+         👉 software.amazon.awssdk.auth.credentials.WebIdentityTokenCredentialsProvider in auth-2.28.23.jar
+
+- name: dependencies
+  alias: deps
+  help: |-
+    📚 Libraries bundled in a connector plugin, and what changed between two versions
+
+    "Which jackson / netty / aws-sdk version ships in 10.7.4, and which
+    plugin version bumped it?", often after a CVE scanner flagged a jar.
+
+    Libraries are read from the META-INF/maven/**/pom.properties of each jar
+    (the libraries shaded inside a fat jar are listed too, "inside <jar>"),
+    or from the jar file name. Same download and cache as search-jar
+    (/tmp/connector-plugin-jars).
+
+    One --connector-tag (default latest) or --connector-zip: the list.
+    Two of them (or a zip and a version): upgraded ⬆️, downgraded ⬇️,
+    added ➕ and removed ➖ libraries.
+
+    --find-first <artifact>:<version> finds the first version of the plugin
+    that ships at least that version of the library, with a binary search
+    over the versions of Confluent Hub (each probed version is downloaded).
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
+  flags:
+  - long: --connector-plugin
+    short: -c
+    required: false
+    arg: connector-plugin
+    completions:
+      dynamic:
+      - playground get-connector-plugin "$completion_current" "onprem"
+    help: |-
+      🔌 Connector plugin name (or --connector-zip)
+
+      owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+      or a fully managed type (S3_SINK)
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - long: --connector-tag
+    arg: connector_tag
+    repeatable: true
+    required: false
+    help: |-
+      🔗 Connector version, default is the latest on Confluent Hub
+
+      Set it twice to compare two versions. With --find-first, the version to start the search from.
+  - long: --connector-zip
+    arg: connector_zip
+    required: false
+    validate: file_exists_with_trick
+    completions:
+      dynamic:
+      - playground get-zip-or-jar-with-fzf --type zip "$completion_current"
+    help: |-
+      🤐 Connector zip: its libraries, or compared with --connector-tag
+  - long: --grep
+    arg: grep
+    required: false
+    validate: not_empty
+    help: |-
+      🔎 Only the libraries matching this regular expression (group:artifact or jar name, case insensitive)
+
+      Example: --grep "jackson|netty"
+  - long: --find-first
+    arg: artifact_version
+    required: false
+    validate: not_empty
+    help: |-
+      🎯 <artifact>:<version>: first plugin version shipping at least that version of the library
+
+      Example: --find-first jackson-databind:2.18.0 (the artifactId, as in the list)
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON
+  - import: src/flags/force-refresh.yml
+  examples: |
+    playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --grep "jackson|netty"
+    playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-s3 --connector-tag 10.5.0 --connector-tag 12.1.15
+    playground connector-plugin dependencies --connector-plugin confluentinc/kafka-connect-jdbc --find-first postgresql:42.7.0
+    playground connector-plugin deps --connector-zip /path/to/customer-plugin.zip --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.9.9
+
+- name: cve-scan
+  help: |-
+    🛡️ Known vulnerabilities (CVE) of the jars of a connector plugin version
+
+    "The customer's scanner flags CVE-… in our connector: is it real, and
+    which version fixes it?". The jars of the version (same download and
+    cache as search-jar) are scanned with grype in Docker; with
+    --compare-with, the other version too: fixed ✅, still there ⚠️, new 🆕.
+    For Confluent plugins, the fixed CVE ids are looked up in the release
+    notes between the two versions (📜).
+
+    ⚠️ What a scanner sees in the jars, not an official Confluent statement:
+    a vulnerable library can be unused, or its vulnerable code unreachable.
+
+    The first scan downloads the vulnerability database of grype (a minute
+    or two), kept in the docker volume kdp-grype-db; a scan is kept one day.
+    An HTML report is written in --output-dir.
+  environment_variables:
+  - name: PG_CVE_SCANNER_IMAGE
+    help: "🛡️ grype image used for the scan (default anchore/grype:latest)"
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
+  filters:
+  - docker_running
+  flags:
+  - long: --connector-plugin
+    short: -c
+    required: false
+    arg: connector-plugin
+    completions:
+      dynamic:
+      - playground get-connector-plugin "$completion_current" "onprem"
+    help: |-
+      🔌 Connector plugin name (or --connector-zip)
+
+      owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+      or a fully managed type (S3_SINK)
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - import: src/flags/connector-tag.yml
+  - import: src/flags/connector-zip.yml
+  - long: --compare-with
+    arg: version
+    required: false
+    validate: not_empty
+    help: |-
+      🔢 Another version of the plugin (Confluent Hub): which vulnerabilities it fixes, keeps or adds
+  - long: --severity
+    arg: severity
+    required: false
+    allowed: [critical, high, medium, low]
+    help: |-
+      🚦 Only this severity or worse
+  - long: --output-dir
+    arg: output_dir
+    required: false
+    help: |-
+      📂 Output directory for the HTML report (default: /tmp/playground-cve-scan)
+  - long: --no-open
+    required: false
+    help: |-
+      🚫 Do not open the HTML report in the browser
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON (no HTML report)
+  - import: src/flags/force-refresh.yml
+  examples: |
+    playground connector-plugin cve-scan --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.7.4
+    playground connector-plugin cve-scan --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.7.4 --compare-with 10.9.9 --severity high
+    playground connector-plugin cve-scan --connector-zip /path/to/customer-plugin.zip --json
+
+- name: fm-versions
+  help: |-
+    ☁️ Fully managed connector: the connector version shipped by each cc-connect image (Confluent employees)
+
+    Fully managed connectors have no Confluent Hub versions: each cc-connect
+    image version (a tag of the private confluentinc/cc-docker-connect
+    repository) pins one version of every connector in
+    cc-connect/cache-versions.env.
+
+    Without option: the last --last cc-connect versions, grouped by connector
+    version, newest first; --with-log adds the commits between two connector
+    versions (playground connector-plugin sourcecode --log).
+    --cc-connect-version: the connector version of one image.
+    --find-first: the first cc-connect version shipping a connector version
+    (binary search), to answer "is the fix of 3.2.1 in an image yet?".
+
+    Needs gh logged in (or GH_TOKEN), the Confluent VPN, and the employee
+    version of the plugin list (playground generate-connector-plugin-list
+    with AWS credentials). The tags are listed once a day (about 30 s).
+    An image version is not a deployment: the cc-connect version of a
+    cluster is in its connect logs.
+  environment_variables:
+  - name: GH_TOKEN
+    help: "🔑 GitHub token, when gh is not logged in (cc-docker-connect is private)"
+  flags:
+  - long: --connector-plugin
+    short: -c
+    required: true
+    arg: connector-plugin
+    completions:
+      dynamic:
+      - playground get-connector-plugin "$completion_current" "all"
+    help: |-
+      ☁️ Fully managed connector, for example confluentinc/SalesforceBulkApiV2Sink
+  - long: --last
+    arg: last
+    required: false
+    validate: integer
+    conflicts: [--cc-connect-version, --find-first]
+    help: |-
+      🆕 Number of last cc-connect versions to look at (default 10)
+  - long: --cc-connect-version
+    arg: cc_connect_version
+    required: false
+    validate: not_empty
+    conflicts: [--last, --find-first, --with-log]
+    help: |-
+      🏷️ Only this cc-connect version: the connector version it ships
+  - long: --find-first
+    arg: connector_version
+    required: false
+    validate: not_empty
+    conflicts: [--last, --cc-connect-version, --with-log]
+    help: |-
+      🎯 First cc-connect version shipping at least this connector version (numeric part compared, 3.2.1)
+  - long: --with-log
+    required: false
+    conflicts: [--cc-connect-version, --find-first, --json]
+    help: |-
+      📜 Also the commits between two consecutive connector versions
+  - long: --json
+    required: false
+    conflicts: [--with-log]
+    help: |-
+      🤖 Print the result as JSON
+  - import: src/flags/force-refresh.yml
+  examples: |
+    playground connector-plugin fm-versions --connector-plugin confluentinc/SalesforceBulkApiV2Sink
+    playground connector-plugin fm-versions --connector-plugin confluentinc/SalesforceBulkApiV2Sink --last 30 --with-log
+    playground connector-plugin fm-versions --connector-plugin confluentinc/S3_SINK --cc-connect-version 0.3780.0
+    playground connector-plugin fm-versions --connector-plugin confluentinc/SalesforceBulkApiV2Sink --find-first 3.2.0
+
+- name: versions
+  help: |-
+    💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/
+
+    What to feed to --connector-tag when you want to test another version,
+    and the way to find out which release you are behind on (--from).
+
+    The answer of Confluent Hub is cached for one day in
+    /tmp/version_<owner>_<name>.json and the age of each version is
+    computed on every call; use --force-refresh right after a release.
+  flags:
+  - &connector-plugin
+    long: --connector-plugin
+    short: -c
+    required: true
+    arg: connector-plugin
+    completions:
+      dynamic:
+      - playground get-connector-plugin "$completion_current" "onprem"
+    help: |-
+      🔌 Connector plugin name
+
+      owner/name, a connector class (io.confluent.connect.jdbc.JdbcSinkConnector: its plugin is found in the examples)
+      or a fully managed type (S3_SINK)
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - import: src/flags/force-refresh.yml
+  - long: --last
+    arg: last
+    required: false
+    validate: integer
+    conflicts: [--latest]
+    help: |-
+      🆕 Number of last versions to show
+  - long: --from
+    arg: from
+    required: false
+    validate: not_empty
+    conflicts: [--latest]
+    help: |-
+      📌 Version in use: show how many versions it is behind, and only the newer ones
+
+      Combine with --with-changelog to read what changed since, or use playground connector-plugin changelog --from.
+  - long: --latest
+    required: false
+    conflicts: [--last, --from, --with-changelog, --json]
+    help: |-
+      🔝 Only print the latest version number, nothing else
+
+      🎓 Tip: use it in scripts and from AI agents, the output is just the version (for example 10.9.9)
+  - long: --with-changelog
+    required: false
+    conflicts: [--latest]
+    help: |-
+      📜 Show the release notes of each version under it
+
+      From the changelog feeds of docs.confluent.io, like playground connector-plugin changelog: Confluent self-managed plugins only.
+  - long: --json
+    required: false
+    conflicts: [--latest]
+    help: |-
+      🤖 Print the result as JSON
+
+      latest, versions (version, release_date, days_ago, and changes with --with-changelog), documentation_url, versions_behind with --from.
+  examples: |
+    playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-s3
+    playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-jdbc --last 3 --with-changelog
+    playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4
+    playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-jdbc --latest
+    playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-jdbc --last 3 --json
+  x_example_outputs:
+  - command: playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-http --last 3
+    output: |-
+      17:23:19 ℹ️ 💯 Listing last 3 versions for connector plugin confluentinc/kafka-connect-http
+      🔢 v1.7.12 - 📅 release date: 2026-01-29 (256 days ago)
+      🔢 v1.7.13 - 📅 release date: 2026-05-05 (160 days ago)
+      🔢 v1.7.14 - 📅 release date: 2026-10-01 (11 days ago)
+      🌐 documentation: https://docs.confluent.io/kafka-connect-http/current/index.html
+
+- name: info
+  help: |-
+    🪪 One page on a connector plugin of Confluent Hub
+
+    What it is and whether the customer is up to date, in one call: owner,
+    license, component types, latest version and how many versions since
+    when, how far behind --from is, the requirements of the manifest when
+    the vendor gives them, the examples of this repository using it with
+    their CI status, the connector classes, the fully managed examples named
+    like it, and the documentation, changelog and source code links.
+
+    The fully managed part is a heuristic: the ccloud/fm-* folders whose name
+    has the words of the plugin name (there is no mapping between a
+    self-managed plugin and fully managed connector types).
+  flags:
+  - *connector-plugin
+  - long: --from
+    arg: from
+    required: false
+    validate: not_empty
+    help: |-
+      📌 Version in use: show how many versions it is behind the latest
+  - long: --max-examples
+    arg: max_examples
+    required: false
+    validate: integer
+    default: "10"
+    help: |-
+      🧪 Maximum number of examples to list (default 10)
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON
+  - import: src/flags/force-refresh.yml
+  examples: |
+    playground connector-plugin info --connector-plugin confluentinc/kafka-connect-jdbc
+    playground connector-plugin info --connector-plugin confluentinc/kafka-connect-s3 --from 10.5.0
+    playground connector-plugin info --connector-plugin debezium/debezium-connector-postgresql --json
+
+- name: changelog
+  help: |-
+    📜 Show the release notes of a connector plugin between two versions
+
+    Reads the changelog feeds of docs.confluent.io (one per minor line, for
+    example https://docs.confluent.io/kafka-connectors/s3-sink/12.1/changelog.xml)
+    and lists every change after --from, up to --to, newest first, with the
+    release date from Confluent Hub.
+
+    It answers "the customer runs 10.5.7: is their bug fixed in a later
+    version, and in which one?" in one call: pass the customer version as
+    --from and the symptom as --grep. The CC-xxxxx ids are the Jira tickets
+    of the fixes.
+
+    Without --from, only the minor line of --to is shown (for example every
+    12.1.x up to 12.1.15).
+
+    Only Confluent self-managed plugins documented under
+    docs.confluent.io/kafka-connectors have a feed. Fully managed connectors
+    and partner plugins don't. Answers are cached for one day in
+    /tmp/connector-plugin-changelog (--force-refresh).
+
+    🎓 Tip: then read the code of the fix with playground connector-plugin sourcecode --checkout-only
+  flags:
+  - *connector-plugin
+  - long: --from
+    arg: from
+    required: false
+    validate: not_empty
+    help: |-
+      🔢 Version in use: show the changes of the versions after it (excluded)
+  - long: --to
+    arg: to
+    required: false
+    validate: not_empty
+    help: |-
+      🔢 Show the changes up to this version (included)
+
+      Default is the latest version on Confluent Hub
+  - long: --grep
+    arg: grep
+    required: false
+    validate: not_empty
+    help: |-
+      🔎 Only show the changes matching this regular expression (case insensitive)
+
+      Example: --grep "CVE|offset|NullPointerException"
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON
+  - import: src/flags/force-refresh.yml
+  examples: |
+    playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-s3 --from 12.0.10
+    playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4 --grep "timestamp|CVE"
+    playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-http --to 1.7.10
+    playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-oracle-cdc --from 2.14.0 --json
+
+- name: display-last-updated
+  help: |-
+    🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/
+
+    A quick way to see what has just been released on the Hub, which often
+    explains why an example that passed yesterday behaves differently today.
+
+    One request to the Confluent Hub API lists every plugin with its latest
+    version, newest first. A plugin released twice in the period shows its
+    latest version only.
+  flags:
+  - long: --days
+    arg: days
+    required: false
+    default: "3"
+    validate: integer
+    help: |-
+      📅 Number of days to look back
+
+      Default is 3 days
+  - long: --vendor
+    required: false
+    validate: not_empty
+    arg: vendor
+    help: |-
+      🏢 Only display results for this vendor
+
+      A regular expression matched against owner/name, for example confluentinc or debezium
+  - long: --with-changelog
+    required: false
+    help: |-
+      📜 Show the release notes of each new version under it
+
+      From the changelog feeds of docs.confluent.io, like playground connector-plugin changelog: Confluent self-managed plugins only.
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON
+
+      connector_plugin, version, release_date, days_ago, documentation_url, and changes with --with-changelog.
+  examples: |
+    playground connector-plugin display-last-updated --days 7
+    playground connector-plugin display-last-updated --days 7 --vendor confluentinc --with-changelog
+    playground connector-plugin display-last-updated --days 30 --json
+- name: config-diff
+  help: |-
+    🔧 Configuration keys added, removed or changed between two versions of a plugin
+
+    "What changes in the configuration when the customer upgrades from 10.7.4
+    to the latest?": keys added ➕, removed ➖, default changed ✏️, type,
+    importance, valid values or required changed 🔀 (📝 documentation with
+    --with-docs), for every connector class of the plugin.
+
+    With --file (the customer's connector config: JSON, CFK, Strimzi,
+    terraform, properties), only the keys it sets are compared, and a key it
+    sets that the new version doesn't know is flagged ❗.
+
+    No environment needed: each version is downloaded (same cache as
+    search-jar), and its configuration read by loading the connector class
+    with the java of the connect image (a small reader compiled once in a JDK
+    container). The result is also kept in .connector_config, like
+    playground connector show-config-parameters: connector-plugin config-key
+    then lists those versions under "versions run locally".
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
+  flags:
+  - *connector-plugin
+  - long: --from
+    arg: from
+    required: true
+    validate: not_empty
+    help: |-
+      🔢 Version in use (the customer's)
+  - long: --to
+    arg: to
+    required: false
+    validate: not_empty
+    help: |-
+      🔢 Version to compare with, default is the latest on Confluent Hub
+  - long: --connector-class
+    arg: connector-class
+    required: false
+    validate: not_empty
+    help: |-
+      🔌 Only this connector class (default: every connector of the plugin, or the connector.class of --file)
+  - long: --file
+    arg: file
+    required: false
+    validate: file_exists_with_trick
+    help: |-
+      📄 Connector configuration of the customer: only the keys it sets are compared
+
+      JSON ({"name":…, "config":{…}} or the bare config), or a CFK / Strimzi / terraform / properties file.
+  - long: --with-docs
+    required: false
+    help: |-
+      📝 Also report the keys whose documentation changed
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON
+  examples: |
+    playground connector-plugin config-diff --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4
+    playground connector-plugin config-diff --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4 --to 10.9.9 --connector-class io.confluent.connect.jdbc.JdbcSinkConnector
+    playground connector-plugin config-diff --connector-plugin confluentinc/kafka-connect-s3 --from 10.5.0 --file /path/to/customer-connector.json
+
+- name: config-key
+  help: |-
+    🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it
+
+    Answers "what does this key do, what is its default, since which
+    version does it exist, and how is it used" in one call, without a
+    running environment.
+
+    📗 Documentation, type, default, importance and group come from the
+    configuration reference that CI records for every tested connector,
+    self-managed and fully managed (the config-<class>.txt files next to
+    the examples, refreshed with the latest connector version).
+
+    📅 The git history of that file tells when CI first saw the key, which
+    is when a new connector version introduced it. Versions you ran
+    locally (playground connector show-config-parameters cache) are also
+    checked one by one.
+
+    🧪 Examples that set the key are listed with the value they use.
+
+    Without --connector-class, every connector having the key is listed.
+    When the key is not found, similar keys are suggested.
+  flags:
+    - long: --key
+      short: -k
+      required: true
+      arg: key
+      validate: not_empty
+      help: |-
+        🔑 Exact configuration key, for example behavior.on.null.values
+    - long: --connector-class
+      short: -c
+      required: false
+      arg: connector-class
+      help: |-
+        🔌 Only this connector: part of its class name or fully managed type, case insensitive
+
+        Examples: S3SinkConnector, io.confluent.connect.jdbc.JdbcSinkConnector, S3_SINK, jdbc
+    - long: --max-examples
+      required: false
+      arg: max_examples
+      validate: integer
+      default: "10"
+      help: |-
+        🧪 Maximum number of examples to show (default 10)
+    - long: --since-version
+      required: false
+      help: |-
+        📅 Find the first version of the plugin having the key (self-managed connectors)
+
+        A binary search over the versions of Confluent Hub: each probed version is downloaded and its configuration
+        read without a worker, like playground connector-plugin config-diff (about 5 s per version, 6 or 7 versions).
+        Needs one connector (--connector-class). The plugin is found from the examples, or set with --connector-plugin.
+    - long: --connector-plugin
+      required: false
+      arg: connector-plugin
+      needs: [--since-version]
+      help: |-
+        🔌 Plugin of the connector for --since-version (owner/name), when the examples don't tell it
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON (connectors with their definition, versions run locally, values in examples)
+  examples:
+  - playground connector-plugin config-key --key behavior.on.null.values
+  - playground connector-plugin config-key --key behavior.on.null.values --connector-class S3SinkConnector
+  - playground connector-plugin config-key -k s3.part.size -c S3_SINK
+  - playground connector-plugin config-key -k errors.tolerance -c jdbc --max-examples 3
+  - playground connector-plugin config-key -k batch.max.rows -c io.confluent.connect.jdbc.JdbcSourceConnector --since-version
+  x_example_outputs:
+  - command: playground connector-plugin config-key --key flush.size
+    output: |-
+      17:22:28 ℹ️ 🔌 12 connector(s) have key flush.size, use --connector-class to see the details of one
+         defaults: null (x7), 1000 (x5)
+
+      CONNECTOR                                                                TYPE  DEFAULT  IMPORTANCE
+      AzureBlobSink                                                            INT   1000     HIGH
+      GcsSink                                                                  INT   1000     HIGH
+      io.confluent.connect.gcs.GcsSinkConnector                                INT   null     HIGH
+      io.confluent.connect.hdfs.HdfsSinkConnector                              INT   null     HIGH
+      io.confluent.connect.s3.S3SinkConnector                                  INT   null     HIGH
+      S3_SINK                                                                  INT   1000     HIGH
+      ...
+
+      17:22:30 ℹ️ 🧪 427 line(s) in examples set flush.size, values used (most frequent first):
+         "3"                            x275 e.g. connect/connect-gcp-gcs-source/gcs-source-backup-and-restore.sh:98
+         "1000"                         x63  e.g. ccloud/fm-azure-data-lake-storage-gen2-sink/fully-managed-azure-data-lake-storage-gen2-sink.sh:134
+         "1"                            x14  e.g. connect/connect-ftps-sink/ftps-sink.sh:55
+  footer: |-
+    Example output:
+      $ playground connector-plugin config-key --key flush.size
+      17:22:28 ℹ️ 🔌 12 connector(s) have key flush.size, use --connector-class to see the details of one
+         defaults: null (x7), 1000 (x5)
+
+      CONNECTOR                                                                TYPE  DEFAULT  IMPORTANCE
+      AzureBlobSink                                                            INT   1000     HIGH
+      GcsSink                                                                  INT   1000     HIGH
+      io.confluent.connect.gcs.GcsSinkConnector                                INT   null     HIGH
+      io.confluent.connect.hdfs.HdfsSinkConnector                              INT   null     HIGH
+      io.confluent.connect.s3.S3SinkConnector                                  INT   null     HIGH
+      S3_SINK                                                                  INT   1000     HIGH
+      ...
+
+      17:22:30 ℹ️ 🧪 427 line(s) in examples set flush.size, values used (most frequent first):
+         "3"                            x275 e.g. connect/connect-gcp-gcs-source/gcs-source-backup-and-restore.sh:98
+         "1000"                         x63  e.g. ccloud/fm-azure-data-lake-storage-gen2-sink/fully-managed-azure-data-lake-storage-gen2-sink.sh:134
+         "1"                            x14  e.g. connect/connect-ftps-sink/ftps-sink.sh:55
+
+- name: sourcecode
+  help: |
+    🧑‍💻 Open source code url in your browser (or in your editor when used with --open)
+
+    You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+    
+    🏗️ Compile code and generate zip file(s) by providing --compile flag
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version
+
+  environment_variables:
+  - name: GH_TOKEN
+    help: "🔑 GitHub token, needed for fully managed connectors (cc-docker-connect is private)"
+  - name: GITHUB_TOKEN
+    help: "🔑 GitHub token, used when GH_TOKEN is not set"
+  flags:
+    - long: --connector-plugin
+      short: -c
+      required: true
+      arg: connector-plugin
+      completions:
+        dynamic:
+        - playground get-connector-plugin "$completion_current" "all"
+      help: |-
+        🔌 Connector plugin name
+
+        owner/name, a connector class (its plugin is found in the examples) or a fully managed type (S3_SINK)
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+    - long: --only-show-url
+      help: |-
+        🌐 Only show url
+    - long: --connector-tag
+      arg: connector_tag
+      repeatable: true
+      required: false
+      help: |- 
+        🔗 Connector version to use
+
+        By default, for each connector, the latest available version on Confluent Hub is used (for Confluent employees, it will also get latest versions for fully managed connectors)
+
+        💌 Confluent employees only: for fully managed connectors, use the cc-connect image version for the pcc. You must have a Confluent Github token set with GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent VPN.
+
+        🎓 Tip: set to " " in order to select the version dynamically (for Confluent plugins, the preview shows the release notes of each version)
+
+        🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
+    - long: --compile
+      required: false
+      conflicts: [--checkout-only]
+      help: |-
+        🏗️ Checkout and compile code
+
+        You must have git installed.
+
+        💌 Confluent employees only: make sure to follow "Maven FAQ", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.
+    - long: --compile-jdk-version
+      required: false
+      needs: [--compile]
+      arg: compile_jdk_version
+      allowed: 
+        - "8"
+        - "11"
+        - "17"
+        - "21"
+        - "25"
+      help: |-
+        🤎 JDK version to use when compiling
+        It will check in pom.xml for maven-compiler-plugin source/target version or release version and set jdk accordingly
+        Default is 11
+    - long: --compile-verbose
+      short: -v
+      needs: [--compile]
+      help: 🐞 Show output of compilation.
+    - long: --open
+      short: -o
+      conflicts: [--checkout-only]
+      help: |- 
+        🔖 Checkout the code and open with text editor set with playground config editor <editor> (default is code)
+    - long: --checkout-only
+      required: false
+      conflicts: [--open, --compile]
+      help: |-
+        📂 Checkout the code at the right tag and print the path of the folder, nothing else
+
+        No browser, no editor, no question: an existing checkout of the same
+        version in /tmp/connector-plugin-sourcecode is reused. The path is
+        the last line of the output.
+
+        🎓 Tip: use it in scripts and from AI agents, which can then read the code
+    - long: --log
+      required: false
+      conflicts: [--compile, --open, --checkout-only]
+      help: |-
+        📜 With 2 --connector-tag: the commits between the two versions, newest first
+
+        From the GitHub compare API (gh when logged in, then GH_TOKEN / GITHUB_TOKEN if set, then anonymous with
+        a low rate limit, each tried when the previous one is refused). Merge commits are left out. Complements playground connector-plugin changelog, which is
+        only as complete as the docs, and works for partner and fully managed plugins too.
+    - long: --files
+      required: false
+      conflicts: [--compile, --open, --checkout-only]
+      help: |-
+        🗂️ With 2 --connector-tag: the files changed between the two versions, with +/- line counts
+    - long: --path
+      arg: path
+      required: false
+      needs: [--files]
+      validate: not_empty
+      help: |-
+        📄 Only the changed files matching this glob, and their diff
+
+        Example: --path "*/JdbcSinkConfig.java"
+    - long: --grep
+      arg: grep
+      required: false
+      validate: not_empty
+      help: |-
+        🔎 One --connector-tag: grep the code at that version (checkout, file:line, 500 lines at most)
+
+        With 2 --connector-tag and --log: only the commits whose message matches (case insensitive).
+        Extended regular expression, for example "BATCH_SIZE_DEFAULT|batch.size"
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON (url, checkout folder, commits, files, matches), logs on stderr
+  examples: |
+
+    # commits between two versions, only the ones about offsets
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --connector-tag 10.9.9 --log --grep "offset"
+    # files changed between two versions, and the diff of one of them
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --connector-tag 10.9.9 --files --path "*/JdbcSinkConfig.java"
+    # grep the code of a version
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --grep "BATCH_SIZE_DEFAULT"
+    # will checkout the latest version from hub and print the path of the folder
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --checkout-only
+
+    # will open latest version from hub source code
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs
+
+    # will ask you to select a version
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --connector-tag " "
+
+    # if you're a confluent employee (make sure to set your aws credentials), it will also work on proprietary connectors and fully managed connectors
+    playground connector-plugin sourcecode --connector-plugin confluentinc/MqttSource
+
+    # comparison mode:
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --connector-tag "10.2.1" --connector-tag "10.2.0"
+
+    # comparison mode (with versions selection):
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --connector-tag " " --connector-tag " "
+
+    # compile 
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-jdbc --compile
+
+    # if you're a confluent employee (make sure to set your aws credentials and follow Maven FAQ), it will also work on proprietary connectors and fully managed connectors 
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-oracle-xstream-cdc-source --compile --connector-tag "1.2.0" --compile-verbose
+
+    # will open repository in your editor
+    playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --open
+  x_example_outputs:
+  - command: playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-s3 --only-show-url
+    output: |-
+      17:22:31 ℹ️ ✨ --connector-tag was not set, using latest version on hub 12.1.13
+      17:22:31 ℹ️ 🧑‍💻🌐 sourcecode for plugin confluentinc/kafka-connect-s3 for 12.1.13 version is available at:
+      https://github.com/confluentinc/kafka-connect-storage-cloud/tree/v12.1.13

@@ -1,0 +1,8 @@
+name: compile-all-connector-plugins
+help: Call playground connector-plugin sourcecode --compile for all plugins in confluent-hub-plugin-list.txt
+private: true
+flags:
+- long: --confluent-only
+  required: false
+  help: |-
+    confluent only

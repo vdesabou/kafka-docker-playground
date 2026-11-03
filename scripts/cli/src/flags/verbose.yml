@@ -1,0 +1,3 @@
+long: --verbose
+short: -v
+help: 🐞 Show command being ran.

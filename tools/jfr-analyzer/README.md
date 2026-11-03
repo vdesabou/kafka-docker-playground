@@ -78,4 +78,4 @@ playground connector benchmark --no-flight-recorder
 
 To add one: run a benchmark, then
 `jq -c '. + {connector_class: "<class>", connector_type: "sink|source", mode: "drain|steady", files: ["<name>.jfr"]}' <run>-connect.digest.json > samples/<name>.digest.json`,
-and add `<name>` to the allowed values of `--sample` in `scripts/cli/src/bashly.yml`.
+and add `<name>` to the allowed values of `--sample` in `scripts/cli/src/commands/analyze.yml`.

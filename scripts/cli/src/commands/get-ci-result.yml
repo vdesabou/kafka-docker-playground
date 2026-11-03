@@ -1,0 +1,138 @@
+name: get-ci-result
+group: Run
+help: |-
+  🤖 get CI result for current example
+
+  Tells you whether the example you are running is green in the nightly CI,
+  both for the default environment and for cfk, by reading the published
+  badges from kafka-docker-playground.io.
+
+  👉 Useful before you spend time debugging: if CI is red too, the breakage
+  is probably not on your side. Reproduction models are skipped, they are not
+  part of the CI matrix.
+
+  🔥 With --logs, also tells why it is red: the latest failing CI job of the
+  example is located from its '🔥' GitHub issue, its full log is downloaded,
+  and for each failing script the last lines before the failure are shown
+  with a digest of the ERROR/FATAL records (same digest as 'playground
+  container logs --errors').
+
+  🌐 With --logs, also writes a self-contained HTML report of the failure in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): known causes, last lines before the failure of each failing script, root causes and every distinct record, with links to the issue and the job.
+
+  Use --test to ask about any example, without running it.
+flags:
+- long: --test
+  short: -t
+  required: false
+  arg: test
+  help: |-
+    📂 Example directory (or script) to check, instead of the current example
+
+    Examples: connect/connect-aws-s3-sink, other/connect-secret-registry
+- long: --environment
+  required: false
+  arg: environment
+  allowed:
+  - plaintext
+  - cfk
+  help: |-
+    🔐 CI environment to check: plaintext or cfk
+
+    Default is the environment of the current example, or plaintext with --test
+- long: --podman
+  required: false
+  help: |-
+    🦭 With --logs, read the podman CI job instead of the docker one (the published CI status is the one of the docker runs)
+- long: --logs
+  required: false
+  conflicts: [--json]
+  help: |-
+    🔥 When CI is red, show why: tail and ERROR/FATAL digest of each failing script of the latest failing job
+- long: --json
+  required: false
+  conflicts: [--logs]
+  help: |-
+    📗 Print the CI status as one JSON object, and nothing else: test, environment, status (ok, fail, not_tested,
+    not_in_ci, no_badge, unknown, skipped), url (job or issue) and message. Exits with code 1 when the status is fail
+
+    🎓 Tip: for scripts and AI agents, for example playground get-ci-result --test <dir> --json | jq -r .status
+- long: --max-findings
+  arg: max_findings
+  required: false
+  validate: integer
+  default: "20"
+  needs: [--logs]
+  help: |-
+    ✂️ With --logs, maximum number of distinct records to show per failing script (default 20). The HTML report has them all
+- long: --output-dir
+  short: -o
+  arg: output_dir
+  required: false
+  default: "/tmp/playground-ci-result"
+  needs: [--logs]
+  help: |-
+    📂 With --logs, output directory for the HTML report (default: /tmp/playground-ci-result)
+- long: --no-open
+  required: false
+  needs: [--logs]
+  help: |-
+    🙈 With --logs, do not open the HTML report in the browser
+examples:
+- playground get-ci-result
+- playground get-ci-result --logs
+- playground get-ci-result --test other/connect-secret-registry --logs
+- playground get-ci-result --test connect/connect-mqtt-sink --environment cfk --podman --logs
+- playground get-ci-result --test connect/connect-replicator --logs --no-open
+x_example_outputs:
+- command: playground get-ci-result --test connect/connect-http-sink
+  output: |-
+    17:23:20 ℹ️ 🤖 CI status: 🟢 ok, 🔗 test url: https://github.com/vdesabou/kafka-docker-playground/actions/runs/37858925089/job/113589742349
+- command: playground get-ci-result --test connect/connect-replicator --logs --max-findings 2
+  output: |-
+    17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054
+       🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45
+       🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973
+       🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d
+
+    17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:
+       00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds
+       00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !
+       00:45:50 🔥 ####################################################
+
+    17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job
+    🔎 4 distinct record(s), 4 occurrence(s), in 797 lines
+
+    🔴 ERROR x1 (first seen line 717, last seen line 717)
+    [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)
+            org.apache.kafka.common.KafkaException: Failed to construct kafka producer
+            at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
+
+    ✂️ 2 more distinct record(s) not shown, increase --max-findings
+
+    17:24:17 ℹ️ ✅ HTML report saved: /tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html
+    17:24:17 ℹ️ 🔗 Open in browser: file:///tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html
+footer: |-
+  Example output:
+    $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2
+    17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054
+       🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45
+       🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973
+       🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d
+
+    17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:
+       00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds
+       00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !
+       00:45:50 🔥 ####################################################
+
+    17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job
+    🔎 4 distinct record(s), 4 occurrence(s), in 797 lines
+
+    🔴 ERROR x1 (first seen line 717, last seen line 717)
+    [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)
+            org.apache.kafka.common.KafkaException: Failed to construct kafka producer
+            at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
+
+    ✂️ 2 more distinct record(s) not shown, increase --max-findings
+
+    17:24:17 ℹ️ ✅ HTML report saved: /tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html
+    17:24:17 ℹ️ 🔗 Open in browser: file:///tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html

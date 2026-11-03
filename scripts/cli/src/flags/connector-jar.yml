@@ -1,0 +1,16 @@
+long: --connector-jar
+arg: connector_jar
+
+required: false
+validate: file_exists_with_trick
+completions:
+  dynamic:
+  - playground get-zip-or-jar-with-fzf --type jar "$completion_current"
+help: |-
+  🤎 Connector jar to use
+
+  ❕ It must be absolute full path
+
+  🎓 Tip: use <tab> completion to trigger fzf completion 
+          use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+          use <option+enter> to use the value you typed manually

@@ -1,0 +1,6 @@
+name: get-topic-list
+help: Return some completion for topic list
+private: true
+flags:
+- long: --skip-internal-topics
+  required: false

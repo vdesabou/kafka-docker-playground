@@ -1,0 +1,561 @@
+name: run
+group: Run
+environment_variables:
+- name: PLAYGROUND_ENVIRONMENT
+  help: "🔐 Environment used when --environment is not set (plaintext by default in the examples), recorded as --environment in the history and re-run"
+- name: SQL_DATAGEN_DURATION
+  help: "⏱️ With --enable-sql-datagen, duration of the injection in minutes (default 10)"
+- name: SQL_DATAGEN_SESSIONS
+  help: "🔀 With --enable-sql-datagen, number of parallel sessions (default 5)"
+- name: BENCHMARK_LOAD_SCRIPT
+  help: "📜 With --enable-sql-datagen or --benchmark, load script to use instead of benchmark-load.bash (file of the example folder, or absolute path)"
+- name: BENCHMARK_ARGS
+  help: "🏎️ With --benchmark, extra flags for playground connector benchmark (e.g. \"--nb-records 10000000 --record-size 100\" or \"--mode steady --duration 5m\")"
+- name: PG_RUN_PRINT_FLAGS_AND_EXIT
+  private: true
+  help: "Print the flags and the variables the run would use (secrets masked), then exit before stopping or starting anything: compares two versions of this command"
+- name: PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE
+  help: "🙈 With --ccloud-service-account, regex of the ACLs not to create, matched on <OPERATION> <ResourceType>:<name> [prefix] (e.g. \"READ Group:\")"
+dependencies:
+  fzf: visit https://github.com/junegunn/fzf#installation to install
+help: |-
+  🕹️ Run any example !
+
+  🔥 It start an interactive mode where you'll be fully guided !
+
+    playground run                       🔍 pick an example, guided
+    playground run -f <example.sh>       🚀 run that one directly
+    playground re-run                    ⚡ same example, same flags
+
+  Each run stops what was running, starts the environment the example asks
+  for, brings up its containers, creates the connector and produces data.
+  Credentials the example needs are loaded from 'playground secrets'.
+
+  🔢 Choosing versions
+    --tag             Confluent Platform version for every component
+    --connect-tag     Confluent Platform version for connect only
+    --schema-registry-tag, --ksqldb-tag, --control-center-tag
+                      version for that component only
+    --connector-tag   connector version from Confluent Hub
+    --connector-zip   connector from a local zip
+    --connector-jar   a single jar, dropped into the existing plugin
+
+  🧰 Adding to the example
+    --environment     run a connector example under another security setup
+    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...
+    --enable-sql-datagen
+                      continuous realistic data for CDC source examples
+    --benchmark       benchmark the connector once the example succeeded
+    --connect-community-image, --kafka-community-image
+                      use community images instead of enterprise ones
+    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9
+    --connect-log-level
+                      log levels set on connect before the connector is created
+
+
+  ⛅ When running Confluent Cloud (ccloud) example:
+
+    All you have to do is to be already logged in with confluent CLI.
+
+    By default, a new Confluent Cloud environment with a Cluster will be created.
+
+    You can configure the new cluster by setting:
+  
+    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)
+    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)
+    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)
+    --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) 
+
+    In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
+
+    --cluster-name (or CLUSTER_NAME environment variable): The cluster name
+    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
+    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
+
+  📄 Run log
+    The output is also written to a text file, passwords, api keys and
+    tokens masked, ready to share with a colleague: the
+    command to re-run, the versions, the host, the result and, for a
+    failure, the errors of the connect container. Its path is printed at
+    the end of the run. The last 50 are kept in
+    /tmp/playground-run-logs.
+
+    --run-log-file    write it to that file
+    --no-run-log      don't write it
+    playground config run-log false | run-log-folder <folder>
+
+    The masking is best-effort: review the file before sharing it
+    outside Confluent.
+
+  ❗ the containers of the previous example are stopped first ("playground stop"). To kill every container instead ("playground container kill-all"), run "playground config container-kill-all-before-run true"
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
+  🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags
+
+flags:
+- &environment-run
+  long: --environment
+  required: false
+  arg: environment
+  allowed: [ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
+  help: |-
+    🔐 The environment to start when running a connector example 
+    
+    - plaintext
+    - ccloud
+    - cfk
+    - cfk-rbac
+    - 2way-ssl
+    - kerberos
+    - ldap-authorizer-sasl-plain
+    - ldap-sasl-plain
+    - rbac-sasl-plain
+    - sasl-plain
+    - sasl-scram
+    - sasl-ssl
+    - ssl_kerberos
+
+    Default is PLAYGROUND_ENVIRONMENT when it is exported in your shell (it is then
+    added to the flags of the run), plaintext otherwise. Not available with
+    ccloud examples (they run against Confluent Cloud).
+    This is only supported when example is a connector example
+- long: --file
+  short: -f
+  required: false
+  
+  validate: file_exists_with_trick
+  arg: file
+  completions:
+    dynamic:
+    - playground get-examples-list-with-fzf "$completion_current"
+  help: |-
+    🔖 Example file to run
+
+    ❕ It must be absolute full path
+
+    🎓 Tip: use <tab> completion to trigger fzf completion
+- long: --open
+  
+  short: -o
+  help: 📖 Opening example files (including docker-compose file) with text editor set with playground config editor <editor> (default is code)
+- import: src/flags/tag.yml
+- import: src/flags/connect-tag.yml
+- long: --schema-registry-tag
+  arg: schema_registry_tag
+  required: false
+  completions:
+    dynamic:
+    - playground get-tag-list "$completion_current"
+  help: |-
+    🔰 Confluent Platform (CP) version to use for schema registry only
+
+    It sets CP_SCHEMA_REGISTRY_TAG environment variable
+
+    ❗ not supported with ccloud examples (schema registry is in Confluent Cloud)
+
+    🎓 Tip: use <tab> completion to trigger fzf completion
+- long: --ksqldb-tag
+  arg: ksqldb_tag
+  required: false
+  completions:
+    dynamic:
+    - playground get-tag-list "$completion_current"
+  help: |-
+    🎏 Confluent Platform (CP) version to use for ksqlDB server and CLI only, with --enable-ksqldb
+
+    It sets CP_KSQL_TAG and CP_KSQL_CLI_TAG environment variables
+
+    ❗ not supported with ccloud examples
+
+    🎓 Tip: use <tab> completion to trigger fzf completion
+- long: --control-center-tag
+  arg: control_center_tag
+  required: false
+  help: |-
+    💠 Control Center version to use, with --enable-control-center
+
+    It sets CP_CONTROL_CENTER_TAG environment variable
+
+    With Control Center Next Gen (default), this is the version of the confluentinc/cp-enterprise-control-center-next-gen image (for example 2.2.0, default is latest)
+
+    With --enable-legacy-control-center, this is a CP version (< 8), by default the one of --tag
+- import: src/flags/connector-tag.yml
+- import: src/flags/connector-zip.yml
+
+- import: src/flags/connector-jar.yml
+
+- &enable-ksqldb
+  long: --enable-ksqldb
+  required: false
+  
+  help: |-
+    🚀 Enable ksqlDB 
+    
+    ❗ not supported with ccloud examples
+
+    By default, ksqldb-server and ksqldb-cli containers are not started for every test
+- &enable-rest-proxy
+  long: --enable-rest-proxy
+  required: false
+  
+  help: |-
+    🧲 Enable Rest Proxy
+
+    ❗ not supported with ccloud examples
+
+    By default, rest-proxy container is not started for every test
+- &enable-control-center
+  long: --enable-control-center
+  required: false
+  
+  help: |-
+    💠 Enable Control Center
+
+    By default, control-center container is not started for every test
+
+    Control Center is reachable at http://127.0.0.1:9021
+- &enable-flink
+  long: --enable-flink
+  required: false
+  
+  help: |-
+    🐿️ Enable Flink
+
+    ❗ not supported with ccloud examples
+
+    By default, flink is not started for every test
+
+    Once enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink maven repository.
+
+    To skip the question (in a script or CI), set FLINK_URL to the jar(s) to download, e.g. the Kafka SQL connector.
+
+    Flink UI and REST API: http://127.0.0.1:18081
+
+    🎓 Tip: run Flink SQL and manage the jobs with 'playground flink sql|list-jobs|cancel', see the flink/flink-sql-kafka example.
+- &enable-conduktor
+  long: --enable-conduktor
+  required: false
+  
+  help: |- 
+    🐺 Enable Conduktor Platform
+
+    By default, Conduktor Platform container is not started for every test
+
+    Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
+- &enable-multiple-brokers
+  long: --enable-multiple-brokers
+  required: false
+  
+  help: |- 
+    3️⃣ Enable multiple brokers
+
+    By default, there is only one broker node enabled. With 3 brokers (ids
+    1, 2 and 3), the internal topics (consumer offsets, transactions,
+    connect, schemas, license...) have 3 replicas and a min ISR of 2, like
+    in production: a broker can stop without making them unavailable.
+- &enable-multiple-connect-workers
+  long: --enable-multiple-connect-workers
+  required: false
+  
+  help: |-
+    🥉 Enable multiple connect worker node
+
+    By default, there is only one connect worker node enabled
+- &enable-multiple-controllers
+  long: --enable-multiple-controllers
+  required: false
+
+  help: |-
+    🗳️ Enable multiple controllers
+
+    By default, there is only one KRaft controller (or one ZooKeeper node
+    with CP < 8 in ZooKeeper mode). With this flag, the quorum has 3 nodes,
+    so that one of them can stop without making the cluster unavailable:
+
+    - KRaft mode: controllers controller, controller2 and controller3
+      (node ids 4, 5 and 6)
+
+    - ZooKeeper mode: zookeeper, zookeeper2 and zookeeper3
+
+    - cfk / cfk-rbac: 3 replicas on the KRaftController CR (pods
+      kraftcontroller-0, kraftcontroller-1 and kraftcontroller-2), or on
+      the Zookeeper CR with cfk in ZooKeeper mode (pods zookeeper-0,
+      zookeeper-1 and zookeeper-2)
+
+    ❗ not supported with ccloud examples, ignored with the mdc-*
+    environments
+- &enable-jmx-grafana
+  long: --enable-jmx-grafana
+  required: false
+  
+  help: |-
+    Enable Grafana, Prometheus and Pyroscope
+
+    📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)
+
+    🛡️ Prometheus is reachable at http://127.0.0.1:9090
+    
+    📛 Pyroscope is reachable at http://127.0.0.1:4040
+- &enable-kcat
+  long: --enable-kcat
+  required: false
+  
+  help: |-
+    🐈‍⬛ Enable kcat
+
+    ❗ not supported with ccloud examples
+
+    You can use it with:
+
+    $ docker exec kcat kcat -b broker:9092 -L
+- &enable-sql-datagen
+  long: --enable-sql-datagen
+  required: false
+  
+  help: |-
+    🌪️ Enable SQL Datagen injection
+
+    Once the example succeeded, rows are injected with the benchmark-load.bash next to the example script (the load of
+    playground connector benchmark): one row per transaction, in parallel sessions, for a few minutes, while Grafana shows
+    the connector. Works with the JDBC, Debezium, Oracle CDC and XStream source examples (Oracle, MySQL, MariaDB,
+    PostgreSQL, SQL Server), self-managed and fully managed, and with their reproduction models.
+
+    SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5) change the duration and the number of
+    parallel sessions, BENCHMARK_LOAD_SCRIPT another load script than benchmark-load.bash (see playground connector
+    benchmark). If the injection fails, the command exits with its exit code.
+
+- long: --benchmark
+  required: false
+  help: |-
+    🏎️ Benchmark the connector once the example succeeded
+
+    Runs playground connector benchmark on the connector of the example: a
+    drain of the load of a source (benchmark-load.bash next to the example
+    script) or of the records produced by a sink example, then the
+    throughput, the HTML report and where the task time went. Self-managed
+    and fully managed connectors, not with the cfk environment.
+
+    --benchmark takes no value: the flags of playground connector benchmark
+    go in the BENCHMARK_ARGS environment variable, for instance a backlog of
+    10 million records of 100 bytes:
+
+    BENCHMARK_ARGS="--nb-records 10000000 --record-size 100" playground run -f csv.sh --benchmark
+
+    or a steady run: BENCHMARK_ARGS="--mode steady --duration 5m".
+    BENCHMARK_LOAD_SCRIPT selects another load script than benchmark-load.bash.
+    If the benchmark fails, the command exits with its exit code.
+
+- long: --run-log-file
+  required: false
+  arg: file
+  conflicts: [--no-run-log]
+  help: |-
+    📄 Write the masked log of this run to this file, instead of the run log folder
+
+    Same file as the one written by default (see 'playground config run-log'), at this path.
+
+- long: --no-run-log
+  required: false
+  conflicts: [--run-log-file]
+  help: |-
+    🙈 Don't write the masked log of this run (see 'playground config run-log')
+
+- &connect-community-image
+  long: --connect-community-image
+  required: false
+
+  help: |-
+    🌱 Use the community connect image (confluentinc/cp-kafka-connect) instead of the enterprise one (confluentinc/cp-server-connect)
+
+    It sets CP_CONNECT_IMAGE environment variable
+
+    Monitoring interceptors are disabled, as they are not part of the community image
+- &kafka-community-image
+  long: --kafka-community-image
+  required: false
+
+  help: |-
+    🌿 Use the community kafka image (confluentinc/cp-kafka) instead of the enterprise one (confluentinc/cp-server)
+
+    It sets CP_KAFKA_IMAGE environment variable
+
+    Confluent Metrics Reporter and Telemetry Reporter are disabled, as they are not part of the community image
+- &enable-kraft
+  long: --enable-kraft
+  required: false
+
+  help: |-
+    🛰️ Start Confluent Platform in KRaft mode
+
+    It sets ENABLE_KRAFT environment variable
+
+    Only useful for CP versions from 7.4 to 7.9, where Zookeeper is used by default (KRaft is always used for CP >= 8)
+- &enable-legacy-control-center
+  long: --enable-legacy-control-center
+  required: false
+
+  help: |-
+    👨‍🦳 Use legacy Control Center (confluentinc/cp-enterprise-control-center) instead of Control Center Next Gen
+
+    It sets ENABLE_LEGACY_CONTROL_CENTER environment variable
+
+    Legacy Control Center is not available for CP >= 8. It implies --enable-control-center
+- long: --connect-log-level
+  required: false
+  arg: connect-log-level
+  validate: connect_log_levels
+  help: |-
+    🔊 Log level(s) to set on connect, as a comma separated list of <package>=<level> (level is one of INFO, WARN, DEBUG, TRACE)
+
+    They are applied with 'playground debug log-level set' as soon as the environment is started and connect is ready, so before the example creates its connector
+
+    Example: --connect-log-level "io.confluent.connect.s3=TRACE,org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG"
+
+- &cluster-cloud
+  long: --cluster-cloud
+  required: false
+  
+  arg: cluster-cloud
+  allowed: [aws, gcp, azure]
+  help: |-
+    🌤 The cloud provider: aws, gcp or azure. Default is aws
+
+    🎓 Tip: you can also use CLUSTER_CLOUD environment variable
+- &cluster-type
+  long: --cluster-type
+  required: false
+  
+  arg: cluster-type
+  allowed: [basic, standard, dedicated]
+  help: |-
+    🔋 The cluster type: basic, standard or dedicated. Default is basic
+
+    🎓 Tip: you can also use CLUSTER_TYPE environment variable
+- &cluster-region
+  long: --cluster-region
+  required: false
+  
+  arg: cluster-region
+  completions:
+    dynamic:
+    - playground get-kafka-region-list "$completion_current"
+  help: |-
+    🗺 The Cloud region. 
+    
+    🎓 Tip: you can also use CLUSTER_REGION environment variable
+    🎓 Tip: use <tab> completion to trigger fzf completion
+
+- &cluster-environment
+  long: --cluster-environment
+  required: false
+  
+  arg: cluster-environment
+  validate: not_empty
+  completions:
+    dynamic:
+    - playground get-ccloud-environment-list "$completion_current"
+  help: |-
+    🌐 The environment id where want your new cluster (example: txxxxx)
+
+    ℹ️ Optional, if not set, new environment will be created
+
+    🎓 Tip: you can also use ENVIRONMENT environment variable
+    🎓 Tip: use <tab> completion to trigger fzf completion
+
+- &cluster-name
+  long: --cluster-name
+  required: false
+  
+  validate: not_empty
+  completions:
+    dynamic:
+    - playground get-ccloud-cluster-list "$completion_current"
+  arg: cluster-name
+  help: |-
+    🎰 The cluster name. 
+    
+    ❣️ Only required if you want to use your own existing cluster
+
+    🎓 Tip: you can also use CLUSTER_NAME environment variable
+    🎓 Tip: use <tab> completion to trigger fzf completion
+- &cluster-creds
+  long: --cluster-creds
+  required: false
+  
+  validate: not_empty
+  arg: cluster-creds
+  help: |-
+    🔒 The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
+
+    ❣️ Only required if you want to use your own existing cluster
+
+    🎓 Tip: you can also use CLUSTER_CREDS environment variable
+- &cluster-schema-registry-creds
+  long: --cluster-schema-registry-creds
+  required: false
+  
+  validate: not_empty
+  arg: cluster-schema-registry-creds
+  help: |-
+    🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
+
+    ℹ️ Optional, if not set, new credentials will be created
+
+    ❣️ Only required if you want to use your own existing cluster
+    
+    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
+
+- long: --ccloud-service-account
+  required: false
+  help: |-
+    👤 Run the fully managed connectors with a service account (kafka.auth.mode=SERVICE_ACCOUNT)
+
+    Instead of the API key of the example, each fully managed or custom
+    connector gets its own service account, with the ACLs listed in
+    https://docs.confluent.io/cloud/current/connectors/service-account.html
+    (derived from the connector config), and the owner of
+    CONFLUENT_CLOUD_API_KEY gets the Assigner role on it. The example is
+    not changed.
+
+    The service accounts and their ACLs are deleted with the connectors
+    (playground connector delete, end-of-run cleanup, playground
+    cloud-resources cleanup).
+
+    🎓 Tip: to reproduce an authorization error, delete or deny an ACL with
+    playground rbac acl delete|create --connector <connector> [--deny],
+    restart the connector and run playground connector diagnose.
+    PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE skips ACLs when they are created.
+
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%91%A4-a-fully-managed-connector-with-a-service-account-loses-an-acl
+- long: --ccloud-service-account-acls
+  required: false
+  arg: profile
+  allowed: [docs, full, none]
+  help: |-
+    🚦 ACLs of the service accounts created by --ccloud-service-account (implies it)
+
+      docs  the ACLs of the documentation, derived from the connector config (default)
+      full  every operation on every topic, group and transactional id (same as the API key of the example)
+      none  no ACL, add them with playground rbac acl create --connector <connector>
+- long: --ccloud-service-account-id
+  required: false
+  validate: not_empty
+  arg: service-account
+  help: |-
+    👤 Use this existing service account (sa-xxxxx) for the fully managed connectors, as is (implies --ccloud-service-account)
+
+    No ACL is created nor deleted, and the service account is kept.
+
+- long: --force-interactive-re-run
+  required: false
+  private: true
+  help: |-
+    Force interactive mode
+- long: --force-interactive-repro
+  required: false
+  private: true
+  help: |-
+    Force interactive mode
+examples:
+- playground run (interactive mode)
+- BENCHMARK_ARGS="--nb-records 10000000 --record-size 100" playground run -f connect/connect-spool-dir-source/csv.sh --benchmark

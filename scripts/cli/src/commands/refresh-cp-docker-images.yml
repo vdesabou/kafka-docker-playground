@@ -1,0 +1,20 @@
+name: refresh-cp-docker-images
+group: Run
+help: |-
+  🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
+
+  Useful when a version tag has been re-published. Images built locally by
+  the playground are skipped with a warning.
+flags:
+  - long: --include-cloud-cli
+    required: false
+    help: |-
+      ☁️ Also pull the aws, azure and gcp cli images (several GB), when they have drifted behind the API they talk to
+  - long: --version
+    required: true
+    arg: version
+    completions:
+      dynamic:
+      - docker image ls --format '{{.Repository}} {{.Tag}}' | awk '$1 ~ /^confluentinc\// && $2 != "<none>" {print $2}' | sort -u
+    help: |-
+      🔢 Specific version to pull 

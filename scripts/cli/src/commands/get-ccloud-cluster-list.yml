@@ -1,0 +1,7 @@
+name: get-ccloud-cluster-list
+help: Return some completion for ccloud cluster
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

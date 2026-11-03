@@ -1,0 +1,12 @@
+long: --connector-tag
+arg: connector_tag
+
+required: false
+help: |- 
+  🔗 Connector version to use
+
+  By default, for each connector, the latest available version on Confluent Hub is used
+
+  🎓 Tip: set to " " in order to select the version dynamically (for Confluent plugins, the preview shows the release notes of each version)
+
+conflicts: [--connector-zip]

@@ -2,7 +2,8 @@
 name: kdp-playground-cli
 description: |
   Add or change a command in the `playground` CLI of kafka-docker-playground.
-  Use when editing `scripts/cli/src/bashly.yml`, adding or renaming a command /
+  Use when editing the command tree under `scripts/cli/src/commands/*.yml` or
+  `scripts/cli/src/flags/`, adding or renaming a command /
   subcommand / flag / argument, writing a command partial under
   `scripts/cli/src/commands/`, adding a shared bash helper in
   `scripts/cli/src/lib/`, adding a validator or filter, wiring shell
@@ -32,7 +33,8 @@ The CLI reference pages (`docs/cli.md`, `docs/playground <command>.md`,
 `docs/cli-pages.js`) are **not** tracked in this repository. `playground update-docs`
 writes them into `docs/`, and the nightly CI `post-build` job ("Update DOCS")
 generates and publishes them to the documentation site. `update-docs.yml` also
-publishes them on every push to `master` touching `bashly.yml`. A CLI change
+publishes them on every push to `master` touching the command tree
+(`src/bashly.yml`, `src/commands/**.yml`, `src/flags/**`). A CLI change
 needs nothing for those pages. If you ran `update-docs` locally, the pages it wrote
 are ignored by `.gitignore`: never force-add them.
 
@@ -43,8 +45,11 @@ command or flag is new and worth mentioning, or renamed, update them in the same
 
 ## The loop
 
-1. **Declare** the command/flag in `scripts/cli/src/bashly.yml` (~5000 lines,
-   the single source of truth for the whole command tree).
+1. **Declare** the command/flag in `scripts/cli/src/commands/<command>.yml`
+   — one file per top-level command (see "Where the command tree lives" below).
+   `src/bashly.yml` itself holds only the global settings and one
+   `- import: src/commands/<command>.yml` line per command: do not add a
+   command body there.
 2. **Implement** it in `scripts/cli/src/commands/<command>/<subcommand>.sh` —
    one file per (sub)command, path mirroring the command tree exactly.
 3. **Regenerate**: `playground bashly-reload`
@@ -60,9 +65,66 @@ command or flag is new and worth mentioning, or renamed, update them in the same
    generated diff only contains your change (another uncommitted edit in the
    checkout gets inlined too).
 
-Skipping step 3 is the classic failure: the flag exists in `bashly.yml`, the
+Skipping step 3 is the classic failure: the flag exists in the YAML, the
 partial reads `${args[--new-flag]}`, and the CLI ignores it entirely because
 the parser was never rebuilt.
+
+## Where the command tree lives
+
+`src/bashly.yml` is ~230 lines: the global settings, flags and environment
+variables, then one import per top-level command.
+
+| File | Holds |
+| --- | --- |
+| `src/bashly.yml` | global settings + `- import: src/commands/<command>.yml` for each of the 88 top-level commands |
+| `src/commands/<command>.yml` | the whole tree of that command — its subcommands, flags, args, examples |
+| `src/flags/<flag>.yml` | **one** flag definition, shared by several commands |
+| `src/commands/<command>/<sub>.sh` | the bash partial implementing a (sub)command |
+
+Config (`.yml`) and code (`.sh`) sit side by side on purpose: everything about
+`connector` is `src/commands/connector.yml` + `src/commands/connector/`.
+
+### Sharing a flag between commands — not an anchor
+
+**A YAML anchor cannot cross files.** `*verbose` in `src/commands/topic.yml`
+referring to an `&verbose` defined in `src/commands/schema.yml` fails with
+`Psych::AnchorNotDefined`. Anchors still work *inside* one file, and plenty of
+commands use them for their own flags.
+
+A flag used by more than one top-level command gets its own file instead:
+
+```yaml
+# src/flags/verbose.yml  — the flag mapping, at column 0
+long: --verbose
+short: -v
+help: 🐞 Show command being ran.
+```
+
+```yaml
+# used from any command file, at the right indentation
+    flags:
+    - import: src/flags/verbose.yml
+```
+
+Currently in `src/flags/`: `verbose`, `cluster`, `container`, `tag`,
+`connect-tag`, `connector-tag`, `connector-zip`, `connector-jar`,
+`force-refresh`, `level`, `compatibility-required`, plus the five
+`analyze-*-flags` groups.
+
+An `import` replaces **one list item**, so it only works for a single flag. For
+a whole *list* of flags shared by two commands (the `analyze-*-flags` groups,
+shared by `analyze` and `debug`), the file holds a YAML list and the command
+file includes it with ERB, which bashly runs over the config before loading it:
+
+```yaml
+    flags:
+<%= File.read('src/flags/analyze-logs-flags.yml').gsub(/^(?=.)/, '      ') %>
+```
+
+The ERB line **must start at column 0** and the string in `gsub` is the
+indentation of the resulting flags (here 6 = the `flags:` indent + 2). Paths in
+both `import:` and `File.read` are relative to `scripts/cli/`, not to the file
+doing the importing.
 
 ## Where does the code go?
 
@@ -111,14 +173,18 @@ log "⏸️ Pausing $connector_type connector $connector"
 - `src/before.sh` runs before every command; it handles `--vvv` and
   `--output-level`.
 
-## bashly.yml conventions in this repo
+## Conventions in the command files
 
 Read `references/bashly-yml.md` for the full vocabulary as it is actually used
 here (anchors, validators, filters, groups, completions). The essentials:
 
-- **Reuse the YAML anchors.** Common flags are defined once with `&tag`,
-  `&connector`, `&verbose`, `&environment`, `&enable-ksqldb`, … and referenced
-  as `*tag`, `*connector`. Never re-declare a flag that already has an anchor.
+- **Reuse the shared flags, never re-declare one.** A flag used by several
+  top-level commands is `- import: src/flags/<flag>.yml` (see above). Inside a
+  single command file, a flag reused by several of its subcommands is a YAML
+  anchor (`&connector` / `*connector`, `&subject` / `*subject`, …) — that still
+  works, because anchor and alias are in the same file. If a flag that is
+  currently an anchor becomes needed by a second top-level command, move it to
+  `src/flags/` rather than copying it.
 - **Help text is emoji-prefixed** (`🔗 Connector name`, `🗺️ Show a status`) and
   written for end users. Multi-line help uses `|-` with a blank line between
   paragraphs; `🎓 Tip:` marks hints.

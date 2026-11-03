@@ -1,0 +1,8 @@
+name: get-subject-list
+help: Return some completion for subject list
+private: true
+flags:
+- long: --deleted
+  required: false
+  help: |-
+    🧟 Include soft deleted schemas

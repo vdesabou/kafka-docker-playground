@@ -1,0 +1,3 @@
+name: get-docker-ports
+help: Return some completion for docker ports
+private: true

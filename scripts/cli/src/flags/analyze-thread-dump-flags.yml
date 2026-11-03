@@ -1,0 +1,75 @@
+- long: --file
+  short: -f
+  required: false
+  repeatable: true
+  arg: file
+  validate: file_or_dir_exists
+  completions:
+    dynamic:
+    - playground get-specific-file-extension "$completion_current" --extension "log"
+  help: |-
+    🗒️  Thread dump file or folder (repeat --file for several dumps of the same JVM)
+
+    ❕ Provide only one of --file, --container and --sample
+
+    🎓 Tip: use <tab> completion to trigger fzf completion
+            use <option+enter> to use the value you typed manually
+- long: --sample
+  short: -s
+  required: false
+  repeatable: true
+  arg: sample
+  allowed: [deadlock_jdk21, deadlock_jdk8, healthy_connect]
+  help: |-
+    🧪 Sample of tools/thread-analyzer/samples
+
+      deadlock_jdk21     3 jstack -l dumps of one JDK 21 JVM, 3 s apart: deadlock, blocked threads, CPU-hot thread, stuck task, leaking pool
+      deadlock_jdk8      the same scenario, one dump, JDK 8
+      healthy_connect    3 kill -3 dumps of a healthy CP 8.3.2 Connect worker, from its container logs
+- long: --container
+  short: -c
+  alias: [--pod, -p]
+  required: false
+  arg: container
+  completions:
+    dynamic:
+    - playground get-container-list
+  help: |-
+    🐳 Container name (or pod name when cfk environment is used) to take the thread dumps from (default: connect)
+- long: --count
+  arg: count
+  required: false
+  default: "3"
+  validate: integer
+  help: |-
+    🔢 Number of thread dumps to take with --container (default: 3)
+- long: --interval
+  arg: interval
+  required: false
+  default: "5"
+  validate: integer
+  help: |-
+    ⏱️  Seconds between two thread dumps with --container (default: 5)
+- long: --output-dir
+  short: -o
+  arg: output_dir
+  required: false
+  default: "./thread-analysis-output"
+  help: |-
+    📂 Output directory for the thread dumps taken from a container and the HTML report (default: ./thread-analysis-output)
+- long: --html
+  required: false
+  private: true
+  help: |-
+    Deprecated: the HTML report is always written (kept so that existing commands keep working)
+- long: --json
+  required: false
+  help: |-
+    🗂️  Output JSON (no text report, no HTML report)
+- long: --top
+  arg: top
+  required: false
+  default: "10"
+  validate: integer
+  help: |-
+    📊 Number of rows per section (default: 10)

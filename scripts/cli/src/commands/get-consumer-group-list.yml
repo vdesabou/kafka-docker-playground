@@ -1,0 +1,3 @@
+name: get-consumer-group-list
+help: Return some completion for consumer group list
+private: true

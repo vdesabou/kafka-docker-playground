@@ -1,0 +1,7 @@
+name: get-ec2-cloudformation-list
+help: Return some completion for ec2 cloudformation list
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

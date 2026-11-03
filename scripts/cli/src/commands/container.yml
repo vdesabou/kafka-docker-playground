@@ -1,0 +1,555 @@
+name: container
+expose: always
+alias: pod
+group: Container
+help: |-
+  🐳 Container commands
+
+  Work on the containers of the running example without having to remember
+  their names, their users or their file layout. The same commands work
+  against Kubernetes pods when the example runs on the cfk environment,
+  which is why 'pod' is an accepted alias.
+
+  🔍 Look inside
+    logs                 tail logs, grep them, or block until a line appears
+    display-error-all    every ERROR and FATAL across all containers
+    get-properties       the properties file a component actually loaded
+    get-ip-addresses     addresses on the docker network
+    exec / ssh           run a command, or get a shell
+
+  🔁 Act on them
+    restart / kill / pause / resume
+    recreate             re-create with the same compose definition
+    update               edit the compose or Kubernetes definition, apply it
+    set-environment-variables   add settings, then recreate
+    cp                   copy files in and out
+    change-jdk           swap the JDK, to reproduce a JVM-specific issue
+    kill-all             kill everything and prune volumes
+
+  Most commands accept --container several times to act on a few containers
+  at once.
+
+  🎓 Tip: the usual names are broker, connect, schema-registry,
+  control-center, ksqldb-server, plus whatever the example adds.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-lifecycle
+  🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%B3-restart-or-recreate-what-a-container-keeps
+commands:
+
+  - name: get-properties
+    help: |-
+      📝 Get properties file from a container
+      
+      👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
+
+    flags:
+    - import: src/flags/container.yml
+    examples:
+    - playground container get-properties
+    - playground container get-properties --container broker
+    - playground container get-properties -c broker
+    x_example_outputs:
+    - command: playground container get-properties -c connect
+      output: |-
+        17:22:51 ℹ️ 📝 Displaying properties file for connect
+        bootstrap.servers=broker:9092
+        config.storage.topic=connect-configs
+        group.id=connect-cluster
+        key.converter=org.apache.kafka.connect.storage.StringConverter
+        offset.storage.topic=connect-offsets
+        plugin.path=/usr/share/filestream-connectors
+        rest.port=8083
+        status.storage.topic=connect-status
+        value.converter=io.confluent.connect.avro.AvroConverter
+        value.converter.schema.registry.url=http://schema-registry:8081
+        ...
+
+  - name: recreate
+    group: Container
+    help: |-
+      💫 Recreate container(s)
+
+      👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers
+
+      Replays the docker compose command of the example, so a container is
+      rebuilt from its current definition. This is what applies a change
+      made with 'playground container set-environment-variables' or
+      'playground container update', and what you use to restart a component
+      from scratch without re-running the whole example.
+    flags:
+    - long: --ignore-current-versions
+      required: false
+      help: |-
+        Ignore current confluent platform version
+
+        By default, the current version is used
+
+  - name: update
+    group: Container
+    help: |-
+      ✍️ Edit and apply runtime container/pod definition
+
+      Opens the current docker-compose (non-CFK) or Kubernetes resource YAML (CFK)
+      for the target container/pod in your configured editor and applies changes
+      when you save and close the file.
+    flags:
+    - import: src/flags/container.yml
+    alias:
+    - edit
+    - alter
+    examples:
+    - playground container update --container connect
+    - playground container update -c splunk
+    - playground container update --container connect --container broker
+
+  - name: get-ip-addresses
+    group: Container
+    help: |-
+      🖥️  Get ip address of running containers
+
+      The address each container has on the docker network, which is what
+      you need when a component must be reached by IP rather than by name,
+      or when you are checking what a client actually connected to.
+    examples:
+    - playground container get-ip-addresses
+    x_example_outputs:
+    - command: playground container get-ip-addresses
+      output: |-
+        17:22:19 ℹ️ Get IP address of running containers
+        /controller - 10.89.0.2
+        /broker - 10.89.0.4
+        /schema-registry - 10.89.0.6
+        /connect - 10.89.0.7
+
+  - name: kill-all
+    group: Container
+    help: |-
+      💀 Kill all containers and prune all volumes
+
+      Kills every container on your machine, playground or not, and prunes
+      the volumes. Used automatically before each 'playground run' to
+      guarantee a clean slate; disable that with
+      'playground config container-kill-all-before-run false'.
+
+  - name: logs
+    group: Container
+    help: |-
+      🕵️  Tail and follow container logs
+
+      Three ways to use it:
+
+        --grep "ERROR"                    keep only the lines that matter
+        --open                            read the whole log in your editor
+        --wait-for-log "Started" -m 120   block until the line shows up
+
+      The last one is what example scripts use to synchronise on a component
+      being ready, instead of sleeping and hoping.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle
+    flags:
+    - import: src/flags/container.yml
+    - long: --open
+      short: -o
+      help: |- 
+        🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
+      conflicts: [--wait-for-log, --grep, --errors]
+    - long: --wait-for-log
+      short: -w
+      arg: log
+      validate: not_empty
+      help: |- 
+        😴 Wait until log appears
+      conflicts: [--open, --grep, --errors]
+    - &logsmaxwait
+      long: --max-wait
+      short: -m
+      arg: max_wait
+      validate: integer
+      default: "600"
+      help: |- 
+        ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
+      conflicts: [--open, --grep]
+    - long: --grep
+      arg: grep
+      required: false
+      default: ""
+      help: |-
+        🎯 Grep pattern to filter logs
+
+      conflicts: [--open, --wait-for-log, --errors]
+
+    - long: --previous
+      required: false
+      help: |-
+        🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)
+
+    - long: --since
+      arg: since
+      required: false
+      validate: not_empty
+      help: |-
+        🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (2026-09-24T16:00:00)
+      conflicts: [--open, --wait-for-log]
+
+    - long: --tail
+      arg: lines
+      required: false
+      help: |-
+        🔢 Number of lines to show from the end of the logs, or "all"
+
+        Default is 200, or all when --since, --errors, or --grep with --no-follow is used
+      conflicts: [--open, --wait-for-log]
+
+    - long: --no-follow
+      required: false
+      help: |-
+        🛑 Print the logs and exit instead of following them
+
+        🎓 Tip: use it in scripts and from AI agents, which otherwise never get the command back
+      conflicts: [--open, --wait-for-log]
+
+    - long: --errors
+      required: false
+      help: |-
+        🔥 Only show a digest of ERROR/FATAL records, then exit
+
+        Repeated records are de-duplicated with an occurrence count, stack
+        traces are collapsed to the exception chain ("Caused by:") plus a few
+        frames of the deepest cause. Only records with an explicit level are
+        reported (" ERROR ", "[ERROR]", level=error, "level":"error"), plus
+        uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and
+        level-less lines that merely contain "error" or "failed", never are.
+
+        Scans the whole log unless --since or --tail narrow it.
+      conflicts: [--open, --wait-for-log, --grep]
+
+    - long: --include-warnings
+      required: false
+      help: |-
+        🟠 With --errors, also report WARN records
+      needs: [--errors]
+
+    - long: --max-findings
+      arg: max_findings
+      required: false
+      validate: integer
+      default: "40"
+      help: |-
+        ✂️ With --errors, maximum number of distinct records to show (default 40)
+
+    - long: --html
+      required: false
+      needs: [--errors]
+      help: |-
+        🌐 With --errors, also write a self-contained HTML report of the digest in /tmp/playground-log-reports (known causes, zoomable timeline, root causes, every distinct record), opened in the browser in an interactive terminal
+    examples:
+    - playground container logs --container connect
+    - playground container logs -c connect --errors
+    - playground container logs -c connect -c broker --errors --html
+    - playground container logs -c connect --errors --since 10m --include-warnings
+    - playground container logs -c connect --grep "Caused by" --no-follow
+    - playground container logs -c connect --no-follow --tail 500
+    - playground container logs -c connect --open
+    - playground container logs -c connect --wait-for-log "StackOverflowError"
+    - playground container logs -c connect -c broker
+    - playground container logs --container schema-registry --container ksqldb-server --open
+    - playground container logs -c broker -c connect -c schema-registry
+    - playground container logs -c connect -c broker --wait-for-log "ERROR" --max-wait 120
+    - playground container logs --container connect --grep "ERROR"
+    - playground pod logs --previous
+    x_example_outputs:
+    - command: playground container logs -c connect --errors
+      output: |-
+        17:22:10 ℹ️ 🔥 ERROR/FATAL digest for connect logs
+        ✅ no ERROR/FATAL record found in 12523 lines
+    - command: playground container logs -c connect --errors --include-warnings --max-findings 2
+      output: |-
+        17:22:50 ℹ️ 🔥 ERROR/FATAL digest for connect logs
+        🔎 7 distinct record(s), 13 occurrence(s), in 12743 lines
+
+        🟠 WARN x7 (first seen line 108, last seen line 471)
+        [2026-10-13 14:27:56,953] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/10.89.0.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient:899)
+
+        🟠 WARN x1 (first seen line 737, last seen line 737)
+        WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+
+        ✂️ 5 more distinct record(s) not shown, increase --max-findings or narrow with --since
+    footer: |-
+      Example output:
+        $ playground container logs -c connect --errors
+        17:22:10 ℹ️ 🔥 ERROR/FATAL digest for connect logs
+        ✅ no ERROR/FATAL record found in 12523 lines
+
+  - name: display-error-all
+    group: Container
+    help: |-
+      🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting
+
+      The first command to run when an example misbehaves and you do not yet
+      know which component is at fault. It sweeps every container at once,
+      so you do not have to guess where to look.
+
+      Each container gets the same digest as 'playground container logs
+      --errors': repeated records are de-duplicated with an occurrence count
+      and stack traces are collapsed to their "Caused by:" chain. Containers
+      without any finding are only listed in a final one-line summary. The
+      last lines of connect are always shown raw, for failures that log no
+      error.
+    flags:
+    - long: --since
+      arg: since
+      required: false
+      validate: not_empty
+      help: |-
+        🕐 Only scan logs newer than a relative duration (10m, 1h) or a timestamp (2026-09-24T16:00:00)
+
+    - long: --include-warnings
+      required: false
+      help: |-
+        🟠 Also report WARN records
+
+    - long: --max-findings
+      arg: max_findings
+      required: false
+      validate: integer
+      default: "15"
+      help: |-
+        ✂️ Maximum number of distinct records to show per container (default 15)
+
+    - long: --html
+      required: false
+      help: |-
+        🌐 Also write a self-contained HTML report of all the containers in /tmp/playground-log-reports (known causes, zoomable timeline, root causes, every distinct record), opened in the browser in an interactive terminal
+    examples:
+    - playground container display-error-all
+    - playground container display-error-all --since 10m --include-warnings
+    - playground container display-error-all --html
+
+  - name: ssh
+    group: Container
+    help: |-
+      🛬 SSH into container
+
+      Interactive shell inside the container, as the user the component runs
+      with. Use 'playground container exec' instead when you want to run a
+      single command from a script.
+
+    flags:
+    - import: src/flags/container.yml
+
+    - long: --shell
+      short: -s
+      required: false
+      default: "bash"
+      arg: shell
+      allowed: 
+        - bash
+        - sh
+        - ksh
+        - zsh
+      help: |-
+        💾 Shell to use (default is bash)
+
+    examples:
+    - playground container ssh -c connect
+    - playground container ssh -c connect -s sh
+    - playground container ssh --container connect --shell sh
+    - playground container ssh -c broker
+    - playground container ssh --container schema-registry --shell zsh
+
+  - name: change-jdk
+    group: Container
+    help: |-
+      🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)
+
+      PS: It works for UBI8 docker images only
+
+    flags:
+    - import: src/flags/container.yml
+
+    - long: --version
+      required: true
+      arg: version
+      allowed: 
+        - "8"
+        - "11"
+        - "17"
+        - "21"
+        - "22"
+        - "25"
+      help: |-
+        🤎 JDK version to use
+
+    examples:
+    - playground container change-jdk --container connect --version 17
+
+  - name: exec
+    group: Container
+    help: |-
+      🪄 Execute command in a container
+
+      Runs one command and returns, which makes it the form to use inside
+      example scripts. Add --root when the component user is not allowed to
+      do what you are asking, typically to install a package or read a file
+      under /etc.
+
+    flags:
+    - import: src/flags/container.yml
+
+    - long: --command
+      required: true
+      validate: not_empty
+      arg: command
+      help: |-
+        📲 Command to execute
+
+    - long: --root
+      help: |-
+        👑 Run command as root
+
+    - long: --shell
+      default: "bash"
+      arg: shell
+      allowed: 
+        - bash
+        - sh
+        - ksh
+        - zsh
+      help: |-
+        💾 Shell to use (default is bash)
+
+    examples:
+    - playground container exec -c connect --command "date"
+    - playground container exec -c connect --command "whoami" --root
+    - playground container exec --container connect --command "whoami" --shell sh
+    - playground container exec -c broker -c connect --command "ps aux"
+    - playground container exec --container schema-registry --container ksqldb-server --command "free -h"
+    - playground container exec -c connect -c broker --command "netstat -tuln" --root
+
+  - name: cp
+    group: Container
+    help: |-
+      🪄 Copy files between local filesystem and container
+
+      Works in both directions, using the container:path notation. Typically
+      used to drop a jar, a certificate or a test file into a component, or
+      to pull out a file the connector has written.
+
+    flags:
+    - long: --source
+      required: true
+      validate: not_empty
+      arg: source
+      help: |-
+        📥 Source path (local path or container:path)
+
+    - long: --destination
+      required: true
+      validate: not_empty
+      arg: destination
+      help: |-
+        📤 Destination path (local path or container:path)
+
+    examples:
+    - playground container cp --source ./file.txt --destination connect:/tmp/file.txt
+    - playground container cp --source connect:/tmp/file.txt --destination ./file.txt
+
+  - name: restart
+    group: Container
+    help: |-
+      🔁 Restart a container
+
+      Stops and starts the container, keeping its definition and its data.
+      Use 'playground container recreate' instead if you changed the compose
+      definition or an environment variable.
+
+    flags:
+    - import: src/flags/container.yml
+
+  - name: pause
+    group: Container
+    help: |-
+      ⏸️  Pause a container
+
+      Freezes the processes without stopping the container: it keeps its
+      connections but stops responding. A good way to simulate a hung
+      broker, an unresponsive database or a GC pause, and to see how the
+      rest of the system reacts.
+
+    flags:
+    - import: src/flags/container.yml
+
+  - name: resume
+    alias: unpause
+    group: Container
+    help: |-
+      ⏯️  Resume a container
+
+      Unfreezes a container paused with 'playground container pause'.
+
+    flags:
+    - import: src/flags/container.yml
+
+  - name: kill
+    group: Container
+    help: |-
+      🔫 Kill a container
+
+      Stops the container abruptly, without letting it shut down cleanly,
+      which is how you simulate a crash. Bring it back with
+      'playground container recreate'.
+
+    flags:
+    - import: src/flags/container.yml
+    examples:
+    - playground container kill --container connect
+    - playground container kill -c broker
+    - playground container kill -c connect -c broker
+    - playground container kill --container schema-registry --container ksqldb-server --container control-center
+
+  - name: set-environment-variables
+    group: Container
+    help: |-
+      📦  Set environment variable(s) for a container
+
+      🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
+
+      Example: --env "KAFKA_OPTS: -verbose:class" --env "CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,org.apache.kafka.connect.runtime.rest.RestServer=ERROR"
+
+    flags:
+    - import: src/flags/container.yml
+    - long: --env
+      required: false
+      repeatable: true
+      conflicts:
+        - --restore-original-values
+      arg: env
+      help: |-
+        📦 Environment variables to set
+
+        🎓 Tip: you can pass multiple environment variables by specifying --env multiple times
+    - long: --restore-original-values
+      conflicts:
+        - --env
+      required: false
+      help: |-
+        🧽 Restore back original values before any changes was made
+    - long: --mount-jscissors-files
+      required: false
+      private: true
+      help: |-
+        Mount jscissors files for debugging
+
+  - name: wait-for-connect-rest-api-ready
+    group: Container
+    private: true
+    help: |-
+      🚏 wait-for-connect-rest-api-ready
+    flags:
+      - long: --max-wait
+        arg: max_wait
+        validate: integer
+        default: "300"
+        help: |- 
+          ⏳ Max time in seconds to wait

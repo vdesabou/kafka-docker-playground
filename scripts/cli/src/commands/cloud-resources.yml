@@ -1,0 +1,403 @@
+name: cloud-resources
+expose: always
+group: Cloud Resources
+help: |-
+  ☁️ What the playground left behind in your cloud accounts, what it costs, and cleaning it up
+
+  Examples that talk to a real cloud create real resources, and an
+  interrupted run leaves them behind. These commands show what is still
+  alive and what you are being billed for:
+
+    cloud-resources aws list            resources still up, scoped to you
+    cloud-resources aws costs           spend over a range of dates
+    cloud-resources aws costs-history   spend per month over the last year
+
+  The same three exist for azure, and costs / costs-history for ccloud
+  (Confluent Cloud).
+
+  🧹 Only one command deletes anything:
+
+    cloud-resources cleanup             delete the leftovers in aws, gcp,
+                                        azure, ccloud and salesforce
+                                        (--resource, --dry-run first)
+commands:
+- name: aws
+  help: |
+    ☁️ What is still running in AWS, and what it costs
+
+      list            resources created by the playground, still alive
+      costs           spend over a range of dates, by service
+      costs-history   spend per month over the last year
+
+    Uses the credentials and region of your aws CLI. Nothing is deleted
+    here, use 'playground cloud-resources cleanup' for that.
+  commands:
+  - name: list
+    help: |
+      📋 List all active resources
+
+      AWS resources created by the playground and still running, matched on
+      your username. Anything in the list is still being billed.
+    flags:
+    - &user
+      long: --user
+      private: true
+      arg: user
+      help: |-
+        ☢️ force user
+  - name: costs
+    help: |
+      💰 Show aws costs
+
+      Spend over a range of dates, broken down by AWS service, using the
+      Cost Explorer API. Run it after a week of heavy examples to see which
+      service the money actually went to, then use
+      'playground cloud-resources aws list' to find what is still up.
+
+      Defaults cover the last month, ending 3 days ago because AWS needs a
+      couple of days to consolidate. --start-date cannot go back more than
+      one year.
+    flags:
+    - *user
+    - long: --start-date
+      arg: start_date
+      validate: date_format
+      required: false
+      help: |- 
+        🗓️ start date in format yyyy-mm-dd
+
+        Default is 30 days ago
+    - long: --end-date
+      arg: end_date
+      validate: date_format
+      required: false
+      help: |- 
+        🗓️ end date in format yyyy-mm-dd
+
+          Default is 3 days ago
+    - long: --display-only-total-cost
+      private: true
+      help: |-
+        💰 display only total cost
+    - &raw-output-file
+      long: --raw-output-file
+      private: true
+      arg: raw_output_file
+      help: |-
+        📄 also save the raw response of the cost API in this file (used by costs-history for its HTML report)
+  - name: costs-history
+    help: |-
+      👛  Retrieve aws costs for each month since last year
+
+      One line per month over the past year, drawn as a histogram, which
+      makes a month that went wrong obvious at a glance. Use costs when you
+      then want to know which service it was.
+
+      By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+      🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and usage type, the month x service matrix, the top usage types, and the details of each month.
+
+      🪣 When S3 costs something, the report adds the Amazon S3 details: cost and volume (GB, requests) of each kind of S3 usage per month (storage, requests, Standard-IA retrieval, data sent to the Internet or to another region), the S3 buckets tagged cflt_managed_id=<user> (region, size per storage class, objects, access logging, lifecycle) and hints. Cost Explorer has no cost per bucket: that needs the resource-level data of the payer account.
+    flags:
+      - long: --detailed
+        help: |-
+          💹 display all details for each month
+      - &cloud-costs-output-dir
+        long: --output-dir
+        short: -o
+        arg: output_dir
+        required: false
+        default: "/tmp/playground-cloud-costs"
+        help: |-
+          📂 Output directory for the HTML report (default: /tmp/playground-cloud-costs)
+      - &cloud-costs-no-open
+        long: --no-open
+        help: |-
+          🚫 Do not open the HTML report in the browser
+      - long: --sample
+        short: -s
+        required: false
+        arg: sample
+        allowed: [aws_dummy]
+        help: |-
+          🧪 Sample of tools/cloud-costs/samples: writes the HTML report from this dummy cost data, without calling AWS
+
+          To see what the report looks like before running it on your account.
+    examples:
+      - playground cloud-resources aws costs-history
+      - playground cloud-resources aws costs-history --sample aws_dummy
+
+- name: azure
+  help: |
+    ☁️ What is still running in Azure, and what it costs
+
+      list            resources created by the playground, still alive
+      costs           spend over a range of dates
+      costs-history   spend per month over the last year
+
+    Uses the subscription your az CLI is logged into. Nothing is deleted
+    here, use 'playground cloud-resources cleanup' for that.
+  commands:
+  - name: list
+    help: |
+      📋 List all active resources
+
+      Azure resources created by the playground and still running, matched
+      on your username. Anything in the list is still being billed.
+    flags:
+    - &user
+      long: --user
+      private: true
+      arg: user
+      help: |-
+        ☢️ force user
+  - name: costs
+    help: |
+      💰 Show azure costs
+
+      Spend over a range of dates for your subscription, using the Azure
+      Cost Management API. You need to be logged in with the az CLI.
+
+      Defaults cover the last month, ending 3 days ago because the data
+      takes a couple of days to consolidate. --start-date cannot go back
+      more than one year.
+    flags:
+    - *user
+    - long: --start-date
+      arg: start_date
+      validate: date_format
+      required: false
+      help: |- 
+        🗓️ start date in format yyyy-mm-dd
+
+        Default is 30 days ago
+    - long: --end-date
+      arg: end_date
+      validate: date_format
+      required: false
+      help: |- 
+        🗓️ end date in format yyyy-mm-dd
+
+          Default is 3 days ago
+    - long: --display-only-total-cost
+      private: true
+      help: |-
+        💰 display only total cost
+    - *raw-output-file
+  - name: costs-history
+    help: |-
+      👛  Retrieve azure costs for each month since last year
+
+      One line per month over the past year, so you can spot the month that
+      went wrong before digging into it with costs.
+
+      By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+      🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and resource group, the month x service matrix, the top resources with the ones still billing, and the details of each month.
+    flags:
+      - long: --detailed
+        help: |-
+          💹 display all details for each month
+      - *cloud-costs-output-dir
+      - *cloud-costs-no-open
+
+- name: ccloud
+  help: |
+    ☁️ What Confluent Cloud costs you
+
+      costs           spend over a range of dates, by product
+      costs-history   spend per month over the last year
+
+    Uses the organization your confluent CLI is logged into. Leftovers of
+    the examples (connectors, topics) are shown by 'playground status'; to
+    delete them, use 'playground cloud-resources cleanup'.
+  commands:
+  - name: costs
+    dependencies:
+      confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    help: |-
+      💰  Retrieve ccloud costs for a range of dates
+
+      All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
+
+      Cost data can take up to 72 hours to become available.
+
+      Start date can reach a maximum of one year into the past
+
+      One month is the maximum window between start and end dates
+
+      For accuracy, Confluent recommends using a start_date that is at least 72 hours prior to the current date and time.
+
+      🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per day (zoomable, the other tiles follow the selected range), per product and environment, the resources still billing, the top resources, the resources of each product, the product x environment matrix and the cost per line type.
+    flags:
+      - long: --start-date
+        arg: start_date
+        validate: date_format
+        required: false
+        help: |- 
+          🗓️ start date in format yyyy-mm-dd
+
+          Default is 30 days ago
+      - long: --end-date
+        arg: end_date
+        validate: date_format
+        required: false
+        help: |- 
+          🗓️ end date in format yyyy-mm-dd
+
+            Default is 3 days ago
+      - long: --display-only-total-cost
+        private: true
+        help: |-
+          💰 display only total cost
+      - *raw-output-file
+      - *cloud-costs-output-dir
+      - *cloud-costs-no-open
+      - long: --no-report
+        private: true
+        help: |-
+          🚫 Do not write the HTML report (used by costs-history --detailed)
+      - long: --sample
+        short: -s
+        required: false
+        arg: sample
+        allowed: [ccloud_dummy]
+        help: |-
+          🧪 Sample of tools/cloud-costs/samples: writes the HTML report from the last month of this dummy billing data, without calling Confluent Cloud
+
+          To see what the report looks like before running it on your organization.
+    examples:
+      - playground cloud-resources ccloud costs
+      - playground cloud-resources ccloud costs --start-date 2026-09-01 --end-date 2026-10-01
+      - playground cloud-resources ccloud costs --sample ccloud_dummy
+
+  - name: costs-history
+    dependencies:
+      confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    help: |-
+      👛  Retrieve ccloud costs for each month since last year
+
+      All you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates
+
+      By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+      🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day (zoomable: drag over a range of days, last 7 / 30 / 90 days; the other tiles follow the selected range), per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
+
+    flags:
+      - long: --detailed
+        help: |-
+          💹 display all details for each month
+      - *cloud-costs-output-dir
+      - *cloud-costs-no-open
+      - long: --sample
+        short: -s
+        required: false
+        arg: sample
+        allowed: [ccloud_dummy]
+        help: |-
+          🧪 Sample of tools/cloud-costs/samples: writes the HTML report from this dummy billing data, without calling Confluent Cloud
+
+          To see what the report looks like before running it on your organization.
+    examples:
+      - playground cloud-resources ccloud costs-history
+      - playground cloud-resources ccloud costs-history --sample ccloud_dummy
+
+- name: cleanup
+  dependencies:
+    confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+  environment_variables:
+  - name: AZ_USER 
+    help: Azure user
+  - name: GCP_PROJECT 
+    help: GCP project
+  - name: AWS_ACCESS_KEY_ID 
+    help: AWS access key id
+  - name: AWS_SECRET_ACCESS_KEY 
+    help: AWS secret access key
+  - name: GCP_KEYFILE_CONTENT 
+    help: GCP keyfile (generated with "cat keyfile.json | jq -aRs .")
+  help: |-
+    🧹 Cleanup cloud resources that were created by running examples from the playground
+
+    ❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...
+
+    Examples that talk to a real cloud create real, billable resources, and an
+    interrupted run leaves them behind. This sweeps them, scoped to the ones
+    whose name contains pg and your username (as is, or lowercased without
+    - . _ like the examples write it), across AWS, GCP and Azure. Restrict the
+    scope with --resource, and run it regularly.
+
+    Salesforce: the accounts of the playground are dedicated test orgs, every
+    Lead, Contact and PushTopic of them is deleted.
+
+    Confluent Cloud: connectors whose name contains your username are deleted,
+    with their dlq, success and error topics. All topics of the cluster are
+    deleted only when the cluster was created by the playground for you
+    (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be
+    shared with your team, only the topics recorded as created by your own
+    runs are deleted (local file playground-ccloud-created-topics): topics
+    created with playground topic create / produce, and topics your fully
+    managed source connectors write to, as set in their config (kafka.topic,
+    api1.topics, topic.prefix...).
+
+    In CI, the service accounts created by the playground (pg-<user>-*) and the
+    subjects of the deleted topics (<topic>-key, <topic>-value) are deleted too.
+
+    You are asked to confirm every deletion, unless --force is given. Use
+    --dry-run first to see what would be deleted.
+
+    ☢️ Deletions are permanent. Use a dedicated cloud account for the
+       playground rather than one that also hosts resources you care about.
+  flags:
+  - long: --force
+    help: |-
+      ☢️ do not ask for confirmation
+
+      ❗use with caution
+  - long: --user
+    private: true
+    arg: user
+    help: |-
+      ☢️ force user
+  - long: --resource
+    arg: resource
+    help: |-
+      🛁 resource to cleanup
+
+      If not provided, all of them are cleaned up
+
+      🎓 Tip: you can pass multiple resources by specifying --resource multiple times
+    required: false
+    repeatable: true
+    unique: true
+    default:
+      - aws
+      - gcp
+      - azure
+      - ccloud
+      - salesforce
+    allowed: 
+      - aws
+      - gcp
+      - azure
+      - ccloud
+      - salesforce
+  - long: --dry-run
+    required: false
+    conflicts: [--recorded-topics-only]
+    help: |-
+      🔎 List what would be deleted (the commands), without deleting anything nor asking
+
+      The Confluent Cloud part is skipped when no cluster is known (CLUSTER_NAME, or a previous ccloud run): finding
+      one would create it.
+  - long: --recorded-topics-only
+    private: true
+    conflicts: [--dry-run]
+    help: |-
+      🧹 only delete the Confluent Cloud topics recorded as created by the playground runs (playground-ccloud-created-topics) that are still on the cluster, except the ones a connector of the cluster uses
+
+      Used by run-tests.sh at the end of each CI job.
+  examples:
+  - playground cloud-resources cleanup --dry-run
+  - playground cloud-resources cleanup --resource aws --dry-run
+  - playground cloud-resources cleanup --resource aws --resource gcp

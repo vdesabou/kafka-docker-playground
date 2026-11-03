@@ -1,0 +1,7 @@
+name: get-ccloud-environment-list
+help: Return some completion for ccloud environment
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

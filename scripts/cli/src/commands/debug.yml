@@ -1,0 +1,813 @@
+name: debug
+expose: always
+group: Debug
+help: |-
+  🐞 Debug commands
+
+  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and
+  the analysis tools are run inside the right container, installed on the
+  fly when missing, and their output is brought back to your machine.
+
+  🐌 It hangs, or it is slow
+    thread-dump         what every thread is doing right now
+    flight-recorder     record the JVM from start to stop, then analyze it
+
+  💾 It eats memory
+    heap-dump           take a .hprof, optionally as a histogram
+
+  🌐 It is a network or TLS problem
+    tcp-dump            capture traffic, analyze it, open it in Wireshark
+    testssl             probe a TLS endpoint, locally or in the cloud
+    block-traffic       cut a route with iptables, to simulate an outage
+    degrade-traffic     add latency, packet loss or corruption with tc
+    java-debug          turn on the JVM SSL, Kerberos or class loading traces
+
+  🔬 It is in the code
+    log-level set       raise the level of any package, without a restart
+    enable-remote-debugging   attach your IDE debugger to a container
+    jscissors           trace method calls, arguments and return values
+
+  📦 Hand it over
+    generate-diagnostics   a support bundle for connect or broker
+
+  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,
+  logs, Oracle XStream reports, CFK bundles, flight recordings, network
+  captures): playground analyze
+commands:
+
+- name: enable-remote-debugging
+  help: |-
+    ✨ Enable java remote debugging for container
+    
+    👉 Check documentation https://kafka-docker-playground.io/#/toolkit-debugging?id=%e2%9c%a8-remote-debugging
+
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
+  flags:
+    - import: src/flags/container.yml
+    - long: --skip-vs-code-config-display
+      required: false
+      private: true
+  examples:
+  - playground debug enable-remote-debugging
+  - playground debug enable-remote-debugging --container broker
+  - playground debug enable-remote-debugging -c broker
+  - playground debug enable-remote-debugging -c connect -c broker
+  - playground debug enable-remote-debugging --container schema-registry --container ksqldb-server --container control-center
+
+- name: disable-remote-debugging
+  help: |-
+    🛑 Disable java remote debugging for container
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
+  flags:
+    - import: src/flags/container.yml
+
+- name: testssl
+  help: |-
+    🔐 Testing TLS/SSL encryption using https://testssl.sh/
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
+  flags:
+    - long: --uri
+      arg: uri
+      required: true
+      help: |-
+        host|host:port|URL|URL:port   port 443 is default, URL can only contain HTTPS protocol
+  catch_all:
+    label: testssl arguments
+    help: arguments to pass to testssl, see https://testssl.sh for all options
+  examples:
+  - playground debug testssl --uri "https://google.com" --fast
+  - playground debug testssl --uri "pkc-xxxx.us-west-2.aws.confluent.cloud:9092"
+
+- name: generate-diagnostics
+  help: |-
+    ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool
+
+    ⚠️ only connect and broker containers are supported for now
+
+    see https://docs.confluent.io/platform/current/tools/diagnostics-tool.html#collect-diagnostics
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
+  flags:
+    - import: src/flags/container.yml
+  examples:
+  - playground debug generate-diagnostics
+  - playground debug generate-diagnostics --container broker
+
+- name: thread-dump
+  help: |-
+    🎯 Take a java thread dump
+
+    🔖 It will save output to a file and open with text editor set with playground config editor <editor> (default is code)
+
+    The first thing to take when something is stuck: it shows the stack of
+    every thread, and the deadlocks if any.
+
+    🔖 It sends kill -3 to the JVM, which prints the dump to the container logs: no JDK is needed in the image and the container is not restarted. It falls back to jstack -l when the dump does not reach the logs.
+
+    🎓 Tip: take two or three dumps a few seconds apart. Threads that appear
+    in the same place every time are the ones that are really blocked. playground analyze thread-dump does it and analyzes them.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%B5-a-connector-looks-stuck-analyze-thread-dumps
+  flags:
+    - import: src/flags/container.yml
+    - long: --jstack
+      required: false
+      help: |-
+        🔧 Use jstack -l instead of kill -3: adds the owners of java.util.concurrent locks ("Locked ownable synchronizers"). Needs a JDK in the image (on cfk, a debug container is attached); the container is never restarted
+  examples:
+  - playground debug thread-dump
+  - playground debug thread-dump --container broker
+  - playground debug thread-dump -c connect -c broker
+  - playground debug thread-dump --container schema-registry --container ksqldb-server
+  - playground debug thread-dump --container connect --jstack
+
+- name: thread-analyze
+  private: true
+  filename: commands/analyze/thread-dump.sh
+  help: |-
+    Moved to 'playground analyze thread-dump' (kept as a hidden alias)
+  flags:
+<%= File.read('src/flags/analyze-thread-dump-flags.yml').gsub(/^(?=.)/, '    ') %>
+
+- name: heap-dump
+  help: |-
+    👻 Take a heap dump
+
+    🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
+
+    With --live, only the live objects are dumped, which runs a full GC first. Without it, every object of the
+    heap is dumped, without a GC.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+  flags:
+    - import: src/flags/container.yml
+    - long: --live
+      required: false
+      help: |-
+        🧬 dump only live objects; if not specified, all objects in the heap are dumped
+    - long: --histo
+      required: false
+      help: |-
+        📊 print histogram of java object heap
+  examples:
+  - playground debug heap-dump
+  - playground debug heap-dump --container broker
+  - playground debug heap-dump -c connect -c broker
+  - playground debug heap-dump --container schema-registry --live
+  - playground debug heap-dump -c connect -c broker --histo
+
+- name: heap-analyze
+  private: true
+  filename: commands/analyze/heap-dump.sh
+  help: |-
+    Moved to 'playground analyze heap-dump' (kept as a hidden alias)
+  flags:
+<%= File.read('src/flags/analyze-heap-dump-flags.yml').gsub(/^(?=.)/, '    ') %>
+
+- name: analyze-logs
+  private: true
+  filename: commands/analyze/logs.sh
+  help: |-
+    Moved to 'playground analyze logs' (kept as a hidden alias)
+  flags:
+<%= File.read('src/flags/analyze-logs-flags.yml').gsub(/^(?=.)/, '    ') %>
+
+- name: gc-analyze
+  private: true
+  filename: commands/analyze/gc-logs.sh
+  help: |-
+    Moved to 'playground analyze gc-logs' (kept as a hidden alias)
+  flags:
+<%= File.read('src/flags/analyze-gc-logs-flags.yml').gsub(/^(?=.)/, '    ') %>
+
+- name: tcp-dump
+  help: |-
+    🕵️‍♂️ Take a tcp dump (sniffing network)
+
+    Captures the traffic in or out of one or more containers and brings the capture files back, with a summary and
+    ready to open in Wireshark. Narrow it with --port and/or --filter (any tcpdump expression) when you know what you
+    care about.
+
+    ⏱️ Without --action, it captures for --duration (default 30s): reproduce the issue meanwhile, Ctrl+C stops it
+    earlier and keeps the capture. With several --container, the captures run at the same time, so both sides of a
+    connection can be compared. For a window of any length, in a script or by hand: --action start, reproduce,
+    --action stop (--action status shows the running captures, kept in playground.ini as tcp_dump.<container>).
+
+    📂 For each container, --output-dir (default: current folder) gets:
+
+      tcp-dump-<container>-<port>-<date>.pcap                     the capture
+      tcp-dump-<container>-<port>-<date>.hosts                    ip address → container name
+      tcp-dump-<container>-<port>-<date>-tcp-dump-report.html     the HTML report of the analysis
+
+    🔎 Each capture is then analyzed with playground analyze tcp-dump (--no-analyze to skip it): refused and reset
+    connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times (with the bodies of
+    the HTTP error responses), with container names instead of ip addresses, as a text digest and an HTML report.
+
+    🐳 tcpdump runs from the nicolaka/netshoot image in the network namespace of the container (an ephemeral
+    container of the pod with cfk): nothing is installed in the container, so it works with any image.
+
+    ❕ On an encrypted listener you will see the handshake and the failures (TLS alerts), but not the records
+       themselves.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+  flags:
+    - import: src/flags/container.yml
+    - long: --port
+      arg: port
+      validate: integer
+      required: false
+      completions:
+        dynamic:
+        - playground get-docker-ports
+      help: |-
+        🚪 Only the traffic to or from this port (default: every port)
+    - long: --filter
+      arg: filter
+      required: false
+      help: |-
+        🔍 tcpdump filter expression (pcap-filter syntax), combined with --port when both are set
+
+        Examples: 'host postgres', 'tcp[tcpflags] & tcp-rst != 0', 'not port 22'
+    - long: --duration
+      arg: duration
+      validate: duration
+      required: false
+      default: "30"
+      help: |-
+        ⏱️ Duration of the capture without --action, in seconds or with a s/m/h suffix (default is 30 seconds)
+    - long: --snaplen
+      arg: snaplen
+      validate: integer
+      required: false
+      help: |-
+        ✂️ Bytes kept from each packet (default: the whole packet). 128 keeps the headers only, for long captures
+    - long: --action
+      allowed: [start, stop, status]
+      arg: action
+      required: false
+      help: |-
+        🟢 start, stop (copy and summarize the capture) or status, for a capture of any length (default: capture for --duration)
+    - long: --output-dir
+      arg: output_dir
+      required: false
+      default: "."
+      help: |-
+        📂 Folder for the capture files (default: current folder)
+    - long: --no-analyze
+      required: false
+      help: |-
+        🙈 Only copy the captures, do not analyze them with playground analyze tcp-dump
+    - long: --no-open
+      required: false
+      help: |-
+        🦈 Do not open the captures in Wireshark (they are never opened in CI or outside a terminal)
+  examples:
+  - playground debug tcp-dump --container control-center --port 9021 --duration 60
+  - playground debug tcp-dump -c connect -c broker --port 9092 --duration 2m
+  - playground debug tcp-dump -c connect --filter "host postgres and tcp[tcpflags] & tcp-rst != 0"
+  - playground debug tcp-dump -c connect --action start
+  - playground debug tcp-dump -c connect --action stop --output-dir /tmp/captures
+
+- name: block-traffic
+  help: |-
+    🚫 Blocking traffic using iptables
+
+    Cuts the route from a container to a destination, so you can see how the
+    system behaves during a network outage: a broker that loses the
+    controller, a connector that can no longer reach its database, a client
+    that cannot resolve the schema registry.
+
+    Blocking with --action start and restoring with --action stop, so the
+    failure is reversible without restarting anything.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose
+  flags:
+    - import: src/flags/container.yml
+    - long: --destination
+      arg: destination
+      required: true
+      help: |-
+        Destination: it could be an ip address, a container name or a hostname
+    - long: --port
+      arg: port
+      validate: integer
+      required: false
+      completions:
+        dynamic:
+        - playground get-docker-ports
+      help: |-
+        Port on which tcp traffic should be blocked
+    - &action_start_stop
+      long: --action
+      allowed: [start, stop]
+      arg: action
+      required: true
+      help: |-
+        🟢 start or stop
+  examples:
+  - playground debug block-traffic --destination google.com --action start
+  - playground debug block-traffic --container broker --destination zookeeper --action start
+  - playground debug block-traffic -c broker -c connect --destination zookeeper --action start
+  - playground debug block-traffic --container schema-registry --destination broker --port 9092 --action start
+  - playground debug block-traffic -c connect -c ksqldb-server --destination schema-registry --action stop
+
+- name: degrade-traffic
+  help: |-
+    🐌 Add latency, packet loss, corruption or a bandwidth limit using tc
+
+    Some issues only happen on a slow or unreliable network: request
+    timeouts, retries, rebalances, producer or consumer errors. This makes
+    the traffic from a container slow or lossy, to a destination (and
+    port) or to everything, and --action stop puts it back to normal
+    without restarting anything.
+
+    Several effects can be combined in one call, e.g. --latency 100ms
+    --loss 1%. A new --action start replaces what was applied before on
+    the container. --action status shows what is applied and the measured
+    round trip to the destination.
+
+    tc runs from the nicolaka/netshoot image in the network namespace of
+    the container (an ephemeral container of the pod with cfk): nothing is
+    installed in the container, so it works with any image.
+
+    ❕ tc only shapes the packets a container sends: with --latency 100ms
+    the round trip to the destination grows by 100ms. A container restart
+    removes the degradation.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose
+  flags:
+    - import: src/flags/container.yml
+    - long: --destination
+      arg: destination
+      required: false
+      completions:
+        dynamic:
+        - playground get-container-list
+      help: |-
+        🎯 Destination: an ip address, a container name or a hostname (default: all the traffic of the container)
+    - long: --port
+      arg: port
+      validate: integer
+      required: false
+      completions:
+        dynamic:
+        - playground get-docker-ports
+      help: |-
+        🚪 Only the tcp traffic to this port of the destination
+    - long: --latency
+      arg: latency
+      required: false
+      help: |-
+        ⏱️ Added latency, e.g. 100ms, 1s
+    - long: --jitter
+      arg: jitter
+      required: false
+      help: |-
+        〰️ Random variation of the latency, e.g. 20ms (needs --latency)
+    - long: --loss
+      arg: loss
+      required: false
+      help: |-
+        🕳️ Percentage of packets dropped, e.g. 1%
+    - long: --corruption
+      arg: corruption
+      required: false
+      help: |-
+        🧨 Percentage of packets corrupted, e.g. 1%
+    - long: --duplicate
+      arg: duplicate
+      required: false
+      help: |-
+        👯 Percentage of packets duplicated, e.g. 1%
+    - long: --rate
+      arg: rate
+      required: false
+      help: |-
+        🚰 Bandwidth limit, e.g. 1mbit, 500kbit
+    - long: --action
+      allowed: [start, stop, status]
+      arg: action
+      required: true
+      help: |-
+        🟢 start, stop or status
+  examples:
+  - playground debug degrade-traffic --container connect --destination broker --latency 100ms --action start
+  - playground debug degrade-traffic -c connect --destination broker --latency 100ms --jitter 20ms --loss 1% --action start
+  - playground debug degrade-traffic -c connect -c ksqldb-server --destination broker --port 9092 --loss 5% --action start
+  - playground debug degrade-traffic -c connect --rate 1mbit --action start
+  - playground debug degrade-traffic -c connect --destination broker --action status
+  - playground debug degrade-traffic -c connect -c ksqldb-server --action stop
+
+- name: java-debug
+  help: |-
+    🤎 JVM arguments for SSL, Kerberos or Class Loading
+
+    Turns on the JVM's own diagnostic traces in a container and restarts it.
+    This is how you find out why a TLS handshake fails, why a Kerberos
+    login is refused, or which jar a class was loaded from when two
+    versions collide.
+
+    ❗ These traces are extremely verbose. Turn them back off with
+       --action disable once you have what you need.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging
+  flags:
+    - import: src/flags/container.yml
+    - long: --type
+      arg: type
+      allowed: [ssl_all, ssl_handshake, class_loading, kerberos]
+      required: true
+      help: |-
+        - ssl_all: Enable all SSL debugging, i.e -Djavax.net.debug=all
+        - ssl_handshake: Enable SSL handshake debugging, i.e -Djavax.net.debug=ssl:handshake
+        - class_loading: Enable class loading debugging, i.e -verbose:class
+        - kerberos: Enable Kerberos debugging, i.e -Dsun.security.krb5.debug=true
+    - &action_enable_disable
+      long: --action
+      allowed: [enable, disable]
+      arg: action
+      required: false
+      default: "enable"
+      help: |-
+        🟢 enable or disable
+  examples:
+  - playground debug java-debug --type class_loading
+  - playground debug java-debug --container broker --type ssl_handshake --action enable
+  - playground debug java-debug --container broker --type ssl_handshake --action disable
+
+- name: jscissors
+  help: |-
+    ✂️ Trace the calls of any method of a running JVM: arguments, return values, durations, exceptions, call tree
+
+    A java agent (tools/jscissors/agent, byte-buddy) loaded in the JVM of the container instruments the methods matching --class and --method, and records every call with what the --operation flags ask for. For a window of any length: --action start, reproduce the problem, --action stop, which copies the trace to --output-dir and analyzes it with playground analyze jscissors (methods by total time, exceptions, calls still running, slowest calls, call trees, HTML report), unless --no-analyze. With --duration, start, wait and stop in one command.
+
+    💉 No restart: the agent is loaded in the running JVM with the attach protocol (what jcmd does, without jcmd, which the cp images do not have), or over JMX for a JDK older than 16. --action stop restores the original classes. Starting again replaces the rules. With --restart, the container is recreated with the agent in JAVA_TOOL_OPTIONS, to trace the startup of the JVM too (or when the JVM refuses the attach).
+
+    🎯 --class and --method are exact names, or java regular expressions as soon as they hold other characters than letters, digits, '.', '$' and '_' (io.confluent.connect.jdbc.*, .*[Ww]rite.*). Only concrete methods are traced (trace the implementation class, not the interface), constructors and JDK classes (java.*, javax.*) are not. A class loaded after the start is instrumented when it loads.
+
+    🛡️ Safe by default: values are cut to --max-value-length and the secrets found in them are masked (passwords of maps, JAAS, connection strings), at most --max-calls calls (--max-calls-per-method per method) are recorded with their details (every call is counted in the statistics), or only the ones that throw (--only-failed) or are slow (--slower-than), at most 10 thread dumps and 1 heap dump, the agent can never throw in the traced code, and a toString() of an argument is never traced. Trace what you need: a regex matching thousands of hot methods slows the JVM down.
+
+    📂 In the trace folder (jscissors-<container>-<date>/pid-<pid>/): events.jsonl (one event per call enter / exit / dump), summary.json (statistics), agent.log, instrumented.txt, dumps/, and the HTML report.
+
+    🔖 The session of each container is kept in playground.ini (jscissors.<container>), --action status shows it with the calls so far. The agent jar is built from tools/jscissors/agent with maven in a container the first time (and after a change of its sources).
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%9C%82%EF%B8%8F-records-vanish-a-task-hangs-what-does-the-code-do
+  flags:
+    - import: src/flags/container.yml
+    - long: --action
+      allowed: [start, stop, status, enable, disable]
+      arg: action
+      required: false
+      default: "start"
+      help: |-
+        🟢 start (default), stop (copy the trace and analyze it) or status
+
+        enable and disable are the former names of start and stop
+    - long: --class
+      arg: class
+      required: false
+      repeatable: true
+      help: |-
+        🎯 Class to trace: exact name (io.confluent.connect.jdbc.sink.JdbcDbWriter, a nested class with $), or a regex (io.confluent.connect.jdbc.sink.*)
+
+        🎓 Tip: you can pass multiple classes by specifying --class multiple times
+    - long: --method
+      arg: method
+      required: false
+      repeatable: true
+      default: ".*"
+      help: |-
+        🎯 Method to trace, in each --class: exact name (write) or regex (.*[Ww]rite.*), default: every method
+
+        🎓 Tip: you can pass multiple methods by specifying --method multiple times
+    - long: --operation
+      arg: operation
+      help: |-
+        🥼 What to record on top of each call (its duration, its exception and its place in the call tree are always recorded):
+
+        * VALUES: arguments
+        * RETURN_VALUE: return value
+        * STACK: stack trace of the caller
+        * THREADS / RETURN_THREADS / EXCEPTION_THREADS: thread dump when the method is called / returns / throws
+        * HEAP / RETURN_HEAP / EXCEPTION_HEAP: heap dump when the method is called / returns / throws
+        * DELAY: duration (always recorded, kept for compatibility)
+
+        Default values: VALUES and RETURN_VALUE
+
+        🎓 Tip: you can pass multiple operations by specifying --operation multiple times
+      required: false
+      repeatable: true
+      unique: true
+      allowed:
+        - VALUES
+        - RETURN_VALUE
+        - STACK
+        - THREADS
+        - RETURN_THREADS
+        - EXCEPTION_THREADS
+        - HEAP
+        - RETURN_HEAP
+        - EXCEPTION_HEAP
+        - DELAY
+      default:
+        - VALUES
+        - RETURN_VALUE
+    - long: --config-file
+      arg: config_file
+      required: false
+      completions:
+        dynamic:
+        - playground get-any-file-with-fzf "$completion_current"
+      help: |-
+        📜 Rules file, for different operations per class: one class{method}=OP+OP rule per line (io.confluent.connect.jdbc.sink.JdbcDbWriter{write}=VALUES+STACK), added to the rules of --class
+    - long: --duration
+      arg: duration
+      validate: duration
+      required: false
+      help: |-
+        ⏱️ With --action start: trace for this long (in seconds, or with a s/m/h suffix), then stop and analyze
+    - long: --restart
+      required: false
+      help: |-
+        🔁 Load the agent at the start of the JVM: the container is recreated (and recreated again without the agent by --action stop). To trace the startup, or when the JVM refuses the attach
+    - long: --pid
+      arg: pid
+      required: false
+      default: "auto"
+      help: |-
+        🔢 Process to attach to in the container (default: auto, the oldest java process)
+    - long: --max-calls
+      arg: max_calls
+      required: false
+      validate: integer
+      help: |-
+        ✂️ Calls recorded with their details in events.jsonl (default: 50000), the next ones are only counted in the statistics
+    - long: --max-calls-per-method
+      arg: max_calls_per_method
+      required: false
+      validate: integer
+      help: |-
+        ✂️ Calls of one method recorded with their details (default: 2000), so that a hot method does not use the whole budget
+    - long: --max-value-length
+      arg: max_value_length
+      required: false
+      validate: integer
+      help: |-
+        ✂️ Characters kept of each argument, return value and exception message (default: 300)
+    - long: --only-failed
+      required: false
+      help: |-
+        🎯 Record with their details (arguments, return value, stack) only the calls that throw an exception: the others are only counted in the statistics. With --slower-than, the calls that throw or are slow
+    - long: --slower-than
+      arg: duration
+      required: false
+      help: |-
+        🐢 Record with their details only the calls that take at least this long (500ms, 2s, 1m): the others are only counted in the statistics. With --only-failed, the calls that are slow or throw
+    - long: --output-dir
+      short: -o
+      arg: output_dir
+      required: false
+      default: "."
+      help: |-
+        📂 Folder for the trace and its HTML report, used by --action stop (default: current folder)
+    - long: --no-analyze
+      required: false
+      help: |-
+        🙈 With --action stop, only copy the trace, do not analyze it
+  examples:
+  - playground debug jscissors --class io.confluent.connect.jdbc.sink.JdbcDbWriter --method write --action start
+  - playground debug jscissors --action stop
+  - playground debug jscissors --action status
+  - playground debug jscissors --class 'io.confluent.connect.jdbc.sink.*' --duration 60s
+  - playground debug jscissors --class org.apache.kafka.connect.runtime.WorkerSinkTask --method 'poll|convertMessages' --operation VALUES --operation EXCEPTION_THREADS
+  - playground debug jscissors -c broker --class kafka.server.KafkaApis --method handleProduceRequest --restart
+  - playground debug jscissors --class io.confluent.connect.jdbc.sink.BufferedRecords --only-failed --duration 2m
+  - playground debug jscissors --class 'io.confluent.connect.s3.*' --slower-than 500ms --action start
+
+- name: flight-recorder
+  help: |-
+    🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop
+
+    For a window of any length, in a script or by hand: start, reproduce the problem, stop. --action stop copies the
+    .jfr to --output-dir and analyzes it with playground analyze flight-recorder (where the time of the connector tasks
+    goes: states, CPU by layer, hot methods, allocation, locks, GC, findings), unless --no-analyze. Open it with JDK
+    Mission Control (https://jdk.java.net/jmc/) for the details. To record for a fixed time and analyze in one
+    command: playground analyze flight-recorder -c <container> --duration 2m.
+
+    🔌 The recording is driven over JMX (FlightRecorderMXBean) when the container has a JMX port (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...), as in the
+    playground environments: the cp images ship a JRE without jcmd, and nothing is installed or restarted. Otherwise
+    (cfk pods), jcmd is used when the image has it.
+
+    ⚙️ --settings playground (default) records what the analysis needs with a low overhead
+    (tools/jfr-analyzer/playground.jfc); profile and default are the settings of the JDK; all records every event
+    with no threshold (scripts/cli/all.jfc), for a deep dive in JDK Mission Control, with a high overhead.
+
+    🔖 The recording of each container is kept in playground.ini (flight_recorder.<container>), --action status shows it.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%9B%A9%EF%B8%8F-a-slow-connector-where-does-the-task-time-go
+  flags:
+    - import: src/flags/container.yml
+    - long: --action
+      allowed: [start, stop, status]
+      arg: action
+      required: true
+      help: |-
+        🟢 start, stop (copy the recording and analyze it) or status
+    - long: --settings
+      allowed: [playground, profile, default, all]
+      arg: settings
+      required: false
+      default: "playground"
+      help: |-
+        ⚙️ Settings of the recording, used by --action start (default: playground)
+
+          playground   what playground analyze flight-recorder needs, low overhead (tools/jfr-analyzer/playground.jfc)
+          profile      settings of the JDK for profiling, about 2% overhead
+          default      settings of the JDK for continuous recording, about 1% overhead
+          all          every event, no threshold (scripts/cli/all.jfc): high overhead, for JDK Mission Control
+    - long: --trace-method
+      arg: method
+      required: false
+      repeatable: true
+      help: |-
+        🎯 With --action start, also record every call of this method, with its duration and its caller (method tracing of JDK 25+, JEP 520: the cp 8.3.2 images ship JDK 25): a class (all its methods), Class::method or @Annotation. The report gets a "Traced methods" section: calls, total, avg, max, the slowest calls and their stack. No argument values: for them, use playground debug jscissors
+
+        🎓 Tip: you can pass multiple methods by specifying --trace-method multiple times
+    - long: --output-dir
+      short: -o
+      arg: output_dir
+      required: false
+      default: "."
+      help: |-
+        📂 Folder for the .jfr and the HTML report of the analysis, used by --action stop (default: current folder)
+    - long: --no-analyze
+      required: false
+      help: |-
+        🙈 With --action stop, only copy the recording, do not analyze it
+  examples:
+  - playground debug flight-recorder --action start
+  - playground debug flight-recorder --action stop
+  - playground debug flight-recorder --action status
+  - playground debug flight-recorder -c connect -c connect2 --action start --settings profile
+  - playground debug flight-recorder --action stop --output-dir /tmp/jfr --no-analyze
+  - playground debug flight-recorder --action start --trace-method io.confluent.connect.jdbc.sink.BufferedRecords --trace-method io.confluent.connect.jdbc.sink.JdbcDbWriter::write
+
+- name: log-level
+  help: |-
+    🧬 Set log level for any package
+
+    Changes the level of any logger on the running connect worker, straight
+    away and without a restart, so you do not have to edit log4j properties
+    and rebuild the container.
+
+    🎓 Tip: raise only the package you suspect, for instance
+    io.confluent.connect.s3 or org.apache.kafka.clients.consumer, rather
+    than the root logger, or the useful lines will be lost in the noise.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-log-levels
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AC-trace-on-a-running-connector-without-a-restart
+  filters:
+  - connect_running
+  commands:
+  - name: get
+    help: |-
+      Get log levels
+
+      With no --package, every logger with an explicit level is listed.
+    flags:
+    - &package
+      long: --package
+      short: -p
+      required: false
+      validate: not_empty
+      arg: package
+      help: |-
+        Package name
+
+  - name: set
+    help: |-
+      Set log level for specific logger
+
+      Takes effect immediately and applies to the logger and everything
+      below it in the package hierarchy.
+    flags:
+    - long: --package
+      short: -p
+      required: true
+      validate: not_empty
+      arg: package
+      help: |-
+        📦 Package name
+
+    - import: src/flags/level.yml
+
+  examples:
+  - playground debug log-level get
+  - playground debug log-level get -p io.confluent.connect.oracle.cdc
+  - playground debug log-level get --package io.confluent.connect.oracle.cdc
+  - playground debug log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
+
+- name: cfk
+  expose: always
+  group: Debug
+  help: |-
+    🧱 CFK debug sub-commands
+  commands:
+    - name: cfk-bundle-analyze
+      private: true
+      filename: commands/analyze/cfk-bundle.sh
+      help: |-
+        Moved to 'playground analyze cfk-bundle' (kept as a hidden alias)
+      flags:
+<%= File.read('src/flags/analyze-cfk-bundle-flags.yml').gsub(/^(?=.)/, '        ') %>
+
+    - name: generate-bundle
+      help: |-
+        ⛑️ Generate a Support bundle
+
+        see https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk
+      filters:
+      - cfk_environment
+      dependencies:
+        kubectl: visit https://kubernetes.io/docs/tasks/tools/ to install
+      flags:
+      - long: --follow-logs-duration
+        arg: follow-logs-duration
+        validate: integer
+        required: false
+        default: "0"
+        help: |-
+          Max duration to follow logs
+      examples:
+      - playground debug cfk generate-bundle
+
+    - name: sourcecode
+      help: |-
+        🧑‍💻 Source code of the CFK operator at the version of a cluster or of a support bundle
+
+        The helm chart version of CFK (0.1718.10 for CFK 3.3.0) is also the image tag of the operator and the git tag
+        (v0.1718.10) of its source, in the private repository confluentinc/confluent-operator (Confluent only: gh auth
+        login, VPN). The tag is cloned once, shallow, in /tmp/cfk-operator-sourcecode/confluent-operator-v<tag>, and the
+        folder is printed as the last line, for an agent or an engineer to read the code that logs an error.
+
+        --grep "<message>" searches a literal part of an operator message in the code (tests and vendor left out), with
+        the GitHub link of each match. With --compare-with <version>, it also says whether the message is still there in
+        another version, and which of its files changed (is it fixed after X?).
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk
+      dependencies:
+        git: visit https://git-scm.com/downloads to install
+      flags:
+      - long: --cfk-version
+        arg: version
+        required: false
+        help: |-
+          🔢 CFK version (3.3.0), mapped to its operator tag
+      - long: --operator-tag
+        arg: tag
+        required: false
+        help: |-
+          🏷️ Operator tag, the helm chart version (0.1718.10)
+      - long: --bundle
+        short: -f
+        arg: bundle
+        required: false
+        completions:
+          dynamic:
+          - playground get-any-file-with-fzf "$completion_current"
+        help: |-
+          📦 CFK support bundle (folder, .tar.gz, .tgz, .zip): its operator version (cluster-details.txt, operator Deployment)
+      - long: --grep
+        arg: message
+        required: false
+        help: |-
+          🔎 Literal text to search in the code, a part of an operator log message ("cluster not rollable from roll pre checks")
+      - long: --compare-with
+        arg: version
+        required: false
+        help: |-
+          🆚 Another CFK version or operator tag: whether the --grep text is still there, which files changed, the GitHub compare link
+      - long: --only-show-url
+        required: false
+        help: |-
+          🔗 Only print the GitHub URL of the tag (and of the comparison with --compare-with), no clone
+      - long: --checkout-only
+        required: false
+        help: |-
+          📂 Clone the tag and print its folder as the last line (also what the command does without --grep / --compare-with)
+      examples:
+      - playground debug cfk sourcecode --cfk-version 3.3.0 --only-show-url
+      - playground debug cfk sourcecode --bundle ./support-bundle-ns-confluent.tar.gz --grep "cluster not rollable from roll pre checks"
+      - playground debug cfk sourcecode --cfk-version 3.2.3 --grep "missing inter replication credentials" --compare-with 3.3.0
+      - playground debug cfk sourcecode --operator-tag 0.1718.10 --checkout-only
