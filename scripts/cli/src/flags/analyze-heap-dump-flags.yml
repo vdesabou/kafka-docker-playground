@@ -1,0 +1,61 @@
+- long: --file
+  short: -f
+  required: false
+  completions:
+    dynamic:
+    - playground get-specific-file-extension "$completion_current" --extension "hprof"
+  validate: file_exists_and_hprof
+  arg: file
+  help: |-
+    🔖 Heap dump to analyze (.hprof, or .hprof.gz as written by jcmd GC.heap_dump -gz)
+
+    🎓 Tip: use <tab> completion to trigger fzf completion
+            use <option+enter> to use the value you typed manually
+- long: --sample
+  short: -s
+  required: false
+  arg: sample
+  allowed: [leak, leak_growth]
+  help: |-
+    🧪 Sample of tools/heap-analyzer/samples
+
+      leak          heap dump of a JVM with a session cache that is never evicted (MAT leak suspect)
+      leak_growth   two dumps of that JVM a few seconds apart: the later one is compared with the earlier one
+- long: --output-dir
+  short: -o
+  arg: output_dir
+  required: false
+  default: "./heap-analysis"
+  help: |-
+    📂 Output directory for the digest (summary.txt), the MAT HTML reports and mat.log (default: ./heap-analysis)
+- long: --report-type
+  short: -r
+  arg: report_type
+  allowed: [all, leaks, overview, top-components]
+  required: false
+  default: "all"
+  help: |-
+    📋 MAT HTML report(s) to generate (the text digest is always printed)
+
+    - all: the three reports below
+    - leaks: leak suspects (org.eclipse.mat.api:suspects)
+    - overview: system overview (org.eclipse.mat.api:overview)
+    - top-components: top components per class loader (org.eclipse.mat.api:top_components)
+- long: --max-memory
+  arg: max_memory
+  required: false
+  help: |-
+    🧠 Java heap given to MAT, e.g. 8g (default: 80% of the Docker memory)
+- long: --compare
+  arg: file
+  required: false
+  completions:
+    dynamic:
+    - playground get-specific-file-extension "$completion_current" --extension "hprof"
+  validate: file_exists_and_hprof
+  help: |-
+    📈 Second heap dump of the same JVM, taken later: prints the classes whose instance count and shallow size grew
+- long: --json
+  required: false
+  help: |-
+    🗂️  Output JSON on stdout: overview, leak suspects, retained heap by class, growth and findings (text digest on stderr, no HTML report)

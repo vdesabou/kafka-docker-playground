@@ -1,0 +1,3 @@
+name: get-connector-list
+help: Return some completion for connector list
+private: true

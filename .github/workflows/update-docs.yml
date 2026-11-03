@@ -8,7 +8,10 @@ on:
       - master
     paths:
       - 'docs/**'
+      # the command tree: src/bashly.yml, one src/commands/<command>.yml per command, shared flags in src/flags/
       - 'scripts/cli/src/bashly.yml'
+      - 'scripts/cli/src/commands/**.yml'
+      - 'scripts/cli/src/flags/**'
       - 'scripts/cli/docs-template/**'
       - 'scripts/publish-docs.sh'
 

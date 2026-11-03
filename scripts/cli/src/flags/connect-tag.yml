@@ -1,0 +1,14 @@
+long: --connect-tag
+arg: connect_tag
+required: false
+completions:
+  dynamic:
+  - playground get-tag-list "$completion_current" --connect-only
+help: |-
+  🔗 Confluent Platform (CP) version to use. Applies to connect only.
+
+  It sets CP_CONNECT_TAG environment variable
+
+  Must be greater or equal to 5.3.0
+
+  🎓 Tip: use <tab> completion to trigger fzf completion

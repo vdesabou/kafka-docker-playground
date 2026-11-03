@@ -1,0 +1,54 @@
+name: get-jmx-metrics
+group: Kafka
+help: |-
+  🔢 Get JMX metrics from a container
+
+  Dumps every attribute of the MBeans of a container (all domains, or the
+  ones of --domain), with jmxterm run inside the container: no local Java
+  needed. Works with any container that exposes JMX (broker, broker2,
+  connect, schema-registry, ksqldb-server, broker-us in mdc-*
+  environments...) and with the pods of cfk.
+
+  🎓 Tip: for a digest instead of raw MBeans, use 'playground broker
+  metrics' or 'playground connector metrics'.
+
+  👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
+flags:
+- import: src/flags/container.yml
+- long: --open
+  short: -o
+  help: |- 
+    🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
+
+- long: --domain
+  short: -d
+  required: false
+  arg: domain
+  help: |-
+    Domain name
+
+examples:
+- playground get-jmx-metrics --container connect
+- playground get-jmx-metrics --container connect --domain "kafka.connect kafka.consumer kafka.producer"
+- playground get-jmx-metrics -c broker
+- playground get-jmx-metrics -c connect -c broker
+- playground get-jmx-metrics --container schema-registry --container ksqldb-server --open
+- playground get-jmx-metrics -c broker -c connect --domain "kafka.server"
+x_example_outputs:
+- command: 'playground get-jmx-metrics -c connect --domain "kafka.connect"'
+  output: |-
+    17:24:01 ℹ️ 🪄 Copying files with docker cp
+    ####### domain kafka.connect ########
+    Welcome to JMX terminal. Type "help" for available commands.
+    #mbean = kafka.connect:client-id="connect:8083",type=app-info:
+    start-time-ms = 1791901690493;
+
+    commit-id = 328ff4d5ac3448d6;
+
+    version = 8.3.2-ce;
+
+    #mbean = kafka.connect:client-id=connect-adminclient-producer,node-id=node--1,type=connect-node-metrics:
+    request-rate = 0.0;
+
+    response-rate = 0.0;
+    ...

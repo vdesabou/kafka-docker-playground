@@ -1,0 +1,3 @@
+name: get-ksqldb-source-list
+help: Return some completion for ksqlDB streams and tables
+private: true

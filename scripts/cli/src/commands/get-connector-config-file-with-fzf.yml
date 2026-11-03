@@ -1,0 +1,7 @@
+name: get-connector-config-file-with-fzf
+help: Return some completion for connector config files (json, yaml, tf, properties holding a connector config)
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

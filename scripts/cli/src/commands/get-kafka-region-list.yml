@@ -1,0 +1,9 @@
+name: get-kafka-region-list
+help: Return some completion for confluent cloud kafka cluster region list
+private: true
+dependencies:
+  confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

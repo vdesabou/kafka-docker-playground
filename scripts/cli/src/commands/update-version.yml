@@ -1,0 +1,34 @@
+name: update-version
+group: Run
+help: |-
+  ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)
+
+  Re-runs the example you are currently on with different versions, which is
+  the fastest way to answer "does it still happen on 8.x?" or "is it fixed in
+  connector 10.6.0?".
+
+    --tag            🔢 every Confluent Platform component
+    --connect-tag    🔗 only the connect container, other components untouched
+    --connector-tag  🧩 the connector, from Confluent Hub
+    --connector-zip  📦 the connector, from a local zip
+    --connector-jar  ☕ a single jar, dropped into the existing plugin
+
+  With no flag, you are prompted with the versions available. The versions
+  currently running are read from the broker and connect containers, so the
+  example must be up.
+
+  🎓 Tip: this is a version bisect tool. Keep the example running and call it
+  repeatedly until you find the version where the behaviour changes.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
+  🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version
+flags:
+- import: src/flags/tag.yml
+- import: src/flags/connect-tag.yml
+- import: src/flags/connector-tag.yml
+- import: src/flags/connector-zip.yml
+- import: src/flags/connector-jar.yml
+examples:
+- playground update-version (interactive mode)
+- playground update-version --tag 6.2.0 --connector-tag=2.5.12,10.5.7
+- playground update-version --connect-tag 6.2.0 --connector-tag=2.5.12,10.5.7

@@ -1,0 +1,253 @@
+name: tcp-proxy
+expose: always
+group: TCP Proxy
+help: |-
+  🏚 Zazkia TCP Proxy commands
+
+  Simulate TCP connection issues (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy
+
+  Slips a controllable proxy between a connector and the system it talks to,
+  so you can break the connection on purpose and watch what the connector
+  does: does it retry, does it lose records, does it fail the task.
+
+    start        put the proxy in the path, rewriting the connector config
+    delay        add latency to the responses
+    break        drop a percentage of the responses
+    close-connection, close-all-connection-with-error
+    toggle-*     cut reads or writes in one direction only
+    get-connections   the live connections and their statistics
+    open-ui      drive all of the above from the Zazkia web UI
+
+  🎓 Tip: start with 'playground tcp-proxy open-ui' to see what is
+  happening, then reproduce the same actions from the CLI in a script.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-tcp-proxy
+commands:
+
+- name: start
+  help: |-
+    💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998
+
+    Starts the proxy in front of --hostname and --port, then rewrites the
+    running connector configuration so its traffic goes through it. Nothing
+    else to change on your side.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-tcp-proxy
+  flags:
+    - long: --hostname
+      arg: hostname
+      required: true
+      completions:
+        dynamic:
+        - playground get-container-list
+      help: |-
+        Hostname used by the tcp proxy to forward request
+    - long: --port
+      arg: port
+      validate: integer
+      required: true
+      completions:
+        dynamic:
+        - playground get-docker-ports
+      help: |-
+        Port used by the tcp proxy to forward request
+    - &throttle-service-response
+      long: --throttle-service-response
+      arg: throttle-service-response
+      validate: integer
+      required: false
+      default: "0"
+      help: |-
+        🐌 Throttle service response. This is bytes per second.
+    - long: --delay-service-response
+      arg: delay-service-response
+      validate: integer
+      required: false
+      default: "0"
+      help: |-
+        ⏲️ Add milliseconds delay to service response. Default is 0 ms.
+    - long: --break-service-response
+      arg: break-service-response
+      validate: percentage
+      required: false
+      default: "0"
+      help: |-
+        💔 Percentage of broken connections. Default is 0%.
+    - &service-response-corrupt
+      long: --service-response-corrupt
+      required: false
+      help: |-
+        🦹‍♂️ Corrupt service response with random mangled bytes. By default, there is no corruption.
+    - long: --skip-automatic-connector-config
+      required: false
+      help: |-
+        🤖 By default, script will attempt to modify automatically the running connector config to use Zazkia proxy.
+        
+        This flag allows to skip this automatic configuration (only useful if you want to manually update connector config with zazkia tcp proxy details)
+  examples:
+  - playground tcp-proxy start --hostname mysql --port 3306
+
+- name: get-connections
+  help: |-
+    🧲 Get Zazkia active TCP connections config and stats
+
+    Lists every TCP connection currently going through the proxy, with its
+    id, its state (the toggles and the delay or break currently applied) and
+    its stats (bytes sent and received each way).
+
+    Start here: the id printed by this command is what the other tcp-proxy
+    commands take as --connection-id. Connections in EOF state are hidden.
+
+    🎓 Tip: every other tcp-proxy command applies to all active connections
+    when you do not pass --connection-id, which is normally what you want.
+  flags:
+    - &connection-id
+      long: --connection-id
+      completions:
+        dynamic:
+        - playground get-zazkia-connection-list
+      arg: connection-id
+      validate: integer
+      required: false
+      help: |-
+        🧲 Zazkia TCP connection id
+              
+- name: delay
+  help: |-
+      ⏲️ Add milliseconds delay to service response.
+
+      Slows down every response coming back from the service, without
+      breaking anything. This is how you reproduce a slow database or a slow
+      API: request timeouts, retries, rebalances caused by a task that takes
+      too long to answer.
+
+      Set it back to 0 to remove the delay.
+
+      The new state is printed afterwards, so you can check it was applied.
+  flags:
+    - long: --delay-service-response
+      arg: delay-service-response
+      validate: integer
+      required: true
+      help: |-
+        ⏲️ Add milliseconds delay to service response.
+    - *connection-id
+
+- name: break
+  help: |-
+      💔 Break sending the response to the client.
+
+      Drops the response part way through, for the given percentage of
+      responses. Unlike close-connection, which kills the connection once,
+      this keeps failing intermittently, which is what you need to reproduce
+      the flaky network a customer is seeing rather than a clean outage.
+
+      Set it back to 0 to stop breaking responses.
+
+      The new state is printed afterwards, so you can check it was applied.
+  flags:
+    - long: --break-service-response
+      arg: break-service-response
+      validate: percentage
+      required: true
+      help: |-
+        💔 Percentage of broken connections.
+    - *connection-id
+
+- name: close-connection
+  help: |-
+      ❌ Close the Zazkia active TCP connections
+
+      Kills the connection abruptly, the way a firewall or a restarted
+      database would. Use it to check that the connector reconnects on its
+      own, and how long it takes.
+
+      Without --connection-id, every active connection is closed.
+  flags:
+    - *connection-id
+
+- name: close-all-connection-with-error
+  help: |-
+      🧹 Close all Zazkia TCP connections which are in error state
+
+      Same as the "close all with error" button in the Zazkia UI. Connections
+      left behind by a previous break or delay clutter get-connections;
+      this cleans them up so you only see the live ones.
+
+- name: toggle-accept-connections
+  help: |-
+      🙅‍♂️ Change whether new connections can be accepted
+
+      Turn it off and the service looks down to anything trying to connect,
+      while the connections already open keep working. That is the way to
+      reproduce a connector that cannot reconnect after a failure, or an
+      exhausted connection pool.
+
+      This is a toggle, run it again to accept connections once more.
+
+- name: toggle-reads-client
+  help: |-
+      ✅ Change whether reading data from the client is enabled.
+
+      Stops the proxy from reading what the client sends. The client's writes
+      pile up in its socket buffer and it eventually blocks, which is how you
+      reproduce backpressure and produce timeouts.
+
+      This is a toggle, run it again to restore the flow.
+
+        See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+  flags:
+    - *connection-id
+
+- name: toggle-reads-service
+  help: |-
+      ✅ Change whether reading data from the service is enabled.
+
+      Stops the proxy from reading what the service replies. Nothing comes
+      back to the client, so requests hang until they time out, without the
+      connection ever being closed. This is the classic black hole that a
+      TCP keepalive misconfiguration produces.
+
+      This is a toggle, run it again to restore the flow.
+
+        See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+  flags:
+    - *connection-id
+
+- name: toggle-writes-client
+  help: |-
+      ✅ Change whether writing data to the client is enabled.
+
+      The proxy keeps reading the service's response but never forwards it to
+      the client. Close to toggle-reads-service from the client's point of
+      view, except the service sees its response as fully sent, so both sides
+      disagree about what happened.
+
+      This is a toggle, run it again to restore the flow.
+
+        See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+  flags:
+    - *connection-id
+
+- name: toggle-writes-service
+  help: |-
+      ✅ Change whether writing data to the service is enabled.
+
+      The proxy keeps reading the client's request but never forwards it to
+      the service. The client believes it sent its data, the service never
+      receives it, so nothing ever answers.
+
+      This is a toggle, run it again to restore the flow.
+
+        See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
+  flags:
+    - *connection-id
+
+- name: open-ui
+  help: |-
+      🌐 Just open Zazkia UI (http://localhost:9191) in your browser
+
+      The UI shows the same connections as get-connections, but live, with
+      the toggles as buttons and a diagram of which direction each one cuts.
+      Easier than the CLI when you are exploring, the CLI is what you put in
+      a reproduction script once you know which fault you want.

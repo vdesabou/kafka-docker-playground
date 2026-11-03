@@ -1,0 +1,64 @@
+- long: --bundle
+  short: -b
+  required: false
+  arg: path
+  help: |-
+    🗂️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)
+- long: --sample
+  short: -s
+  required: false
+  arg: sample
+  allowed: [synthetic]
+  help: |-
+    🧪 Sample of cfk-analysis/samples
+
+      synthetic   CFK bundle: kafka-2 crash-looping on an expired certificate, pending volume, OOMKilled Connect
+                  pod, failed connector task, Schema Registry authentication failure, operator reconcile errors
+- long: --json
+  required: false
+  help: |-
+    📄 Emit machine-readable JSON (includes per-issue recommendation) instead of the text report
+- long: --sanitize
+  required: false
+  help: |-
+    🔒 Replace IPs, hostnames, emails and credentials by placeholders (off by default)
+- long: --no-sanitize
+  required: false
+  private: true
+  help: |-
+    Kept for compatibility: the output is not sanitized by default, see --sanitize
+- long: --severity
+  required: false
+  arg: level
+  allowed: [critical, high, medium, low]
+  help: |-
+    🎚️  Filter issues by minimum severity (critical | high | medium | low)
+- long: --component
+  required: false
+  repeatable: true
+  arg: component
+  allowed: [kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other]
+  help: |-
+    🧩 Only keep the issues of this component (repeat --component for several). other = not a CFK component (nodes, volumes, unknown pods)
+- long: --top
+  required: false
+  arg: n
+  default: "5"
+  validate: integer
+  help: |-
+    🔢 Max number of issues to display per category in text mode (default: 5)
+- long: --include-warnings
+  required: false
+  help: |-
+    ⚠️  Also report WARN log records that match no known category (WARN records matching a known category are always reported)
+- long: --html
+  required: false
+  private: true
+  help: |-
+    Deprecated: the HTML report is always written (kept so that existing commands keep working)
+- long: --output-dir
+  required: false
+  arg: dir
+  default: "./cfk-reports"
+  help: |-
+    📁 Directory for the HTML report (default: ./cfk-reports)

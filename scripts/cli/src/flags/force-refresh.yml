@@ -1,0 +1,4 @@
+long: --force-refresh
+required: false
+help: |-
+  ☢️ Force refresh.

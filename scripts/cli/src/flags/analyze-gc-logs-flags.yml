@@ -1,0 +1,73 @@
+- long: --file
+  short: -f
+  required: false
+  repeatable: true
+  arg: file
+  validate: file_or_dir_exists
+  completions:
+    dynamic:
+    - playground get-specific-file-extension "$completion_current" --extension "log"
+  help: |-
+    🗒️  GC log file or folder to analyze (repeat --file for the rotated files of the same JVM)
+
+    ❕ Provide only one of --file, --container and --sample
+
+    🎓 Tip: use <tab> completion to trigger fzf completion
+            use <option+enter> to use the value you typed manually
+- long: --sample
+  short: -s
+  required: false
+  repeatable: true
+  arg: sample
+  allowed: [jdk7_parallel, jdk8_cms, jdk8_cms_cmf_real, jdk8_g1gc, jdk8_g1gc_details_real, jdk11_zgc, jdk17_g1gc, jdk17_shenandoah, jdk21_g1_kafka_real, jdk21_genzgc, jdk21_genzgc_real]
+  help: |-
+    🧪 Sample of gc-analysis/samples (repeat --sample to analyze several)
+
+      GC logs of JDK 7 to 21 and every collector, named <jdk>_<collector>[_real]
+      (_real: taken from a real Kafka / Connect JVM)
+- long: --container
+  short: -c
+  alias: [--pod, -p]
+  required: false
+  arg: container
+  completions:
+    dynamic:
+    - playground get-container-list
+  help: |-
+    🐳 Container name (or pod name when cfk environment is used) to extract the GC log from
+
+    ❕ Provide only one of --file, --container and --sample
+
+    🔖 The GC log path is read from the java command line (-Xlog:gc*:file=… or -Xloggc:…), and its rotated files are copied too.
+         Falls back to searching common log locations (/var/log, /tmp, /opt).
+         The playground environments write a GC log for ZooKeeper, brokers, controllers, Schema Registry,
+         Connect (-loggc, /var/log/kafka/<name>-gc.log) and ksqlDB.
+- long: --output-dir
+  short: -o
+  arg: output_dir
+  required: false
+  default: "./gc-analysis-output"
+  help: |-
+    📂 Output directory for the HTML report and the GC logs copied from a container (default: ./gc-analysis-output)
+- long: --html
+  required: false
+  private: true
+  help: |-
+    Deprecated: the HTML report is always written (kept so that existing commands keep working)
+- long: --json
+  required: false
+  help: |-
+    🗂️  Output JSON stats (no text report, no HTML report)
+- long: --run
+  arg: run
+  required: false
+  validate: integer
+  help: |-
+    🔄 JVM run to analyze when the log spans restarts (default: the latest, see the "JVM runs" table)
+- long: --top-pauses
+  arg: top_pauses
+  required: false
+  default: "10"
+  validate: integer
+  help: |-
+    📊 Number of longest pauses to display in the report (default: 10)

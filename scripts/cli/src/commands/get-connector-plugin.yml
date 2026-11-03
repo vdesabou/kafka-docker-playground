@@ -1,0 +1,10 @@
+name: get-connector-plugin
+help: Return some completion for connector plugin
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur
+- name: type
+  required: false
+  help: type (all, fm, onprem)

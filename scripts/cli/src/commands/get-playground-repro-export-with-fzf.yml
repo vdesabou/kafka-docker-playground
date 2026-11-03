@@ -1,0 +1,7 @@
+name: get-playground-repro-export-with-fzf
+help: Return some completion for export tgz files
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

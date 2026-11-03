@@ -1,0 +1,11 @@
+name: open-docs
+group: Run
+help: |-
+  🧑‍🎓 Open Confluent documentation of currently running example
+
+  Jumps straight to the official Confluent page for the connector or feature
+  the running example demonstrates, so you do not have to search for it.
+flags:
+- long: --only-show-url
+  help: |-
+    🌐 Only show url

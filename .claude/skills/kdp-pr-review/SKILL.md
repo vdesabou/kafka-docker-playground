@@ -58,9 +58,10 @@ Report each failed check with `file:line`, the rule, and the fix. Skip checks th
 | --- | --- |
 | `scripts/cli/playground` never edited by hand | it changes only together with `scripts/cli/src/**`; regenerate in a clean worktree (`./scripts/cli/playground bashly-reload`) and compare: no diff expected |
 | generated diff contains only this change | hunks of `scripts/cli/playground` map to the changed commands |
-| `playground.yaml` / `playground.json` regenerated when `bashly.yml` changed | file list |
+| `playground.yaml` / `playground.json` regenerated when the command tree changed | file list |
 | partial path mirrors the command tree | `scripts/cli/src/commands/<cmd>/<sub>.sh` |
-| flags reuse YAML anchors (`*connector`, `*verbose`…) instead of redefining | read `bashly.yml` diff |
+| a command body goes in `src/commands/<command>.yml`, not in `src/bashly.yml` (imports only) | read the diff |
+| a flag shared with another top-level command is `- import: src/flags/<flag>.yml`, not a copy (an anchor cannot cross files); inside one command file it is an anchor (`*connector`) | read the diff |
 | `conflicts:` declared on **both** flags (bashly only checks flags already parsed) | read |
 | no prompt (`read -p`) without a TTY check (scripts and AI agents run the CLI with no stdin) | grep `read -p` |
 | output meant for parsing (`--json`, a path) has no `log` lines on stdout | read |

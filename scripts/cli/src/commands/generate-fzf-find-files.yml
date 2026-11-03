@@ -1,0 +1,3 @@
+name: generate-fzf-find-files
+help: force call to generate_fzf_find_files
+private: true

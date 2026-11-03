@@ -1,0 +1,3 @@
+name: get-catalog-tag-list
+help: Return some completion for stream catalog tag list
+private: true

@@ -1,0 +1,299 @@
+name: ec2
+expose: always
+group: EC2
+filters:
+  - aws_ec2_permissions
+help: |-
+  ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground
+
+  🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)
+
+  Run the playground on a remote machine instead of your laptop, which is
+  what you want for an example that needs far more CPU or memory than you
+  have, or one that must run for hours.
+
+    create              provision the instance with Cloud Formation
+    open                open it in VS Code over SSH, as if it were local
+    push-secrets        send your credentials to it, over ssh
+    sync-repro-folder   keep reproduction-models in step, both directions
+    list / status / start / stop / delete
+
+  💰 The instance is billed while it runs. Use 'playground ec2 stop' when
+     you pause, and 'playground ec2 delete' when you are done;
+     'playground status' reminds you when one is still up.
+
+  🔐 A pem file is created at the root of the repository when the instance
+     is created. Back it up, it is the only way in, and only your current
+     ip address is allowed to connect.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2
+commands:
+- name: create
+  help: |-
+    👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation
+
+    One command does the whole thing: a Cloud Formation stack, an instance
+    with docker and the playground repository already installed, a key pair,
+    a security group opened to your ip only. Your credentials are pushed to
+    it over ssh, then VS Code opens on it.
+
+    Creation takes a few minutes, and Cloud Formation keeps installing in the
+    background for about ten more. Follow output.log in the root folder of
+    the instance to see where it is.
+
+    🔐 AWS EC2 pem file for the ec2 instance will be created and stored in the
+    root folder of the repository (make sure to do a backup, it is the only
+    way in).
+
+    🌍 Region being used will be the one set in your environment
+    (aws configure get region) either by the AWS_REGION environment variable
+    or ~/.aws/config.
+
+    💰 The instance is billed from now on. Stop it when you pause and delete
+    it when you are done.
+
+    🐚 Use zsh on the instance to have everything working out of the box.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-ec2
+  flags:
+  - long: --instance-type
+    required: false
+    arg: instance-type
+    default: t3.2xlarge
+    allowed: 
+      - c1.medium
+      - c1.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c3.large
+      - c3.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.large
+      - c4.xlarge
+      - m1.large
+      - m1.medium
+      - m1.small
+      - m1.xlarge
+      - m2.2xlarge
+      - m2.4xlarge
+      - m2.xlarge
+      - m3.2xlarge
+      - m3.large
+      - m3.medium
+      - m3.xlarge
+      - m4.10xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.large
+      - m4.xlarge
+      - t1.micro
+      - t2.large
+      - t2.medium
+      - t2.micro
+      - t2.nano
+      - t2.small
+      - t3.2xlarge
+    help: |-
+      🧑‍💻 instance type. default is t3.2xlarge
+
+  - long: --size
+    required: false
+    arg: size
+    default: "1000"
+    validate: integer
+    help: |-
+      💾 instance size in Gb. default is 1000 Gb
+
+  - long: --suffix
+    required: false
+    arg: suffix
+    help: |-
+      📮 suffix to add to instance name, giving pg-<username>-<suffix>
+
+      if not set, the name is pg-<username>-<6 random characters>
+
+      🎓 Tip: set it to the case number you are working on, so you can tell
+      your instances apart in 'playground ec2 list'.
+
+- name: delete
+  help: |- 
+    ❌ Delete an EC2 instance created with Cloud Formation
+
+    Deletes the Cloud Formation stack, which takes the instance, its volume
+    and its security group with it, then removes the key pair on AWS and the
+    local pem file. This is what stops the billing for good, unlike stop
+    which only pauses it.
+
+    ⚠️ Everything on the instance is lost, including any reproduction model
+    you have not synced back with 'playground ec2 sync-repro-folder'.
+
+    Without --instance it applies to all your instances, and asks you to
+    confirm first.
+  flags:
+    - long: --instance
+      short: -i
+      required: false
+      arg: instance
+      validate: not_empty
+      completions:
+        dynamic:
+        - playground get-ec2-cloudformation-list $completion_current
+      help: |-
+        🌀 ec2 instance cloudformation (need to use completion to get all required details)
+
+        🎓 Tip: If not specified, the command will apply to all ec2 instances
+
+- name: open
+  help: |-
+    👨‍💻 Open an EC2 instance using Visual Studio code
+
+    Opens a VS Code window on the instance over ssh, using Remote
+    Development. The editor, the terminal and the playground CLI all run
+    there, so it feels like working locally while the containers use the
+    remote machine's CPU and memory.
+
+    The security group is refreshed with your current ip on the way, so this
+    is also the command to run after your ip changed and ssh stopped working.
+
+    🔐 Only your current ip address will be allowed to connect.
+  flags:
+    - &instance
+      long: --instance
+      short: -i
+      required: false
+      arg: instance
+      validate: not_empty
+      completions:
+        dynamic:
+        - playground get-ec2-instance-list $completion_current
+      help: |-
+        🖥️ ec2 instance (need to use completion to get all required details)
+
+        🎓 Tip: If not specified, the command will apply to all ec2 instances
+    - long: --enable-sync-repro-folder
+      required: false
+      help: |-
+        👉 Enable sync reproduction-models folder between local and ec2 instance
+
+- name: allow-my-ip
+  private: true
+  help: 🛂 Allow your current ip to connect to ec2 instance via ssh
+  flags:
+    - *instance
+    
+- name: list
+  help: |-
+    🔘 List all EC2 instance
+
+    Your playground instances and their state. Anything not stopped is
+    costing money.
+
+- name: stop
+  help: |-
+    🔴 Stop an EC2 instance
+
+    Shuts the instance down while keeping its disk, so you stop paying for
+    compute and find your work again on 'playground ec2 start'.
+  flags:
+    - *instance
+
+- name: start
+  help: |-
+    🟢 Start an EC2 instance
+
+    Boots an instance stopped earlier. Its public address changes, so use
+    'playground ec2 open' rather than a bookmarked ssh command.
+  flags:
+    - *instance
+
+- name: status
+  help: 🗺️ Show a status
+  private: true
+  flags:
+    - long: --instance
+      short: -i
+      required: true
+      arg: instance
+      validate: not_empty
+      help: |-
+        🖥️ EC2 instance name
+    - long: --all
+      help: |- 
+        return all details
+
+- name: sync-repro-folder
+  dependencies:
+    rsync: rsync needs to be installed
+  help: |
+      ↔️ Synchronize reproduction-models folder between local and ec2 instance
+
+      The reproduction models you write are the only thing on the instance
+      worth keeping, and deleting the instance destroys them. These two
+      commands copy that folder in one direction or the other with rsync.
+
+        local-to-ec2   push what you wrote locally, before running it there
+        ec2-to-local   pull back what you wrote there, before deleting it
+
+      'playground ec2 create' runs local-to-ec2 for you, and
+      'playground ec2 open --enable-sync-repro-folder' does it again each
+      time you open the instance.
+
+      ⚠️ Get into the habit of running ec2-to-local before
+      'playground ec2 delete', nothing else brings those files back.
+
+      Note: rsync needs to be installed
+  commands:
+  - name: local-to-ec2
+    help: |-
+      👉 Sync local reproduction-models folder to ec2 instance
+
+      Copies your local reproduction-models to the instance, so you can run
+      there a model you started writing on your laptop.
+    flags:
+      - *instance
+
+  - name: ec2-to-local
+    help: |-
+      👈 Sync ec2 instance reproduction-models folder to local
+
+      Brings back the models you wrote on the instance. Run it before
+      'playground ec2 delete', otherwise they go with the instance.
+    flags:
+      - *instance
+
+- name: push-secrets
+  help: |-
+    🔐 Send the secrets store to an ec2 instance
+
+    Writes ~/.playground-secrets.properties (mode 0600) on the instance. The
+    playground .zshrc doesn't load it by itself: a new shell prints a hint,
+    and the pgenv alias exports the variables (run it before an example
+    that expects them). This replaces the encrypted secrets.tar.gpg
+    committed in the repository.
+
+    The file is piped over ssh, so no clear text copy is ever written locally
+    and the values never appear in 'ps'.
+
+    The credentials that cannot be stored as name=value pairs are sent too,
+    when they exist at the root of the repository:
+
+      aws_credentials_with_assuming_iam_role       -> ~/.aws/credentials-with-assuming-iam-role
+      aws_credentials_aws_account_with_assume_role -> ~/.aws/credentials_aws_account_with_assume_role
+      github_ssh_key_file                          -> ~/.ssh/id_rsa
+  flags:
+    - *instance
+    - long: --profile
+      arg: profile
+      required: false
+      help: 🗂️ Secrets profile to use (default is the active one)
+      completions:
+        dynamic:
+        - playground get-secret-profile-list
+    - long: --dry-run
+      required: false
+      help: 🔍 List what would be sent, change nothing
+  examples:
+  - playground ec2 push-secrets
+  - playground ec2 push-secrets --instance pg-vsaboulin-abc123

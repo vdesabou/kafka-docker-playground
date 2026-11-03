@@ -1,0 +1,223 @@
+name: tools
+expose: always
+group: Tools
+help: |-
+  🧰 Tools commands
+
+  Small utilities that are handy around the playground but are not tied to a
+  running environment:
+
+    read-avro-file        dump an avro file as readable json
+    read-parquet-file     same, for parquet
+    certs-create          generate a keystore and truststore for a component
+    redos-check           check a topics.regex for catastrophic backtracking
+    install-vscode-extension   playground completion inside VS Code
+    install-alfred-workflow    kdp launcher for the playground CLI (macOS)
+
+  🎓 Tip: the file readers are what you use to check what a sink connector
+  really wrote, after pulling the file out with 'playground container cp'.
+commands:
+- name: install-vscode-extension
+  help: |-
+    🪄 Install a slightly modified version of "Shell Script Command Completion" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)
+
+    Gives you the same completion inside VS Code as in your terminal: while
+    editing an example or a reproduction model, playground commands, flags
+    and their allowed values are proposed as you type, with the help text
+    on hover. Worth the two minutes of setup if you write example scripts.
+
+    It is installed as "Shell Script Command Completion (kafka-docker-playground)"
+    (tetradresearch.vscode-h2o-playground), in place of the marketplace one,
+    so that VS Code does not auto-update it with the unpatched version. Run
+    the command again to get a newer upstream version.
+
+    After installation, install "playground" command:
+
+    * Go on a .sh file
+
+    * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose "Shell Completion: Load Command Spec (experimental)" and then type "playground"
+
+    🔖 The command spec is downloaded from the master branch: commands added in a local branch are only proposed once merged. Run "Load Command Spec" again to refresh it.
+
+    👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension
+  examples:
+  - playground tools install-vscode-extension
+  dependencies:
+    code: visit https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line to install
+    curl: visit https://curl.se/download.html to install
+    jq: visit https://jqlang.github.io/jq/download/ to install
+    unzip: install it with your package manager (brew install unzip, apt-get install unzip)
+    zip: install it with your package manager (brew install zip, apt-get install zip)
+- name: install-alfred-workflow
+  help: |-
+    🎩 Install the "kafka-docker-playground (kdp)" Alfred workflow (macOS, Alfred 5 with the Powerpack)
+
+    A launcher for the playground CLI: type 'kdp' in Alfred, or select text
+    anywhere (a connector config, a stack trace, a connector class, a config
+    key, a case number) and use the Universal Action "kdp: config, stack
+    trace, connector class, key, case…":
+
+      kdp how <question>          find-command: the command that answers a question, ⌥ its --help, ⇧ its deep dive
+      kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘ copies 'playground run -f …'
+      kdp history [words]         replay a past run with its exact flags (Tab: re-run it)
+      kdp plugin <words> [ver]    pick a plugin, then a version, then info, changelog, source code, jars, CVEs
+      kdp key <words>             pick a config key, then a connector: config-key
+      kdp docs [words]            deep dive pages
+      kdp connector [words]       pick a running connector: diagnose, status, tasks, metrics, history…
+      kdp logs [container] [pat]  pick a container: errors, last lines, grep, follow
+      kdp topic / schema / ci     pick a topic, a subject, a CI test: describe, records, history, CI result
+      kdp status                  status, connector status / diagnose, connect errors
+      kdp repro / notes / case    reproduction models, notes, support cases (when present)
+
+    On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs
+    it in the terminal (for an example, that stops the running environment),
+    ⌥ and ⇧ depend on the mode. On a script (find, repro, history): ↩ opens
+    it in VS Code and ⌘ copies 'playground run -f …'.
+
+    Read-only commands (plugin, key, status) show their output in the Alfred
+    window, streamed while they run. "Show output" and "Run in the terminal"
+    are workflow settings: the output can go to the terminal instead, and the
+    terminal is the one set in Alfred (default), a new VS Code integrated
+    terminal, Terminal.app, or copy only.
+
+    By default, builds the workflow from scripts/alfred-workflow/ and opens it
+    in Alfred, which asks to import it: run the command again after a pull to
+    update it. With --link, the folder is symlinked into your Alfred
+    preferences instead, to work on it: Alfred does not watch the folder
+    behind the link, so run the command again after an edit (it reloads the
+    workflow in Alfred).
+    Alfred then writes its settings to scripts/alfred-workflow/prefs.plist
+    (ignored by git) and may rewrite info.plist when you edit the workflow in
+    Alfred Preferences: check git diff before committing.
+
+    👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos
+  flags:
+  - long: --link
+    help: |-
+      🔗 Symlink scripts/alfred-workflow/ into the Alfred preferences instead of importing a copy
+
+      Changes to the source are live, for development. Replaces an existing
+      symlink, never a workflow folder.
+  examples:
+  - playground tools install-alfred-workflow
+  - playground tools install-alfred-workflow --link
+  dependencies:
+    zip: install it with your package manager (brew install zip)
+    python3: install it with 'xcode-select --install' or 'brew install python'
+- name: read-avro-file
+  help: |-
+    🔖 Read provided avro file
+
+    Prints the records as json, along with the writer schema embedded in the
+    file. The way to check what a sink connector actually produced.
+  flags:
+  - long: --file
+    short: -f
+    required: false
+    completions:
+      dynamic:
+      - playground get-specific-file-extension "$completion_current" --extension "avro"
+    validate: file_exists_and_avro
+    arg: file
+    help: |-
+      🔖 Avro file to read
+
+      ❕ It must be absolute full path
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+              use <option+enter> to use the value you typed manually
+
+- name: read-parquet-file
+  help: |-
+    🔖 Read provided parquet file
+
+    Prints the rows and the parquet schema, so you can verify what a sink
+    connector wrote without an external tool.
+  flags:
+  - long: --file
+    short: -f
+    required: false
+    completions:
+      dynamic:
+      - playground get-specific-file-extension "$completion_current" --extension "parquet"
+    validate: file_exists_and_parquet
+    arg: file
+    help: |-
+      🔖 Parquet file to read
+
+      ❕ It must be absolute full path
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+              use <option+enter> to use the value you typed manually
+
+- name: certs-create
+  help: |-
+    🔐 Generate keys and certificates used for SSL
+
+    Creates a certificate authority and, for each container, a keystore and
+    a truststore in --output-folder. This is how the certificates of the
+    ssl environments are produced; regenerate them when they have expired,
+    or to build a set for a container the playground does not know about.
+  flags:
+  - long: --container
+    short: -c
+    alias: [--pod, -p]
+    arg: container
+    help: |-
+      🐳 container name (or pod name when cfk environment is used)
+
+      🎓 Tip: you can pass multiple containers by specifying --container multiple times
+    required: false
+    repeatable: true
+    unique: true
+    default:
+      - broker 
+      - broker2 
+      - broker3
+      - client 
+      - schema-registry 
+      - restproxy
+      - connect
+      - connect2
+      - connect3
+      - control-center
+      - clientrestproxy
+      - ksqldb-server
+      - conduktor
+  - import: src/flags/verbose.yml
+  - long: --output-folder
+    required: true
+    arg: folder
+    help: |-
+      📁 Folder where certificates are created
+
+- name: redos-check
+  help: |-
+    🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)
+
+    Some regular expressions take exponential time on certain inputs. A sink
+    connector using such a pattern in topics.regex can pin a CPU and stall
+    the whole worker on a topic name that happens to hit the bad case, with
+    nothing in the logs to explain it.
+
+    Give it the regex and it answers safe, vulnerable, or timeout when the
+    analysis itself takes longer than --timeout. The exit code matches:
+    0 safe, 1 vulnerable, 2 timeout.
+
+    🎓 Tip: worth running whenever a customer reports a connect worker at
+    100% CPU with no progress and a topics.regex in the configuration.
+  flags:
+    - long: --topic-regex
+      arg: regex
+      required: true
+      help: |-
+        🔣 Topic regex to test
+    - long: --timeout
+      arg: timeout
+      validate: integer
+      required: false
+      default: "1"
+      help: |-
+        Max number of seconds to wait for ReDos check.
+
+        Default is 1 second

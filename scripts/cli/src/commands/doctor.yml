@@ -1,0 +1,33 @@
+name: doctor
+help: |-
+  🩺 Check that the container engine is ready for the playground
+
+  Reports which engine the 'docker' CLI is really talking to — 🐳 Docker or
+  🦭 Podman — and checks what has to be right before any example can start:
+  the engine is reachable, compose v2 is there, there is enough memory, and,
+  with podman, that short image names resolve, that privileged ports can be
+  published and that bind mounts will be readable from the host.
+
+  This is the one command that still runs when the engine is down, so it is
+  what to run first when an example fails before a single container starts.
+
+  Exits 1 if it found a blocking problem, 0 otherwise.
+
+  👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker
+examples:
+- playground doctor
+x_example_outputs:
+- command: playground doctor
+  output: |-
+    17:23:04 ℹ️ 🩺 Checking the container engine
+    17:23:04 ℹ️ ✅ 'docker' CLI found: Docker version 29.8.1, build 4a63305
+    17:23:04 ℹ️ 🦭 engine detected: podman
+    17:23:05 ℹ️ ✅ engine is reachable
+    17:23:05 ℹ️ ✅ 'docker compose' is 5.5.1
+    17:23:05 ℹ️ ✅ engine memory is 11GB
+    17:23:05 ℹ️ ✅ podman 6.1.3
+    17:23:06 ℹ️ ✅ podman is running rootful
+    17:23:06 ℹ️ ✅ docker.io is in the podman search registries
+    17:23:06 ℹ️ ✅ the podman machine shares ~
+
+    17:23:06 ℹ️ 🩺 all good, the podman engine is ready for the playground

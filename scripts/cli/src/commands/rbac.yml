@@ -1,0 +1,362 @@
+name: rbac
+expose: always
+group: RBAC
+help: |-
+  🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)
+
+  Change permissions of the running rbac-sasl-plain or cfk-rbac environment
+  without opening a shell in a container: the commands call the MDS REST API
+  (http://localhost:8091, a port-forward to the kafka service on cfk-rbac) as
+  superUser.
+
+    role-binding   create, delete and list role bindings
+    user           add, delete and list LDAP users and their groups
+    acl            create, delete and list ACLs (MDS centralized ACLs, or
+                   regular Kafka ACLs with --kafka-acls). On a Confluent
+                   Cloud run, ACLs of the Confluent Cloud cluster
+
+  🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments
+  🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac
+commands:
+
+  - name: role-binding
+    expose: always
+    group: RBAC
+    filters:
+    - rbac_environment
+    help: |-
+      🔐 Role binding commands
+    commands:
+
+      - name: create
+        group: RBAC
+        help: |-
+          🔐 Create a role binding
+
+          Without --resource, the role is bound on the whole cluster
+          (SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin,
+          Operator). With --resource, it is bound on that resource
+          (ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage).
+
+          The scope is deduced from the resource type when --scope is not set:
+          Subject is schema-registry, Connector is connect, KsqlCluster is
+          ksqldb, anything else is kafka.
+        flags:
+        - long: --principal
+          short: -p
+          required: false
+          arg: principal
+          help: |-
+            🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+
+            ❕ Required, unless --file is set
+        - long: --role
+          short: -r
+          required: false
+          arg: role
+          allowed: [ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator]
+          help: |-
+            🎩 Role name
+
+            ❕ Required, unless --file is set
+        - &rbac-resource
+          long: --resource
+          required: false
+          arg: resource
+          help: |-
+            📦 Resource, <ResourceType>:<name>, for example Topic:orders, Group:my-app,
+            Subject:orders-value, Connector:my-sink, TransactionalId:my-tx, Cluster:kafka-cluster
+
+            ℹ️ If not set, the role is bound on the whole cluster
+        - &rbac-prefix
+          long: --prefix
+          required: false
+          help: |-
+            🔤 The resource name is a prefix (PREFIXED pattern) instead of a literal name
+        - &rbac-scope
+          long: --scope
+          required: false
+          arg: scope
+          allowed: [kafka, schema-registry, connect, ksqldb]
+          help: |-
+            🎯 Cluster the role binding applies to
+
+            ℹ️ If not set, it is deduced from the resource type (kafka when there is no resource)
+        - long: --file
+          required: false
+          validate: file_exists
+          arg: file
+          help: |-
+            📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]
+
+            See environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format.
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac role-binding create --principal User:alice --role DeveloperRead --resource Topic:orders
+        - playground rbac role-binding create --principal User:alice --role ResourceOwner --resource Topic:orders --prefix
+        - playground rbac role-binding create --principal User:connectorSA --role ResourceOwner --resource Subject:orders-value
+        - playground rbac role-binding create --principal Group:KafkaDevelopers --role SystemAdmin --scope connect
+        - playground rbac role-binding create --file "\$PWD/role-bindings.txt"
+
+      - name: delete
+        group: RBAC
+        help: |-
+          🗑️ Delete a role binding
+
+          Same flags as 'playground rbac role-binding create'.
+        flags:
+        - &rbac-principal-required
+          long: --principal
+          short: -p
+          required: true
+          arg: principal
+          help: |-
+            🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+        - &rbac-role
+          long: --role
+          short: -r
+          required: true
+          arg: role
+          allowed: [ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator]
+          help: |-
+            🎩 Role name
+        - *rbac-resource
+        - *rbac-prefix
+        - *rbac-scope
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac role-binding delete --principal User:alice --role DeveloperRead --resource Topic:orders
+        - playground rbac role-binding delete --principal User:alice --role SystemAdmin
+
+      - name: list
+        group: RBAC
+        help: |-
+          📋 List role bindings
+
+          Without --principal, every principal with a role binding is listed.
+        flags:
+        - &rbac-principal
+          long: --principal
+          short: -p
+          required: false
+          arg: principal
+          help: |-
+            🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+
+            ℹ️ If not set, role bindings of all principals are listed
+        - long: --scope
+          required: false
+          arg: scope
+          allowed: [kafka, schema-registry, connect, ksqldb]
+          help: |-
+            🎯 Only list role bindings of this cluster
+
+            ℹ️ If not set, all clusters are listed
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac role-binding list
+        - playground rbac role-binding list --principal User:connectorSA
+        - playground rbac role-binding list --scope schema-registry
+
+  - name: user
+    expose: always
+    group: RBAC
+    filters:
+    - rbac_environment
+    help: |-
+      🧑 LDAP user commands
+
+      Users live in the openldap container. They authenticate on the broker
+      with SASL/PLAIN (their LDAP password) and log in to MDS, Control
+      Center, Schema Registry and Connect REST API with basic auth.
+      Changes apply to the running environment, without restart.
+    commands:
+
+      - name: add
+        group: RBAC
+        help: |-
+          ➕ Add an LDAP user
+
+          The user can connect right away. MDS picks up new group
+          memberships (for Group:<name> role bindings) within its LDAP
+          refresh interval (60 seconds by default).
+        flags:
+        - &rbac-user
+          long: --user
+          short: -u
+          required: true
+          arg: user
+          help: |-
+            🧑 User name (principal User:<user>)
+        - long: --password
+          required: false
+          arg: password
+          help: |-
+            🔑 Password
+
+            ℹ️ If not set, <user>-secret
+        - long: --group
+          short: -g
+          required: false
+          repeatable: true
+          unique: true
+          arg: group
+          help: |-
+            👥 Group to add the user to (principal Group:<group>), created if it does not exist. Can be set several times.
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac user add --user bob
+        - playground rbac user add --user bob --password bob-pwd --group KafkaDevelopers
+
+      - name: delete
+        group: RBAC
+        help: |-
+          🗑️ Delete an LDAP user, and remove it from its groups
+
+          Its role bindings and ACLs are not deleted.
+        flags:
+        - *rbac-user
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac user delete --user bob
+
+      - name: list
+        group: RBAC
+        help: |-
+          📋 List LDAP users and their groups
+        flags:
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac user list
+
+  - name: acl
+    expose: always
+    group: RBAC
+    filters:
+    - rbac_or_ccloud_environment
+    help: |-
+      🚦 ACL commands
+
+      By default, ACLs are MDS centralized ACLs (stored in the
+      _confluent-metadata-auth topic and enforced by the CONFLUENT access rule
+      provider). With --kafka-acls, they are regular Kafka ACLs created with
+      kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).
+
+      ⛅ On a Confluent Cloud run, they are the ACLs of the Confluent Cloud
+      cluster (confluent kafka acl). --connector then uses the service
+      account of a fully managed connector created with
+      playground run --ccloud-service-account as principal, to reproduce
+      authorization errors: delete or deny one of its ACLs, then restart the
+      connector.
+
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%91%A4-a-fully-managed-connector-with-a-service-account-loses-an-acl
+    commands:
+
+      - name: create
+        group: RBAC
+        help: |-
+          🚦 Create ACLs, one per --operation
+        flags:
+        - &rbac-acl-principal
+          long: --principal
+          short: -p
+          required: false
+          arg: principal
+          help: |-
+            🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+
+            ⛅ On Confluent Cloud, User:sa-xxxxx (service account) or User:u-xxxxx (user)
+
+            ❕ Required, unless --connector is set
+        - &rbac-acl-connector
+          long: --connector
+          short: -c
+          required: false
+          arg: connector
+          completions:
+            dynamic:
+            - playground get-connector-list
+          help: |-
+            🔗 Use the service account of this fully managed connector (kafka.service.account.id) as principal
+
+            ⛅ Confluent Cloud only, see playground run --ccloud-service-account
+        - &rbac-operation
+          long: --operation
+          short: -o
+          required: true
+          repeatable: true
+          unique: true
+          arg: operation
+          allowed: [ALL, READ, WRITE, CREATE, DELETE, ALTER, DESCRIBE, CLUSTER_ACTION, DESCRIBE_CONFIGS, ALTER_CONFIGS, IDEMPOTENT_WRITE]
+          help: |-
+            ⚙️ Operation, can be set several times
+        - &rbac-acl-resource
+          long: --resource
+          required: true
+          arg: resource
+          help: |-
+            📦 Resource, <ResourceType>:<name> with ResourceType one of Topic, Group,
+            Cluster, TransactionalId, DelegationToken. Use Cluster:kafka-cluster for the cluster.
+        - *rbac-prefix
+        - &rbac-deny
+          long: --deny
+          required: false
+          help: |-
+            ⛔ DENY instead of ALLOW
+        - &rbac-host
+          long: --host
+          required: false
+          arg: host
+          help: |-
+            🖥️ Host the ACL applies to
+
+            ℹ️ If not set, all hosts (*)
+        - &rbac-kafka-acls
+          long: --kafka-acls
+          required: false
+          help: |-
+            🧰 Use regular Kafka ACLs (kafka-acls) instead of MDS centralized ACLs
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac acl create --principal User:charlie --operation WRITE --operation DESCRIBE --resource Topic:orders
+        - playground rbac acl create --principal User:charlie --operation READ --resource Group:my-app --prefix
+        - playground rbac acl create --principal User:charlie --operation READ --resource Topic:orders --kafka-acls
+        - playground rbac acl create --connector HttpSink_\$USER --operation READ --resource Topic:http-topic --deny
+
+      - name: delete
+        group: RBAC
+        help: |-
+          🗑️ Delete ACLs, one per --operation
+
+          Same flags as 'playground rbac acl create'.
+        flags:
+        - *rbac-acl-principal
+        - *rbac-acl-connector
+        - *rbac-operation
+        - *rbac-acl-resource
+        - *rbac-prefix
+        - *rbac-deny
+        - *rbac-host
+        - *rbac-kafka-acls
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac acl delete --principal User:charlie --operation WRITE --resource Topic:orders
+        - playground rbac acl delete --connector HttpSink_\$USER --operation READ --resource Group:connect-lcc- --prefix
+
+      - name: list
+        group: RBAC
+        help: |-
+          📋 List ACLs
+
+          Lists both MDS centralized ACLs and regular Kafka ACLs, or the ACLs of
+          the Confluent Cloud cluster on a Confluent Cloud run.
+        flags:
+        - *rbac-principal
+        - *rbac-acl-connector
+        - import: src/flags/verbose.yml
+        examples:
+        - playground rbac acl list
+        - playground rbac acl list --principal User:charlie
+        - playground rbac acl list --connector HttpSink_\$USER

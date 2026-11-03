@@ -1,0 +1,7 @@
+name: get-predefined-schemas
+help: Return some completion for predefined schemas
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

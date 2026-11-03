@@ -1,0 +1,7 @@
+long: --level
+short: -l
+arg: level
+allowed: [INFO, WARN, DEBUG, TRACE]
+required: true
+help: |-
+  ❕Log level

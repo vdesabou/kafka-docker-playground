@@ -12,10 +12,27 @@ fi
 
 cd "$root_folder/scripts/cli"
 
+# The command tree is split: src/bashly.yml only lists `- import: src/commands/<command>.yml`,
+# and the flags shared by several commands live in src/flags/ (imported, or included with ERB for
+# a whole list of flags). The checks below therefore run on the config bashly itself assembles,
+# not on src/bashly.yml, which on its own contains no command.
+set +e
+merged_config=$(docker run --rm --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly validate --verbose 2>&1)
+validate_rc=$?
+set -e
+if [ $validate_rc -ne 0 ]
+then
+	logerror "❌ bashly cannot load the configuration:"
+	echo "$merged_config"
+	exit 1
+fi
+# `validate --verbose` prints the merged config between a leading --- and a trailing ---/OK
+merged_config=$(awk 'NR==1 && /^---$/ {next} /^---$/ {exit} {print}' <<< "$merged_config")
+
 # examples and footers are printed with printf "..." in --help, so an unescaped $VAR, ${...} or $(...) is expanded (or run)
 # example lines starting with playground must call their command (or one of its aliases)
 # x_example_outputs (rendered in the docs only, see templates/markdown) must start with the name of their command
-bashly_yml_errors=$(yq -o=json src/bashly.yml | jq -r '
+bashly_yml_errors=$(printf '%s\n' "$merged_config" | yq -o=json | jq -r '
 def names: [.name] + ((.alias // []) | if type == "string" then [.] else . end);
 def commands(p; n): (.commands // [])[] | (p + [.name]) as $q | (n + [names]) as $m | ({path: ($q | join(" ")), names: $m, examples: ((.examples // []) | if type == "string" then [.] else . end), footer, outputs: (.x_example_outputs // [])}), commands($q; $m);
 commands(["playground"]; [["playground"]])
@@ -25,7 +42,7 @@ commands(["playground"]; [["playground"]])
   (.outputs[] | select((.command // "" | startswith($path) | not) or ((.output // "") == "")) | "\($path): x_example_outputs entry needs an output and a command starting with \"\($path)\": \(.command)")')
 if [ -n "$bashly_yml_errors" ]
 then
-	logerror "❌ src/bashly.yml has errors:"
+	logerror "❌ the bashly configuration has errors (src/commands/*.yml, src/flags/*.yml):"
 	echo "$bashly_yml_errors"
 	exit 1
 fi

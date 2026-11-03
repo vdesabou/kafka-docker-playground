@@ -1,7 +1,10 @@
-# `bashly.yml` vocabulary as used in this repo
+# bashly config vocabulary as used in this repo
 
-Reference for `scripts/cli/src/bashly.yml`. Official docs: https://bashly.dev.
-Everything below is what the file actually uses today — prefer matching an
+Reference for the command tree: `scripts/cli/src/bashly.yml` (global settings
+and the `- import:` lines only), one `scripts/cli/src/commands/<command>.yml`
+per top-level command, and the flags shared by several commands in
+`scripts/cli/src/flags/`. Official docs: https://bashly.dev.
+Everything below is what those files actually use today — prefer matching an
 existing pattern over inventing one.
 
 ## Top level
@@ -55,27 +58,48 @@ Nesting maps directly to the filesystem:
 
 A parent command that only groups subcommands needs no partial of its own.
 
-## Anchors and aliases
+## Shared flags, anchors and aliases
 
-Shared flags are declared once with a YAML anchor and reused everywhere. This
-is the single most important convention in the file — duplicating a flag
-definition instead of aliasing it causes drift in help text and completions.
+Duplicating a flag definition instead of sharing it causes drift in help text
+and completions. There are two mechanisms, and which one to use depends only on
+whether the flag is shared **across** command files:
 
-Anchors currently defined (search `bashly.yml` for `&<name>` to see the full
-definition):
+**1. Across top-level commands → a file in `src/flags/`.** A YAML anchor cannot
+cross files (`Psych::AnchorNotDefined`), so these live on their own:
 
-`&verbose` · `&connector` · `&subject` · `&subject_required` ·
-`&compatibility-required` · `&user` · `&environment` · `&environment-run` ·
-`&tag` · `&connect-tag` · `&connector-tag` · `&connector-zip` · `&connector-jar` ·
-`&cluster-cloud` · `&cluster-type` · `&cluster-region` · `&cluster-environment` ·
-`&cluster-name` · `&cluster-creds` · `&cluster-schema-registry-creds` ·
-`&enable-ksqldb` · `&enable-rest-proxy` · `&enable-control-center` ·
-`&enable-flink` · `&enable-conduktor` · `&enable-multiple-brokers` ·
-`&enable-multiple-connect-workers` · `&enable-jmx-grafana` · `&enable-kcat` ·
-`&enable-sql-datagen`
+```yaml
+    flags:
+    - import: src/flags/verbose.yml
+```
 
-Use them as `- *connector`. An anchor must appear earlier in the file than any
-alias to it.
+Available today: `verbose` · `cluster` · `container` · `tag` · `connect-tag` ·
+`connector-tag` · `connector-zip` · `connector-jar` · `force-refresh` ·
+`level` · `compatibility-required`, plus the list groups
+`analyze-thread-dump-flags` · `analyze-heap-dump-flags` · `analyze-logs-flags` ·
+`analyze-gc-logs-flags` · `analyze-cfk-bundle-flags`.
+
+`import` replaces one list item, so a file holding a **list** of flags cannot be
+imported — it is included with ERB, which bashly runs over the config before
+loading it. The line starts at column 0 and the `gsub` string is the
+indentation of the result:
+
+```yaml
+  flags:
+<%= File.read('src/flags/analyze-thread-dump-flags.yml').gsub(/^(?=.)/, '    ') %>
+```
+
+Paths in `import:` and `File.read` are relative to `scripts/cli/`, never to the
+importing file.
+
+**2. Inside one command file → a YAML anchor**, for a flag reused by several
+subcommands of the same command (`&connector` / `*connector`, used 27 times in
+`commands/connector.yml`; `&context`, `&json`, `&subject_required` in
+`commands/schema.yml`; `&rbac-*` in `commands/rbac.yml`; `&quota-*` in
+`commands/quota.yml`…). The anchor must
+appear earlier in the file than any alias to it. Use it as `- *connector`.
+
+When a flag that is an anchor today is needed by a second top-level command,
+move it to `src/flags/` instead of copying it.
 
 ## Flag and argument attributes
 

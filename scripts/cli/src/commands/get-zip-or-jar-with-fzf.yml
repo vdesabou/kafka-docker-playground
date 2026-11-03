@@ -1,0 +1,12 @@
+name: get-zip-or-jar-with-fzf
+help: Return some completion for zip or jar list
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur
+flags:
+- long: --type
+  required: false
+  arg: type
+  allowed: [zip, jar]

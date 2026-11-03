@@ -1,0 +1,3 @@
+name: get-zazkia-connection-list
+help: Return some completion for zazkia connections list
+private: true

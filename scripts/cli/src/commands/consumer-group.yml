@@ -1,0 +1,207 @@
+name: consumer-group
+expose: always
+group: Topic
+help: |-
+  👥 Consumer group commands
+
+  Inspect any consumer group (not only the ones of sink connectors): which
+  groups exist, their state and members, and the committed offsets and lag
+  per partition. Works on plaintext, secured environments, cfk and
+  Confluent Cloud.
+
+    list            consumer groups, optionally with their state
+    describe        committed offsets and lag, or --state, or --members
+    reset-offsets   rewind or fast-forward a group (earliest, latest, datetime...)
+    delete          delete a group, or its offsets for one topic
+
+  🎓 Tip: for a sink connector, 'playground connector show-lag' follows the
+  lag until it reaches 0.
+
+  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag
+  🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck
+commands:
+
+  - name: list
+    group: Topic
+    help: |-
+      👥 List consumer groups
+    flags:
+    - long: --state
+      required: false
+      help: |-
+        🚦 Also display the state of each group (Stable, Empty, PreparingRebalance...)
+    - import: src/flags/verbose.yml
+    - import: src/flags/cluster.yml
+    examples:
+    - playground consumer-group list
+    - playground consumer-group list --state
+    x_example_outputs:
+    - command: playground consumer-group list
+      output: |-
+        17:22:17 ℹ️ 👥 Listing consumer groups
+        connect-filestream-sink
+
+  - name: describe
+    group: Topic
+    help: |-
+      🔬 Describe consumer group
+
+      By default, shows the committed offset, log end offset and lag of
+      every partition consumed by the group, followed by the total lag.
+      Use --state for the coordinator, assignment strategy and state, and
+      --members for the members and their assigned partitions.
+    flags:
+    - long: --group
+      short: -g
+      required: false
+      arg: group
+      completions:
+        dynamic:
+        - playground get-consumer-group-list
+      help: |-
+        👥 Consumer group name
+
+        ℹ️ If not set, all consumer groups are described
+    - long: --state
+      required: false
+      help: |-
+        🚦 Display state of the group (coordinator, assignment strategy, state, number of members)
+    - long: --members
+      required: false
+      help: |-
+        🧑‍🤝‍🧑 Display members of the group and their assigned partitions
+    - import: src/flags/verbose.yml
+    - import: src/flags/cluster.yml
+    examples:
+    - playground consumer-group describe --group connect-http-sink
+    - playground consumer-group describe --group my-app --members
+    - playground consumer-group describe --group my-app --state
+    x_example_outputs:
+    - command: playground consumer-group describe --group connect-filestream-sink
+      output: |-
+        17:23:03 ℹ️ 🔬 Describing consumer group connect-filestream-sink
+
+        GROUP                   TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                               HOST            CLIENT-ID
+        connect-filestream-sink filestream      0          5               5               0               connector-consumer-filestream-sink-0-01fb326c-c344-4c45-ba76-b8c048b539f4 /10.89.0.7      connector-consumer-filestream-sink-0
+        17:23:04 ℹ️ 🏁 Total lag for consumer group connect-filestream-sink: 0
+
+  - name: reset-offsets
+    group: Topic
+    help: |-
+      ⏪ Reset the committed offsets of a consumer group
+
+      Wraps kafka-consumer-groups --reset-offsets: set exactly one of
+      --to-earliest, --to-latest, --to-offset, --to-datetime, --shift-by
+      or --by-duration. All the topics of the group are reset, unless
+      --topic is set (topic, or topic:partition[,partition]).
+
+      The offsets are changed right away (kafka-consumer-groups --execute):
+      use --dry-run to only see the new offsets. The group must have no
+      active member.
+
+      🎓 Tip: for a sink connector (group connect-<connector>), use
+      'playground connector offsets reset|alter', which stops and resumes
+      the connector for you.
+    flags:
+    - long: --group
+      short: -g
+      required: true
+      arg: group
+      completions:
+        dynamic:
+        - playground get-consumer-group-list
+      help: |-
+        👥 Consumer group name
+    - long: --topic
+      short: -t
+      required: false
+      arg: topic
+      completions:
+        dynamic:
+        - playground get-topic-list
+      help: |-
+        🗳 Topic to reset (topic, or topic:partition[,partition])
+
+        ℹ️ If not set, all the topics of the group are reset
+    - long: --to-earliest
+      required: false
+      help: |-
+        ⏮️ Reset to the earliest offset
+    - long: --to-latest
+      required: false
+      help: |-
+        ⏭️ Reset to the latest offset (skip everything that is in the topic)
+    - long: --to-offset
+      required: false
+      arg: offset
+      validate: integer
+      help: |-
+        📍 Reset to this offset
+    - long: --to-datetime
+      required: false
+      arg: datetime
+      help: |-
+        📅 Reset to the first offset at or after this date (YYYY-MM-DDTHH:mm:SS.sss, e.g. 2026-10-20T08:00:00.000)
+    - long: --shift-by
+      required: false
+      arg: shift
+      help: |-
+        ↔️ Move the offsets by this number of records (negative to go back, e.g. -100)
+    - long: --by-duration
+      required: false
+      arg: duration
+      help: |-
+        ⏱️ Reset to the offsets of this long ago (ISO-8601 duration, e.g. PT1H for one hour ago, P1D for one day)
+    - long: --dry-run
+      required: false
+      help: |-
+        🧪 Only display the new offsets, do not change them
+    - import: src/flags/verbose.yml
+    - import: src/flags/cluster.yml
+    examples:
+    - playground consumer-group reset-offsets --group my-app --to-earliest
+    - playground consumer-group reset-offsets --group my-app --topic orders --shift-by -100 --dry-run
+    - playground consumer-group reset-offsets --group my-app --to-datetime 2026-10-20T08:00:00.000
+    x_example_outputs:
+    - command: playground consumer-group reset-offsets --group my-app --to-earliest
+      output: |-
+        17:23:03 ℹ️ ⏪ Resetting offsets of consumer group my-app on all its topics to earliest
+        GROUP                          TOPIC                          PARTITION  NEW-OFFSET
+        my-app                         filestream                     0          0
+        17:23:04 ℹ️ ✅ Offsets of consumer group my-app reset
+
+  - name: delete
+    group: Topic
+    help: |-
+      🗑️ Delete a consumer group, or its offsets for one topic
+
+      Wraps kafka-consumer-groups --delete. With --topic, only the
+      committed offsets of that topic are deleted (--delete-offsets), the
+      group keeps its other offsets.
+
+      The group must have no active member: for a sink connector, stop or
+      delete the connector first.
+    flags:
+    - long: --group
+      short: -g
+      required: true
+      arg: group
+      completions:
+        dynamic:
+        - playground get-consumer-group-list
+      help: |-
+        👥 Consumer group name
+    - long: --topic
+      short: -t
+      required: false
+      arg: topic
+      completions:
+        dynamic:
+        - playground get-topic-list
+      help: |-
+        🗳 Only delete the committed offsets of this topic
+    - import: src/flags/verbose.yml
+    - import: src/flags/cluster.yml
+    examples:
+    - playground consumer-group delete --group my-app
+    - playground consumer-group delete --group my-app --topic orders

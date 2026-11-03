@@ -1,0 +1,293 @@
+name: config
+help: |-
+  ⚙️ Configure CLI
+
+  Your preferences, kept between sessions:
+
+    editor <name>                      the editor every command opens files
+                                       with (code, vi, nano...)
+    folder_zip_or_jar <dir>...         where to look for connector zips and
+                                       jars, in addition to the current
+                                       folder
+    clipboard true|false               copy connector config to the
+                                       clipboard (macOS only)
+    container-kill-all-before-run      kill every container before each run,
+                                       or just stop the example
+    cleanup-ccloud-resources-after-run delete the Confluent Cloud connectors
+                                       and topics of the last ccloud run on
+                                       stop and before the next run
+                                       (ask, true or false)
+    check-and-update-repo-version      warn when your clone is out of date
+    run-log true|false                 write a masked log of each
+                                       'playground run' to share it
+    run-log-folder <dir>               where to write the run logs
+    open-diagnose-report-on-failure    open the HTML report of the 'connector
+                                       diagnose' run when a connector fails
+                                       (true or false)
+    display-last-updated-connector-plugins
+                                       list the connector plugins released
+                                       recently at the end of a
+                                       self-managed run (true or false,
+                                       -days <n>, -vendor <vendor|all>)
+    open-ccloud-connector-in-browser   open fully managed connectors, and in
+    open-grafana-in-browser            which browser
+
+  🎓 Tip: all of them can also be changed from the '⚙️ CLI preferences'
+  entry of the 'playground run' menu.
+commands:
+- name: show
+  private: true
+  help: Show the entire playground_config.ini file
+
+- name: get
+  private: true
+  help: Read a value from the playground_config.ini file
+
+  args:
+  - name: key
+    required: true
+    help: Config key
+  examples:
+  - playground config get hello
+  - playground config get user.name
+
+- name: set
+  private: true
+  help: Save a value in the playground_config.ini file
+  args:
+  - name: key
+    required: true
+    help: playground_config.ini key
+  - name: value
+    required: true
+    help: playground_config.ini value
+  examples:
+  - playground config set hello world
+  - playground config set user.email me@example.com
+
+- name: editor
+  help: editor to use to open files
+  args:
+  - name: editor
+    required: true
+    help: editor
+    validate: editor_exists
+  examples:
+  - playground config editor vi
+  - playground config editor code
+
+- name: folder_zip_or_jar
+  help: |- 
+    📂 list of folders where to search for zip or jar
+    current folder is always included
+
+    default is ~ (home dir)
+  args:
+  - name: folder
+    required: true
+    help: folder
+    unique: true
+    repeatable: true
+    validate: dir_exists
+  examples:
+  - playground config folder_zip_or_jar ~/Downloads ~/Documents/github/kafka-connect-*
+  - playground config folder_zip_or_jar ~/Downloads
+
+- name: clipboard
+  help: copy to clipboard connector config (only working on MacOS)
+  args:
+  - name: enabled
+    required: false
+    default: "true"
+  examples:
+  - playground config clipboard false
+  - playground config clipboard true
+
+- name: open-ccloud-connector-in-browser
+  help: |
+    when running a fully managed connector example, it opens the connector in browser
+  commands:
+    - name: automatically
+      help: automatically open the connector in browser
+      args:
+      - name: automatically
+        required: false
+        default: "true"
+      examples:
+      - playground config open-ccloud-connector-in-browser automatically false
+      - playground config open-ccloud-connector-in-browser automatically true
+    - name: browser
+      help: browser to use
+      args:
+      - name: browser
+        required: false
+        default: ""
+      examples:
+      - playground config open-ccloud-connector-in-browser browser Safari
+
+- name: open-grafana-in-browser
+  help: |
+    when running an example with --enable-jmx-grafana flag, it opens grafana in browser
+  commands:
+    - name: automatically
+      help: automatically open grafana in browser
+      args:
+      - name: automatically
+        required: false
+        default: "true"
+      examples:
+      - playground config open-grafana-in-browser automatically false
+      - playground config open-grafana-in-browser automatically true
+    - name: browser
+      help: browser to use
+      args:
+      - name: browser
+        required: false
+        default: ""
+      examples:
+      - playground config open-grafana-in-browser browser Safari
+
+- name: container-kill-all-before-run
+  help: |
+    when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.
+  args:
+  - name: enabled
+    required: false
+    default: "false"
+  examples:
+  - playground config container-kill-all-before-run false
+  - playground config container-kill-all-before-run true
+
+- name: run-log
+  help: |-
+    📄 write a masked log of each 'playground run' (default true)
+
+    The output of the run is also written to a text file, with the
+    passwords, api keys and tokens masked, to share it with a colleague or
+    engineering. Its path is printed at the end of the run.
+
+    The masking is best-effort: review the file before sharing it outside
+    Confluent.
+  args:
+  - name: enabled
+    required: false
+    default: "true"
+    allowed: ["true", "false"]
+  examples:
+  - playground config run-log false
+  - playground config run-log true
+
+- name: run-log-folder
+  help: |-
+    🗂️ folder of the run logs
+
+    Default is /tmp/playground-run-logs.
+
+    The last 50 run logs of the folder are kept.
+  args:
+  - name: folder
+    required: true
+    help: folder
+  examples:
+  - playground config run-log-folder ~/Documents/playground-run-logs
+
+- name: open-diagnose-report-on-failure
+  help: |-
+    🩺 open the HTML report when a connector fails (default true)
+
+    When 'connector create-or-update' or 'connector wait' find a FAILED
+    connector or task, they run 'playground connector diagnose' on it. Its
+    HTML report is opened in the browser from an interactive terminal (never
+    in CI). Set it to false to only print the path of the report.
+  args:
+  - name: enabled
+    required: false
+    default: "true"
+    allowed: ["true", "false"]
+  examples:
+  - playground config open-diagnose-report-on-failure false
+  - playground config open-diagnose-report-on-failure true
+
+- name: display-last-updated-connector-plugins
+  help: |-
+    🆕 at the end of a self-managed connector run, list the connector plugins released recently on Confluent Hub (default false)
+
+    Same as 'playground connector-plugin display-last-updated', computed
+    in the background during the run. Look-back window and vendor are set
+    with display-last-updated-connector-plugins-days and
+    display-last-updated-connector-plugins-vendor.
+  args:
+  - name: enabled
+    required: false
+    default: "true"
+    allowed: ["true", "false"]
+  examples:
+  - playground config display-last-updated-connector-plugins false
+  - playground config display-last-updated-connector-plugins true
+
+- name: display-last-updated-connector-plugins-days
+  help: |-
+    📅 number of days to look back for display-last-updated-connector-plugins
+
+    Default is 3.
+  args:
+  - name: days
+    required: true
+    help: days
+    validate: integer
+  examples:
+  - playground config display-last-updated-connector-plugins-days 7
+
+- name: display-last-updated-connector-plugins-vendor
+  help: |-
+    🏢 vendor of the connector plugins listed by display-last-updated-connector-plugins
+
+    Default is confluentinc. Use 'all' for every vendor.
+  args:
+  - name: vendor
+    required: true
+    help: vendor
+    validate: not_empty
+  examples:
+  - playground config display-last-updated-connector-plugins-vendor debezium
+  - playground config display-last-updated-connector-plugins-vendor all
+
+- name: cleanup-ccloud-resources-after-run
+  help: |-
+    🧹 delete the Confluent Cloud resources left by the last ccloud example
+
+    Connectors and topics created by a ccloud 'playground run' are recorded
+    with the run. On 'playground stop', and at the start of the next
+    'playground run', the ones still alive are listed and deleted:
+
+      ask     list them and ask for confirmation (default)
+      true    delete them without asking
+      false   never delete them
+
+    Fully managed connectors are billed while they exist, and an
+    interrupted example never reaches its final 'playground connector
+    delete'. Resources of older runs, or created outside a run, are left
+    alone: use 'playground cloud-resources cleanup --resource ccloud'.
+  args:
+  - name: mode
+    required: false
+    default: "ask"
+    allowed:
+    - ask
+    - "true"
+    - "false"
+  examples:
+  - playground config cleanup-ccloud-resources-after-run ask
+  - playground config cleanup-ccloud-resources-after-run true
+  - playground config cleanup-ccloud-resources-after-run false
+
+- name: check-and-update-repo-version
+  help: |
+    when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.
+  args:
+  - name: enabled
+    required: false
+    default: "true"
+  examples:
+  - playground config check-and-update-repo-version false
+  - playground config check-and-update-repo-version true
