@@ -1,6 +1,7 @@
 topic="${args[--topic]}"
 nb_partitions="${args[--nb-partitions]}"
 verbose="${args[--verbose]}"
+if_not_exists="${args[--if-not-exists]}"
 
 get_security_broker "--command-config"
 get_environment_used
@@ -38,34 +39,14 @@ then
         record_ccloud_created_topic "$topic"
     elif [[ "$environment" == cfk* ]]
     then
-        if [[ -z "$nb_partitions" ]]
-        then
-            nb_partitions=1
-        fi
+        # kafka-topics in the pod, like on the other environments: a KafkaTopic resource ignored the extra arguments
+        # (--config…), was created asynchronously, and its name must be a DNS-1123 name (no _ nor upper case)
         if [[ -n "$verbose" ]]
         then
             log "🐞 CLI command used"
-            echo "kubectl -n confluent apply -f - << EOF"
-            echo "apiVersion: platform.confluent.io/v1beta1"
-            echo "kind: KafkaTopic"
-            echo "metadata:"
-            echo "  name: $topic"
-            echo "  namespace: confluent"
-            echo "spec:"
-            echo "  replicas: 1"
-            echo "  partitionCount: $nb_partitions"
-            echo "EOF"
+            echo "kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}"
         fi
-        kubectl -n confluent apply -f - << EOF
-apiVersion: platform.confluent.io/v1beta1
-kind: KafkaTopic
-metadata:
-  name: $topic
-  namespace: confluent
-spec:
-  replicas: 1
-  partitionCount: $nb_partitions
-EOF
+        kubectl -n confluent exec $container -- kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}
     else
         if [[ -n "$verbose" ]]
         then
@@ -74,6 +55,9 @@ EOF
         fi
         docker exec $container kafka-topics --create --topic $topic --bootstrap-server $bootstrap_server --partitions $nb_partitions $security ${other_args[*]}
     fi
+elif [[ -n "$if_not_exists" ]]
+then
+    log "✅ topic $topic already exists (--if-not-exists)"
 else
     logerror "❌ topic $topic already exist !"
     exit 1

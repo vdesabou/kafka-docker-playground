@@ -14,17 +14,15 @@ then
     fi
 fi
 
-get_connect_image
-if ! version_gt "$CP_CONNECT_TAG" "6.9.9"
+# GetOffsetShell runs in the container of the admin tools (the broker, the kerberos client…): its version, not the one
+# of connect (--connect-tag), decides the class name
+tool_tag=$(get_admin_tool_cp_tag)
+if ! version_gt "$tool_tag" "6.9.9"
 then
-    logerror "❌ playground topic get-offsets requires CP 7.0 or later (it is $CP_CONNECT_TAG)"
+    logerror "❌ playground topic get-offsets requires CP 7.0 or later (it is $tool_tag)"
     exit 1
 fi
-class_name="kafka.tools.GetOffsetShell"
-if version_gt "$CP_CONNECT_TAG" "7.6.99"
-then
-    class_name="org.apache.kafka.tools.GetOffsetShell"
-fi
+class_name=$(get_offset_shell_class "$tool_tag")
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT

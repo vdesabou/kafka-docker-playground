@@ -90,7 +90,8 @@ Gotchas:
 - **`--generate-only`** prints the records without sending anything. Use it to get the skeleton of a record for a
   complex schema, edit one, and send it with `--forced-value`.
 - **Raw payloads** from stdin: one JSON per line → one record per line; one multi-line JSON document → minified into a
-  single record; any other text → one record per line.
+  single record; any other text → one record per line. A line between double quotes is only taken for an Avro
+  schema when it is a primitive type (`"string"`, `"long"`…): `"John","Doe"` is a raw record.
 - **Avro unions** are shown in their JSON encoding (`{"string": "Ona"}`): that's the form `--forced-value` expects
   too.
 - `--no-null` never generates `null` for optional fields (Avro and JSON Schema only, forced by `--record-size`).
@@ -121,6 +122,18 @@ Gotchas:
 - `--tombstone` without `--key` sends a record with a null key **and** a null value (with a warning).
 - `--headers` and `--tombstone` need CP 7.2+, `--schema-id-in-header` CP 8.1.1+: the command fails early
   otherwise.
+- `--forced-key` without `--key` sends that key, as a string, on every record.
+- An empty stdin (a script or CI with nothing piped) is the same as no stdin: `❌ stdin is empty you probably forgot
+  to set --value !`, or, with `--forced-value`, that value is the payload.
+- Two `produce` running at the same time (an infinite producer in the background and another one) don't share any file:
+  each run copies its schemas to its own files in the container, removed at the end.
+- The flag combinations are checked before anything is generated or created: `--validate`, the subject name
+  strategies and `--schema-id-in-header` need a value with a schema (avro, json-schema, protobuf).
+- A console producer that dies fails the command: a record that doesn't match the schema (`SerializationException`), a
+  schema refused by the registry, a wrong `--producer-property`. The output is
+  `❌ the console producer failed (exit code 1) while producing to topic orders: <first exception>`, exit 1. A record
+  the producer could not send (`RecordTooLargeException`, authorization) is only logged by the console producer, which
+  still exits 0: that case is caught from its output (`❌ N record(s) could not be sent to topic …`).
 
 ### Transactions: `--transactional-id`
 
@@ -137,7 +150,8 @@ schemas, partitioning) to a hidden staging topic with the same number of partiti
 (`scripts/cli/src/transactional-copier`, built with Maven in Docker on first use, run with the `kafka-clients` of the
 broker container) then copies them byte for byte, partition by partition and in order, in one transaction, and
 commits it, aborts it or leaves it open. With the default subject name strategy, the schemas are registered under
-the subjects of the topic (same schema id). The staging topic and its subjects are deleted at the end.
+the subjects of the topic (same schema id). The staging topic and its subjects are deleted at the end, also when the
+command fails. Ctrl-C during the staging write copies nothing: no transaction is committed.
 
 - `--transaction open` stops the producer without ending the transaction: the coordinator aborts it after
   `--transaction-timeout` (default 60000 ms, at most `transaction.max.timeout.ms` of the brokers, 15 minutes). Until
@@ -173,8 +187,8 @@ What happens behind the flags:
 | `--nb-messages -1` | infinite, in batches; ctrl-c stops and prints the exact number of records sent |
 | `--throughput N` | at most N records per second (paced on the host, before the producer) |
 | `--sleep-time-between-batch N` | pause N seconds between batches (bursty load) |
-| `--record-size N` | pads the **first string field** of each record; above 1 MB, also sets `max.request.size`, `buffer.memory`, `request.timeout.ms` (60 s instead of the 1.5 s of the console producer) and the topic's `max.message.bytes` for you |
-| `--nb-partitions N` | creates the topic with N partitions. If it exists with another count: **re-created when empty, error when not** |
+| `--record-size N` | pads the **first string field** of each record (nested fields and the `string` branch of an Avro union included, only that one); above 1 MB, also sets `max.request.size`, `buffer.memory`, `request.timeout.ms` (60 s instead of the 1.5 s of the console producer) and the topic's `max.message.bytes` for you |
+| `--nb-partitions N` | creates the topic with N partitions (1 by default). If it exists with another count, `--nb-partitions 1` included: **re-created when empty, error when not** |
 | `--delete-topic` | deletes the topic and its subjects first: a clean slate on re-runs |
 | `--consume` | reads the topic back right after (`topic consume --min-expected-messages <sent>`) |
 

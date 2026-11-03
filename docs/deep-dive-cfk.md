@@ -65,8 +65,9 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
    - the REST calls from your machine go through `kubectl port-forward`: Connect on `localhost:8083`, Schema Registry
      on `localhost:8081` (and `9021`, `8088`, `8082` for Control Center, ksqlDB, REST Proxy). A CLI call that finds
      the Connect port-forward dead starts a new one (`🔀 Starting CFK port-forward for Connect on localhost:8083`);
-   - connectors are `Connector` resources (create, update, delete, and pause / resume / restart with annotations), and
-     `topic create` / `topic delete` act on `KafkaTopic` resources.
+   - connectors are `Connector` resources (create, update, delete, and pause / resume / restart with annotations).
+     Topics are created, described and deleted with `kafka-topics` in connect-0, like on the other environments; a
+     topic that has a `KafkaTopic` resource also gets it described, and deleted.
 
 ---
 
@@ -83,7 +84,7 @@ read it. Takes about 15 minutes to read, and about 10 minutes to run the lab.
 | `connector stop` | the Connect REST API (CFK has no annotation for it) |
 | `connector wait` | the Connect REST API through the port-forward, started again on each failed try (the pod was restarted) |
 | `connector plugins` | `status.connectorPlugins` of the `Connect` CR |
-| `topic create` / `delete` / `describe` | a `KafkaTopic` CR (`replicas: 1`, `partitionCount`) / `kubectl delete kafkatopic` / `kubectl describe kafkatopic` + `kafka-topics --describe` |
+| `topic create` / `delete` / `describe` | `kafka-topics` in connect-0, `kafka:9071` (+ `kubectl delete` / `describe kafkatopic` when the topic has a `KafkaTopic` resource) |
 | `topic produce` / `consume`, `get-number-records`, `consumer-group`, `show-lag` | the console tools in connect-0, `kafka:9071` |
 | `container exec` / `logs` / `cp` / `get-properties` / `get-ip-addresses` | `kubectl exec` / `kubectl logs --all-containers` (`--previous` for the instance before a restart) / `kubectl cp` / … on the pod |
 | `container restart` / `kill` | delete the pod (`kill` with `--grace-period=0 --force`): the StatefulSet creates a new one |
@@ -140,11 +141,11 @@ Gotchas:
   (restarted by the CLI). When connect-0 is deleted, the Connect one dies with it: the next `playground connector …`
   call starts a new one, and `connector wait` keeps starting one until the new pod answers. A `curl localhost:8083`
   of your own in between fails.
-- **`topic create` only sets the partitions**: the `KafkaTopic` CR has `replicas: 1` and `partitionCount`, the extra
-  `kafka-topics` arguments (`--config retention.ms=…`) are not applied. `topic produce` creates a missing topic the
-  same way (`kafkatopic.platform.confluent.io/filestream created`), but a topic created by a connector or a client
-  (`auto.create.topics.enable=true` in the `Kafka` CR) has no `KafkaTopic` resource: `kubectl describe kafkatopic`
-  doesn't find it, `kafka-topics --describe` does, and `topic delete` (`kubectl delete kafkatopic`) can't delete it.
+- **Topics are not `KafkaTopic` resources**: `topic create` (and `topic produce` for a missing topic) runs
+  `kafka-topics --create` in connect-0, so the extra arguments (`--config retention.ms=…`) apply and names with `_` or
+  upper case work (a resource name must be a DNS-1123 name). `topic delete` deletes any topic, also the ones created by
+  a connector or a client; when a topic has a `KafkaTopic` resource (created with `kubectl apply`), the resource is
+  deleted first, otherwise the operator would create the topic again.
 - **`playground stop` leaves the cluster up** (and its memory reserved): `k3d cluster stop playground-cfk` to pause
   it, `k3d cluster delete playground-cfk` to start from scratch (the next run creates it again and reinstalls the
   operator).
@@ -309,7 +310,7 @@ playground status
 # schemaregistry-0                     0/1     Running   0             31s
 playground topic produce -t filestream --nb-messages 5 --value '{"id": %g, "name": "name-%g"}'
 # 🆕 Creating topic filestream
-# kafkatopic.platform.confluent.io/filestream created                           <- a KafkaTopic resource
+# Created topic filestream.                                                      <- kafka-topics in connect-0
 playground connector create-or-update --connector filestream-sink --wait << EOF
 {
      "tasks.max": "1",
@@ -392,12 +393,6 @@ playground connector benchmark -c filestream-sink
 playground container recreate
 # ❌ container recreate is not supported in cfk mode                              (exit 1)
 playground topic describe -t filestream
-# 🎰 kubectl -n confluent describe kafkatopic filestream
-# Kind:         KafkaTopic
-# Spec:
-#   Partition Count:  1
-#   Replicas:         1
-# …
 # Topic: filestream	TopicId: …	PartitionCount: 1	ReplicationFactor: 1	Configs: min.insync.replicas=1,segment.bytes=1073741824
 ```
 

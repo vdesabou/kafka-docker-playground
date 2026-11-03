@@ -5710,7 +5710,7 @@
         },
         {
           "name": "compare",
-          "description": "🔀 Compare a topic with its replica: is everything replicated?\n\nEarliest and latest offsets and number of records of every partition, on\nboth sides, and what the destination misses. In an mdc-* environment\nthe two sides are the clusters given with --from and --to (Replicator,\nMirrorMaker 2, Cluster Linking); elsewhere, two topics of the same\ncluster (--to-topic).\n\nExits 1 when the destination has fewer records than the source. The\ncounts come from the offsets: transaction markers and compaction make\nthem approximate.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication",
+          "description": "🔀 Compare a topic with its replica: is everything replicated?\n\nEarliest and latest offsets and number of records of every partition, on\nboth sides, and what the destination misses. In an mdc-* environment\nthe two sides are the clusters given with --from and --to (Replicator,\nMirrorMaker 2, Cluster Linking); elsewhere, two topics of the same\ncluster (--to-topic).\n\nExits 1 when the destination misses records: partition by partition\nwhen both topics have the same number of partitions (duplicates in\none partition don't hide missing records in another), in total\notherwise. The counts come from the offsets: transaction markers and\ncompaction make them approximate.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication",
           "usage": "playground topic compare [OPTIONS]",
           "options": [
             {
@@ -5959,6 +5959,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6004,6 +6011,13 @@
               ],
               "argument": "",
               "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--cluster"
+              ],
+              "argument": "CLUSTER",
+              "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
             }
           ]
         },
@@ -6077,7 +6091,7 @@
                 "--max-messages"
               ],
               "argument": "MAX-MESSAGES",
-              "description": "Max number of messages to display (default is 100)\n\nYou can use -1 to display all messages\n\nDefault value: 100"
+              "description": "Max number of messages to display (default is 100)\n\nYou can use -1 to display all messages. With --grep, every record is searched and this limits the matching records displayed.\n\nDefault value: 100"
             },
             {
               "names": [
@@ -6091,14 +6105,14 @@
                 "--grep"
               ],
               "argument": "GREP",
-              "description": "Verify that topic content contains record which contains specified string\n\nIt is searched in the records as displayed (decoded when base64 encoded), and the command fails when no record contains it."
+              "description": "Verify that topic content contains record which contains specified string\n\nIt is searched in every record of the topic, as displayed (decoded when base64 encoded), and the command fails when no record contains it (with --count, 0 is printed instead)."
             },
             {
               "names": [
                 "--timeout"
               ],
               "argument": "TIMEOUT",
-              "description": "Max number of seconds to wait when --min-expected-messages is used.\n\nDefault is 60 seconds\n\nDefault value: 60"
+              "description": "Max number of seconds to wait when --min-expected-messages is used: for the topic to be created, then for the records.\n\nDefault is 60 seconds"
             },
             {
               "names": [
@@ -6126,7 +6140,7 @@
                 "--max-characters"
               ],
               "argument": "MAX-CHARACTERS",
-              "description": "Max characters per message to display (default is 3000, 0 for no limit)\n\nDefault value: 3000"
+              "description": "Max characters per message to display, the whole line: timestamp, headers, key and value (default is 3000, 0 for no limit)\n\nDefault value: 3000"
             },
             {
               "names": [
@@ -6134,7 +6148,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --max-characters, --tail, --min-expected-messages"
+              "description": "🔖 Save full dump of topic to a file and open with text editor set with playground config editor <editor> (default is code)\n\n--grep, --no-decode and --print-schema apply to the dump. Needs --topic.\n\nConflicts with: --max-characters, --tail, --min-expected-messages"
             },
             {
               "names": [
@@ -6183,7 +6197,7 @@
                 "--count"
               ],
               "argument": "",
-              "description": "🔢 Only print the number of records consumed (with --grep, the number of records containing that string),\non stdout: logs go to stderr. Without --topic, one \"<topic> <number>\" line per topic.\n\nUnlike playground topic get-number-records, records are counted, not offsets (transaction markers,\ncompacted records and records that cannot be deserialized do not count)\n\nConflicts with: --tail, --open, --json"
+              "description": "🔢 Only print the number of records consumed (with --grep, the number of records containing that string,\n0 included: not a failure), on stdout: logs go to stderr. Without --topic, one \"<topic> <number>\" line per topic.\n\nUnlike playground topic get-number-records, records are counted, not offsets (transaction markers,\ncompacted records and records that cannot be deserialized do not count)\n\nConflicts with: --tail, --open, --json"
             },
             {
               "names": [
@@ -6262,7 +6276,7 @@
                 "--nb-messages"
               ],
               "argument": "NB-MESSAGES",
-              "description": "💯 Number of messages to produce (default is 1)\n   \n🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages will be sent in batches of <value of --max-nb-messages-per-batch> (default 300000) records\n    - if you set it to -1, an infinite number of records will also be sent in batches\n\nDefault value: 1"
+              "description": "💯 Number of messages to produce (default is 1), greater than 0 or -1\n   \n🎓  - if > <value of --max-nb-messages-per-batch> (default 300000), messages will be sent in batches of <value of --max-nb-messages-per-batch> (default 300000) records\n    - if you set it to -1, an infinite number of records will also be sent in batches\n\nDefault value: 1"
             },
             {
               "names": [
@@ -6276,7 +6290,7 @@
                 "--max-nb-messages-to-generate"
               ],
               "argument": "MAX-NB-MESSAGES-TO-GENERATE",
-              "description": "🔨 Max number of different messages to generate.\n\n   - when protobuf is used, default is 50 as protobuf generation is really slow\n   - when json or sql datagen format is used, default is 1000\n   - when --record-size is set, default is 100\n   --when nb-messages is set to -1, default is 1000\n   - otherwise default is 100000"
+              "description": "🔨 Max number of different messages to generate.\n\n   - when protobuf is used, default is 50 as protobuf generation is really slow\n   - when json or sql datagen format is used, default is 1000\n   - when --record-size is set (avro, json-schema, datagen), default is 100\n   - when --nb-messages is set to -1, default is 1000 (at most)\n   - otherwise default is 100000"
             },
             {
               "names": [
@@ -6297,7 +6311,7 @@
                 "--nb-partitions"
               ],
               "argument": "NB-PARTITIONS",
-              "description": "🔢 Number of partitions for the topic. (default is 1)\n\n❌ Important: if the topic exists with another number of partitions, it is re-created when it\nis empty, and the command fails when it is not.\n\nDefault value: 1"
+              "description": "🔢 Number of partitions for the topic. (default is 1 when the topic is created)\n\n❌ Important: if the topic exists with another number of partitions, it is re-created when it\nis empty, and the command fails when it is not."
             },
             {
               "names": [
@@ -6339,7 +6353,7 @@
                 "--forced-key"
               ],
               "argument": "FORCED-KEY",
-              "description": "☢️ Key to use for all records. \n\n🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-key to send the message you need."
+              "description": "☢️ Key to use for all records. Without --key, it is sent as a string (no schema).\n\n🎓 Tip: use --generate-only first with avro, json-schema or protobuf to get skeleton of messages and then use --forced-key to send the message you need."
             },
             {
               "names": [
@@ -6367,7 +6381,7 @@
                 "--schema-id-in-header"
               ],
               "argument": "",
-              "description": "🎯 Include schema ID in kafka header. \n\nUses HeaderSchemaIdSerializer for schema.id.seserializer\n\nNote: CP 8.1.1+ is required."
+              "description": "🎯 Include schema ID in kafka header. \n\nUses HeaderSchemaIdSerializer for value.schema.id.serializer\n\nNote: CP 8.1.1+ is required, and a value with a schema (avro, json-schema or protobuf)."
             },
             {
               "names": [
@@ -6492,6 +6506,13 @@
             },
             {
               "names": [
+                "--if-not-exists"
+              ],
+              "argument": "",
+              "description": "✅ Do nothing, and succeed, when the topic already exists (default: fail)"
+            },
+            {
+              "names": [
                 "--cluster"
               ],
               "argument": "CLUSTER",
@@ -6501,7 +6522,7 @@
         },
         {
           "name": "delete",
-          "description": "❌ Delete topic and associated schema/subject if applicable\n\nAlso removes the key and value subjects from the schema registry,\nwhich is what you usually want: a topic re-created with a leftover\nsubject keeps the old compatibility rules and the old schema history.\nKeep them with --skip-delete-schema. When the topic no longer exists,\nits leftover key and value subjects are still deleted.\n\nA regex is accepted, matched in full, to clean up a family of topics\nat once.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception",
+          "description": "❌ Delete topic and associated schema/subject if applicable\n\nAlso removes the key and value subjects from the schema registry,\nwhich is what you usually want: a topic re-created with a leftover\nsubject keeps the old compatibility rules and the old schema history.\nKeep them with --skip-delete-schema. When the topic no longer exists,\nits leftover key and value subjects are still deleted.\n\nA regex is accepted, matched in full, to clean up a family of topics\nat once. A regex never matches the internal topics (_schemas,\n__consumer_offsets, connect-configs…): give the exact name to delete\none of them.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception",
           "usage": "playground topic delete [OPTIONS]",
           "options": [
             {

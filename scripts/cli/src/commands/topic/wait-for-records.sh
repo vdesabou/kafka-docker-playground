@@ -8,10 +8,25 @@ start_time=$SECONDS
 last_count=""
 while true
 do
-    # a topic that does not exist yet prints nothing: counts as empty
+    # a topic that does not exist yet prints nothing and succeeds: counts as empty. A failure (environment down,
+    # authentication) is not an empty topic: fail after 3 in a row instead of waiting until --max-wait
     set +e
-    count=$(playground --output-level WARN topic get-number-records --topic "$topic" 2>/dev/null | grep -E '^[0-9]+$' | tail -1)
+    output=$(playground --output-level WARN topic get-number-records --topic "$topic" 2>&1)
+    rc=$?
     set -e
+    if [ $rc -ne 0 ]
+    then
+        nb_failures=$((${nb_failures:-0} + 1))
+        if [ $nb_failures -ge 3 ]
+        then
+            logerror "❌ could not count the records of topic $topic:"
+            echo "$output" | tail -10
+            exit 1
+        fi
+    else
+        nb_failures=0
+    fi
+    count=$(echo "$output" | grep -E '^[0-9]+$' | tail -1)
     count=${count:-0}
     elapsed=$((SECONDS - start_time))
 

@@ -69,10 +69,12 @@ playground topic alter -t orders --add-config retention.ms=1000,segment.ms=1000
 
 Gotchas:
 
-- **`create` fails on an existing topic**: `❌ topic orders already exist !`, exit 1. Delete it first, or use
+- **`create` fails on an existing topic**: `❌ topic orders already exist !`, exit 1 (`--if-not-exists` succeeds
+  instead: `✅ topic orders already exists`). Delete it first, or use
   `alter` for configs.
 - **`alter` on a missing topic creates it first** (`🆕 topic orders does not exist, creating it...`), with 1 partition,
-  then applies the configs.
+  then applies the configs. A config that `kafka-configs` refuses fails the command:
+  `❌ could not alter topic orders (kafka-configs exit code 1)`, exit 1.
 - **The replication factor is the broker's default**: 1 on the single-broker environments. Pass
   `--replication-factor 3` with `--enable-multiple-brokers`: on a single broker, creation fails.
 - **The number of partitions can't be changed with `alter`** (`kafka-configs` only touches configs). `topic produce
@@ -117,8 +119,8 @@ Gotchas:
   sum of its partitions. A freshly written topic can show 0 until the segment is flushed. On Confluent Cloud, sizes come
   from the Metrics API (`retained_bytes`, a few minutes late) and need `CONFLUENT_CLOUD_API_KEY` /
   `CONFLUENT_CLOUD_API_SECRET`.
-- On CFK, `describe` shows the `KafkaTopic` custom resource (`kubectl describe kafkatopic`) **and** `kafka-topics
-  --describe`.
+- On CFK, `describe` runs `kafka-topics --describe` in connect-0, and also shows the `KafkaTopic` custom resource
+  (`kubectl describe kafkatopic`) when the topic has one.
 
 ---
 
@@ -153,10 +155,13 @@ Gotchas:
 - **`wait-for-records` polls `get-number-records`** every `--interval` seconds (5) up to `--max-wait` (120): it
   inherits its counting, so it can return early on offsets that hold no readable record (a transaction marker). A topic
   that doesn't exist yet counts as 0, so you can call it before a source connector created its topic. On timeout:
-  `❌ topic orders contains 0 records after 10 seconds, expected at least 1`, exit 1.
+  `❌ topic orders contains 0 records after 10 seconds, expected at least 1`, exit 1. When the count itself fails 3
+  times in a row (environment down, authentication), it stops at once: `❌ could not count the records of topic orders:`
+  followed by the error, exit 1.
 - `get-number-records` on a missing topic prints `topic … does not exist !` (a warning) and exits 0: check the number,
-  not the exit code.
-- `get-offsets` needs CP 7.0+.
+  not the exit code. When the offsets can't be read (broker down, authentication), it prints
+  `❌ could not get the offsets of topic orders (exit code 1)` and exits 1, instead of a `0`.
+- `get-offsets` needs CP 7.0+: the version of the container that runs the tool (the broker), not the one of connect.
 - **To assert data in a script, prefer `topic consume --min-expected-messages N`** (counts real records, then shows
   them) to `wait-for-records` + a count.
 
@@ -177,7 +182,9 @@ Gotchas:
   be decoded any more. That's usually what a repro wants; `--skip-delete-schema` when it isn't. Subjects of other
   naming strategies (`<topic>-<record>`) are not touched. See the [schema deep dive](/deep-dive-schema.md).
 - **`--topic` is a regex when no topic has that exact name**, matched in full (`^(…)$`): `lab-.*` deletes every topic
-  starting with `lab-`, internal ones included if they match. The matching topics are printed before they're deleted.
+  starting with `lab-`. A regex never matches the internal topics (`_schemas`, `__consumer_offsets`,
+  `connect-configs`…): `.*` used to delete them too; give the exact name to delete one of them. The matching topics
+  are printed before they're deleted.
 - **Nothing matching is not an error**: `❌ topic lab-nope does not exist and regex does not match any topic !`, exit 0.
   When `--topic` is a plain topic name (no regex characters other than `.`), leftover `<topic>-key` / `<topic>-value`
   subjects are still deleted (`🔰 Delete subject <topic>-value (its topic does not exist)`): a subject that outlived its

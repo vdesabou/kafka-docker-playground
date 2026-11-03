@@ -61,6 +61,9 @@ lab_run playground topic describe -t lab-orders
 lab_expect_not_contains "max.message.bytes=1000" "the override is gone"
 lab_run playground topic alter -t lab-created-by-alter --add-config retention.ms=60000
 lab_expect_contains "🆕 topic lab-created-by-alter does not exist, creating it..."
+lab_run playground topic alter -t lab-orders --add-config not.a.topic.config=1
+lab_expect_exit 1
+lab_expect_contains "❌ could not alter topic lab-orders (kafka-configs exit code 1)"
 
 log "Step 5: waiting for records that come, and records that don't"
 lab_run playground topic wait-for-records -t lab-later --min-expected-messages 1 --max-wait 10
@@ -92,6 +95,16 @@ lab_expect_contains "lab-orders"
 lab_run playground topic delete -t lab-nope
 lab_expect_exit 0
 lab_expect_contains "❌ topic lab-nope does not exist and regex does not match any topic !"
+lab_run playground topic delete -t '_schem.*'
+lab_expect_exit 0
+lab_expect_contains "🫥 --topic _schem.* only matches internal topics"
+lab_run playground topic list --show-internal
+lab_expect_contains "_schemas"
+lab_run playground topic create -t lab-orders --if-not-exists
+lab_expect_exit 0
+lab_run playground topic create -t lab-orders --if-not-exists
+lab_expect_exit 0
+lab_expect_contains "✅ topic lab-orders already exists (--if-not-exists)"
 
 log "Step 7: dynamic broker config, without restart"
 lab_run playground broker config set --key log.retention.ms --value 60000

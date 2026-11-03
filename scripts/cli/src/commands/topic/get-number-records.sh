@@ -18,6 +18,24 @@ get_environment_used
 
 items=($topic)
 
+# sum of the offsets printed by GetOffsetShell (topic:partition:offset lines) for the command "$@", in $offsets_sum.
+# Fails when the tool fails (broker down, authentication): before, the sum of nothing was 0, and 'wait-for-records' or
+# 'consume --min-expected-messages' waited until their timeout for an empty topic that was in fact unreachable
+offsets_err_file=$(mktemp -t pg-offsets-XXXXXXXXXX)
+function sum_offsets() {
+    local out rc
+    out=$("$@" 2> "$offsets_err_file")
+    rc=$?
+    if [ $rc -ne 0 ]
+    then
+        logerror "❌ could not get the offsets of topic $topic (exit code $rc)"
+        grep -v -E "^$|SLF4J|No configuration found" "$offsets_err_file" | tail -5 >&2
+        return 1
+    fi
+    offsets_sum=$(echo "$out" | grep -E ':[0-9]+:-?[0-9]+$' | awk -F ":" '{sum += $NF} END {print sum+0}')
+}
+failed=0
+
 # ------------------------------------------------------
 # PREPARATION: Cache configs and Start Containers
 # ------------------------------------------------------
@@ -65,13 +83,48 @@ if [[ "$environment" == "ccloud" ]]; then
     grep -v "basic.auth.user.info" $root_folder/.ccloud/librdkafka_no_quotes_tmp.delta > $root_folder/.ccloud/librdkafka_no_quotes.delta
 
     # FIXED: Added --entrypoint to override the default 'kcat' entrypoint
-    docker run -d --rm --name "$kcat_container_name" --network=host \
+    if ! kcat_error=$(docker run -d --rm --name "$kcat_container_name" --network=host \
         -v $root_folder/.ccloud/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
         --entrypoint tail \
-        confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
+        confluentinc/cp-kcat:latest -f /dev/null 2>&1)
+    then
+        # without it, every count was 0 and 'consume --min-expected-messages' waited until its timeout
+        logerror "❌ could not start the kcat container that counts the records: $kcat_error"
+        exit 1
+    fi
 
-    trap "docker stop $kcat_container_name > /dev/null 2>&1" EXIT
+    trap "docker stop $kcat_container_name > /dev/null 2>&1; rm -f $offsets_err_file" EXIT
 fi
+
+# read_committed: the offsets include the aborted records and the transaction markers, the records are counted with a
+# read_committed console consumer instead (ccloud: kcat, below)
+committed_consumer_args=()
+if [ "$isolation_level" == "read_committed" ] && [[ "$environment" != "ccloud" ]]
+then
+    committed_tag="$cached_tag"
+    if [[ "$environment" == cfk* ]]
+    then
+        committed_tag="$cached_cfk_tag"
+    else
+        container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+        if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+        then
+            committed_tag="$container_tag"
+        fi
+    fi
+    if version_gt "$committed_tag" "8.1.99"
+    then
+        get_security_broker "--command-config"
+        committed_property="--formatter-property"
+    else
+        get_security_broker "--consumer.config"
+        committed_property="--property"
+    fi
+    committed_consumer_args=(kafka-console-consumer --bootstrap-server "$bootstrap_server" $security --from-beginning --isolation-level read_committed --timeout-ms 10000 "$committed_property" print.value=false "$committed_property" print.offset=true)
+fi
+
+# listed once: the loop used to list the topics again for each topic
+existing_topics=$(playground get-topic-list)
 
 # ------------------------------------------------------
 # MAIN LOOP
@@ -81,7 +134,6 @@ for topic in "${items[@]}"
 do
     log "💯 Get number of records in topic $topic"
     set +e
-    existing_topics=$(playground get-topic-list)
     if ! echo "$existing_topics" | grep -qFx "$topic"
     then
         logwarn "topic $topic does not exist !"
@@ -113,6 +165,15 @@ do
             echo "${count:-0}"
         fi
 
+    elif [ ${#committed_consumer_args[@]} -ne 0 ]
+    then
+        # one "Offset:N" line per committed record (print.value=false: a value with new lines counts once)
+        if [[ "$environment" == cfk* ]]
+        then
+            kubectl -n confluent exec "$container" -c connect -- "${committed_consumer_args[@]}" --topic "$topic" 2>/dev/null | grep -c "Offset:"
+        else
+            docker exec "$container" "${committed_consumer_args[@]}" --topic "$topic" 2>/dev/null | grep -c "Offset:"
+        fi
     elif [[ "$environment" == cfk* ]]
     then
         cfk_class_name="kafka.tools.GetOffsetShell"
@@ -128,8 +189,10 @@ do
         fi
 
         # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
-        latest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
-        earliest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
+        sum_offsets kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1" || { failed=1; continue; }
+        latest=$offsets_sum
+        sum_offsets kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2" || { failed=1; continue; }
+        earliest=$offsets_sum
         echo $((latest - earliest))
     else
         # --- ON-PREM / LOCAL LOGIC ---
@@ -165,9 +228,13 @@ do
             # broker:9092 by default, but the kerberized client container and the broker FQDN
             # with kerberos, whose client config needs a ticket and the real principal host
             # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
-            latest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
-            earliest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
+            sum_offsets docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 || { failed=1; continue; }
+            latest=$offsets_sum
+            sum_offsets docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 || { failed=1; continue; }
+            earliest=$offsets_sum
             echo $((latest - earliest))
         fi
     fi
 done
+rm -f "$offsets_err_file"
+exit $failed

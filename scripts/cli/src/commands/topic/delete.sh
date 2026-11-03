@@ -11,8 +11,14 @@ if echo "$existing_topics" | grep -qFx -- "$topic_pattern"; then
     topics_to_delete="$topic_pattern"
 else
     regex_pattern="^(${topic_pattern})$"
-    topics_to_delete=$(echo "$existing_topics" | grep -E -- "$regex_pattern")
+    # a regex never matches the internal topics (_schemas, __consumer_offsets, connect-configs…): '.*' deleted them
+    # too. Give their exact name to delete one of them
+    topics_to_delete=$(playground get-topic-list --skip-internal-topics | grep -E -- "$regex_pattern")
     grep_status=$?
+    if [ $grep_status -eq 1 ] && echo "$existing_topics" | grep -qE -- "$regex_pattern"
+    then
+        logwarn "🫥 --topic $topic_pattern only matches internal topics: they are never deleted with a regex, give the exact name"
+    fi
 
     if [ $grep_status -eq 2 ]; then
         logerror "❌ Invalid regex provided for --topic: $topic_pattern"
@@ -79,7 +85,7 @@ do
             echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
         elif [[ "$environment" == cfk* ]]
         then
-            echo "kubectl -n confluent delete kafkatopic $topic"
+            echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security (and kubectl -n confluent delete kafkatopic $topic when it has a KafkaTopic resource)"
         else
             echo "kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security"
         fi
@@ -92,7 +98,13 @@ do
         forget_ccloud_recorded_topic "$(get_ccloud_kafka_cluster_id)" "$topic"
     elif [[ "$environment" == cfk* ]]
     then
-        kubectl -n confluent delete kafkatopic $topic
+        # the KafkaTopic resource first, if the topic has one (the operator would create the topic again), then the
+        # topic itself: most topics (producers, connectors) have no resource
+        if kubectl -n confluent get kafkatopic "$topic" > /dev/null 2>&1
+        then
+            kubectl -n confluent delete kafkatopic "$topic"
+        fi
+        kubectl -n confluent exec $container -- kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security 2>/dev/null || true
     else
         docker exec $container kafka-topics --delete --topic $topic --bootstrap-server $bootstrap_server $security
     fi
