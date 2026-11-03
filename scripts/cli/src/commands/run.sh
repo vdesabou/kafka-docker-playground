@@ -28,6 +28,7 @@ boolean_flags_table='
 --enable-jmx-grafana|ENABLE_JMX_GRAFANA|true|1|-|ccloud|options|📊|Grafana
 --enable-multiple-brokers|ENABLE_KAFKA_NODES|true|1|ccloud|ccloud|options|🔢|Multiple brokers
 --enable-multiple-connect-workers|ENABLE_CONNECT_NODES|true|1|ccloud|ccloud|options|🥉|Multiple connect workers
+--enable-multiple-controllers|ENABLE_CONTROLLER_NODES|true|1|ccloud|ccloud|options|🗳️|Multiple controllers (KRaft or ZooKeeper)
 --enable-kcat|ENABLE_KCAT|true|1|ccloud|ccloud|options|🐈|kcat
 --enable-sql-datagen|ENABLE_SQL_DATAGEN|true|0|-|sql_datagen|options|🌀|SQL Datagen injection
 --benchmark|ENABLE_BENCHMARK|true|0|-|benchmark_available|options|🏎️|Benchmark the connector

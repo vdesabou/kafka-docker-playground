@@ -6,6 +6,16 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb;User:controller;User:ANONYMOUS
 
+  controller2:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb;User:controller;User:ANONYMOUS
+
+  controller3:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb;User:controller;User:ANONYMOUS
+
   broker:
     environment:
       # FIXTHIS:

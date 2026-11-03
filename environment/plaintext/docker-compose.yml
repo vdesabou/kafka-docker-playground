@@ -15,6 +15,11 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      # ensemble of 3 nodes with --enable-multiple-controllers (zookeeper2 and zookeeper3), standalone when empty
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_SERVERS: ${PLAYGROUND_ZOOKEEPER_SERVERS:-}
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
       KAFKA_JMX_PORT: 9999
       EXTRA_ARGS: -name zookeeper -loggc ${GRAFANA_AGENT_ZK}
       KAFKA_JMX_HOSTNAME: localhost
@@ -22,6 +27,57 @@ services:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
       PYROSCOPE_APPLICATION_NAME: "zookeeper"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
+  zookeeper2:
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
+    hostname: zookeeper2
+    container_name: zookeeper2
+    restart: always
+    profiles:
+    - zookeeper_nodes
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+    ports:
+      - "12999:12999"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_SERVERS: ${PLAYGROUND_ZOOKEEPER_SERVERS:-}
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      KAFKA_JMX_PORT: 12999
+      EXTRA_ARGS: -name zookeeper -loggc ${GRAFANA_AGENT_ZK}
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
+      PYROSCOPE_APPLICATION_NAME: "zookeeper2"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
+  zookeeper3:
+    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
+    hostname: zookeeper3
+    container_name: zookeeper3
+    restart: always
+    profiles:
+    - zookeeper_nodes
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+    ports:
+      - "13999:13999"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_SERVERS: ${PLAYGROUND_ZOOKEEPER_SERVERS:-}
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      KAFKA_JMX_PORT: 13999
+      EXTRA_ARGS: -name zookeeper -loggc ${GRAFANA_AGENT_ZK}
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
+      PYROSCOPE_APPLICATION_NAME: "zookeeper3"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
   broker:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker
@@ -35,7 +91,7 @@ services:
       KAFKA_JMX_PORT: 10000
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ZOOKEEPER_CONNECT: ${PLAYGROUND_ZOOKEEPER_CONNECT:-zookeeper:2181}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,HOST:PLAINTEXT
       KAFKA_LISTENERS: BROKER://:9092,HOST://:29092
       KAFKA_ADVERTISED_LISTENERS: BROKER://broker:9092,HOST://localhost:29092
@@ -101,7 +157,7 @@ services:
       KAFKA_JMX_PORT: 12000
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ZOOKEEPER_CONNECT: ${PLAYGROUND_ZOOKEEPER_CONNECT:-zookeeper:2181}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,HOST:PLAINTEXT
       KAFKA_LISTENERS: BROKER://:9092,HOST://:29292
       KAFKA_ADVERTISED_LISTENERS: BROKER://broker2:9092,HOST://localhost:29292
@@ -167,7 +223,7 @@ services:
       KAFKA_JMX_PORT: 13000
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ZOOKEEPER_CONNECT: ${PLAYGROUND_ZOOKEEPER_CONNECT:-zookeeper:2181}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,HOST:PLAINTEXT
       KAFKA_LISTENERS: BROKER://:9092,HOST://:29392
       KAFKA_ADVERTISED_LISTENERS: BROKER://broker3:9092,HOST://localhost:29392
@@ -544,7 +600,7 @@ services:
 
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:9092'
-      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: ${PLAYGROUND_ZOOKEEPER_CONNECT:-zookeeper:2181}
       CONTROL_CENTER_CONNECT_CLUSTER: http://connect:8083 # deprecated
       CONTROL_CENTER_CONNECT_MYCONNECT_CLUSTER: http://connect:8083
       CONTROL_CENTER_KAFKA_BOOTSTRAP_SERVERS: 'broker:9092'

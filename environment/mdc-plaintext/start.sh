@@ -11,6 +11,12 @@ check_docker_compose_version
 check_bash_version
 check_and_update_playground_version
 
+if [ -n "$ENABLE_CONTROLLER_NODES" ]
+then
+  # each cluster of a multi data center environment has its own zookeeper / controller
+  logwarn "⚠️ ENABLE_CONTROLLER_NODES (--enable-multiple-controllers) is ignored with multi data center environments"
+  unset ENABLE_CONTROLLER_NODES
+fi
 set_profiles
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""

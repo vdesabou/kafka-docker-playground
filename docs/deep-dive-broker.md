@@ -341,6 +341,8 @@ playground broker config get|set|delete …                              # see t
 ```
 
 - `--enable-multiple-brokers` = brokers 1, 2, 3 and internal topics with 3 replicas, min ISR 2.
+- `--enable-multiple-controllers` = 3 KRaft controllers (node ids 4, 5, 6: `health` shows 3 voters) or 3 ZooKeeper nodes (CP < 8),
+  so that `container kill -c controller2` (or `zookeeper2`) leaves the quorum available.
 - `stop` / `start` / `rolling-restart` / `metrics` drive the containers: not on CFK. Nothing on Confluent Cloud. `mdc-*`: add `--cluster us|europe`.
 - `health` and `find-hanging` exit 1 when they find a problem.
 - `read_committed` counts: `topic consume --isolation-level read_committed --count`.

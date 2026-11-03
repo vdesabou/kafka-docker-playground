@@ -1309,6 +1309,13 @@ then
   playground_kafka_nodes_flag=1
 fi
 set_internal_topics_replication "$playground_kafka_nodes_flag"
+# same for the ZooKeeper / KRaft controller nodes (see set_controller_nodes_settings)
+playground_controller_nodes_flag=""
+if grep -q -E "^ENABLE_CONTROLLER_NODES *= *1" "${DIR_UTILS}/../playground.ini" 2>/dev/null
+then
+  playground_controller_nodes_flag=1
+fi
+set_controller_nodes_settings "$playground_controller_nodes_flag"
 
 # Setting grafana agent based  
 if [ -z "$ENABLE_JMX_GRAFANA" ]
