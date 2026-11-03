@@ -28106,20 +28106,38 @@ function find_commands() {
         }
         return ""
     }
-    # text is searched with weight, extra (the usage, with its flags) with weight 1
-    function add(cmd, matched, usage, url, source, weight, text, extra,    t, low, lowx, hits, score, path_hits, need, s) {
+    # term t (or one of its synonyms) found in s
+    function has(s, t,    k, n, w) {
+        if (index(s, terms[t]) > 0) return 1
+        if (!(t in syn)) return 0
+        n = split(syn[t], w, " ")
+        for (k = 1; k <= n; k++) if (index(s, w[k]) > 0) return 1
+        return 0
+    }
+    # text is searched with weight, extra (the usage, with its flags) with weight 1.
+    # Generic terms (connector, kafka...) add to the score but do not count to reach the coverage needed,
+    # otherwise "memory issue with connector" matches anything that says connector.
+    function add(cmd, matched, usage, url, source, weight, text, extra,    t, low, lowx, hits, score, path_hits, need, s, hit, phit, gw_factor) {
         if (cmd == "" || !(cmd in known)) return
         low = tolower(text)
         lowx = tolower(extra)
         hits = 0; score = 0; path_hits = 0
         for (t = 1; t <= nterms; t++) {
-            if (index(low, terms[t]) > 0) { hits++; score += weight }
-            else if (lowx != "" && index(lowx, terms[t]) > 0) { hits++; score += 1 }
-            if (index(" " cmd, " " terms[t]) > 0) { path_hits++; score += 2 }
+            hit = 0; phit = 0
+            gw_factor = (t in generic ? 0.5 : 1)
+            if (has(low, t)) {
+                hit = 1; score += weight * gw_factor
+                # the exact word typed ("working") beats its stem ("work" in "worker")
+                if (word[t] != terms[t] && index(low, word[t]) > 0) score += gw_factor
+            }
+            else if (lowx != "" && has(lowx, t)) { hit = 1; score += gw_factor }
+            if (index(" " cmd, " " terms[t]) > 0) { phit = 1; score += 2 * gw_factor }
+            if (nsig > 0 && (t in generic)) continue
+            hits += hit; path_hits += phit
         }
-        need = (nterms <= 2 ? 1 : int((nterms + 1) / 2))
+        need = (ncount <= 2 ? 1 : int((ncount + 1) / 2))
         if (hits < need && path_hits < need) return
-        s = score * ((hits > path_hits ? hits : path_hits) / nterms)
+        s = score * ((hits > path_hits ? hits : path_hits) / ncount)
         if (!(cmd in best) || s > best[cmd]) {
             best[cmd] = s
             bmatched[cmd] = matched; busage[cmd] = usage; bsource[cmd] = source
@@ -28128,17 +28146,33 @@ function find_commands() {
         count[cmd]++
     }
     BEGIN {
-        split("a an and are as at be by can could do does doing for from get got how i if in into is it its me my no not of on or show so tell that the their them there these this to was we what when where which who why will with without you your", sw, " ")
+        split("a about an and any are as at be by can could do does doing for from get got has have having help how i if in into is issue it its me my no not of on or please problem show so some tell that the their them there these this to trouble was we what when where which who why will with without you your", sw, " ")
         for (i in sw) stop[sw[i]] = 1
+        split("connector connect kafka playground command", gw, " ")
+        for (i in gw) is_generic[gw[i]] = 1
+        # synonyms, stemmed: a term of a group also matches the other words of its group
+        ngroups = split("memory heap oom outofmemory leak|cpu stuck hanging|slow latency performance throughput|ssl tls certificat handshake", groups, "|")
+        for (g = 1; g <= ngroups; g++) {
+            split(groups[g], gwords, " ")
+            for (i in gwords) group_of[gwords[i]] = groups[g]
+        }
         n = split(tolower(query), raw, /[^a-z0-9._+-]+/)
         nterms = 0
         for (i = 1; i <= n; i++) {
             w = raw[i]; gsub(/^[-.]+|[-.]+$/, "", w)
             if (length(w) < 2 || (w in stop)) continue
+            typed = w
             w = stem(w)
-            if (!(w in seen)) { seen[w] = 1; terms[++nterms] = w }
+            if (!(w in seen)) {
+                seen[w] = 1; terms[++nterms] = w; word[nterms] = typed
+                if (w in is_generic) generic[nterms] = 1
+                else nsig++
+                if (w in group_of) { syn[nterms] = group_of[w] }
+            }
         }
         if (nterms == 0) exit
+        # number of terms the coverage is computed on: the specific ones when there are some
+        ncount = (nsig > 0 ? nsig : nterms)
         FS = "\t"
     }
     # 1. help of every command
@@ -28164,8 +28198,8 @@ function find_commands() {
         if (c1 ~ /^(Question|Instead of|Customer symptom|Symptom)/) next
         if (FILENAME == catalog) {
             if (c3 != "") {
-                # question | command | instead of (the flags of the command are searched in its help)
-                add(command_of(c2), c1, c2, "", "catalog", 3, c1 " " c1 " " c3, c2)
+                # question | command | instead of: the question weighs most, the raw command and the usage like flags
+                add(command_of(c2), c1, c2, "", "catalog", 3, c1, c3 " " c2)
             } else {
                 # instead of | use
                 add(command_of(c2), "instead of " c1, c2, "", "catalog", 3, c1 " " c1, c2)
@@ -47415,7 +47449,7 @@ playground_find_command_command() {
       echo "playground $command"
       if [[ -n "$matched" ]]
       then
-          echo "    ❓ $matched"
+          echo "    ❓ ${matched//\`/}"
       fi
       if [[ -n "$usage" ]]
       then

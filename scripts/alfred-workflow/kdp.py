@@ -568,7 +568,7 @@ def mode_how(rest):
             "alt": mod("⌥ show: " + command + " --help", "output", in_root(h["help_command"])),
             "shift": mod("⇧ open the deep dive", "open", url) if url else mod("⇧ no deep dive for this command"),
         }
-        items.append(item(command, short(h.get("matched") or "", 120) + (" · " + short(usage, 80) if usage else ""),
+        items.append(item(command, short(re.sub(r"`", "", h.get("matched") or ""), 120) + (" · " + short(usage, 80) if usage else ""),
                           "copy", command, mods=mods, copy=usage or command, quicklook=url or None))
     return {"items": items}
 
