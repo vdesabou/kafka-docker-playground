@@ -108,12 +108,12 @@ The Oracle service name. If set, the connector always connects to the database u
 
 🔘 oracle.username
 
+The name of the Oracle database user. Blank typically only when using Kerberos for authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Oracle database user. Blank typically only when using Kerberos for authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oracle.password
 
@@ -153,12 +153,12 @@ LDAP security credentials used for authentication.
 
 🔘 oracle.kerberos.cache.file
 
+If using Kerberose 5 authentication, set this to the location of the Kerberos 5 ticket cache file on all the Connect workers.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If using Kerberose 5 authentication, set this to the location of the Kerberos 5 ticket cache file on all the Connect workers.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oracle.fan.events.enable
 
@@ -171,12 +171,12 @@ Whether the connection should allow using Oracle RAC Fast Application Notificati
 
 🔘 oracle.ssl.truststore.file
 
+If using SSL for encryption and server authentication, set this to the location of the trust store containing server certificates that should be trusted.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If using SSL for encryption and server authentication, set this to the location of the trust store containing server certificates that should be trusted.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oracle.ssl.truststore.password
 
@@ -225,12 +225,12 @@ The fetch size to be used while querying database for validations. This will be 
 
 🔘 retry.error.codes
 
+Comma-separated list of Oracle error codes (e.g. 12505, 12528) that will be retried by the connector, up to the time defined by ``max.retry.time.ms`` configuration. By default, the connector retries in case of a recoverable or transient SQL exception and on certain Oracle error codes.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of Oracle error codes (e.g. 12505, 12528) that will be retried by the connector, up to the time defined by ``max.retry.time.ms`` configuration. By default, the connector retries in case of a recoverable or transient SQL exception and on certain Oracle error codes.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Oracle Redo Logs
@@ -246,12 +246,12 @@ The name of the Kafka topic to which the connector will record all raw redo log 
 
 🔘 redo.log.corruption.topic
 
+The name of the Kafka topic where the connector records events describing corruption in the Oracle redo log, indicating missed data. This topic is also where unparsable statements are published when ``behavior.on.unparsable.statement`` is set to ``write``. A blank topic name (the default) means this information will not be written to Kafka.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topic where the connector records events describing corruption in the Oracle redo log, indicating missed data. This topic is also where unparsable statements are published when ``behavior.on.unparsable.statement`` is set to ``write``. A blank topic name (the default) means this information will not be written to Kafka.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 redo.log.poll.interval.ms
 
@@ -318,48 +318,48 @@ The number of rows to provide as a hint to the JDBC driver when fetching rows fr
 
 🔘 redo.log.row.poll.fields.include
 
+Comma-separated list of the fields to include in the redo log
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of the fields to include in the redo log
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.row.poll.fields.exclude
 
+Comma-separated list of the fields to exclude from the redo log
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of the fields to exclude from the redo log
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.row.poll.username.include
 
+A comma-separated list of database usernames. When this property is set, the connector captures changes only from the specified set of database users.You cannot set this property along with the redo.log.row.poll.username.exclude property
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from the specified set of database users.You cannot set this property along with the redo.log.row.poll.username.exclude property
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.row.poll.username.exclude
 
+A comma-separated list of database usernames. When this property is set, the connector captures changes only from database users that are not specified in this list.You cannot set this property along with the redo.log.row.poll.username.include property
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from database users that are not specified in this list.You cannot set this property along with the redo.log.row.poll.username.include property
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.row.poll.filter
 
+SQL predicate to include the specific rows
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: SQL predicate to include the specific rows
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 use.transaction.begin.for.mining.session
 
@@ -392,6 +392,12 @@ Include only archived redo logs in a mining session if the total size of relevan
 
 The dictionary handling mode used by the connector. One of auto, online, or redo_log.
 
+auto: the connector uses the dictionary from the online catalog until a DDL statement to evolve the table schema is encountered. At which point, the connector starts using the dictionary from archived redo logs. Once the DDL statement has been processed, the connector reverts back to using the online catalog. Use this mode if DDL statements are expected.
+
+online: the connector always uses the online dictionary catalog. Use this mode if no DDL statements are expected.
+
+redo_log: the connector always uses the dictionary catalog from archived redo logs. Use this mode if you can not access the online redo log. Note that any CDC events will be delayed until they are archived from online logs before they are processed by the connector.
+
 	 - Type: STRING
 	 - Default: auto
 	 - Importance: LOW
@@ -399,16 +405,20 @@ The dictionary handling mode used by the connector. One of auto, online, or redo
 
 🔘 log.mining.archive.destination.name
 
+The name of the log archive destination to use when mining archived redo logs. You can configure the connector to use a  specific destination using the destination name, for example, LOG_ARCHIVE_DEST_2. This is only applicable for Oracle database versions 19c and later.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the log archive destination to use when mining archived redo logs. You can configure the connector to use a  specific destination using the destination name, for example, LOG_ARCHIVE_DEST_2. This is only applicable for Oracle database versions 19c and later.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 record.buffer.mode
 
 Where to buffer records that are part of the transaction but may not yet be committed. Options are:
+  * ``connector``: buffer uncommitted transactions in connector memory.
+Starting with version 2.15.0, the database option is no longer supported. In earlier versions, this option buffered records in the database using the COMMITTED_DATA_ONLY flag to LogMiner so that the connector only receives committed records. Transactions that are rolled back or in-progress are filtered out, as are internal redo records.
+
+The default and only supported option is connector, which buffers uncommitted transactions in connector memory.
 
 	 - Type: STRING
 	 - Default: connector
@@ -418,6 +428,7 @@ Where to buffer records that are part of the transaction but may not yet be comm
 🔘 log.mining.end.scn.deviation.ms
 
 Calculates the end SCN of log mining sessions as the approximate SCN that corresponds to the point in time that is log.mining.end.scn.deviation.ms milliseconds before the current SCN obtained from the database. The default value is set to 3 seconds on RAC environments, and not set otherwise. This configuration is applicable only for Oracle database versions 19c and later.
+ Setting this configuration to a lower value on a RAC environment introduces the potential for data loss at high load. A higher value increases the end to end latency for change events.
 
 	 - Type: LONG
 	 - Default: 0
@@ -426,12 +437,12 @@ Calculates the end SCN of log mining sessions as the approximate SCN that corres
 
 🔘 redo.log.consumer.bootstrap.servers
 
+A list of host/port pairs to use for establishing the initial connection to the Kafka cluster with the redo log topic. The client will make use of all servers irrespective of which servers are specified here for bootstrapping—this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form ``host1:port1,host2:port2,...``. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster with the redo log topic. The client will make use of all servers irrespective of which servers are specified here for bootstrapping—this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form ``host1:port1,host2:port2,...``. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 redo.log.consumer.client.dns.lookup
 
@@ -912,12 +923,12 @@ The (optional) setting that allows the broker to validate JWTs without verifying
 
 🔘 redo.log.consumer.sasl.oauthbearer.expected.audience
 
+The comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and the broker will match the value(s) from the JWT's "aud" claim to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. Required if sasl.oauthbearer.jwks.endpoint.url is set, with the ability to opt-out using sasl.oauthbearer.allow.unverified.audience.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and the broker will match the value(s) from the JWT's "aud" claim to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. Required if sasl.oauthbearer.jwks.endpoint.url is set, with the ability to opt-out using sasl.oauthbearer.allow.unverified.audience.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 redo.log.consumer.sasl.oauthbearer.allow.unverified.issuer
 
@@ -1159,6 +1170,13 @@ Deprecated. Use ``poll.linger.ms`` instead.
 🔘 numeric.mapping
 
 Map NUMERIC values by precision and optionally scale to primitive or decimal types.
+  * Use ``none`` if all NUMERIC columns are to be represented by Connect's DECIMAL logical type.
+  * Use ``best_fit_or_decimal`` if NUMERIC columns should be cast to Connect's primitive type based upon the column's precision and scale. If the precision and scale exceed the bounds for any primitive type, Connect's DECIMAL logical type will be used instead.
+  * Use ``best_fit_or_double`` if NUMERIC columns should be cast to Connect's primitive type based upon the column's precision and scale. If the precision and scale exceed the bounds for any primitive type, Connect's FLOAT64 type will be used instead.
+  * Use ``best_fit_or_string`` if NUMERIC columns should be cast to Connect's primitive type based upon the column's precision and scale. If the precision and scale exceed the bounds for any primitive type, Connect's STRING type will be used instead.
+  * Use ``precision_only`` to map NUMERIC columns based only on the column's precision assuming that column's scale is 0.
+
+The ``none`` option is the default, but may lead to serialization issues since Connect's DECIMAL type is mapped to its binary representation. One of the ``best_fit_or`` options will often be preferred. For backwards compatibility reasons, the ``best_fit`` option is also available. It behaves the same as ``best_fit_or_decimal``
 
 	 - Type: STRING
 	 - Default: none
@@ -1204,6 +1222,9 @@ Specifies the desired behavior when the connector encounters a SQL statement tha
 🔘 oracle.date.mapping
 
 Map Oracle DATE values to Connect types.
+  * Use ``date`` if all DATE columns are to be represented by Connect's Date logical type.
+  * Use ``timestamp`` if DATE columns should be cast to Connect's Timestamp.
+  The ``date`` option is the default for backward compatibility. Despite the name similarity, Oracle DATE type has different semantics than Connect Date. ``timestamp`` will often be preferred for semantic similarity.
 
 	 - Type: STRING
 	 - Default: date
@@ -1230,21 +1251,21 @@ The name of the field in the change record written to Kafka that contains the Or
 
 🔘 output.commit.scn.field
 
+The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when this transaction was committed. A blank value signals that this field should not be included in the change records.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when this transaction was committed. A blank value signals that this field should not be included in the change records.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.before.state.field
 
+The name of the field in the change record written to Kafka that contains the before state of changed database rows for an update operation.A blank value signals that this field should not be included in the change records.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the before state of changed database rows for an update operation.A blank value signals that this field should not be included in the change records.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.op.type.field
 
@@ -1293,21 +1314,21 @@ The name of the field in the change record written to Kafka that contains the na
 
 🔘 output.redo.field
 
+The name of the field in the change record written to Kafka that contains the original redo DML statement from which this change record was created. A blank value signals that this field should not be included in the change records.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the original redo DML statement from which this change record was created. A blank value signals that this field should not be included in the change records.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.undo.field
 
+The name of the field in the change record written to Kafka that contains the original undo DML statement that effectively undoes this change and represents the "before" state of the row. A blank value signals that this field should not be included in the change records.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the original undo DML statement that effectively undoes this change and represents the "before" state of the row. A blank value signals that this field should not be included in the change records.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.op.type.read.value
 
@@ -1356,12 +1377,12 @@ The value of the operation type for a truncate change event. By default this is 
 
 🔘 lob.topic.name.template
 
+The template that defines the name of the Kafka topic to which LOB objects should be written. The value can be a constant if all LOB objects from all captured tables are to be written to one topic, or the value can include any supported template variables, including ``${columnName}``, ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}``, etc. The default is empty, which will ignore all LOB type columns if any exist on captured tables. Special-meaning characters ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The template that defines the name of the Kafka topic to which LOB objects should be written. The value can be a constant if all LOB objects from all captured tables are to be written to one topic, or the value can include any supported template variables, including ``${columnName}``, ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}``, etc. The default is empty, which will ignore all LOB type columns if any exist on captured tables. Special-meaning characters ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 enable.large.lob.object.support
 
@@ -1413,12 +1434,12 @@ A Java regular expression that matches the schema-qualified names of the tables 
 
 🔘 table.exclusion.regex
 
+A Java regular expression that matches the schema-qualified names of the tables (e.g., ``dbo.Customers``) not to be captured. For example, ``dbo[.](table1|orders|customers)``. Matches are case-sensitive. The exclusion pattern is applied after the inclusion pattern. A blank regex (the default) implies no exclusions.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A Java regular expression that matches the schema-qualified names of the tables (e.g., ``dbo.Customers``) not to be captured. For example, ``dbo[.](table1|orders|customers)``. Matches are case-sensitive. The exclusion pattern is applied after the inclusion pattern. A blank regex (the default) implies no exclusions.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 table.topic.name.template
 
@@ -1503,4 +1524,5 @@ Specifies how long an application request waits to obtain a connection if there 
 	 - Default: 0
 	 - Importance: LOW
 	 - Required: false
+
 
