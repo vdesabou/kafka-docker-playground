@@ -153,22 +153,26 @@ playground_usage() {
   printf "  %s   🧪 End a reproduction model with its verdict: 🐞 REPRODUCED or ✅ NOT REPRODUCED\n" "$(green "repro assert")                              "
   printf "  %s   🔀 Run a reproduction model on several versions: which one introduced or fixed the problem\n" "$(green "repro bisect")                              "
   echo
-  printf "%s\n" "$(bold "Kafka commands:")"
+  printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   🐋 Get docker-compose\n" "$(green "get-docker-compose")                        "
-  printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                           "
-  printf "  %s   🚦 Client quota commands\n" "$(green "quota")                                     "
-  printf "  %s   🔎 Display client quotas\n" "$(green "quota get")                                 "
-  printf "  %s   🚦 Set client quotas\n" "$(green "quota set")                                 "
-  printf "  %s   🗑️ Remove client quotas\n" "$(green "quota delete")                              "
-  printf "  %s   🖥️ Broker commands\n" "$(green "broker")                                    "
-  printf "  %s   ⚙️ Dynamic broker config commands\n" "$(green "broker config")                             "
-  printf "  %s   🩺 Check the health of the cluster\n" "$(green "broker health")                             "
-  printf "  %s   🛑 Stop a broker\n" "$(green "broker stop")                               "
-  printf "  %s   ▶️ Start a broker stopped with 'playground broker stop'\n" "$(green "broker start")                              "
-  printf "  %s   🔄 Restart the brokers one by one, like a rolling upgrade\n" "$(green "broker rolling-restart")                    "
-  printf "  %s   💱 Transaction commands\n" "$(green "broker transactions")                       "
-  printf "  %s   🗺️ Describe the cluster\n" "$(green "broker describe")                           "
-  printf "  %s   📈 Display the key JMX metrics of the brokers\n" "$(green "broker metrics")                            "
+  printf "  %s   🐳 Container commands\n" "$(green "container")                                 "
+  printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")                  "
+  printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                        "
+  printf "  %s   ✍️ Edit and apply runtime container/pod definition\n" "$(green "container update")                          "
+  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
+  printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "container kill-all")                        "
+  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                            "
+  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n" "$(green "container display-error-all")               "
+  printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
+  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                      "
+  printf "  %s   🪄 Execute command in a container\n" "$(green "container exec")                            "
+  printf "  %s   🪄 Copy files between local filesystem and container\n" "$(green "container cp")                              "
+  printf "  %s   🔁 Restart a container\n" "$(green "container restart")                         "
+  printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                           "
+  printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                          "
+  printf "  %s   🔫 Kill a container\n" "$(green "container kill")                            "
+  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "container set-environment-variables")       "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🚏 wait-for-connect-rest-api-ready\n" "$(green "container wait-for-connect-rest-api-ready") "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
   printf "  %s   🔰 Schema commands\n" "$(green "schema")                                    "
@@ -254,25 +258,21 @@ playground_usage() {
   printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                           "
   printf "  %s   🧱 CFK debug sub-commands\n" "$(green "debug cfk")                                 "
   echo
-  printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   🐳 Container commands\n" "$(green "container")                                 "
-  printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")                  "
-  printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                        "
-  printf "  %s   ✍️ Edit and apply runtime container/pod definition\n" "$(green "container update")                          "
-  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
-  printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "container kill-all")                        "
-  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                            "
-  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n" "$(green "container display-error-all")               "
-  printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
-  printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                      "
-  printf "  %s   🪄 Execute command in a container\n" "$(green "container exec")                            "
-  printf "  %s   🪄 Copy files between local filesystem and container\n" "$(green "container cp")                              "
-  printf "  %s   🔁 Restart a container\n" "$(green "container restart")                         "
-  printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                           "
-  printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                          "
-  printf "  %s   🔫 Kill a container\n" "$(green "container kill")                            "
-  printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "container set-environment-variables")       "
-  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🚏 wait-for-connect-rest-api-ready\n" "$(green "container wait-for-connect-rest-api-ready") "
+  printf "%s\n" "$(bold "Kafka commands:")"
+  printf "  %s   🔢 Get JMX metrics from a container\n" "$(green "get-jmx-metrics")                           "
+  printf "  %s   🚦 Client quota commands\n" "$(green "quota")                                     "
+  printf "  %s   🔎 Display client quotas\n" "$(green "quota get")                                 "
+  printf "  %s   🚦 Set client quotas\n" "$(green "quota set")                                 "
+  printf "  %s   🗑️ Remove client quotas\n" "$(green "quota delete")                              "
+  printf "  %s   🖥️ Broker commands\n" "$(green "broker")                                    "
+  printf "  %s   ⚙️ Dynamic broker config commands\n" "$(green "broker config")                             "
+  printf "  %s   🩺 Check the health of the cluster\n" "$(green "broker health")                             "
+  printf "  %s   🛑 Stop a broker\n" "$(green "broker stop")                               "
+  printf "  %s   ▶️ Start a broker stopped with 'playground broker stop'\n" "$(green "broker start")                              "
+  printf "  %s   🔄 Restart the brokers one by one, like a rolling upgrade\n" "$(green "broker rolling-restart")                    "
+  printf "  %s   💱 Transaction commands\n" "$(green "broker transactions")                       "
+  printf "  %s   🗺️ Describe the cluster\n" "$(green "broker describe")                           "
+  printf "  %s   📈 Display the key JMX metrics of the brokers\n" "$(green "broker metrics")                            "
   echo
   printf "%s\n" "$(bold "Topic commands:")"
   printf "  %s   🗳 Topic commands\n" "$(green "topic")                                     "
@@ -6405,7 +6405,7 @@ playground_repro_bisect_usage() {
 playground_get_docker_compose_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-docker-compose\n\n"
-    printf "  🐋 Get docker-compose\n  \n  Prints the fully resolved docker compose configuration of the running\n  example: every file merged, every profile applied and every variable\n  substituted. This is what Docker actually received, which is the thing to\n  look at when a container did not get the image, port or setting you\n  expected.\n\n"
+    printf "  🐋 Get docker-compose\n  \n  Prints the fully resolved docker compose configuration of the running\n  example: every file merged, every profile applied and every variable\n  substituted. This is what Docker actually received, which is the thing to\n  look at when a container did not get the image, port or setting you\n  expected.\n  \n  The output is the YAML alone (the logs are not printed on stdout), ready\n  to be redirected to a file. Not available on cfk, where the components\n  are pods.\n\n"
   else
     printf "playground get-docker-compose - 🐋 Get docker-compose\n\n"
   fi
@@ -6423,6 +6423,13 @@ playground_get_docker_compose_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground get-docker-compose\n"
+    printf "  playground get-docker-compose > /tmp/docker-compose.yml\n"
+    printf "  playground get-docker-compose | yq '.services.connect.environment'\n"
     echo
 
   fi
@@ -11520,7 +11527,7 @@ playground_debug_cfk_sourcecode_usage() {
 playground_get_jmx_metrics_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-jmx-metrics\n\n"
-    printf "  🔢 Get JMX metrics from a container\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n\n"
+    printf "  🔢 Get JMX metrics from a container\n  \n  Dumps every attribute of the MBeans of a container (all domains, or the\n  ones of --domain), with jmxterm run inside the container: no local Java\n  needed. Works with any container that exposes JMX (broker, broker2,\n  connect, schema-registry, ksqldb-server, broker-us in mdc-*\n  environments...) and with the pods of cfk.\n  \n  🎓 Tip: for a digest instead of raw MBeans, use 'playground broker\n  metrics' or 'playground connector metrics'.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n\n"
   else
     printf "playground get-jmx-metrics - 🔢 Get JMX metrics from a container\n\n"
   fi
@@ -14287,6 +14294,11 @@ playground_quota_get_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the quotas as JSON (one object per entity: user, client_id, quotas),\n    and nothing else\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
     echo
@@ -14307,6 +14319,7 @@ playground_quota_get_usage() {
     printf "  playground quota get\n"
     printf "  playground quota get --connector filestream-sink\n"
     printf "  playground quota get --user client --client-id my-app\n"
+    printf "  playground quota get --json | jq '.[] | select(.client_id != null) | .quotas'\n"
     echo
 
   fi
@@ -14507,7 +14520,7 @@ playground_quota_delete_usage() {
 playground_broker_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground broker\n\n"
-    printf "  🖥️ Broker commands\n  \n    config            read and change dynamic broker configs\n    health            brokers down, partition problems, KRaft quorum\n    stop / start      stop (or kill) a broker, start it again\n    rolling-restart   restart the brokers one by one, safely\n    transactions      list transactions, find and abort hanging ones\n    describe          brokers, KRaft quorum, feature levels, API versions\n    metrics           key JMX metrics of each broker\n  \n  Not available on Confluent Cloud and multi data center environments.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker\n\n"
+    printf "  🖥️ Broker commands\n  \n    config            read and change dynamic broker configs\n    health            brokers down, partition problems, KRaft quorum\n    stop / start      stop (or kill) a broker, start it again\n    rolling-restart   restart the brokers one by one, safely\n    transactions      list transactions, find and abort hanging ones\n    describe          brokers, KRaft quorum, feature levels, API versions\n    metrics           key JMX metrics of each broker\n  \n  Not available on Confluent Cloud. In mdc-* environments, pick the cluster\n  with --cluster us|europe.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker\n\n"
   else
     printf "playground broker - 🖥️ Broker commands\n\n"
   fi
@@ -14619,6 +14632,11 @@ playground_broker_config_get_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the result as JSON, and nothing else: {key, brokers: [{broker,\n    value, source, sensitive, from}]} with --key, {brokers: [{broker, configs}]}\n    with --all, {cluster_wide, brokers} otherwise\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--verbose, -v")"
     printf "    🐞 Show command being ran.\n"
     echo
@@ -14639,6 +14657,7 @@ playground_broker_config_get_usage() {
     printf "  playground broker config get\n"
     printf "  playground broker config get --key num.io.threads\n"
     printf "  playground broker config get --broker 1 --all\n"
+    printf "  playground broker config get --key log.retention.ms --json | jq -r '.brokers[]\n  | \"\(.broker) \(.value // .from)\"'\n"
     echo
 
   fi
@@ -15227,8 +15246,7 @@ playground_broker_transactions_find_hanging_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-transaction-timeout MINUTES")"
-    printf "    ⏱️ transaction.max.timeout.ms of the brokers, in minutes: only the\n    transactions open for longer are checked (default 15)\n"
-    printf "    %s\n" "Default: 15"
+    printf "    ⏱️ Only the transactions open for longer than this, in minutes (default:\n    transaction.max.timeout.ms of the brokers, 15 minutes unless changed)\n"
     echo
 
     # :flag.usage
@@ -15344,6 +15362,7 @@ playground_broker_describe_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--broker, -b BROKER")"
     printf "    🖥️ Broker id for --api-versions (default: the first broker)\n"
+    printf "    %s\n" "Needs: --api-versions"
     echo
 
     # :flag.usage
@@ -22289,6 +22308,18 @@ function get_offset_shell_class() {
   fi
 }
 
+# --verbose: prints "🐞 CLI command used" and the command $1 on the file descriptor opened by before.sh, so that it is
+# shown even when the output of the tool is captured by the command
+function log_verbose_command() {
+  if [[ -n "$playground_verbose_fd" ]]
+  then
+    { log "🐞 CLI command used" ; echo "$1" ; } >&$playground_verbose_fd
+  else
+    log "🐞 CLI command used"
+    echo "$1"
+  fi
+}
+
 function run_kafka_admin_tool() {
   tool="$1"
   shift
@@ -22312,8 +22343,7 @@ function run_kafka_admin_tool() {
     fi
     if [[ -n "$verbose" ]]
     then
-      log "🐞 CLI command used"
-      echo "$tool $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+      log_verbose_command "$tool $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
     fi
     get_connect_image
     docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tool "$@" --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
@@ -22321,8 +22351,7 @@ function run_kafka_admin_tool() {
     get_security_broker "--command-config"
     if [[ -n "$verbose" ]]
     then
-      log "🐞 CLI command used"
-      echo "$tool $* --bootstrap-server $bootstrap_server $security"
+      log_verbose_command "$tool $* --bootstrap-server $bootstrap_server $security"
     fi
     if [[ "$environment" == cfk* ]]
     then
@@ -30024,7 +30053,7 @@ function get_connector_client_ids () {
   connector_kind=$(echo "$status" | jq -r '.type // empty' 2>/dev/null)
   if [[ -z "$connector_kind" ]]
   then
-    logerror "❌ connector $connector not found on $connect_url"
+    logerror "❌ connector $connector not found on $connect_url" >&2
     return 1
   fi
   role="consumer"
@@ -30071,6 +30100,11 @@ function get_quota_entities () {
       return 1
     fi
     client_ids=$(get_connector_client_ids "$connector") || return 1
+    if [[ -z "$client_ids" ]]
+    then
+      logerror "❌ connector $connector has no task, so no client id yet (playground connector status --connector $connector)"
+      return 1
+    fi
   elif [[ -n "$client_id" ]]
   then
     client_ids="$client_id"
@@ -30128,6 +30162,26 @@ function broker_config_entity () {
   else
     printf '%s\t%s\t%s' --entity-type brokers --entity-default
   fi
+}
+
+# reads kafka-configs --entity-type brokers --describe [--all] (one or several brokers, and the cluster-wide default)
+# on stdin, prints one "<broker id or default>\t<key>\t<value>\t<sensitive true|false>\t<source>\t<raw line>" per
+# config. source is the first synonym (DYNAMIC_BROKER_CONFIG, STATIC_BROKER_CONFIG, DEFAULT_CONFIG...), empty when
+# nothing sets the key
+function parse_broker_configs () {
+  awk 'BEGIN { OFS = "\t" }
+    /^(All|Dynamic) configs for broker [0-9]+ are:/ { b = $5 ; next }
+    /^Default configs for brokers in the cluster are:/ { b = "default" ; next }
+    /^[[:space:]]+[^ =]+=/ {
+      line = $0 ; sub(/^[[:space:]]+/, "", line)
+      eq = index(line, "=") ; k = substr(line, 1, eq - 1) ; rest = substr(line, eq + 1)
+      tail = ""
+      if (match(rest, / sensitive=(true|false) synonyms=[{].*[}]$/)) { v = substr(rest, 1, RSTART - 1) ; tail = substr(rest, RSTART + 1) } else { v = rest }
+      s = (tail ~ /^sensitive=true/) ? "true" : "false"
+      syn = tail ; sub(/^sensitive=(true|false) synonyms=[{]/, "", syn) ; sub(/[}]$/, "", syn)
+      src = syn ; sub(/:.*/, "", src)
+      print b, k, v, s, src, line
+    }'
 }
 
 # sets broker_config_ids to broker $1 (checking that it exists), or to every broker when $1 is empty: returns 1 on
@@ -30228,8 +30282,7 @@ function run_kafka_admin_subcommand_tool () {
   get_security_broker "--command-config"
   if [[ -n "$verbose" ]]
   then
-    log "🐞 CLI command used"
-    echo "$tool --bootstrap-server $bootstrap_server $security $subcommand $*"
+    log_verbose_command "$tool --bootstrap-server $bootstrap_server $security $subcommand $*"
   fi
   if [[ "$environment" == cfk* ]]
   then
@@ -33922,154 +33975,131 @@ function display_jmx_info() {
     log "    - ksqldb-server   : 10003"
   fi
 }
+# prints the JMX metrics of the domains $2 (space separated, all of them when empty) of container $1 (docker container,
+# or cfk pod or docker-style name), with jmxterm run inside the container: saved to a file and opened when $3 is set.
+# returns 1 when the container or its JMX port can't be found
 function get_jmx_metrics() {
-  JMXTERM_VERSION="1.0.2"
-  JMXTERM_UBER_JAR="/tmp/jmxterm-$JMXTERM_VERSION-uber.jar"
-  if [ ! -f $JMXTERM_UBER_JAR ]
+  local container="$1" domains="$2" open="$3"
+  local JMXTERM_VERSION="1.0.2"
+  local JMXTERM_UBER_JAR="/tmp/jmxterm-$JMXTERM_VERSION-uber.jar"
+  local jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
+  local target_container="$container" port="" work_dir output_file domain
+
+  if [ ! -s "$JMXTERM_UBER_JAR" ]
   then
-    curl -L https://github.com/jiaqi/jmxterm/releases/download/v$JMXTERM_VERSION/jmxterm-$JMXTERM_VERSION-uber.jar -o $JMXTERM_UBER_JAR -s
+    # downloaded to a temporary file first: a failed download must not be cached as the jar
+    if ! curl -fsSL "https://github.com/jiaqi/jmxterm/releases/download/v$JMXTERM_VERSION/jmxterm-$JMXTERM_VERSION-uber.jar" -o "$JMXTERM_UBER_JAR.tmp"
+    then
+      rm -f "$JMXTERM_UBER_JAR.tmp"
+      logerror "❌ could not download jmxterm $JMXTERM_VERSION from github.com"
+      return 1
+    fi
+    mv "$JMXTERM_UBER_JAR.tmp" "$JMXTERM_UBER_JAR"
   fi
 
-  rm -f /tmp/commands
-  rm -f /tmp/jmx_metrics.log
-
-  container="$1"
-  domains="$2"
-  open="$3"
   get_environment_used
-
-  target_container="$container"
-  jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
-  jmx_exec() {
-    local args="$1"
-    if [[ "$environment" == cfk* ]]
-    then
-      kubectl -n confluent exec -i "$target_container" -- java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $args
-    else
-      docker exec -i "$container" java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $args
-    fi
-  }
 
   if [[ "$environment" == cfk* ]]
   then
     case "$container" in
-      connect2)
-        target_container="connect-1"
-      ;;
-      connect3)
-        target_container="connect-2"
-      ;;
-      connect|connect-[0-9]*|broker|schema-registry|controller|controller2|controller3|zookeeper|zookeeper2|zookeeper3)
-        target_container="$container"
-      ;;
-      *)
-        target_container=$(resolve_container_name_for_environment "$container")
-      ;;
+      connect2) target_container="connect-1" ;;
+      connect3) target_container="connect-2" ;;
+      broker2) target_container="kafka-1" ;;
+      broker3) target_container="kafka-2" ;;
+      *) target_container=$(resolve_container_name_for_environment "$container") ;;
     esac
+    if ! kubectl -n confluent get pod "$target_container" > /dev/null 2>&1
+    then
+      logerror "❌ pod $target_container does not exist, pods are: $(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | paste -sd, - | sed 's/,/, /g')"
+      return 1
+    fi
+    # CFK JMX defaults to 7203 on each component pod.
+    port=7203
+  else
+    if ! is_container_running "$container"
+    then
+      logerror "❌ container $container is not running, containers are: $(docker ps --format '{{.Names}}' | sort | paste -sd, - | sed 's/,/, /g')"
+      return 1
+    fi
+    # KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT, KSQL_JMX_PORT... set in the docker compose files of the environments
+    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    if [[ -z "$port" ]]
+    then
+      logerror "❌ JMX is not enabled on container $container (no *_JMX_PORT environment variable)"
+      return 1
+    fi
   fi
+
   if [ "$domains" = "" ]
   then
-    # non existing domain: all domains will be in output !
     logwarn "You did not specify a list of domains, all domains will be exported!"
+  fi
+
+  work_dir=$(mktemp -d -t playground-jmx.XXXXXX)
+  output_file="/tmp/jmx_metrics-$container.log"
+  rm -f "$output_file"
+
+  jmx_exec() {
+    if [[ "$environment" == cfk* ]]
+    then
+      kubectl -n confluent exec -i "$target_container" -- java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $1
+    else
+      docker exec -i "$container" java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $1
+    fi
+  }
+
+  playground container cp --source "$JMXTERM_UBER_JAR" --destination "$target_container:$JMXTERM_UBER_JAR"
+
+  if [ "$domains" = "" ]
+  then
+    log "This is the list of domains for container $container"
+    if ! printf 'domains\nexit\n' | jmx_exec "-v silent"
+    then
+      logwarn "JMX endpoint is unavailable for $container. JMX may be disabled. $jmx_disabled_hint"
+      rm -rf "$work_dir"
+      return 0
+    fi
+    # one pass on the beans of every domain
     domains="ALL"
   fi
 
-  case "$container" in
-  zookeeper )
-    port=9999
-  ;;
-  controller )
-    port=10005
-  ;;
-  zookeeper2 )
-    port=12999
-  ;;
-  zookeeper3 )
-    port=13999
-  ;;
-  controller2 )
-    port=12005
-  ;;
-  controller3 )
-    port=13005
-  ;;
-  broker )
-    port=10000
-  ;;
-  schema-registry )
-    port=10001
-  ;;
-  connect )
-    port=10002
-  ;;
-  connect2 )
-    port=10022
-  ;;
-  connect3 )
-    port=10032
-  ;;
-  connect-[0-9]* )
-    port=10002
-  ;;
-  n|N ) ;;
-  * ) logerror "invalid container $container! it should be one of zookeeper, zookeeper2, zookeeper3, controller, controller2, controller3, broker, schema-registry, connect, connect2, connect3 or connect-<n>";exit 1;;
-  esac
+  for domain in $domains
+  do
+    if [ "$domain" = "ALL" ]
+    then
+      printf 'beans\nexit\n'
+    else
+      printf 'domain %s\nbeans\nexit\n' "$domain"
+    fi | jmx_exec "-v silent" > "$work_dir/beans.log"
+    if [ ${PIPESTATUS[1]} -ne 0 ]
+    then
+      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
+      rm -rf "$work_dir"
+      return 0
+    fi
+    while read -r line
+    do
+      [[ -n "$line" ]] && echo "get * -b $line"
+    done < "$work_dir/beans.log" > "$work_dir/commands"
 
-  if [[ "$environment" == cfk* ]]
-  then
-    # CFK JMX defaults to 7203 on each component pod.
-    port=7203
-  fi
-
-  playground container cp --source $JMXTERM_UBER_JAR --destination $target_container:$JMXTERM_UBER_JAR
-  if [ "$domains" = "ALL" ]
-  then
-
-log "This is the list of domains for container $container"
-if ! jmx_exec "-v silent" << EOF
-domains
-exit
-EOF
-then
-  logwarn "JMX endpoint is unavailable for $container. JMX may be disabled. $jmx_disabled_hint"
-  return 0
-fi
-  fi
-
-for domain in `echo $domains`
-do
-if ! jmx_exec "-v silent" > /tmp/beans.log << EOF
-domain $domain
-beans
-exit
-EOF
-then
-  logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
-  return 0
-fi
-  while read line; do echo "get *"  -b $line; done < /tmp/beans.log >> /tmp/commands
+    if [[ -n "$open" ]]
+    then
+      echo "####### domain $domain ########" >> "$output_file"
+      jmx_exec "" < "$work_dir/commands" >> "$output_file" 2>&1
+    else
+      echo "####### domain $domain ########"
+      jmx_exec "" < "$work_dir/commands" 2>&1
+    fi || {
+      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
+      rm -rf "$work_dir"
+      return 0
+    }
+  done
+  rm -rf "$work_dir"
 
   if [[ -n "$open" ]]
   then
-    echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
-    if ! jmx_exec "" < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
-    then
-      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
-      return 0
-    fi
-  else
-    echo "####### domain $domain ########"
-    if ! jmx_exec "" < /tmp/commands 2>&1
-    then
-      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
-      return 0
-    fi
-  fi
-done
-
-  if [[ -n "$open" ]]
-  then
-    playground open --file "/tmp/jmx_metrics.log"
+    playground open --file "$output_file"
   fi
 }
 
@@ -52597,25 +52627,66 @@ playground_repro_bisect_command() {
 playground_get_docker_compose_command() {
 
   # src/commands/get-docker-compose.sh
-  # keep TAG, CONNECT TAG and ORACLE_IMAGE
-  export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
-  export CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
-  export ORACLE_IMAGE=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
-
-  handle_aws_credentials
+  get_environment_used
+  if [[ "$environment" == cfk* ]]
+  then
+    logerror "❌ get-docker-compose is not supported in cfk mode: the components are pods, see them with 'kubectl -n confluent get pods'"
+    exit 1
+  fi
 
   docker_command=$(playground state get run.docker_command)
   if [ "$docker_command" == "" ]
   then
-    logerror "docker_command retrieved from $root_folder/playground.ini is empty !"
+    logerror "❌ docker_command retrieved from $root_folder/playground.ini is empty, is an environment running? (playground status)"
     exit 1
   fi
-  echo "$docker_command" > /tmp/tmp
-  sed -e "s|up -d|config|g" \
-      -e "s|--quiet-pull||g" \
-      /tmp/tmp > /tmp/playground-command-config
 
-  bash /tmp/playground-command-config
+  export IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+
+  # keep the versions of the running containers (an empty tag would fall back to the default one of scripts/utils.sh)
+  broker_container="broker"
+  if [[ "$environment" == mdc* ]]
+  then
+    broker_container="broker-us"
+  fi
+  running_tag=$(docker inspect -f '{{.Config.Image}}' "$broker_container" 2> /dev/null | cut -d ":" -f 2)
+  [[ -n "$running_tag" ]] && export TAG="$running_tag"
+  running_connect_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  [[ -n "$running_connect_tag" ]] && export CP_CONNECT_TAG="$running_connect_tag"
+  running_oracle_image=$(docker inspect -f '{{.Config.Image}}' oracle 2> /dev/null)
+  [[ -n "$running_oracle_image" ]] && export ORACLE_IMAGE="$running_oracle_image"
+
+  # only the path of the mounted file is needed to render the configuration: no AWS credentials required
+  export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
+
+  enable_flink=$(playground state get flags.ENABLE_FLINK)
+  if [ "$enable_flink" != "1" ]
+  then
+    export flink_connectors=""
+  fi
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+      source $DELTA_CONFIGS_ENV
+    else
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+      exit 1
+    fi
+  fi
+
+  tmp_command=$(mktemp -t playground-command-config.XXXXXX)
+  trap 'rm -f "$tmp_command"' EXIT
+  # 'docker compose config' instead of 'up -d', and the logs of scripts/utils.sh out of stdout, so that the output is
+  # valid YAML (playground get-docker-compose > docker-compose.yml)
+  echo "$docker_command" | sed -e "s|up -d|config|g" \
+      -e "s|--quiet-pull||g" \
+      -e "s|scripts/utils.sh &&|scripts/utils.sh > /dev/null \&\&|" > "$tmp_command"
+
+  bash "$tmp_command"
 
 }
 
@@ -61102,18 +61173,10 @@ playground_get_jmx_metrics_command() {
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
 
+  # the container names and their JMX port are checked by get_jmx_metrics
   for container in "${container_array[@]}"
   do
-  	case "${container}" in
-  	zookeeper|zookeeper2|zookeeper3|broker|schema-registry|connect|connect2|connect3|controller|controller2|controller3|connect-[0-9]*)
-  	;;
-  	*)
-  		logerror "❌ container name not valid ! Should be one of zookeeper, zookeeper2, zookeeper3, controller, controller2, controller3, broker, schema-registry, connect, connect2, connect3 or connect-<n>"
-  		exit 1
-  	;;
-  	esac
-
-  	get_jmx_metrics "$container" "$domain" "$open"
+  	get_jmx_metrics "$container" "$domain" "$open" || exit 1
   done
 
 }
@@ -67919,6 +67982,7 @@ playground_quota_get_command() {
   connector="${args[--connector]}"
   all_users="${args[--all-users]}"
   all_client_ids="${args[--all-client-ids]}"
+  json="${args[--json]}"
   verbose="${args[--verbose]}"
 
   rc=0
@@ -67928,30 +67992,50 @@ playground_quota_get_command() {
       exit 1
   fi
 
+  # "Quota configs for <entity> are <key>=<value>, ..." lines of kafka-configs ($1) as a JSON array: user and client_id
+  # are the name, "<default>" for the default quota, or null when the quota is not for this type of entity
+  function quota_lines_to_json () {
+      echo -n "$1" | jq -R -s 'split("\n") | map(capture("^Quota configs for (?<entity>.*) are (?<configs>.*)$")? // empty | {
+          entity: (.entity | split(", ") | map(
+              (capture("^(?<type>[a-z-]+) '\''(?<name>.*)'\''$") // (capture("^the default (?<type>[a-z-]+)$") | .name = "<default>"))
+              | { (if .type == "user-principal" then "user" elif .type == "client-id" then "client_id" else .type end): .name }) | add),
+          quotas: (.configs | split(", ") | map(split("=") | { (.[0]): (.[1] | tonumber? // .) }) | add)
+      } | { user: (.entity.user // null), client_id: (.entity.client_id // null), quotas })'
+  }
+
   if [ $rc -eq 2 ]
   then
-      log "🔎 Displaying all client quotas"
-      found=0
+      all_output=""
       for entity in $'--entity-type\tusers' $'--entity-type\tclients' $'--entity-type\tusers\t--entity-type\tclients'
       do
           output=$(run_quota_kafka_configs "$entity" --describe) || exit 1
-          if [[ -n "$output" ]]
-          then
-              echo "$output"
-              found=1
-          fi
+          [[ -n "$output" ]] && all_output+="$output"$'\n'
       done
-      if [ $found -eq 0 ]
+      if [[ -n "$json" ]]
       then
+          quota_lines_to_json "$all_output"
+          exit 0
+      fi
+      log "🔎 Displaying all client quotas"
+      if [[ -n "$all_output" ]]
+      then
+          echo -n "$all_output"
+      else
           log "🤷 no client quota, set one with playground quota set"
       fi
       exit 0
   fi
 
+  all_output=""
   for i in "${!quota_entities[@]}"
   do
-      log "🔎 Displaying client quotas of ${quota_entity_labels[$i]}"
       output=$(run_quota_kafka_configs "${quota_entities[$i]}" --describe) || exit 1
+      if [[ -n "$json" ]]
+      then
+          [[ -n "$output" ]] && all_output+="$output"$'\n'
+          continue
+      fi
+      log "🔎 Displaying client quotas of ${quota_entity_labels[$i]}"
       if [[ -n "$output" ]]
       then
           echo "$output"
@@ -67959,6 +68043,10 @@ playground_quota_get_command() {
           log "🤷 no quota"
       fi
   done
+  if [[ -n "$json" ]]
+  then
+      quota_lines_to_json "$all_output"
+  fi
 
 }
 
@@ -68086,82 +68174,142 @@ playground_broker_config_get_command() {
   broker="${args[--broker]}"
   key="${args[--key]}"
   all="${args[--all]}"
+  json="${args[--json]}"
   verbose="${args[--verbose]}"
 
   get_broker_config_ids "$broker" || exit 1
 
+  # one kafka-configs call for --broker, or for every broker and the cluster-wide default
+  entity=$'--entity-type\tbrokers'
+  [[ -n "$broker" ]] && entity=$(broker_config_entity "$broker")
+  describe_args=(--describe)
+  [[ -n "$key" || -n "$all" ]] && describe_args+=(--all)
+  output=$(run_quota_kafka_configs "$entity" "${describe_args[@]}") || exit 1
+  configs=$(echo "$output" | parse_broker_configs)
+
+  # JSON array of "<a>\t<b>..." lines ($1) with the field names ($2: space separated, "?" suffix = null when empty,
+  # "#" suffix = number, "!" suffix = boolean)
+  function tsv_to_json () {
+      echo -n "$1" | jq -R -s --arg fields "$2" '($fields | split(" ")) as $names | split("\n") | map(select(length > 0) | split("\t") as $row | [range(0; $names | length)] | map(
+          ($names[.]) as $n | ($row[.] // "") as $v |
+          if ($n | endswith("?")) then { ($n | rtrimstr("?")): (if $v == "" then null else $v end) }
+          elif ($n | endswith("#")) then { ($n | rtrimstr("#")): ($v | tonumber? // $v) }
+          elif ($n | endswith("!")) then { ($n | rtrimstr("!")): ($v == "true") }
+          else { ($n): $v } end) | add)'
+  }
+
   if [[ -n "$key" ]]
   then
+      rows=""
+      for id in "${broker_config_ids[@]}"
+      do
+          # \037 between the fields: read collapses empty fields separated by tabs
+          line=$(echo "$configs" | awk -F'\t' -v b="$id" -v k="$key" 'BEGIN { OFS = "\037" } $1 == b && $2 == k { print $3, $4, $5 ; exit }')
+          [[ -z "$line" ]] && continue
+          IFS=$'\037' read -r value sensitive source <<< "$line"
+          from=""
+          if [[ -z "$source" ]]
+          then
+              value=""
+              if [[ "$key" =~ \.(ms|seconds|minutes|hours)$ ]]
+              then
+                  # a time key that is not set takes its value from a sibling key (log.retention.ms from
+                  # log.retention.hours): Kafka uses the most precise unit that is set
+                  from=$(echo "$configs" | awk -F'\t' -v b="$id" -v k="$key" -v base="${key%.*}" '
+                      BEGIN { rank["ms"] = 1 ; rank["seconds"] = 2 ; rank["minutes"] = 3 ; rank["hours"] = 4 }
+                      $1 == b && $2 != k && $5 != "" {
+                          u = $2 ; sub(/.*\./, "", u) ; p = substr($2, 1, length($2) - length(u) - 1)
+                          if (p == base && (u in rank) && (best == "" || rank[u] < best)) { best = rank[u] ; found = $2 "=" $3 }
+                      }
+                      END { print found }')
+              fi
+          elif [[ "$sensitive" == "true" ]]
+          then
+              value=""
+          fi
+          rows+="$id"$'\037'"$value"$'\037'"$source"$'\037'"$sensitive"$'\037'"$from"$'\n'
+      done
+      if [[ -z "$rows" ]]
+      then
+          logerror "❌ $key is not a broker config, check its name ('playground broker config get --all' lists them)"
+          exit 1
+      fi
+      if [[ -n "$json" ]]
+      then
+          tsv_to_json "$(echo -n "$rows" | tr '\037' '\t')" "broker# value? source? sensitive! from?" | jq --arg key "$key" '{ key: $key, brokers: . }'
+          exit 0
+      fi
       if [[ -n "$broker" ]]
       then
           log "🔎 Value of $key on broker $broker"
       else
           log "🔎 Value of $key on each broker"
       fi
-      key_regex="${key//./\\.}"
-      found=0
-      for id in "${broker_config_ids[@]}"
-      do
-          output=$(run_quota_kafka_configs "$(broker_config_entity "$id")" --describe --all) || exit 1
-          line=$(echo "$output" | grep -E "^[[:space:]]*${key_regex}=" | head -1)
-          if [[ -z "$line" ]]
-          then
-              continue
-          fi
-          if [ $found -eq 0 ]
-          then
-              printf '%-8s %-20s %s\n' "BROKER" "VALUE" "SOURCE"
-              found=1
-          fi
-          value=$(echo "$line" | sed -E "s/^[[:space:]]*${key_regex}=(.*) sensitive=(true|false) synonyms=\{.*\}$/\1/")
-          synonyms=$(echo "$line" | sed -E 's/.* synonyms=\{(.*)\}$/\1/')
-          source="${synonyms%%:*}"
-          if [[ -z "$source" ]]
-          then
-              # no value and no default: another key gives it (e.g. log.retention.hours for log.retention.ms)
-              value="(not set)"
-              source="-"
-          elif echo "$line" | grep -q " sensitive=true "
-          then
-              value="(sensitive)"
-          fi
-          printf '%-8s %-20s %s\n' "$id" "$value" "$source"
-      done
-      if [ $found -eq 0 ]
-      then
-          logerror "❌ $key is not a broker config, check its name ('playground broker config get --all' lists them)"
-          exit 1
-      fi
+      {
+          printf 'BROKER\tVALUE\tSOURCE\n'
+          echo -n "$rows" | while IFS=$'\037' read -r id value source sensitive from
+          do
+              if [[ -z "$source" ]]
+              then
+                  value="(not set)"
+                  [[ -n "$from" ]] && value="(not set, from $from)"
+              elif [[ "$sensitive" == "true" ]]
+              then
+                  value="(sensitive)"
+              fi
+              printf '%s\t%s\t%s\n' "$id" "$value" "${source:--}"
+          done
+      } | column -t -s $'\t'
       exit 0
   fi
 
   if [[ -n "$all" ]]
   then
+      if [[ -n "$json" ]]
+      then
+          for id in "${broker_config_ids[@]}"
+          do
+              tsv_to_json "$(echo "$configs" | awk -F'\t' -v b="$id" 'BEGIN { OFS = "\t" } $1 == b { if ($4 == "true" || $3 == "null") $3 = "" ; print $2, $3, $5, $4 }')" "key value? source? sensitive!" \
+                  | jq --argjson broker "$id" '{ broker: $broker, configs: (map({ (.key): del(.key) }) | add // {}) }'
+          done | jq -s '{ brokers: . }'
+          exit 0
+      fi
       for id in "${broker_config_ids[@]}"
       do
           log "📜 All configs of broker $id"
-          run_quota_kafka_configs "$(broker_config_entity "$id")" --describe --all | grep -v -E "are:$" || exit 1
+          echo "$configs" | awk -F'\t' -v b="$id" '$1 == b { print "  " $6 }'
       done
       exit 0
   fi
 
   # dynamic configs only: the cluster-wide default (unless --broker), then the ones of each broker
   targets=()
-  [[ -z "$broker" ]] && targets+=("")
+  [[ -z "$broker" ]] && targets+=("default")
   targets+=("${broker_config_ids[@]}")
+  if [[ -n "$json" ]]
+  then
+      for id in "${targets[@]}"
+      do
+          tsv_to_json "$(echo "$configs" | awk -F'\t' -v b="$id" 'BEGIN { OFS = "\t" } $1 == b { if ($4 == "true" || $3 == "null") $3 = "" ; print $2, $3 }')" "key value?" \
+              | jq --arg id "$id" '{ id: $id, configs: (map({ (.key): .value }) | add // {}) }'
+      done | jq -s '{
+          cluster_wide: (map(select(.id == "default")) | if length == 0 then null else .[0].configs end),
+          brokers: map(select(.id != "default") | { broker: (.id | tonumber), configs })
+      }'
+      exit 0
+  fi
   for id in "${targets[@]}"
   do
-      if [[ -n "$id" ]]
+      if [[ "$id" != "default" ]]
       then
           log "🔎 Dynamic configs of broker $id"
       else
           log "🔎 Cluster-wide dynamic configs (default of all brokers)"
       fi
-      output=$(run_quota_kafka_configs "$(broker_config_entity "$id")" --describe) || exit 1
-      output=$(echo "$output" | grep -v -E "are:$" || true)
-      if [[ -n "$output" ]]
+      lines=$(echo "$configs" | awk -F'\t' -v b="$id" '$1 == b { print "  " $6 }')
+      if [[ -n "$lines" ]]
       then
-          echo "$output"
+          echo "$lines"
       else
           log "🤷 none, set one with playground broker config set"
       fi
@@ -68443,7 +68591,10 @@ playground_broker_start_command() {
   log "⏳ Waiting for broker $broker to be registered"
   wait_for_broker_registered "$broker" "$max_wait" || exit 1
   log "✅ broker $broker is registered, waiting for its replicas to be back in sync"
-  wait_for_cluster_healthy $((max_wait - (SECONDS - start_time))) || exit 1
+  # at least 10s left for the health check, even when the registration took most of --max-wait
+  remaining=$((max_wait - (SECONDS - start_time)))
+  [ $remaining -lt 10 ] && remaining=10
+  wait_for_cluster_healthy $remaining || exit 1
   log "✅ cluster is healthy, broker $broker started in $((SECONDS - start_time))s"
 
 }
@@ -68466,7 +68617,8 @@ playground_broker_rolling_restart_command() {
 
   if [[ -n "$brokers" ]]
   then
-      ids=$(echo "$brokers" | tr ',' '\n' | sed '/^$/d')
+      # in the given order, each broker once
+      ids=$(echo "$brokers" | tr -d ' ' | tr ',' '\n' | sed '/^$/d' | awk '!seen[$0]++')
       for id in $ids
       do
           get_broker_container_of_id "$id" || exit 1
@@ -68502,7 +68654,10 @@ playground_broker_rolling_restart_command() {
       log "🔄 [$i/$nb] Restarting broker $id (container $container)"
       docker restart -t 60 "$container" > /dev/null || exit 1
       wait_for_broker_registered "$id" "$max_wait" || exit 1
-      wait_for_cluster_healthy $((max_wait - (SECONDS - broker_start_time))) || {
+      # at least 10s left for the health check, even when the registration took most of --max-wait
+      remaining=$((max_wait - (SECONDS - broker_start_time)))
+      [ $remaining -lt 10 ] && remaining=10
+      wait_for_cluster_healthy $remaining || {
           logerror "❌ rolling restart stopped after broker $id: the next brokers were not restarted"
           exit 1
       }
@@ -68650,13 +68805,34 @@ playground_broker_transactions_find_hanging_command() {
       exit 1
   fi
 
+  if [[ -z "$max_transaction_timeout" ]]
+  then
+      # transaction.max.timeout.ms of the brokers, in minutes rounded up (15 by default)
+      first_broker=$(get_broker_ids | head -1)
+      timeout_ms=""
+      if [[ -n "$first_broker" ]]
+      then
+          timeout_ms=$(run_quota_kafka_configs "$(broker_config_entity "$first_broker")" --describe --all 2>/dev/null | grep -E "^[[:space:]]*transaction\.max\.timeout\.ms=[0-9]+ " | sed -E 's/^[[:space:]]*transaction\.max\.timeout\.ms=([0-9]+) .*/\1/')
+      fi
+      if [[ "$timeout_ms" =~ ^[0-9]+$ ]] && [ "$timeout_ms" -gt 0 ]
+      then
+          max_transaction_timeout=$(( (timeout_ms + 59999) / 60000 ))
+      else
+          max_transaction_timeout=15
+      fi
+  fi
+
   # one search per broker, unless the search is limited to a topic
   searches=()
   if [[ -n "$topic" ]]
   then
       search=(--topic "$topic")
       [[ -n "$partition" ]] && search+=(--partition "$partition")
-      [[ -n "$broker" ]] && search+=(--broker-id "$broker")
+      if [[ -n "$broker" ]]
+      then
+          get_broker_config_ids "$broker" || exit 1
+          search+=(--broker-id "$broker")
+      fi
       searches+=("${search[*]}")
       log "🔎 Searching hanging transactions on topic $topic$([[ -n "$partition" ]] && echo " partition $partition") (open for more than $max_transaction_timeout minutes)"
   else
@@ -68943,6 +69119,10 @@ playground_broker_metrics_command() {
   fi
 
   log "📈 Broker metrics$([[ -n "$topic" ]] && echo " (rates and failed requests of topic $topic)")"
+  if [[ -n "$topic" ]] && ! echo -n "$values" | awk -F'|' '$2 == "Messages in/s (1m)" && $3 != ""' | grep -q .
+  then
+      logwarn "⚠️ no metric for topic $topic: it does not exist, or no broker received or served records of it since it started"
+  fi
   {
       printf 'METRIC'
       for id in $ids
@@ -109769,21 +109949,6 @@ playground_get_jmx_metrics_parse_requirements() {
     esac
   done
 
-  # :command.dependencies_filter
-  missing_deps=
-  # :dependency.filter
-  if ! command -v java >/dev/null 2>&1; then
-    printf "missing dependency: java\n" >&2
-    printf "%s\n\n" "visit https://openjdk.org/install/ to install" >&2
-    missing_deps=1
-  else
-    deps['java']="$(command -v java | head -n1)"
-  fi
-
-  if [[ -n $missing_deps ]]; then
-    exit 1
-  fi
-
   # :command.command_filter
   action="get-jmx-metrics"
 
@@ -116552,6 +116717,14 @@ playground_quota_get_parse_requirements() {
         ;;
 
       # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
       --verbose | -v)
 
         # :flag.case_no_arg
@@ -117380,6 +117553,14 @@ playground_broker_config_get_parse_requirements() {
 
         # :flag.case_no_arg
         args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
         shift
         ;;
 
@@ -118930,9 +119111,6 @@ playground_broker_transactions_find_hanging_parse_requirements() {
     esac
   done
 
-  # :command.default_assignments
-  [[ -n ${args['--max-transaction-timeout']:-} ]] || args['--max-transaction-timeout']="15"
-
   # :command.validations
   # :flag.validations
   if [[ -v args['--broker'] ]]; then
@@ -119231,6 +119409,13 @@ playground_broker_describe_parse_requirements() {
 
     esac
   done
+
+  # :command.needy_flags_filter
+  # :flag.needs
+  if [[ -n ${args['--broker']+x} ]] && [[ -z "${args[--api-versions]:-}" ]]; then
+    printf "%s\n" "--broker needs --api-versions" >&2
+    exit 1
+  fi
 
   # :command.validations
   # :flag.validations
@@ -149808,6 +149993,11 @@ playground_quota_get_completion() {
 
         shift
         ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
 
@@ -149841,6 +150031,7 @@ playground_quota_get_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --all-users "$completion_current" --all-users
     completion_flag_candidates --all-client-ids "$completion_current" --all-client-ids
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -150258,6 +150449,11 @@ playground_broker_config_get_completion() {
 
         shift
         ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
 
@@ -150289,6 +150485,7 @@ playground_broker_config_get_completion() {
     completion_flag_candidates --broker "$completion_current" --broker -b
     completion_flag_candidates --key "$completion_current" --key -k
     completion_flag_candidates --all "$completion_current" --all
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
@@ -158188,6 +158385,10 @@ before_hook() {
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   root_folder=$(echo ${dir1%/*})
+
+  # a free file descriptor on stderr for the --verbose output of the kafka-* tools (see log_verbose_command): unlike stdout
+  # and stderr, $(...) and 2>&1 in the commands don't capture it
+  exec {playground_verbose_fd}>&2
 
   vvv="${args[--vvv]}"
   level="${args[--output-level]}"

@@ -10,13 +10,34 @@ then
     exit 1
 fi
 
+if [[ -z "$max_transaction_timeout" ]]
+then
+    # transaction.max.timeout.ms of the brokers, in minutes rounded up (15 by default)
+    first_broker=$(get_broker_ids | head -1)
+    timeout_ms=""
+    if [[ -n "$first_broker" ]]
+    then
+        timeout_ms=$(run_quota_kafka_configs "$(broker_config_entity "$first_broker")" --describe --all 2>/dev/null | grep -E "^[[:space:]]*transaction\.max\.timeout\.ms=[0-9]+ " | sed -E 's/^[[:space:]]*transaction\.max\.timeout\.ms=([0-9]+) .*/\1/')
+    fi
+    if [[ "$timeout_ms" =~ ^[0-9]+$ ]] && [ "$timeout_ms" -gt 0 ]
+    then
+        max_transaction_timeout=$(( (timeout_ms + 59999) / 60000 ))
+    else
+        max_transaction_timeout=15
+    fi
+fi
+
 # one search per broker, unless the search is limited to a topic
 searches=()
 if [[ -n "$topic" ]]
 then
     search=(--topic "$topic")
     [[ -n "$partition" ]] && search+=(--partition "$partition")
-    [[ -n "$broker" ]] && search+=(--broker-id "$broker")
+    if [[ -n "$broker" ]]
+    then
+        get_broker_config_ids "$broker" || exit 1
+        search+=(--broker-id "$broker")
+    fi
     searches+=("${search[*]}")
     log "🔎 Searching hanging transactions on topic $topic$([[ -n "$partition" ]] && echo " partition $partition") (open for more than $max_transaction_timeout minutes)"
 else

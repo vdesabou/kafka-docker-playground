@@ -116,6 +116,6 @@ lab_expect_exit 1
 lab_expect_contains "Cannot update these configs dynamically"
 lab_run playground broker config delete --key log.retention.ms
 lab_expect_exit 0
-lab_expect_contains "(not set)"
+lab_expect_contains "(not set, from log.retention.hours=168)"
 
 log "✅ all the outputs of the page are as expected"

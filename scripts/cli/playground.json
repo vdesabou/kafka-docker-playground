@@ -2099,7 +2099,7 @@
     },
     {
       "name": "get-docker-compose",
-      "description": "🐋 Get docker-compose\n\nPrints the fully resolved docker compose configuration of the running\nexample: every file merged, every profile applied and every variable\nsubstituted. This is what Docker actually received, which is the thing to\nlook at when a container did not get the image, port or setting you\nexpected.",
+      "description": "🐋 Get docker-compose\n\nPrints the fully resolved docker compose configuration of the running\nexample: every file merged, every profile applied and every variable\nsubstituted. This is what Docker actually received, which is the thing to\nlook at when a container did not get the image, port or setting you\nexpected.\n\nThe output is the YAML alone (the logs are not printed on stdout), ready\nto be redirected to a file. Not available on cfk, where the components\nare pods.",
       "usage": "playground get-docker-compose",
       "options": []
     },
@@ -5159,7 +5159,7 @@
     },
     {
       "name": "get-jmx-metrics",
-      "description": "🔢 Get JMX metrics from a container\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics",
+      "description": "🔢 Get JMX metrics from a container\n\nDumps every attribute of the MBeans of a container (all domains, or the\nones of --domain), with jmxterm run inside the container: no local Java\nneeded. Works with any container that exposes JMX (broker, broker2,\nconnect, schema-registry, ksqldb-server, broker-us in mdc-*\nenvironments...) and with the pods of cfk.\n\n🎓 Tip: for a digest instead of raw MBeans, use 'playground broker\nmetrics' or 'playground connector metrics'.\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics",
       "usage": "playground get-jmx-metrics [OPTIONS]",
       "options": [
         {
@@ -6980,6 +6980,13 @@
             },
             {
               "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "📗 Print the quotas as JSON (one object per entity: user, client_id, quotas), and nothing else"
+            },
+            {
+              "names": [
                 "--verbose",
                 "-v"
               ],
@@ -7173,7 +7180,7 @@
     },
     {
       "name": "broker",
-      "description": "🖥️ Broker commands\n\n  config            read and change dynamic broker configs\n  health            brokers down, partition problems, KRaft quorum\n  stop / start      stop (or kill) a broker, start it again\n  rolling-restart   restart the brokers one by one, safely\n  transactions      list transactions, find and abort hanging ones\n  describe          brokers, KRaft quorum, feature levels, API versions\n  metrics           key JMX metrics of each broker\n\nNot available on Confluent Cloud and multi data center environments.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker",
+      "description": "🖥️ Broker commands\n\n  config            read and change dynamic broker configs\n  health            brokers down, partition problems, KRaft quorum\n  stop / start      stop (or kill) a broker, start it again\n  rolling-restart   restart the brokers one by one, safely\n  transactions      list transactions, find and abort hanging ones\n  describe          brokers, KRaft quorum, feature levels, API versions\n  metrics           key JMX metrics of each broker\n\nNot available on Confluent Cloud. In mdc-* environments, pick the cluster\nwith --cluster us|europe.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker",
       "usage": "playground broker COMMAND",
       "options": [],
       "subcommands": [
@@ -7210,6 +7217,13 @@
                   ],
                   "argument": "",
                   "description": "📜 Display every config of the broker (static and default ones too), not only the dynamic ones\n\nConflicts with: --key"
+                },
+                {
+                  "names": [
+                    "--json"
+                  ],
+                  "argument": "",
+                  "description": "📗 Print the result as JSON, and nothing else: {key, brokers: [{broker, value, source, sensitive, from}]} with --key, {brokers: [{broker, configs}]} with --all, {cluster_wide, brokers} otherwise"
                 },
                 {
                   "names": [
@@ -7624,7 +7638,7 @@
                     "--max-transaction-timeout"
                   ],
                   "argument": "MINUTES",
-                  "description": "⏱️ transaction.max.timeout.ms of the brokers, in minutes: only the transactions open for longer are checked (default 15)\n\nDefault value: 15"
+                  "description": "⏱️ Only the transactions open for longer than this, in minutes (default: transaction.max.timeout.ms of the brokers, 15 minutes unless changed)"
                 },
                 {
                   "names": [

@@ -173,7 +173,8 @@ playground topic consume --topic payments --isolation-level read_committed --cou
 - **`describe --transactional-id <id>`**: state, producer id and epoch, timeout, start time, duration, and the
   partitions of the current transaction. **`list`** filters with `--state Ongoing` and `--pattern <regex>`.
 - **`find-hanging`** searches every broker (or `--broker`, or the partitions of `--topic`) for transactions open for
-  longer than `--max-transaction-timeout` minutes (15) that their coordinator doesn't know any more. It exits with 1
+  longer than `--max-transaction-timeout` minutes (default: `transaction.max.timeout.ms` of the brokers, 15 minutes
+  unless changed) that their coordinator doesn't know any more. It exits with 1
   when it finds some, and prints the `abort` command of each. An open transaction that its coordinator still tracks is
   not hanging: it ends after its timeout.
 - **`abort --topic <t> --partition <p> --start-offset <o>`** writes an abort marker for the transaction started at that
@@ -334,7 +335,7 @@ playground topic produce -t <t> … --transactional-id <id> [--transaction commi
 playground broker transactions list [--state Ongoing] [--pattern <regex>]
 playground broker transactions describe --transactional-id <id>
 playground broker transactions describe-producers -t <t> [--partition N]
-playground broker transactions find-hanging [--broker <id> | -t <t> [--partition N]] [--max-transaction-timeout 15]
+playground broker transactions find-hanging [--broker <id> | -t <t> [--partition N]] [--max-transaction-timeout <minutes>]
 playground broker transactions abort -t <t> --partition N --start-offset <o>
 playground broker metrics [--broker <id>] [--topic <t>] [--json]
 playground broker config get|set|delete …                              # see the topic administration deep dive

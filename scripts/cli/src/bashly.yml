@@ -4322,7 +4322,7 @@ commands:
     - playground repro bisect -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --tag 7.9.0 --tag 8.2.0 --tag 8.4.0
 
 - name: get-docker-compose
-  group: Kafka
+  group: Container
   help: |-
     🐋 Get docker-compose
 
@@ -4331,6 +4331,14 @@ commands:
     substituted. This is what Docker actually received, which is the thing to
     look at when a container did not get the image, port or setting you
     expected.
+
+    The output is the YAML alone (the logs are not printed on stdout), ready
+    to be redirected to a file. Not available on cfk, where the components
+    are pods.
+  examples:
+  - playground get-docker-compose
+  - playground get-docker-compose > /tmp/docker-compose.yml
+  - playground get-docker-compose | yq '.services.connect.environment'
 
 - name: schema
   expose: always
@@ -7987,10 +7995,17 @@ commands:
   group: Kafka
   help: |-
     🔢 Get JMX metrics from a container
-    
+
+    Dumps every attribute of the MBeans of a container (all domains, or the
+    ones of --domain), with jmxterm run inside the container: no local Java
+    needed. Works with any container that exposes JMX (broker, broker2,
+    connect, schema-registry, ksqldb-server, broker-us in mdc-*
+    environments...) and with the pods of cfk.
+
+    🎓 Tip: for a digest instead of raw MBeans, use 'playground broker
+    metrics' or 'playground connector metrics'.
+
     👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
-  dependencies:
-    java: visit https://openjdk.org/install/ to install
   flags:
   - *container
   - long: --open
@@ -10685,12 +10700,17 @@ commands:
         conflicts: [--client-id, --connector]
         help: |-
           🏷️ Default quota of all client ids (used by the client ids without their own quota)
+      - long: --json
+        required: false
+        help: |-
+          📗 Print the quotas as JSON (one object per entity: user, client_id, quotas), and nothing else
       - *verbose
       - *cluster
       examples:
       - playground quota get
       - playground quota get --connector filestream-sink
       - playground quota get --user client --client-id my-app
+      - playground quota get --json | jq '.[] | select(.client_id != null) | .quotas'
 
     - name: set
       group: Kafka
@@ -10798,7 +10818,8 @@ commands:
       describe          brokers, KRaft quorum, feature levels, API versions
       metrics           key JMX metrics of each broker
 
-    Not available on Confluent Cloud and multi data center environments.
+    Not available on Confluent Cloud. In mdc-* environments, pick the cluster
+    with --cluster us|europe.
 
     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-broker
   commands:
@@ -10882,18 +10903,28 @@ commands:
           conflicts: [--key]
           help: |-
             📜 Display every config of the broker (static and default ones too), not only the dynamic ones
+        - long: --json
+          required: false
+          help: |-
+            📗 Print the result as JSON, and nothing else: {key, brokers: [{broker, value, source, sensitive, from}]} with --key, {brokers: [{broker, configs}]} with --all, {cluster_wide, brokers} otherwise
         - *verbose
         - *cluster
         examples:
         - playground broker config get
         - playground broker config get --key num.io.threads
         - playground broker config get --broker 1 --all
+        - playground broker config get --key log.retention.ms --json | jq -r '.brokers[] | "\(.broker) \(.value // .from)"'
         x_example_outputs:
         - command: playground broker config get --key log.retention.ms
           output: |-
             15:02:10 ℹ️ 🔎 Value of log.retention.ms on each broker
-            BROKER   VALUE                SOURCE
-            1        60000                DYNAMIC_DEFAULT_BROKER_CONFIG
+            BROKER  VALUE  SOURCE
+            1       60000  DYNAMIC_DEFAULT_BROKER_CONFIG
+        - command: playground broker config get --key log.roll.ms
+          output: |-
+            15:02:12 ℹ️ 🔎 Value of log.roll.ms on each broker
+            BROKER  VALUE                               SOURCE
+            1       (not set, from log.roll.hours=168)  -
 
       - name: set
         group: Kafka
@@ -11275,9 +11306,8 @@ commands:
           required: false
           arg: minutes
           validate: integer
-          default: "15"
           help: |-
-            ⏱️ transaction.max.timeout.ms of the brokers, in minutes: only the transactions open for longer are checked (default 15)
+            ⏱️ Only the transactions open for longer than this, in minutes (default: transaction.max.timeout.ms of the brokers, 15 minutes unless changed)
         - *verbose
         - *cluster
         examples:
@@ -11348,6 +11378,7 @@ commands:
       required: false
       arg: broker
       validate: integer
+      needs: [--api-versions]
       help: |-
         🖥️ Broker id for --api-versions (default: the first broker)
     - *verbose

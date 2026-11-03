@@ -229,7 +229,7 @@ playground topic elect-leader -t orders                         # preferred lead
 playground topic elect-leader -t orders --partition 0 --leader 2   # a controlled leader change, no broker stopped
 
 # change a broker config live (dynamic configs only)
-playground broker config get --key log.retention.ms            # the value of each broker and its source
+playground broker config get --key log.retention.ms            # the value of each broker and its source (--json)
 playground broker config set --key log.retention.ms --value 60000   # cluster-wide, --broker <id> for one broker
 playground broker config delete --key log.retention.ms
 ```
@@ -352,14 +352,14 @@ playground topic delete -t lab-nope; echo "exit=$?"
 ```bash
 playground broker config set --key log.retention.ms --value 60000
 # ⚙️ Setting log.retention.ms=60000 cluster-wide
-# BROKER   VALUE                SOURCE
-# 1        60000                DYNAMIC_DEFAULT_BROKER_CONFIG
+# BROKER  VALUE  SOURCE
+# 1       60000  DYNAMIC_DEFAULT_BROKER_CONFIG
 playground broker config set --key broker.id --value 3; echo "exit=$?"
 # … Cannot update these configs dynamically: Set(broker.id)
 # exit=1
 playground broker config delete --key log.retention.ms
-# BROKER   VALUE                SOURCE
-# 1        (not set)            -                     <- log.retention.hours gives the value
+# BROKER  VALUE                                    SOURCE
+# 1       (not set, from log.retention.hours=168)  -
 ```
 
 ```bash
@@ -411,7 +411,7 @@ playground topic reassign -t <t> --replicas 2,3 [--partition N] | --brokers 1,2,
 playground topic reassign -t <t> --verify-only          # progress of a --no-wait reassignment
 playground topic elect-leader -t <t> [--partition N] [--leader <broker> | --unclean]
 playground topic display-consumer-offsets              # follows, ctrl-c
-playground broker config get [--broker <id>] [--key <k> | --all]
+playground broker config get [--broker <id>] [--key <k> | --all] [--json]
 playground broker config set --key <k> --value <v> [--broker <id>]   # cluster-wide without --broker
 playground broker config delete --key <k> [--broker <id>]
 playground topic tag list|create|delete|add|remove|show|search   # Confluent Cloud

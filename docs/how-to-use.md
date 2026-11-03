@@ -19,7 +19,7 @@
 > Run [playground doctor](/playground%20doctor) first: it checks that the container engine is reachable, that compose v2 is there and that there is enough memory. It is the one command that still works when the engine is down.
 
 > [!NOTE]
-> Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc...Only exceptions are `fzf`, `confluent` and a local Java install for [playground get-jmx-metrics](/playground%20get-jmx-metrics)
+> Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc...Only exceptions are `fzf` and `confluent`
 > 
 > The goal is to have a consistent behavior and only depends on Docker.
 
@@ -687,7 +687,7 @@ JMX metrics are available locally on those ports:
 * controller: `10005` (Kraft mode)
 * zookeeper: `9999` (CP < 8 only)
 
-In order to easily gather JMX metrics, you can use [playground get-jmx-metrics](/playground%20get-jmx-metrics) command. `--container` (`-c`) can be repeated (default is `connect`), `--domain` (`-d`) restricts the list of domains and `--open` (`-o`) saves the output to a file and opens it with your editor:
+In order to easily gather JMX metrics, you can use [playground get-jmx-metrics](/playground%20get-jmx-metrics) command. `--container` (`-c`) can be repeated (default is `connect`), `--domain` (`-d`) restricts the list of domains and `--open` (`-o`) saves the output to `/tmp/jmx_metrics-<container>.log` and opens it with your editor. It works with any container that exposes JMX (its port is read from the `*_JMX_PORT` environment variable of the container: `broker2`, `ksqldb-server`, `broker-us` in `mdc-*` environments…) and with the pods of `cfk`, and jmxterm runs inside the container: no local Java needed.
 
 ```bash
 playground get-jmx-metrics -c connect -c broker --domain "kafka.server"
@@ -698,7 +698,7 @@ Example (without specifying domain):
 ```bash
 $ playground get-jmx-metrics -c connect
 17:35:35 ❗ You did not specify a list of domains, all domains will be exported!
-17:35:35 ℹ️ This is the list of domains for component connect
+17:35:35 ℹ️ This is the list of domains for container connect
 JMImplementation
 com.sun.management
 java.lang
@@ -709,18 +709,24 @@ kafka.admin.client
 kafka.connect
 kafka.consumer
 kafka.producer
-17:35:38 ℹ️ JMX metrics are available in /tmp/jmx_metrics.log file
+####### domain ALL ########
+Welcome to JMX terminal. Type "help" for available commands.
+#mbean = JMImplementation:type=MBeanServerDelegate:
+…
 ```
 
 Example (specifying domain):
 
 ```bash
 $ playground get-jmx-metrics -c connect -d "kafka.connect kafka.consumer kafka.producer"
-17:38:00 ℹ️ JMX metrics are available in /tmp/jmx_metrics.log file
+####### domain kafka.connect ########
+…
+####### domain kafka.consumer ########
+…
 ```
 
-> [!WARNING]
-> Local install of Java `JDK` (at least 1.8) is required to run `playground get-jmx-metrics`
+> [!TIP]
+> For a digest instead of raw MBeans: [playground broker metrics](/playground%20broker%20metrics) and [playground connector metrics](/playground%20connector%20metrics).
 
 ## 📝 See properties file
 
