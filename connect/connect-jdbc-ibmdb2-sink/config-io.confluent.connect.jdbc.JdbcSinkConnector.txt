@@ -4,6 +4,7 @@ Connection
 🔘 connection.url
 
 JDBC connection URL.
+For example: ``jdbc:oracle:thin:@localhost:1521:orclpdb1``, ``jdbc:mysql://localhost/db_name``, ``jdbc:sqlserver://localhost;instance=SQLEXPRESS;databaseName=db_name``
 
 	 - Type: STRING
 	 - Default: null
@@ -39,12 +40,12 @@ Credentials provider or provider chain to use for authentication to database. By
 
 🔘 dialect.name
 
+The name of the database dialect that should be used for this connector. By default this is empty, and the connector automatically determines the dialect based upon the JDBC connection URL. Use this if you want to override that behavior and use a specific dialect. All properly-packaged dialects in the JDBC connector plugin can be used.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the database dialect that should be used for this connector. By default this is empty, and the connector automatically determines the dialect based upon the JDBC connection URL. Use this if you want to override that behavior and use a specific dialect. All properly-packaged dialects in the JDBC connector plugin can be used.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 connection.attempts
 
@@ -70,6 +71,12 @@ Writes
 🔘 insert.mode
 
 The insertion mode to use. Supported modes are:
+``insert``
+    Use standard SQL ``INSERT`` statements.
+``upsert``
+    Use the appropriate upsert semantics for the target database if it is supported by the connector, e.g. ``INSERT OR IGNORE``.
+``update``
+    Use the appropriate update semantics for the target database if it is supported by the connector, e.g. ``UPDATE``.
 
 	 - Type: STRING
 	 - Default: insert
@@ -118,6 +125,7 @@ Data Mapping
 🔘 table.name.format
 
 A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -127,6 +135,14 @@ A format string for the destination table name, which may contain '${topic}' as 
 🔘 pk.mode
 
 The primary key mode, also refer to ``pk.fields`` documentation for interplay. Supported modes are:
+``none``
+    No keys utilized.
+``kafka``
+    Kafka coordinates are used as the PK.
+``record_key``
+    Field(s) from the record key are used, which may be a primitive or a struct.
+``record_value``
+    Field(s) from the record value are used, which must be a struct.
 
 	 - Type: STRING
 	 - Default: none
@@ -135,21 +151,30 @@ The primary key mode, also refer to ``pk.fields`` documentation for interplay. S
 
 🔘 pk.fields
 
+List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
 ``none``
+    Ignored as no fields are used as primary key in this mode.
+``kafka``
+    Must be a trio representing the Kafka coordinates, defaults to ``__connect_topic,__connect_partition,__connect_offset`` if empty.
+``record_key``
+    If empty, all fields from the key struct will be used, otherwise used to extract the desired fields - for primitive key only a single field name must be configured.
+``record_value``
+    If empty, all fields from the value struct will be used, otherwise used to extract the desired fields.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 fields.whitelist
 
+List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
 Note that ``pk.fields`` is applied independently in the context of which field(s) form the primary key columns in the destination database, while this configuration is applicable for the other columns.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 db.timezone
 
@@ -171,12 +196,12 @@ Name of the JDBC timezone that should be used in the connector when inserting DA
 
 🔘 timestamp.fields.list
 
+List of comma-separated record value timestamp field names that should be converted to timestamps. These fields will be converted based on precision mode specified in timestamp.precision.mode(microseconds or nanoseconds). The timestamp fields included here should be Long or String type and nested fields are not supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated record value timestamp field names that should be converted to timestamps. These fields will be converted based on precision mode specified in timestamp.precision.mode(microseconds or nanoseconds). The timestamp fields included here should be Long or String type and nested fields are not supported.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.precision.mode
 
@@ -228,7 +253,7 @@ Whether to automatically add columns in the table schema when found to be missin
 
 🔘 quote.sql.identifiers
 
-When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``.
+When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``. Identifiers containing control characters are always rejected. With ``never``, identifiers also may not contain ``;``, SQL comment sequences (including ``#`` on MySQL and MariaDB), whitespace, quote characters, parentheses, or commas, since they cannot be used unquoted.
 
 	 - Type: STRING
 	 - Default: ALWAYS
@@ -279,4 +304,5 @@ null
 	 - Default: false
 	 - Importance: LOW
 	 - Required: false
+
 
