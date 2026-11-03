@@ -1,0 +1,512 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 name
+
+Sets a name for your connector.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
+
+	 - Type: STRING
+	 - Default: ${connect.regional.connector}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.api.key
+
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.api.secret
+
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 datapreview.schemas.enable
+
+This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Output messages
+==========================
+🔘 output.data.format
+
+Output Kafka record value format: AVRO, JSON_SR, or PROTOBUF, each with Confluent Cloud Schema Registry. With PROTOBUF, set Schema evolution mode to NONE.
+
+	 - Type: STRING
+	 - Default: JSON_SR
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 schema.enforce
+
+How the connector handles a field that Stripe returns but the connector doesn't know. EVOLVE adds it to the topic's schema once, with its detected type. NONE adds it as an optional string, only in the records that carry it. With PROTOBUF, use NONE.
+
+	 - Type: STRING
+	 - Default: EVOLVE
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+Maximum number of tasks for the connector.
+
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Authentication
+==========================
+🔘 stripe.api.key
+
+Your Stripe secret key or restricted key. We recommend a restricted key with Read access to the resources you select and to Events. A sandbox key reads sandbox data, and a live mode key reads live data.
+
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 stripe.connected.account.id
+
+Leave blank to read your own Stripe account, or enter a connected account ID, such as acct_1Nv0FGQ9RKHgCVdK, to read that account instead. Each connector reads one account, so create one connector per connected account.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Stripe resources
+==========================
+🔘 stripe.resources
+
+The Stripe resources to sync, up to 7 per connector. To sync more, create another connector.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 topic.prefix
+
+Prefix for the Kafka topics of every selected resource. With the default, Charges are written to stripe-charges and their changes to stripe-charges_events.
+
+	 - Type: STRING
+	 - Default: stripe-
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 stripe.initial.start.timestamp
+
+Load records created at or after this time, as a Unix timestamp in seconds. 0 loads all history. Stripe keeps change events for 30 days, so older changes are not loaded.
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+Polling configurations
+==========================
+🔘 poll.interval.ms
+
+How long, in milliseconds, the connector waits between requests to Stripe for each resource. This also sets how fast history loads, one page of up to ``100`` records per interval. Lower values load history faster and deliver changes sooner, but use more of your Stripe API rate limit and read allocation.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Reporter
+==========================
+🔘 reporter.error.topic.name
+
+The name of the topic to produce errant records after each unsuccessful API operation. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: error-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 producer.override.linger.ms
+
+The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
+
+	 - Type: LONG
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.object.additional.properties
+
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.int.for.enums
+
+Whether to represent enums as integers. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.allow.optional.map.keys
+
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.latest.compatibility.strict
+
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.unions
+
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 header.converter
+
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.optional.for.proto2
+
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.optional.for.nullables
+
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.struct.for.nulls
+
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.auto.register.schemas
+
+Specify if the Serializer should attempt to register the Schema.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.latest.version
+
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.avro.schema.support
+
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.singleton.unions
+
+Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.optional.for.nonrequired
+
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 producer.override.compression.type
+
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.wrapper.for.nullables
+
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.protobuf.schema.support
+
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.scrub.invalid.names
+
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.index.for.unions
+
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.wrapper.for.raw.primitives
+
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+
