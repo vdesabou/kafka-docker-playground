@@ -7,18 +7,19 @@ then
     exit 0
 fi
 
-if [ ! -f $test_file ]
-then 
+if [ ! -f "$test_file" ]
+then
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
 fi
 get_connector_paths
 if [ "$connector_paths" == "" ]
 then
-    logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+    logwarn "❌ skipping as $test_file is not an example with a connector plugin"
     exit 1
 else
-    current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+    # works whatever the connect container is named (connect, connect-us/connect-europe in mdc, connect-0 in cfk)
+    current_tag=$(get_running_cp_tag)
     log "🎯 Version currently used for confluent platform"
     echo "$current_tag"
 
@@ -49,13 +50,13 @@ else
 
         ## current version
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
-        if [ -f $manifest_file ]
+        if [ -f "$manifest_file" ]
         then
-            version=$(cat $manifest_file | jq -r '.version')
-            release_date=$(cat $manifest_file | jq -r '.release_date')
+            version=$(jq -r '.version' "$manifest_file")
+            release_date=$(jq -r '.release_date' "$manifest_file")
         else
-            logwarn "file $manifest_file does not exist, could not retrieve version"
-            exit 0
+            logwarn "file $manifest_file does not exist, could not retrieve version of $owner/$name"
+            continue
         fi
 
         current="🔢 v$version - 📅 release date: $release_date"

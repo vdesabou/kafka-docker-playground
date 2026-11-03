@@ -353,7 +353,7 @@ playground_usage() {
   printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                         "
   printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "connector tasks")                           "
   printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "connector topics")                          "
-  printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "connector stop")                            "
+  printf "  %s   🛑 Stop connector (only available since CP 7.5)\n" "$(green "connector stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                          "
   printf "  %s   🩺 Diagnose a connector in one call: status, errors and progress\n" "$(green "connector diagnose")                        "
@@ -17734,7 +17734,7 @@ playground_connector_usage() {
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")                         "
   printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "tasks")                           "
   printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "topics")                          "
-  printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "stop")                            "
+  printf "  %s   🛑 Stop connector (only available since CP 7.5)\n" "$(green "stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                          "
   printf "  %s   🩺 Diagnose a connector in one call: status, errors and progress\n" "$(green "diagnose")                        "
@@ -17774,7 +17774,6 @@ playground_connector_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector status\n"
-    printf "  playground connector status --json\n"
     printf "  playground connector resume --connector <connector-name>\n"
     printf "  playground connector pause -c <connector-name>\n"
     printf "  playground connector delete -c <connector-name>\n"
@@ -18441,7 +18440,7 @@ playground_connector_smt_test_usage() {
 playground_connector_offsets_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector offsets\n\n"
-    printf "  💈 Handle source and sink connectors offsets\n  \n  Where a connector is in its data: for a source, the position it keeps in\n  the system it reads from (a SCN, a binlog position, a file offset); for a\n  sink, the consumer group offsets of the topics it consumes.\n  \n    get                          show them\n    alter                        edit them in your editor, then apply\n    reset                        start over from the beginning\n    get-offsets-request-status   did the last change go through\n  \n  This uses the first-class offsets API (KIP-875), so it needs CP 7.5 for\n  get and CP 7.6 for alter and reset. On older CP the playground falls back\n  to kafka-consumer-groups, which only covers sink connectors.\n  \n  The connector must not be running while its offsets change: alter and\n  reset stop it and resume it for you.\n  \n  🎓 Tip: a sink that reprocesses everything and a source that re-snapshots\n  are usually offsets problems, not connector problems. Look here first.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%8F%%AA-the-lag-of-a-sink-is-stuck\n\n"
+    printf "  💈 Handle source and sink connectors offsets\n  \n  Where a connector is in its data: for a source, the position it keeps in\n  the system it reads from (a SCN, a binlog position, a file offset); for a\n  sink, the consumer group offsets of the topics it consumes.\n  \n    get                          show them\n    alter                        edit them in your editor, then apply\n    reset                        start over from the beginning\n    get-offsets-request-status   did the last change go through\n  \n  This uses the first-class offsets API (KIP-875), so it needs CP 7.5 for\n  get and CP 7.6 for alter and reset. On older CP the playground falls back\n  to kafka-consumer-groups, which only covers sink connectors.\n  \n  The connector must not be running while its offsets change: alter and\n  reset stop it and resume it for you, also when the change is refused\n  (the command then exits 1).\n  \n  🎓 Tip: a sink that reprocesses everything and a source that re-snapshots\n  are usually offsets problems, not connector problems. Look here first.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%8F%%AA-the-lag-of-a-sink-is-stuck\n\n"
   else
     printf "playground connector offsets - 💈 Handle source and sink connectors offsets\n\n"
   fi
@@ -18815,14 +18814,18 @@ playground_connector_sourcecode_usage() {
       echo
 
     fi
-    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
-      # :flag.usage
-      printf "  %s\n" "$(magenta "--forced-url")"
-      printf "    🔗 Set github url (to compile cp for example)\n"
-      printf "    %s\n" "Needs: --compile"
-      echo
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--checkout-only")"
+    printf "    📂 Checkout the code at the right tag and print the path of the folder,\n    nothing else\n    \n    No browser, no editor, no question (with several connectors in the example,\n    the first one is used).\n    The path is the last line of the output.\n    \n    🎓 Tip: use it in scripts and from AI agents, which can then read the code\n"
+    printf "    %s\n" "Conflicts: --compile"
+    echo
 
-    fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep GREP")"
+    printf "    🔎 Grep the code at the version in use (or the --connector-tag one):\n    checkout, file:line, 500 lines at most\n    \n    With 2 --connector-tag: only the commits between the two versions whose\n    message matches (case insensitive).\n    Extended regular expression, for example \"BATCH_SIZE_DEFAULT|batch.size\"\n"
+    printf "    %s\n" "Conflicts: --compile"
+    echo
+
     if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
       # :flag.usage
       printf "  %s\n" "$(magenta "--enable-remote-debugging")"
@@ -18926,7 +18929,8 @@ playground_connector_restart_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--task-id, -t TASK_ID")"
-    printf "    🔧 Restart specific task ID only (instead of restarting entire connector)\n"
+    printf "    🔧 Restart specific task ID only (instead of restarting entire connector),\n    needs --connector\n"
+    printf "    %s\n" "Needs: --connector"
     printf "    %s\n" "Conflicts: --only-failed"
     echo
 
@@ -19085,9 +19089,9 @@ playground_connector_topics_usage() {
 playground_connector_stop_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector stop\n\n"
-    printf "  🛑 Stop connector (only available if CP > 7.5)\n  \n  Stronger than pause: the tasks are shut down and unassigned, so the\n  connector consumes no resources at all. This is the state in which\n  offsets can be altered or reset.\n\n"
+    printf "  🛑 Stop connector (only available since CP 7.5)\n  \n  Stronger than pause: the tasks are shut down and unassigned, so the\n  connector consumes no resources at all. This is the state in which\n  offsets can be altered or reset.\n\n"
   else
-    printf "playground connector stop - 🛑 Stop connector (only available if CP > 7.5)\n\n"
+    printf "playground connector stop - 🛑 Stop connector (only available since CP 7.5)\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -20497,7 +20501,7 @@ playground_connector_create_or_update_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground connector create-or-update -c filestream-sink << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n  \n  playground connector create-or-update -c filestream-sink --offsets\n  '[{\"partition\":{\"kafka_topic\":\"filestream\",\"kafka_partition\":0},\"offset\":{\"kafka_offset\":8}}]'\n  << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n"
+    printf "  playground connector create-or-update -c filestream-sink << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n  \n  # --offsets: fully managed connectors only (the sink starts consuming\n  partition 0 of topic http-topic at offset 8)\n  playground connector create-or-update -c HttpSink_\$USER --offsets\n  '[{\"partition\":{\"kafka_topic\":\"http-topic\",\"kafka_partition\":0},\"offset\":{\"kafka_offset\":8}}]'\n  << EOF\n{\n    \"connector.class\": \"HttpSink\",\n    \"name\": \"HttpSink_\$USER\",\n    \"kafka.auth.mode\": \"KAFKA_API_KEY\",\n    \"kafka.api.key\": \"\$CLOUD_KEY\",\n    \"kafka.api.secret\": \"\$CLOUD_SECRET\",\n    \"topics\": \"http-topic\",\n    \"input.data.format\": \"AVRO\",\n    \"http.api.url\": \"https://httpbin.org/post\",\n    \"tasks.max\" : \"1\"\n}\nEOF\n"
 echo
 
 fi
@@ -37648,8 +37652,9 @@ function handle_ccloud_connect_rest_api () {
     log "🐞 curl command used"
     echo "$curl_request"
   fi
-  eval "curl_output=\$($curl_request)"
-  ret=$?
+  # the generated cli runs under set -e: read the exit code in a && || list, otherwise a failed curl (6: could not
+  # resolve host, 7: could not connect, 28: timeout) ends the command with the curl code before the error below is printed
+  eval "curl_output=\$($curl_request)" && ret=0 || ret=$?
   if [ $ret -eq 0 ]
   then
       if [ "$curl_output" == "[]" ]
@@ -74872,24 +74877,27 @@ playground_connector_offsets_get_command() {
       fi
   fi
 
+  # returns 1 when the offsets could not be read: called as 'handle_first_class_offset || ...', so set -e does
+  # not apply inside it and every failure must be checked explicitly
   function handle_first_class_offset() {
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
           get_ccloud_connect
-          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets\" --header \"authorization: Basic $authorization\""
+          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets\" --header \"authorization: Basic $authorization\"" || return 1
       else
           if ! version_gt $tag "7.4.99"
           then
               logerror "❌ command is available since CP 7.5 only"
-              return
+              return 1
           fi
 
           get_connect_url_and_security
-          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\"" || return 1
       fi
 
       echo "$curl_output" | jq .
   }
+  failed=0
   items=($connector)
   length=${#items[@]}
   if ((length > 1))
@@ -74909,16 +74917,12 @@ playground_connector_offsets_get_command() {
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
       fi
-      log "🏹 Getting offsets for $connector_type $type connector $connector${maybe_id}"
       type=$(echo "$curl_output" | jq -r '.type')
+      log "🏹 Getting offsets for $connector_type $type connector $connector${maybe_id}"
       if [ "$type" == "source" ]
       then
           # SOURCE CONNECTOR
-          handle_first_class_offset
-          if [ $? != 0 ]
-          then
-              continue
-          fi
+          handle_first_class_offset || { failed=1; continue; }
       else
           # SINK CONNECTOR
           if [[ -n "$verbose" ]]
@@ -74929,22 +74933,24 @@ playground_connector_offsets_get_command() {
           get_environment_used
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
           then
-              handle_first_class_offset
-
+              handle_first_class_offset || { failed=1; continue; }
           else
-              if version_gt $tag "7.5.99"
+              # the offsets API (KIP-875) reads the offsets of a sink since CP 7.5, like for a source
+              if version_gt $tag "7.4.99"
               then
-                  handle_first_class_offset
-                  if [ $? != 0 ]
-                  then
-                      continue
-                  fi
+                  handle_first_class_offset || { failed=1; continue; }
               else
                   playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
               fi
           fi
       fi
   done
+
+  if [ $failed -ne 0 ]
+  then
+      exit 1
+  fi
+
 }
 
 # :command.function
@@ -74955,6 +74961,7 @@ playground_connector_offsets_reset_command() {
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
+  get_environment_used
 
   if [[ ! -n "$connector" ]]
   then
@@ -74999,26 +75006,37 @@ playground_connector_offsets_reset_command() {
       fi
   fi
 
+  # returns 1 when the offsets could not be reset: called as 'handle_first_class_offset || ...', so set -e does
+  # not apply inside it and every failure must be checked explicitly
   function handle_first_class_offset() {
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
 
-          echo '{"type":"DELETE"}' > /tmp/delete.json
+          echo '{"type":"DELETE"}' > $tmp_dir/delete.json
           get_ccloud_connect
-          handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @/tmp/delete.json \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
+          handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$tmp_dir/delete.json \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\"" || return 1
       else
           if ! version_gt $tag "7.5.99"; then
               logerror "❌ command is available since CP 7.6 only"
-              return
+              return 1
           fi
-          playground connector stop --connector $connector
+          playground connector stop --connector $connector || return 1
 
+          # always resume the connector, even when the DELETE is refused: otherwise it stays STOPPED
           get_connect_url_and_security
-          handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
+          delete_ret=0
+          handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\"" || delete_ret=1
+          if [ $delete_ret -eq 0 ]
+          then
+              echo "$curl_output" | jq .
+          fi
 
-          echo "$curl_output" | jq .
-
-          playground connector resume --connector $connector
+          playground connector resume --connector $connector || return 1
+          if [ $delete_ret -ne 0 ]
+          then
+              logerror "❌ offsets of connector $connector were not reset (the connector has been resumed)"
+              return 1
+          fi
       fi
   }
 
@@ -75030,6 +75048,7 @@ playground_connector_offsets_reset_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
+  failed=0
   items=($connector)
   length=${#items[@]}
   if ((length > 1))
@@ -75054,37 +75073,29 @@ playground_connector_offsets_reset_command() {
       if [ "$type" == "source" ]
       then
           # SOURCE CONNECTOR
-          handle_first_class_offset
-          if [ $? != 0 ]
+          handle_first_class_offset || { failed=1; continue; }
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
-              continue
+              # Confluent Cloud applies the request asynchronously
+              sleep 5
+              playground connector offsets get-offsets-request-status --connector $connector
+              sleep 20
           fi
-          sleep 5
-          playground connector offsets get-offsets-request-status --connector $connector
-          sleep 20
           playground connector offsets get --connector $connector
       else
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
-              handle_first_class_offset
-              if [ $? != 0 ]
-              then
-                  continue
-              fi
+              handle_first_class_offset || { failed=1; continue; }
               sleep 5
               playground connector offsets get-offsets-request-status --connector $connector
               sleep 20
               playground connector offsets get --connector $connector
-              exit 0
+              continue
           fi
 
           if version_gt $tag "7.5.99"
           then
-              handle_first_class_offset
-              if [ $? != 0 ]
-              then
-                  continue
-              fi
+              handle_first_class_offset || { failed=1; continue; }
               playground connector offsets get --connector $connector
           else
               playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION
@@ -75109,6 +75120,12 @@ playground_connector_offsets_reset_command() {
           fi
       fi
   done
+
+  if [ $failed -ne 0 ]
+  then
+      exit 1
+  fi
+
 }
 
 # :command.function
@@ -75164,6 +75181,8 @@ playground_connector_offsets_alter_command() {
       fi
   fi
 
+  # returns 1 when the offsets could not be altered: called as 'handle_first_class_offset || ...', so set -e does
+  # not apply inside it and every failure must be checked explicitly
   function handle_first_class_offset() {
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
@@ -75171,7 +75190,7 @@ playground_connector_offsets_alter_command() {
           file=$tmp_dir/offsets-$connector.json
           file_tmp=$tmp_dir/tmp.json
 
-          playground --output-level ERROR connector offsets get --connector $connector > $file
+          playground --output-level ERROR connector offsets get --connector $connector > $file || return 1
 
           # add mandatory name field
           new_json_content=$(cat $file | jq ". + {\"type\": \"PATCH\"}")
@@ -75185,31 +75204,40 @@ playground_connector_offsets_alter_command() {
           cp $file_tmp $file
 
           log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-          playground open --file "${file}" --wait
+          playground open --file "${file}" --wait || return 1
 
-          handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
+          handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\"" || return 1
       else
           if ! version_gt $tag "7.5.99"; then
               logerror "❌ command is available since CP 7.6 only"
-              return
+              return 1
           fi
 
           get_connect_url_and_security
-          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+          handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\"" || return 1
 
           file=$tmp_dir/offsets-$connector.json
           echo "$curl_output" | jq . > $file
 
           log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-          playground open --file "${file}" --wait
+          playground open --file "${file}" --wait || return 1
 
-          playground connector stop --connector $connector
+          playground connector stop --connector $connector || return 1
 
-          handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\""
+          # always resume the connector, even when the PATCH is refused (invalid offsets, 400): otherwise it stays STOPPED
+          patch_ret=0
+          handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\"" || patch_ret=1
+          if [ $patch_ret -eq 0 ]
+          then
+              echo "$curl_output" | jq .
+          fi
 
-          echo "$curl_output" | jq .
-
-          playground connector resume --connector $connector
+          playground connector resume --connector $connector || return 1
+          if [ $patch_ret -ne 0 ]
+          then
+              logerror "❌ offsets of connector $connector were not altered (the connector has been resumed)"
+              return 1
+          fi
       fi
   }
 
@@ -75221,6 +75249,7 @@ playground_connector_offsets_alter_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
+  failed=0
   items=($connector)
   length=${#items[@]}
   if ((length > 1))
@@ -75247,24 +75276,20 @@ playground_connector_offsets_alter_command() {
       if [ "$type" == "source" ]
       then
           # SOURCE CONNECTOR
-          handle_first_class_offset
-          if [ $? != 0 ]
+          handle_first_class_offset || { failed=1; continue; }
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
-              continue
+              # Confluent Cloud applies the request asynchronously
+              sleep 5
+              playground connector offsets get-offsets-request-status --connector $connector
+              sleep 20
           fi
-          sleep 5
-          playground connector offsets get-offsets-request-status --connector $connector
-          sleep 20
           playground connector offsets get --connector $connector
       else
           # SINK CONNECTOR
           if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
           then
-              handle_first_class_offset
-              if [ $? != 0 ]
-              then
-                  continue
-              fi
+              handle_first_class_offset || { failed=1; continue; }
               sleep 5
               playground connector offsets get-offsets-request-status --connector $connector
               sleep 20
@@ -75272,11 +75297,7 @@ playground_connector_offsets_alter_command() {
           else
               if version_gt $tag "7.5.99"
               then
-                  handle_first_class_offset
-                  if [ $? != 0 ]
-                  then
-                      continue
-                  fi
+                  handle_first_class_offset || { failed=1; continue; }
                   playground connector offsets get --connector $connector
               else
                   # if [[ -n "$verbose" ]]
@@ -75325,6 +75346,12 @@ playground_connector_offsets_alter_command() {
           fi
       fi
   done
+
+  if [ $failed -ne 0 ]
+  then
+      exit 1
+  fi
+
 }
 
 # :command.function
@@ -75500,19 +75527,19 @@ playground_connector_versions_command() {
       exit 0
   fi
 
-  if [ ! -f $test_file ]
+  if [ ! -f "$test_file" ]
   then
-
       logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
       exit 1
   fi
   get_connector_paths
   if [ "$connector_paths" == "" ]
   then
-      logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+      logwarn "❌ skipping as $test_file is not an example with a connector plugin"
       exit 1
   else
-      current_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+      # works whatever the connect container is named (connect, connect-us/connect-europe in mdc, connect-0 in cfk)
+      current_tag=$(get_running_cp_tag)
       log "🎯 Version currently used for confluent platform"
       echo "$current_tag"
 
@@ -75542,13 +75569,13 @@ playground_connector_versions_command() {
           latest_to_compare=$(echo "$latest" | head -n 1 | sed 's/ ([0-9]* days ago)//')
 
           manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
-          if [ -f $manifest_file ]
+          if [ -f "$manifest_file" ]
           then
-              version=$(cat $manifest_file | jq -r '.version')
-              release_date=$(cat $manifest_file | jq -r '.release_date')
+              version=$(jq -r '.version' "$manifest_file")
+              release_date=$(jq -r '.release_date' "$manifest_file")
           else
-              logwarn "file $manifest_file does not exist, could not retrieve version"
-              exit 0
+              logwarn "file $manifest_file does not exist, could not retrieve version of $owner/$name"
+              continue
           fi
 
           current="🔢 v$version - 📅 release date: $release_date"
@@ -75582,6 +75609,8 @@ playground_connector_sourcecode_command() {
   compile_jdk_version="${args[--compile-jdk-version]}"
   compile_verbose="${args[--compile-verbose]}"
   enable_remote_debugging="${args[--enable-remote-debugging]}"
+  checkout_only="${args[--checkout-only]}"
+  grep_regex="${args[--grep]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -75595,9 +75624,8 @@ playground_connector_sourcecode_command() {
       exit 0
   fi
 
-  if [ ! -f $test_file ]
+  if [ ! -f "$test_file" ]
   then
-
       logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
       exit 1
   fi
@@ -75608,12 +75636,33 @@ playground_connector_sourcecode_command() {
       maybe_only_show_url="--only-show-url"
   fi
 
+  # passed through to playground connector-plugin sourcecode (as an array, the regex may contain spaces)
+  passthrough_flags=()
+  if [[ -n "$checkout_only" ]]
+  then
+      passthrough_flags+=(--checkout-only)
+  fi
+  if [[ -n "$grep_regex" ]]
+  then
+      passthrough_flags+=(--grep "$grep_regex")
+  fi
+  # with 2 --connector-tag, --grep filters the commits between the two versions (connector-plugin sourcecode --log)
+  comparison_flags=()
+  if [[ -n "$checkout_only" ]] && ((${#connector_tag_array[@]} > 1))
+  then
+      logwarn "--checkout-only is ignored when --connector-tag is set twice"
+  fi
+  if [[ -n "$grep_regex" ]]
+  then
+      comparison_flags+=(--log --grep "$grep_regex")
+  fi
+
   # Compile related optional flags
   maybe_compile=""
   if [[ -n "$compile" ]]; then
       maybe_compile="--compile"
       if [[ -n "$compile_jdk_version" ]]; then
-          maybe_compile_jdk_version="--compile_jdk_version $compile_jdk_version"
+          maybe_compile_jdk_version="--compile-jdk-version $compile_jdk_version"
       fi
       if [[ -n "$compile_verbose" ]]; then
           maybe_compile_verbose="--compile-verbose"
@@ -75640,15 +75689,18 @@ playground_connector_sourcecode_command() {
               exit 1
           fi
           connector_tag1="${connector_tag_array[0]}"
+          [ "$connector_tag1" = "\\" ] && connector_tag1=" "
           connector_tag2="${connector_tag_array[1]}"
-          playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
+          [ "$connector_tag2" = "\\" ] && connector_tag2=" "
+          playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url "${comparison_flags[@]}"
       else
           if ((length == 1))
           then
               connector_tag="${connector_tag_array[0]}"
-              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
+              [ "$connector_tag" = "\\" ] && connector_tag=" "
+              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url "${passthrough_flags[@]}"
           else
-              playground connector-plugin sourcecode --connector-plugin "$owner/$name" $maybe_only_show_url
+              playground connector-plugin sourcecode --connector-plugin "$owner/$name" $maybe_only_show_url "${passthrough_flags[@]}"
           fi
       fi
       exit 0
@@ -75656,7 +75708,7 @@ playground_connector_sourcecode_command() {
 
   get_connector_paths
   if [ "$connector_paths" == "" ]; then
-      logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+      logwarn "❌ skipping as $test_file is not an example with a connector plugin"
       exit 1
   fi
 
@@ -75679,11 +75731,10 @@ playground_connector_sourcecode_command() {
 
   chosen_path="${eligible_paths[0]}"
   if [ ${#eligible_paths[@]} -gt 1 ]; then
-      log "🔌 multiple connectors detected, please choose one"
-
-      if [[ -n "$only_show_url" ]]
+      if [[ -n "$only_show_url" ]] || [[ -n "$checkout_only" ]] || [[ -n "$grep_regex" ]] || [ ! -t 0 ]
       then
           chosen_path="${eligible_paths[0]}"
+          log "🔌 multiple connectors detected, using the first one: $(basename "$chosen_path")"
       else
           log "🔌 multiple connectors detected, please choose one"
           if command -v fzf >/dev/null 2>&1; then
@@ -75715,17 +75766,17 @@ playground_connector_sourcecode_command() {
       [ "$connector_tag1" = "\\" ] && connector_tag1=" "
       connector_tag2="${connector_tag_array[1]}"
       [ "$connector_tag2" = "\\" ] && connector_tag2=" "
-      playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
+      playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url "${comparison_flags[@]}"
   else
       if ((length == 1)); then
           connector_tag="${connector_tag_array[0]}"
           [ "$connector_tag" = "\\" ] && connector_tag=" "
-          playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose
+          playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose "${passthrough_flags[@]}"
       else
           manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
           if [ -f "$manifest_file" ]; then
               version=$(jq -r '.version' "$manifest_file")
-              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose
+              playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose "${passthrough_flags[@]}"
           else
               logerror "❌ file $manifest_file does not exist, could not retrieve version"
               exit 1
@@ -127721,11 +127772,35 @@ playground_connector_sourcecode_parse_requirements() {
         ;;
 
       # :flag.case
-      --forced-url)
+      --checkout-only)
+        # :flag.conflicts
+        if [[ -n "${args['--compile']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--compile" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
-        args['--forced-url']=1
+        args['--checkout-only']=1
         shift
+        ;;
+
+      # :flag.case
+      --grep)
+        # :flag.conflicts
+        if [[ -n "${args['--compile']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--compile" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep GREP" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -127779,15 +127854,19 @@ playground_connector_sourcecode_parse_requirements() {
   fi
 
   # :flag.needs
-  if [[ -n ${args['--forced-url']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
-    printf "%s\n" "--forced-url needs --compile" >&2
-    exit 1
-  fi
-
-  # :flag.needs
   if [[ -n ${args['--enable-remote-debugging']+x} ]] && [[ -z "${args[--compile]:-}" ]]; then
     printf "%s\n" "--enable-remote-debugging needs --compile" >&2
     exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--grep'] ]]; then
+    validation_output="$(validate_not_empty "${args['--grep']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--grep GREP" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
   # :command.whitelist_filter
@@ -127824,7 +127903,7 @@ playground_connector_enable_remote_debugging_parse_requirements() {
   # :dependency.filter
   if ! command -v git >/dev/null 2>&1; then
     printf "missing dependency: git\n" >&2
-    printf "%s\n\n" "visit https://docs.confluent.io/confluent-cli/current/overview.html to install" >&2
+    printf "%s\n\n" "visit https://git-scm.com/downloads to install" >&2
     missing_deps=1
   else
     deps['git']="$(command -v git | head -n1)"
@@ -128057,6 +128136,13 @@ playground_connector_restart_parse_requirements() {
 
     esac
   done
+
+  # :command.needy_flags_filter
+  # :flag.needs
+  if [[ -n ${args['--task-id']+x} ]] && [[ -z "${args[--connector]:-}" ]]; then
+    printf "%s\n" "--task-id needs --connector" >&2
+    exit 1
+  fi
 
   # :command.validations
   # :flag.validations
@@ -155785,6 +155871,23 @@ playground_connector_sourcecode_completion() {
         shift
 
         ;;
+      --checkout-only)
+        completion_blocked_flags["--checkout-only"]=1
+        completion_blocked_flags["--compile"]=1
+
+        shift
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+        completion_blocked_flags["--compile"]=1
+
+        ;;
       *)
         return
         ;;
@@ -155795,6 +155898,8 @@ playground_connector_sourcecode_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --only-show-url "$completion_current" --only-show-url
     completion_flag_candidates --connector-tag "$completion_current" --connector-tag
+    completion_flag_candidates --checkout-only "$completion_current" --checkout-only
+    completion_flag_candidates --grep "$completion_current" --grep
   fi
 
 }

@@ -47,6 +47,8 @@ then
     fi
 fi
 
+# returns 1 when the offsets could not be altered: called as 'handle_first_class_offset || ...', so set -e does
+# not apply inside it and every failure must be checked explicitly
 function handle_first_class_offset() {
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
@@ -54,7 +56,7 @@ function handle_first_class_offset() {
         file=$tmp_dir/offsets-$connector.json
         file_tmp=$tmp_dir/tmp.json
 
-        playground --output-level ERROR connector offsets get --connector $connector > $file
+        playground --output-level ERROR connector offsets get --connector $connector > $file || return 1
 
         # add mandatory name field
         new_json_content=$(cat $file | jq ". + {\"type\": \"PATCH\"}")
@@ -68,31 +70,40 @@ function handle_first_class_offset() {
         cp $file_tmp $file
 
         log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-        playground open --file "${file}" --wait
+        playground open --file "${file}" --wait || return 1
 
-        handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
+        handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\"" || return 1
     else
         if ! version_gt $tag "7.5.99"; then
             logerror "❌ command is available since CP 7.6 only"
-            return
+            return 1
         fi
 
         get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+        handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\"" || return 1
 
         file=$tmp_dir/offsets-$connector.json
         echo "$curl_output" | jq . > $file
 
         log "✨ Update the connector offsets as per your needs, save and close the file to continue"
-        playground open --file "${file}" --wait
+        playground open --file "${file}" --wait || return 1
 
-        playground connector stop --connector $connector
+        playground connector stop --connector $connector || return 1
 
-        handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\""
+        # always resume the connector, even when the PATCH is refused (invalid offsets, 400): otherwise it stays STOPPED
+        patch_ret=0
+        handle_onprem_connect_rest_api "curl $security -s -X PATCH -H \"Content-Type: application/json\" --data @$file \"$connect_url/connectors/$connector/offsets\"" || patch_ret=1
+        if [ $patch_ret -eq 0 ]
+        then
+            echo "$curl_output" | jq .
+        fi
 
-        echo "$curl_output" | jq .
-
-        playground connector resume --connector $connector
+        playground connector resume --connector $connector || return 1
+        if [ $patch_ret -ne 0 ]
+        then
+            logerror "❌ offsets of connector $connector were not altered (the connector has been resumed)"
+            return 1
+        fi
     fi
 }
 
@@ -104,6 +115,7 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 
+failed=0
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -132,14 +144,14 @@ do
         ##
         # SOURCE CONNECTOR
         ##
-        handle_first_class_offset
-        if [ $? != 0 ]
+        handle_first_class_offset || { failed=1; continue; }
+        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
-            continue
+            # Confluent Cloud applies the request asynchronously
+            sleep 5
+            playground connector offsets get-offsets-request-status --connector $connector
+            sleep 20
         fi
-        sleep 5
-        playground connector offsets get-offsets-request-status --connector $connector
-        sleep 20
         playground connector offsets get --connector $connector
     else
         ##
@@ -147,11 +159,7 @@ do
         ##
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
-            handle_first_class_offset
-            if [ $? != 0 ]
-            then
-                continue
-            fi
+            handle_first_class_offset || { failed=1; continue; }
             sleep 5
             playground connector offsets get-offsets-request-status --connector $connector
             sleep 20
@@ -159,11 +167,7 @@ do
         else
             if version_gt $tag "7.5.99"
             then
-                handle_first_class_offset
-                if [ $? != 0 ]
-                then
-                    continue
-                fi
+                handle_first_class_offset || { failed=1; continue; }
                 playground connector offsets get --connector $connector
             else
                 # if [[ -n "$verbose" ]]
@@ -212,3 +216,8 @@ do
         fi
     fi
 done
+
+if [ $failed -ne 0 ]
+then
+    exit 1
+fi

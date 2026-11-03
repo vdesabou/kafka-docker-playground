@@ -604,7 +604,8 @@ commands:
     to kafka-consumer-groups, which only covers sink connectors.
 
     The connector must not be running while its offsets change: alter and
-    reset stop it and resume it for you.
+    reset stop it and resume it for you, also when the change is refused
+    (the command then exits 1).
 
     🎓 Tip: a sink that reprocesses everything and a source that re-snapshots
     are usually offsets problems, not connector problems. Look here first.
@@ -633,7 +634,7 @@ commands:
     x_example_outputs:
     - command: playground connector offsets get
       output: |-
-        17:22:15 ℹ️ 🏹 Getting offsets for 🌎onprem  connector filestream-sink
+        17:22:15 ℹ️ 🏹 Getting offsets for 🌎onprem sink connector filestream-sink
         {
           "offsets": [
             {
@@ -797,10 +798,26 @@ commands:
       private: true
       needs: [--compile]
       help: 🐞 Show output of compilation.
-    - long: --forced-url
-      private: true
-      needs: [--compile]
-      help: 🔗 Set github url (to compile cp for example)
+    - long: --checkout-only
+      required: false
+      conflicts: [--compile]
+      help: |-
+        📂 Checkout the code at the right tag and print the path of the folder, nothing else
+
+        No browser, no editor, no question (with several connectors in the example, the first one is used).
+        The path is the last line of the output.
+
+        🎓 Tip: use it in scripts and from AI agents, which can then read the code
+    - long: --grep
+      arg: grep
+      required: false
+      validate: not_empty
+      conflicts: [--compile]
+      help: |-
+        🔎 Grep the code at the version in use (or the --connector-tag one): checkout, file:line, 500 lines at most
+
+        With 2 --connector-tag: only the commits between the two versions whose message matches (case insensitive).
+        Extended regular expression, for example "BATCH_SIZE_DEFAULT|batch.size"
     - long: --enable-remote-debugging
       required: false
       private: true
@@ -828,7 +845,7 @@ commands:
 
 - name: enable-remote-debugging
   dependencies:
-    git: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    git: visit https://git-scm.com/downloads to install
   help: |-
     ✨ Enable java remote debugging for the connector.
 
@@ -863,8 +880,9 @@ commands:
     validate: integer
     required: false
     conflicts: [--only-failed]
+    needs: [--connector]
     help: |-
-      🔧 Restart specific task ID only (instead of restarting entire connector)
+      🔧 Restart specific task ID only (instead of restarting entire connector), needs --connector
   - long: --only-failed
     required: false
     conflicts: [--task-id]
@@ -955,7 +973,7 @@ commands:
 
 - name: stop
   help: |-
-    🛑 Stop connector (only available if CP > 7.5)
+    🛑 Stop connector (only available since CP 7.5)
 
     Stronger than pause: the tasks are shut down and unassigned, so the
     connector consumes no resources at all. This is the state in which
@@ -2171,15 +2189,18 @@ commands:
     }
     EOF
 
-    playground connector create-or-update -c filestream-sink --offsets '[{"partition":{"kafka_topic":"filestream","kafka_partition":0},"offset":{"kafka_offset":8}}]' << EOF
+    # --offsets: fully managed connectors only (the sink starts consuming partition 0 of topic http-topic at offset 8)
+    playground connector create-or-update -c HttpSink_\$USER --offsets '[{"partition":{"kafka_topic":"http-topic","kafka_partition":0},"offset":{"kafka_offset":8}}]' << EOF
     {
-        "tasks.max": "1",
-        "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
-        "topics": "filestream",
-        "file": "/tmp/output.json",
-        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-        "value.converter.schemas.enable": "false"
+        "connector.class": "HttpSink",
+        "name": "HttpSink_\$USER",
+        "kafka.auth.mode": "KAFKA_API_KEY",
+        "kafka.api.key": "\$CLOUD_KEY",
+        "kafka.api.secret": "\$CLOUD_SECRET",
+        "topics": "http-topic",
+        "input.data.format": "AVRO",
+        "http.api.url": "https://httpbin.org/post",
+        "tasks.max" : "1"
     }
     EOF
 
@@ -2200,7 +2221,6 @@ commands:
   - alter
 examples:
 - playground connector status
-- playground connector status --json
 - playground connector resume --connector <connector-name>
 - playground connector pause -c <connector-name>
 - playground connector delete -c <connector-name>

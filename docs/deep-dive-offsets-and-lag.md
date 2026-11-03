@@ -125,6 +125,10 @@ What happens behind each subcommand (self-managed, CP 7.6+):
 | `alter` | `GET …/offsets`, your edit, `PATCH …/offsets` | `connector stop` before the `PATCH`, `connector resume` after, then `get` |
 | `reset` | `DELETE /connectors/<c>/offsets` | `connector stop` before, `connector resume` after, then `get` |
 
+If the `PATCH` / `DELETE` is refused (for example a `400` on an offsets file with a typo), the connector is still
+resumed, and the command prints `❌ offsets of connector <c> were not altered (the connector has been resumed)` (or
+`reset`) and exits 1.
+
 Gotchas:
 
 - **`alter` is interactive**: it opens the file with the editor of `playground config get editor` and waits until
