@@ -43,7 +43,7 @@ do
     echo "playground $command"
     if [[ -n "$matched" ]]
     then
-        echo "    ❓ $matched"
+        echo "    ❓ ${matched//\`/}"
     fi
     if [[ -n "$usage" ]]
     then
