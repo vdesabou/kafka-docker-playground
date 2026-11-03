@@ -9,16 +9,24 @@ source ${DIR}/lab-utils.bash
 # connector and postgres
 lab_require_plaintext
 
-# 'tcp-proxy start' and 'tcp-proxy open-ui' call 'open http://localhost:9191' when an 'open' command exists: a stub
-# that only prints the URL, so that the lab never opens a browser (and doesn't depend on what 'open' is on Linux)
+# 'tcp-proxy start' and 'tcp-proxy open-ui' open http://localhost:9191 when they can (open_url: 'open' on macOS,
+# 'xdg-open' with a DISPLAY on Linux): stubs that only print the URL, so that the lab never opens a browser and
+# 'open-ui' prints the same output as on a desktop, also on a headless Linux runner
 stub_dir=$(mktemp -d)
 trap 'rm -rf "$stub_dir"' EXIT
-cat << 'EOF' > "$stub_dir/open"
+for opener in open xdg-open
+do
+    cat << 'EOF' > "$stub_dir/$opener"
 #!/bin/bash
 echo "(lab) not opening $*"
 EOF
-chmod +x "$stub_dir/open"
+    chmod +x "$stub_dir/$opener"
+done
 export PATH="$stub_dir:$PATH"
+if [[ "$OSTYPE" != "darwin"* ]] && [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]
+then
+    export DISPLAY=":lab"
+fi
 
 # wait_for_zazkia_links <ids to ignore>: prints the ids of the active Zazkia connections once there is at least one
 # and the list differs from <ids to ignore> (a new connection after a close), waits up to 120 seconds
