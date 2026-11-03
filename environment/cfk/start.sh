@@ -2524,6 +2524,7 @@ function build_cfk_manifest() {
   local include_restproxy=0
   local kafka_replicas=1
   local connect_replicas=1
+  local controller_replicas=1
 
   rendered_file=$(mktemp)
   base_manifest_file=$(mktemp)
@@ -2561,16 +2562,22 @@ function build_cfk_manifest() {
     log "🥉 Connect replicas set to 3 for CFK deployment"
   fi
 
+  if [[ -n "$ENABLE_CONTROLLER_NODES" ]]
+  then
+    controller_replicas=3
+    log "🗳️  KRaft controller replicas set to 3 for CFK deployment"
+  fi
+
   local include_c3_next_gen=0
   if [[ "$include_control_center" -eq 1 ]] && [[ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]]
   then
     include_c3_next_gen=1
   fi
 
-  # Filter ControlCenter (and the KsqlDB / KafkaRestProxy resources of cfk-rbac) and patch Kafka/Connect replicas
+  # Filter ControlCenter (and the KsqlDB / KafkaRestProxy resources of cfk-rbac) and patch KRaftController/Kafka/Connect replicas
   # based on set_profiles options. Lines between "# cfk-<feature>-begin" and "# cfk-<feature>-end" markers are
   # removed when the feature is disabled.
-  awk -v include_control_center="$include_control_center" -v include_c3_next_gen="$include_c3_next_gen" -v include_ksqldb="$include_ksqldb" -v include_restproxy="$include_restproxy" -v include_license="${CFK_INCLUDE_LICENSE:-0}" -v kafka_replicas="$kafka_replicas" -v connect_replicas="$connect_replicas" '
+  awk -v include_control_center="$include_control_center" -v include_c3_next_gen="$include_c3_next_gen" -v include_ksqldb="$include_ksqldb" -v include_restproxy="$include_restproxy" -v include_license="${CFK_INCLUDE_LICENSE:-0}" -v kafka_replicas="$kafka_replicas" -v connect_replicas="$connect_replicas" -v controller_replicas="$controller_replicas" '
     function strip_block(d, feature,    n, lines, i, out, skipping) {
       n = split(d, lines, "\n")
       out = ""
@@ -2618,6 +2625,10 @@ function build_cfk_manifest() {
 
       if (d ~ /kind:[[:space:]]*Connect([[:space:]]|$)/) {
         sub(/replicas:[[:space:]]*[0-9]+/, "replicas: " connect_replicas, d)
+      }
+
+      if (d ~ /kind:[[:space:]]*KRaftController([[:space:]]|$)/) {
+        sub(/replicas:[[:space:]]*[0-9]+/, "replicas: " controller_replicas, d)
       }
 
       if (emitted_docs > 0) {

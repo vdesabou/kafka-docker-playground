@@ -1088,8 +1088,9 @@ function set_profiles() {
     playground state del flags.ENABLE_CONTROLLER_NODES
   elif [ -n "$PLAYGROUND_CFK_MODE" ]
   then
-    logwarn "⚠️ ENABLE_CONTROLLER_NODES (--enable-multiple-controllers) is ignored in CFK mode"
-    playground state del flags.ENABLE_CONTROLLER_NODES
+    # CFK mode scales the KRaft controllers via the replicas of the KRaftController CR, not docker-compose profiles.
+    log "🗳️  Multiple controllers mode is enabled for CFK (3 KRaft controller pods)"
+    playground state set flags.ENABLE_CONTROLLER_NODES 1
   elif [ -n "$ENABLE_KRAFT" ]
   then
     log "🗳️  Multiple controllers enabled, controller2 and controller3 containers will be started (KRaft quorum of 3 voters)"

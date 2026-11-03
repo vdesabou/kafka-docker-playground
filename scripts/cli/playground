@@ -4499,7 +4499,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-multiple-controllers")"
-    printf "    🗳️ Enable multiple controllers\n    \n    By default, there is only one KRaft controller (or one ZooKeeper node\n    with CP < 8 in ZooKeeper mode). With this flag, the quorum has 3 nodes,\n    so that one of them can stop without making the cluster unavailable:\n    \n    - KRaft mode: controllers controller, controller2 and controller3\n      (node ids 4, 5 and 6)\n    \n    - ZooKeeper mode: zookeeper, zookeeper2 and zookeeper3\n    \n    ❗ not supported with ccloud examples, ignored with the mdc-* and cfk\n    environments\n"
+    printf "    🗳️ Enable multiple controllers\n    \n    By default, there is only one KRaft controller (or one ZooKeeper node\n    with CP < 8 in ZooKeeper mode). With this flag, the quorum has 3 nodes,\n    so that one of them can stop without making the cluster unavailable:\n    \n    - KRaft mode: controllers controller, controller2 and controller3\n      (node ids 4, 5 and 6)\n    \n    - ZooKeeper mode: zookeeper, zookeeper2 and zookeeper3\n    \n    - cfk / cfk-rbac: 3 replicas on the KRaftController CR (pods\n      kraftcontroller-0, kraftcontroller-1 and kraftcontroller-2)\n    \n    ❗ not supported with ccloud examples, ignored with the mdc-*\n    environments\n"
     echo
 
     # :flag.usage
@@ -21193,6 +21193,15 @@ function resolve_container_name_for_environment() {
     broker|kafka)
       mapped_name="kafka-0"
       ;;
+    controller)
+      mapped_name="kraftcontroller-0"
+      ;;
+    controller2)
+      mapped_name="kraftcontroller-1"
+      ;;
+    controller3)
+      mapped_name="kraftcontroller-2"
+      ;;
     schema-registry|schemaregistry)
       mapped_name="schemaregistry-0"
       ;;
@@ -33185,8 +33194,9 @@ function set_profiles() {
     playground state del flags.ENABLE_CONTROLLER_NODES
   elif [ -n "$PLAYGROUND_CFK_MODE" ]
   then
-    logwarn "⚠️ ENABLE_CONTROLLER_NODES (--enable-multiple-controllers) is ignored in CFK mode"
-    playground state del flags.ENABLE_CONTROLLER_NODES
+    # CFK mode scales the KRaft controllers via the replicas of the KRaftController CR, not docker-compose profiles.
+    log "🗳️  Multiple controllers mode is enabled for CFK (3 KRaft controller pods)"
+    playground state set flags.ENABLE_CONTROLLER_NODES 1
   elif [ -n "$ENABLE_KRAFT" ]
   then
     log "🗳️  Multiple controllers enabled, controller2 and controller3 containers will be started (KRaft quorum of 3 voters)"
