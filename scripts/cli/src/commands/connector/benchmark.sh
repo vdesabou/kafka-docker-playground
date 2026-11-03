@@ -14,6 +14,11 @@ output_dir="${args[--output-dir]}"
 compare_file="${args[--compare]}"
 no_history="${args[--no-history]}"
 json="${args[--json]}"
+# --no-open: same switch as the child runs of a comparison (benchmark_open_report reads it)
+if [[ -n "${args[--no-open]}" ]]
+then
+    export BENCHMARK_NO_OPEN=1
+fi
 eval "topics=(${args[--topic]:-})"
 eval "connector_tags=(${args[--connector-tag]:-})"
 rounds="${args[--rounds]}"
@@ -86,8 +91,8 @@ then
     ccloud_environment="$environment"
     ccloud_cluster="$cluster"
     environment=$(playground state get run.environment)
-    benchmark_ccloud_kcat_start || exit 1
-    trap benchmark_ccloud_kcat_stop EXIT
+    # the kcat (and consumer groups) containers are started below, by the run that measures: not by the parent of a
+    # --shape sequence or of --rounds, whose child runs start their own
 else
     get_connect_url_and_security
 fi
@@ -147,9 +152,6 @@ fi
 if [ -n "$fully_managed" ] && [ "$type" == "sink" ]
 then
     consumer_group="connect-$connector_id"
-    benchmark_ccloud_groups_start || exit 1
-    trap 'benchmark_ccloud_kcat_stop; benchmark_ccloud_groups_stop' EXIT
-    log "📊 records counted from the committed offsets of consumer group $consumer_group"
 fi
 nb_tasks=$(echo "$status_json" | jq '.tasks | length')
 workers=""
@@ -168,10 +170,61 @@ then
     plugin_version="fully managed"
     cp_tag="ccloud"
 else
-    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
-    plugin_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
+    plugin_version=$(benchmark_plugin_version "$connector_class")
     cp_tag=$(get_running_cp_tag)
 fi
+# tasks.max of the config (the number of tasks running is nb_tasks), for the comparison with the previous run
+tasks_max=$(echo "$connector_config_json" | jq -r '."tasks.max" // empty')
+
+# flags that the load in use ignores: say so rather than measuring something else than asked
+function warn_ignored_load_flags () {
+    local load_kind="$1"
+    if [ "$record_size" != "0" ]
+    then
+        logwarn "⚠️ --record-size $record_size is ignored with $load_kind"
+    fi
+    if [ "$shape" != "bulk" ]
+    then
+        logwarn "⚠️ --shape $shape is ignored with $load_kind"
+    fi
+}
+
+# arguments of the child runs of a --shape sequence, --connector-tag comparison or --rounds: the same benchmark in each
+function build_child_args () {
+    child_args=(--connector "$connector" --nb-records "$nb_records" --record-size "$record_size"
+        --interval "${args[--interval]}" --max-wait "${args[--max-wait]}" --output-dir "$output_dir" --sessions "$sessions")
+    if [ -n "$compare_file" ]
+    then
+        child_args+=(--compare "$compare_file")
+    fi
+    local topic
+    for topic in "${topics[@]}"
+    do
+        child_args+=(--topic "$topic")
+    done
+    [ -n "$no_history" ] && child_args+=(--no-history)
+    [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
+    [ -n "$verbose" ] && child_args+=(--verbose)
+    # the whole benchmark, not only a drain of a --shape sequence
+    if [ "$1" == "full" ]
+    then
+        child_args+=(--mode "$mode" --shape "$shape" --duration "${args[--duration]}" --warmup "${args[--warmup]}")
+        [ -n "$load_command" ] && child_args+=(--load-command "$load_command")
+        [ -n "$stream_load_command" ] && child_args+=(--stream-load-command "$stream_load_command")
+        [ -n "$latency_field" ] && child_args+=(--latency-field "$latency_field")
+        [ -n "$no_latency" ] && child_args+=(--no-latency)
+    fi
+    return 0
+}
+
+# with --json, the parent of child runs prints the results of all of them as one json array on stdout
+function print_children_json () {
+    local results_file="$1"
+    if [[ -n "$json" ]] && [ -s "$results_file" ]
+    then
+        xargs cat < "$results_file" | jq -s . >&3
+    fi
+}
 
 # --shape: one shape, or a sequence of shapes (bulk,update,delete) run one after the other on the same rows
 IFS=',' read -ra shapes <<< "$shape"
@@ -186,24 +239,17 @@ done
 # --shape a,b,c: one drain per shape (child runs of this command) on the same rows, then the phases are compared
 if [ ${#shapes[@]} -gt 1 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
 then
-    if [ ${#connector_tags[@]} -gt 0 ] || [ "$mode" != "drain" ] || [ "$type" != "source" ] || [ -n "$load_command" ]
+    if [ ${#connector_tags[@]} -gt 0 ] || [ "$mode" != "drain" ] || [ "$type" != "source" ] || [ -n "$load_command" ] || [ "$rounds" -gt 1 ]
     then
-        logerror "❌ a --shape sequence is a series of drains of the load script of a source connector: not with --connector-tag, --mode steady, a sink connector or --load-command"
+        logerror "❌ a --shape sequence is a series of drains of the load script of a source connector: not with --connector-tag, --rounds, --mode steady, a sink connector or --load-command"
         exit 1
     fi
     mkdir -p "$output_dir"
     sequence_id="${connector}-sequence-$(date +%Y%m%d-%H%M%S)"
     sequence_results="$output_dir/$sequence_id.results"
     : > "$sequence_results"
-    child_args=(--connector "$connector" --mode drain --nb-records "$nb_records" --record-size "$record_size"
-        --interval "${args[--interval]}" --max-wait "${args[--max-wait]}" --output-dir "$output_dir" --sessions "$sessions")
-    for topic in "${topics[@]}"
-    do
-        child_args+=(--topic "$topic")
-    done
-    [ -n "$no_history" ] && child_args+=(--no-history)
-    [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
-    [ -n "$verbose" ] && child_args+=(--verbose)
+    build_child_args
+    child_args+=(--mode drain)
     log "🔁 sequence of ${#shapes[@]} drains of $nb_records records on $connector: ${shape//,/ → }"
     sequence_failed=0
     phase=0
@@ -234,20 +280,12 @@ then
     if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$sequence_results") --group-by shape --output "$html_file" > /dev/null
     then
         log "📊 report: $html_file"
-        if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ]
-        then
-            if command -v open > /dev/null 2>&1
-            then
-                open "$html_file"
-            elif command -v xdg-open > /dev/null 2>&1
-            then
-                xdg-open "$html_file" > /dev/null 2>&1 || true
-            fi
-        fi
+        benchmark_open_report "$html_file"
     else
         logwarn "⚠️ the html report could not be generated"
     fi
     logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
+    print_children_json "$sequence_results"
     [ $sequence_failed -eq 1 ] && exit 1
     exit 0
 fi
@@ -269,18 +307,7 @@ then
     matrix_results="$output_dir/$matrix_id.results"
     : > "$matrix_results"
     # same benchmark in each child run
-    child_args=(--connector "$connector" --mode "$mode" --nb-records "$nb_records" --shape "$shape" --record-size "$record_size"
-        --duration "${args[--duration]}" --warmup "${args[--warmup]}" --interval "${args[--interval]}" --max-wait "${args[--max-wait]}" --output-dir "$output_dir")
-    [ -n "$load_command" ] && child_args+=(--load-command "$load_command")
-    [ -n "$stream_load_command" ] && child_args+=(--stream-load-command "$stream_load_command")
-    for topic in "${topics[@]}"
-    do
-        child_args+=(--topic "$topic")
-    done
-    [ -n "$no_history" ] && child_args+=(--no-history)
-    [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
-    child_args+=(--sessions "$sessions")
-    [ -n "$verbose" ] && child_args+=(--verbose)
+    build_child_args full
 
     function switch_connector_version () {
         local version="$1" value
@@ -297,9 +324,7 @@ then
             playground connector status --connector "$connector"
             return 1
         fi
-        get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
-        running_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
+        running_version=$(benchmark_plugin_version "$connector_class") || running_version="unknown"
         if [ "$running_version" != "$version" ]
         then
             logerror "❌ the connect worker runs $connector_class $running_version, not the requested $version"
@@ -307,9 +332,9 @@ then
         fi
     }
     function restore_original_version () {
-        get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
-        if [ "$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // empty')" == "$original_version" ]
+        # once: the end of the comparison, or the EXIT trap when it is interrupted (Ctrl-C) or fails
+        trap - EXIT INT TERM
+        if [ "$(benchmark_plugin_version "$connector_class" "" || true)" == "$original_version" ]
         then
             log "🧩 $connector_class is already at its original version $original_version"
             return
@@ -318,6 +343,9 @@ then
         switch_connector_version "$original_version" || logwarn "⚠️ could not restore $connector_class $original_version: run playground update-version --connector-tag $original_value"
     }
 
+    # Ctrl-C or a failure during the comparison must not leave the worker on another version of the plugin
+    trap restore_original_version EXIT
+    trap 'exit 130' INT TERM
     nb_versions=${#connector_tags[@]}
     log "🏎️ benchmark of $connector_class versions ${connector_tags[*]} ($rounds round(s), currently $original_version)"
     matrix_failed=0
@@ -378,23 +406,99 @@ then
     if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$matrix_results") --output "$html_file" > /dev/null
     then
         log "📊 report: $html_file"
-        if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ]
-        then
-            if command -v open > /dev/null 2>&1
-            then
-                open "$html_file"
-            elif command -v xdg-open > /dev/null 2>&1
-            then
-                xdg-open "$html_file" > /dev/null 2>&1 || true
-            fi
-        fi
+        benchmark_open_report "$html_file"
     else
         logwarn "⚠️ the html report could not be generated"
     fi
     logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
+    print_children_json "$matrix_results"
     [ $matrix_failed -eq 1 ] && exit 1
     exit 0
 fi
+
+# --rounds N without --connector-tag: the same benchmark N times (child runs of this command), to see how much the result
+# varies from one run to the next (mean, standard deviation, coefficient of variation)
+if [ "$rounds" -gt 1 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
+then
+    mkdir -p "$output_dir"
+    rounds_id="${connector}-rounds-$(date +%Y%m%d-%H%M%S)"
+    rounds_results="$output_dir/$rounds_id.results"
+    : > "$rounds_results"
+    build_child_args full
+    log "🔁 $rounds rounds of the same benchmark of $connector ($mode, shape $shape)"
+    rounds_failed=0
+    for ((round = 1; round <= rounds; round++))
+    do
+        log "🏁 round $round/$rounds"
+        if ! BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 BENCHMARK_MATRIX_RESULTS="$rounds_results" playground connector benchmark "${child_args[@]}"
+        then
+            logerror "❌ round $round failed"
+            rounds_failed=1
+            break
+        fi
+    done
+    if [ ! -s "$rounds_results" ]
+    then
+        logerror "❌ no round could be benchmarked"
+        exit 1
+    fi
+    log "🏁 $rounds rounds of $connector_class ($connector, $mode, shape $shape)"
+    xargs cat < "$rounds_results" | jq -s -r '
+        def r1: if . == null then "-" else (. * 10 | round) / 10 | tostring end;
+        (["round", "records", "seconds", "records/s"] | @tsv),
+        (to_entries[] | [(.key + 1), .value.records, .value.seconds,
+            ((if .value.lower_bound == true then "≥ " else "" end) + (.value.records_per_second | r1))] | @tsv)' \
+        | column -t -s $'\t' | sed 's/^/   /'
+    # lower bounds are not measures: left out of the statistics
+    read -r rounds_mean rounds_stddev rounds_cv <<< "$(xargs cat < "$rounds_results" | jq -s -r '.[] | select(.lower_bound != true and .incomplete != true) | .records_per_second' | benchmark_stats)"
+    rounds_measured=$(xargs cat < "$rounds_results" | jq -s '[.[] | select(.lower_bound != true and .incomplete != true)] | length')
+    printf "   %-22s %s\n" "records/s" "mean $rounds_mean  stddev $rounds_stddev  cv $([ "$rounds_cv" != "-" ] && echo "${rounds_cv}%" || echo "-")   ($rounds_measured measured round(s))"
+    if [ "$rounds_cv" != "-" ] && awk -v c="$rounds_cv" 'BEGIN { exit !(c > 10) }'
+    then
+        logwarn "⚠️ the throughput varies by ${rounds_cv}% from one round to the next: a difference smaller than that between two configs or versions is noise (longer drains, --no-flight-recorder, an idle docker host)"
+    fi
+    if [ "$rounds_measured" -lt "$(wc -l < "$rounds_results" | tr -d ' ')" ]
+    then
+        logwarn "⚠️ $(( $(wc -l < "$rounds_results" | tr -d ' ') - rounds_measured )) round(s) gave a lower bound or did not finish: increase --nb-records"
+    fi
+    html_file="$output_dir/$rounds_id.html"
+    if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$rounds_results") --output "$html_file" > /dev/null
+    then
+        log "📊 report: $html_file"
+        benchmark_open_report "$html_file"
+    else
+        logwarn "⚠️ the html report could not be generated"
+    fi
+    logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
+    print_children_json "$rounds_results"
+    [ $rounds_failed -eq 1 ] && exit 1
+    exit 0
+fi
+
+# the run that measures: the containers that read the records of a fully managed connector
+if [ -n "$fully_managed" ]
+then
+    benchmark_ccloud_kcat_start || exit 1
+    if [ "$type" == "sink" ]
+    then
+        benchmark_ccloud_groups_start || { benchmark_ccloud_kcat_stop; exit 1; }
+        log "📊 records counted from the committed offsets of consumer group $consumer_group"
+    fi
+fi
+# until benchmark_cleanup takes over: stop these containers, and delete the unmasked copy of the connector config
+function early_cleanup () {
+    if [ -n "$fully_managed" ]
+    then
+        benchmark_ccloud_kcat_stop
+        benchmark_ccloud_groups_stop
+    fi
+    [ -n "$connector_config_copy" ] && rm -f "$connector_config_copy"
+    # the bean cache of benchmark_jmx_init, when the run stops before benchmark_cleanup takes over
+    benchmark_jmx_cleanup 2> /dev/null
+    return 0
+}
+connector_config_copy=""
+trap early_cleanup EXIT
 
 test_file=$(playground state get run.test_file)
 
@@ -436,9 +540,11 @@ load_mode="preload"
 if [ "$mode" == "drain" ] && [ -n "$load_command" ]
 then
     load_cmd="$load_command"
+    warn_ignored_load_flags "--load-command"
 elif [ "$mode" == "steady" ] && [ -n "$stream_load_command" ]
 then
     load_cmd="$stream_load_command"
+    warn_ignored_load_flags "--stream-load-command"
 elif [ -n "$load_script" ]
 then
     load_cmd="bash \"$load_script\" --records $nb_records --mode $load_mode --shape $shape --record-size $record_size"
@@ -492,8 +598,10 @@ then
     done
     load_cmd="$sessions_cmd; for p in \$pids; do wait \$p || rc=\$?; done; exit \$rc"
 fi
-# load scripts can adapt to the connector configuration (a redo log topic doubles the records of oracle cdc...)
+# load scripts can adapt to the connector configuration (a redo log topic doubles the records of oracle cdc...). This copy
+# is not masked (passwords): deleted at the end (early_cleanup, benchmark_cleanup)
 export BENCHMARK_CONNECTOR_CONFIG="$output_dir/$run_id-config.json"
+connector_config_copy="$BENCHMARK_CONNECTOR_CONFIG"
 # a stream load stops at the end of its current batch when this file exists
 export BENCHMARK_STOP_FILE="$output_dir/$run_id.stop"
 rm -f "$BENCHMARK_STOP_FILE"
@@ -517,6 +625,11 @@ then
     then
         load_cmd="bash \"$replay_file\""
         log "🔁 load: replay of the 'playground topic produce' of $(basename "$test_file") to topic $replay_output"
+        # the replayed produce takes the record size, not a shape
+        if [ "$shape" != "bulk" ]
+        then
+            logwarn "⚠️ --shape $shape is ignored with the replay of the produce of a sink example"
+        fi
     elif [ $replay_ret -eq 3 ]
     then
         logerror "❌ cannot replay the produce command of the example: $replay_output, set them or use --load-command"
@@ -541,7 +654,7 @@ echo "timestamp,elapsed_s,phase,records,rate_records_per_s,batch_avg_ms,running_
 
 if [ -z "$fully_managed" ]
 then
-    benchmark_jmx_init "$workers"
+    benchmark_jmx_init "$workers" || exit 1
 fi
 paused_by_benchmark=0
 load_stopped_early=0
@@ -571,6 +684,10 @@ function kill_tree () {
 }
 function benchmark_cleanup () {
     restore_run_state
+    if [ -z "$fully_managed" ]
+    then
+        benchmark_jmx_cleanup
+    fi
     if [ -n "$load_pid" ] && kill -0 "$load_pid" 2> /dev/null
     then
         # interrupted: give the load a chance to finish its batch before killing it
@@ -583,6 +700,8 @@ function benchmark_cleanup () {
         kill -0 "$load_pid" 2> /dev/null && kill_tree "$load_pid"
     fi
     rm -f "$BENCHMARK_STOP_FILE"
+    # the unmasked copy of the connector config given to the load (stopped above)
+    rm -f "$connector_config_copy"
     if [ -n "$fully_managed" ]
     then
         benchmark_ccloud_kcat_stop
@@ -636,11 +755,47 @@ function stop_flight_recorder () {
     fi
 }
 
+# tasks and the workers running them, as <task>@<worker>: a change (rebalance) moves tasks to other workers, whose JMX
+# beans must be listed again (and jmxterm copied to a new worker)
+task_signature=$(echo "$status_json" | jq -r '[.tasks[]? | "\(.id)@\(.worker_id)"] | sort | join(",")')
+task_set_changes=0
+function check_task_set () {
+    local signature new_workers
+    local listed
+    signature=$(echo "$curl_output" | jq -r '[.tasks[]? | "\(.id)@\(.worker_id)"] | sort | join(",")' 2> /dev/null)
+    if [ -z "$signature" ] || [ "$signature" == "$task_signature" ]
+    then
+        return 0
+    fi
+    # during a rebalance the status can briefly list only some tasks, or tasks without a worker: not a new task set
+    # (narrowing the workers would drop the records of the other tasks from the samples)
+    listed=$(echo "$curl_output" | jq '[.tasks[]? | select((.worker_id // "") != "")] | length' 2> /dev/null)
+    if [ -z "$listed" ] || [ "$listed" -lt "${nb_tasks:-0}" ] || [ "$listed" -ne "$(echo "$curl_output" | jq '.tasks | length')" ]
+    then
+        return 0
+    fi
+    task_signature="$signature"
+    task_set_changes=$((task_set_changes + 1))
+    nb_tasks="$listed"
+    # the workers read so far are kept (a task can come back to them): only new ones are added
+    new_workers=$( { [ -n "$workers" ] && echo "$workers"; echo "$curl_output" | jq -r '.tasks[].worker_id' | sort -u | while read -r worker_id; do benchmark_worker_container_and_port "$worker_id"; done; } | sed '/^$/d' | sort -u)
+    if [ -n "$new_workers" ] && [ "$new_workers" != "$workers" ]
+    then
+        workers="$new_workers"
+        benchmark_jmx_init "$workers" || logwarn "⚠️ the tasks moved to other workers ($(echo "$workers" | awk '{ print $1 }' | xargs)), whose JMX metrics cannot be read"
+    fi
+    benchmark_jmx_invalidate_beans
+}
+
 # fails the benchmark as soon as the connector or one of its tasks is FAILED
 function check_not_failed () {
     if ! connect_rest_get "$connector/status" > /dev/null 2>&1
     then
         return
+    fi
+    if [ -z "$fully_managed" ]
+    then
+        check_task_set
     fi
     if ! echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | all(. == "RUNNING")' > /dev/null 2>&1
     then
@@ -665,15 +820,31 @@ prev_time=""
 declare -A task_last_records=()
 declare -A task_records_offset=()
 task_counter_resets=0
+# reads that failed (fully managed offsets, topic counts): the sample keeps the previous count instead of a 0 that would
+# make a huge negative then positive rate
+read_failures=0
 function take_sample () {
     local phase="$1"
-    local values="0 - - - - - - - - - -"
+    local values="0 - - - - - - - - - -" read_start read_end
+    # the time of a sample is the middle of the read of its counters: a JMX read starts a jvm in each worker, a fully
+    # managed read runs kafka tools in a container, both take a while
+    read_start=$(now)
     if [ -z "$fully_managed" ]
     then
         values=$(benchmark_jmx_sample "$connector" "$type" "$workers")
     fi
-    sample_time=$(now)
+    read_end=$(now)
     read -r sample_records sample_batch sample_ratio sample_cpu sample_lag sample_cpu_available sample_pause sample_gc sample_dlq sample_skipped sample_tasks <<< "$values"
+    # a task bean missing from the cached list (a task that was still starting when it was listed): list them again
+    local seen_tasks=0
+    if [ -n "$sample_tasks" ] && [ "$sample_tasks" != "-" ]
+    then
+        seen_tasks=$(echo "${sample_tasks//;/ }" | wc -w | tr -d ' ')
+    fi
+    if [ -z "$fully_managed" ] && [ "$seen_tasks" -lt "$nb_tasks" ]
+    then
+        benchmark_jmx_invalidate_beans
+    fi
     if [ "$sample_tasks" != "-" ] && [ -n "$sample_tasks" ] && [ -z "$records_from_topics" ]
     then
         local entry task value corrected=0
@@ -695,14 +866,32 @@ function take_sample () {
     # since committed_before (sink)
     if [ -n "$fully_managed" ]
     then
-        fully_managed_progress
-        sample_records="$fully_managed_records"
-        sample_lag="$fully_managed_lag"
+        read_start=$(now)
+        if fully_managed_progress
+        then
+            sample_records="$fully_managed_records"
+            sample_lag="$fully_managed_lag"
+        else
+            read_failures=$((read_failures + 1))
+            sample_records="${prev_records:-0}"
+            sample_lag="-"
+        fi
+        read_end=$(now)
     # the task counters were reset by a restart during the drain: the records come from the topics
     elif [ -n "$records_from_topics" ]
     then
-        sample_records=$((baseline_records + $(topic_records_progress)))
+        local progress
+        read_start=$(now)
+        if progress=$(topic_records_progress)
+        then
+            sample_records=$((baseline_records + progress))
+        else
+            read_failures=$((read_failures + 1))
+            sample_records="${prev_records:-$baseline_records}"
+        fi
+        read_end=$(now)
     fi
+    sample_time=$(awk -v a="$read_start" -v b="$read_end" 'BEGIN { printf "%.6f", (a + b) / 2 }')
     local rate="-"
     if [ -n "$consumer_group" ]
     then
@@ -725,19 +914,42 @@ function take_sample () {
     prev_time="$sample_time"
 }
 
-# records per topic, as "<topic> <count>" lines
+# self managed: the first sample must read the records counters of the tasks, otherwise every sample counts 0 records (JMX
+# not reachable, beans not found) and a sink drain waits for --max-wait for nothing. One more try, the beans listed again
+function check_jmx_readable () {
+    local phase="$1"
+    if [ -n "$fully_managed" ] || { [ -n "$sample_tasks" ] && [ "$sample_tasks" != "-" ]; }
+    then
+        return 0
+    fi
+    sleep 2
+    benchmark_jmx_invalidate_beans
+    # the failed sample is replaced
+    sed -i.bak '$d' "$csv_file" && rm -f "$csv_file.bak"
+    take_sample "$phase"
+    if [ -z "$sample_tasks" ] || [ "$sample_tasks" == "-" ]
+    then
+        logerror "❌ could not read the JMX metrics of the tasks of $connector on $(echo "$workers" | awk '{ print $1 ":" $2 }' | xargs) (jmxterm in the worker, JMX port): every sample would count 0 records"
+        exit 1
+    fi
+}
+
+# records per topic, as "<topic> <count>" lines; fully managed: fails when the offsets cannot be read
 function count_topic_records () {
-    local topic count
+    local topic count lines=""
     if [ -n "$fully_managed" ]
     then
-        [ ${#topics[@]} -gt 0 ] && benchmark_ccloud_topic_end_offsets "${topics[@]}"
+        [ ${#topics[@]} -eq 0 ] && return 0
+        benchmark_ccloud_topic_end_offsets "${topics[@]}"
         return
     fi
     for topic in "${topics[@]}"
     do
-        count=$(playground --output-level WARN topic get-number-records --topic "$topic" 2> /dev/null | grep -E '^[0-9]+$' | tail -1)
-        echo "$topic ${count:-0}"
+        # no count: a topic the source has not created yet
+        count=$(playground --output-level WARN topic get-number-records --topic "$topic" 2> /dev/null | grep -E '^[0-9]+$' | tail -1 || true)
+        lines="$lines$topic ${count:-0}"$'\n'
     done
+    printf '%s' "$lines"
 }
 
 # fully managed: sets fully_managed_records, the records written to the topics (source) or committed by the consumer group
@@ -748,29 +960,48 @@ fully_managed_lag="-"
 commit_records=""
 commit_time=""
 committed_before=0
+# fails, without changing fully_managed_records, when the topics or the consumer group could not be read
 function fully_managed_progress () {
+    local progress offsets committed lag
     if [ "$type" == "source" ]
     then
-        fully_managed_records=$(topic_records_progress)
-        return
+        progress=$(topic_records_progress) || return 1
+        fully_managed_records="$progress"
+        return 0
     fi
-    local committed
-    read -r committed fully_managed_lag <<< "$(benchmark_ccloud_group_offsets "$consumer_group")"
+    offsets=$(benchmark_ccloud_group_offsets "$consumer_group") || return 1
+    read -r committed lag <<< "$offsets"
+    fully_managed_lag="$lag"
     fully_managed_records=$((committed - committed_before))
 }
+# the counts the measure starts from: a few tries, the measure is meaningless without them
 function fully_managed_snapshot () {
+    local try snapshot
+    for try in 1 2 3
+    do
+        if [ "$type" == "source" ]
+        then
+            snapshot=$(count_topic_records) && { topic_records_before="$snapshot"; return 0; }
+        else
+            snapshot=$(benchmark_ccloud_group_offsets "$consumer_group") && { read -r committed_before fully_managed_lag <<< "$snapshot"; return 0; }
+        fi
+        sleep 2
+    done
     if [ "$type" == "source" ]
     then
-        topic_records_before=$(count_topic_records)
+        logerror "❌ could not read the end offsets of topic(s) ${topics[*]} in Confluent Cloud"
     else
-        read -r committed_before fully_managed_lag <<< "$(benchmark_ccloud_group_offsets "$consumer_group")"
+        logerror "❌ could not read the committed offsets of consumer group $consumer_group in Confluent Cloud"
     fi
+    exit 1
 }
 
-# records written to the topics since the backlog was loaded (topic_records_before)
+# records written to the topics since the backlog was loaded (topic_records_before); fails when a count cannot be read
 function topic_records_progress () {
+    local current
+    current=$(count_topic_records) || return 1
     awk 'NR == FNR { before[$1] = $2; next } { delta += $2 - before[$1] } END { print delta + 0 }' \
-        <(echo "$topic_records_before") <(count_topic_records)
+        <(echo "$topic_records_before") <(echo "$current")
 }
 
 # a source can create topics during the drain (a new table): read the topics of the connector again
@@ -795,6 +1026,8 @@ if [ -n "$fully_managed" ] && [ "$type" == "source" ]
 then
     records_from_topics=1
 fi
+# fully managed drain: time of the first sample after the resume when it already saw the whole backlog
+whole_backlog_at_first_sample=""
 # the drain stopped at --max-wait before the end of the backlog
 incomplete=false
 load_seconds="-"
@@ -854,6 +1087,7 @@ then
     start_flight_recorder
     start_time=$(now)
     take_sample "baseline"
+    check_jmx_readable "baseline"
     baseline_records="$sample_records"
     log "⏯️ resuming $connector_type connector $connector and waiting for $expected records (max ${max_wait}s, sample every ${interval}s)"
     start_time=$(now)
@@ -866,7 +1100,8 @@ then
     if [ -n "$fully_managed" ]
     then
         resume_time="$start_time"
-        while fully_managed_progress && [ "$fully_managed_records" -le "$baseline_records" ]
+        # a read that fails is not progress: keep waiting
+        while ! fully_managed_progress || [ "$fully_managed_records" -le "$baseline_records" ]
         do
             if awk -v n="$(now)" -v s="$resume_time" -v m="$max_wait" 'BEGIN { exit !(n - s >= m) }'
             then
@@ -880,12 +1115,32 @@ then
         # the tasks were still starting: not a status of the measure
         not_running_checks=0
         start_time=$(now)
+        progress_records="$fully_managed_records"
+        failures_before_baseline="$read_failures"
         take_sample "baseline"
         baseline_records="$sample_records"
+        if [ "$read_failures" -gt "$failures_before_baseline" ]
+        then
+            # the read failed: the count of the loop above, not the one before the resume (records already seen would be
+            # measured as if they had been processed after start_time)
+            baseline_records="$progress_records"
+            prev_records="$progress_records"
+        fi
         prev_time="$start_time"
         backlog_records="$expected"
         expected=$((expected - baseline_records))
-        log "▶️ first records after $(awk -v n="$start_time" -v s="$resume_time" 'BEGIN { printf "%.0f", n - s }')s (not measured), measuring the remaining $expected records"
+        first_seen_after=$(awk -v n="$start_time" -v s="$resume_time" 'BEGIN { printf "%.0f", n - s }')
+        if [ "$expected" -le 0 ]
+        then
+            # the first records seen are the whole backlog (a sink commits its offsets about every minute, a fast source
+            # with a small backlog): nothing left to measure, the drain took at most the time since the resume
+            whole_backlog_at_first_sample="$sample_time"
+            log "▶️ the first records seen, ${first_seen_after}s after the resume, are the whole backlog of $backlog_records records: the throughput is a lower bound over the time since the resume"
+            start_time="$resume_time"
+            expected="$backlog_records"
+        else
+            log "▶️ first records after ${first_seen_after}s (not measured), measuring the remaining $expected records"
+        fi
     fi
 
     end_time=""
@@ -893,6 +1148,11 @@ then
     stalled_samples=0
     while true
     do
+        if [ -n "$whole_backlog_at_first_sample" ]
+        then
+            end_time="$whole_backlog_at_first_sample"
+            break
+        fi
         sleep "$interval"
         before_records="$prev_records"
         before_time="$prev_time"
@@ -971,7 +1231,7 @@ then
         if [ ${#topics[@]} -gt 0 ]
         then
             # topics created during the drain count from 0
-            topic_records_delta=$(topic_records_progress)
+            topic_records_delta=$(topic_records_progress) || topic_records_delta="-"
         fi
     fi
 else
@@ -987,6 +1247,7 @@ else
     fi
     log "🔥 warm-up for ${warmup}s"
     take_sample "warmup"
+    check_jmx_readable "warmup"
     warmup_end=$(awk -v s="$start_time" -v w="$warmup" 'BEGIN { printf "%.3f", s + w }')
     while awk -v n="$(now)" -v e="$warmup_end" 'BEGIN { exit !(n < e) }'
     do
@@ -1178,14 +1439,18 @@ fi
 
 # summary from the samples of the measure (drain or steady phase)
 phase="$mode"
+# in a drain, the rate of the first sample includes the restart of the tasks after the resume and the one of the last
+# sample the idle time after the end of the backlog: left out of the percentiles when there are 3 rates or more
 read -r rate_p50 rate_p95 rate_min batch_avg ratio_avg cpu_avg cpu_max <<< "$(awk -F, -v p="$phase" '
     NR > 1 && $3 == p {
-        if ($5 != "-") rates[n++] = $5
+        if ($5 != "-") all[na++] = $5
         if ($6 != "-") { batch += $6; nb++ }
         if ($7 != "-") { ratio += $7; nr++ }
         if ($8 != "-") { cpu += $8; nc++; if ($8 > cpumax) cpumax = $8 }
     }
     END {
+        n = 0
+        for (i = 0; i < na; i++) if (p != "drain" || na < 3 || (i > 0 && i < na - 1)) rates[n++] = all[i]
         # insertion sort, a few hundred samples at most
         for (i = 1; i < n; i++) { v = rates[i]; j = i - 1; while (j >= 0 && rates[j] > v) { rates[j + 1] = rates[j]; j-- } rates[j + 1] = v }
         printf "%s %s %s %s %s %s %s\n",
@@ -1218,6 +1483,11 @@ then
         lower_bound=true
         lower_bound_reason="only $commit_steps offset commit(s) seen during the drain"
     fi
+fi
+if [ -n "$whole_backlog_at_first_sample" ]
+then
+    lower_bound=true
+    lower_bound_reason="the first records seen after the resume were the whole backlog: $measured_records records in at most ${measured_seconds}s since the resume"
 fi
 
 # bottleneck indicators over the measure: from the sample just before the measure to the last one of the measure
@@ -1325,36 +1595,6 @@ then
 fi
 
 test_file_relative="${test_file#$root_folder/}"
-result=$(jq -n \
-    --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
-    --arg connector_class "$connector_class" --arg plugin_version "$plugin_version" --arg cp_tag "$cp_tag" \
-    --arg type "$type" --arg mode "$mode" --arg shape "$shape" --argjson tasks "$nb_tasks" --argjson sessions "$sessions" \
-    --argjson records "$measured_records" --argjson seconds "$measured_seconds" --argjson records_per_second "$throughput" \
-    --arg rate_p50 "$rate_p50" --arg rate_p95 "$rate_p95" --arg rate_min "$rate_min" \
-    --arg batch_avg_ms "$batch_avg" --arg running_ratio "$ratio_avg" --arg cpu_avg "$cpu_avg" --arg cpu_max "$cpu_max" \
-    --arg load_seconds "$load_seconds" --arg topic_records_delta "$topic_records_delta" \
-    --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" --argjson incomplete "$incomplete" --argjson expected_records "$expected" \
-    --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
-    --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
-    --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" --argjson metrics_api "$metrics_api_json" \
-    --argjson measure_from_ms "$measure_from_ms" --argjson measure_to_ms "$measure_to_ms" --argjson latency "$latency_json" \
-    --arg load_script "$([ -n "$load_script" ] && [[ "$load_cmd" == *"$load_script"* ]] && basename "$load_script")" \
-    '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
-      cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
-      records_per_second: $records_per_second, lower_bound: $lower_bound,
-      incomplete: $incomplete, expected_records: $expected_records, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
-      batch_avg_ms: $batch_avg_ms, running_ratio: $running_ratio, cpu_percent_of_one_core_avg: $cpu_avg,
-      cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
-      gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
-      dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
-      samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder, grafana: $grafana, metrics_api: $metrics_api,
-      measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms, load_script: $load_script, latency: $latency}')
-echo "$result" > "$json_file"
-if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
-then
-    echo "$json_file" >> "$BENCHMARK_MATRIX_RESULTS"
-fi
-
 # previous result to compare with: --compare, or the last one of the same connector, example, mode and shape
 history_file="$root_folder/benchmark-history"
 previous=""
@@ -1363,133 +1603,29 @@ then
     previous=$(jq -c . "$compare_file")
 elif [ -f "$history_file" ]
 then
-    # lower bounds are not comparable
-    previous=$(jq -c --arg t "$test_file_relative" --arg c "$connector" --arg m "$mode" --arg s "$shape" 'select(.test_file == $t and .connector == $c and .mode == $m and .shape == $s and .lower_bound != true and .incomplete != true and .records > 0)' "$history_file" 2> /dev/null | tail -1)
-fi
-if [[ ! -n "$no_history" ]]
-then
-    echo "$result" | jq -c . >> "$history_file"
-fi
-
-if [[ -n "$json" ]]
-then
-    if [ -n "$previous" ]
-    then
-        echo "$result" | jq --argjson p "$previous" '. + {previous: $p}' >&3
-    else
-        echo "$result" >&3
-    fi
-    [ "$incomplete" == "true" ] && exit 1
-    exit 0
-fi
-
-log "🏁 benchmark of $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version, CP $cp_tag)"
-if [ "$mode" == "drain" ]
-then
-    if [ "$incomplete" == "true" ]
-    then
-        printf "   %-22s %s\n" "mode" "drain stopped after ${max_wait}s (--max-wait): $measured_records of $expected records processed (shape $shape)"
-    else
-        printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape$([ "$sessions" -gt 1 ] && echo ", $sessions sessions"), loaded in ${load_seconds}s)"
-    fi
-else
-    printf "   %-22s %s\n" "mode" "steady for ${measured_seconds}s after ${warmup}s of warm-up"
-fi
-printf "   %-22s %s\n" "duration" "${measured_seconds}s"
-if [ "$lower_bound" == "true" ]
-then
-    printf "   %-22s %s\n" "throughput" "≥ $throughput records/s   ($lower_bound_reason)"
-else
-    printf "   %-22s %s\n" "throughput" "$throughput records/s   (per $([ -n "$consumer_group" ] && echo "offset commit, every ~${commit_interval}s" || echo "${interval}s sample"): p50 $rate_p50  p95 $rate_p95  min $rate_min)"
-fi
-if [ "$(echo "$latency_json" | jq -r '.enabled')" == "true" ]
-then
-    printf "   %-22s %s\n" "end-to-end latency" "$(echo "$latency_json" | jq -r '"p50 \(.p50_ms) ms  p95 \(.p95_ms) ms  p99 \(.p99_ms) ms  max \(.max_ms) ms   (\(.field), \(.records) records)"')"
-elif [ "$type" == "source" ] && [ "$mode" == "steady" ] && [ -z "$no_latency" ]
-then
-    printf "   %-22s %s\n" "end-to-end latency" "$(echo "$latency_json" | jq -r '.reason')"
-fi
-# no JMX for a fully managed connector
-if [ -z "$fully_managed" ]
-then
-    if [ "$type" == "sink" ]
-    then
-        printf "   %-22s %s\n" "put batch avg" "$batch_avg ms"
-    else
-        printf "   %-22s %s\n" "poll batch avg" "$batch_avg ms"
-    fi
-    printf "   %-22s %s\n" "running ratio avg" "$ratio_avg"
-    printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core (${cpu_available_avg}% of the cpus available)"
-    printf "   %-22s %s\n" "gc pauses" "${gc_percent}% of the time"
-else
-    if [ "$metrics_steady" != "-" ]
-    then
-        printf "   %-22s %s\n" "metrics api" "$metrics_steady records/s steady (median of $metrics_full_minutes full minute(s) of $metrics_records_metric)"
-    else
-        printf "   %-22s %s\n" "metrics api" "no full minute of $metrics_records_metric during the measure: use a drain of 3 minutes or more"
-    fi
-    if [ "$type" == "sink" ]
-    then
-        printf "   %-22s %s\n" "put batch avg" "$metrics_put_batch ms ($metrics_batch_size records per batch)"
-    else
-        printf "   %-22s %s\n" "batch size avg" "$metrics_batch_size records"
-    fi
-fi
-if [ "$task_shares" != "-" ]
-then
-    printf "   %-22s %s\n" "records per task" "$task_shares"
-fi
-if [ "$dlq_delta" != "-" ] && [ "$dlq_delta" != "0" ] || { [ "$skipped_delta" != "-" ] && [ "$skipped_delta" != "0" ]; }
-then
-    printf "   %-22s %s\n" "dlq / dropped" "$dlq_delta records sent to the dlq, $skipped_delta dropped without dlq"
-fi
-if [ "$topic_records_delta" != "-" ]
-then
-    printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
-fi
-printf "   %-22s %s\n" "setup" "$(benchmark_setup_summary "$setup_json")"
-if [ "$(echo "$grafana_json" | jq -r '.enabled')" == "true" ]
-then
-    printf "   %-22s %s\n" "grafana" "$(echo "$grafana_json" | jq -r '.dashboards[0].url // "-"')"
-    printf "   %-22s %s\n" "" "measure annotated on $(echo "$grafana_json" | jq -r '"\(.annotated) dashboard(s): " + ([.dashboards[].title] | join(", "))')"
-fi
-if [ -n "$jfr_analysis" ]
-then
-    jfr_lines=$(jq -r '.findings[0:4][] | (if .severity == "critical" then "🔴" elif .severity == "warning" then "🟠" else "ℹ️ " end) + " " + .title' "$jfr_analysis")
-    if [ -z "$jfr_lines" ]
-    then
-        jfr_lines="no finding"
-    fi
-    first_line=1
-    while IFS= read -r line
-    do
-        printf "   %-22s %s\n" "$([ $first_line -eq 1 ] && echo "flight recorder")" "$line"
-        first_line=0
-    done <<< "$jfr_lines"
-fi
-if [ -n "$previous" ]
-then
-    previous_throughput=$(echo "$previous" | jq -r '.records_per_second')
-    delta=$(awk -v n="$throughput" -v p="$previous_throughput" 'BEGIN { if (p > 0) printf "%+.0f%%", (n - p) / p * 100; else print "n/a" }')
-    printf "   %-22s %s\n" "previous run" "$previous_throughput records/s on $(echo "$previous" | jq -r '.date'): $delta"
-    printf "   %-22s %s\n" "" "($(echo "$previous" | jq -r '"\(.plugin_version), CP \(.cp_tag), \(.tasks) task(s), \(.records) records, shape \(.shape)"'))"
-    previous_p95=$(echo "$previous" | jq -r 'if .latency.enabled == true then .latency.p95_ms else empty end')
-    current_p95=$(echo "$latency_json" | jq -r 'if .enabled == true then .p95_ms else empty end')
-    if [ -n "$previous_p95" ] && [ -n "$current_p95" ]
-    then
-        printf "   %-22s %s\n" "" "end-to-end latency p95 $current_p95 ms, $previous_p95 ms in the previous run"
-    fi
+    # lower bounds are not comparable, nor another record size (results written before it was recorded match any)
+    previous=$(jq -c --arg t "$test_file_relative" --arg c "$connector" --arg m "$mode" --arg s "$shape" --argjson rs "$record_size" 'select(.test_file == $t and .connector == $c and .mode == $m and .shape == $s and .lower_bound != true and .incomplete != true and .records > 0 and ((.record_size // $rs) == $rs))' "$history_file" 2> /dev/null | tail -1)
 fi
 
 # warnings of the summary, also shown in the html report
 report_warnings=()
+# printed after the summary (the load that stopped early was already logged)
+print_warnings=()
 function add_warning () {
-    logwarn "⚠️ $1"
+    print_warnings+=("$1")
     report_warnings+=("$1")
 }
 if [ "$load_stopped_early" == "1" ]
 then
     report_warnings+=("the load stopped before the end of the measure, see $load_log")
+fi
+if [ "$read_failures" -gt 0 ]
+then
+    add_warning "$read_failures read(s) of the records failed during the run (Confluent Cloud offsets or topic counts): those samples kept the previous count"
+fi
+if [ "$task_set_changes" -gt 0 ]
+then
+    add_warning "the tasks moved between workers $task_set_changes time(s) during the run (rebalance): the JMX metrics were read from the new workers, see the rebalances in the connect logs"
 fi
 if [ "$task_counter_resets" -gt 0 ] && [ -z "$records_from_topics" ]
 then
@@ -1517,10 +1653,25 @@ then
 fi
 # a load script of another name loads something else (BENCHMARK_LOAD_SCRIPT)
 previous_load_script=$(echo "$previous" | jq -r '.load_script // empty' 2> /dev/null)
-current_load_script=$(echo "$result" | jq -r '.load_script // empty')
+current_load_script=""
+if [ -n "$load_script" ] && [[ "$load_cmd" == *"$load_script"* ]]
+then
+    current_load_script=$(basename "$load_script")
+fi
 if [ -n "$previous_load_script" ] && [ -n "$current_load_script" ] && [ "$previous_load_script" != "$current_load_script" ]
 then
     add_warning "the previous run used the load $previous_load_script and this one $current_load_script: the load is not the same"
+fi
+# record size and tasks.max change what is measured (older results do not have them)
+previous_record_size=$(echo "$previous" | jq -r '.record_size // empty' 2> /dev/null)
+if [ -n "$previous_record_size" ] && [ "$previous_record_size" != "$record_size" ]
+then
+    add_warning "the previous run used --record-size $previous_record_size and this one $record_size: the records are not the same"
+fi
+previous_tasks_max=$(echo "$previous" | jq -r '.tasks_max // empty' 2> /dev/null)
+if [ -n "$previous_tasks_max" ] && [ -n "$tasks_max" ] && [ "$previous_tasks_max" != "$tasks_max" ]
+then
+    add_warning "the previous run had tasks.max=$previous_tasks_max and this one tasks.max=$tasks_max: the parallelism is not the same"
 fi
 if [ -n "$previous" ] && [ "$(echo "$previous" | jq -r '.sessions // 1')" != "$sessions" ]
 then
@@ -1634,6 +1785,167 @@ if [ "$mode" == "steady" ] && [ "$measured_records" -eq 0 ]
 then
     add_warning "no record was processed during the measure: is there any load?"
 fi
+
+result=$(jq -n \
+    --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
+    --arg connector_class "$connector_class" --arg plugin_version "$plugin_version" --arg cp_tag "$cp_tag" \
+    --arg type "$type" --arg mode "$mode" --arg shape "$shape" --argjson tasks "$nb_tasks" --argjson sessions "$sessions" \
+    --argjson records "$measured_records" --argjson seconds "$measured_seconds" --argjson records_per_second "$throughput" \
+    --arg rate_p50 "$rate_p50" --arg rate_p95 "$rate_p95" --arg rate_min "$rate_min" \
+    --arg batch_avg_ms "$batch_avg" --arg running_ratio "$ratio_avg" --arg cpu_avg "$cpu_avg" --arg cpu_max "$cpu_max" \
+    --arg load_seconds "$load_seconds" --arg topic_records_delta "$topic_records_delta" \
+    --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" --argjson incomplete "$incomplete" --argjson expected_records "$expected" \
+    --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
+    --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
+    --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" --argjson metrics_api "$metrics_api_json" \
+    --argjson measure_from_ms "$measure_from_ms" --argjson measure_to_ms "$measure_to_ms" --argjson latency "$latency_json" \
+    --arg load_script "$current_load_script" \
+    --argjson record_size "$record_size" --arg tasks_max "$tasks_max" --argjson requested_records "$nb_records" \
+    --argjson read_failures "$read_failures" --argjson task_set_changes "$task_set_changes" \
+    --argjson warnings "$(printf '%s\n' "${report_warnings[@]}" | jq -R -s -c 'split("\n") | map(select(. != ""))')" \
+    '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
+      cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
+      records_per_second: $records_per_second, lower_bound: $lower_bound,
+      incomplete: $incomplete, expected_records: $expected_records, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
+      batch_avg_ms: $batch_avg_ms, running_ratio: $running_ratio, cpu_percent_of_one_core_avg: $cpu_avg,
+      cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
+      gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
+      dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
+      samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder, grafana: $grafana, metrics_api: $metrics_api,
+      measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms, load_script: $load_script, latency: $latency,
+      record_size: $record_size, tasks_max: ($tasks_max | tonumber? // null), requested_records: $requested_records,
+      read_failures: $read_failures, task_set_changes: $task_set_changes, warnings: $warnings}')
+echo "$result" > "$json_file"
+if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
+then
+    echo "$json_file" >> "$BENCHMARK_MATRIX_RESULTS"
+fi
+
+if [[ ! -n "$no_history" ]]
+then
+    echo "$result" | jq -c . >> "$history_file"
+fi
+
+if [[ -n "$json" ]]
+then
+    # also in the result json (warnings): on stderr, with the other logs
+    for warning in "${print_warnings[@]}"
+    do
+        logwarn "⚠️ $warning"
+    done
+    if [ -n "$previous" ]
+    then
+        echo "$result" | jq --argjson p "$previous" '. + {previous: $p}' >&3
+    else
+        echo "$result" >&3
+    fi
+    [ "$incomplete" == "true" ] && exit 1
+    exit 0
+fi
+
+log "🏁 benchmark of $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version, CP $cp_tag)"
+if [ "$mode" == "drain" ]
+then
+    if [ "$incomplete" == "true" ]
+    then
+        printf "   %-22s %s\n" "mode" "drain stopped after ${max_wait}s (--max-wait): $measured_records of $expected records processed (shape $shape)"
+    else
+        printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape$([ "$sessions" -gt 1 ] && echo ", $sessions sessions"), loaded in ${load_seconds}s)"
+    fi
+else
+    printf "   %-22s %s\n" "mode" "steady for ${measured_seconds}s after ${warmup}s of warm-up"
+fi
+printf "   %-22s %s\n" "duration" "${measured_seconds}s"
+if [ "$lower_bound" == "true" ]
+then
+    printf "   %-22s %s\n" "throughput" "≥ $throughput records/s   ($lower_bound_reason)"
+else
+    printf "   %-22s %s\n" "throughput" "$throughput records/s   (per $([ -n "$consumer_group" ] && echo "offset commit, every ~${commit_interval}s" || echo "${interval}s sample"): p50 $rate_p50  p95 $rate_p95  min $rate_min)"
+fi
+if [ "$(echo "$latency_json" | jq -r '.enabled')" == "true" ]
+then
+    printf "   %-22s %s\n" "end-to-end latency" "$(echo "$latency_json" | jq -r '"p50 \(.p50_ms) ms  p95 \(.p95_ms) ms  p99 \(.p99_ms) ms  max \(.max_ms) ms   (\(.field), \(.records) records)"')"
+elif [ "$type" == "source" ] && [ "$mode" == "steady" ] && [ -z "$no_latency" ]
+then
+    printf "   %-22s %s\n" "end-to-end latency" "$(echo "$latency_json" | jq -r '.reason')"
+fi
+# no JMX for a fully managed connector
+if [ -z "$fully_managed" ]
+then
+    if [ "$type" == "sink" ]
+    then
+        printf "   %-22s %s\n" "put batch avg" "$batch_avg ms"
+    else
+        printf "   %-22s %s\n" "poll batch avg" "$batch_avg ms"
+    fi
+    printf "   %-22s %s\n" "running ratio avg" "$ratio_avg"
+    printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core (${cpu_available_avg}% of the cpus available)"
+    printf "   %-22s %s\n" "gc pauses" "${gc_percent}% of the time"
+else
+    if [ "$metrics_steady" != "-" ]
+    then
+        printf "   %-22s %s\n" "metrics api" "$metrics_steady records/s steady (median of $metrics_full_minutes full minute(s) of $metrics_records_metric)"
+    else
+        printf "   %-22s %s\n" "metrics api" "no full minute of $metrics_records_metric during the measure: use a drain of 3 minutes or more"
+    fi
+    if [ "$type" == "sink" ]
+    then
+        printf "   %-22s %s\n" "put batch avg" "$metrics_put_batch ms ($metrics_batch_size records per batch)"
+    else
+        printf "   %-22s %s\n" "batch size avg" "$metrics_batch_size records"
+    fi
+fi
+if [ "$task_shares" != "-" ]
+then
+    printf "   %-22s %s\n" "records per task" "$task_shares"
+fi
+if [ "$dlq_delta" != "-" ] && [ "$dlq_delta" != "0" ] || { [ "$skipped_delta" != "-" ] && [ "$skipped_delta" != "0" ]; }
+then
+    printf "   %-22s %s\n" "dlq / dropped" "$dlq_delta records sent to the dlq, $skipped_delta dropped without dlq"
+fi
+if [ "$topic_records_delta" != "-" ]
+then
+    printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
+fi
+printf "   %-22s %s\n" "setup" "$(benchmark_setup_summary "$setup_json")"
+if [ "$(echo "$grafana_json" | jq -r '.enabled')" == "true" ]
+then
+    printf "   %-22s %s\n" "grafana" "$(echo "$grafana_json" | jq -r '.dashboards[0].url // "-"')"
+    printf "   %-22s %s\n" "" "measure annotated on $(echo "$grafana_json" | jq -r '"\(.annotated) dashboard(s): " + ([.dashboards[].title] | join(", "))')"
+fi
+if [ -n "$jfr_analysis" ]
+then
+    jfr_lines=$(jq -r '.findings[0:4][] | (if .severity == "critical" then "🔴" elif .severity == "warning" then "🟠" else "ℹ️ " end) + " " + .title' "$jfr_analysis")
+    if [ -z "$jfr_lines" ]
+    then
+        jfr_lines="no finding"
+    fi
+    first_line=1
+    while IFS= read -r line
+    do
+        printf "   %-22s %s\n" "$([ $first_line -eq 1 ] && echo "flight recorder")" "$line"
+        first_line=0
+    done <<< "$jfr_lines"
+fi
+if [ -n "$previous" ]
+then
+    previous_throughput=$(echo "$previous" | jq -r '.records_per_second')
+    delta=$(awk -v n="$throughput" -v p="$previous_throughput" 'BEGIN { if (p > 0) printf "%+.0f%%", (n - p) / p * 100; else print "n/a" }')
+    printf "   %-22s %s\n" "previous run" "$previous_throughput records/s on $(echo "$previous" | jq -r '.date'): $delta"
+    printf "   %-22s %s\n" "" "($(echo "$previous" | jq -r '"\(.plugin_version), CP \(.cp_tag), \(.tasks) task(s)\(if .tasks_max then " (tasks.max \(.tasks_max))" else "" end), \(.records) records, shape \(.shape)\(if (.record_size // 0) > 0 then ", record size \(.record_size)" else "" end)"'))"
+    previous_p95=$(echo "$previous" | jq -r 'if .latency.enabled == true then .latency.p95_ms else empty end')
+    current_p95=$(echo "$latency_json" | jq -r 'if .enabled == true then .p95_ms else empty end')
+    if [ -n "$previous_p95" ] && [ -n "$current_p95" ]
+    then
+        printf "   %-22s %s\n" "" "end-to-end latency p95 $current_p95 ms, $previous_p95 ms in the previous run"
+    fi
+fi
+
+# the warnings, computed before the summary (and the result json): printed after it
+for warning in "${print_warnings[@]}"
+do
+    logwarn "⚠️ $warning"
+done
 logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
 log "📄 samples: $csv_file"
 log "📄 result: $json_file"
@@ -1659,17 +1971,7 @@ done
 if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" "${report_args[@]}" > /dev/null
 then
     log "📊 report: $html_file"
-    # only open a browser in an interactive terminal, never in CI nor for the runs of a --connector-tag comparison
-    if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$BENCHMARK_NO_OPEN" ]
-    then
-        if command -v open > /dev/null 2>&1
-        then
-            open "$html_file"
-        elif command -v xdg-open > /dev/null 2>&1
-        then
-            xdg-open "$html_file" > /dev/null 2>&1 || true
-        fi
-    fi
+    benchmark_open_report "$html_file"
 else
     logwarn "⚠️ the html report could not be generated"
 fi

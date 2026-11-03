@@ -33,9 +33,20 @@ lab_expect_contains "⚠️ results are relative to this docker host: compare ru
 lab_expect_contains "📄 result: $out/"
 
 log "Step 2: again, as JSON"
-lab_run bash -c "$playground_cli connector benchmark --connector filestream-sink --nb-records 200000 --interval 1 --no-history --no-flight-recorder --output-dir '$out' --json 2> /dev/null | jq -c '{ok: (.records_per_second > 0 and .records > 0 and .expected_records == 200000 and .type == \"sink\" and .mode == \"drain\" and .tasks == 1)}'"
+lab_run bash -c "$playground_cli connector benchmark --connector filestream-sink --nb-records 200000 --interval 1 --no-history --no-flight-recorder --output-dir '$out' --json 2> /dev/null | jq -c '{ok: (.records_per_second > 0 and .records > 0 and .expected_records == 200000 and .type == \"sink\" and .mode == \"drain\" and .tasks == 1 and .requested_records == 200000 and .record_size == 0 and (.warnings | type) == \"array\")}'"
 lab_expect_exit 0
-lab_expect_contains '{"ok":true}' "result json: records_per_second > 0, 200000 records expected, sink, drain, 1 task"
+lab_expect_contains '{"ok":true}' "result json: records_per_second > 0, 200000 records expected and requested, sink, drain, 1 task, record size, warnings"
+
+log "Step 2b: the same drain 2 times, to see how much it varies"
+lab_run playground connector benchmark --connector filestream-sink --nb-records 200000 --interval 1 --rounds 2 --no-history --no-flight-recorder --output-dir "$out"
+lab_expect_exit 0
+lab_expect_contains "🔁 2 rounds of the same benchmark of filestream-sink (drain, shape bulk)"
+lab_expect_contains "🏁 round 2/2"
+lab_expect_contains "records/s"
+lab_expect_contains "mean"
+lab_run bash -c "$playground_cli connector benchmark --connector filestream-sink --nb-records 200000 --interval 1 --rounds 2 --no-history --no-flight-recorder --output-dir '$out' --json 2> /dev/null | jq -c '{ok: (length == 2 and all(.[]; .type == \"sink\"))}'"
+lab_expect_exit 0
+lab_expect_contains '{"ok":true}' "--rounds 2 --json: an array of 2 results"
 
 log "Step 3: a source, with its benchmark-load.bash"
 playground container exec --container connect --command "touch /tmp/lab-benchmark.txt"

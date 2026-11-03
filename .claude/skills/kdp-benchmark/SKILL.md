@@ -19,13 +19,19 @@ playground connector benchmark [--connector <c>]
 ```
 
 - Drain of `--nb-records` by default; `--mode steady --duration 5m` for a steady rate.
-- `--shape bulk|small-txn|update`, `--json`.
-- Compares with the previous run in `benchmark-history`.
+- `--shape bulk|small-txn|update|delete`, `--json` (result on stdout, logs and warnings on stderr; the result also
+  holds `warnings`, `record_size`, `tasks_max`, `requested_records`; with `--connector-tag`, a `--shape` sequence or
+  `--rounds`, a json array of the runs).
+- `--rounds N` (without `--connector-tag`): the same benchmark N times, then mean / stddev / cv of the records/s. A
+  difference between two configs smaller than the cv is noise: run it once on a new machine or setup.
+- Compares with the previous run in `benchmark-history` (same example, connector, mode, shape and record size; warns
+  when `tasks.max` changed).
 - Writes an HTML report with the charts to `--output-dir` (opened only in an interactive terminal).
 - Records the workers with Java Flight Recorder during the measure and says where the task time went;
   `--no-flight-recorder` to skip it.
 - When Grafana runs (`--enable-jmx-grafana`), annotates the measure on its dashboards and links to them.
 - When it says the throughput is a lower bound, rerun with 10x `--nb-records`.
+- It fails at once when the first sample cannot read the JMX metrics of the tasks (jmxterm download or copy, JMX port).
 
 ## End-to-end latency of a source (steady mode)
 

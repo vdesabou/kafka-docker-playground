@@ -155,7 +155,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 # only the functions: sourcing scripts/utils.sh would record this script as the example being run
 source ${DIR}/../../scripts/cli/src/lib/utils_function.sh
 
-# --records <n> --mode preload|stream --shape bulk|small-txn|update [--check]
+# --records <n> --mode preload|stream --shape bulk|small-txn|update|delete [--check]
 benchmark_load_args "$@"
 records="$BENCHMARK_LOAD_RECORDS"
 
@@ -222,7 +222,7 @@ A benchmark is only meaningful when the connector is what limits the throughput.
 | N records went to the dead letter queue / were dropped by errors.tolerance=all | failing records are counted in the throughput |
 | the load generated N records but the connector processed only M | steady mode: a backlog builds up in the source system, or a publish/subscribe broker (MQTT) drops the messages it cannot deliver |
 
-At the end, it prints a summary (throughput with p50 / p95 / min per sample, put or poll batch time, running ratio, connect CPU), writes the samples (csv) and the result (json, also with `--json`) to `--output-dir`, and opens an HTML report with the charts. Each result is appended to a `benchmark-history` file, and compared with the previous benchmark of the same connector in the same example, mode and shape.
+At the end, it prints a summary (throughput with p50 / p95 / min per sample, put or poll batch time, running ratio, connect CPU), writes the samples (csv) and the result (json, also with `--json`) to `--output-dir`, and opens an HTML report with the charts. Each result is appended to a `benchmark-history` file, and compared with the previous benchmark of the same connector in the same example, mode, shape and record size (the summary warns when `tasks.max` changed). The result json also holds the warnings of the summary; with `--connector-tag`, a `--shape` sequence or `--rounds`, `--json` prints an array of the runs.
 
 ![playground connector benchmark report](./images/report-benchmark.jpg)
 
@@ -293,7 +293,15 @@ more slower or faster.
 ![playground connector benchmark report comparing where the time goes by version](./images/report-benchmark-versions-flight-recorder.jpg)
 
 > [!WARNING]
-> A downgrade or a major version change can be incompatible with the offsets or the config of the connector: the comparison stops at the first FAILED state.
+> A downgrade or a major version change can be incompatible with the offsets or the config of the connector: the comparison stops at the first FAILED state. The original version is restored then too, and when the comparison is interrupted (Ctrl-C).
+
+#### How much does one run vary?
+
+`--rounds N` without `--connector-tag` runs the same benchmark N times, then prints the records/s of each round with their mean, standard deviation and coefficient of variation (`cv`), and warns above 10%. A difference between two configs or versions smaller than the `cv` is noise:
+
+```bash
+playground connector benchmark --nb-records 1000000 --rounds 3
+```
 
 Each result also records the setup it ran on, shown in the **Setup** section of the report: host (OS, CPU model, CPUs, memory), container engine and the resources given to it, connect image and whether it runs **emulated** (an amd64 image on an arm64 host is much slower), connect JVM and maximum heap, number of workers and brokers, environment, connector plugin version, and the connector configuration with secrets masked. The summary warns when the previous run was on a different setup, and the history chart shows runs of another setup faded. The report also links to the example on GitHub, at the commit it ran with and on the default branch (repro models link to the private repository of the `reproduction-models` submodule), and to the documentation of the connector (from the manifest of its plugin).
 

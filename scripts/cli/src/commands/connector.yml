@@ -1412,7 +1412,11 @@ commands:
     Throughput is read from the connect JMX metrics of the tasks
     (sink-record-read-total: records read from kafka, including the ones
     filtered or sent to the dlq; source-record-write-total), sampled every
-    --interval. Results are written to --output-dir (samples csv, result
+    --interval (each sample is timed at the middle of its read, and the
+    first and last samples of a drain are left out of its percentiles: the
+    restart of the tasks, the idle time after the backlog). The benchmark
+    fails at once when the first sample cannot read them (JMX not
+    reachable). Results are written to --output-dir (samples csv, result
     json and an html report with the charts, opened in the browser at the
     end in an interactive terminal) and appended to the benchmark-history
     file, and the summary compares them with the previous benchmark of the
@@ -1469,7 +1473,10 @@ commands:
     within one commit interval: a drain that sees less than 5 commits
     is reported as a lower bound, and the summary gives the
     --nb-records of a drain of 10 commits (within ~10%, usually 1M
-    records or more).
+    records or more). When the first commit seen after the resume
+    already covers the whole backlog, the throughput is the backlog over
+    the time since the resume, a lower bound. A read of the offsets that
+    fails keeps the previous count (and is reported in the warnings).
 
     📈 After the measure of a fully managed connector, the benchmark
     reads its per minute metrics in the Confluent Cloud Metrics API
@@ -1522,7 +1529,7 @@ commands:
     help: |-
       🏁 drain (time to process a backlog of --nb-records) or steady (throughput during --duration)
   - long: --nb-records
-    arg: nb-records
+    arg: nb_records
     validate: integer
     required: false
     default: "100000"
@@ -1545,14 +1552,14 @@ commands:
 
       A sequence of shapes, e.g. bulk,update,delete, runs one drain per shape on the same rows (insert, update, then delete them) and compares the phases in the summary and the report. Drain of a source connector only.
   - long: --record-size
-    arg: record-size
+    arg: record_size
     validate: integer
     required: false
     default: "0"
     help: |-
       🏋️ Record size in bytes, passed to benchmark-load.bash (default is 0: size given by the load)
   - long: --load-command
-    arg: load-command
+    arg: load_command
     required: false
     help: |-
       📥 Command that loads the backlog in drain mode, instead of benchmark-load.bash (or of the replayed produce of a sink)
@@ -1567,7 +1574,7 @@ commands:
         # source: your own script, which inserts the rows and prints BENCHMARK_RECORDS=<n>
         --load-command "./load-my-table.sh 500000"
   - long: --stream-load-command
-    arg: stream-load-command
+    arg: stream_load_command
     required: false
     help: |-
       🌊 Command that generates load continuously in steady mode, instead of benchmark-load.bash (or of the replayed produce of a sink)
@@ -1588,7 +1595,13 @@ commands:
       dynamic:
       - playground get-topic-list
     help: |-
-      🗳 Topics to count records in at the end of a drain, to check the result of a source connector (default is the topics of the connector)
+      🗳 Topics of a source connector to count records in (default is the topics of the connector)
+
+      - self managed: the records written during a drain (records in topics line), and the count when a restarted task resets its JMX counter
+      - fully managed source: the topics whose end offsets are the records of every sample (no JMX)
+      - the topics read for the end-to-end latency in --mode steady
+
+      Setting it also stops the benchmark from reading the topics of the connector again during the run (a source can create topics, e.g. a new table).
   - long: --duration
     arg: duration
     validate: duration
@@ -1611,14 +1624,14 @@ commands:
     help: |-
       🔁 Interval between samples (default is 5s)
   - long: --max-wait
-    arg: max-wait
+    arg: max_wait
     validate: duration
     required: false
     default: "30m"
     help: |-
       ⏳ Max time to wait for the backlog to be processed in drain mode (default is 30m)
   - long: --connector-tag
-    arg: connector-tag
+    arg: connector_tag
     required: false
     repeatable: true
     help: |-
@@ -1635,13 +1648,19 @@ commands:
     required: false
     default: "1"
     help: |-
-      🔁 With --connector-tag, number of rounds over the versions (default is 1): 2 alternates them (A B A B), which shows a drift from one run to the next
+      🔁 Number of times the benchmark runs (default is 1)
+
+      Without --connector-tag: the same benchmark N times, then the records/s of each round and their mean, standard deviation and coefficient of variation (cv), to know how much the result varies on this machine: a difference between two configs or versions smaller than the cv is noise. Rounds that give a lower bound or do not finish are left out of the statistics. Not with a --shape sequence.
+
+      With --connector-tag: number of rounds over the versions: 2 alternates them (A B A B), which shows a drift from one run to the next
   - long: --output-dir
-    arg: output-dir
+    short: -o
+    arg: output_dir
     required: false
     default: "/tmp/playground-benchmark"
     help: |-
       📂 Folder for the samples csv, the result json and the html report (default is /tmp/playground-benchmark)
+  - import: src/flags/no-open.yml
   - long: --compare
     arg: compare
     validate: file_exists
@@ -1668,7 +1687,7 @@ commands:
 
       The recording costs a few % of throughput: compare runs recorded the same way.
   - long: --latency-field
-    arg: latency-field
+    arg: latency_field
     required: false
     conflicts: [--no-latency]
     help: |-
@@ -1687,7 +1706,11 @@ commands:
   - long: --json
     required: false
     help: |-
-      📄 Print the result as json instead of the summary
+      📄 Print the result as json instead of the summary (logs and warnings on stderr)
+
+      The result has the throughput (records, seconds, records_per_second, lower_bound, rate_p50 / p95 / min), the requested_records, record_size and tasks_max of the run, the setup, the latency, the warnings of the summary (warnings) and the previous run it is compared with (previous).
+
+      With --connector-tag, a --shape sequence or --rounds: a json array with the result of each run.
   examples:
   - playground connector benchmark --connector filestream-sink --nb-records 3000000
   - playground connector benchmark --connector jdbc-postgres-source --nb-records 1000000 --shape small-txn
@@ -1697,6 +1720,7 @@ commands:
   - playground connector benchmark --mode steady --duration 2m --stream-load-command 'while [ ! -f "\$BENCHMARK_STOP_FILE" ]; do playground topic produce -t my-topic --nb-messages 10000 --value @predefined-schemas/avro/customer.avsc; echo "BENCHMARK_BATCH=10000 \$(date +%s)"; done'
   - playground connector benchmark --load-command "./my-load.sh" --json
   - playground connector benchmark --nb-records 1000000 --connector-tag 10.8.4 --connector-tag 10.9.9 --rounds 2
+  - playground connector benchmark --nb-records 1000000 --rounds 3
   - playground connector benchmark --nb-records 1000000 --no-flight-recorder
   - playground connector benchmark --nb-records 1000000 --shape small-txn --sessions 5
   - playground connector benchmark --nb-records 500000 --shape bulk,update,delete

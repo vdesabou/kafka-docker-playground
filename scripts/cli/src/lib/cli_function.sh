@@ -7319,20 +7319,62 @@ function benchmark_jmxterm() {
   docker exec -i "$container" java -jar "$BENCHMARK_JMXTERM_JAR" -l "localhost:$port" -n -v silent 2> /dev/null
 }
 
-# copies jmxterm to the connect workers running the tasks of the connector
+# copies jmxterm to the connect workers running the tasks of the connector, fails when it cannot (no worker, download or
+# copy failed): without it every sample would read 0 records
 function benchmark_jmx_init() {
   local workers="$1"
   BENCHMARK_JMXTERM_JAR="/tmp/jmxterm-1.0.2-uber.jar"
+  # bean names of each worker, listed once and refreshed when the task set changes (benchmark_jmx_invalidate_beans)
+  if [ -z "$BENCHMARK_JMX_BEANS_DIR" ]
+  then
+    BENCHMARK_JMX_BEANS_DIR=$(mktemp -d -t playground-benchmark-beans.XXXXXX)
+  fi
+  if [ -z "$(echo "$workers" | grep .)" ]
+  then
+    logerror "❌ no connect worker runs a task of the connector: nothing to read the JMX metrics from"
+    return 1
+  fi
+  # a failed download used to be cached as an html page: a jar is a zip file, it starts with PK
+  if [ -f "$BENCHMARK_JMXTERM_JAR" ] && [ "$(head -c 2 "$BENCHMARK_JMXTERM_JAR" 2> /dev/null)" != "PK" ]
+  then
+    rm -f "$BENCHMARK_JMXTERM_JAR"
+  fi
   if [ ! -f "$BENCHMARK_JMXTERM_JAR" ]
   then
-    curl -L https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar -o "$BENCHMARK_JMXTERM_JAR" -s
+    if ! curl -fsSL https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar -o "$BENCHMARK_JMXTERM_JAR.tmp" \
+      || [ "$(head -c 2 "$BENCHMARK_JMXTERM_JAR.tmp" 2> /dev/null)" != "PK" ]
+    then
+      rm -f "$BENCHMARK_JMXTERM_JAR.tmp"
+      logerror "❌ could not download jmxterm (https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar), needed to read the JMX metrics of the tasks"
+      return 1
+    fi
+    mv "$BENCHMARK_JMXTERM_JAR.tmp" "$BENCHMARK_JMXTERM_JAR"
   fi
   local container port
   while read -r container port
   do
     [ -z "$container" ] && continue
-    playground container cp --source "$BENCHMARK_JMXTERM_JAR" --destination "$container:$BENCHMARK_JMXTERM_JAR" > /dev/null 2>&1
+    if ! playground container cp --source "$BENCHMARK_JMXTERM_JAR" --destination "$container:$BENCHMARK_JMXTERM_JAR" > /dev/null 2>&1
+    then
+      logerror "❌ could not copy jmxterm to container $container, needed to read the JMX metrics of the tasks"
+      return 1
+    fi
   done <<< "$workers"
+}
+
+# forgets the bean names listed by benchmark_jmx_sample: the next sample lists them again (task set changed)
+function benchmark_jmx_invalidate_beans() {
+  if [ -n "$BENCHMARK_JMX_BEANS_DIR" ] && [ -d "$BENCHMARK_JMX_BEANS_DIR" ]
+  then
+    rm -f "$BENCHMARK_JMX_BEANS_DIR"/*.beans
+  fi
+}
+
+function benchmark_jmx_cleanup() {
+  if [ -n "$BENCHMARK_JMX_BEANS_DIR" ] && [ -d "$BENCHMARK_JMX_BEANS_DIR" ]
+  then
+    rm -rf "$BENCHMARK_JMX_BEANS_DIR"
+  fi
 }
 
 # grafana of the environment (--enable-jmx-grafana), for playground connector benchmark: an annotation of the measure on
@@ -7586,11 +7628,24 @@ function benchmark_jmx_sample() {
     counter="sink-record-read-total"
     batch="put-batch-avg-time-ms"
   fi
-  local container port beans task_beans task_ids
+  local container port beans beans_cache task_beans task_ids
   while read -r container port
   do
     [ -z "$container" ] && continue
-    beans=$(printf 'beans -d kafka.connect\nbeans -d kafka.consumer\nbeans -d java.lang\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -E "connector=$connector,task=|client-id=connector-consumer-$connector-[0-9]+,type=consumer-fetch-manager-metrics$|type=GarbageCollector" || true)
+    # listing the beans starts a jvm in the worker, as long as reading them: list them once, until the task set changes
+    # (benchmark_jmx_invalidate_beans), so that one sample is one jmxterm run per worker
+    beans_cache="${BENCHMARK_JMX_BEANS_DIR:-/nonexistent}/$container-$port.beans"
+    if [ -s "$beans_cache" ]
+    then
+      beans=$(cat "$beans_cache")
+    else
+      beans=$(printf 'beans -d kafka.connect\nbeans -d kafka.consumer\nbeans -d java.lang\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -E "connector=$connector,task=|client-id=connector-consumer-$connector-[0-9]+,type=consumer-fetch-manager-metrics$|type=GarbageCollector" || true)
+      # only a list with task beans is worth keeping: the tasks may still be starting
+      if [ -n "$BENCHMARK_JMX_BEANS_DIR" ] && [ -d "$BENCHMARK_JMX_BEANS_DIR" ] && echo "$beans" | grep -qF "type=$type-task-metrics"
+      then
+        echo "$beans" > "$beans_cache"
+      fi
+    fi
     task_beans=$(echo "$beans" | grep -F "type=$type-task-metrics" || true)
     # the n-th counter value belongs to the n-th task bean
     task_ids=$(echo "$task_beans" | sed -n 's/.*task=\([0-9]*\).*/\1/p' | tr '\n' ' ')
@@ -7667,9 +7722,11 @@ function benchmark_ccloud_topic_list () {
 # "<topic> <sum of the end offsets of its partitions>" lines for <topics>, 0 for a topic that does not exist (yet). Offsets
 # overcount the records of a transactional producer (one commit marker per transaction and partition): fine for the
 # difference over a drain of non transactional sources
+# fails (nothing printed) when the metadata or the offsets cannot be read: a sample must not count 0 records then
 function benchmark_ccloud_topic_end_offsets () {
   local metadata topic query_args=()
-  metadata=$(docker exec "$BENCHMARK_CCLOUD_KCAT_CONTAINER" kcat -F /tmp/configuration/ccloud.properties -L -J 2> /dev/null)
+  metadata=$(docker exec "$BENCHMARK_CCLOUD_KCAT_CONTAINER" kcat -F /tmp/configuration/ccloud.properties -L -J 2> /dev/null) || return 1
+  echo "$metadata" | jq -e '.topics' > /dev/null 2>&1 || return 1
   for topic in "$@"
   do
     while read -r partition
@@ -7680,12 +7737,16 @@ function benchmark_ccloud_topic_end_offsets () {
   local offsets='{}'
   if [ ${#query_args[@]} -gt 0 ]
   then
-    offsets=$(docker exec "$BENCHMARK_CCLOUD_KCAT_CONTAINER" kcat -F /tmp/configuration/ccloud.properties -Q -J "${query_args[@]}" 2> /dev/null)
+    offsets=$(docker exec "$BENCHMARK_CCLOUD_KCAT_CONTAINER" kcat -F /tmp/configuration/ccloud.properties -Q -J "${query_args[@]}" 2> /dev/null) || return 1
+    echo "$offsets" | jq -e 'type == "object"' > /dev/null 2>&1 || return 1
   fi
+  local lines="" count
   for topic in "$@"
   do
-    echo "$topic $(echo "$offsets" | jq -r --arg t "$topic" '[.[$t] // {} | to_entries[] | .value.offset? // empty | select(. >= 0)] | add // 0' 2> /dev/null || echo 0)"
+    count=$(echo "$offsets" | jq -r --arg t "$topic" '[.[$t] // {} | to_entries[] | .value.offset? // empty | select(. >= 0)] | add // 0' 2> /dev/null) || return 1
+    lines="$lines$topic $count"$'\n'
   done
+  printf '%s' "$lines"
 }
 
 # fully managed sink, for playground connector benchmark: the records are counted from the committed offsets of its consumer
@@ -7710,11 +7771,20 @@ function benchmark_ccloud_groups_stop () {
   docker rm -f "$BENCHMARK_CCLOUD_GROUPS_CONTAINER" > /dev/null 2>&1 || true
 }
 
-# "<sum of the committed offsets> <max lag>" of consumer group <group> ("0 -" when it has no committed offset yet)
+# "<sum of the committed offsets> <max lag>" of consumer group <group> ("0 -" when it has no committed offset yet). Fails
+# (nothing printed) when the group could not be described: a sample must not count 0 records then
 function benchmark_ccloud_group_offsets () {
-  local group="$1"
-  docker exec "$BENCHMARK_CCLOUD_GROUPS_CONTAINER" bash -c "kafka-consumer-groups --bootstrap-server \$BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group '$group' --describe 2> /dev/null" \
-    | awk '$4 ~ /^[0-9]+$/ { committed += $4; if ($6 ~ /^[0-9]+$/ && $6 > lag) lag = $6; n++ } END { printf "%d %s\n", committed, (n ? lag + 0 : "-") }'
+  local group="$1" output
+  output=$(docker exec "$BENCHMARK_CCLOUD_GROUPS_CONTAINER" bash -c "kafka-consumer-groups --bootstrap-server \$BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group '$group' --describe 2>&1")
+  # a group that does not exist yet (a sink that never committed) has no committed offset: not a failed read
+  if echo "$output" | grep -q "does not exist"
+  then
+    echo "0 -"
+    return 0
+  fi
+  # the header of the table is printed when the group was described
+  echo "$output" | grep -q "CURRENT-OFFSET" || return 1
+  echo "$output" | awk '$4 ~ /^[0-9]+$/ { committed += $4; if ($6 ~ /^[0-9]+$/ && $6 > lag) lag = $6; n++ } END { printf "%d %s\n", committed, (n ? lag + 0 : "-") }'
 }
 
 # Confluent Cloud Metrics API, for playground connector benchmark: "<epoch> <value>" lines of
@@ -8015,6 +8085,46 @@ function benchmark_connector_tag_value () {
     value="${value:+$value,}$current"
   done
   [ $found -eq 1 ] && echo "$value"
+}
+
+# version of the plugin of <connector class> in the connect worker (connect REST API /connector-plugins), "unknown" when
+# not found; <empty> to print nothing instead of unknown
+function benchmark_plugin_version () {
+  local connector_class="$1" fallback="${2-unknown}"
+  get_connect_url_and_security
+  # the errors of the helper go to stderr, not into the version
+  handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\"" >&2 || return 1
+  echo "$curl_output" | jq -r --arg c "$connector_class" --arg f "$fallback" '[.[] | select(.class == $c) | .version][0] // $f'
+}
+
+# opens the html report of playground connector benchmark in a browser: only in an interactive terminal, never in CI nor
+# for the child runs of a comparison (BENCHMARK_NO_OPEN)
+function benchmark_open_report () {
+  local html_file="$1"
+  if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$BENCHMARK_NO_OPEN" ]
+  then
+    if command -v open > /dev/null 2>&1
+    then
+      open "$html_file"
+    elif command -v xdg-open > /dev/null 2>&1
+    then
+      xdg-open "$html_file" > /dev/null 2>&1 || true
+    fi
+  fi
+}
+
+# "<mean> <sample stddev> <coefficient of variation in %>" of the numbers on stdin, one per line ("- - -" without any, a
+# stddev and cv of "-" with only one)
+function benchmark_stats () {
+  awk 'NF { v[n++] = $1; s += $1 }
+    END {
+      if (n == 0) { print "- - -"; exit }
+      m = s / n
+      if (n < 2) { printf "%.1f - -\n", m; exit }
+      for (i = 0; i < n; i++) d += (v[i] - m) ^ 2
+      sd = sqrt(d / (n - 1))
+      printf "%.1f %.1f %s\n", m, sd, (m > 0 ? sprintf("%.1f", sd / m * 100) : "-")
+    }'
 }
 
 # ---- playground connector smt test ------------------------------------------------------------------------------

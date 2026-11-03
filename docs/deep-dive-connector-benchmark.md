@@ -17,8 +17,9 @@ one or with other plugin versions. Takes about 15 minutes to read and run.
 | the throughput under a continuous load | `… --mode steady --duration 5m` (`--warmup 30s`) |
 | the end-to-end latency of a source | `… --mode steady` (p50 / p95 / p99 from a timestamp field of the records) |
 | two plugin versions compared | `… --connector-tag 10.8.4 --connector-tag 10.9.9` (`--rounds 2`) |
+| how much the result varies on this machine | `… --rounds 3` (mean, stddev and coefficient of variation of the records/s) |
 | another load shape (source) | `… --shape small-txn` / `update` / `delete`, or a sequence `bulk,update,delete` |
-| the result as data | `… --json` (the result JSON on stdout, logs on stderr) |
+| the result as data | `… --json` (the result JSON on stdout, logs and warnings on stderr; an array of the runs with `--connector-tag`, a `--shape` sequence or `--rounds`) |
 | your own load | `… --load-command "<cmd>"` / `--stream-load-command "<cmd>"`, or `BENCHMARK_LOAD_SCRIPT=<file>` |
 | right after the example | `playground run -f <example> --benchmark` (flags in `BENCHMARK_ARGS="--nb-records 1000000"`) |
 
@@ -85,9 +86,18 @@ What the summary prints (one `printf` line each):
 
 Gotchas:
 
-- **"≥ N records/s" is a lower bound**, not a result: the backlog was processed before the first sample, or (fully
-  managed sink) fewer than 5 offset commits were seen. Rerun with 10x `--nb-records`. Lower bounds are left out of
-  the comparisons.
+- **"≥ N records/s" is a lower bound**, not a result: the backlog was processed before the first sample, (fully
+  managed sink) fewer than 5 offset commits were seen, or (fully managed) the first records seen after the resume were
+  already the whole backlog (`▶️ the first records seen, Ns after the resume, are the whole backlog of … records`: the
+  throughput is the backlog over the time since the resume). Rerun with 10x `--nb-records`. Lower bounds are left out
+  of the comparisons.
+- **The first and last samples of a drain are left out of its percentiles** (p50 / p95 / min): the first one includes
+  the restart of the tasks after the resume, the last one the idle time after the end of the backlog. The throughput
+  itself is the backlog over the interpolated drain time. Each sample is timed at the middle of its JMX read (one
+  jmxterm run per worker: the bean names are listed once, and again when the tasks move to other workers).
+- **No JMX, no benchmark**: when the first sample cannot read the records counters of the tasks (jmxterm could not be
+  downloaded or copied to the worker, JMX port not reachable), it fails at once with `❌ could not read the JMX metrics
+  of the tasks of …` instead of counting 0 records until `--max-wait`.
 - **A drain of a few seconds has few samples**: `only N samples during the measure: the percentiles are not
   meaningful`. A good drain lasts tens of seconds: raise `--nb-records`, or lower `--interval`.
 - **The first records after the resume are not measured**: tasks take a moment to restart (`▶️ first records after
@@ -102,7 +112,13 @@ Gotchas:
 - **The sink count includes what the connector reads, not only what it writes**: a sink dropping records (SMT
   filter, `errors.tolerance=all` + DLQ) looks fast. The `dlq / dropped` line tells.
 - Results are appended to `benchmark-history` at the root of the repository (`--no-history` to skip it), and the
-  next run of the same connector in the same example is compared with it (`--compare <result.json>` for another one).
+  next run of the same connector in the same example, mode, shape and `--record-size` is compared with it
+  (`--compare <result.json>` for another one). The summary warns when `tasks.max` changed between the two runs.
+- **One run is one number**: `--rounds 3` runs the same benchmark 3 times and gives the mean, standard deviation and
+  coefficient of variation (`cv`) of the records/s, and warns above 10%. A difference between two configs or versions
+  smaller than the cv is noise.
+- The result JSON (`--json`, or the `📄 result:` file) has the warnings of the summary (`warnings`), and the
+  `requested_records`, `record_size` and `tasks_max` of the run.
 - The HTML report (charts, setup, flight recorder digest) opens in the browser only in an interactive terminal.
 
 ---
@@ -149,6 +165,7 @@ playground connector benchmark --sessions 4
 | `--connector-tag A --connector-tag B` | for each version: `update-version --connector-tag`, a check that the worker really runs it, a warm-up drain (not recorded), the measured drain(s), then a comparison table (`version, runs, lower bounds, records/s (mean), min, max, vs first`) and the original version restored |
 | `--shape bulk,update,delete` | a series of drains of the load script, compared per phase; `delete` counts tombstones from the connector config (`tombstones.on.delete`…), refused for a JDBC source |
 | `--sessions <n>` | the `benchmark-load.bash` in n parallel sessions (not with `--load-command` or a replayed produce) |
+| `--rounds <n>` (no `--connector-tag`) | the same benchmark n times: a table of the rounds, then `records/s  mean …  stddev …  cv …%` |
 
 Gotchas:
 
@@ -160,7 +177,8 @@ Gotchas:
   the topics' end offsets), and sinks (produce replay, records counted from the offsets committed by `connect-<lcc
   id>`, which move about once a minute: drains of 10+ commits, often 1M records). No JMX, flight recorder nor
   `--connector-tag`; the Confluent Cloud Metrics API gives the steady rate of the full minutes. The throughput
-  includes the network between your machine and Confluent Cloud.
+  includes the network between your machine and Confluent Cloud. A read of the offsets that fails keeps the previous
+  count, and the summary says how many failed.
 - Not available on the CFK environment yet.
 
 ---
@@ -211,6 +229,30 @@ playground connector benchmark --nb-records 200000 --output-dir /tmp/benchmark-l
   | jq '{records, seconds, records_per_second, lower_bound, tasks, plugin_version, cp_tag}'
 # { "records": 200000, "seconds": 7.7, "records_per_second": 25974.0, "lower_bound": true, "tasks": 1, "plugin_version": "8.3.2-ce", "cp_tag": "8.3.2" }
 ```
+
+The result also has `requested_records`, `record_size`, `tasks_max` and the `warnings` of the summary.
+
+**Step 2b: the same drain twice, to see how much it varies**
+
+```bash
+playground connector benchmark --nb-records 200000 --rounds 2 --output-dir /tmp/benchmark-lab
+# 🔁 2 rounds of the same benchmark of filestream-sink (drain, shape bulk)
+# 🏁 round 1/2
+# …
+# 🏁 round 2/2
+# …
+#    round  records  seconds  records/s
+#    1      200000   …        ≥ …
+#    2      200000   …        ≥ …
+#    records/s              mean -  stddev -  cv -   (0 measured round(s))
+# ⚠️ 2 round(s) gave a lower bound or did not finish: increase --nb-records
+playground connector benchmark --nb-records 200000 --rounds 2 --output-dir /tmp/benchmark-lab --json 2> /dev/null | jq length
+# 2
+```
+
+FileStream often drains 200000 records before the first sample: such rounds are lower bounds, left out of the
+statistics (empty here). With a slower connector or a bigger backlog, the `cv` tells how much a single run can be
+trusted.
 
 With `--json`, stdout only holds the result. The human summary of step 1 already compared with the last saved run of
 the same connector (`previous run           263157.9 records/s on 2026-10-15T10:22:02Z: -90%`, with a warning when one
@@ -283,7 +325,7 @@ the records/s.
 playground connector benchmark [--connector <c>] [--mode drain|steady] [--nb-records 100000] [--record-size N]
   [--duration 5m] [--warmup 30s] [--interval 5s] [--max-wait 30m]
   [--shape bulk|small-txn|update|delete|bulk,update,…] [--sessions N]
-  [--connector-tag A --connector-tag B [--rounds 2]]
+  [--connector-tag A --connector-tag B [--rounds 2]] [--rounds N]
   [--load-command "<cmd>"] [--stream-load-command "<cmd>"] [--topic <t>]
   [--latency-field <path>] [--no-latency] [--no-flight-recorder]
   [--output-dir /tmp/playground-benchmark] [--compare <result.json>] [--no-history] [--json]

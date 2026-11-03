@@ -861,7 +861,8 @@ then
 
   # playground connector benchmark needs a load: the benchmark-load.bash of a source, or the topic produce of a sink
   benchmark_available=0
-  if [ -f "$test_file_directory/benchmark-load.bash" ] || grep -q "playground topic produce" "$test_file"
+  # the load of the example, or another one (BENCHMARK_LOAD_SCRIPT, e.g. benchmark-load-<ticket>.bash of a repro model)
+  if [ -n "$(benchmark_load_script "$test_file" 2> /dev/null)" ] || grep -q "playground topic produce" "$test_file"
   then
     benchmark_available=1
   fi
