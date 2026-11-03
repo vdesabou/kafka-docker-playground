@@ -8,6 +8,10 @@ to master them. Every output shown in a lab comes from a real run, and CI replay
 CLI change that makes a page wrong shows up as a failing test.
 
 > [!TIP]
+> Don't know which page to read? `playground find-command "<question or symptom>"` searches the "Recipes for support
+> repros" table of every deep dive and prints the page to read next, see [🧭 Which command do I need?](/which-command.md).
+
+> [!TIP]
 > Each deep dive follows the same outline, so you can jump to the part you need: mental model first, then the commands
 > with their gotchas, a hands-on lab, recipes for support repros, and a cheat sheet at the end.
 

@@ -6916,6 +6916,166 @@ function find_examples() {
         | head -n "$limit"
 }
 
+# Ranked search over what the CLI can do, for 'playground find-command'.
+# Sources, best weighted first:
+#   1. the tables of docs/which-command.md (question -> command, raw command -> playground command)
+#   2. the "Recipes for support repros" tables of docs/deep-dive-*.md (symptom -> commands)
+#   3. the help of every public command (scripts/cli/playground.json)
+# Every hit is attached to the command it uses (longest known command path), one line per command.
+# Output: one line per command, best first, fields separated by \037 (not a tab: read would merge empty fields):
+# score, command, matched text, usage, deep dive URL, source
+# $1: query, $2: limit
+function find_commands() {
+    local query="$1"
+    local limit="${2:-5}"
+    local catalog="$root_folder/docs/which-command.md"
+    local spec="$root_folder/scripts/cli/playground.json"
+
+    if [ ! -f "$spec" ]
+    then
+        logerror "❌ $spec not found"
+        return 1
+    fi
+
+    local commands_tsv
+    commands_tsv=$(mktemp)
+    # path, summary (first line of the help), aliases + full help on one line, first deep dive URL of the help
+    jq -r '
+        def cmds(p): (.subcommands // [])[] | (p + [.name]) as $q
+            | {path: ($q | join(" ")), names: (.names // [.name]), desc: (.description // "")}, cmds($q);
+        cmds([]) | select(.path != "help")
+        | [.path,
+           (.desc | split("\n")[0]),
+           ((.names | join(" ")) + " " + (.desc | gsub("[\t\n\r]+"; " "))),
+           ((.desc | capture("Deep dive: (?<u>https://[^ \n)]+)") | .u) // "")]
+        | @tsv' "$spec" > "$commands_tsv"
+
+    local recipes=()
+    local f
+    for f in "$root_folder"/docs/deep-dive-*.md
+    do
+        [ -f "$f" ] && recipes+=("$f")
+    done
+
+    awk -v query="$query" -v limit="$limit" -v catalog="$catalog" '
+    function stem(w) {
+        if (length(w) > 5 && w ~ /ing$/) return substr(w, 1, length(w) - 3)
+        if (length(w) > 4 && w ~ /ed$/) return substr(w, 1, length(w) - 2)
+        if (length(w) > 4 && w ~ /es$/) return substr(w, 1, length(w) - 2)
+        if (length(w) > 3 && w ~ /s$/ && w !~ /ss$/) return substr(w, 1, length(w) - 1)
+        return w
+    }
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    # longest known command path used in a table cell: `playground a b ...` or a bare `a b ...` in backticks
+    function command_of(cell,    rest, seg, words, n, i, cand, best_here) {
+        rest = cell
+        while (match(rest, /`[^`]+`/)) {
+            seg = substr(rest, RSTART + 1, RLENGTH - 2)
+            rest = substr(rest, RSTART + RLENGTH)
+            sub(/^playground[ \t]+/, "", seg)
+            n = split(seg, words, /[ \t]+/)
+            cand = ""
+            best_here = ""
+            for (i = 1; i <= n && i <= 4; i++) {
+                cand = (i == 1 ? words[1] : cand " " words[i])
+                if (cand in known) best_here = cand
+                else if (i > 1) break
+            }
+            if (best_here != "") return best_here
+        }
+        return ""
+    }
+    # text is searched with weight, extra (the usage, with its flags) with weight 1
+    function add(cmd, matched, usage, url, source, weight, text, extra,    t, low, lowx, hits, score, path_hits, need, s) {
+        if (cmd == "" || !(cmd in known)) return
+        low = tolower(text)
+        lowx = tolower(extra)
+        hits = 0; score = 0; path_hits = 0
+        for (t = 1; t <= nterms; t++) {
+            if (index(low, terms[t]) > 0) { hits++; score += weight }
+            else if (lowx != "" && index(lowx, terms[t]) > 0) { hits++; score += 1 }
+            if (index(" " cmd, " " terms[t]) > 0) { path_hits++; score += 2 }
+        }
+        need = (nterms <= 2 ? 1 : int((nterms + 1) / 2))
+        if (hits < need && path_hits < need) return
+        s = score * ((hits > path_hits ? hits : path_hits) / nterms)
+        if (!(cmd in best) || s > best[cmd]) {
+            best[cmd] = s
+            bmatched[cmd] = matched; busage[cmd] = usage; bsource[cmd] = source
+            if (url != "") burl[cmd] = url
+        }
+        count[cmd]++
+    }
+    BEGIN {
+        split("a an and are as at be by can could do does doing for from get got how i if in into is it its me my no not of on or show so tell that the their them there these this to was we what when where which who why will with without you your", sw, " ")
+        for (i in sw) stop[sw[i]] = 1
+        n = split(tolower(query), raw, /[^a-z0-9._+-]+/)
+        nterms = 0
+        for (i = 1; i <= n; i++) {
+            w = raw[i]; gsub(/^[-.]+|[-.]+$/, "", w)
+            if (length(w) < 2 || (w in stop)) continue
+            w = stem(w)
+            if (!(w in seen)) { seen[w] = 1; terms[++nterms] = w }
+        }
+        if (nterms == 0) exit
+        FS = "\t"
+    }
+    # 1. help of every command
+    FILENAME == ARGV[1] {
+        known[$1] = 1; summary[$1] = $2; help_text[$1] = $3; help_url[$1] = $4
+        next
+    }
+    FNR == 1 && FILENAME != ARGV[1] && !help_done {
+        help_done = 1
+        for (c in known) add(c, summary[c], "", help_url[c], "help", 1, summary[c] " " help_text[c], "")
+    }
+    # 2. catalog and deep-dive recipe tables (markdown rows)
+    FNR == 1 { in_recipes = 0; page = FILENAME; sub(/^.*\//, "", page); sub(/\.md$/, "", page) }
+    /^## / { in_recipes = (FILENAME != catalog && $0 ~ /[Rr]ecipes/) }
+    /^\| *--- *\|/ { next }
+    /^\| / {
+        if (FILENAME != catalog && !in_recipes) next
+        line = $0
+        gsub(/\\\|/, "\001", line)
+        nc = split(line, cells, /[ \t]*\|[ \t]*/)
+        c1 = cells[2]; c2 = cells[3]; c3 = (nc > 4 ? cells[4] : "")
+        gsub(/\001/, "|", c1); gsub(/\001/, "|", c2); gsub(/\001/, "|", c3)
+        if (c1 ~ /^(Question|Instead of|Customer symptom|Symptom)/) next
+        if (FILENAME == catalog) {
+            if (c3 != "") {
+                # question | command | instead of (the flags of the command are searched in its help)
+                add(command_of(c2), c1, c2, "", "catalog", 3, c1 " " c1 " " c3, c2)
+            } else {
+                # instead of | use
+                add(command_of(c2), "instead of " c1, c2, "", "catalog", 3, c1 " " c1, c2)
+            }
+        } else {
+            add(command_of(c2), c1, c2, "https://kafka-docker-playground.io/#/" page, "deep dive", 2, c1 " " c1, c2)
+        }
+        next
+    }
+    END {
+        if (nterms == 0) exit
+        top = 0
+        for (c in best) { total[c] = best[c] + (count[c] - 1) * 0.5; if (total[c] > top) top = total[c] }
+        for (c in best) {
+            # drop the long tail: weak matches far below the best one
+            if (total[c] < top * 0.3) continue
+            url = (c in burl ? burl[c] : help_url[c])
+            if (url == "") {
+                # inherit the deep dive of the parent command
+                p = c; while (url == "" && sub(/ [^ ]+$/, "", p)) url = help_url[p]
+            }
+            m = bmatched[c]; u = busage[c]
+            gsub(/[\t\r\n\037]+/, " ", m); gsub(/[\t\r\n\037]+/, " ", u)
+            if (m ~ /^".*"$/) m = substr(m, 2, length(m) - 2)
+            printf "%.1f\037%s\037%s\037%s\037%s\037%s\n", total[c], c, m, u, url, bsource[c]
+        }
+    }' "$commands_tsv" "$catalog" "${recipes[@]}" | sort -t $'\037' -k1,1nr -k2,2 | head -n "$limit"
+
+    rm -f "$commands_tsv"
+}
+
 # shared by switch-podman / switch-docker: the docker context is what the docker CLI,
 # docker compose, k3d and the playground follow, unless DOCKER_HOST overrides it
 function warn_container_engine_switch() {

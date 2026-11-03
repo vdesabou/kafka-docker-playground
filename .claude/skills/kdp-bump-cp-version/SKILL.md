@@ -114,7 +114,7 @@ Ask before running: `playground run` stops the running environment. Give the use
 
 ## 4. Issue and PR
 
-Ask the user first (repo `CLAUDE.md`, "Contributing"). Title `👾⬆️ Upgrade playground to default CP <NEW>`,
+Ask the user first (skill `kdp-contributing`). Title `👾⬆️ Upgrade playground to default CP <NEW>`,
 label `enhancement ✨`, milestone of the current month on the issue (`--milestone "$(date +%m-%Y)"`), none on the PR. In the PR body, summarize the changes from `cp-changelog --from $OLD --to $NEW`
 (count per component, `--security` highlights, anything that made you fix an example), with the link of the feed page. Commit only the files above plus the regenerated `scripts/cli/playground`
 (never `reproduction-models`). After the merge, the nightly CI runs the whole matrix on `NEW` and

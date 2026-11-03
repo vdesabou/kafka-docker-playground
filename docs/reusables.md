@@ -1,6 +1,11 @@
 # 🧰 Reproduction toolkit
 
-Everything you need once an example runs, one page per topic:
+Everything you need once an example runs, one page per topic.
+
+> [!TIP]
+> Looking for the command that answers one question? `playground find-command "<question or symptom>"` searches
+> [🧭 Which command do I need?](/which-command.md), the recipes of the deep dives and the help of every command.
+
 
 | Page | What is in it |
 | --- | --- |
