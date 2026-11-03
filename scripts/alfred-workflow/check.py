@@ -8,7 +8,7 @@
 - the output view: one background job per command, "run again" only once the output was shown, watch mode.
 
 No Alfred and no running environment needed (the modes about the environment then answer "nothing running").
-A change of the JSON of find-example, history, repro list, connector-plugin versions… breaks this check instead of
+A change of the JSON of find-command, find-example, history, repro list, connector-plugin versions… breaks this check instead of
 the workflow.
 
     python3 -I scripts/alfred-workflow/check.py [--root <kafka-docker-playground>]
@@ -118,7 +118,7 @@ def check_items(query, out):
 
 
 QUERIES = [
-    "", "find", "find s3 sink", "history", "docs", "docs schema", "status",
+    "", "how", "how why is my connector not working", "how zzqx", "find", "find s3 sink", "history", "docs", "docs schema", "status",
     "key", "key batch", "key batch.size ", "key errors tolerance", "key my.custom.key ",
     "plugin", "plugin jdbc", "plugin jdbc 10.7", "plugin confluentinc/kafka-connect-jdbc ", "plugin io.confluent.connect.jdbc.JdbcSinkConnector ",
     "connector", "logs", "topic", "schema", "ci", "ci jdbc", "repro", "notes", "case 123456",
