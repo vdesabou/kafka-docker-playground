@@ -5,6 +5,7 @@ Script filter:  python3 kdp.py "<query>"        -> Alfred JSON on stdout
 Action:         python3 kdp.py --action "<arg>"  -> runs $action, prints a notification text
 
 Sub-commands (first word of the query):
+  how <question>      playground find-command: the command that answers a question or a symptom
   find <words>        playground find-example (examples + reproduction models)
   repro [words]       reproduction models (repro list, cached, mine first)
   history [words]     playground history: replay a run
@@ -94,6 +95,7 @@ SUBCOMMANDS = [
     ("topic", "🧵", "Topics: describe, records, last records, DLQ", "kdp topic [words]: pick a topic"),
     ("schema", "📐", "Schema Registry subjects: describe, history, diff", "kdp schema [words]: pick a subject"),
     ("logs", "📜", "Container logs: errors, last lines, grep", "kdp logs [container] [pattern]"),
+    ("how", "🧭", "Which command answers my question?", "kdp how <question or symptom>: find-command"),
     ("find", "🔎", "Find an example or a reproduction model", "find-example, ↩ copies playground run -f"),
     ("repro", "🧪", "Reproduction models (mine first)", "repro list, cached"),
     ("history", "🕘", "Replay a playground run", "playground history"),
@@ -509,6 +511,7 @@ def mode_menu(rest, raw=""):
         items += smart
         # free text: offer the modes that take free text (not for a selected config or stack trace)
         if "\n" not in (raw or "").strip():
+            items.append(info("🧭 Which command: " + rest, "↩ search with find-command", autocomplete="how " + rest))
             items.append(info("🔎 Find examples: " + rest, "↩ search with find-example", autocomplete="find " + rest))
             if HAS_NOTES:
                 items.append(info("📝 Search notes: " + rest, "↩ search the notes", autocomplete="notes " + rest))
@@ -542,6 +545,31 @@ def mode_find(rest):
             quicklook=readme_of(script) or script,
             autocomplete="find @{} ".format(script),
         ))
+    return {"items": items}
+
+
+def mode_how(rest):
+    if len(rest.strip()) < 2:
+        return {"items": [info("🧭 Type a question or a symptom", "e.g. connector stuck high cpu · who deleted the schema · docker logs")]}
+    hits, err = run_json(["find-command", rest.strip(), "--json", "--limit", "10"], timeout=30)
+    if hits is None:
+        return {"items": [info("⚠️ find-command failed", short(err, 200))]}
+    if not hits:
+        return {"items": [info("🤷 No command matches: " + rest, "try other words, or kdp docs for the deep dive pages")]}
+    items = []
+    for h in hits:
+        command = h["command"]
+        usage = re.sub(r"`", "", h.get("usage") or "")
+        url = h.get("deep_dive") or ""
+        page = os.path.join(DOCS_DIR, url.rsplit("/", 1)[-1] + ".md") if url else ""
+        mods = {
+            "cmd": mod("⌘ open the deep dive in VS Code", "code", page) if page and os.path.exists(page)
+            else mod("⌘ no deep dive for this command"),
+            "alt": mod("⌥ show: " + command + " --help", "output", in_root(h["help_command"])),
+            "shift": mod("⇧ open the deep dive", "open", url) if url else mod("⇧ no deep dive for this command"),
+        }
+        items.append(item(command, short(h.get("matched") or "", 120) + (" · " + short(usage, 80) if usage else ""),
+                          "copy", command, mods=mods, copy=usage or command, quicklook=url or None))
     return {"items": items}
 
 
@@ -1416,7 +1444,7 @@ def mode_ci(rest):
 
 
 MODES = {
-    "find": mode_find, "repro": mode_repro, "history": mode_history, "case": mode_case, "notes": mode_notes,
+    "how": mode_how, "find": mode_find, "repro": mode_repro, "history": mode_history, "case": mode_case, "notes": mode_notes,
     "plugin": mode_plugin, "key": mode_key, "docs": mode_docs, "status": mode_status,
     "connector": mode_connector, "logs": mode_logs, "topic": mode_topic, "schema": mode_schema, "ci": mode_ci,
 }

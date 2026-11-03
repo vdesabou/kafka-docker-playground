@@ -538,6 +538,7 @@ Keyword **kdp** (the first line says what is running: ↩ status, ⌘ re-run, �
 
 | Query | What |
 | --- | --- |
+| `kdp how &lt;question&gt;` | `playground find-command`: the command that answers a question or a symptom; ↩ copies it, ⌥ its `--help`, ⇧ its deep dive, ⌘ the deep dive in VS Code |
 | `kdp find &lt;words&gt;` | `playground find-example`: examples (and repro models); Tab: ▶️ run it (says what it stops), README, repro bootstrap |
 | `kdp history [words]` | `playground history`; Tab: 🔁 re-run with the same flags |
 | `kdp plugin &lt;words&gt; [version]` | pick the plugin in the list (↩ fills it in), then a version in its list, then connector-plugin info / changelog / sourcecode / dependencies / cve-scan |
