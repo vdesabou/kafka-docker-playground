@@ -79,6 +79,12 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 🔘 behavior.on.error
 
 Error handling behavior setting for handling response from HTTP requests. Must be configured to one of the following:
+``fail``
+Stops the connector when an error occurs.
+``ignore``
+Continues to process next set of records. when error occurs.
+``log``
+Logs the error message when error occurs and continues to process next set of records, available in ``${connector-name}-error`` topic
 
 	 - Type: STRING
 	 - Default: fail
@@ -508,6 +514,8 @@ Separator for records in a batch.
 🔘 json.decimal.format
 
 Specify the Request Body JSON serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON Request Body as a number representing the decimal value. Applicable when `request.body.format` is `json`
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -532,6 +540,9 @@ On Failure
 🔘 report.errors.as
 
 Dictates the content of records produced to the error topic. If set to ``error_string``, the value would be a human readable string describing the failure. The value will include some or all of the following information if available: http response code, reason phrase, submitted payload, url, response content, exception and error message.
+If set to http_response, the value would be the plain response content for the request which failed to write the record. 
+In both modes, any information about the failure will also be included in the error records headers. 
+
 
 	 - Type: STRING
 	 - Default: error_string
@@ -713,38 +724,32 @@ The algorithm used by trust manager factory for SSL connections. Default value i
 	 - Required: false
 
 ==========================
-reporter.result.topic.name
+
 ==========================
-🔘 ${connector}-success
+🔘 reporter.result.topic.name
 
 The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
 	 - Type: STRING
-	 - Default: 
+	 - Default: ${connector}-success
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.result.topic.replication.factor
-==========================
-🔘 3
+🔘 reporter.result.topic.replication.factor
 
 The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
 	 - Type: SHORT
-	 - Default: 
+	 - Default: 3
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.result.topic.partitions
-==========================
-🔘 1
+🔘 reporter.result.topic.partitions
 
 The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
 
 	 - Type: INT
-	 - Default: 
+	 - Default: 1
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -833,38 +838,32 @@ Controls which format this converter will serialize decimals in. This value is c
 	 - Required: false
 
 ==========================
-reporter.error.topic.name
+
 ==========================
-🔘 ${connector}-error
+🔘 reporter.error.topic.name
 
 The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
 	 - Type: STRING
-	 - Default: 
+	 - Default: ${connector}-error
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.error.topic.replication.factor
-==========================
-🔘 3
+🔘 reporter.error.topic.replication.factor
 
 The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
 	 - Type: SHORT
-	 - Default: 
+	 - Default: 3
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.error.topic.partitions
-==========================
-🔘 1
+🔘 reporter.error.topic.partitions
 
 The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
 
 	 - Type: INT
-	 - Default: 
+	 - Default: 1
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -953,16 +952,16 @@ Controls which format this converter will serialize decimals in. This value is c
 	 - Required: false
 
 ==========================
-reporter.bootstrap.servers
+
 ==========================
-🔘 LIST
+🔘 reporter.bootstrap.servers
 
+A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
 
-
-	 - Type: MEDIUM
-	 - Default: false
-	 - Importance: 
-	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 null
@@ -1053,4 +1052,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 
