@@ -3804,7 +3804,9 @@ subcommands:
   description: "\U0001F9F0 Tools commands\n\nSmall utilities that are handy around
     the playground but are not tied to a\nrunning environment:\n\n  read-avro-file
     \       dump an avro file as readable json\n  read-parquet-file     same, for
-    parquet\n  certs-create          generate a keystore and truststore for a component\n
+    parquet\n  cert create           generate a keystore and truststore for a component\n
+    \ cert inspect          why TLS fails: keystores, certificates, server chains\n
+    \ cert convert          JKS, PKCS12, PEM, DER, Kafka properties with PEM inline\n
     \ redos-check           check a topics.regex for catastrophic backtracking\n  http-server
     \          drive the http test server of the http examples: set-response, reset,
     requests\n  install-vscode-extension   playground completion inside VS Code\n
@@ -3900,36 +3902,194 @@ subcommands:
       description: "\U0001F516 Parquet file to read\n\n❕ It must be absolute full
         path\n\n\U0001F393 Tip: use <tab> completion to trigger fzf completion\n        use
         <option+enter> to use the value you typed manually"
-  - name: certs-create
-    description: "\U0001F510 Generate keys and certificates used for SSL\n\nCreates
-      a certificate authority and, for each container, a keystore and\na truststore
-      in --output-folder. This is how the certificates of the\nssl environments are
-      produced; regenerate them when they have expired,\nor to build a set for a container
-      the playground does not know about."
-    usage: playground tools certs-create [OPTIONS]
-    options:
-    - names:
-      - "--container"
-      - "-c"
-      - "--pod"
-      - "-p"
-      argument: CONTAINER
-      description: "\U0001F433 container name (or pod name when cfk environment is
-        used)\n\n\U0001F393 Tip: you can pass multiple containers by specifying --container
-        multiple times\n\nRepeatable: ✓ Yes\nDefault value: [\"broker\", \"broker2\",
-        \"broker3\", \"client\", \"schema-registry\", \"restproxy\", \"connect\",
-        \"connect2\", \"connect3\", \"control-center\", \"clientrestproxy\", \"ksqldb-server\",
-        \"conduktor\"]"
-    - names:
-      - "--verbose"
-      - "-v"
-      argument: ''
-      description: "\U0001F41E Show command being ran."
-    - names:
-      - "--output-folder"
-      argument: FOLDER
-      description: "\U0001F4C1 Folder where certificates are created\n\nRequired:
-        ✓ Yes"
+  - name: cert
+    description: "\U0001F510 Certificate commands\n\n  create    a CA, then a keystore
+      and a truststore per container\n  inspect   why TLS fails: keystore, truststore,
+      certificate or server\n            chain, explained in an HTML report for TLS
+      beginners\n  convert   JKS, PKCS12, PEM, DER, or Kafka properties with PEM inline\n\n\U0001F393
+      Tip: for a customer error 'PKIX path building failed' or 'No subject\nalternative
+      names matching', run 'inspect' on their certificate with their\ntruststore and
+      the hostname the clients use."
+    usage: playground tools cert COMMAND
+    options: []
+    subcommands:
+    - name: create
+      description: "\U0001F510 Generate keys and certificates used for SSL\n\nCreates
+        a certificate authority and, for each container, a keystore and\na truststore
+        in --output-folder. This is how the certificates of the\nssl environments
+        are produced; regenerate them when they have expired,\nor to build a set for
+        a container the playground does not know about."
+      usage: playground tools cert create [OPTIONS]
+      options:
+      - names:
+        - "--container"
+        - "-c"
+        - "--pod"
+        - "-p"
+        argument: CONTAINER
+        description: "\U0001F433 container name (or pod name when cfk environment
+          is used)\n\n\U0001F393 Tip: you can pass multiple containers by specifying
+          --container multiple times\n\nRepeatable: ✓ Yes\nDefault value: [\"broker\",
+          \"broker2\", \"broker3\", \"client\", \"schema-registry\", \"restproxy\",
+          \"connect\", \"connect2\", \"connect3\", \"control-center\", \"clientrestproxy\",
+          \"ksqldb-server\", \"conduktor\"]"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--output-folder"
+        argument: FOLDER
+        description: "\U0001F4C1 Folder where certificates are created\n\nRequired:
+          ✓ Yes"
+    - name: inspect
+      description: "\U0001F50D Inspect certificates and explain what breaks TLS\n\nReads
+        a keystore or truststore (JKS, PKCS12), a PEM or DER certificate\n(a chain,
+        a private key), and / or the chain a server sends\n(--server host:port), and
+        checks what makes Kafka clients fail:\n\n  expired (or not yet valid) certificates,
+        and the ones expiring soon\n  the order and the end of each chain (a missing
+        intermediate)\n  --hostname in the subject alternative names (No subject alternative
+        names matching)\n  --truststore trusts the chain (PKIX path building failed)\n
+        \ the private key belongs to the certificate (in the PEM, or --key)\n  --purpose
+        server|client in the extended key usage, CA used as leaf,\n  RSA keys under
+        2048 bits, SHA-1 signatures\n\nIt prints a digest and writes an HTML report
+        made for someone new to\nTLS: every problem with what it means, why it matters,
+        the java error it\ncauses and how to fix it, each chain drawn certificate
+        by certificate,\nand a glossary. Exit code 1 when a problem is found.\n\nkeytool
+        and openssl run in the connect image: nothing to install. A\nkeystore opens
+        with --password, or else with an empty, 'confluent' or\n'changeit' password
+        (the report says which one).\n\n\U0001F393 Tip: for a customer error 'PKIX
+        path building failed', run it on their\nserver certificate (or --server) with
+        --truststore <their truststore>."
+      usage: playground tools cert inspect [OPTIONS]
+      options:
+      - names:
+        - "--file"
+        - "-f"
+        argument: FILE
+        description: "\U0001F4C4 Keystore, truststore (.jks, .p12, .pfx), PEM (.pem,
+          .crt, .cer: certificates, private key) or DER certificate"
+      - names:
+        - "--password"
+        argument: PASSWORD
+        description: "\U0001F511 Password of the keystore of --file (or of the encrypted
+          private key)"
+      - names:
+        - "--key"
+        argument: KEY
+        description: "\U0001F5DD️ Private key (PEM) to check against the first certificate"
+      - names:
+        - "--truststore"
+        argument: TRUSTSTORE
+        description: "\U0001F4D2 Truststore (JKS, PKCS12 or PEM bundle) that should
+          trust the chain(s)"
+      - names:
+        - "--truststore-password"
+        argument: TRUSTSTORE_PASSWORD
+        description: "\U0001F511 Password of --truststore"
+      - names:
+        - "--server"
+        argument: SERVER
+        description: "\U0001F5A5️ <host>:<port> of a TLS server whose chain to inspect
+          (a playground container such as broker:9093, or any reachable server)"
+      - names:
+        - "--servername"
+        argument: SERVERNAME
+        description: "\U0001F3F7️ SNI sent to --server (default: its host)"
+      - names:
+        - "--hostname"
+        argument: HOSTNAME
+        description: "\U0001F3F7️ Hostname the clients use to connect: checked against
+          the subject alternative names (default: the host of --server)"
+      - names:
+        - "--purpose"
+        argument: PURPOSE
+        description: "\U0001F3AF Role of the certificate, checked against its extended
+          key usage: server (broker, schema registry...) or client (mTLS)\n\nAllowed
+          values: server, client"
+      - names:
+        - "--output-dir"
+        argument: OUTPUT_DIR
+        description: "\U0001F4C2 Output directory of the HTML report (default: /tmp/playground-cert-inspect)"
+      - names:
+        - "--no-open"
+        argument: ''
+        description: "\U0001F6AB Do not open the HTML report in the browser"
+      - names:
+        - "--json"
+        argument: ''
+        description: "\U0001F916 Print the result as JSON (no HTML report)"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+    - name: convert
+      description: "\U0001F504 Convert certificates and keystores between formats\n\n--to
+        pkcs12 | jks   a keystore (JKS / PKCS12) in the other format; PEM\n                    with
+        a private key (in the file or --key): a\n                    keystore with
+        the key and its chain; PEM or DER\n                    certificates only:
+        a truststore\n--to pem            from a keystore, per key pair entry\n                    <name>-<alias>.certificate.pem
+        (chain) and\n                    <name>-<alias>.key.pem (PKCS#8), the trusted\n
+        \                   certificates in <name>.truststore.pem: the files of\n
+        \                   librdkafka (python, go, .net) clients\n--to der            the
+        first certificate (of each key pair entry)\n--to properties     Kafka client
+        properties with the certificates\n                    inline (ssl.keystore.type=PEM,\n
+        \                   ssl.keystore.certificate.chain, ssl.keystore.key,\n                    ssl.truststore.certificates):
+        no file to copy\n                    (Apache Kafka 2.7+, CP 6.1+)\n\nThe files
+        are written next to --file (--output-folder to change it),\nnever over an
+        existing file unless --force. A keystore opens with\n--password, or else an
+        empty, 'confluent' or 'changeit' password; the\noutputs use --output-password
+        (default: the input password, or\n'confluent').\n\n\U0001F393 Tip: check the
+        result with 'playground tools cert inspect'."
+      usage: playground tools cert convert [OPTIONS]
+      options:
+      - names:
+        - "--file"
+        - "-f"
+        argument: FILE
+        description: "\U0001F4C4 Keystore or truststore (.jks, .p12, .pfx), PEM (certificates,
+          private key) or DER certificate to convert\n\nRequired: ✓ Yes"
+      - names:
+        - "--to"
+        argument: TO
+        description: "\U0001F3AF Output format\n\nRequired: ✓ Yes\nAllowed values:
+          pkcs12, jks, pem, der, properties"
+      - names:
+        - "--key"
+        argument: KEY
+        description: "\U0001F5DD️ Private key (PEM) of the first certificate of --file,
+          for a keystore from PEM"
+      - names:
+        - "--password"
+        argument: PASSWORD
+        description: "\U0001F511 Password of --file (keystore), or of the encrypted
+          private key"
+      - names:
+        - "--output-password"
+        argument: OUTPUT_PASSWORD
+        description: "\U0001F511 Password of the output keystore, or of the output
+          private key (--to pem: encrypted only when set)"
+      - names:
+        - "--alias"
+        argument: ALIAS
+        description: "\U0001F3F7️ Only this entry of the keystore, or the name of
+          the entry created from PEM (default: the CN of the certificate)"
+      - names:
+        - "--output-folder"
+        argument: OUTPUT_FOLDER
+        description: "\U0001F4C1 Folder of the output files (default: the folder of
+          --file)"
+      - names:
+        - "--force"
+        argument: ''
+        description: "\U0001F4AA Replace the output files when they exist"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
   - name: redos-check
     description: "\U0001FA96 Check topics.regex for ReDos vulnerabilities using recheck
       (https://github.com/makenowjust-labs/recheck)\n\nSome regular expressions take

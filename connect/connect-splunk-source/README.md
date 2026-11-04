@@ -16,7 +16,7 @@ playground run -f splunk-source.sh
 
 ## What the script does
 
-1. Generates a keystore for the connector HTTPS listener with `playground tools certs-create` (in `security/`).
+1. Generates a keystore for the connector HTTPS listener with `playground tools cert create` (in `security/`).
 2. Creates the Splunk Source connector listening on port `8889` (HTTPS), writing to topic `splunk-source`.
 3. Simulates an application sending an event to the HEC-compatible endpoint:
 

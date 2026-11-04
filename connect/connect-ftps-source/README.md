@@ -20,7 +20,7 @@ playground run -f ftps-source.sh --tag 7.9.0
 
 ## What the script does
 
-1. Generates the keystore/truststore with `playground tools certs-create` and the vsftpd certificate with `openssl`.
+1. Generates the keystore/truststore with `playground tools cert create` and the vsftpd certificate with `openssl`.
 2. Creates the `input`, `error` and `finished` folders for user `bob` on the FTPS server and copies a JSON file with 2 records into `input`.
 3. Creates the `ftps-source-json` connector (`schema.generation.enabled=false`, with `key.schema` and `value.schema`) writing to topic `ftps-testing-topic`.
 4. Verifies topic `ftps-testing-topic` with `playground topic consume`.

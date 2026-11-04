@@ -11,7 +11,7 @@ check_docker_compose_version
 check_bash_version
 check_and_update_playground_version
 
-playground tools certs-create --output-folder "${PWD}/../../environment/ssl_kerberos/security"
+playground tools cert create --output-folder "${PWD}/../../environment/ssl_kerberos/security"
 
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first

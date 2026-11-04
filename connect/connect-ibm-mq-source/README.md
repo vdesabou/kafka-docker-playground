@@ -34,7 +34,7 @@ playground run -f ibm-mq.sh
 ## What the script does
 
 1. Extracts the IBM MQ client jars from `IBM-MQ-Install-Java-All.jar` (first run only).
-2. For SSL/mTLS variants: generates certificates with `playground tools certs-create` and configures TLS on channel `DEV.APP.SVRCONN` (mTLS also sets `SSLCAUTH(REQUIRED)` and refreshes security).
+2. For SSL/mTLS variants: generates certificates with `playground tools cert create` and configures TLS on channel `DEV.APP.SVRCONN` (mTLS also sets `SSLCAUTH(REQUIRED)` and refreshes security).
 3. For the EOS variant: defines the MQ topic `MY.MQ.STATE.TOPIC` and grants user `app` the required permissions.
 4. Creates the IBM MQ source connector from queue `DEV.QUEUE.1` of queue manager `QM1` to topic `MyKafkaTopicName` (`ibm-topic` for EOS).
 5. Puts messages in the queue with `amqsput` (or `runjms JmsProducer` for the BytesMessage variant).

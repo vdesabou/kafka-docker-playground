@@ -17,7 +17,7 @@ playground run -f rabbitmq-sink.sh
 | Script | Description |
 | --- | --- |
 | `rabbitmq-sink.sh` | Basic example |
-| `rabbitmq-sink-ssl.sh` | Same, with SSL on port `5671` (`rabbitmq.security.protocol=SSL`, certificates generated with `playground tools certs-create`) |
+| `rabbitmq-sink-ssl.sh` | Same, with SSL on port `5671` (`rabbitmq.security.protocol=SSL`, certificates generated with `playground tools cert create`) |
 
 ## What the script does
 

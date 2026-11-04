@@ -17,7 +17,7 @@ playground run -f rabbitmq-source.sh
 | Script | Description |
 | --- | --- |
 | `rabbitmq-source.sh` | Basic example |
-| `rabbitmq-source-ssl.sh` | Same, with SSL on port `5671` (`rabbitmq.security.protocol=SSL`, certificates generated with `playground tools certs-create`) |
+| `rabbitmq-source-ssl.sh` | Same, with SSL on port `5671` (`rabbitmq.security.protocol=SSL`, certificates generated with `playground tools cert create`) |
 
 ## What the script does
 

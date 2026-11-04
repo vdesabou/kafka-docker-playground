@@ -9,7 +9,9 @@ help: |-
 
     read-avro-file        dump an avro file as readable json
     read-parquet-file     same, for parquet
-    certs-create          generate a keystore and truststore for a component
+    cert create           generate a keystore and truststore for a component
+    cert inspect          why TLS fails: keystores, certificates, server chains
+    cert convert          JKS, PKCS12, PEM, DER, Kafka properties with PEM inline
     redos-check           check a topics.regex for catastrophic backtracking
     http-server           drive the http test server of the http examples: set-response, reset, requests
     install-vscode-extension   playground completion inside VS Code
@@ -151,46 +153,301 @@ commands:
       🎓 Tip: use <tab> completion to trigger fzf completion
               use <option+enter> to use the value you typed manually
 
-- name: certs-create
+- name: cert
   help: |-
-    🔐 Generate keys and certificates used for SSL
+    🔐 Certificate commands
 
-    Creates a certificate authority and, for each container, a keystore and
-    a truststore in --output-folder. This is how the certificates of the
-    ssl environments are produced; regenerate them when they have expired,
-    or to build a set for a container the playground does not know about.
-  flags:
-  - long: --container
-    short: -c
-    alias: [--pod, -p]
-    arg: container
-    help: |-
-      🐳 container name (or pod name when cfk environment is used)
+      create    a CA, then a keystore and a truststore per container
+      inspect   why TLS fails: keystore, truststore, certificate or server
+                chain, explained in an HTML report for TLS beginners
+      convert   JKS, PKCS12, PEM, DER, or Kafka properties with PEM inline
 
-      🎓 Tip: you can pass multiple containers by specifying --container multiple times
-    required: false
-    repeatable: true
-    unique: true
-    default:
-      - broker 
-      - broker2 
-      - broker3
-      - client 
-      - schema-registry 
-      - restproxy
-      - connect
-      - connect2
-      - connect3
-      - control-center
-      - clientrestproxy
-      - ksqldb-server
-      - conduktor
-  - import: src/flags/verbose.yml
-  - long: --output-folder
-    required: true
-    arg: folder
+    🎓 Tip: for a customer error 'PKIX path building failed' or 'No subject
+    alternative names matching', run 'inspect' on their certificate with their
+    truststore and the hostname the clients use.
+  commands:
+  - name: create
     help: |-
-      📁 Folder where certificates are created
+      🔐 Generate keys and certificates used for SSL
+
+      Creates a certificate authority and, for each container, a keystore and
+      a truststore in --output-folder. This is how the certificates of the
+      ssl environments are produced; regenerate them when they have expired,
+      or to build a set for a container the playground does not know about.
+    flags: &cert_create_flags
+    - long: --container
+      short: -c
+      alias: [--pod, -p]
+      arg: container
+      help: |-
+        🐳 container name (or pod name when cfk environment is used)
+
+        🎓 Tip: you can pass multiple containers by specifying --container multiple times
+      required: false
+      repeatable: true
+      unique: true
+      default:
+        - broker 
+        - broker2 
+        - broker3
+        - client 
+        - schema-registry 
+        - restproxy
+        - connect
+        - connect2
+        - connect3
+        - control-center
+        - clientrestproxy
+        - ksqldb-server
+        - conduktor
+    - import: src/flags/verbose.yml
+    - long: --output-folder
+      required: true
+      arg: folder
+      help: |-
+        📁 Folder where certificates are created
+
+  - name: inspect
+    help: |-
+      🔍 Inspect certificates and explain what breaks TLS
+
+      Reads a keystore or truststore (JKS, PKCS12), a PEM or DER certificate
+      (a chain, a private key), and / or the chain a server sends
+      (--server host:port), and checks what makes Kafka clients fail:
+
+        expired (or not yet valid) certificates, and the ones expiring soon
+        the order and the end of each chain (a missing intermediate)
+        --hostname in the subject alternative names (No subject alternative names matching)
+        --truststore trusts the chain (PKIX path building failed)
+        the private key belongs to the certificate (in the PEM, or --key)
+        --purpose server|client in the extended key usage, CA used as leaf,
+        RSA keys under 2048 bits, SHA-1 signatures
+
+      It prints a digest and writes an HTML report made for someone new to
+      TLS: every problem with what it means, why it matters, the java error it
+      causes and how to fix it, each chain drawn certificate by certificate,
+      and a glossary. Exit code 1 when a problem is found.
+
+      keytool and openssl run in the connect image: nothing to install. A
+      keystore opens with --password, or else with an empty, 'confluent' or
+      'changeit' password (the report says which one).
+
+      🎓 Tip: for a customer error 'PKIX path building failed', run it on their
+      server certificate (or --server) with --truststore <their truststore>.
+    flags:
+    - long: --file
+      short: -f
+      required: false
+      arg: file
+      validate: file_exists
+      help: |-
+        📄 Keystore, truststore (.jks, .p12, .pfx), PEM (.pem, .crt, .cer: certificates, private key) or DER certificate
+    - long: --password
+      required: false
+      arg: password
+      help: |-
+        🔑 Password of the keystore of --file (or of the encrypted private key)
+    - long: --key
+      required: false
+      arg: key
+      validate: file_exists
+      help: |-
+        🗝️ Private key (PEM) to check against the first certificate
+    - long: --truststore
+      required: false
+      arg: truststore
+      validate: file_exists
+      help: |-
+        📒 Truststore (JKS, PKCS12 or PEM bundle) that should trust the chain(s)
+    - long: --truststore-password
+      required: false
+      arg: truststore_password
+      help: |-
+        🔑 Password of --truststore
+    - long: --server
+      required: false
+      arg: server
+      help: |-
+        🖥️ <host>:<port> of a TLS server whose chain to inspect (a playground container such as broker:9093, or any reachable server)
+    - long: --servername
+      required: false
+      arg: servername
+      help: |-
+        🏷️ SNI sent to --server (default: its host)
+    - long: --hostname
+      required: false
+      arg: hostname
+      help: |-
+        🏷️ Hostname the clients use to connect: checked against the subject alternative names (default: the host of --server)
+    - long: --purpose
+      required: false
+      arg: purpose
+      allowed:
+      - server
+      - client
+      help: |-
+        🎯 Role of the certificate, checked against its extended key usage: server (broker, schema registry...) or client (mTLS)
+    - long: --output-dir
+      required: false
+      arg: output_dir
+      help: |-
+        📂 Output directory of the HTML report (default: /tmp/playground-cert-inspect)
+    - long: --no-open
+      required: false
+      help: |-
+        🚫 Do not open the HTML report in the browser
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON (no HTML report)
+    - import: src/flags/verbose.yml
+    examples:
+    - playground tools cert inspect --file keystore.jks --password confluent
+    - playground tools cert inspect --file broker.pem --truststore client-truststore.jks --hostname broker.example.com
+    - playground tools cert inspect --server broker:9093 --truststore ./security/kafka.client.truststore.jks
+    - playground tools cert inspect --file client.crt --key client.key --purpose client
+    - playground tools cert inspect --file keystore.p12 --password secret --json | jq -r '.entries[].checks[] | select(.status == "fail") | .check'
+    x_example_outputs:
+    - command: playground tools cert inspect --file expired-chain.pem --truststore wrong-truststore.jks --truststore-password confluent --hostname kafka.example.com
+      output: |-
+        15:18:17 ℹ️ truststore wrong-truststore.jks: 1 certificate(s)
+        15:18:17 ℹ️ 🔐 expired-chain.pem (pem)
+           #1 CN=expired
+              issuer   CN=Test Intermediate CA
+              valid    2020-01-01 → 2021-01-01 (expired 2133 days ago)
+              SAN      DNS:broker,DNS:localhost
+              key      RSA 2048 bits, sha256WithRSAEncryption
+              usage    Digital Signature, Key Encipherment | TLS Web Server Authentication, TLS Web Client Authentication
+              sha256   A8:B7:BF:75:52:4E:81:EA:62:B1:CD:2F:EF:6D:5B:52:DF:25:A6:0D:51:BB:FC:33:2B:EC:52:45:7B:36:88:81
+           #2 CN=Test Intermediate CA
+              issuer   CN=Test Root CA
+              valid    2026-11-04 → 2031-11-03 (1824 days left)
+              key      RSA 2048 bits, sha256WithRSAEncryption, CA
+              usage    Certificate Sign, CRL Sign
+              sha256   75:D7:C9:EE:35:ED:B9:D5:3B:15:25:2D:A6:60:71:7B:26:E3:D4:C1:56:4A:7C:70:3B:67:2F:EB:0D:90:46:02
+           ❌ expiry of #1 (expired)           expired on 2021-01-01
+              👉 renew the certificate ('playground tools cert create' for the playground ones)
+           ✅ chain order                      2 certificates, each one issued by the next one
+           ℹ️  chain end                        ends at a certificate issued by CN=Test Root CA, not included: the truststore of the peers must contain it
+           ❌ hostname kafka.example.com       not in the SANs (DNS:broker,DNS:localhost)
+              👉 java fails with 'No subject alternative names matching ... found': regenerate with -ext SAN=dns:kafka.example.com, or set ssl.endpoint.identification.algorithm= (empty) on the client to skip the check
+           ❌ truststore wrong-truststore.jks  does not trust the chain: the truststore does not have the CA that issued the last certificate of the chain (CN=Test Root CA)
+              👉 java fails with 'PKIX path building failed: unable to find valid certification path to requested target': import the root (or the intermediate) CA of the chain into the truststore
+        15:18:17 ℹ️ ✅ HTML report saved: /tmp/playground-cert-inspect/cert-inspect-expired-chain.pem-20261104-151817.html
+        15:18:17 🔥 ❌ 3 problem(s), ⚠️ 0 warning(s), ✅ 1 ok
+
+  - name: convert
+    help: |-
+      🔄 Convert certificates and keystores between formats
+
+      --to pkcs12 | jks   a keystore (JKS / PKCS12) in the other format; PEM
+                          with a private key (in the file or --key): a
+                          keystore with the key and its chain; PEM or DER
+                          certificates only: a truststore
+      --to pem            from a keystore, per key pair entry
+                          <name>-<alias>.certificate.pem (chain) and
+                          <name>-<alias>.key.pem (PKCS#8), the trusted
+                          certificates in <name>.truststore.pem: the files of
+                          librdkafka (python, go, .net) clients
+      --to der            the first certificate (of each key pair entry)
+      --to properties     Kafka client properties with the certificates
+                          inline (ssl.keystore.type=PEM,
+                          ssl.keystore.certificate.chain, ssl.keystore.key,
+                          ssl.truststore.certificates): no file to copy
+                          (Apache Kafka 2.7+, CP 6.1+)
+
+      The files are written next to --file (--output-folder to change it),
+      never over an existing file unless --force. A keystore opens with
+      --password, or else an empty, 'confluent' or 'changeit' password; the
+      outputs use --output-password (default: the input password, or
+      'confluent').
+
+      🎓 Tip: check the result with 'playground tools cert inspect'.
+    flags:
+    - long: --file
+      short: -f
+      required: true
+      arg: file
+      validate: file_exists
+      help: |-
+        📄 Keystore or truststore (.jks, .p12, .pfx), PEM (certificates, private key) or DER certificate to convert
+    - long: --to
+      required: true
+      arg: to
+      allowed:
+      - pkcs12
+      - jks
+      - pem
+      - der
+      - properties
+      help: |-
+        🎯 Output format
+    - long: --key
+      required: false
+      arg: key
+      validate: file_exists
+      help: |-
+        🗝️ Private key (PEM) of the first certificate of --file, for a keystore from PEM
+    - long: --password
+      required: false
+      arg: password
+      help: |-
+        🔑 Password of --file (keystore), or of the encrypted private key
+    - long: --output-password
+      required: false
+      arg: output_password
+      help: |-
+        🔑 Password of the output keystore, or of the output private key (--to pem: encrypted only when set)
+    - long: --alias
+      required: false
+      arg: alias
+      help: |-
+        🏷️ Only this entry of the keystore, or the name of the entry created from PEM (default: the CN of the certificate)
+    - long: --output-folder
+      required: false
+      arg: output_folder
+      help: |-
+        📁 Folder of the output files (default: the folder of --file)
+    - long: --force
+      required: false
+      help: |-
+        💪 Replace the output files when they exist
+    - import: src/flags/verbose.yml
+    examples:
+    - playground tools cert convert --file kafka.client.keystore.jks --password confluent --to pkcs12
+    - playground tools cert convert --file kafka.client.keystore.jks --password confluent --to pem
+    - playground tools cert convert --file client.crt --key client.key --to pkcs12 --output-password secret123
+    - playground tools cert convert --file ca-bundle.pem --to jks --output-password changeit
+    - playground tools cert convert --file kafka.client.truststore.jks --password confluent --to properties
+    x_example_outputs:
+    - command: playground tools cert convert --file kafka.client.keystore.jks --to pem
+      output: |-
+        15:17:49 ℹ️ 🔄 Converting kafka.client.keystore.jks to pem
+        15:17:54 ℹ️ kafka.client.keystore.jks: opened with the password 'confluent' (no --password)
+        15:17:54 ℹ️ kafka.client.keystore.jks: keystore type PKCS12
+        15:17:54 ℹ️ ✅ /tmp/certs/kafka.client.keystore-client.certificate.pem
+           certificate chain of 'client' (2 certificate(s), the first one is its own): librdkafka ssl.certificate.location
+        15:17:54 ℹ️ ✅ /tmp/certs/kafka.client.keystore-client.key.pem
+           private key of 'client' (PKCS#8, not encrypted: keep it private): librdkafka ssl.key.location
+        15:17:54 ℹ️ ✅ /tmp/certs/kafka.client.keystore.truststore.pem
+           1 trusted certificate(s) (CA bundle): librdkafka ssl.ca.location
+        15:17:54 ℹ️ 🎓 librdkafka clients (python, go, .net, C): ssl.ca.location, ssl.certificate.location, ssl.key.location
+        15:17:54 ℹ️ 🔍 check the result: playground tools cert inspect --file /tmp/certs/kafka.client.keystore-client.certificate.pem
+    - command: playground tools cert convert --file kafka.client.keystore.jks --to properties
+      output: |-
+        15:18:01 ℹ️ 🔄 Converting kafka.client.keystore.jks to properties
+        15:18:02 ℹ️ kafka.client.keystore.jks: opened with the password 'confluent' (no --password)
+        15:18:02 ℹ️ kafka.client.keystore.jks: keystore type PKCS12
+        15:18:02 ℹ️ ✅ /tmp/certs/kafka.client.keystore.properties
+           Kafka client properties with PEM inline: ssl.keystore.* (key + 2 certificate(s)), ssl.truststore.* (1 trusted certificate(s))
+        15:18:02 ℹ️ 🎓 add these lines to the client properties (security.protocol=SSL or SASL_SSL): the certificates are inline, no file to copy
+
+- name: certs-create
+  private: true
+  filename: commands/tools/cert/create.sh
+  help: |-
+    🔐 Former name of 'playground tools cert create', kept so that existing scripts keep working
+  flags: *cert_create_flags
 
 - name: redos-check
   help: |-

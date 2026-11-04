@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 
-playground tools certs-create --output-folder "${PWD}/../../other/ldap-authorizer-with-ldap-failover/security"
+playground tools cert create --output-folder "${PWD}/../../other/ldap-authorizer-with-ldap-failover/security"
 
 playground start-environment --environment ldap-authorizer-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.ldap-authorizer-sasl-plain.ldaps.yml"
 

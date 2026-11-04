@@ -1,4 +1,8 @@
 #!/bin/bash
+# run by 'playground tools cert create' in the connect image, the output folder mounted as /tmp: a CA, then a keystore
+# and a truststore per container. Stops at the first failing step (the command reports it with the end of the log)
+set -e
+set -o pipefail
 
 # Split the argument into an array
 IFS=' ' read -r -a containers <<< "$1"
@@ -15,11 +19,10 @@ else
     maybe_nomac=""
 fi
 
-# Cleanup files
-rm -f /tmp/*.crt /tmp/*.csr /tmp/*_creds /tmp/*.jks /tmp/*.srl /tmp/*.key /tmp/*.pem /tmp/*.der /tmp/*.p12 /tmp/extfile
+# the files of a previous run are removed by the command (only those: the folder can hold other files)
 
-# Generate CA key
-openssl req -new -x509 -keyout /tmp/snakeoil-ca-1.key -out /tmp/snakeoil-ca-1.crt -days 365 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US' -passin pass:confluent -passout pass:confluent $maybe_provider
+# Generate CA key: valid as long as the certificates it signs (a CA that expires first invalidates them all)
+openssl req -new -x509 -keyout /tmp/snakeoil-ca-1.key -out /tmp/snakeoil-ca-1.crt -days 9999 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US' -passin pass:confluent -passout pass:confluent $maybe_provider
 
 for container in "${containers[@]}"
 do
@@ -93,4 +96,5 @@ EOF
                 -alias clientrestproxy
     fi
 done
+rm -f /tmp/extfile /tmp/snakeoil-ca-1.srl
 

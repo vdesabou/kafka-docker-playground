@@ -38,7 +38,7 @@ playground run -f fully-managed-ibm-mq-source.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-ibm-mq-source.sh` | Plain connection with user/password |
-| `fully-managed-ibm-mq-source-ssl.sh` | TLS (truststore generated with `playground tools certs-create`) |
+| `fully-managed-ibm-mq-source-ssl.sh` | TLS (truststore generated with `playground tools cert create`) |
 | `fully-managed-ibm-mq-source-mtls.sh` | Mutual TLS (`SSLCAUTH(REQUIRED)` on the channel, keystore and truststore, no user/password) |
 | `fully-managed-ibm-mq-source-eos.sh` | Exactly once semantics (`transaction.boundary` connector, state topic `ibm-mq-source-state-topic`), verified with `--isolation-level read_committed` |
 

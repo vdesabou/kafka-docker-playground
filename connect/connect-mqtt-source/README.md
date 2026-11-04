@@ -17,7 +17,7 @@ playground run -f mqtt-source.sh
 | Script | Description |
 | --- | --- |
 | `mqtt-source.sh` | Basic example, `tcp://mosquitto:1883` with username/password |
-| `mqtt-source-mtls.sh` | Same, with mTLS (`ssl://mosquitto:8883`, certificates generated with `playground tools certs-create`) |
+| `mqtt-source-mtls.sh` | Same, with mTLS (`ssl://mosquitto:8883`, certificates generated with `playground tools cert create`) |
 
 ## What the script does
 

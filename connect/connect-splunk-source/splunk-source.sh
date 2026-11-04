@@ -13,7 +13,7 @@ fi
 
 mkdir -p ../../connect/connect-splunk-source/security
 cd ../../connect/connect-splunk-source/security
-playground tools certs-create --output-folder "$PWD" --container splunk
+playground tools cert create --output-folder "$PWD" --container splunk
 cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
