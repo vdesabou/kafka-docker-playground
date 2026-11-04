@@ -6135,9 +6135,10 @@ subcommands:
     offsets per partition\n  compare              a topic and its replica, is everything
     replicated?\n  display-consumer-offsets   read the internal offsets topic\n\n\U0001F527
     Manage\n  list / describe / alter / delete\n  reassign / elect-leader   move replicas
-    between brokers, move leaders\n  dlq inspect / replay   dead letter queue grouped
-    by error, and replay\n  set-schema-compatibility   compatibility of the topic
-    subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation
+    between brokers, move leaders\n  dump-log        the batches of a partition on
+    disk: producers, transactions, sizes\n  dlq inspect / replay   dead letter queue
+    grouped by error, and replay\n  set-schema-compatibility   compatibility of the
+    topic subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation
     is handled for you: 'produce' registers the schema you give\nit and 'consume'
     works out from the payload whether it is avro, protobuf,\njson schema or plain
     text.\n\n\U0001F393 Tip: in an example script, 'consume --min-expected-messages
@@ -6502,6 +6503,84 @@ subcommands:
         the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
         state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
         values: us, europe"
+  - name: dump-log
+    description: "\U0001F52C Dump the log segments of a partition: batches, producers,
+      transactions\n\nRuns kafka-dump-log on the segment files of a partition, in
+      the broker\nthat holds the replica (the leader by default), and prints a digest\nbefore
+      the batches:\n\n  batches, records, offsets and time range of the segment(s)
+      read\n  compression codecs, largest batch (the max.message.bytes /\n  RecordTooLargeException
+      limit) and largest record\n  producers (id, epochs, offsets), idempotent or
+      transactional, with\n  their COMMIT / ABORT markers\n  open transactions: transactional
+      records with no marker after them,\n  where read_committed consumers stop (the
+      last stable offset)\n\nThen the batches: the last 20 (--last, --all), or the
+      ones around\n--offset, with --records for each record (key and value sizes,\nheaders)
+      and --print-data for the payloads.\n\nIt reads the last (active) segment, the
+      one that holds --offset, or\nevery segment with --all-segments. The files are
+      read on disk: no\nclient credentials, any secured environment and cfk. Not on
+      Confluent\nCloud (no access to the log segments).\n\n\U0001F393 Tip: for a read_committed
+      consumer stuck at an offset, or\ntransactions that never end, look at the producers
+      of that offset,\nthen 'playground broker transactions find-hanging'."
+    usage: playground topic dump-log [OPTIONS]
+    options:
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Topic name\n\nRequired: ✓ Yes"
+    - names:
+      - "--partition"
+      - "-p"
+      argument: PARTITION
+      description: "\U0001F522 Partition (default 0)\n\nDefault value: 0"
+    - names:
+      - "--offset"
+      - "-o"
+      argument: OFFSET
+      description: "\U0001F3AF Read the segment that holds this offset, and show the
+        batches around it"
+    - names:
+      - "--broker"
+      argument: BROKER
+      description: "\U0001F5A5️ Id of the broker whose replica to read (default: the
+        leader)"
+    - names:
+      - "--all-segments"
+      argument: ''
+      description: "\U0001F4DA Read every segment of the partition, not only the last
+        one (can be long on a big partition)"
+    - names:
+      - "--records"
+      argument: ''
+      description: "\U0001F9FE Show each record of the batches shown: offset, key
+        and value sizes, headers"
+    - names:
+      - "--print-data"
+      argument: ''
+      description: "\U0001F4C4 With --records, show the payloads too (raw bytes as
+        text: Avro and Protobuf are not decoded)"
+    - names:
+      - "--last"
+      argument: LAST
+      description: "\U0001F522 Number of batches to show, the last ones (default 20)\n\nDefault
+        value: 20"
+    - names:
+      - "--all"
+      argument: ''
+      description: "\U0001F4E6 Show every batch of the segment(s) read"
+    - names:
+      - "--raw"
+      argument: ''
+      description: "\U0001F4DC Print the output of kafka-dump-log as is"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print {\"segments\", \"batches\": [{..., \"records\"}],
+        \"summary\": {..., \"producers\", \"open_transactions\"}} and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
   - name: set-schema-compatibility
     description: "\U0001F6E1️ Change topic's schema compatibility\n\nSets the compatibility
       level on the value subject of the topic\n(<topic>-value), and on its key subject

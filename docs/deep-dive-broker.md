@@ -20,6 +20,7 @@ run.
 | restart the brokers one by one, like a rolling upgrade | `playground broker rolling-restart` (`--brokers 3,2,1`, `--force`) |
 | records in a transaction that never ends | `playground topic produce -t <t> --transactional-id <id> --transaction open --transaction-timeout 900000` |
 | open and hanging transactions (a `read_committed` consumer stuck) | `playground broker transactions list\|describe\|describe-producers\|find-hanging\|abort` |
+| the batches of a partition on disk: producers, COMMIT / ABORT markers, where a transaction is still open | `playground topic dump-log --topic <t> --partition <p> [--offset o]` |
 | is a broker the bottleneck? (idle threads, p99 latency, bytes in/out) | `playground broker metrics` (`--topic <t>`, `--json`) |
 | change a config of the live brokers | `playground broker config set --key <k> --value <v>` (see the [topic administration deep dive](/deep-dive-topic-administration.md)) |
 

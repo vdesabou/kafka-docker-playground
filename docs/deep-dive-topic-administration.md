@@ -122,6 +122,41 @@ Gotchas:
 - On CFK, `describe` runs `kafka-topics --describe` in connect-0, and also shows the `KafkaTopic` custom resource
   (`kubectl describe kafkatopic`) when the topic has one.
 
+### On disk: `dump-log`
+
+`playground topic dump-log` runs `kafka-dump-log` on the segment files of a partition, in the broker that holds the
+replica (the leader, or `--broker <id>`), and prints a digest before the batches: producers, transactions with their
+markers, compression, the largest batch. It answers what the offsets cannot: why a `read_committed` consumer stops at an
+offset, why `get-number-records` counts more than a consumer reads (markers, aborted records), which producer wrote a
+batch, how big the batches really are on disk.
+
+```bash
+playground topic dump-log --topic orders
+# 📂 orders-0 on broker 1 (leader) in broker: /var/lib/kafka/data/orders-0
+#    1 segment(s): 00000000000000000000.log (782 KB); read: 00000000000000000000.log
+# 🧮 8 batch(es), 18 record(s), offsets 0-19, 2026-11-04 16:02:08 → 2026-11-04 16:02:52
+#    compression: lz4 (1), none (5); largest batch 781.2 KB at offset 10, largest record value 781.2 KB at offset 10
+#    transactions: 3 transactional batch(es), 1 COMMIT and 1 ABORT marker(s)
+#    producer 21 (epochs 0,1)  offsets 11-14, 3 record(s) in 1 batch(es), transactional: 1 commit(s), 0 abort(s)
+#    producer 25 (epoch 0)  offsets 18-19, 2 record(s) in 1 batch(es), transactional: 0 commit(s), 0 abort(s), ⚠️ open since offset 18
+# ⚠️ producer 25: transactional records from offset 18 with no COMMIT / ABORT marker after them in the segment(s) read: an open (or hanging) transaction. read_committed consumers stop before offset 18 (the last stable offset) until it ends
+# 📦 last 20 batch(es)
+#    offsets        count  producer     kind             codec   size       CreateTime
+#    10             1      19/0         -                none    781.2 KB   2026-11-04 16:02:17
+#    11-13          3      21/0         transactional    none    121 B      2026-11-04 16:02:25
+#    14             1      21/1         ✅ COMMIT marker  none    78 B       2026-11-04 16:02:27
+#    18-19          2      25/0         transactional    none    103 B      2026-11-04 16:02:52
+```
+
+- It reads the **last (active) segment** by default: `--offset <o>` reads the segment that holds `o` and shows the
+  batches around it, `--all-segments` reads them all (long on a big partition). The digest is about the segments read.
+- `--records` adds each record (offset, key and value sizes, headers), `--print-data` the payloads (raw bytes: Avro and
+  Protobuf are not decoded, use `topic consume` for that), `--raw` prints `kafka-dump-log` as is, `--json` the result.
+- The files are read on disk in the broker container (the `kafka-<id>` pod on CFK): no client credentials, any
+  environment. Not on Confluent Cloud.
+- A COMMIT / ABORT marker takes an offset: that's why the offsets of a transactional topic have gaps for a consumer.
+  With transactions v2 (Kafka 4), the marker has the next producer epoch.
+
 ---
 
 ## 4. Counting and waiting: `get-number-records`, `get-offsets`, `wait-for-records`
@@ -376,6 +411,8 @@ playground stop
 | "the sink lost data: retention" | `topic create … --config retention.ms=60000 --config segment.ms=10000`, produce, wait for the log cleaner, `topic get-offsets`: `EARLIEST` moved |
 | "compacted topic, the sink sees old values" | `topic create … --config cleanup.policy=compact --config segment.ms=10000 --config min.cleanable.dirty.ratio=0.01`, produce the same keys several times, roll a segment, compare `get-offsets` and `consume --count` over time |
 | "records of one key arrive out of order after adding partitions" | a key goes to `hash(key) % partitions`: produce keyed records on 1 partition, re-create with 3 (`topic produce --nb-partitions 3` on an empty topic, or `kafka-topics --alter --partitions` through `container exec`), produce the same keys: they move |
+| "a `read_committed` consumer / sink stops at an offset" | `topic dump-log -t <t> --partition <p> --offset <that offset>`: the producer whose transactional records have no marker after them (⚠️ open since offset …), then `broker transactions find-hanging` |
+| "which producer wrote these records? how big are the batches on disk?" | `topic dump-log -t <t> --offset <o> --records` (producer id / epoch of each batch, codec, size, key and value sizes) |
 | "the count doesn't match what the consumer reads" | `get-number-records` (offsets) vs `topic consume --count` (records): transactions, compaction or retention explain the gap |
 | "a source connector created nothing" | `topic wait-for-records -t <t> --min-expected-messages 1 --max-wait 120` (works before the topic exists), then `topic consume` |
 | "our topic has an odd config" | `topic describe -t <t>`: `Configs:` shows only the overrides; compare with the customer's `kafka-configs --describe` |
