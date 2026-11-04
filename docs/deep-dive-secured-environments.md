@@ -68,6 +68,7 @@ SSL cluster" or "the connector gets `TopicAuthorizationException`". Takes about 
 | `plaintext` | `PLAINTEXT` | none | `http`, no auth | `http`, no auth | none |
 | `sasl-plain` | `SASL_PLAINTEXT` | `PLAIN` | `http` | `http` | `/tmp/client.properties` (`environment/sasl-plain/client.properties`) |
 | `sasl-scram` | `SASL_PLAINTEXT` | `SCRAM-SHA-256` | `http` | `http` | `/tmp/client.properties` (`environment/sasl-scram/client.properties`) |
+| `sasl-oauthbearer` | `SASL_PLAINTEXT` | `OAUTHBEARER` (OIDC), tokens from the `keycloak` container (`client_credentials`), principal = client id (`azp`), CP 7.4+ | `http` | `http` | `/tmp/client.properties` (`environment/sasl-oauthbearer/client.properties`) |
 | `sasl-ssl` | `SASL_SSL` (`ssl.client.auth=required`) | `PLAIN` over TLS, client certificate | `https`, client certificate | `https`, client certificate | `/etc/kafka/secrets/client_without_interceptors.config` |
 | `2way-ssl` | `SSL` (`ssl.client.auth=required`) | mutual TLS | `https`, client certificate | `https`, client certificate | `/etc/kafka/secrets/client_without_interceptors.config` |
 | `kerberos` | `SASL_PLAINTEXT` | `GSSAPI`, `kdc` container, keytabs | `http` | `http` | `/etc/kafka/producer.properties` in the `client` container, after `kinit` |
@@ -163,6 +164,7 @@ EOF
 | --- | --- |
 | `sasl-plain`, `ldap-sasl-plain`, `ldap-authorizer-sasl-plain` | `<prefix>.sasl.jaas.config` (`client` / `client-secret`), `<prefix>.security.protocol=SASL_PLAINTEXT`, `<prefix>.sasl.mechanism=PLAIN` |
 | `sasl-scram` | the same with `ScramLoginModule`, `SCRAM-SHA-256` |
+| `sasl-oauthbearer` | `<prefix>.sasl.mechanism=OAUTHBEARER`, `<prefix>.sasl.login.callback.handler.class=…OAuthBearerLoginCallbackHandler`, `<prefix>.sasl.oauthbearer.token.endpoint.url` (Keycloak), `OAuthBearerLoginModule` JAAS with `clientId="client"` / `clientSecret="client-secret"` |
 | `sasl-ssl` | `<prefix>.bootstrap.servers=broker:9092`, JAAS, `SASL_SSL`, truststore / keystore; `*.converter.schema.registry.url=https://schema-registry:8081` + its keystore / truststore |
 | `2way-ssl` | `SSL`, keystore / truststore; the same for the Schema Registry url |
 | `kerberos`, `ssl_kerberos` | `GSSAPI`, `sasl.kerberos.service.name`, the keytab JAAS |
@@ -293,6 +295,7 @@ playground stop
 | "the connector config has its own producer / consumer settings" | write them in the config, and `--skip-automatic-connector-config` to send it as the customer does |
 | "`TopicAuthorizationException` with RBAC" | `rbac-sasl-plain`, delete the role binding of `connectorSA` on the topic (or start with `--rbac-role-bindings-file`) |
 | "the connector can't create its topics / its DLQ" | RBAC: give `connectorSA` a narrower role on the topics (for example `DeveloperWrite`) instead of `ResourceOwner`: creating a topic needs more, see the Confluent RBAC role reference |
+| "we use OAuth / OIDC (Okta, Azure AD / Entra ID, Keycloak…)", `invalid_token`, `Allowed URL list: []` | `sasl-oauthbearer`: Keycloak issues the tokens, the brokers validate them with the JWKS endpoint. Key rotation, token lifespan, issuer / audience mismatch recipes: [environment/sasl-oauthbearer/README.md](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-oauthbearer) |
 | "Kerberos ticket / principal errors" | `--environment kerberos` (or `ssl_kerberos`), principals and keytabs in `environment/kerberos/` |
 | "users in LDAP, ACLs per group" | `ldap-authorizer-sasl-plain` |
 | "Schema Registry over HTTPS with client certificates" | `sasl-ssl` / `2way-ssl`: the converter keys get the keystore / truststore, `playground schema …` uses the client certificate |
@@ -309,7 +312,7 @@ run` without `--environment` then uses the customer's setup, and CI can still ru
 ## 7. Cheat sheet
 
 ```bash
-playground run -f <example> --environment plaintext|sasl-plain|sasl-scram|sasl-ssl|2way-ssl|kerberos|ssl_kerberos|ldap-sasl-plain|ldap-authorizer-sasl-plain|rbac-sasl-plain
+playground run -f <example> --environment plaintext|sasl-plain|sasl-scram|sasl-oauthbearer|sasl-ssl|2way-ssl|kerberos|ssl_kerberos|ldap-sasl-plain|ldap-authorizer-sasl-plain|rbac-sasl-plain
 playground start-environment --environment <type> [--docker-compose-override-file <example override>] [--rbac-role-bindings-file <file>]
 playground state get run.environment
 playground container get-properties -c connect|broker|schema-registry

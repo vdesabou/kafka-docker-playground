@@ -100,7 +100,7 @@ Each example directory also has a `stop.sh` that is just `stop_all "$DIR"`, plus
 
 `environment/<type>/start.sh` is the real orchestrator. It runs `docker compose -f environment/<type>/docker-compose.yml [-f kraft override] [-f example override] <profiles> up -d`, where profiles (`control-center`, `ksqldb`, `flink`, `rest-proxy`, `grafana`, `kcat`, `conduktor`, extra kafka/connect nodes) are toggled by `ENABLE_*` env vars via `set_profiles`. It then stores the full docker compose command in `playground.ini` (`run.docker_command`) so `playground container recreate` / `re-run` / `update-version` can replay it.
 
-Types: `plaintext`, `sasl-plain`, `sasl-scram`, `sasl-ssl`, `2way-ssl`, `ssl_kerberos`, `kerberos`, `ldap-sasl-plain`, `ldap-authorizer-sasl-plain`, `rbac-sasl-plain`, `mdc-*` (multi-datacenter), `cfk` (Confluent for Kubernetes), plus `ccloud` which resolves to `ccloud/environment/start.sh`.
+Types: `plaintext`, `sasl-plain`, `sasl-scram`, `sasl-oauthbearer` (OIDC with Keycloak), `sasl-ssl`, `2way-ssl`, `ssl_kerberos`, `kerberos`, `ldap-sasl-plain`, `ldap-authorizer-sasl-plain`, `rbac-sasl-plain`, `mdc-*` (multi-datacenter), `cfk` (Confluent for Kubernetes), plus `ccloud` which resolves to `ccloud/environment/start.sh`.
 
 ### State: `playground.ini`
 

@@ -141,7 +141,7 @@ then
     # Passed as group.id, not --group: the console consumer refuses --group with --partition and --offset (used by
     # --partition, --last and --from-timestamp)
     security="$consumer_property_name group.id=test-consumer-group $consumer_property_name enable.auto.commit=false $consumer_config_name /service/kafka/users/client.properties"
-elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
+elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]] || [[ "$environment" == "sasl-oauthbearer" ]]
 then
   get_broker_container
   bootstrap_server="$broker_container:9092"

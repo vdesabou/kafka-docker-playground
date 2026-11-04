@@ -112,7 +112,7 @@ then
             fi
 
             case "${environment}" in
-            plaintext|sasl-plain|ldap-authorizer-sasl-plain|ldap-sasl-plain|sasl-scram|kerberos|ssl_kerberos)
+            plaintext|sasl-plain|ldap-authorizer-sasl-plain|ldap-sasl-plain|sasl-scram|sasl-oauthbearer|kerberos|ssl_kerberos)
                 plaintext_schema_registry_snippet
             ;;
             ccloud)

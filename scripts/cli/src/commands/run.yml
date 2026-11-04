@@ -97,7 +97,7 @@ flags:
   long: --environment
   required: false
   arg: environment
-  allowed: [ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
+  allowed: [ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, sasl-oauthbearer]
   help: |-
     🔐 The environment to start when running a connector example 
     
@@ -110,6 +110,7 @@ flags:
     - ldap-authorizer-sasl-plain
     - ldap-sasl-plain
     - rbac-sasl-plain
+    - sasl-oauthbearer
     - sasl-plain
     - sasl-scram
     - sasl-ssl

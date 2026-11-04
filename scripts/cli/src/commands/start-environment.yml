@@ -16,6 +16,7 @@ help: |-
   - mdc-sasl-plain
   - plaintext
   - rbac-sasl-plain
+  - sasl-oauthbearer
   - sasl-plain
   - sasl-scram
   - sasl-ssl
@@ -42,7 +43,7 @@ flags:
     required: false
     default: "plaintext"
     arg: environment
-    allowed: [ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+    allowed: [ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
     help: |-
       🔐 The environment to start . 
       
@@ -58,6 +59,7 @@ flags:
       - mdc-sasl-plain
       - plaintext
       - rbac-sasl-plain
+      - sasl-oauthbearer
       - sasl-plain
       - sasl-scram
       - sasl-ssl
