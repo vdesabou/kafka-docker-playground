@@ -126,24 +126,30 @@ do
 
     echo ""
     log "👉 4/4 next steps"
+    # " --cluster us|europe" in mdc environments, otherwise the printed commands target the wrong cluster
+    cluster_flag=""
+    if [ $is_cloud -eq 0 ]
+    then
+        cluster_flag=$(mdc_cluster_flag)
+    fi
     next_steps=()
     if [[ "$connector_state" == "FAILED" ]] || [[ "$task_states" == *"FAILED"* ]]
     then
-        next_steps+=("🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector")
+        next_steps+=("🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector$cluster_flag")
     elif [[ "$connector_state" == "PAUSED" ]] || [[ "$task_states" == *"PAUSED"* ]]
     then
-        next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector")
+        next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector$cluster_flag")
     elif [[ "$connector_state" == "RUNNING" ]]
     then
         next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
     fi
-    next_steps+=("playground connector show-config --connector $connector")
+    next_steps+=("playground connector show-config --connector $connector$cluster_flag")
     if [ $is_cloud -eq 1 ]
     then
         next_steps+=("playground connector logs --connector $connector")
     else
         next_steps+=("playground container logs -c $diagnose_connect_container --grep \"$connector\" --no-follow --tail 200")
-        next_steps+=("playground debug log-level set --package <connector package> --level TRACE")
+        next_steps+=("playground connector log-level --connector $connector --level TRACE$cluster_flag")
         next_steps+=("playground debug thread-dump --container $diagnose_connect_container")
     fi
     for step in "${next_steps[@]}"

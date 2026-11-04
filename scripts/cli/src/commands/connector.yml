@@ -1093,7 +1093,7 @@ commands:
          🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move
          playground connector show-config --connector filestream-sink
          playground container logs -c connect --grep "filestream-sink" --no-follow --tail 200
-         playground debug log-level set --package <connector package> --level TRACE
+         playground connector log-level --connector filestream-sink --level TRACE
          playground debug thread-dump --container connect
 
       17:22:10 ℹ️ ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html
@@ -1120,7 +1120,7 @@ commands:
          🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move
          playground connector show-config --connector filestream-sink
          playground container logs -c connect --grep "filestream-sink" --no-follow --tail 200
-         playground debug log-level set --package <connector package> --level TRACE
+         playground connector log-level --connector filestream-sink --level TRACE
          playground debug thread-dump --container connect
 
       17:22:10 ℹ️ ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html
@@ -1205,7 +1205,9 @@ commands:
     that does not move while the connector reports RUNNING means the tasks
     are stuck rather than slow.
 
-    It will run until all lag becomes 0 (press ctrl-c to exit)
+    It will run until all lag becomes 0 (press ctrl-c to exit), or until
+    --max-wait seconds. The consumer group is connect-<connector>, or the one
+    set with consumer.override.group.id.
 
     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag
     🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck
@@ -1225,9 +1227,13 @@ commands:
     default: "0"
     help: |- 
       ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.
+  - long: --fail-on-timeout
+    help: |-
+      ❌ Exit 1 when the lag is still not 0 after --max-wait seconds (by default it logs a warning and exits 0)
   - import: src/flags/cluster.yml
   examples:
   - playground connector show-lag
+  - playground connector show-lag --connector filestream-sink --interval 5 --max-wait 120 --fail-on-timeout
   x_example_outputs:
   - command: playground connector show-lag
     output: |-
@@ -1833,25 +1839,68 @@ commands:
     with --wait-for-log to block until a given line appears, which is how
     examples assert that something happened.
 
-    For onprem connectors, this is basically a shortcut for "playground container logs --container connect", --connector flag is not relevant
+    For self managed connectors, this is a shortcut for "playground container logs --container connect"
+    (connect-us / connect-europe in mdc environments): --no-follow, --errors, --since, --tail and --grep are passed through.
+    When --connector is set (and none of --grep, --errors, --wait-for-log, --open), only the lines mentioning the
+    connector are kept.
 
-    For Fully Managed connectors, limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)
+    For Fully Managed connectors, the logs come from the confluent CLI ('confluent connect logs', last 71 hours),
+    limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):
+    --errors keeps the ERROR level, --grep is a search text, and --wait-for-log polls until the text is found or --max-wait.
+
+    🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or --wait-for-log, otherwise the command never returns for a self managed connector.
   flags:
   - *connector
   - long: --open
     short: -o
-    conflicts: [--wait-for-log]
+    conflicts: [--wait-for-log, --grep, --errors]
     help: |-
       🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
   - long: --wait-for-log
     short: -w
     arg: log
     validate: not_empty
-    conflicts: [--open]
+    conflicts: [--open, --grep, --errors]
     help: |-
-      😴 Wait until log appears
+      😴 Wait until log appears (exits 1 after --max-wait)
+  - long: --max-wait
+    short: -m
+    arg: max_wait
+    validate: integer
+    default: "600"
+    help: |-
+      ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
+  - long: --grep
+    arg: grep
+    conflicts: [--open, --wait-for-log, --errors]
+    help: |-
+      🎯 Grep pattern to filter logs (search text for fully managed connectors)
+  - long: --since
+    arg: since
+    validate: not_empty
+    conflicts: [--open, --wait-for-log]
+    help: |-
+      🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (self managed only)
+  - long: --tail
+    arg: lines
+    conflicts: [--open, --wait-for-log]
+    help: |-
+      🔢 Number of lines to show from the end of the logs, or "all" (self managed only)
+  - long: --no-follow
+    conflicts: [--open, --wait-for-log]
+    help: |-
+      🛑 Print the logs and exit instead of following them (self managed only, fully managed logs are never followed)
+  - long: --errors
+    conflicts: [--open, --wait-for-log, --grep]
+    help: |-
+      🔥 Only show a digest of ERROR/FATAL records, then exit (fully managed: only the ERROR level)
   - import: src/flags/verbose.yml
   - import: src/flags/cluster.yml
+  examples:
+  - playground connector logs --no-follow --tail 100
+  - playground connector logs --errors
+  - playground connector logs --connector filestream-sink --since 10m --no-follow
+  - playground connector logs --wait-for-log "Started FileStreamSinkTask" --max-wait 120
 
 - name: open-ccloud-connector-in-browser
   group: Connect
@@ -1878,11 +1927,13 @@ commands:
 
     This is useful when you have multiple connect workers and want to know which one is the leader.
 
-    For onprem connectors, this is basically a shortcut for "playground container exec -c connect -- bash -c 'export JMX_PORT=9404; jmxterm -l localhost:9404 -n -v silent -u admin -p admin123 -e \"get -b kafka.connect:type=connect-worker-rebalance-metrics name=leader-name\"'", --connector flag is not relevant
+    For self managed connectors, it reads the leader-name attribute with "playground get-jmx-metrics --container <worker> --domain kafka.connect" on each running connect worker (connect, connect2, connect3, or the connect-N pods on cfk) until one answers.
 
     For Fully Managed connectors, this is not available as JMX is not accessible.
   flags:
   - import: src/flags/cluster.yml
+  examples:
+  - playground connector display-leader-name
 
 - name: translate
   help: |

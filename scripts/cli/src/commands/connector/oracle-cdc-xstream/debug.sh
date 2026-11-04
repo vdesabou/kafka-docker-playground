@@ -111,12 +111,12 @@ log "View apply (outbound server) parameter settings"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
     CONNECT sys/Admin123 AS SYSDBA
     SELECT
-    c.capture_name,
+    a.apply_name,
     parameter, value,
     set_by_user
-    FROM ALL_CAPTURE_PARAMETERS c,
+    FROM ALL_APPLY_PARAMETERS a,
     ALL_XSTREAM_OUTBOUND o
-    WHERE c.capture_name = o.capture_name 
+    WHERE a.apply_name = o.server_name
     ORDER BY parameter;
 EOF
 

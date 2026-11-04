@@ -10318,7 +10318,7 @@
         },
         {
           "name": "show-lag",
-          "description": "🐢 Show lag of sink connector\n\nThe consumer lag of the sink, refreshed every --interval seconds, so you\nsee whether it is catching up, standing still or falling behind. A lag\nthat does not move while the connector reports RUNNING means the tasks\nare stuck rather than slow.\n\nIt will run until all lag becomes 0 (press ctrl-c to exit)\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck",
+          "description": "🐢 Show lag of sink connector\n\nThe consumer lag of the sink, refreshed every --interval seconds, so you\nsee whether it is catching up, standing still or falling behind. A lag\nthat does not move while the connector reports RUNNING means the tasks\nare stuck rather than slow.\n\nIt will run until all lag becomes 0 (press ctrl-c to exit), or until\n--max-wait seconds. The consumer group is connect-<connector>, or the one\nset with consumer.override.group.id.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck",
           "usage": "playground connector show-lag [OPTIONS]",
           "options": [
             {
@@ -10350,6 +10350,13 @@
               ],
               "argument": "MAX_WAIT",
               "description": "⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.\n\nDefault value: 0"
+            },
+            {
+              "names": [
+                "--fail-on-timeout"
+              ],
+              "argument": "",
+              "description": "❌ Exit 1 when the lag is still not 0 after --max-wait seconds (by default it logs a warning and exits 0)"
             },
             {
               "names": [
@@ -10786,7 +10793,7 @@
         },
         {
           "name": "logs",
-          "description": "🕵️  Tail and follow connect logs\n\nThe logs of the worker running your connector. Combine it with\n'playground connector log-level' to get more than the stack trace, and\nwith --wait-for-log to block until a given line appears, which is how\nexamples assert that something happened.\n\nFor onprem connectors, this is basically a shortcut for \"playground container logs --container connect\", --connector flag is not relevant\n\nFor Fully Managed connectors, limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)",
+          "description": "🕵️  Tail and follow connect logs\n\nThe logs of the worker running your connector. Combine it with\n'playground connector log-level' to get more than the stack trace, and\nwith --wait-for-log to block until a given line appears, which is how\nexamples assert that something happened.\n\nFor self managed connectors, this is a shortcut for \"playground container logs --container connect\"\n(connect-us / connect-europe in mdc environments): --no-follow, --errors, --since, --tail and --grep are passed through.\nWhen --connector is set (and none of --grep, --errors, --wait-for-log, --open), only the lines mentioning the\nconnector are kept.\n\nFor Fully Managed connectors, the logs come from the confluent CLI ('confluent connect logs', last 71 hours),\nlimitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n--errors keeps the ERROR level, --grep is a search text, and --wait-for-log polls until the text is found or --max-wait.\n\n🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or --wait-for-log, otherwise the command never returns for a self managed connector.",
           "usage": "playground connector logs [OPTIONS]",
           "options": [
             {
@@ -10803,7 +10810,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log, --grep, --errors"
             },
             {
               "names": [
@@ -10811,7 +10818,50 @@
                 "-w"
               ],
               "argument": "LOG",
-              "description": "😴 Wait until log appears\n\nConflicts with: --open"
+              "description": "😴 Wait until log appears (exits 1 after --max-wait)\n\nConflicts with: --open, --grep, --errors"
+            },
+            {
+              "names": [
+                "--max-wait",
+                "-m"
+              ],
+              "argument": "MAX_WAIT",
+              "description": "⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n\nDefault value: 600"
+            },
+            {
+              "names": [
+                "--grep"
+              ],
+              "argument": "GREP",
+              "description": "🎯 Grep pattern to filter logs (search text for fully managed connectors)\n\nConflicts with: --open, --wait-for-log, --errors"
+            },
+            {
+              "names": [
+                "--since"
+              ],
+              "argument": "SINCE",
+              "description": "🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (self managed only)\n\nConflicts with: --open, --wait-for-log"
+            },
+            {
+              "names": [
+                "--tail"
+              ],
+              "argument": "LINES",
+              "description": "🔢 Number of lines to show from the end of the logs, or \"all\" (self managed only)\n\nConflicts with: --open, --wait-for-log"
+            },
+            {
+              "names": [
+                "--no-follow"
+              ],
+              "argument": "",
+              "description": "🛑 Print the logs and exit instead of following them (self managed only, fully managed logs are never followed)\n\nConflicts with: --open, --wait-for-log"
+            },
+            {
+              "names": [
+                "--errors"
+              ],
+              "argument": "",
+              "description": "🔥 Only show a digest of ERROR/FATAL records, then exit (fully managed: only the ERROR level)\n\nConflicts with: --open, --wait-for-log, --grep"
             },
             {
               "names": [
@@ -10854,7 +10904,7 @@
         },
         {
           "name": "display-leader-name",
-          "description": "👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n\nThis is useful when you have multiple connect workers and want to know which one is the leader.\n\nFor onprem connectors, this is basically a shortcut for \"playground container exec -c connect -- bash -c 'export JMX_PORT=9404; jmxterm -l localhost:9404 -n -v silent -u admin -p admin123 -e \\\"get -b kafka.connect:type=connect-worker-rebalance-metrics name=leader-name\\\"'\", --connector flag is not relevant\n\nFor Fully Managed connectors, this is not available as JMX is not accessible.",
+          "description": "👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n\nThis is useful when you have multiple connect workers and want to know which one is the leader.\n\nFor self managed connectors, it reads the leader-name attribute with \"playground get-jmx-metrics --container <worker> --domain kafka.connect\" on each running connect worker (connect, connect2, connect3, or the connect-N pods on cfk) until one answers.\n\nFor Fully Managed connectors, this is not available as JMX is not accessible.",
           "usage": "playground connector display-leader-name [OPTIONS]",
           "options": [
             {

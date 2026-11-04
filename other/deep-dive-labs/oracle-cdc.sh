@@ -81,7 +81,9 @@ lab_expect_contains "View the rules used by XStream components"
 log "Step 4: the diagnostics report of the running example"
 lab_run playground connector oracle-cdc-xstream generate-report
 lab_expect_exit 0
-lab_expect_contains "⚙️ oracle cdc xstream connector diagnostics report is available at /tmp/orclcdc_diag.html"
+lab_expect_contains "🔎 using outbound server XOUT and connect user C##CFLTUSER of connector cdc-xstream-oracle-source"
+lab_expect_contains "⚙️ oracle cdc xstream connector diagnostics report is available at /tmp/orclcdc_diag_"
+lab_expect_contains "(latest also in /tmp/orclcdc_diag.html)"
 lab_run playground analyze oracle-xstream-report -c oracle --output-dir "$out/live"
 lab_expect_exit 0
 lab_expect_contains "⚙️ Generating the diagnostics report in container oracle"

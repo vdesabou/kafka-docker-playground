@@ -26,6 +26,16 @@ build_quoted_csv() {
     echo "$result"
 }
 
+# first free host port from $1: the grafana profile of the example already publishes 3000 and 9090
+find_free_port() {
+    local port="$1"
+    while (echo > /dev/tcp/127.0.0.1/$port) >/dev/null 2>&1
+    do
+        port=$((port + 1))
+    done
+    echo "$port"
+}
+
 connector_type=$(playground state get run.connector_type)
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -59,8 +69,9 @@ then
     connector_ids=()
     for connector in "${items[@]}"
     do
-        connectorId=$(get_ccloud_connector_lcc "$connector")
-        if [[ -z "$connectorId" ]]
+        # get_ccloud_connector_lcc uses jq -e: without || true an unknown name would end the command silently
+        connectorId=$(get_ccloud_connector_lcc "$connector" || true)
+        if [[ -z "$connectorId" ]] || [[ "$connectorId" == "null" ]]
         then
             logerror "🚨 Could not find connector id for $connector"
             exit 1
@@ -96,6 +107,8 @@ then
     plaintext_dir="$root_folder/environment/plaintext"
     working_dir="/tmp/playground-display-metrics-api-with-grafana"
 
+    mkdir -p "$working_dir"
+    chmod 700 "$working_dir"
     mkdir -p "$working_dir/prometheus"
     mkdir -p "$working_dir/grafana/provisioning/datasources"
     mkdir -p "$working_dir/grafana/provisioning/dashboards"
@@ -122,6 +135,8 @@ then
         -e "s|\${CCLOUD_CONNECT_LCC_IDS}|$escaped_connector_ids_csv|g" \
         -e "s|\${CCLOUD_SR_LSRC_IDS}|$escaped_sr_ids_csv|g" \
         "$display_metrics_dir/prometheus/prometheus.yml" > "$working_dir/prometheus/prometheus.yml"
+    # holds the Cloud API key and secret: owner only, and removed once copied into the container
+    chmod 600 "$working_dir/prometheus/prometheus.yml"
 
     network_name="playground-grafana"
     if ! docker network inspect "$network_name" >/dev/null 2>&1
@@ -138,22 +153,46 @@ then
         docker rm -f grafana-display-metrics-api-with-grafana >/dev/null
     fi
 
-    docker run -d --name prometheus-display-metrics-api-with-grafana --hostname prometheus \
+    prometheus_port=$(find_free_port 9090)
+    grafana_port=$(find_free_port 3000)
+    if [ "$prometheus_port" != "9090" ] || [ "$grafana_port" != "3000" ]
+    then
+        log "🔀 ports 9090 / 3000 are in use (grafana of the example?), using $prometheus_port / $grafana_port"
+    fi
+
+    # the config is copied into the container (not bind mounted) so that the file with the secret can be deleted
+    docker create --name prometheus-display-metrics-api-with-grafana --hostname prometheus \
         --network "$network_name" \
-        -p 9090:9090 \
-        -v "$working_dir/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
-        prom/prometheus:v2.29.2 \
+        -p $prometheus_port:9090 \
+        prom/prometheus:v2.55.1 \
         --config.file=/etc/prometheus/prometheus.yml >/dev/null
+    # docker cp keeps the mode and makes root the owner, and prometheus runs as nobody: it must be world readable in
+    # the container (locally the folder stays owner only, and the file is removed right after the copy)
+    chmod 644 "$working_dir/prometheus/prometheus.yml"
+    docker cp "$working_dir/prometheus/prometheus.yml" prometheus-display-metrics-api-with-grafana:/etc/prometheus/prometheus.yml >/dev/null
+    rm -f "$working_dir/prometheus/prometheus.yml"
+    docker start prometheus-display-metrics-api-with-grafana >/dev/null
 
     docker run -d --name grafana-display-metrics-api-with-grafana --hostname grafana \
         --network "$network_name" \
-        -p 3000:3000 \
+        -p $grafana_port:3000 \
         -e GF_SECURITY_ADMIN_USER=admin \
         -e GF_SECURITY_ADMIN_PASSWORD=password \
         -e GF_USERS_ALLOW_SIGN_UP=false \
         -v "$working_dir/grafana/provisioning:/etc/grafana/provisioning:ro" \
         -v "$working_dir/grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro" \
         grafana/grafana:11.1.0 >/dev/null
+
+    sleep 3
+    for c in prometheus-display-metrics-api-with-grafana grafana-display-metrics-api-with-grafana
+    do
+        if [ "$(docker inspect -f '{{.State.Running}}' $c 2>/dev/null)" != "true" ]
+        then
+            logerror "❌ container $c is not running, its last logs:"
+            docker logs --tail 20 $c 2>&1
+            exit 1
+        fi
+    done
 
     if [ -z "$GITHUB_RUN_NUMBER" ]
     then
@@ -175,24 +214,24 @@ then
         if ! can_open_url
         then
             log "🔗 Cannot open browser, use url:"
-            echo "http://127.0.0.1:3000"
+            echo "http://127.0.0.1:$grafana_port"
         else
             if [ "$browser" != "" ]
             then
             log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in browser $browser (you can change browser with 'playground config open-grafana-in-browser browser <browser>')"
             log "🤖 Open grafana with browser $browser (login/password is admin/password)"
-            open_url "http://127.0.0.1:3000" "$browser"
+            open_url "http://127.0.0.1:$grafana_port" "$browser"
             else
             log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in default browser (you can set browser with 'playground config open-grafana-in-browser browser <browser>')"
             log "🤖 Open grafana (login/password is admin/password)"
-            open_url "http://127.0.0.1:3000"
+            open_url "http://127.0.0.1:$grafana_port"
             fi
         fi
         fi
     fi
-    log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
-    log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)"
-    log "✨ Prometheus config in use: $working_dir/prometheus/prometheus.yml"
+    log "🛡️ Prometheus is reachable at http://127.0.0.1:$prometheus_port"
+    log "📊 Grafana is reachable at http://127.0.0.1:$grafana_port (login/password is admin/password)"
+    log "🧹 to stop them: docker rm -f prometheus-display-metrics-api-with-grafana grafana-display-metrics-api-with-grafana"
 
     log "⏳ It will take a couple of minutes for metrics to be collected and displayed in Grafana dashboard, please wait..."
 

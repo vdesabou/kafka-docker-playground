@@ -24,7 +24,8 @@ format_metric_timestamp() {
     fi
 
     local ts_seconds=$((timestamp / 1000))
-    date -r "$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || true
+    # date -r <epoch> is BSD (macOS) only, date -d @<epoch> is GNU (Linux)
+    date -r "$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || date -d "@$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || true
 }
 
 extract_metric() {
@@ -244,7 +245,13 @@ then
     get_ccloud_connect
     for connector in "${items[@]}"
     do
-        connectorId=$(get_ccloud_connector_lcc $connector)
+        # get_ccloud_connector_lcc uses jq -e: without || true an unknown name ends the command silently (set -e)
+        connectorId=$(get_ccloud_connector_lcc "$connector" || true)
+        if [[ -z "$connectorId" ]] || [[ "$connectorId" == "null" ]]
+        then
+            logerror "❌ Could not find the id of fully managed connector $connector"
+            exit 1
+        fi
         metrics_file=$(mktemp)
         if [[ -n "$open" ]]
         then
@@ -254,14 +261,29 @@ then
         if [[ -n "$verbose" ]]
         then
             log "🐞 CLI command used"
-            echo "curl -sS \"https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId\" -H \"Content-Type: application/json\" -X GET -H \"Authorization: Basic $authorization\""
+            # the Basic token is the Cloud API key and secret: never print it
+            echo "curl -sS \"https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId\" -H \"Content-Type: application/json\" -X GET -H \"Authorization: Basic <CLOUD_API_KEY:CLOUD_API_SECRET in base64>\""
         fi
 
         log "〽️ Display metrics api for fully managed connector $connector (id: $connectorId), see https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud"
-        curl -sS "https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId" \
+        http_code=$(curl -sS -o "$metrics_file" -w '%{http_code}' "https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId" \
         -H "Content-Type: application/json" \
         -X GET \
-        -H "Authorization: Basic $authorization" > "$metrics_file"
+        -H "Authorization: Basic $authorization") || http_code="000"
+
+        if [[ "$http_code" != "200" ]]
+        then
+            # 401/403: the Cloud API key lacks the MetricsViewer role, 429: rate limited. Never report it as "no metrics"
+            logerror "❌ Metrics API returned HTTP $http_code for connector $connector (id: $connectorId)"
+            head -c 1000 "$metrics_file"
+            echo ""
+            if [[ "$http_code" == "401" ]] || [[ "$http_code" == "403" ]]
+            then
+                logerror "💡 the Cloud API key needs the MetricsViewer role (or OrganizationAdmin / EnvironmentAdmin)"
+            fi
+            rm -f "$metrics_file"
+            exit 1
+        fi
 
         if [[ -n "$verbose" ]]
         then

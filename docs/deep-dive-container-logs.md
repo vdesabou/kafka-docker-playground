@@ -90,7 +90,9 @@ Gotchas:
 - **Timestamps are the container's, in UTC**: `[2026-10-23 10:44:36,598]` in the connect log is 12:44 on a host at
   UTC+2. `--since 10m` is converted for you, but compare raw timestamps with care.
 - `--previous` only exists for CFK pods: with Docker it's ignored with a warning.
-- `playground connector logs` is a shortcut for `container logs -c connect` for self-managed connectors.
+- `playground connector logs` is a shortcut for `container logs -c connect` for self-managed connectors: it passes
+  `--no-follow`, `--errors`, `--since`, `--tail` and `--grep` through, and with `--connector` keeps only the lines
+  mentioning that connector.
 
 ---
 

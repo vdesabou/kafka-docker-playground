@@ -5,7 +5,14 @@ json="${args[--json]}"
 
 connector_type=$(playground state get run.connector_type)
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    # no jmx access, and the Telemetry API (display-metrics-api) does not support custom connectors either
+    logerror "❌ connector metrics is not supported for $connector_type connectors (no JMX access, and the Confluent Cloud Telemetry API does not cover them)"
+    exit 1
+fi
+
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
 then
     # no jmx for a fully managed connector: its metrics come from the Confluent Cloud Telemetry API
     if [[ -n "$json" ]] || [[ -n "$watch" ]]
@@ -87,7 +94,8 @@ function read_task_mbeans() {
     port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
     if [[ -z "$port" ]]
     then
-        logwarn "⚠️ JMX is not enabled on $container (no KAFKA_JMX_PORT), skipped"
+        # stderr: this function runs inside $(...), stdout is the data
+        logwarn "⚠️ JMX is not enabled on $container (no KAFKA_JMX_PORT), skipped" >&2
         return 0
     fi
     # the jvm of the tool must not inherit the debug agent, jmx port or java agents of the worker (bind errors)
@@ -106,14 +114,14 @@ function read_task_mbeans() {
     then
         object_args+=(--object-name "debezium.*:server=$prefix,*")
     fi
-    [[ -n "$verbose" ]] && log "🐞 ${jmx_command[*]} --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv"
+    [[ -n "$verbose" ]] && log >&2 "🐞 ${jmx_command[*]} --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv"
     output=$("${jmx_command[@]}" --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv 2>&1) || true
     if ! echo "$output" | grep -q -E "^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_-]+="
     then
         if ! echo "$output" | grep -q -E "^(time|Trying to connect|Expected attribute counts)"
         then
-            logwarn "⚠️ could not read the JMX metrics of $container:"
-            echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3
+            logwarn "⚠️ could not read the JMX metrics of $container:" >&2
+            echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3 >&2
         fi
         return 0
     fi
@@ -145,7 +153,7 @@ function collect_metrics() {
         read -r container port <<< "$(benchmark_worker_container_and_port "$worker_id")"
         if ! is_container_running "$container"
         then
-            logwarn "⚠️ worker $worker_id (container $container) is not running, skipped"
+            logwarn "⚠️ worker $worker_id (container $container) is not running, skipped" >&2
             continue
         fi
         lines+="$(read_task_mbeans "$connector" "$container" "$prefix")"$'\n'

@@ -19297,7 +19297,7 @@ playground_connector_diagnose_usage() {
     echo
 
     # :command.footer
-    printf "Example output:\n  $ playground connector diagnose\n  17:22:06 ℹ️ 🩺 diagnosing 🌎onprem connector filestream-sink\n\n  17:22:06 ℹ️ 🗺️  1/4 status\n  17:22:07 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink\n  Name                           Status       Tasks                                                        Stack Trace\n  -------------------------------------------------------------------------------------------------------------\n  filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -\n  -------------------------------------------------------------------------------------------------------------\n\n  17:22:07 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)\n  ✅ no ERROR/FATAL record found in 12523 lines\n\n  17:22:07 ℹ️ 🐢 3/4 progress: consumer lag of sink filestream-sink\n  topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100%% 🏁\n\n  17:22:10 ℹ️ 👉 4/4 next steps\n     🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move\n     playground connector show-config --connector filestream-sink\n     playground container logs -c connect --grep \"filestream-sink\" --no-follow --tail 200\n     playground debug log-level set --package <connector package> --level TRACE\n     playground debug thread-dump --container connect\n\n  17:22:10 ℹ️ ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html\n  17:22:10 ℹ️ 🔗 Open in browser: file:///tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html\n"
+    printf "Example output:\n  $ playground connector diagnose\n  17:22:06 ℹ️ 🩺 diagnosing 🌎onprem connector filestream-sink\n\n  17:22:06 ℹ️ 🗺️  1/4 status\n  17:22:07 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink\n  Name                           Status       Tasks                                                        Stack Trace\n  -------------------------------------------------------------------------------------------------------------\n  filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -\n  -------------------------------------------------------------------------------------------------------------\n\n  17:22:07 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)\n  ✅ no ERROR/FATAL record found in 12523 lines\n\n  17:22:07 ℹ️ 🐢 3/4 progress: consumer lag of sink filestream-sink\n  topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100%% 🏁\n\n  17:22:10 ℹ️ 👉 4/4 next steps\n     🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move\n     playground connector show-config --connector filestream-sink\n     playground container logs -c connect --grep \"filestream-sink\" --no-follow --tail 200\n     playground connector log-level --connector filestream-sink --level TRACE\n     playground debug thread-dump --container connect\n\n  17:22:10 ℹ️ ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html\n  17:22:10 ℹ️ 🔗 Open in browser: file:///tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html\n"
     echo
 
   fi
@@ -19378,7 +19378,7 @@ playground_connector_history_usage() {
 playground_connector_show_lag_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector show-lag\n\n"
-    printf "  🐢 Show lag of sink connector\n  \n  The consumer lag of the sink, refreshed every --interval seconds, so you\n  see whether it is catching up, standing still or falling behind. A lag\n  that does not move while the connector reports RUNNING means the tasks\n  are stuck rather than slow.\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit)\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%8F%%AA-the-lag-of-a-sink-is-stuck\n\n"
+    printf "  🐢 Show lag of sink connector\n  \n  The consumer lag of the sink, refreshed every --interval seconds, so you\n  see whether it is catching up, standing still or falling behind. A lag\n  that does not move while the connector reports RUNNING means the tasks\n  are stuck rather than slow.\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit), or until\n  --max-wait seconds. The consumer group is connect-<connector>, or the one\n  set with consumer.override.group.id.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%8F%%AA-the-lag-of-a-sink-is-stuck\n\n"
   else
     printf "playground connector show-lag - 🐢 Show lag of sink connector\n\n"
   fi
@@ -19417,6 +19417,11 @@ playground_connector_show_lag_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--fail-on-timeout")"
+    printf "    ❌ Exit 1 when the lag is still not 0 after --max-wait seconds (by default it\n    logs a warning and exits 0)\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--cluster CLUSTER")"
     printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
     printf "    %s\n" "Allowed: us, europe"
@@ -19430,6 +19435,7 @@ playground_connector_show_lag_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector show-lag\n"
+    printf "  playground connector show-lag --connector filestream-sink --interval 5\n  --max-wait 120 --fail-on-timeout\n"
     echo
 
   fi
@@ -20057,7 +20063,7 @@ playground_connector_log_level_usage() {
 playground_connector_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector logs\n\n"
-    printf "  🕵️  Tail and follow connect logs\n  \n  The logs of the worker running your connector. Combine it with\n  'playground connector log-level' to get more than the stack trace, and\n  with --wait-for-log to block until a given line appears, which is how\n  examples assert that something happened.\n  \n  For onprem connectors, this is basically a shortcut for \"playground container\n  logs --container connect\", --connector flag is not relevant\n  \n  For Fully Managed connectors, limitations apply (see\n  https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)\n\n"
+    printf "  🕵️  Tail and follow connect logs\n  \n  The logs of the worker running your connector. Combine it with\n  'playground connector log-level' to get more than the stack trace, and\n  with --wait-for-log to block until a given line appears, which is how\n  examples assert that something happened.\n  \n  For self managed connectors, this is a shortcut for \"playground container logs\n  --container connect\"\n  (connect-us / connect-europe in mdc environments): --no-follow, --errors,\n  --since, --tail and --grep are passed through.\n  When --connector is set (and none of --grep, --errors, --wait-for-log,\n  --open), only the lines mentioning the\n  connector are kept.\n  \n  For Fully Managed connectors, the logs come from the confluent CLI ('confluent\n  connect logs', last 71 hours),\n  limitations apply (see\n  https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n  --errors keeps the ERROR level, --grep is a search text, and --wait-for-log\n  polls until the text is found or --max-wait.\n  \n  🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or\n  --wait-for-log, otherwise the command never returns for a self managed\n  connector.\n\n"
   else
     printf "playground connector logs - 🕵️  Tail and follow connect logs\n\n"
   fi
@@ -20081,13 +20087,49 @@ playground_connector_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log"
+    printf "    %s\n" "Conflicts: --wait-for-log, --grep, --errors"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
-    printf "    😴 Wait until log appears\n"
-    printf "    %s\n" "Conflicts: --open"
+    printf "    😴 Wait until log appears (exits 1 after --max-wait)\n"
+    printf "    %s\n" "Conflicts: --open, --grep, --errors"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait, -m MAX_WAIT")"
+    printf "    ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n"
+    printf "    %s\n" "Default: 600"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep GREP")"
+    printf "    🎯 Grep pattern to filter logs (search text for fully managed connectors)\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --errors"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--since SINCE")"
+    printf "    🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp\n    (self managed only)\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tail LINES")"
+    printf "    🔢 Number of lines to show from the end of the logs, or \"all\" (self managed\n    only)\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-follow")"
+    printf "    🛑 Print the logs and exit instead of following them (self managed only,\n    fully managed logs are never followed)\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--errors")"
+    printf "    🔥 Only show a digest of ERROR/FATAL records, then exit (fully managed: only\n    the ERROR level)\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --grep"
     echo
 
     # :flag.usage
@@ -20104,6 +20146,14 @@ playground_connector_logs_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector logs --no-follow --tail 100\n"
+    printf "  playground connector logs --errors\n"
+    printf "  playground connector logs --connector filestream-sink --since 10m --no-follow\n"
+    printf "  playground connector logs --wait-for-log \"Started FileStreamSinkTask\"\n  --max-wait 120\n"
     echo
 
   fi
@@ -20151,7 +20201,7 @@ playground_connector_open_ccloud_connector_in_browser_usage() {
 playground_connector_display_leader_name_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector display-leader-name\n\n"
-    printf "  👑 Display Connect Worker leader name using JMX MBean leader-name from\n  kafka.connect:type=connect-worker-rebalance-metrics\n  \n  This is useful when you have multiple connect workers and want to know which\n  one is the leader.\n  \n  For onprem connectors, this is basically a shortcut for \"playground container\n  exec -c connect -- bash -c 'export JMX_PORT=9404; jmxterm -l localhost:9404 -n\n  -v silent -u admin -p admin123 -e \\"get -b\n  kafka.connect:type=connect-worker-rebalance-metrics name=leader-name\\"'\",\n  --connector flag is not relevant\n  \n  For Fully Managed connectors, this is not available as JMX is not accessible.\n\n"
+    printf "  👑 Display Connect Worker leader name using JMX MBean leader-name from\n  kafka.connect:type=connect-worker-rebalance-metrics\n  \n  This is useful when you have multiple connect workers and want to know which\n  one is the leader.\n  \n  For self managed connectors, it reads the leader-name attribute with\n  \"playground get-jmx-metrics --container <worker> --domain kafka.connect\" on\n  each running connect worker (connect, connect2, connect3, or the connect-N\n  pods on cfk) until one answers.\n  \n  For Fully Managed connectors, this is not available as JMX is not accessible.\n\n"
   else
     printf "playground connector display-leader-name - 👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n\n"
   fi
@@ -20176,6 +20226,11 @@ playground_connector_display_leader_name_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector display-leader-name\n"
     echo
 
   fi
@@ -57442,7 +57497,8 @@ playground_analyze_oracle_xstream_report_command() {
       fi
       rm -f /tmp/orclcdc_diag.html
       log "⚙️ Generating the diagnostics report in container $container"
-      playground --output-level ERROR connector oracle-cdc-xstream generate-report > /dev/null 2>&1
+      # generate-report exits 1 on failure: the check below gives the message (set -e)
+      playground --output-level ERROR connector oracle-cdc-xstream generate-report > /dev/null 2>&1 || true
       if [[ ! -f /tmp/orclcdc_diag.html ]]; then
           logerror "❌ the diagnostics report could not be generated, run 'playground connector oracle-cdc-xstream generate-report' to see why"
           exit 1
@@ -73424,6 +73480,28 @@ playground_connector_status_command() {
           leader_name=$(echo "$leader_name" | tr -d '[:space:]')
       fi
   fi
+  # decorate every task state (an if/elif chain only decorated the first state found: 0:🟢 RUNNING,1:FAILED)
+  function decorate_task_states() {
+      if [ -z "$1" ]
+      then
+          echo "🤔 N/A"
+          return
+      fi
+      echo "$1" | sed -e 's/:RUNNING/:🟢 RUNNING/g' \
+          -e 's/:PAUSED/:⏸️  PAUSED/g' \
+          -e 's/:STOPPED/:⏹️  STOPPED/g' \
+          -e 's/:FAILED/:🛑 FAILED/g' \
+          -e 's/:UNASSIGNED/:⌛ UNASSIGNED/g' \
+          -e 's/:RESTARTING/:🔄 RESTARTING/g' \
+          -e 's/:USER_ACTIONABLE_ERROR/:💪 USER_ACTIONABLE_ERROR/g'
+  }
+
+  # true when the REST API answered "not found": retrying will not help
+  function is_not_found() {
+      # self-managed: {"error_code":404}, Confluent Cloud API: {"error":{"code":404}}
+      [ "$(echo "$curl_output" | jq -r '(.error_code // .error.code?) // empty' 2> /dev/null)" == "404" ]
+  }
+
   for connector in "${items[@]}"
   do
       set +e
@@ -73491,6 +73569,9 @@ playground_connector_status_command() {
               if [ "$status" != "null" ] && [ -n "$status" ]; then
                   break # Valid status found, exit retry loop
               fi
+              if is_not_found; then
+                  break
+              fi
 
               if [ $attempt -lt $MAX_RETRIES ]; then
                   log "⚠️  API did not return a valid status (attempt $attempt/$MAX_RETRIES). Retrying in ${RETRY_INTERVAL}s..."
@@ -73499,7 +73580,7 @@ playground_connector_status_command() {
               ((attempt++))
           done
 
-          printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+          printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
           echo "-------------------------------------------------------------------------------------------------------------"
 
           # Status mapping (using the status retrieved from the loop)
@@ -73509,18 +73590,12 @@ playground_connector_status_command() {
           elif [ "$status" == "UNASSIGNED" ]; then status="⌛ UNASSIGNED"
           elif [ "$status" == "STOPPED" ]; then status="🛑 STOPPED"
           elif [ "$status" == "PROVISIONING" ]; then status="🏭 PROVISIONING"
+          elif is_not_found; then status="🤔 NOT FOUND"
           else status="🤔 UNKNOWN (API Error)"; fi
 
           tasks=$(echo "$curl_output" | jq -r '.tasks[]? | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
 
-          # Task Mapping
-          if [[ "$tasks" == *"RUNNING"* ]]; then tasks="${tasks//RUNNING/🟢 RUNNING}"
-          elif [[ "$tasks" == *"PAUSED"* ]]; then tasks="${tasks//PAUSED/⏸️  PAUSED}"
-          elif [[ "$tasks" == *"STOPPED"* ]]; then tasks="${tasks//STOPPED/🛑  STOPPED}"
-          elif [[ "$tasks" == *"FAILED"* ]]; then tasks="${tasks//FAILED/🛑 FAILED}"
-          elif [[ "$tasks" == *"UNASSIGNED"* ]]; then tasks="${tasks//UNASSIGNED/⌛ UNASSIGNED}"
-          elif [[ "$tasks" == *"USER_ACTIONABLE_ERROR"* ]]; then tasks="${tasks//USER_ACTIONABLE_ERROR/💪 USER_ACTIONABLE_ERROR}"
-          else tasks="🤔 N/A"; fi
+          tasks=$(decorate_task_states "$tasks")
 
           # Stacktrace Extraction
           stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace? // empty')
@@ -73558,6 +73633,9 @@ playground_connector_status_command() {
               if [ "$status" != "null" ] && [ -n "$status" ]; then
                   break # Valid status found
               fi
+              if is_not_found; then
+                  break
+              fi
 
               if [ $attempt -lt $MAX_RETRIES ]; then
                   log "⚠️  API did not return a valid status (attempt $attempt/$MAX_RETRIES). Retrying in ${RETRY_INTERVAL}s..."
@@ -73571,6 +73649,8 @@ playground_connector_status_command() {
           elif [ "$status" == "FAILED" ]; then status="❌ FAILED"
           elif [ "$status" == "UNASSIGNED" ]; then status="⌛ UNASSIGNED"
           elif [ "$status" == "STOPPED" ]; then status="🛑 STOPPED"
+          elif [ "$status" == "RESTARTING" ]; then status="🔄 RESTARTING"
+          elif is_not_found; then status="🤔 NOT FOUND"
           else status="🤔 UNKNOWN (API Error)"; fi
 
           status_display="$status"
@@ -73595,15 +73675,10 @@ playground_connector_status_command() {
               fi
           fi
 
-          printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+          printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
           echo "-------------------------------------------------------------------------------------------------------------"
 
-          if [[ "$tasks" == *"RUNNING"* ]]; then tasks="${tasks//RUNNING/🟢 RUNNING}"
-          elif [[ "$tasks" == *"PAUSED"* ]]; then tasks="${tasks//PAUSED/⏸️  PAUSED}"
-          elif [[ "$tasks" == *"STOPPED"* ]]; then tasks="${tasks//STOPPED/🛑  STOPPED}"
-          elif [[ "$tasks" == *"FAILED"* ]]; then tasks="${tasks//FAILED/🛑 FAILED}"
-          elif [[ "$tasks" == *"UNASSIGNED"* ]]; then tasks="${tasks//UNASSIGNED/⌛ UNASSIGNED}"
-          else tasks="🤔 N/A"; fi
+          tasks=$(decorate_task_states "$tasks")
 
           stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace? // empty' | sed '/^$/d')
           stacktrace_tasks=$(echo "$curl_output" | jq -r '.tasks[]?.trace? // empty' | sed '/^$/d')
@@ -74378,31 +74453,74 @@ playground_connector_oracle_cdc_xstream_generate_report_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
-  cd $tmp_dir
-  if [ ! -f orclcdc_diag.sql ]
+  # defaults of the playground examples, overridden by the running XStream connector config when there is one
+  xstream_admin="C##CFLTADMIN"
+  xstream_user="C##CFLTUSER"
+  xstream_server="XOUT"
+  connector_type=$(playground state get run.connector_type)
+  if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
   then
-      wget -q https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/_downloads/6d672a473a3153a88f9c67de5e0b558f/orclcdc_diag.sql
+      for c in $(playground get-connector-list 2> /dev/null || true)
+      do
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$c/config\"" > /dev/null 2>&1 || continue
+          if echo "$curl_output" | jq -e '."connector.class" | test("XStream")' > /dev/null 2>&1
+          then
+              server=$(echo "$curl_output" | jq -r '."database.out.server.name" // empty')
+              user=$(echo "$curl_output" | jq -r '."database.user" // empty' | tr '[:lower:]' '[:upper:]')
+              [ -n "$server" ] && xstream_server="$server"
+              [ -n "$user" ] && xstream_user="$user"
+              log "🔎 using outbound server $xstream_server and connect user $xstream_user of connector $c"
+              break
+          fi
+      done
   fi
+
+  cd $tmp_dir
+  # the URL contains a hash that changes when the docs are republished: fail with an explicit message rather than silently
+  diag_url="https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/_downloads/6d672a473a3153a88f9c67de5e0b558f/orclcdc_diag.sql"
+  if ! curl -fsSL -o orclcdc_diag.sql "$diag_url"
+  then
+      logerror "❌ could not download orclcdc_diag.sql from $diag_url"
+      logerror "💡 the link may have changed: get the script from https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
+      exit 1
+  fi
+
+  # never present the report of a previous run as the new one
+  rm -f /tmp/orclcdc_diag.html
+  playground container exec --container oracle --command "rm -f /home/oracle/orclcdc_diag_*.html" > /dev/null 2>&1 || true
+
   playground container cp --source orclcdc_diag.sql --destination oracle:/orclcdc_diag.sql > /dev/null 2>&1
   docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
      CONNECT sys/Admin123 AS SYSDBA
-     @/orclcdc_diag.sql C##CFLTADMIN C##CFLTUSER XOUT ''
+     @/orclcdc_diag.sql $xstream_admin $xstream_user $xstream_server ''
 END;
 /
 EOF
-  playground container exec --container oracle --command "mv /home/oracle/orclcdc_diag_*.html /home/oracle/orclcdc_diag.html"
-  playground container cp --source oracle:/home/oracle/orclcdc_diag.html --destination /tmp/ > /dev/null 2>&1
+  playground container exec --container oracle --command "mv \$(ls -t /home/oracle/orclcdc_diag_*.html | head -1) /home/oracle/orclcdc_diag.html" || true
+  playground container cp --source oracle:/home/oracle/orclcdc_diag.html --destination /tmp/ > /dev/null 2>&1 || true
   if [ -f /tmp/orclcdc_diag.html ]
   then
-      log "⚙️ oracle cdc xstream connector diagnostics report is available at /tmp/orclcdc_diag.html"
+      # a timestamped copy, plus /tmp/orclcdc_diag.html (the latest, read by playground analyze oracle-xstream-report)
+      report="/tmp/orclcdc_diag_$(date '+%Y%m%d_%H%M%S').html"
+      cp /tmp/orclcdc_diag.html "$report"
+      log "⚙️ oracle cdc xstream connector diagnostics report is available at $report (latest also in /tmp/orclcdc_diag.html)"
       # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null
+      if [[ -t 1 ]]
       then
-          open "/tmp/orclcdc_diag.html"
+          if command -v open &>/dev/null
+          then
+              open "$report"
+          elif command -v xdg-open &>/dev/null
+          then
+              xdg-open "$report" > /dev/null 2>&1 || true
+          fi
       fi
   else
-      logwarn "❌ oracle cdc xstream connector diagnostics report is not available"
+      logerror "❌ oracle cdc xstream connector diagnostics report is not available"
+      exit 1
   fi
+
 }
 
 # :command.function
@@ -74521,13 +74639,12 @@ EOF
   docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
     CONNECT sys/Admin123 AS SYSDBA
     SELECT
-    c.capture_name,
+    a.apply_name,
     parameter, value,
     set_by_user
-    FROM ALL_CAPTURE_PARAMETERS c,
+    FROM ALL_APPLY_PARAMETERS a,
     ALL_XSTREAM_OUTBOUND o
-    WHERE c.capture_name = o.capture_name
-
+    WHERE a.apply_name = o.server_name
     ORDER BY parameter;
 EOF
 
@@ -76074,7 +76191,7 @@ playground_connector_tasks_command() {
           RUNNING) echo "🟢 RUNNING" ;;
           FAILED) echo "🛑 FAILED" ;;
           PAUSED) echo "⏸️  PAUSED" ;;
-          STOPPED) echo "🛑 STOPPED" ;;
+          STOPPED) echo "⏹️  STOPPED" ;;
           UNASSIGNED) echo "⌛ UNASSIGNED" ;;
           RESTARTING) echo "🔄 RESTARTING" ;;
           *) echo "$1" ;;
@@ -76674,24 +76791,30 @@ playground_connector_diagnose_command() {
 
       echo ""
       log "👉 4/4 next steps"
+      # " --cluster us|europe" in mdc environments, otherwise the printed commands target the wrong cluster
+      cluster_flag=""
+      if [ $is_cloud -eq 0 ]
+      then
+          cluster_flag=$(mdc_cluster_flag)
+      fi
       next_steps=()
       if [[ "$connector_state" == "FAILED" ]] || [[ "$task_states" == *"FAILED"* ]]
       then
-          next_steps+=("🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector")
+          next_steps+=("🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector$cluster_flag")
       elif [[ "$connector_state" == "PAUSED" ]] || [[ "$task_states" == *"PAUSED"* ]]
       then
-          next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector")
+          next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector$cluster_flag")
       elif [[ "$connector_state" == "RUNNING" ]]
       then
           next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
       fi
-      next_steps+=("playground connector show-config --connector $connector")
+      next_steps+=("playground connector show-config --connector $connector$cluster_flag")
       if [ $is_cloud -eq 1 ]
       then
           next_steps+=("playground connector logs --connector $connector")
       else
           next_steps+=("playground container logs -c $diagnose_connect_container --grep \"$connector\" --no-follow --tail 200")
-          next_steps+=("playground debug log-level set --package <connector package> --level TRACE")
+          next_steps+=("playground connector log-level --connector $connector --level TRACE$cluster_flag")
           next_steps+=("playground debug thread-dump --container $diagnose_connect_container")
       fi
       for step in "${next_steps[@]}"
@@ -76763,31 +76886,39 @@ playground_connector_history_command() {
       status_topic=${status_topic:-connect-status}
   fi
 
-  # prints the records of internal topic $1 as "<timestamp ms>|<key>|<value>" lines (a tombstone value is "null")
+  # checked here, not in read_internal_topic: its output goes through a pipe filtered by awk, which would swallow
+  # the error and turn it into "No record found"
+  if [[ "$environment" == "ccloud" ]]
+  then
+      get_kafka_docker_playground_dir
+      if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta ] || [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+      then
+          logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta or ak-tools-ccloud.delta has not been generated"
+          exit 1
+      fi
+  fi
+
+  # prints the records of internal topic $1 as "<timestamp ms>|<key>|<value>" lines (a tombstone value is "null"), the
+  # errors of the consumer go to file $2
   function read_internal_topic() {
       local topic="$1"
+      local errfile="$2"
       # --property works with every version (only deprecated in favor of --formatter-property since Kafka 4.0)
       local consumer_args=(--topic "$topic" --from-beginning --timeout-ms 6000 --property print.key=true --property print.timestamp=true --property key.separator='|')
       if [[ "$environment" == "ccloud" ]]
       then
-          get_kafka_docker_playground_dir
-          if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta ] || [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
-          then
-              logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta or ak-tools-ccloud.delta has not been generated"
-              exit 1
-          fi
           source $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
           get_connect_image
           [[ -n "$verbose" ]] && log "🐞 kafka-console-consumer ${consumer_args[*]} --bootstrap-server $BOOTSTRAP_SERVERS --consumer.config /tmp/configuration/ccloud.properties"
-          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $BOOTSTRAP_SERVERS --consumer.config /tmp/configuration/ccloud.properties 2> /dev/null
+          docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $BOOTSTRAP_SERVERS --consumer.config /tmp/configuration/ccloud.properties 2>> "$errfile"
       else
           get_security_broker "--consumer.config"
           [[ -n "$verbose" ]] && log "🐞 kafka-console-consumer ${consumer_args[*]} --bootstrap-server $bootstrap_server $security (in $container)"
           if [[ "$environment" == cfk* ]]
           then
-              kubectl -n confluent exec -i $container -- kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2> /dev/null
+              kubectl -n confluent exec -i $container -- kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2>> "$errfile"
           else
-              docker exec -i $container kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2> /dev/null
+              docker exec -i $container kafka-console-consumer "${consumer_args[@]}" --bootstrap-server $bootstrap_server $security 2>> "$errfile"
           fi
       fi | awk '/^(CreateTime|LogAppendTime):[0-9]+\|/ { sub(/^[A-Za-z]+:/, ""); print }'
   }
@@ -76799,14 +76930,21 @@ playground_connector_history_command() {
   # both at once: each read ends after 6 seconds without a new record
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
-  read_internal_topic "$config_topic" > "$tmp_dir/config" &
-  read_internal_topic "$status_topic" > "$tmp_dir/status" &
+  read_internal_topic "$config_topic" "$tmp_dir/config.err" > "$tmp_dir/config" &
+  read_internal_topic "$status_topic" "$tmp_dir/status.err" > "$tmp_dir/status" &
   wait
   config_records=$(cat "$tmp_dir/config")
   status_records=$(cat "$tmp_dir/status")
   if [[ -z "$config_records" ]] && [[ -z "$status_records" ]]
   then
       logerror "❌ No record found in $config_topic and $status_topic: wrong topic names? (--config-topic, --status-topic)"
+      # the consumer errors (container not running, authentication, unknown topic...) say which one it is
+      errors=$(cat "$tmp_dir/config.err" "$tmp_dir/status.err" 2> /dev/null | grep -v -E "^Processed a total of|^[[:space:]]+at |TimeoutException|Error processing message, terminating consumer process" | sort -u | tail -10)
+      if [[ -n "$errors" ]]
+      then
+          logerror "❌ the consumer reported:"
+          echo "$errors"
+      fi
       exit 1
   fi
 
@@ -76981,6 +77119,7 @@ playground_connector_show_lag_command() {
   verbose="${args[--verbose]}"
   interval="${args[--interval]}"
   max_wait="${args[--max-wait]}"
+  fail_on_timeout="${args[--fail-on-timeout]}"
 
   connector_type=$(playground state get run.connector_type)
   get_environment_used
@@ -76995,7 +77134,15 @@ playground_connector_show_lag_command() {
       fi
   fi
 
+  # decided once: get_ccloud_connect overwrites $environment with the env-xxxx id, so testing
+  # "$environment" == "ccloud" again later would take the self managed branch on the 2nd poll
+  use_ccloud_tools=0
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$environment" == "ccloud" ]
+  then
+    use_ccloud_tools=1
+  fi
+
+  if [ $use_ccloud_tools == 1 ]
   then
     get_ccloud_connect
     get_kafka_docker_playground_dir
@@ -77065,7 +77212,7 @@ playground_connector_show_lag_command() {
         compare_line="🏁"
       fi
 
-      if [[ "$end_offset" =~ ^[0-9]+$ ]] && [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ] && [[ "$lag" =~ ^[0-9]+$ ]]
+      if [[ "$end_offset" =~ ^[0-9]+$ ]] && [ $end_offset != 0 ] && [[ "$lag" =~ ^[0-9]+$ ]]
       then
         # calculate the percentage of lag
         percentage=$((100 * lag / end_offset))
@@ -77097,7 +77244,7 @@ playground_connector_show_lag_command() {
         printf "topic: %-10s partition: %-3s current-offset: %-10s end-offset: %-10s lag: %-10s [%s] %3d%%\n" "$topic" "$partition" "$current_offset" "$end_offset" "$lag" "$bar" "$inverse_percentage"
       fi
       prev_topic="$topic"
-    done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2n)
+    done < <(cat "$lag_output" | grep -v PARTITION | sed '/^$/d' | sort -k2,2 -k3,3n)
   }
 
   function log_down() {
@@ -77116,6 +77263,20 @@ playground_connector_show_lag_command() {
     ORANGE='\033[0;33m'
     NC='\033[0m' # No Color
     echo -e "$ORANGE$(date +"%H:%M:%S") 🔸$@$NC"
+  }
+
+  timed_out=0
+  # sleep --interval, then return 1 once --max-wait is exceeded
+  function wait_next_poll () {
+    sleep $interval
+    cur_wait=$(( cur_wait+interval ))
+    if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
+    then
+      logwarn "🐢 the consumer lag for $connector_type connector ${connector}${maybe_id} is still not 0 after $max_wait seconds."
+      timed_out=1
+      return 1
+    fi
+    return 0
   }
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -77192,10 +77353,25 @@ playground_connector_show_lag_command() {
         exit 1
       fi
 
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+      consumer_group="connect-$connectorId"
+    else
+      # a sink can use another group with consumer.override.group.id
+      consumer_group="connect-$connector"
+      handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\""
+      override_group=$(echo "$curl_output" | jq -r '."consumer.override.group.id" // empty' 2> /dev/null)
+      if [ -n "$override_group" ]
+      then
+        consumer_group="$override_group"
+        log "👥 $connector_type connector ${connector} uses consumer group $consumer_group (consumer.override.group.id)"
+      fi
+    fi
+
     if [[ -n "$verbose" ]]
     then
         log "🐞 CLI command used"
-        echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
+        echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $security"
     fi
 
     SECONDS=0
@@ -77203,37 +77379,34 @@ playground_connector_show_lag_command() {
     stop=0
     cur_wait=0
 
-    get_environment_used
     while [ $stop != 1 ]
     do
-      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
+      # stderr is kept: an error ("does not exist", timeout) must not be read as an empty or 0 lag
+      if [ $use_ccloud_tools == 1 ]
       then
-        get_ccloud_connect
         get_connect_image
-
-        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-
-        then
-          consumer_group="connect-$connectorId"
-        else
-          consumer_group="connect-$connector"
-        fi
-        docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
+        docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe 2>&1 | grep -v PARTITION | sed '/^$/d' &> $lag_output
       else
-        playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION | sed '/^$/d' &> $lag_output
+        playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $security" 2>&1 | grep -v PARTITION | sed '/^$/d' &> $lag_output
       fi
+      # keep the partition rows (3rd field is the partition number) and the errors: informational stderr lines such as
+      # "Consumer group 'x' has no active members." or SLF4J noise must neither be summed as a 0 lag nor shown as a row
+      awk 'tolower($0) ~ /warning|does not exist|^error|exception/ || $3 ~ /^[0-9]+$/' "$lag_output" > "$lag_output.rows"
+      mv "$lag_output.rows" "$lag_output"
 
       if grep -q "Warning" $lag_output
       then
         logwarn "🐢 consumer group for $connector_type connector ${connector}${maybe_id} is rebalancing"
         cat $lag_output
-        sleep $interval
-        cur_wait=$(( cur_wait+interval ))
-        if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
-        then
-          log "🐢 the consumer lag is still not 0 after $max_wait seconds."
-          exit 0
-        fi
+        wait_next_poll || break
+        continue
+      fi
+
+      if grep -qiE "does not exist|^Error|Exception" $lag_output
+      then
+        logwarn "🐢 could not read the lag of consumer group $consumer_group for $connector_type connector ${connector}${maybe_id}:"
+        grep -iE "does not exist|Error|Exception" $lag_output | head -5
+        wait_next_poll || break
         continue
       fi
 
@@ -77244,13 +77417,7 @@ playground_connector_show_lag_command() {
       then
         logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available (no offset committed yet), check the connector status if this persists"
         show_output
-        sleep $interval
-        cur_wait=$(( cur_wait+interval ))
-        if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
-        then
-          log "🐢 the consumer lag is still not 0 after $max_wait seconds."
-          exit 0
-        fi
+        wait_next_poll || break
       else
         total_lag=$(cat "$lag_output" | grep -v "PARTITION" | awk -F" " '{sum+=$6;} END{print sum;}')
 
@@ -77296,13 +77463,7 @@ playground_connector_show_lag_command() {
             fi
             show_output
             prev_lag=$total_lag
-            sleep $interval
-            cur_wait=$(( cur_wait+interval ))
-            if [ "$max_wait" != "0" ] && [[ "$cur_wait" -gt "$max_wait" ]]
-            then
-              log "🐢 the consumer lag is still not 0 after $max_wait seconds."
-              exit 0
-            fi
+            wait_next_poll || break
           else
             ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
             log "🏁 consumer lag for $connector_type connector ${connector}${maybe_id} is 0 ! $ELAPSED"
@@ -77310,10 +77471,20 @@ playground_connector_show_lag_command() {
             show_output
             break
           fi
+        else
+          # empty output (the command failed or the group has no member yet): never loop without sleeping
+          logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} could not be read (empty output)"
+          wait_next_poll || break
         fi
       fi
     done
   done
+
+  if [ $timed_out == 1 ] && [[ -n "$fail_on_timeout" ]]
+  then
+    logerror "❌ the consumer lag did not reach 0 within --max-wait $max_wait seconds"
+    exit 1
+  fi
 }
 
 # :command.function
@@ -79355,7 +79526,14 @@ playground_connector_metrics_command() {
 
   connector_type=$(playground state get run.connector_type)
 
-  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      # no jmx access, and the Telemetry API (display-metrics-api) does not support custom connectors either
+      logerror "❌ connector metrics is not supported for $connector_type connectors (no JMX access, and the Confluent Cloud Telemetry API does not cover them)"
+      exit 1
+  fi
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
   then
       # no jmx for a fully managed connector: its metrics come from the Confluent Cloud Telemetry API
       if [[ -n "$json" ]] || [[ -n "$watch" ]]
@@ -79437,7 +79615,8 @@ playground_connector_metrics_command() {
       port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
       if [[ -z "$port" ]]
       then
-          logwarn "⚠️ JMX is not enabled on $container (no KAFKA_JMX_PORT), skipped"
+          # stderr: this function runs inside $(...), stdout is the data
+          logwarn "⚠️ JMX is not enabled on $container (no KAFKA_JMX_PORT), skipped" >&2
           return 0
       fi
       # the jvm of the tool must not inherit the debug agent, jmx port or java agents of the worker (bind errors)
@@ -79456,14 +79635,14 @@ playground_connector_metrics_command() {
       then
           object_args+=(--object-name "debezium.*:server=$prefix,*")
       fi
-      [[ -n "$verbose" ]] && log "🐞 ${jmx_command[*]} --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv"
+      [[ -n "$verbose" ]] && log >&2 "🐞 ${jmx_command[*]} --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv"
       output=$("${jmx_command[@]}" --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv 2>&1) || true
       if ! echo "$output" | grep -q -E "^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_-]+="
       then
           if ! echo "$output" | grep -q -E "^(time|Trying to connect|Expected attribute counts)"
           then
-              logwarn "⚠️ could not read the JMX metrics of $container:"
-              echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3
+              logwarn "⚠️ could not read the JMX metrics of $container:" >&2
+              echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3 >&2
           fi
           return 0
       fi
@@ -79495,7 +79674,7 @@ playground_connector_metrics_command() {
           read -r container port <<< "$(benchmark_worker_container_and_port "$worker_id")"
           if ! is_container_running "$container"
           then
-              logwarn "⚠️ worker $worker_id (container $container) is not running, skipped"
+              logwarn "⚠️ worker $worker_id (container $container) is not running, skipped" >&2
               continue
           fi
           lines+="$(read_task_mbeans "$connector" "$container" "$prefix")"$'\n'
@@ -79692,7 +79871,8 @@ playground_connector_display_metrics_api_command() {
       fi
 
       local ts_seconds=$((timestamp / 1000))
-      date -r "$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || true
+      # date -r <epoch> is BSD (macOS) only, date -d @<epoch> is GNU (Linux)
+      date -r "$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || date -d "@$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || true
   }
 
   extract_metric() {
@@ -79912,7 +80092,13 @@ playground_connector_display_metrics_api_command() {
       get_ccloud_connect
       for connector in "${items[@]}"
       do
-          connectorId=$(get_ccloud_connector_lcc $connector)
+          # get_ccloud_connector_lcc uses jq -e: without || true an unknown name ends the command silently (set -e)
+          connectorId=$(get_ccloud_connector_lcc "$connector" || true)
+          if [[ -z "$connectorId" ]] || [[ "$connectorId" == "null" ]]
+          then
+              logerror "❌ Could not find the id of fully managed connector $connector"
+              exit 1
+          fi
           metrics_file=$(mktemp)
           if [[ -n "$open" ]]
           then
@@ -79922,14 +80108,29 @@ playground_connector_display_metrics_api_command() {
           if [[ -n "$verbose" ]]
           then
               log "🐞 CLI command used"
-              echo "curl -sS \"https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId\" -H \"Content-Type: application/json\" -X GET -H \"Authorization: Basic $authorization\""
+              # the Basic token is the Cloud API key and secret: never print it
+              echo "curl -sS \"https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId\" -H \"Content-Type: application/json\" -X GET -H \"Authorization: Basic <CLOUD_API_KEY:CLOUD_API_SECRET in base64>\""
           fi
 
           log "〽️ Display metrics api for fully managed connector $connector (id: $connectorId), see https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud"
-          curl -sS "https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId" \
+          http_code=$(curl -sS -o "$metrics_file" -w '%{http_code}' "https://api.telemetry.confluent.cloud/v2/metrics/cloud/export?resource.connector.id=$connectorId" \
           -H "Content-Type: application/json" \
           -X GET \
-          -H "Authorization: Basic $authorization" > "$metrics_file"
+          -H "Authorization: Basic $authorization") || http_code="000"
+
+          if [[ "$http_code" != "200" ]]
+          then
+              # 401/403: the Cloud API key lacks the MetricsViewer role, 429: rate limited. Never report it as "no metrics"
+              logerror "❌ Metrics API returned HTTP $http_code for connector $connector (id: $connectorId)"
+              head -c 1000 "$metrics_file"
+              echo ""
+              if [[ "$http_code" == "401" ]] || [[ "$http_code" == "403" ]]
+              then
+                  logerror "💡 the Cloud API key needs the MetricsViewer role (or OrganizationAdmin / EnvironmentAdmin)"
+              fi
+              rm -f "$metrics_file"
+              exit 1
+          fi
 
           if [[ -n "$verbose" ]]
           then
@@ -79986,6 +80187,16 @@ playground_connector_display_metrics_api_with_grafana_command() {
       echo "$result"
   }
 
+  # first free host port from $1: the grafana profile of the example already publishes 3000 and 9090
+  find_free_port() {
+      local port="$1"
+      while (echo > /dev/tcp/127.0.0.1/$port) >/dev/null 2>&1
+      do
+          port=$((port + 1))
+      done
+      echo "$port"
+  }
+
   connector_type=$(playground state get run.connector_type)
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -80019,8 +80230,9 @@ playground_connector_display_metrics_api_with_grafana_command() {
       connector_ids=()
       for connector in "${items[@]}"
       do
-          connectorId=$(get_ccloud_connector_lcc "$connector")
-          if [[ -z "$connectorId" ]]
+          # get_ccloud_connector_lcc uses jq -e: without || true an unknown name would end the command silently
+          connectorId=$(get_ccloud_connector_lcc "$connector" || true)
+          if [[ -z "$connectorId" ]] || [[ "$connectorId" == "null" ]]
           then
               logerror "🚨 Could not find connector id for $connector"
               exit 1
@@ -80056,6 +80268,8 @@ playground_connector_display_metrics_api_with_grafana_command() {
       plaintext_dir="$root_folder/environment/plaintext"
       working_dir="/tmp/playground-display-metrics-api-with-grafana"
 
+      mkdir -p "$working_dir"
+      chmod 700 "$working_dir"
       mkdir -p "$working_dir/prometheus"
       mkdir -p "$working_dir/grafana/provisioning/datasources"
       mkdir -p "$working_dir/grafana/provisioning/dashboards"
@@ -80082,6 +80296,8 @@ playground_connector_display_metrics_api_with_grafana_command() {
           -e "s|\${CCLOUD_CONNECT_LCC_IDS}|$escaped_connector_ids_csv|g" \
           -e "s|\${CCLOUD_SR_LSRC_IDS}|$escaped_sr_ids_csv|g" \
           "$display_metrics_dir/prometheus/prometheus.yml" > "$working_dir/prometheus/prometheus.yml"
+      # holds the Cloud API key and secret: owner only, and removed once copied into the container
+      chmod 600 "$working_dir/prometheus/prometheus.yml"
 
       network_name="playground-grafana"
       if ! docker network inspect "$network_name" >/dev/null 2>&1
@@ -80098,22 +80314,46 @@ playground_connector_display_metrics_api_with_grafana_command() {
           docker rm -f grafana-display-metrics-api-with-grafana >/dev/null
       fi
 
-      docker run -d --name prometheus-display-metrics-api-with-grafana --hostname prometheus \
+      prometheus_port=$(find_free_port 9090)
+      grafana_port=$(find_free_port 3000)
+      if [ "$prometheus_port" != "9090" ] || [ "$grafana_port" != "3000" ]
+      then
+          log "🔀 ports 9090 / 3000 are in use (grafana of the example?), using $prometheus_port / $grafana_port"
+      fi
+
+      # the config is copied into the container (not bind mounted) so that the file with the secret can be deleted
+      docker create --name prometheus-display-metrics-api-with-grafana --hostname prometheus \
           --network "$network_name" \
-          -p 9090:9090 \
-          -v "$working_dir/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
-          prom/prometheus:v2.29.2 \
+          -p $prometheus_port:9090 \
+          prom/prometheus:v2.55.1 \
           --config.file=/etc/prometheus/prometheus.yml >/dev/null
+      # docker cp keeps the mode and makes root the owner, and prometheus runs as nobody: it must be world readable in
+      # the container (locally the folder stays owner only, and the file is removed right after the copy)
+      chmod 644 "$working_dir/prometheus/prometheus.yml"
+      docker cp "$working_dir/prometheus/prometheus.yml" prometheus-display-metrics-api-with-grafana:/etc/prometheus/prometheus.yml >/dev/null
+      rm -f "$working_dir/prometheus/prometheus.yml"
+      docker start prometheus-display-metrics-api-with-grafana >/dev/null
 
       docker run -d --name grafana-display-metrics-api-with-grafana --hostname grafana \
           --network "$network_name" \
-          -p 3000:3000 \
+          -p $grafana_port:3000 \
           -e GF_SECURITY_ADMIN_USER=admin \
           -e GF_SECURITY_ADMIN_PASSWORD=password \
           -e GF_USERS_ALLOW_SIGN_UP=false \
           -v "$working_dir/grafana/provisioning:/etc/grafana/provisioning:ro" \
           -v "$working_dir/grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro" \
           grafana/grafana:11.1.0 >/dev/null
+
+      sleep 3
+      for c in prometheus-display-metrics-api-with-grafana grafana-display-metrics-api-with-grafana
+      do
+          if [ "$(docker inspect -f '{{.State.Running}}' $c 2>/dev/null)" != "true" ]
+          then
+              logerror "❌ container $c is not running, its last logs:"
+              docker logs --tail 20 $c 2>&1
+              exit 1
+          fi
+      done
 
       if [ -z "$GITHUB_RUN_NUMBER" ]
       then
@@ -80135,24 +80375,24 @@ playground_connector_display_metrics_api_with_grafana_command() {
           if ! can_open_url
           then
               log "🔗 Cannot open browser, use url:"
-              echo "http://127.0.0.1:3000"
+              echo "http://127.0.0.1:$grafana_port"
           else
               if [ "$browser" != "" ]
               then
               log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in browser $browser (you can change browser with 'playground config open-grafana-in-browser browser <browser>')"
               log "🤖 Open grafana with browser $browser (login/password is admin/password)"
-              open_url "http://127.0.0.1:3000" "$browser"
+              open_url "http://127.0.0.1:$grafana_port" "$browser"
               else
               log "🤖 automatically (disable with 'playground config open-grafana-in-browser automatically false') open grafana in default browser (you can set browser with 'playground config open-grafana-in-browser browser <browser>')"
               log "🤖 Open grafana (login/password is admin/password)"
-              open_url "http://127.0.0.1:3000"
+              open_url "http://127.0.0.1:$grafana_port"
               fi
           fi
           fi
       fi
-      log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
-      log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/password)"
-      log "✨ Prometheus config in use: $working_dir/prometheus/prometheus.yml"
+      log "🛡️ Prometheus is reachable at http://127.0.0.1:$prometheus_port"
+      log "📊 Grafana is reachable at http://127.0.0.1:$grafana_port (login/password is admin/password)"
+      log "🧹 to stop them: docker rm -f prometheus-display-metrics-api-with-grafana grafana-display-metrics-api-with-grafana"
 
       log "⏳ It will take a couple of minutes for metrics to be collected and displayed in Grafana dashboard, please wait..."
 
@@ -80582,6 +80822,12 @@ playground_connector_logs_command() {
   log="${args[--wait-for-log]}"
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
+  max_wait="${args[--max-wait]}"
+  grep_pattern="${args[--grep]}"
+  since="${args[--since]}"
+  tail_lines="${args[--tail]}"
+  no_follow="${args[--no-follow]}"
+  errors="${args[--errors]}"
 
   connector_type=$(playground state get run.connector_type)
 
@@ -80593,6 +80839,25 @@ playground_connector_logs_command() {
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
   then
+      if ! command -v confluent > /dev/null 2>&1
+      then
+          logerror "❌ the confluent CLI is required to read the logs of a fully managed connector, see https://docs.confluent.io/confluent-cli/current/overview.html to install it"
+          exit 1
+      fi
+      if [[ -n "$since" ]] || [[ -n "$tail_lines" ]] || [[ -n "$no_follow" ]]
+      then
+          logwarn "⚠️ --since, --tail and --no-follow only apply to self managed connectors: ignored"
+      fi
+      levels="ERROR|WARN|INFO"
+      if [[ -n "$errors" ]]
+      then
+          levels="ERROR"
+      fi
+      maybe_search=()
+      if [[ -n "$grep_pattern" ]]
+      then
+          maybe_search=(--search-text "$grep_pattern")
+      fi
 
       if [[ ! -n "$connector" ]]
       then
@@ -80619,7 +80884,12 @@ playground_connector_logs_command() {
       end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
       for connector in "${items[@]}"
       do
-          connectorId=$(get_ccloud_connector_lcc $connector)
+          connectorId=$(get_ccloud_connector_lcc "$connector" || true)
+          if [[ -z "$connectorId" ]] || [[ "$connectorId" == "null" ]]
+          then
+              logerror "❌ Could not find the id of fully managed connector $connector"
+              exit 1
+          fi
           if [[ -n "$open" ]]
           then
               filename="/tmp/${connector}-$(date '+%Y-%m-%d-%H-%M-%S').log"
@@ -80629,21 +80899,41 @@ playground_connector_logs_command() {
               if [[ -n "$verbose" ]]
               then
                   log "🐞 CLI command used"
-                  echo "confluent connect logs \"$connectorId\" --level \"ERROR|WARN|INFO\" --start-time \"$start_time\" --end-time \"$end_time\" --search-text \"$log\""
+                  echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time <now> --search-text \"$log\""
               fi
-              confluent connect logs "$connectorId" --level "ERROR|WARN|INFO" --start-time "$start_time" --end-time "$end_time" --search-text "$log"
+              # poll until the text is found: a single search returned whatever the outcome
+              log "😴 Waiting up to $max_wait seconds for log \"$log\" in fully managed connector $connector ($connectorId)"
+              cur_wait=0
+              while true
+              do
+                  end_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+                  output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" --search-text "$log" 2>&1 || true)
+                  if ! echo "$output" | grep -q "No logs found" && echo "$output" | grep -qF "$log"
+                  then
+                      echo "$output"
+                      log "✅ log \"$log\" found in fully managed connector $connector"
+                      break
+                  fi
+                  if [[ "$cur_wait" -ge "$max_wait" ]]
+                  then
+                      logerror "❌ log \"$log\" was not found in fully managed connector $connector after $max_wait seconds"
+                      exit 1
+                  fi
+                  sleep 10
+                  cur_wait=$((cur_wait + 10))
+              done
           else
               if [[ -n "$verbose" ]]
               then
                   log "🐞 CLI command used"
-                  echo "confluent connect logs \"$connectorId\" --level \"ERROR|WARN|INFO\" --start-time \"$start_time\" --end-time \"$end_time\" --next"
+                  echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time \"$end_time\" ${maybe_search[*]} --next"
               fi
 
               log "📄 Fetching connector logs for $connector (this may take a while for large log sets)..."
               page_num=1
               while true; do
                   log "📖 Fetching page $page_num..."
-                  output=$(confluent connect logs "$connectorId" --level "ERROR|WARN|INFO" --start-time "$start_time" --end-time "$end_time" --next 2>&1)
+                  output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" "${maybe_search[@]}" --next 2>&1)
 
                   # Check if no logs found
                   if echo "$output" | grep -q "No logs found for the current query"; then
@@ -80688,17 +80978,49 @@ playground_connector_logs_command() {
       then
           get_connect_container
       fi
+      # container logs resolves connect to connect-0 on cfk
+      container_args=(--container "$connect_container")
       if [[ -n "$open" ]]
       then
-          playground container logs --open --container "$connect_container"
+          container_args+=(--open)
       elif [[ -n "$log" ]]
       then
-          playground container logs --container "$connect_container" --wait-for-log "$log"
+          container_args+=(--wait-for-log "$log" --max-wait "$max_wait")
       else
-
-          playground container logs --container "$connect_container"
+          if [[ -n "$errors" ]]
+          then
+              container_args+=(--errors)
+          fi
+          if [[ -n "$grep_pattern" ]]
+          then
+              container_args+=(--grep "$grep_pattern")
+          elif [[ -n "$connector" ]] && [[ -z "$errors" ]]
+          then
+              # the worker logs every connector: keep the lines of this one (its name is in the log context)
+              log "🎯 keeping only the lines mentioning connector $connector (use --grep to choose another pattern)"
+              container_args+=(--grep "$connector")
+          fi
+          if [[ -n "$since" ]]
+          then
+              container_args+=(--since "$since")
+          fi
+          if [[ -n "$tail_lines" ]]
+          then
+              container_args+=(--tail "$tail_lines")
+          fi
+          if [[ -n "$no_follow" ]]
+          then
+              container_args+=(--no-follow)
+          fi
       fi
+      if [[ -n "$verbose" ]]
+      then
+          log "🐞 CLI command used"
+          echo "playground container logs ${container_args[*]}"
+      fi
+      playground container logs "${container_args[@]}"
   fi
+
 }
 
 # :command.function
@@ -80778,26 +81100,30 @@ playground_connector_display_leader_name_command() {
 
   get_environment_used
 
-  # Check if multiple connect workers are enabled
-  enable_connect_nodes=$(playground state get flags.ENABLE_CONNECT_NODES)
-
-  # Build list of connect containers to try
+  # Build list of connect containers to try: the running workers, rather than the ENABLE_CONNECT_NODES flag (same
+  # detection as playground connector status)
   connect_containers=()
   if [[ "$environment" == cfk* ]]
   then
       # CFK uses numbered pods: connect-0, connect-1, connect-2, etc.
-      connect_containers=("connect-0")
-      if [[ -n "$enable_connect_nodes" ]]
+      connect_containers=($(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | grep -E '^connect-[0-9]+$' || true))
+      if [ ${#connect_containers[@]} -eq 0 ]
       then
-          connect_containers+=("connect-1" "connect-2")
+          connect_containers=("connect-0")
       fi
   else
       # Docker uses: connect, connect2, connect3, etc.
       get_connect_container
       connect_containers=("$connect_container")
-      if [[ -n "$enable_connect_nodes" ]]
+      if ! is_mdc_environment && is_multiple_connect_workers_running
       then
-          connect_containers+=("connect2" "connect3")
+          for worker in connect2 connect3
+          do
+              if is_container_running "$worker"
+              then
+                  connect_containers+=("$worker")
+              fi
+          done
       fi
   fi
 
@@ -129237,6 +129563,14 @@ playground_connector_show_lag_parse_requirements() {
         ;;
 
       # :flag.case
+      --fail-on-timeout)
+
+        # :flag.case_no_arg
+        args['--fail-on-timeout']=1
+        shift
+        ;;
+
+      # :flag.case
       --cluster)
 
         # :flag.case_arg
@@ -130738,10 +131072,12 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --open | -o)
         # :flag.conflicts
-        if [[ -n "${args['--wait-for-log']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--wait-for-log" >&2
-          exit 1
-        fi
+        for conflict in --wait-for-log --grep --errors; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_no_arg
         args['--open']=1
@@ -130751,10 +131087,12 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --wait-for-log | -w)
         # :flag.conflicts
-        if [[ -n "${args['--open']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
-          exit 1
-        fi
+        for conflict in --open --grep --errors; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -130765,6 +131103,113 @@ playground_connector_logs_parse_requirements() {
           printf "%s\n" "--wait-for-log requires an argument: --wait-for-log, -w LOG" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --max-wait | -m)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait, -m MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log --errors; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep GREP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --since)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--since']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--since requires an argument: --since SINCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --tail)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tail']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tail requires an argument: --tail LINES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-follow)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--no-follow']=1
+        shift
+        ;;
+
+      # :flag.case
+      --errors)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--errors']=1
+        shift
         ;;
 
       # :flag.case
@@ -130818,12 +131263,33 @@ playground_connector_logs_parse_requirements() {
     esac
   done
 
+  # :command.default_assignments
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="600"
+
   # :command.validations
   # :flag.validations
   if [[ -v args['--wait-for-log'] ]]; then
     validation_output="$(validate_not_empty "${args['--wait-for-log']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--wait-for-log, -w LOG" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait, -m MAX_WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--since'] ]]; then
+    validation_output="$(validate_not_empty "${args['--since']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--since SINCE" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -156706,6 +157172,11 @@ playground_connector_show_lag_completion() {
         completion_blocked_flags["--max-wait"]=1
 
         ;;
+      --fail-on-timeout)
+        completion_blocked_flags["--fail-on-timeout"]=1
+
+        shift
+        ;;
       --cluster)
         shift
         if [[ $# -eq 0 ]]; then
@@ -156733,6 +157204,7 @@ playground_connector_show_lag_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --interval "$completion_current" --interval
     completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --fail-on-timeout "$completion_current" --fail-on-timeout
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -157506,6 +157978,8 @@ playground_connector_logs_completion() {
       --open | -o)
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--grep"]=1
+        completion_blocked_flags["--errors"]=1
 
         shift
         ;;
@@ -157518,7 +157992,71 @@ playground_connector_logs_completion() {
         shift
         completion_blocked_flags["--wait-for-log"]=1
         completion_blocked_flags["--open"]=1
+        completion_blocked_flags["--grep"]=1
+        completion_blocked_flags["--errors"]=1
 
+        ;;
+      --max-wait | -m)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+        completion_blocked_flags["--open"]=1
+        completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--errors"]=1
+
+        ;;
+      --since)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--since"]=1
+        completion_blocked_flags["--open"]=1
+        completion_blocked_flags["--wait-for-log"]=1
+
+        ;;
+      --tail)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--tail"]=1
+        completion_blocked_flags["--open"]=1
+        completion_blocked_flags["--wait-for-log"]=1
+
+        ;;
+      --no-follow)
+        completion_blocked_flags["--no-follow"]=1
+        completion_blocked_flags["--open"]=1
+        completion_blocked_flags["--wait-for-log"]=1
+
+        shift
+        ;;
+      --errors)
+        completion_blocked_flags["--errors"]=1
+        completion_blocked_flags["--open"]=1
+        completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--grep"]=1
+
+        shift
         ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
@@ -157551,6 +158089,12 @@ playground_connector_logs_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --open "$completion_current" --open -o
     completion_flag_candidates --wait-for-log "$completion_current" --wait-for-log -w
+    completion_flag_candidates --max-wait "$completion_current" --max-wait -m
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --since "$completion_current" --since
+    completion_flag_candidates --tail "$completion_current" --tail
+    completion_flag_candidates --no-follow "$completion_current" --no-follow
+    completion_flag_candidates --errors "$completion_current" --errors
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi

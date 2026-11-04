@@ -130,22 +130,23 @@ link to the Oracle documentation of the main views:
 | outbound server, its capture, connect user and queue | `ALL_XSTREAM_OUTBOUND` |
 | the transaction the outbound server is sending, its processed low position | `V$XSTREAM_OUTBOUND_SERVER`, `ALL_XSTREAM_OUTBOUND_PROGRESS` |
 | capture parameters | `ALL_CAPTURE_PARAMETERS` |
+| apply (outbound server) parameters | `ALL_APPLY_PARAMETERS` |
 | rules of the XStream components (which tables) | `ALL_XSTREAM_RULES` |
 
 **`generate-report`** downloads `orclcdc_diag.sql` from the connector documentation, copies it into the container,
-runs it with `C##CFLTADMIN C##CFLTUSER XOUT` and copies the result to **`/tmp/orclcdc_diag.html`** (overwritten on
-each run, opened in the browser in an interactive terminal). This is the report support asks customers for, with the
+runs it with `C##CFLTADMIN <user> <server>` (the `database.user` and `database.out.server.name` of the running XStream
+connector, `C##CFLTUSER XOUT` otherwise) and copies the result to a timestamped **`/tmp/orclcdc_diag_<date>.html`**,
+plus **`/tmp/orclcdc_diag.html`** for the latest one (replaced on each run, so it is never a stale report; opened in the browser
+in an interactive terminal; it exits 1 when the download or the report fails). This is the report support asks customers for, with the
 same script: what you get from the example is directly comparable with theirs.
 
 Gotchas:
 
-- **Hardcoded names**: container `oracle`, `sys/Admin123`, SID `ORCLCDB`, users `C##CFLTADMIN` / `C##CFLTUSER`,
-  outbound server `XOUT`. In a repro model with another outbound server name or user, run the script yourself
-  (`playground container cp` + `sqlplus … @/orclcdc_diag.sql <admin> <user> <server> ''`), or keep the example's names.
+- **Hardcoded names**: container `oracle`, `sys/Admin123`, SID `ORCLCDB`, admin user `C##CFLTADMIN`. The connect
+  user and the outbound server come from the running connector config. With another admin user, run the script
+  yourself (`playground container cp` + `sqlplus … @/orclcdc_diag.sql <admin> <user> <server> ''`).
 - **`generate-report` needs internet** (it downloads the script each time) and takes some seconds: the script queries
   dozens of views.
-- `debug` prints the "apply parameter settings" with the same query as the capture parameters: read the outbound
-  server parameters in the report (`Apply: Parameters`) instead.
 - The LogMiner connector has no equivalent command: there is no capture process to look at. Its database side is
   the archived logs (`V$ARCHIVED_LOG`) and the LogMiner session the task opens, and its health is in the connector
   logs and metrics (the example sets `io.confluent.connect.oracle.cdc.util.metrics.MetricsReporter` to `DEBUG` and
@@ -301,7 +302,8 @@ does it still need". For a verdict, read the report.
 
 ```bash
 playground connector oracle-cdc-xstream generate-report
-# ⚙️ oracle cdc xstream connector diagnostics report is available at /tmp/orclcdc_diag.html
+# 🔎 using outbound server XOUT and connect user C##CFLTUSER of connector cdc-xstream-oracle-source
+# ⚙️ oracle cdc xstream connector diagnostics report is available at /tmp/orclcdc_diag_20261028_122301.html (latest also in /tmp/orclcdc_diag.html)
 playground analyze oracle-xstream-report -c oracle --output-dir /tmp/xstream
 # ⚙️ Generating the diagnostics report in container oracle
 # ✅ report saved in /tmp/xstream/orclcdc_diag_20261028_122319.html
@@ -430,7 +432,7 @@ playground analyze oracle-xstream-report -c oracle --output-dir /tmp/repro-xstre
 playground run -f connect/connect-cdc-xstream-oracle19-source/cdc-xstream-oracle19.sh      # XStream, outbound server XOUT
 playground run -f connect/connect-cdc-oracle19-source/cdc-oracle19-cdb-table.sh             # LogMiner, CDB (or -pdb-table)
 playground connector oracle-cdc-xstream debug                                               # raw XStream views
-playground connector oracle-cdc-xstream generate-report                                    # /tmp/orclcdc_diag.html
+playground connector oracle-cdc-xstream generate-report                                    # /tmp/orclcdc_diag_<date>.html
 playground analyze oracle-xstream-report [-c oracle | -f <report.html>… | --sample <name>…] [-p "<symptom, since when>"] [--json] [--top 10] [--output-dir <d>]
 playground container exec -c oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
 CONNECT sys/Admin123 AS SYSDBA

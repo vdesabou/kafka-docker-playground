@@ -29,7 +29,7 @@ function state_with_emoji() {
         RUNNING) echo "🟢 RUNNING" ;;
         FAILED) echo "🛑 FAILED" ;;
         PAUSED) echo "⏸️  PAUSED" ;;
-        STOPPED) echo "🛑 STOPPED" ;;
+        STOPPED) echo "⏹️  STOPPED" ;;
         UNASSIGNED) echo "⌛ UNASSIGNED" ;;
         RESTARTING) echo "🔄 RESTARTING" ;;
         *) echo "$1" ;;
