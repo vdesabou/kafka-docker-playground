@@ -5947,7 +5947,7 @@
     },
     {
       "name": "topic",
-      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  wait-for-records     wait until the topic contains N records\n  get-offsets          earliest and latest offsets per partition\n  compare              a topic and its replica, is everything replicated?\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  reassign / elect-leader   move replicas between brokers, move leaders\n  dlq inspect / replay   dead letter queue grouped by error, and replay\n  set-schema-compatibility   compatibility of the topic subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.",
+      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  wait-for-records     wait until the topic contains N records\n  get-offsets          earliest and latest offsets per partition\n  compare              a topic and its replica, is everything replicated?\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  reassign / elect-leader   move replicas between brokers, move leaders\n  dump-log        the batches of a partition on disk: producers, transactions, sizes\n  dlq inspect / replay   dead letter queue grouped by error, and replay\n  set-schema-compatibility   compatibility of the topic subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.",
       "usage": "playground topic COMMAND",
       "options": [],
       "subcommands": [
@@ -6356,6 +6356,101 @@
               ],
               "argument": "CLUSTER",
               "description": "🌍 Cluster to use in an mdc-* environment (us or europe)\n\nDefault: the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed values: us, europe"
+            }
+          ]
+        },
+        {
+          "name": "dump-log",
+          "description": "🔬 Dump the log segments of a partition: batches, producers, transactions\n\nRuns kafka-dump-log on the segment files of a partition, in the broker\nthat holds the replica (the leader by default), and prints a digest\nbefore the batches:\n\n  batches, records, offsets and time range of the segment(s) read\n  compression codecs, largest batch (the max.message.bytes /\n  RecordTooLargeException limit) and largest record\n  producers (id, epochs, offsets), idempotent or transactional, with\n  their COMMIT / ABORT markers\n  open transactions: transactional records with no marker after them,\n  where read_committed consumers stop (the last stable offset)\n\nThen the batches: the last 20 (--last, --all), or the ones around\n--offset, with --records for each record (key and value sizes,\nheaders) and --print-data for the payloads.\n\nIt reads the last (active) segment, the one that holds --offset, or\nevery segment with --all-segments. The files are read on disk: no\nclient credentials, any secured environment and cfk. Not on Confluent\nCloud (no access to the log segments).\n\n🎓 Tip: for a read_committed consumer stuck at an offset, or\ntransactions that never end, look at the producers of that offset,\nthen 'playground broker transactions find-hanging'.",
+          "usage": "playground topic dump-log [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic name\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--partition",
+                "-p"
+              ],
+              "argument": "PARTITION",
+              "description": "🔢 Partition (default 0)\n\nDefault value: 0"
+            },
+            {
+              "names": [
+                "--offset",
+                "-o"
+              ],
+              "argument": "OFFSET",
+              "description": "🎯 Read the segment that holds this offset, and show the batches around it"
+            },
+            {
+              "names": [
+                "--broker"
+              ],
+              "argument": "BROKER",
+              "description": "🖥️ Id of the broker whose replica to read (default: the leader)"
+            },
+            {
+              "names": [
+                "--all-segments"
+              ],
+              "argument": "",
+              "description": "📚 Read every segment of the partition, not only the last one (can be long on a big partition)"
+            },
+            {
+              "names": [
+                "--records"
+              ],
+              "argument": "",
+              "description": "🧾 Show each record of the batches shown: offset, key and value sizes, headers"
+            },
+            {
+              "names": [
+                "--print-data"
+              ],
+              "argument": "",
+              "description": "📄 With --records, show the payloads too (raw bytes as text: Avro and Protobuf are not decoded)"
+            },
+            {
+              "names": [
+                "--last"
+              ],
+              "argument": "LAST",
+              "description": "🔢 Number of batches to show, the last ones (default 20)\n\nDefault value: 20"
+            },
+            {
+              "names": [
+                "--all"
+              ],
+              "argument": "",
+              "description": "📦 Show every batch of the segment(s) read"
+            },
+            {
+              "names": [
+                "--raw"
+              ],
+              "argument": "",
+              "description": "📜 Print the output of kafka-dump-log as is"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "📗 Print {\"segments\", \"batches\": [{..., \"records\"}], \"summary\": {..., \"producers\", \"open_transactions\"}} and nothing else"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
             }
           ]
         },
