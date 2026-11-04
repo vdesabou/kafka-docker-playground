@@ -263,7 +263,7 @@ function format_records() {
   HAS_KEY_SCHEMA_ID="$has_key_schema_id" HAS_VALUE_SCHEMA_ID="$has_value_schema_id" MAX_CHARACTERS="$max_characters" \
   DISPLAY_LIMIT="$display_limit" GREP_STRING="$grep_string" \
   NO_DECODE="$no_decode" OUTPUT_JSON="$json" SORT_KEEP="$sort_keep" TOPIC="$topic" \
-  COUNT_FILE="$tmp_dir/consume_counts" PG_LOG_LEVEL="$PG_LOG_LEVEL" perl -MPOSIX=strftime -MMIME::Base64=decode_base64 -MJSON::PP -e '
+  COUNT_FILE="$tmp_dir/consume_counts" PG_LOG_LEVEL="$PG_LOG_LEVEL" perl -MPOSIX=strftime -MMIME::Base64=decode_base64 -MJSON::PP -MIO::Select -e '
     use strict;
     use warnings;
     $| = 1;
@@ -308,15 +308,39 @@ function format_records() {
       print "$line\n";
     }
 
+    # stdin is read with sysread, not <STDIN>: IO::Select only sees what is not read yet, a line already in the buffer
+    # of <STDIN> would look like no input
+    my $stdin_select = IO::Select->new(\*STDIN);
+    my ($stdin_buffer, $stdin_eof) = ("", 0);
+    # next line of stdin, without its new line: undef at the end
+    sub read_line {
+      while (1) {
+        my $i = index($stdin_buffer, "\n");
+        if ($i >= 0) { my $line = substr($stdin_buffer, 0, $i); substr($stdin_buffer, 0, $i + 1, ""); return $line; }
+        if ($stdin_eof) { return undef if $stdin_buffer eq ""; my $line = $stdin_buffer; $stdin_buffer = ""; return $line; }
+        my $n = sysread(STDIN, $stdin_buffer, 65536, length($stdin_buffer));
+        if (!defined $n) { next if $!{EINTR}; $stdin_eof = 1; }
+        elsif ($n == 0) { $stdin_eof = 1; }
+      }
+    }
+    # true when something can be read from stdin now, or within $timeout seconds
+    sub input_ready {
+      my ($timeout) = @_;
+      return 1 if $stdin_eof || index($stdin_buffer, "\n") >= 0;
+      return $stdin_select->can_read($timeout) ? 1 : 0;
+    }
+
     # a header, a key or a value containing new lines (the stack trace header of a dead letter queue record, a
-    # pretty-printed json value) spans several lines: a record is complete when the next one starts, or at the end
+    # pretty-printed json value) spans several lines: a record is complete when the next one starts, at the end, or
+    # when nothing comes for 0.5 s (the console consumer prints a record at once): with --tail, stdin never ends, and
+    # the newest record would wait for the next one
     my $record_start_re = qr/^\w+(?::-?\d+)?\x1fPartition:\d+\x1fOffset:\d+\x1f/;
     my $buffered;
     sub next_record {
       while (1) {
-        my $next = <STDIN>;
+        if (defined $buffered && !input_ready(0.5)) { my $record = $buffered; $buffered = undef; return $record; }
+        my $next = read_line();
         if (!defined $next) { my $record = $buffered; $buffered = undef; return $record; }
-        chomp $next;
         if (!defined $buffered) { $buffered = $next; next; }
         if ($next =~ $record_start_re) { my $record = $buffered; $buffered = $next; return $record; }
         $buffered .= "\n$next";
