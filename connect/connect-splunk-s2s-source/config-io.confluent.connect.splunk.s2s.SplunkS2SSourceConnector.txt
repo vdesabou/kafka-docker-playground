@@ -310,6 +310,12 @@ The interval at which acknowledgement packets are sent. This is applicable only 
 🔘 splunk.s2s.behavior.on.error
 
 Error handling behavior setting. Must be configured to one of the following:
+``fail``
+The Connector throws ConnectException and stops processing records when an error occurs.
+``ignore``
+Continues to process next set of records when an error occurs.
+``log``
+(Default) Logs the error when an error occurs and continues to process next set of data.
 
 	 - Type: STRING
 	 - Default: LOG
@@ -414,4 +420,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 

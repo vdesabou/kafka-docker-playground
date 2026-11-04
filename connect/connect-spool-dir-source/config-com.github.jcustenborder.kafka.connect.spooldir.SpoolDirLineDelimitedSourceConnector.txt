@@ -248,14 +248,15 @@ The size of buffer for the BufferedInputStream that will be used to interact wit
 	 - Required: false
 
 ==========================
-file.charset
+
 ==========================
-🔘 UTF-8
+🔘 file.charset
 
 Character set to read wth file with.
 
 	 - Type: STRING
-	 - Default: 
+	 - Default: UTF-8
 	 - Importance: LOW
 	 - Required: false
+
 

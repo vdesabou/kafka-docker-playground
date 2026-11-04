@@ -449,26 +449,24 @@ Character set to read wth file with.
 	 - Required: false
 
 ==========================
-csv.case.sensitive.field.names
+
 ==========================
-🔘 false
+🔘 csv.case.sensitive.field.names
 
 Flag to determine if the field names in the header row should be treated as case sensitive.
 
 	 - Type: BOOLEAN
-	 - Default: 
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
-==========================
-csv.rfc.4180.parser.enabled
-==========================
-🔘 false
+🔘 csv.rfc.4180.parser.enabled
 
 Flag to determine if the RFC 4180 parser should be used instead of the default parser.
 
 	 - Type: BOOLEAN
-	 - Default: 
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
+
 

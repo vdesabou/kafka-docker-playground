@@ -1,4 +1,4 @@
-    "avro.codec": "",
+    "avro.codec": "null",
     "connect.meta.data": "true",
     "consumer.override.sasl.jaas.config": "",
     "consumer.override.sasl.mechanism": "GSSAPI",

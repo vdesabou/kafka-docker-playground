@@ -1,4 +1,3 @@
-    "UTF-8": "",
     "batch.size": "1000",
     "cleanup.policy": "MOVE",
     "cleanup.policy.maintain.relative.path": "false",
@@ -6,6 +5,7 @@
     "error.path": "",
     "exactly.once.support": "requested",
     "file.buffer.size.bytes": "131072",
+    "file.charset": "UTF-8",
     "file.minimum.age.ms": "0",
     "files.sort.attributes": "NameAsc",
     "finished.path": "",
