@@ -36,22 +36,24 @@ playground run -f http_no_auth.sh
 
 ## Controlling the simple HTTP server
 
-The `httpserver` used by `http_no_auth.sh` exposes endpoints on `localhost:9006` to change its behaviour, which is handy to reproduce error handling and retries.
-
-Return a given HTTP status code:
+The `httpserver` used by `http_no_auth.sh` (port 9006) answers with a configurable status code, delay and body, and records the requests it receives, which is handy to reproduce error handling and retries. Drive it with `playground tools http-server`:
 
 ```bash
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 503}' http://localhost:9006/set-response-error-code
-```
+# return a given HTTP status code, add a delay (in ms) to each response
+playground tools http-server set-response --status-code 503 --delay 2000
 
-Add a delay (in ms) to each response:
+# set the JSON body returned
+playground tools http-server set-response << 'EOF'
+{"message":"Hello, World!"}
+EOF
 
-```bash
-curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
-```
+# close the connections without answering ("Connection reset", "Unexpected end of stream")
+playground tools http-server set-response --close-connection
 
-Set the JSON body returned:
+# what the connector sent (method, url, headers, body, status sent back), or wait for it
+playground tools http-server requests --last 5 --headers
+playground tools http-server requests --min-expected-requests 10 --grep '"product"'
 
-```bash
-curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
+# back to 200, no delay, {} (and forget the requests)
+playground tools http-server reset
 ```

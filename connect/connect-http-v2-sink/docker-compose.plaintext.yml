@@ -11,5 +11,7 @@ services:
       context: ../../connect/connect-http-sink/httpserver
     hostname: httpserver
     container_name: httpserver
+    # always rebuilt: an image cached before a change of server.js would miss its endpoints
+    pull_policy: build
     ports:
       - "9006:9006"

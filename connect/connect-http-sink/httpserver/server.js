@@ -3,11 +3,42 @@ const app = express();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// any other content type (text, xml, avro...) is kept as text, so that it can be shown by 'playground tools http-server requests'
+app.use(express.text({ limit: '10mb', type: () => true }));
 
 let errorCode = 200;
 let delay = 0; // response delay in ms
 let responseBody = {}; // response body
 let closeConnection = false; // flag to track connection closure
+
+// requests received (not the control endpoints below), for 'playground tools http-server requests': the last MAX_REQUESTS
+const MAX_REQUESTS = 1000;
+let receivedRequests = [];
+let totalRequests = 0;
+// the control endpoints are never delayed, closed or recorded: set-connection-closed or a long delay can always be undone
+const CONTROL_PATHS = new Set(['/set-response-error-code', '/set-response-time', '/set-response-body', '/set-connection-closed', '/reset', '/received-requests']);
+const isControl = (req) => CONTROL_PATHS.has(req.path);
+
+function recordRequest(req, status) {
+  totalRequests++;
+  let body = req.body;
+  if (body && typeof body === 'object' && Object.keys(body).length === 0 && !req.get('Content-Length')) {
+    body = null;
+  }
+  receivedRequests.push({
+    number: totalRequests,
+    time: new Date().toISOString(),
+    method: req.method,
+    url: req.originalUrl,
+    headers: req.headers,
+    body: body,
+    status: status,
+    delay_ms: delay
+  });
+  if (receivedRequests.length > MAX_REQUESTS) {
+    receivedRequests.shift();
+  }
+}
 
 
 // Sample data for cursor pagination (Google Cloud Storage API style)
@@ -99,18 +130,29 @@ const generateElasticsearchDocuments = (afterTime, pageSize) => {
 };
 
 app.use((req, res, next) => {
+  if (isControl(req)) {
+    return next();
+  }
   setTimeout(() => {
     next();
   }, delay);
 });
 
 app.use((req, res, next) => {
-  if (closeConnection) {
+  if (closeConnection && !isControl(req)) {
     console.log(`[${new Date().toISOString()}] Closing connection for ${req.method} to ${req.url}`);
+    recordRequest(req, 'connection closed');
     req.socket.destroy(); // Close the connection without sending a response
   } else {
     next();
   }
+});
+
+app.use((req, res, next) => {
+  if (!isControl(req)) {
+    res.on('finish', () => recordRequest(req, res.statusCode));
+  }
+  next();
 });
 
 app.use((req, res, next) => {
@@ -177,7 +219,7 @@ app.put('/set-response-error-code', (req, res) => {
 });
 
 app.put('/set-response-time', (req, res) => {
-  if(req.body.delay && typeof req.body.delay === "number") {
+  if(typeof req.body.delay === "number" && req.body.delay >= 0) {
     delay = req.body.delay;
     res.status(200).json({ message: `Response delay is now: ${delay} ms` });
   } else {
@@ -198,6 +240,36 @@ app.put('/set-connection-closed', (req, res) => {
   closeConnection = true;
   console.log(`[${new Date().toISOString()}] Connection closure enabled`);
   res.status(200).json({ message: 'Connection closure enabled' });
+});
+
+// back to the defaults: 200, no delay, {} as body, connections kept open; ?requests=true also forgets the received requests
+app.put('/reset', (req, res) => {
+  errorCode = 200;
+  delay = 0;
+  responseBody = {};
+  closeConnection = false;
+  if (req.query.requests === 'true') {
+    receivedRequests = [];
+    totalRequests = 0;
+  }
+  console.log(`[${new Date().toISOString()}] Responses reset to the defaults`);
+  res.status(200).json({ message: 'Responses reset to the defaults' });
+});
+
+// settings and the last received requests (oldest first)
+app.get('/received-requests', (req, res) => {
+  res.status(200).json({
+    settings: { status_code: errorCode, delay_ms: delay, body: responseBody, close_connection: closeConnection },
+    total: totalRequests,
+    kept: receivedRequests.length,
+    requests: receivedRequests
+  });
+});
+
+app.delete('/received-requests', (req, res) => {
+  receivedRequests = [];
+  totalRequests = 0;
+  res.status(200).json({ message: 'Received requests cleared' });
 });
 
 

@@ -29,8 +29,10 @@ EOF
 playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
+playground tools http-server set-response --status-code 200
+playground tools http-server set-response << 'EOF'
+{"message":"Hello, World!"}
+EOF
 
 log "Creating http-sink connector with the Apache ReplaceField SMT (org.apache.kafka.connect.transforms) renaming field 'email' to 'email_apache'"
 playground connector create-or-update --connector http-sink  << EOF
@@ -65,4 +67,4 @@ log "Check the success-responses topic"
 playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
 
 log "Verify the Apache ReplaceField SMT was applied: 'email' should now appear as 'email_apache' in the body received by the HTTP server"
-playground container logs --container httpserver --wait-for-log "email_apache"
+playground tools http-server requests --min-expected-requests 1 --grep "email_apache" --max-wait 600

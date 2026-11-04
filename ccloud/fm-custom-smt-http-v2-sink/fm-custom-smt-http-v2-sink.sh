@@ -252,9 +252,9 @@ playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
 log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-# curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
-# curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
+playground tools http-server set-response --status-code 200
+# playground tools http-server set-response --delay 2000
+# playground tools http-server set-response --body '{"message":"Hello, World!"}'
 
 log "Creating fully-managed HTTP V2 Sink connector '$connector_name' with custom InsertUuid SMT $artifact_id"
 playground connector create-or-update --connector $connector_name << EOF
@@ -290,7 +290,7 @@ connectorId=$(get_ccloud_connector_lcc $connector_name)
 log "Verifying topic success-$connectorId"
 playground topic consume --topic success-$connectorId --min-expected-messages 10 --timeout 60
 
-playground container logs --container httpserver --wait-for-log uuid
+playground tools http-server requests --min-expected-requests 1 --grep "uuid" --max-wait 600
 log "✅ 'uuid' field is present - custom InsertUuid SMT worked correctly!"
 
 log "Do you want to delete the connector '$connector_name' and the SMT artifact '$artifact_name'?"

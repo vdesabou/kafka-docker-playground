@@ -30,8 +30,10 @@ EOF
 playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
+playground tools http-server set-response --status-code 200
+playground tools http-server set-response << 'EOF'
+{"message":"Hello, World!"}
+EOF
 
 log "Creating http-sink connector with the Confluent Flatten SMT (io.confluent.connect.transforms) flattening the nested structure"
 playground connector create-or-update --connector http-sink  << EOF
@@ -66,4 +68,4 @@ log "Check the success-responses topic"
 playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
 
 log "Verify the Confluent Flatten SMT was applied: the nested field appears flattened as 'nested.inner' in the body received by the HTTP server"
-playground container logs --container httpserver --wait-for-log "nested.inner"
+playground tools http-server requests --min-expected-requests 1 --grep "nested.inner" --max-wait 600
