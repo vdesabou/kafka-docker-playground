@@ -677,6 +677,9 @@ commands:
         A binary search over the versions of Confluent Hub: each probed version is downloaded and its configuration
         read without a worker, like playground connector-plugin config-diff (about 5 s per version, 6 or 7 versions).
         Needs one connector (--connector-class). The plugin is found from the examples, or set with --connector-plugin.
+
+        Debezium connectors (io.debezium.*): when no Confluent Hub version has the key (a key of a newer upstream
+        release), the upstream Debezium releases of Maven Central (.Final) are searched the same way, from their jars.
     - long: --connector-plugin
       required: false
       arg: connector-plugin
@@ -693,6 +696,7 @@ commands:
   - playground connector-plugin config-key -k s3.part.size -c S3_SINK
   - playground connector-plugin config-key -k errors.tolerance -c jdbc --max-examples 3
   - playground connector-plugin config-key -k batch.max.rows -c io.confluent.connect.jdbc.JdbcSourceConnector --since-version
+  - playground connector-plugin config-key -k offset.mismatch.strategy -c io.debezium.connector.postgresql.PostgresConnector --since-version
   x_example_outputs:
   - command: playground connector-plugin config-key --key flush.size
     output: |-

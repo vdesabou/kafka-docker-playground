@@ -9775,7 +9775,7 @@
                 "--since-version"
               ],
               "argument": "",
-              "description": "📅 Find the first version of the plugin having the key (self-managed connectors)\n\nA binary search over the versions of Confluent Hub: each probed version is downloaded and its configuration\nread without a worker, like playground connector-plugin config-diff (about 5 s per version, 6 or 7 versions).\nNeeds one connector (--connector-class). The plugin is found from the examples, or set with --connector-plugin."
+              "description": "📅 Find the first version of the plugin having the key (self-managed connectors)\n\nA binary search over the versions of Confluent Hub: each probed version is downloaded and its configuration\nread without a worker, like playground connector-plugin config-diff (about 5 s per version, 6 or 7 versions).\nNeeds one connector (--connector-class). The plugin is found from the examples, or set with --connector-plugin.\n\nDebezium connectors (io.debezium.*): when no Confluent Hub version has the key (a key of a newer upstream\nrelease), the upstream Debezium releases of Maven Central (.Final) are searched the same way, from their jars."
             },
             {
               "names": [
