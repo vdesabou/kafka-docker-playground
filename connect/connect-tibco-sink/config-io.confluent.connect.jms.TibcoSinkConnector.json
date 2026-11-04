@@ -17,6 +17,6 @@
     "key.converter.converter.type": "",
     "tibco.password": "[hidden]",
     "tibco.url": "",
-    "tibco.username": "STRING",
+    "tibco.username": "",
     "value.converter.converter.encoding": "UTF-8",
     "value.converter.converter.type": "",

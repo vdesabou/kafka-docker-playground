@@ -93,33 +93,33 @@ The connection URI as supported by the official drivers. eg: ``mongodb://user@pa
 
 🔘 database
 
+The database to watch. If not set then all databases will be watched.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The database to watch. If not set then all databases will be watched.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 collection
 
+The collection in the database to watch. If not set then all collections will be watched.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The collection in the database to watch. If not set then all collections will be watched.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Server Api
 ==========================
 🔘 server.api.version
 
+The server API version to use. Disabled by default.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The server API version to use. Disabled by default.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 server.api.deprecation.errors
 
@@ -144,12 +144,12 @@ SSL
 ==========================
 🔘 connection.ssl.truststore
 
+A trust store certificate location to be used for SSL enabled connections
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A trust store certificate location to be used for SSL enabled connections
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.ssl.truststorePassword
 
@@ -162,12 +162,12 @@ A trust store password to be used for SSL enabled connections
 
 🔘 connection.ssl.keystore
 
+A key store certificate location to be used for SSL enabled connections
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A key store certificate location to be used for SSL enabled connections
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.ssl.keystorePassword
 
@@ -228,21 +228,23 @@ Use the document key as the source record key. Defaults to: true
 
 🔘 change.stream.full.document.before.change
 
+Specifies the pre-image configuration when creating a Change Stream.
 The pre-image is not available in source records published while copying existing data as a result of enabling `copy.existing`, and the pre-image configuration has no effect on copying.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Specifies the pre-image configuration when creating a Change Stream.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 change.stream.full.document
 
+Determines what to return for update operations when using a Change Stream.
 When set to 'updateLookup', the change stream for partial updates will include both a delta describing the changes to the document as well as a copy of the entire document that was changed from *some time* after the change occurred.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Determines what to return for update operations when using a Change Stream.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 change.stream.show.expanded.events
 
@@ -255,12 +257,13 @@ Determines if change streams notifies for DDL events, like the createIndexes and
 
 🔘 collation
 
+The json representation of the Collation options to use for the change stream.
 Use the `Collation.asDocument().toJson()` to create the specific json representation.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The json representation of the Collation options to use for the change stream.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 poll.max.batch.size
 
@@ -303,30 +306,31 @@ Separator to use when joining prefix, database & collection names, suffix to gen
 
 🔘 topic.prefix
 
+Prefix to prepend to database & collection names to generate the name of the Kafka topic to publish data to. Used by the 'DefaultTopicMapper'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix to prepend to database & collection names to generate the name of the Kafka topic to publish data to. Used by the 'DefaultTopicMapper'.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topic.suffix
 
+Suffix to append to database & collection names to generate the name of the Kafka topic to publish data to. Used by the 'DefaultTopicMapper'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix to append to database & collection names to generate the name of the Kafka topic to publish data to. Used by the 'DefaultTopicMapper'.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topic.namespace.map
 
+A JSON object specifying how to map a MongoDB change stream document namespace to a Kafka topic name. Used by the `DefaultTopicMapper`. MongoDB change stream document namespace is a database name optionally concatenated with a collection name, separated by full stop '.'.
 The name in each JSON name/value pair is a namespace pattern, the value is a string representing the corresponding topic name template. Pairs are ordered. When there are multiple pairs with equal namespace patterns (duplicates), they are deduplicated and only one pair is taken into account: its position is taken from the first pair among duplicates, its topic name template is taken from the last pair among duplicates. After deduplication, pairs with an empty topic name template are ignored when computing topic names. Note that a topic name computed based on this configuration is then decorated using the `topic.prefix` and `topic.suffix` configuration properties.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A JSON object specifying how to map a MongoDB change stream document namespace to a Kafka topic name. Used by the `DefaultTopicMapper`. MongoDB change stream document namespace is a database name optionally concatenated with a collection name, separated by full stop '.'.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Schema
@@ -390,21 +394,22 @@ Startup
 ==========================
 🔘 startup.mode
 
+Specifies how the connector should start up when there is no source offset available.
 Resuming a change stream requires a resume token, which the connector stores as / reads from the source offset. If no source offset is available, the connector may either ignore all/some existing source data, or may at first copy all existing source data and then continue with processing new data. Possible values are 'latest', 'timestamp', 'copy_existing'.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Specifies how the connector should start up when there is no source offset available.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 startup.mode.timestamp.start.at.operation.time
 
+Actuated only if 'startup.mode = timestamp'. Specifies the starting point for the change stream. Must be either an integer number of seconds since the Epoch in the decimal format (example: 30), or an instant in the ISO-8601 format with one second precision (example: 'YYYY-MM-DDTHH:mm:ss'), or a BSON Timestamp in the canonical extended JSON (v2) format (example: '{"$timestamp": {"t": 30, "i": 0}}'). You may specify '0' to start at the beginning of the oplog. Requires MongoDB 4.0 or above. See https://www.mongodb.com/docs/current/reference/operator/aggregation/changeStream/.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Actuated only if 'startup.mode = timestamp'. Specifies the starting point for the change stream. Must be either an integer number of seconds since the Epoch in the decimal format (example: 30), or an instant in the ISO-8601 format with one second precision (example: 'YYYY-MM-DDTHH:mm:ss'), or a BSON Timestamp in the canonical extended JSON (v2) format (example: '{"$timestamp": {"t": 30, "i": 0}}'). You may specify '0' to start at the beginning of the oplog. Requires MongoDB 4.0 or above. See https://www.mongodb.com/docs/current/reference/operator/aggregation/changeStream/.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 startup.mode.copy.existing.max.threads
 
@@ -426,21 +431,23 @@ The max size of the queue to use when copying data.
 
 🔘 startup.mode.copy.existing.pipeline
 
+An inline JSON array with objects describing the pipeline operations to run when copying existing data.
 This can improve the use of indexes by the copying manager and make copying more efficient.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: An inline JSON array with objects describing the pipeline operations to run when copying existing data.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 startup.mode.copy.existing.namespace.regex
 
+Use a regular expression to define from which existing namespaces data should be copied from. A namespace is the database name and collection separated by a period e.g. `database.collection`.
  Example: The following regular expression will only include collections starting with `a` in the `demo` database: `demo\.a.*`.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Use a regular expression to define from which existing namespaces data should be copied from. A namespace is the database name and collection separated by a period e.g. `database.collection`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 startup.mode.copy.existing.allow.disk.use
 
@@ -480,21 +487,23 @@ Deprecated, use 'startup.mode.copy.existing.queue.size' instead; deprecated prop
 
 🔘 copy.existing.pipeline
 
+Deprecated, use 'startup.mode.copy.existing.pipeline' instead; deprecated properties are overridden by normal ones if there is a conflict. An inline JSON array with objects describing the pipeline operations to run when copying existing data.
 This can improve the use of indexes by the copying manager and make copying more efficient.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Deprecated, use 'startup.mode.copy.existing.pipeline' instead; deprecated properties are overridden by normal ones if there is a conflict. An inline JSON array with objects describing the pipeline operations to run when copying existing data.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 copy.existing.namespace.regex
 
+Deprecated, use 'startup.mode.copy.existing.namespace.regex' instead; deprecated properties are overridden by normal ones if there is a conflict. Use a regular expression to define from which existing namespaces data should be copied from. A namespace is the database name and collection separated by a period e.g. `database.collection`.
  Example: The following regular expression will only include collections starting with `a` in the `demo` database: `demo\.a.*`
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Deprecated, use 'startup.mode.copy.existing.namespace.regex' instead; deprecated properties are overridden by normal ones if there is a conflict. Use a regular expression to define from which existing namespaces data should be copied from. A namespace is the database name and collection separated by a period e.g. `database.collection`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 copy.existing.allow.disk.use
 
@@ -528,21 +537,21 @@ Use this property if you would like to configure the connector's error handling 
 
 🔘 errors.deadletterqueue.topic.name
 
+Whether to output conversion errors to the dead letter queue. Stops poison messages when using schemas, any message will be outputted as extended json on the specified topic. By default messages are not outputted to the dead letter queue. Also requires `errors.tolerance=all`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Whether to output conversion errors to the dead letter queue. Stops poison messages when using schemas, any message will be outputted as extended json on the specified topic. By default messages are not outputted to the dead letter queue. Also requires `errors.tolerance=all`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 mongo.errors.deadletterqueue.topic.name
 
+Use this property if you would like to configure the connector's error handling behavior differently from the Connect framework's.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Use this property if you would like to configure the connector's error handling behavior differently from the Connect framework's.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 heartbeat.interval.ms
 
@@ -567,12 +576,12 @@ Partition
 ==========================
 🔘 offset.partition.name
 
+Use a custom offset partition name. If blank the default partition name based on the connection details will be used.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Use a custom offset partition name. If blank the default partition name based on the connection details will be used.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 null
@@ -581,8 +590,8 @@ null
 
 
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: 
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 

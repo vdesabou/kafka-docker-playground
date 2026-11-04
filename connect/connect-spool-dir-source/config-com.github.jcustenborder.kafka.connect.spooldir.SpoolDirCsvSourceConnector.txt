@@ -111,12 +111,12 @@ The directory to read files that will be processed. This directory must exist an
 
 🔘 finished.path
 
+The directory to place files that have been successfully processed. This directory must exist and be writable by the user running Kafka Connect.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The directory to place files that have been successfully processed. This directory must exist and be writable by the user running Kafka Connect.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 error.path
 
@@ -252,21 +252,21 @@ Schema
 ==========================
 🔘 key.schema
 
+The schema for the key written to Kafka.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema for the key written to Kafka.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 value.schema
 
+The schema for the value written to Kafka.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema for the value written to Kafka.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Schema Generation
@@ -282,12 +282,12 @@ Flag to determine if schemas should be dynamically generated. If set  to true, `
 
 🔘 schema.generation.key.fields
 
+The field(s) to use to build a key schema. This is only used during schema generation.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The field(s) to use to build a key schema. This is only used during schema generation.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 schema.generation.key.name
 
@@ -330,12 +330,12 @@ The date formats that are expected in the file. This is a list of strings that w
 
 🔘 timestamp.field
 
+The field in the value schema that will contain the parsed timestamp for the record. This field cannot be marked as optional and must be a [Timestamp](https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/data/Schema.html)
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The field in the value schema that will contain the parsed timestamp for the record. This field cannot be marked as optional and must be a [Timestamp](https://kafka.apache.org/0102/javadoc/org/apache/kafka/connect/data/Schema.html)
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 CSV Parsing
@@ -453,22 +453,22 @@ csv.case.sensitive.field.names
 ==========================
 🔘 false
 
+Flag to determine if the field names in the header row should be treated as case sensitive.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Flag to determine if the field names in the header row should be treated as case sensitive.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 csv.rfc.4180.parser.enabled
 ==========================
 🔘 false
 
+Flag to determine if the RFC 4180 parser should be used instead of the default parser.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Flag to determine if the RFC 4180 parser should be used instead of the default parser.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 

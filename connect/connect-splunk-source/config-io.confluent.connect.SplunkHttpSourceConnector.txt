@@ -78,12 +78,12 @@ Flag to determine if ssl renegotiation is allowed.
 
 🔘 splunk.ssl.key.store.path
 
+The path to the keystore on the local filesystem.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the keystore on the local filesystem.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 splunk.ssl.key.store.password
 
@@ -114,12 +114,12 @@ A comma separated list of authentication tokens
 
 🔘 splunk.collector.index.allowed
 
+The indexes this connector allows data to be written for. Specifying an index outside of this list will result in an exception being raised.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The indexes this connector allows data to be written for. Specifying an index outside of this list will result in an exception being raised.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 splunk.collector.index.default
 

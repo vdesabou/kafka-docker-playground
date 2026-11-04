@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,30 +33,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -102,66 +102,66 @@ Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTI
 
 🔘 salesforce.username
 
+Salesforce username for connector authentication
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Salesforce username for connector authentication
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.password
 
+Salesforce account password for connector authentication
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Salesforce account password for connector authentication
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.password.token
 
+Security token associated with the Salesforce username
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Security token associated with the Salesforce username
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.consumer.key
 
+Client ID (consumer key) for the Salesforce connected app
 
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: Client ID (consumer key) for the Salesforce connected app
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 salesforce.consumer.secret
 
+Client secret (consumer secret) for the Salesforce connected app
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Client secret (consumer secret) for the Salesforce connected app
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.jwt.keystore.file
 
+Keystore file that stores the private key for JWT authentication
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Keystore file that stores the private key for JWT authentication
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.jwt.keystore.password
 
+Password that unlocks the JWT keystore file
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password that unlocks the JWT keystore file
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object.num
 
@@ -192,12 +192,12 @@ The maximum number of records to retrieve per set of results for the Bulk API 2.
 
 🔘 oauth.refresh.token
 
+OAuth 2.0 refresh token. Populated by Confluent Cloud after authorization.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: OAuth 2.0 refresh token. Populated by Confluent Cloud after authorization.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 CSFLE
@@ -213,12 +213,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Object 1 configuration
@@ -234,39 +234,39 @@ Enable custom query for SObject1.
 
 🔘 salesforce.object1.custom.query.fields
 
+Comma separated list of fields to be fetched for SObject1. Must include Id and the configured offset field.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separated list of fields to be fetched for SObject1. Must include Id and the configured offset field.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object1
 
+The Salesforce SObject1 to write to.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Salesforce SObject1 to write to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.object1.topic
 
+Specify the topic name to write the data to for Object 1.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Specify the topic name to write the data to for Object 1.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 salesforce.object1.custom.query.where
 
+WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object1.offset.field.name
 
@@ -279,12 +279,12 @@ Offset field to use for incremental bounds. Must be a date or datetime field (e.
 
 🔘 salesforce.object1.since
 
+CreatedDate after which the records should be pulled for SObject1. Note that the time is in UTC and has required format: yyyy-MM-dd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: CreatedDate after which the records should be pulled for SObject1. Note that the time is in UTC and has required format: yyyy-MM-dd.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object1.include.deleted.records
 
@@ -297,12 +297,12 @@ If true, the connector will also fetch deleted records using queryAll operation 
 
 🔘 salesforce.object1.skip.epoch.conversion.fields
 
+Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Object 2 configuration
@@ -318,39 +318,39 @@ Enable custom query for SObject2.
 
 🔘 salesforce.object2.custom.query.fields
 
+Comma separated list of fields to be fetched for SObject2. Must include Id and the configured offset field.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separated list of fields to be fetched for SObject2. Must include Id and the configured offset field.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object2
 
+The Salesforce SObject2 to write to.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Salesforce SObject2 to write to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.object2.topic
 
+Specify the topic name to write the data to for Object 2.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Specify the topic name to write the data to for Object 2.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 salesforce.object2.custom.query.where
 
+WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object2.offset.field.name
 
@@ -363,12 +363,12 @@ Offset field to use for incremental bounds. Must be a date or datetime field (e.
 
 🔘 salesforce.object2.since
 
+CreatedDate after which the records should be pulled for SObject2. Note that the time is in UTC and has required format: yyyy-MM-dd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: CreatedDate after which the records should be pulled for SObject2. Note that the time is in UTC and has required format: yyyy-MM-dd.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object2.include.deleted.records
 
@@ -381,12 +381,12 @@ If true, the connector will also fetch deleted records using queryAll operation 
 
 🔘 salesforce.object2.skip.epoch.conversion.fields
 
+Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Object 3 configuration
@@ -402,39 +402,39 @@ Enable custom query for SObject3.
 
 🔘 salesforce.object3.custom.query.fields
 
+Comma separated list of fields to be fetched for SObject3. Must include Id and the configured offset field.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separated list of fields to be fetched for SObject3. Must include Id and the configured offset field.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object3
 
+The Salesforce SObject3 to write to.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Salesforce SObject3 to write to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.object3.topic
 
+Specify the topic name to write the data to for Object 3.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Specify the topic name to write the data to for Object 3.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 salesforce.object3.custom.query.where
 
+WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object3.offset.field.name
 
@@ -447,12 +447,12 @@ Offset field to use for incremental bounds. Must be a date or datetime field (e.
 
 🔘 salesforce.object3.since
 
+CreatedDate after which the records should be pulled for SObject3. Note that the time is in UTC and has required format: yyyy-MM-dd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: CreatedDate after which the records should be pulled for SObject3. Note that the time is in UTC and has required format: yyyy-MM-dd.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object3.include.deleted.records
 
@@ -465,12 +465,12 @@ If true, the connector will also fetch deleted records using queryAll operation 
 
 🔘 salesforce.object3.skip.epoch.conversion.fields
 
+Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Object 4 configuration
@@ -486,39 +486,39 @@ Enable custom query for SObject4.
 
 🔘 salesforce.object4.custom.query.fields
 
+Comma separated list of fields to be fetched for SObject4. Must include Id and the configured offset field.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separated list of fields to be fetched for SObject4. Must include Id and the configured offset field.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object4
 
+The Salesforce SObject4 to write to.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Salesforce SObject4 to write to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.object4.topic
 
+Specify the topic name to write the data to for Object 4.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Specify the topic name to write the data to for Object 4.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 salesforce.object4.custom.query.where
 
+WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object4.offset.field.name
 
@@ -531,12 +531,12 @@ Offset field to use for incremental bounds. Must be a date or datetime field (e.
 
 🔘 salesforce.object4.since
 
+CreatedDate after which the records should be pulled for SObject4. Note that the time is in UTC and has required format: yyyy-MM-dd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: CreatedDate after which the records should be pulled for SObject4. Note that the time is in UTC and has required format: yyyy-MM-dd.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object4.include.deleted.records
 
@@ -549,12 +549,12 @@ If true, the connector will also fetch deleted records using queryAll operation 
 
 🔘 salesforce.object4.skip.epoch.conversion.fields
 
+Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Object 5 configuration
@@ -570,39 +570,39 @@ Enable custom query for SObject5.
 
 🔘 salesforce.object5.custom.query.fields
 
+Comma separated list of fields to be fetched for SObject5. Must include Id and the configured offset field.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separated list of fields to be fetched for SObject5. Must include Id and the configured offset field.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object5
 
+The Salesforce SObject5 to write to.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Salesforce SObject5 to write to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.object5.topic
 
+Specify the topic name to write the data to for Object 5.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Specify the topic name to write the data to for Object 5.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 salesforce.object5.custom.query.where
 
+WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object5.offset.field.name
 
@@ -615,12 +615,12 @@ Offset field to use for incremental bounds. Must be a date or datetime field (e.
 
 🔘 salesforce.object5.since
 
+CreatedDate after which the records should be pulled for SObject5. Note that the time is in UTC and has required format: yyyy-MM-dd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: CreatedDate after which the records should be pulled for SObject5. Note that the time is in UTC and has required format: yyyy-MM-dd.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object5.include.deleted.records
 
@@ -633,12 +633,12 @@ If true, the connector will also fetch deleted records using queryAll operation 
 
 🔘 salesforce.object5.skip.epoch.conversion.fields
 
+Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Connection details
@@ -669,12 +669,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -690,30 +690,30 @@ Whether to replace fields that have a default value and that are null to the def
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -735,12 +735,12 @@ Include schemas within each of the serialized values. Input messages must contai
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -762,39 +762,39 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.decimal.format
 
@@ -807,39 +807,39 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 producer.override.linger.ms
 
+The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
-	 - Required: LOW
+	 - Type: LONG
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.serializer
 
@@ -852,48 +852,48 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -906,12 +906,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -933,12 +933,12 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -951,21 +951,21 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.scrub.invalid.names
 
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -984,10 +984,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

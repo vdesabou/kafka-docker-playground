@@ -165,13 +165,13 @@ Output file extension for Byte Array Format. Defaults to ``.bin``.
 
 🔘 format.bytearray.separator
 
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
+String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
 ``. An input record that contains the line separator looks like multiple records in the storage object output.
-	 - Required: MEDIUM
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 format.json.schema.enable
 
@@ -217,33 +217,33 @@ The partitioner to use when reading data to the store.
 
 🔘 partition.field.name
 
+The name of the partitioning fields when FieldPartitioner is used.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The name of the partitioning fields when FieldPartitioner is used.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 path.format
 
+This configuration that was used to set the format of the data directories when partitioning with a TimeBasedPartitioner. For example, if you set ``path.format`` to ``'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, then a valid data directories would be: ``/year=2015/month=12/day=07/hour=15/``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This configuration that was used to set the format of the data directories when partitioning with a TimeBasedPartitioner. For example, if you set ``path.format`` to ``'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, then a valid data directories would be: ``/year=2015/month=12/day=07/hour=15/``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Topic
 ==========================
 🔘 topic.regex.list
 
+A comma-separated list of pairs of type '<kafka topic>:<regex>' that is used to map file paths to Kafka topics. An example might be `topic1:.*\.json` to source all files ending in .json to a kafka topic named topic1. You can specify multiple of these topic:regex mappings to sending sets of files to different topics. Any files that aren't mapped by a regex will be ignored and not  sourced. The `topic.regex.list` property matches the full path (for example, `folder/file.txt`), not just the filename.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of pairs of type '<kafka topic>:<regex>' that is used to map file paths to Kafka topics. An example might be `topic1:.*\.json` to source all files ending in .json to a kafka topic named topic1. You can specify multiple of these topic:regex mappings to sending sets of files to different topics. Any files that aren't mapped by a regex will be ignored and not  sourced. The `topic.regex.list` property matches the full path (for example, `folder/file.txt`), not just the filename.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Storage
@@ -301,12 +301,12 @@ csv
 ==========================
 🔘 value.schema
 
+The schema for the value written to Kafka.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema for the value written to Kafka.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 csv.skip.lines
 
@@ -444,10 +444,10 @@ filename.regex
 
 
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: 
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Connector
@@ -487,21 +487,21 @@ Security
 ==========================
 🔘 hadoop.conf.dir
 
+The Hadoop configuration directory.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Hadoop configuration directory.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hadoop.home
 
+The Hadoop home directory.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Hadoop home directory.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hdfs.authentication.kerberos
 
@@ -514,30 +514,30 @@ Configuration indicating whether HDFS is using Kerberos for authentication.
 
 🔘 connect.hdfs.keytab
 
+The path to the keytab file for the HDFS connector principal. This keytab file should only be readable by the connector user.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the keytab file for the HDFS connector principal. This keytab file should only be readable by the connector user.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connect.hdfs.principal
 
+The principal to use when HDFS is using Kerberos to for authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The principal to use when HDFS is using Kerberos to for authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hdfs.namenode.principal
 
+The principal for HDFS Namenode.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The principal for HDFS Namenode.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kerberos.ticket.renew.period.ms
 

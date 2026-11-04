@@ -165,12 +165,12 @@ Authentication type of the endpoint. Valid values are ``none``, ``basic``, ``oau
 
 🔘 zendesk.user
 
+The username to be used with an endpoint requiring authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 zendesk.password
 
@@ -192,21 +192,21 @@ The bearer authentication token to be used when ``auth.type=bearer``. The suppli
 
 🔘 oauth2.token.url
 
+The URL to be used for fetching OAUTH2 token. Client Credentials is the only supported grant type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching OAUTH2 token. Client Credentials is the only supported grant type.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.id
 
+The client id used when fetching OAuth2 token
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client id used when fetching OAuth2 token
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.secret
 
@@ -240,12 +240,12 @@ oauth2.client.scope
 ==========================
 🔘 any
 
+The scope parameter sent to the service when fetching OAuth2 token.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The scope parameter sent to the service when fetching OAuth2 token.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 SSL
@@ -279,12 +279,12 @@ The name of the security provider used for SSL connections. Default value is the
 
 🔘 https.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 https.ssl.enabled.protocols
 
@@ -435,12 +435,12 @@ Proxy
 ==========================
 🔘 http.proxy.host
 
+The host or ip of the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The host or ip of the http proxy.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.proxy.port
 
@@ -453,12 +453,12 @@ The port number of the http proxy.
 
 🔘 http.proxy.user
 
+The username to be used when authenticating with the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used when authenticating with the http proxy.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.proxy.password
 
@@ -513,12 +513,12 @@ Zendesk
 ==========================
 🔘 zendesk.since
 
+Rows updated after this time will be processed by the connector. If left blank, the default time will be set to the time this connector is launched minus 1 minute. The value should be formatted as ISO 8601. Example format yyyy-MM-dd'T'HH:mm:SS.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Rows updated after this time will be processed by the connector. If left blank, the default time will be set to the time this connector is launched minus 1 minute. The value should be formatted as ISO 8601. Example format yyyy-MM-dd'T'HH:mm:SS.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Request
@@ -552,21 +552,21 @@ Disallow Class E IP addresses after DNS resolution.
 
 🔘 connection.disallow.cidr.ranges
 
+Disallow IP addresses from the configured CIDR ranges after DNS resolution.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Disallow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.allow.cidr.ranges
 
+Allow IP addresses from the configured CIDR ranges after DNS resolution.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Allow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 null

@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,30 +33,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -72,12 +72,12 @@ Which topic(s) do you want to send data to?
 ==========================
 🔘 topic.name.pattern
 
+The name of the Kafka topic to publish data to. The value can contain a template variable ${entityName} in case a separate Kafka topic should be used for each entity; the variable ${entityName} will be replaced with values from the config 'entity.names'.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The name of the Kafka topic to publish data to. The value can contain a template variable ${entityName} in case a separate Kafka topic should be used for each entity; the variable ${entityName} will be replaced with values from the config 'entity.names'.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Schema Config
@@ -96,12 +96,12 @@ Connection details
 ==========================
 🔘 url
 
+The HTTP API URL which can be templated with offset and entity information. For example: `http://example.com/api/v1/${entityName}/${offset}` where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'), and `${entityName}` will be substituted with values from the config `entity.names`.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The HTTP API URL which can be templated with offset and entity information. For example: `http://example.com/api/v1/${entityName}/${offset}` where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'), and `${entityName}` will be substituted with values from the config `entity.names`.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 http.request.method
 
@@ -114,39 +114,39 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 🔘 http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by the config value for 'http.request.headers.separator' (defaults to `|'). For example: `From:abcxyz@confluent.io|Content-Length:348`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by the config value for 'http.request.headers.separator' (defaults to `|'). For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by `=`. Distinct parameters should be separated by the config value for 'http.request.parameters.separator' ((defaults to `&`). Parameter values can be templated with offset and entity information (for example: `entity=${entityName}&search_after=${offset}`) where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'), and `${entityName}` will be substituted with values from the config 'entity.names'. The parameters are only set if 'http.request.method' = `GET`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by `=`. Distinct parameters should be separated by the config value for 'http.request.parameters.separator' ((defaults to `&`). Parameter values can be templated with offset and entity information (for example: `entity=${entityName}&search_after=${offset}`) where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'), and `${entityName}` will be substituted with values from the config 'entity.names'. The parameters are only set if 'http.request.method' = `GET`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.request.body
 
+The payload to be sent along with each HTTP request. The value can be templated with offset and entity information (for example: `{'entity': '${entityName}', 'search_after': '${offset}'`) where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'), and `${entityName}` will be substituted with values from the config 'entity.names'. The body is only set if 'http.request.method' = `POST`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset and entity information (for example: `{'entity': '${entityName}', 'search_after': '${offset}'`) where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'), and `${entityName}` will be substituted with values from the config 'entity.names'. The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.initial.offset
 
+The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ${offset}.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ${offset}.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.offset.mode
 
@@ -159,21 +159,21 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 http.response.data.json.pointer
 
+The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.offset.json.pointer
 
+The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to `CHAINING`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to `CHAINING`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 use.http.offset.json.pointer.as.string
 
@@ -186,12 +186,12 @@ By default the value of 'http.response.data.json.pointer' will be converted to s
 
 🔘 http.next.page.json.pointer
 
+The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to `CURSOR_PAGINATION`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to `CURSOR_PAGINATION`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 request.interval.ms
 
@@ -204,12 +204,12 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 entity.names
 
+A list of entities that should be polled. Values from this list will replace the template variable ${entityName} in the configs 'topic.name.pattern', 'url', 'http.request.parameters', 'http.request.body'. This config doesn't need to be set if none of the mentioned configs contain the template variable ${entityName}.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of entities that should be polled. Values from this list will replace the template variable ${entityName} in the configs 'topic.name.pattern', 'url', 'http.request.parameters', 'http.request.body'. This config doesn't need to be set if none of the mentioned configs contain the template variable ${entityName}.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 max.retries
 
@@ -249,12 +249,12 @@ The character that separates multiple distinct headers in the config 'http.reque
 
 🔘 http.request.sensitive.headers
 
+Sensitive HTTP headers (eg: credentials) to be included in all requests. Individual headers should be separated by the Header Separator
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers (eg: credentials) to be included in all requests. Individual headers should be separated by the Header Separator
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.request.parameters.separator
 
@@ -288,84 +288,84 @@ Authentication type of the endpoint. Valid values are ``none``, ``basic``, ``oau
 
 🔘 connection.user
 
+The username to be used with an endpoint requiring basic authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.password
 
+The password to be used with an endpoint requiring basic authentication.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 bearer.token
 
+The bearer authentication token to be used with an endpoint requiring bearer token based authentication.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The bearer authentication token to be used with an endpoint requiring bearer token based authentication.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.token.url
 
+The URL to be used for fetching the OAuth2 token. Client Credentials is the only supported grant type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching the OAuth2 token. Client Credentials is the only supported grant type.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.id
 
+The client id used when fetching the OAuth2 token.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client id used when fetching the OAuth2 token.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.secret
 
+The client secret used when fetching the OAuth2 token.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The client secret used when fetching the OAuth2 token.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.token.property
 
+The name of the property containing the OAuth2 token returned by the OAuth2 token URL (defaults to `access_token`).
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the property containing the OAuth2 token returned by the OAuth2 token URL (defaults to `access_token`).
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.scope
 
+The scope parameter sent to the service when fetching the OAuth2 token. The default value is ``any``. To avoid passing ``any`` to the endpoint, set this property to an empty string when using the API or CLI. When using the Confluent Cloud Console, enter a single space (``" "``) instead of leaving the field empty.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The scope parameter sent to the service when fetching the OAuth2 token. The default value is ``any``. To avoid passing ``any`` to the endpoint, set this property to an empty string when using the API or CLI. When using the Confluent Cloud Console, enter a single space (``" "``) instead of leaving the field empty.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.mode
 
+Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 authorization request. If set to ``header``, the credentials are encoded as an `'Authorization: Basic <base-64 encoded client_id:client_secret>'` HTTP header. If set to 'url', then ``client_id`` and ``client_secret`` are sent as URL encoded parameters.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 authorization request. If set to ``header``, the credentials are encoded as an `'Authorization: Basic <base-64 encoded client_id:client_secret>'` HTTP header. If set to 'url', then ``client_id`` and ``client_secret`` are sent as URL encoded parameters.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 https.ssl.enabled
 
@@ -378,48 +378,48 @@ Whether or not to connect to the endpoint via SSL.
 
 🔘 https.ssl.keystorefile
 
+The key store containing the server certificate.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The key store containing the server certificate.
-	 - Required: LOW
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 https.ssl.keystore.password
 
+The store password for the key store file.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The store password for the key store file.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.key.password
 
+The password for the private key in the key store file.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for the private key in the key store file.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.truststorefile
 
+The trust store containing a server CA certificate.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store containing a server CA certificate.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.truststore.password
 
+The trust store password containing a server CA certificate.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store password containing a server CA certificate.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.protocol
 
@@ -435,24 +435,24 @@ Output messages
 ==========================
 🔘 output.data.format
 
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Auto-restart policy
@@ -498,12 +498,12 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -537,10 +537,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

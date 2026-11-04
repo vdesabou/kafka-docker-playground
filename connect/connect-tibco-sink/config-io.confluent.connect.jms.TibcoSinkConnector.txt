@@ -12,12 +12,12 @@ The URL of the TIBCO EMS broker.
 
 🔘 tibco.username
 
+The username used when connecting to TIBCO EMS.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username used when connecting to TIBCO EMS.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 tibco.password
 

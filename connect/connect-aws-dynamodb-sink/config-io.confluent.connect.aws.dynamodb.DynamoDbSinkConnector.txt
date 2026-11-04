@@ -69,12 +69,12 @@ Proxy Connection
 ==========================
 🔘 aws.dynamodb.proxy.url
 
+DynamoDB Proxy URL. For example http://proxy.example.com:8080, https://user:pass@proxy.example.com:8443
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: DynamoDB Proxy URL. For example http://proxy.example.com:8080, https://user:pass@proxy.example.com:8443
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 aws.dynamodb.proxy.user
 

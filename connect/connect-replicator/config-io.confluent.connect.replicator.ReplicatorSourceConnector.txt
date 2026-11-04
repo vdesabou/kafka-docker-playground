@@ -84,21 +84,21 @@ Regex of topics to replicate to the destination cluster.
 
 🔘 topic.whitelist
 
+Whitelist of topics to be replicated.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Whitelist of topics to be replicated.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 topic.blacklist
 
+Topics to exclude from replication.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Topics to exclude from replication.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 topic.poll.interval.ms
 
@@ -153,21 +153,21 @@ Source Kafka
 ==========================
 🔘 src.kafka.bootstrap.servers
 
+A list of host/port pairs used to establish the initial connection to the Kafka cluster. Clients use this list to bootstrap and discover the full set of Kafka brokers. While the order of servers in the list does not matter, we recommend including more than one server to ensure resilience if any servers are down. This list does not need to contain the entire set of brokers, as Kafka clients automatically manage and update connections to the cluster efficiently. This list must be in the form ``host1:port1,host2:port2,...``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of host/port pairs used to establish the initial connection to the Kafka cluster. Clients use this list to bootstrap and discover the full set of Kafka brokers. While the order of servers in the list does not matter, we recommend including more than one server to ensure resilience if any servers are down. This list does not need to contain the entire set of brokers, as Kafka clients automatically manage and update connections to the cluster efficiently. This list must be in the form ``host1:port1,host2:port2,...``.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 src.kafka.client.id
 
+An id string to pass to the server when making requests. The purpose of this is to be able to track the source of requests beyond just ip/port by allowing a logical application name to be included in server-side request logging.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: An id string to pass to the server when making requests. The purpose of this is to be able to track the source of requests beyond just ip/port by allowing a logical application name to be included in server-side request logging.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 src.kafka.request.timeout.ms
 
@@ -507,12 +507,12 @@ The (optional) value in seconds to allow for differences between the time of the
 
 🔘 src.kafka.sasl.oauthbearer.expected.audience
 
+The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 src.kafka.sasl.oauthbearer.expected.issuer
 
@@ -759,12 +759,12 @@ The name of the security provider used for SSL connections. Default value is the
 
 🔘 src.kafka.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 src.kafka.ssl.enabled.protocols
 
@@ -1167,12 +1167,12 @@ The (optional) value in seconds to allow for differences between the time of the
 
 🔘 dest.kafka.sasl.oauthbearer.expected.audience
 
+The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 dest.kafka.sasl.oauthbearer.expected.issuer
 
@@ -1419,12 +1419,12 @@ The name of the security provider used for SSL connections. Default value is the
 
 🔘 dest.kafka.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 dest.kafka.ssl.enabled.protocols
 
@@ -1575,12 +1575,12 @@ Source Kafka: Consumer
 ==========================
 🔘 src.consumer.interceptor.classes
 
+A list of classes to use as interceptors. Implementing the ``org.apache.kafka.clients.consumer.ConsumerInterceptor`` interface allows you to intercept (and possibly mutate) records received by the consumer. By default, there are no interceptors.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of classes to use as interceptors. Implementing the ``org.apache.kafka.clients.consumer.ConsumerInterceptor`` interface allows you to intercept (and possibly mutate) records received by the consumer. By default, there are no interceptors.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 src.consumer.fetch.max.wait.ms
 
@@ -1650,21 +1650,21 @@ Destination Kafka
 ==========================
 🔘 dest.kafka.bootstrap.servers
 
+A list of host/port pairs used to establish the initial connection to the Kafka cluster. Clients use this list to bootstrap and discover the full set of Kafka brokers. While the order of servers in the list does not matter, we recommend including more than one server to ensure resilience if any servers are down. This list does not need to contain the entire set of brokers, as Kafka clients automatically manage and update connections to the cluster efficiently. This list must be in the form ``host1:port1,host2:port2,...``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of host/port pairs used to establish the initial connection to the Kafka cluster. Clients use this list to bootstrap and discover the full set of Kafka brokers. While the order of servers in the list does not matter, we recommend including more than one server to ensure resilience if any servers are down. This list does not need to contain the entire set of brokers, as Kafka clients automatically manage and update connections to the cluster efficiently. This list must be in the form ``host1:port1,host2:port2,...``.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 dest.kafka.client.id
 
+An id string to pass to the server when making requests. The purpose of this is to be able to track the source of requests beyond just ip/port by allowing a logical application name to be included in server-side request logging.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: An id string to pass to the server when making requests. The purpose of this is to be able to track the source of requests beyond just ip/port by allowing a logical application name to be included in server-side request logging.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 dest.kafka.request.timeout.ms
 
@@ -1833,12 +1833,12 @@ Whether to enable the use of provenance headers during replication. If true, Rep
 
 🔘 provenance.header.filter.overrides
 
+Filter overrides of the form <clusterId>,<topic>,<startTimeMs>-<endTimeMs>. These overrides are matched against the cluster ID, topic, and timestamp in the provenance header of records that would normally be filtered out during replication. If a match occurs, the filter is ignored and the record is replicated. The start time is inclusive and the end time is exclusive. Multiple overrides must be separated by semicolons.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Filter overrides of the form <clusterId>,<topic>,<startTimeMs>-<endTimeMs>. These overrides are matched against the cluster ID, topic, and timestamp in the provenance header of records that would normally be filtered out during replication. If a match occurs, the filter is ignored and the record is replicated. The start time is inclusive and the end time is exclusive. Multiple overrides must be separated by semicolons.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 dest.topic.replication.factor
 

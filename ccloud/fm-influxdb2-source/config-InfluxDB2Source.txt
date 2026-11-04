@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Schema Config
@@ -45,30 +45,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -84,51 +84,51 @@ InfluxDB
 ==========================
 🔘 influxdb.url
 
+Fully qualified InfluxDB API URL used for establishing connection.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Fully qualified InfluxDB API URL used for establishing connection.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 influxdb.token
 
+Token to authenticate with influx db.
 
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: Token to authenticate with influx db.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 influxdb.org.id
 
+Organization ID.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Organization ID.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 influxdb.bucket
 
+Bucket from which this connector will read the data from.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Bucket from which this connector will read the data from.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: true
 
 ==========================
 Read Configuration
 ==========================
 🔘 query
 
+If specified, this query will be executed and the resultant records will be pushed to desired Apache Kafka topic. Use this setting if there's a need to select subset of fields or tags, perform aggregations or filter data. The query should follow the template - ``import "influxdata/influxdb/schema" from(bucket:$influxdb.bucket) |> range(start: $startTimestamp, stop: $endTimestamp) |> <Your custom query criteria here> |> schema.fieldsAsCols() |> limit(n: $batch.size)`` In case of ``mode=bulk``, the connector will run the query as-is each time it polls. The range criteria should be filled in by the user. Flux does not allow unbounded queries as they are resource intensive. If you use ``mode=timestamp``, the values for ``$startTimestamp`` and ``$endTimestamp`` will be filled by the connector with appropriate source offsets.Users should replace other criteria mentioned at - ``<Your custom query criteria here>``. The connector will replace ``$influxdb.bucket`` and ``$batch.size`` with the values from the corresponding configurations.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If specified, this query will be executed and the resultant records will be pushed to desired Apache Kafka topic. Use this setting if there's a need to select subset of fields or tags, perform aggregations or filter data. The query should follow the template - ``import "influxdata/influxdb/schema" from(bucket:$influxdb.bucket) |> range(start: $startTimestamp, stop: $endTimestamp) |> <Your custom query criteria here> |> schema.fieldsAsCols() |> limit(n: $batch.size)`` In case of ``mode=bulk``, the connector will run the query as-is each time it polls. The range criteria should be filled in by the user. Flux does not allow unbounded queries as they are resource intensive. If you use ``mode=timestamp``, the values for ``$startTimestamp`` and ``$endTimestamp`` will be filled by the connector with appropriate source offsets.Users should replace other criteria mentioned at - ``<Your custom query criteria here>``. The connector will replace ``$influxdb.bucket`` and ``$batch.size`` with the values from the corresponding configurations.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 mode
 
@@ -150,12 +150,12 @@ Configuration to decide how to map topics Supported options are : `bucket` - Top
 
 🔘 topic.prefix
 
+Prefix that should be prepended to measurement names to determine the name of the Apache Kafka topic to publish data to, in case of custom query, it should be the full name of the Apache Kafka topic.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Prefix that should be prepended to measurement names to determine the name of the Apache Kafka topic to publish data to, in case of custom query, it should be the full name of the Apache Kafka topic.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: true
 
 🔘 batch.size
 
@@ -177,21 +177,21 @@ How long to wait after a record with certain timestamp appears before we include
 
 🔘 influxdb.measurement.whitelist
 
+Comma separated list of measurements to include in copying. If specified, Measurements Excluded cannot be set. If left empty, all measurements will be included.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separated list of measurements to include in copying. If specified, Measurements Excluded cannot be set. If left empty, all measurements will be included.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 influxdb.measurement.blacklist
 
+Comma separated list of measurements to exclude from copying. If specified, Measurements Included cannot be set.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separated list of measurements to exclude from copying. If specified, Measurements Included cannot be set.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Retries
@@ -231,12 +231,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Auto-restart policy
@@ -264,30 +264,30 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.serializer
 
@@ -300,48 +300,48 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -354,39 +354,39 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -399,12 +399,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -426,21 +426,21 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -453,49 +453,49 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

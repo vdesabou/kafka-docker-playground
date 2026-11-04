@@ -147,12 +147,12 @@ Tag S3 objects with start and end offsets, as well as record count.
 
 🔘 s3.object.tagging.key.value.pairs
 
+Additional S3 tag key value pairs
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Additional S3 tag key value pairs
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 s3.object.behavior.on.tagging.error
 
@@ -192,12 +192,12 @@ Credentials provider or provider chain to use for authentication to AWS. By defa
 
 🔘 aws.access.key.id
 
+The AWS access key ID used to authenticate personal AWS credentials such as IAM credentials. Use only if you do not wish to authenticate by using a credentials provider class via ``s3.credentials.provider.class``
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The AWS access key ID used to authenticate personal AWS credentials such as IAM credentials. Use only if you do not wish to authenticate by using a credentials provider class via ``s3.credentials.provider.class``
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 aws.secret.access.key
 
@@ -210,12 +210,12 @@ The secret access key used to authenticate personal AWS credentials such as IAM 
 
 🔘 s3.ssea.name
 
+The S3 Server Side Encryption Algorithm.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The S3 Server Side Encryption Algorithm.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 s3.sse.customer.key
 
@@ -228,12 +228,12 @@ The S3 Server Side Encryption Customer-Provided Key (SSE-C).
 
 🔘 s3.sse.kms.key.id
 
+The name of the AWS Key Management Service (AWS-KMS) key to be used for server side encryption of the S3 objects. No encryption is used when no key is provided, but it is enabled when ``aws:kms`` is specified as encryption algorithm with a valid key name.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the AWS Key Management Service (AWS-KMS) key to be used for server side encryption of the S3 objects. No encryption is used when no key is provided, but it is enabled when ``aws:kms`` is specified as encryption algorithm with a valid key name.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 s3.acl.canned
 
@@ -319,12 +319,12 @@ String inserted between records for ByteArrayFormat. Defaults to ``System.lineSe
 
 🔘 s3.proxy.url
 
+S3 Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access S3 through a proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: S3 Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access S3 through a proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 s3.proxy.user
 
@@ -577,12 +577,12 @@ The partitioner to use when writing data to the store. You can use ``DefaultPart
 
 🔘 partition.field.name
 
+The name of the partitioning field when FieldPartitioner is used.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The name of the partitioning field when FieldPartitioner is used.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 partition.duration.ms
 
@@ -595,30 +595,30 @@ The duration of a partition milliseconds used by ``TimeBasedPartitioner``. The d
 
 🔘 path.format
 
+This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to proper directories strings. For example, if you set ``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have the format ``/year=2015/month=12/day=07/hour=15/``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to proper directories strings. For example, if you set ``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have the format ``/year=2015/month=12/day=07/hour=15/``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 locale
 
+The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or ``fr-FR`` for French (in France). These may vary by Java version. See the `available locales <http://www.localeplanet.com/java/>`__.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or ``fr-FR`` for French (in France). These may vary by Java version. See the `available locales <http://www.localeplanet.com/java/>`__.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timezone
 
+The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and compute dates and times. All timezone IDs must be specified in the long format, such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. Alternatively a locale independent, fixed offset, datetime zone can be specified in form ``[+-]hh:mm``. Support for these timezones may vary by Java version. See the `available timezones within each locale <http://www.localeplanet.com/java/>`__, such as `those within the US English locale <http://www.localeplanet.com/java/en-US/index.html>`__.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and compute dates and times. All timezone IDs must be specified in the long format, such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. Alternatively a locale independent, fixed offset, datetime zone can be specified in form ``[+-]hh:mm``. Support for these timezones may vary by Java version. See the `available timezones within each locale <http://www.localeplanet.com/java/>`__, such as `those within the US English locale <http://www.localeplanet.com/java/en-US/index.html>`__.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.extractor
 

@@ -12,12 +12,12 @@ The URL of the Salesforce endpoint to use. The default is blank. This directs th
 
 🔘 salesforce.username
 
+Salesforce username for connector authentication
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Salesforce username for connector authentication
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.password
 
@@ -129,12 +129,12 @@ Authentication scheme to be used when authenticate the connector towards HTTP(s)
 
 🔘 http.proxy.user
 
+The HTTP(S) proxy user name
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP(S) proxy user name
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.proxy.password
 
@@ -225,12 +225,12 @@ Flag to indicate whether to use the ``salesforce.custom.id.field.name`` for inse
 
 🔘 salesforce.ignore.fields
 
+Comma separate list of fields from the source Kafka record to ignore when pushing a record into Salesforce.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma separate list of fields from the source Kafka record to ignore when pushing a record into Salesforce.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 salesforce.ignore.reference.fields
 
@@ -258,36 +258,36 @@ reporter.result.topic.name
 ==========================
 🔘 ${connector}-success
 
+The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.result.topic.replication.factor
 ==========================
 🔘 3
 
+The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
-
-	 - Type: false
-	 - Default: SHORT
-	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
-	 - Required: MEDIUM
+	 - Type: SHORT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.result.topic.partitions
 ==========================
 🔘 1
 
+The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
-	 - Required: MEDIUM
+	 - Type: INT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Formatter
@@ -360,36 +360,36 @@ reporter.error.topic.name
 ==========================
 🔘 ${connector}-error
 
+The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.error.topic.replication.factor
 ==========================
 🔘 3
 
+The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
-
-	 - Type: false
-	 - Default: SHORT
-	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
-	 - Required: MEDIUM
+	 - Type: SHORT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.error.topic.partitions
 ==========================
 🔘 1
 
+The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
-	 - Required: MEDIUM
+	 - Type: INT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Formatter

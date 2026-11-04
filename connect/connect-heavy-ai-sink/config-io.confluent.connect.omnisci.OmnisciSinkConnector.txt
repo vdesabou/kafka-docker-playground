@@ -69,12 +69,12 @@ Data Mapping
 ==========================
 🔘 fields.whitelist
 
+List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 SQL/DDL Support

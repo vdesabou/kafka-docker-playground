@@ -1,6 +1,6 @@
     "activemq.password": "[hidden]",
     "activemq.url": "",
-    "activemq.username": "STRING",
+    "activemq.username": "",
     "character.encoding": "UTF-8",
     "jms.connection.backoff.ms": "2000",
     "jms.connection.max.retries": "150",

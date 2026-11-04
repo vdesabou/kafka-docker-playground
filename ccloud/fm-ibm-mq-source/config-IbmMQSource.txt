@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,30 +33,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -72,12 +72,12 @@ Which topic do you want to send data to?
 ==========================
 🔘 kafka.topic
 
+Identifies the topic name to write the data to.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Identifies the topic name to write the data to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Exactly Once Semantics
@@ -93,21 +93,21 @@ When set to true, enables exactly-once support for this connector, ensuring each
 
 🔘 offsets.storage.topic
 
+The topic name used as offset storage topic to store the connector's offsets. Defaults to ``connect-offsets-${connector}``. Within the value, ``${connector}`` can be used as a placeholder for the logical cluster ID. The designated topic should not pre-exist.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The topic name used as offset storage topic to store the connector's offsets. Defaults to ``connect-offsets-${connector}``. Within the value, ``${connector}`` can be used as a placeholder for the logical cluster ID. The designated topic should not pre-exist.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 state.topic.name
 
+The name of the IBM MQ topic used to guarantee exactly-once message delivery. The connector stores and uses offset data in this topic to ensure delivery across restarts. This topic must be created in IBM MQ before the connector is created, as it will not be auto-created. Since the connector uses a durable subscriber to consume from this topic, it should not be shared with any other connector or consumer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the IBM MQ topic used to guarantee exactly-once message delivery. The connector stores and uses offset data in this topic to ensure delivery across restarts. This topic must be created in IBM MQ before the connector is created, as it will not be auto-created. Since the connector uses a durable subscriber to consume from this topic, it should not be shared with any other connector or consumer.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 CSFLE
@@ -123,12 +123,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Schema Config
@@ -186,30 +186,30 @@ The file format of the key store file. This is required only when using secure T
 
 🔘 mq.tls.keystore.location
 
+The key store file. This is required only when using secure TLS communication with IBM MQ.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The key store file. This is required only when using secure TLS communication with IBM MQ.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.tls.keystore.password
 
+The store password for the key store file. This is optional for client and only needed if ``TLS Keystore file`` is configured.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The store password for the key store file. This is optional for client and only needed if ``TLS Keystore file`` is configured.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.tls.key.password
 
+The password of the private key used for secure TLS communication with IBM MQ.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password of the private key used for secure TLS communication with IBM MQ.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.tls.truststore.type
 
@@ -222,21 +222,21 @@ The file format of the trust store file. This is required when using TLS and sec
 
 🔘 mq.tls.truststore.location
 
+The trust store file. This is required only when using secure TLS communication with IBM MQ.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store file. This is required only when using secure TLS communication with IBM MQ.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.tls.truststore.password
 
+The password for the trust store file. If a password is not set access to the truststore is still available, but integrity checking is disabled. This is required only when using secure TLS communication with IBM MQ.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for the trust store file. If a password is not set access to the truststore is still available, but integrity checking is disabled. This is required only when using secure TLS communication with IBM MQ.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.tls.keymanager.algorithm
 
@@ -258,24 +258,24 @@ The algorithm used by trust manager factory for SSL connections. Default value i
 
 🔘 mq.tls.secure.random.implementation
 
+The SecureRandom PRNG implementation to use for SSL cryptography operations. By default, tries PKCS11 implementation first. If PKCS11 is not supported, iterates through the provider and returns the first working implementation. This is required only when using secure TLS communication with IBM MQ.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The SecureRandom PRNG implementation to use for SSL cryptography operations. By default, tries PKCS11 implementation first. If PKCS11 is not supported, iterates through the provider and returns the first working implementation. This is required only when using secure TLS communication with IBM MQ.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 IBM MQ Session
 ==========================
 🔘 jms.destination.name
 
+The name of the JMS destination (queue or topic) to read from.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The name of the JMS destination (queue or topic) to read from.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 jms.destination.type
 
@@ -297,12 +297,12 @@ Specifies the maximum number of messages per task received from the JMS broker a
 
 🔘 max.poll.duration
 
+The maximum amount of time each task can build a batch. The batch is closed and sent to Kafka if not enough messages are read during the time allotted. This helps limit connector lag when the JMS queue/topic has a lower throughput.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The maximum amount of time each task can build a batch. The batch is closed and sent to Kafka if not enough messages are read during the time allotted. This helps limit connector lag when the JMS queue/topic has a lower throughput.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 character.encoding
 
@@ -315,30 +315,30 @@ The character encoding to use while receiving the message.
 
 🔘 jms.subscription.durable
 
+Whether the subscription of the connector tasks to a JMS topic is durable or not. Durable subscriptions require a subscription name to be set via ``jms.subscription.name``. 
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether the subscription of the connector tasks to a JMS topic is durable or not. Durable subscriptions require a subscription name to be set via ``jms.subscription.name``. 
-	 - Required: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 jms.subscription.name
 
+The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 jms.message.selector
 
+The JMS message selector that should be applied to messages in the destination.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JMS message selector that should be applied to messages in the destination.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 initial.poll.wait.time.ms
 
@@ -354,21 +354,21 @@ IBM MQ Connection
 ==========================
 🔘 mq.username
 
+The username to use when connecting to IBM MQ.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The username to use when connecting to IBM MQ.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 mq.password
 
+The password to use when connecting to IBM MQ.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password to use when connecting to IBM MQ.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.configuration.mode
 
@@ -381,12 +381,12 @@ The mode in connector is to configure single mq instance or multiple for HA/DR s
 
 🔘 mq.hostname
 
+IBM MQ broker host
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: IBM MQ broker host
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.port
 
@@ -399,57 +399,57 @@ IBM MQ broker port
 
 🔘 mq.connection.list
 
+For IBM's HA/DR support with multiple MQ instances, enter hosts as comma-separated values, for example, host1:port1, host2:port2. Configure the connector with a reasonable value for ``max.retry.time`` to ensure it has sufficient time to switch over to another instance before failing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: For IBM's HA/DR support with multiple MQ instances, enter hosts as comma-separated values, for example, host1:port1, host2:port2. Configure the connector with a reasonable value for ``max.retry.time`` to ensure it has sufficient time to switch over to another instance before failing.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.queue.manager
 
+The name of the queue manager.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The name of the queue manager.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 mq.channel
 
+The channel for client connections.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The channel for client connections.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 mq.ssl.cipher.suite
 
+The CipherSuite for SSL connections.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The CipherSuite for SSL connections.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.ssl.fips.required
 
+Whether SSL FIPS is required.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether SSL FIPS is required.
-	 - Required: HIGH
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.ssl.peer.name
 
+Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern can ensure that the correct queue manager is used. The connection attempt fails if the distinguished name provided by the queue manager does not match this pattern.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern can ensure that the correct queue manager is used. The connection attempt fails if the distinguished name provided by the queue manager does not match this pattern.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 disable.mqcsp.authentication
 
@@ -465,12 +465,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -486,30 +486,30 @@ Whether to replace fields that have a default value and that are null to the def
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -531,12 +531,12 @@ Include schemas within each of the serialized values. Input messages must contai
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -558,39 +558,39 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.decimal.format
 
@@ -603,39 +603,39 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 producer.override.linger.ms
 
+The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
-	 - Required: LOW
+	 - Type: LONG
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.serializer
 
@@ -648,12 +648,12 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.schemas.enable
 
@@ -666,39 +666,39 @@ Include schemas within each of the serialized keys. Input message keys must cont
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.replace.null.with.default
 
@@ -720,12 +720,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -747,12 +747,12 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -765,21 +765,21 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.scrub.invalid.names
 
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -798,10 +798,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

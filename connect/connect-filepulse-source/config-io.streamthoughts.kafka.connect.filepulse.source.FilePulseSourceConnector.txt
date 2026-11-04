@@ -69,24 +69,24 @@ Class which is used to list eligible files from the scanned file system.
 
 🔘 fs.listing.filters
 
+Filters classes which are used to apply list input files.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Filters classes which are used to apply list input files.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Filters
 ==========================
 🔘 filters
 
+List of filters aliases to apply on each value (order is important).
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of filters aliases to apply on each value (order is important).
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 The TaskPartitioner to be used for partitioning files to tasks

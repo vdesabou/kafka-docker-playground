@@ -12,30 +12,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -60,12 +60,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Schema Config
@@ -86,19 +86,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Authentication method
@@ -126,147 +126,147 @@ Secret manager configuration
 ==========================
 🔘 secret.manager
 
+Select the secret manager to use for retrieving sensitive data.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the secret manager to use for retrieving sensitive data.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.managed.configs
 
+Select the configurations to fetch their values from the secret manager.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Select the configurations to fetch their values from the secret manager.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.provider.integration.id
 
+Select an existing provider integration that has access to your secret manager.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing provider integration that has access to your secret manager.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 How should we connect to your Snowflake Instance?
 ==========================
 🔘 connection.url
 
+Snowflake connection URL. Supported formats are `<org_name>_<account_name>.snowflakecomputing.com` or If the account is located in the AWS US West (Oregon) region, then `<locator>.snowflakecomputing.com`.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Snowflake connection URL. Supported formats are `<org_name>_<account_name>.snowflakecomputing.com` or If the account is located in the AWS US West (Oregon) region, then `<locator>.snowflakecomputing.com`.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 connection.user
 
+User to be used for authenticating to snowflake.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: User to be used for authenticating to snowflake.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 connection.private.key
 
+Private key for Snowflake user.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Private key for Snowflake user.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connection.private.key.passphrase
 
+Passphrase of the encrypted private key.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Passphrase of the encrypted private key.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 How should we name your topic(s)?
 ==========================
 🔘 topic.prefix
 
+Prefix to prepend to table names to generate the name of the Kafka topic to publish data to.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Prefix to prepend to table names to generate the name of the Kafka topic to publish data to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Connector Details
 ==========================
 🔘 mode
 
+Mode represents the criteria on which table is polled each time. Options include -- `BULK`: perform a bulk load of all the eligible tables each time it is polled. `TIMESTAMP`: use timestamp column(s) to detect new and modified rows. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. This assumes that the effective timestamp is updated with each write, it's values are monotonically incrementing, but not necessarily unique. Only rows with non null value of effective timestamp would be captured. `INCREMENTING`: use a strictly incrementing column on each table to detect only new rows. Only rows with non null value of incrementing column would be captured. `TIMESTAMP AND INCREMENTING`: use two columns, a timestamp column that detects new and modified rows and a strictly incrementing column which provides a globally unique ID for updates so each row can be assigned a unique stream offset. Only rows with non null effective timestamp value and non null incrementing column value would be captured
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Mode represents the criteria on which table is polled each time. Options include -- `BULK`: perform a bulk load of all the eligible tables each time it is polled. `TIMESTAMP`: use timestamp column(s) to detect new and modified rows. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. This assumes that the effective timestamp is updated with each write, it's values are monotonically incrementing, but not necessarily unique. Only rows with non null value of effective timestamp would be captured. `INCREMENTING`: use a strictly incrementing column on each table to detect only new rows. Only rows with non null value of incrementing column would be captured. `TIMESTAMP AND INCREMENTING`: use two columns, a timestamp column that detects new and modified rows and a strictly incrementing column which provides a globally unique ID for updates so each row can be assigned a unique stream offset. Only rows with non null effective timestamp value and non null incrementing column value would be captured
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: true
 
 🔘 table.include.list
 
+A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Identifier names are case sensitive. For example, ``table.include.list: "DB_A.PUBLIC.CUSTOMER.*,DB_B.PUBLIC.CUSTOMER.*,"``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Identifier names are case sensitive. For example, ``table.include.list: "DB_A.PUBLIC.CUSTOMER.*,DB_B.PUBLIC.CUSTOMER.*,"``.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.exclude.list
 
+A comma-separated list of regular expressions that match the fully-qualified names of tables not to be copied. This only applies on the tables filtered using include list. Identifier names are case sensitive. For example, ``table.exclude.list: "DB_A.PUBLIC.CUSTOMER.*,DB_B.PUBLIC.CUSTOMER.*,"``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables not to be copied. This only applies on the tables filtered using include list. Identifier names are case sensitive. For example, ``table.exclude.list: "DB_A.PUBLIC.CUSTOMER.*,DB_B.PUBLIC.CUSTOMER.*,"``.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.columns.mapping
 
+A comma-separated list of table regex to timestamp columns mappings. Timestamp columns supplied should strictly be of type ``TIMESTAMP_NTZ``. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. Expected format is ``regex1:[col1|col2],regex2:[col3]``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``COMPANY.EMPLOYEES.SALARY.*:[UPDATED_AT|MODIFIED_AT], COMPANY.FINANCE.ACCOUNTS.*:[CHANGED_AT]``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of table regex to timestamp columns mappings. Timestamp columns supplied should strictly be of type ``TIMESTAMP_NTZ``. On specifying multiple timestamp columns, COALESCE SQL function would be used to find out the effective timestamp for a row. Expected format is ``regex1:[col1|col2],regex2:[col3]``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``COMPANY.EMPLOYEES.SALARY.*:[UPDATED_AT|MODIFIED_AT], COMPANY.FINANCE.ACCOUNTS.*:[CHANGED_AT]``.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 incrementing.column.mapping
 
+A comma-separated list of table regex to incrementing column mappings. Expected format is ``regex1:col2,regex2:col1``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``COMPANY.EMPLOYEES.SALARY*:EMP_ID,COMPANY.FINANCE.ACCOUNTS.*:ID``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of table regex to incrementing column mappings. Expected format is ``regex1:col2,regex2:col1``. Regexes would be matched against the fully-qualified table names. Identifier names are case sensitive. Every table included for capture should match exactly one of the provided mappings. An example for a valid input would be ``COMPANY.EMPLOYEES.SALARY*:EMP_ID,COMPANY.FINANCE.ACCOUNTS.*:ID``.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 db.timezone
 
+Timezone to be used when interpreting values for timestamp types which don't have a timezone information in them. This should be set to the timezone of the snowflake account.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Timezone to be used when interpreting values for timestamp types which don't have a timezone information in them. This should be set to the timezone of the snowflake account.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: true
 
 🔘 timestamp.initial
 
+Epoch timestamp in milliseconds which provides the start timestamp from where to capture rows. The value -1 sets the start timestamp to the current time, in this case older data would not be fetched. If not specified, start timestamp is treated as epoch start time, hence all data is fetched. Once the connector has managed to successfully record a source offset, this property has no effect even if changed to a different value later on.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: Epoch timestamp in milliseconds which provides the start timestamp from where to capture rows. The value -1 sets the start timestamp to the current time, in this case older data would not be fetched. If not specified, start timestamp is treated as epoch start time, hence all data is fetched. Once the connector has managed to successfully record a source offset, this property has no effect even if changed to a different value later on.
-	 - Required: MEDIUM
+	 - Type: LONG
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.types
 
@@ -330,12 +330,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -351,39 +351,39 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 producer.override.linger.ms
 
+The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
-	 - Required: LOW
+	 - Type: LONG
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.serializer
 
@@ -396,48 +396,48 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -450,21 +450,21 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -477,21 +477,21 @@ Use this property if you would like to configure the connector's error handling 
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -504,12 +504,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -540,21 +540,21 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -567,48 +567,48 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.scrub.invalid.names
 
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -627,10 +627,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

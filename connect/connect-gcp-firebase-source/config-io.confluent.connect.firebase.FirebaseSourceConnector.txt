@@ -72,12 +72,12 @@ The firebase database reference from which the connector will read records
 
 🔘 gcp.firebase.credentials.path
 
+Path to the GCP private key file,this file is needed for service account authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path to the GCP private key file,this file is needed for service account authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.firebase.credentials.json
 

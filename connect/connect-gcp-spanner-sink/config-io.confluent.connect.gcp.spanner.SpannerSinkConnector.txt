@@ -30,12 +30,12 @@ Database dialect configured in the target Google Spanner database. This will def
 
 🔘 gcp.spanner.credentials.path
 
+The path to the JSON service key file. If empty, credentials are read from the gcp.spanner.credentials.json configuration.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the JSON service key file. If empty, credentials are read from the gcp.spanner.credentials.json configuration.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.spanner.credentials.json
 
@@ -48,12 +48,12 @@ The contents of the JSON service key file. If empty, credentials are read from t
 
 🔘 gcp.spanner.proxy.url
 
+Google Cloud Spanner Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access Spanner through a proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Google Cloud Spanner Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access Spanner through a proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 gcp.spanner.proxy.user
 
@@ -126,21 +126,23 @@ The primary key mode, also refer to ``pk.fields`` documentation for interplay. S
 
 🔘 pk.fields
 
+List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
 ``kafka``
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 fields.whitelist
 
+List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
 Note that ``pk.fields`` is applied independently in the context of which field(s) form the primary key columns in the destination database, while this configuration is applicable for the other columns.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 DDL Support

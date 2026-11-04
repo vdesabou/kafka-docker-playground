@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Schema Config
@@ -36,12 +36,12 @@ Input messages
 ==========================
 🔘 input.data.format
 
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -57,42 +57,42 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Which topics do you want to get data from?
 ==========================
 🔘 topics
 
+Identifies the topic name or a comma-separated list of topic names.
 
-
-	 - Type: true
-	 - Default: LIST
-	 - Importance: Identifies the topic name or a comma-separated list of topic names.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 errors.deadletterqueue.topic.name
 
@@ -108,39 +108,39 @@ How should we connect to your Azure Cosmos DB?
 ==========================
 🔘 connect.cosmos.connection.endpoint
 
+Cosmos endpoint URL. For example: https://connect-cosmosdb.documents.azure.com:443/.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Cosmos endpoint URL. For example: https://connect-cosmosdb.documents.azure.com:443/.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 connect.cosmos.master.key
 
+Cosmos connection master (primary) key.
 
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: Cosmos connection master (primary) key.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 connect.cosmos.databasename
 
+Cosmos target database to write records into.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Cosmos target database to write records into.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 connect.cosmos.containers.topicmap
 
+A comma delimited list of Kafka topics mapped to Cosmos containers. For example: topic1#con1,topic2#con2.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: A comma delimited list of Kafka topics mapped to Cosmos containers. For example: topic1#con1,topic2#con2.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Database details
@@ -180,12 +180,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -201,12 +201,12 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 key.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.deserializer
 
@@ -219,12 +219,12 @@ The class name of the schema ID deserializer for values. This is used to deseria
 
 🔘 value.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -237,12 +237,12 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -255,12 +255,12 @@ Use this property if you would like to configure the connector's error handling 
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -291,12 +291,12 @@ The class name of the schema ID deserializer for keys. This is used to deseriali
 
 🔘 key.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -315,10 +315,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

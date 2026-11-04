@@ -330,12 +330,12 @@ The maximum delay in milliseconds for reconnect attempts.
 
 🔘 errors.deadletterqueue.topic.name
 
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this source connector, or its transformations or converters. The topic name is blank by default, which means that no messages are to be recorded in the DLQ.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this source connector, or its transformations or converters. The topic name is blank by default, which means that no messages are to be recorded in the DLQ.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 errors.deadletterqueue.context.headers.enable
 

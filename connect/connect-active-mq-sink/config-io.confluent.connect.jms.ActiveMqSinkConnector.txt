@@ -12,12 +12,12 @@ The URL of the ActiveMQ broker.
 
 🔘 activemq.username
 
+The username used when connecting to ActiveMQ.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username used when connecting to ActiveMQ.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 activemq.password
 

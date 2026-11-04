@@ -1,5 +1,5 @@
     "gcp.firebase.credentials.json": "",
-    "gcp.firebase.credentials.path": "STRING",
+    "gcp.firebase.credentials.path": "",
     "gcp.firebase.database.reference": "",
     "insert.mode": "",
     "key.converter.converter.encoding": "UTF-8",

@@ -3,12 +3,12 @@ Credentials
 ==========================
 🔘 aws.access.key.id
 
+The access key ID used to authenticate personal AWS credentials such as IAM credentials.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The access key ID used to authenticate personal AWS credentials such as IAM credentials.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 aws.secret.access.key
 

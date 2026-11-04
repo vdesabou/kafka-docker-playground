@@ -78,21 +78,21 @@ Backoff time in milliseconds between connection attempts.
 
 🔘 table.whitelist
 
+List of tables to include in copying. If specified, table.blacklist may not be set.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of tables to include in copying. If specified, table.blacklist may not be set.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.blacklist
 
+List of tables to exclude from copying. If specified, table.whitelist may not be set.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of tables to exclude from copying. If specified, table.whitelist may not be set.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 catalog.pattern
 
@@ -117,30 +117,31 @@ Mode
 ==========================
 🔘 mode
 
+The mode for updating a table each time it is polled. Options include:
   * bulk - perform a bulk load of the entire table each time it is polled
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The mode for updating a table each time it is polled. Options include:
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 incrementing.column.name
 
+The name of the strictly incrementing column to use to detect new rows. Any empty value indicates the column should be autodetected by looking for an auto-incrementing column. This column may not be nullable.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the strictly incrementing column to use to detect new rows. Any empty value indicates the column should be autodetected by looking for an auto-incrementing column. This column may not be nullable.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.column.name
 
+Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma separated list of one or more timestamp columns to detect new or modified rows using the COALESCE SQL function. Rows whose first non-null timestamp value is greater than the largest previous timestamp value seen will be discovered with each poll. At least one column should not be nullable.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 validate.non.null
 
@@ -153,12 +154,12 @@ By default, the JDBC connector will validate that all incrementing and timestamp
 
 🔘 query
 
+If specified, the query to perform to select new or updated rows. Use this setting if you want to join tables, select subsets of columns in a table, or filter data. If used, this connector will only copy data using this query -- whole-table copying will be disabled. Different query modes may still be used for incremental updates, but in order to properly construct the incremental query, it must be possible to append a WHERE clause to this query (i.e. no WHERE clauses may be used). If you use a WHERE clause, it must handle incremental queries itself.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If specified, the query to perform to select new or updated rows. Use this setting if you want to join tables, select subsets of columns in a table, or filter data. If used, this connector will only copy data using this query -- whole-table copying will be disabled. Different query modes may still be used for incremental updates, but in order to properly construct the incremental query, it must be possible to append a WHERE clause to this query (i.e. no WHERE clauses may be used). If you use a WHERE clause, it must handle incremental queries itself.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 quote.sql.identifiers
 

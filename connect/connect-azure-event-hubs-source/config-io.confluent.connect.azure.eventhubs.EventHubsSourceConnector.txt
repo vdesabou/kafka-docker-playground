@@ -60,21 +60,21 @@ Number of records processed per parallel chunk when task.parallel.transform.enab
 
 🔘 k8s.namespace
 
+The Kubernetes namespace where the service account resides for TokenRequest API.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Kubernetes namespace where the service account resides for TokenRequest API.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 k8s.service.account.name
 
+The Kubernetes service account name for TokenRequest API.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Kubernetes service account name for TokenRequest API.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 k8s.token.expiration.seconds
 
@@ -105,39 +105,39 @@ The initial retry delay in milliseconds for provider integration operations.
 
 🔘 resource.crn
 
+The Confluent Cloud Resource Name (CRN) for the resource. Format: crn://confluent.cloud/organization=<org-id>/environment=<env-id>/...
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Confluent Cloud Resource Name (CRN) for the resource. Format: crn://confluent.cloud/organization=<org-id>/environment=<env-id>/...
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 provider.integration.id
 
+The provider integration ID used as HMAC key for computing the K8s token audience
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The provider integration ID used as HMAC key for computing the K8s token audience
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 confluent.azure.multi.tenant.app.client.id
 
+The Azure client ID (application ID) of the Entra ID Multi Tenant App that Confluent Cloud uses to access Azure resources.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Azure client ID (application ID) of the Entra ID Multi Tenant App that Confluent Cloud uses to access Azure resources.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 customer.azure.tenant.id
 
+The Azure tenant ID (directory ID) where the Azure application is registered.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Azure tenant ID (directory ID) where the Azure application is registered.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 azure.token.scope
 
@@ -153,21 +153,21 @@ Connector
 ==========================
 🔘 credentials.provider.class
 
+Credentials provider class for Microsoft Entra ID authentication
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Credentials provider class for Microsoft Entra ID authentication
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 azure.eventhubs.sas.keyname
 
+Shared Access Signature keyname to the corresponding shared access policy rule for the namespace or entity.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Shared Access Signature keyname to the corresponding shared access policy rule for the namespace or entity.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 azure.eventhubs.sas.key
 

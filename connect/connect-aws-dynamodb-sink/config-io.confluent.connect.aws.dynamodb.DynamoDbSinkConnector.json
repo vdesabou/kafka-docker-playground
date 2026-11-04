@@ -6,7 +6,7 @@
     "aws.dynamodb.pk.hash": "partition",
     "aws.dynamodb.pk.sort": "offset",
     "aws.dynamodb.proxy.password": "",
-    "aws.dynamodb.proxy.url": "STRING",
+    "aws.dynamodb.proxy.url": "",
     "aws.dynamodb.proxy.user": "",
     "aws.dynamodb.region": "us-east-1",
     "aws.secret.access.key": "[hidden]",

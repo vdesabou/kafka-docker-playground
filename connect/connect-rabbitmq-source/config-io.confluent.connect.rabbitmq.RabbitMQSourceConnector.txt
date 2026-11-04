@@ -327,12 +327,12 @@ The file format of the trust store file. The values currently supported by the d
 
 🔘 rabbitmq.https.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 rabbitmq.https.ssl.endpoint.identification.algorithm
 
@@ -420,12 +420,12 @@ Comma-separated list of one or more RabbitMQ queues to read from. Duplicate entr
 
 🔘 rabbitmq.queue.topic.map
 
+JSON object mapping RabbitMQ queue names to Kafka topic names, e.g. {"queue-1":"topic-a","queue-2":"topic-b"}. Messages consumed from a mapped queue are published to its mapped topic. Queues not listed in the map, or any queue when the map is empty, fall back to `kafka.topic`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON object mapping RabbitMQ queue names to Kafka topic names, e.g. {"queue-1":"topic-a","queue-2":"topic-b"}. Messages consumed from a mapped queue are published to its mapped topic. Queues not listed in the map, or any queue when the map is empty, fall back to `kafka.topic`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 batch.size
 

@@ -3,12 +3,12 @@ Which topics do you want to get data from?
 ==========================
 🔘 topics
 
+Identifies the topic name or a comma-separated list of topic names.
 
-
-	 - Type: true
-	 - Default: LIST
-	 - Importance: Identifies the topic name or a comma-separated list of topic names.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Schema Config
@@ -50,19 +50,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -78,30 +78,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 CSFLE
@@ -117,12 +117,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 csfle.onFailure
 
@@ -138,12 +138,12 @@ HTTP server details
 ==========================
 🔘 http.api.url
 
+Specifies the API endpoint to which connector should write to.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Specifies the API endpoint to which connector should write to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 request.method
 
@@ -156,21 +156,21 @@ Specifies the HTTP request method (POST, PUT, PATCH) the connector should use fo
 
 🔘 headers
 
+HTTP headers to be included in all requests. Individual headers should be separated by the Header Separator
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in all requests. Individual headers should be separated by the Header Separator
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 header.separator
 
+Separator character used in headers
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in headers
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 behavior.on.null.values
 
@@ -183,12 +183,12 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 
 🔘 sensitive.headers
 
+Sensitive HTTP headers (eg: credentials) to be included in all requests. Individual headers should be separated by the Header Separator
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers (eg: credentials) to be included in all requests. Individual headers should be separated by the Header Separator
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 HTTP server error handling
@@ -225,12 +225,12 @@ Used to produce request body in either JSON or String format
 
 🔘 batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 batch.max.size
 
@@ -243,39 +243,39 @@ The number of records accumulated in a batch before the HTTP API is invoked
 
 🔘 batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 batch.separator
 
+Separator for records in a batch
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator for records in a batch
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 batch.json.as.array
 
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when batch.max.size is set to 1.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when batch.max.size is set to 1.
-	 - Required: HIGH
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 HTTP server authentication
@@ -291,48 +291,48 @@ Specifies the authentication type of the API endpoint. Valid values are ``NONE``
 
 🔘 connection.user
 
+The username to be used with an endpoint requiring authentication
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring authentication
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connection.password
 
+The password to be used with an endpoint requiring authentication
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password to be used with an endpoint requiring authentication
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.token.url
 
+The URL to be used for fetching OAuth2 token. Client Credentials is the only supported grant type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching OAuth2 token. Client Credentials is the only supported grant type.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.id
 
+The client id used when fetching OAuth2 token
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client id used when fetching OAuth2 token
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.secret
 
+The secret used when fetching OAuth2 token
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The secret used when fetching OAuth2 token
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.token.property
 
@@ -372,21 +372,21 @@ Whether to generate and add JWT token to request. If selected, JWT token will be
 
 🔘 oauth2.jwt.keystore.path
 
+Keystore containing private key to use to sign JWT.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Keystore containing private key to use to sign JWT.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.jwt.keystore.password
 
+Password to access keystore
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password to access keystore
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.jwt.keystore.type
 
@@ -399,30 +399,30 @@ JWT keystore type
 
 🔘 oauth2.jwt.claimset
 
+JSON containing JWT claims
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON containing JWT claims
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.headers
 
+HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by OAuth2 Client Headers Separator
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by OAuth2 Client Headers Separator
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 oauth2.client.header.separator
 
+Separator character used in OAuth2 Client Headers
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in OAuth2 Client Headers
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 HTTP server retries
@@ -486,78 +486,78 @@ HTTP server regular expressions
 ==========================
 🔘 regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}`` and ``${topic}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 HTTP server SSL
 ==========================
 🔘 https.ssl.key.password
 
+The password of the private key in the key store file. This is optional for client
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password of the private key in the key store file. This is optional for client
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.keystorefile
 
+The key store containing server certificate. Only required if using https
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The key store containing server certificate. Only required if using https
-	 - Required: LOW
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 https.ssl.keystore.password
 
+The store password for the key store file. This is optional for a client and is only needed if https.ssl.keystore.location is configured
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The store password for the key store file. This is optional for a client and is only needed if https.ssl.keystore.location is configured
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.truststorefile
 
+The trust store containing server CA certificate. Only required if using https
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store containing server CA certificate. Only required if using https
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.truststore.password
 
+The trust store password containing server CA certificate. Only required if using https
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store password containing server CA certificate. Only required if using https
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.protocol
 
@@ -603,12 +603,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -642,12 +642,12 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.schemas.enable
 
@@ -696,30 +696,30 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 key.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -741,12 +741,12 @@ How to construct the subject name for key schema registration.
 
 🔘 key.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -765,10 +765,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

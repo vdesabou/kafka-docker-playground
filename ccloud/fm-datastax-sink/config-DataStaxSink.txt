@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Schema Config
@@ -66,51 +66,51 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Which topics do you want to get data from?
 ==========================
 🔘 topics.regex
 
+A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topics
 
+Identifies the topic name or a comma-separated list of topic names.
 
-
-	 - Type: true
-	 - Default: LIST
-	 - Importance: Identifies the topic name or a comma-separated list of topic names.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 errors.deadletterqueue.topic.name
 
@@ -135,12 +135,12 @@ Which database you are connecting to. Choose ``Apache Cassandra or DSE`` to conn
 
 🔘 contactPoints
 
+Comma-separated host names or IPs of the Cassandra/DSE cluster contact points. Used only for the ``Apache Cassandra or DSE`` deployment type; leave empty for Astra (use the Secure Connect Bundle instead).
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma-separated host names or IPs of the Cassandra/DSE cluster contact points. Used only for the ``Apache Cassandra or DSE`` deployment type; leave empty for Astra (use the Secure Connect Bundle instead).
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 port
 
@@ -153,21 +153,21 @@ Cassandra/DSE native transport port (ignored for Astra).
 
 🔘 loadBalancing.localDc
 
+Name of the local datacenter the driver should treat as local (commonly ``dc1``). Required for the ``Apache Cassandra or DSE`` deployment type; must not be set for Astra.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the local datacenter the driver should treat as local (commonly ``dc1``). Required for the ``Apache Cassandra or DSE`` deployment type; must not be set for Astra.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 cloud.secureConnectBundle
 
+DataStax Astra DB Secure Connect Bundle (SCB). Required for the ``DataStax Astra`` deployment type, and mutually exclusive with contact points / local datacenter / SSL settings. Upload the SCB zip file; for REST API usage base64-encode it and prefix with ``data:application/octet-stream;base64,``.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: DataStax Astra DB Secure Connect Bundle (SCB). Required for the ``DataStax Astra`` deployment type, and mutually exclusive with contact points / local datacenter / SSL settings. Upload the SCB zip file; for REST API usage base64-encode it and prefix with ``data:application/octet-stream;base64,``.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Authentication
@@ -183,21 +183,21 @@ Authentication provider to the database. ``None`` for no auth, ``PLAIN`` for use
 
 🔘 auth.username
 
+Database username (for ``PLAIN`` auth; for Astra token auth use the literal ``token``).
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Database username (for ``PLAIN`` auth; for Astra token auth use the literal ``token``).
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 auth.password
 
+Database password (for ``PLAIN`` auth; for Astra token auth use the ``AstraCS:...`` token).
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Database password (for ``PLAIN`` auth; for Astra token auth use the ``AstraCS:...`` token).
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Security (SSL/TLS)
@@ -222,60 +222,60 @@ Whether to validate the database node hostnames against the certificate when SSL
 
 🔘 ssl.truststore.path
 
+Truststore file (JKS) containing the CA certificate(s) that sign the database server certificates. Upload the file; for REST API usage base64-encode it and prefix with ``data:application/octet-stream;base64,``.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Truststore file (JKS) containing the CA certificate(s) that sign the database server certificates. Upload the file; for REST API usage base64-encode it and prefix with ``data:application/octet-stream;base64,``.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 ssl.truststore.password
 
+Password protecting the truststore file (leave empty if the truststore has no password).
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password protecting the truststore file (leave empty if the truststore has no password).
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 ssl.keystore.path
 
+Keystore file (JKS) holding the client certificate + private key for mutual TLS (client authentication). Only needed when the database requires client certificates. Upload the file; for REST API usage base64-encode it and prefix with ``data:application/octet-stream;base64,``.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Keystore file (JKS) holding the client certificate + private key for mutual TLS (client authentication). Only needed when the database requires client certificates. Upload the file; for REST API usage base64-encode it and prefix with ``data:application/octet-stream;base64,``.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 ssl.keystore.password
 
+Password protecting the keystore file (leave empty if the keystore has no password).
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password protecting the keystore file (leave empty if the keystore has no password).
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 ssl.cipherSuites
 
+Optional comma-separated list of TLS cipher suites to enable. Leave empty to use the JVM defaults.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Optional comma-separated list of TLS cipher suites to enable. Leave empty to use the JVM defaults.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Table mapping
 ==========================
 🔘 mapping.map
 
+JSON object mapping each ``<topic>.<keyspace>.<table>`` to its field-to-column mapping, e.g. ``{"orders.ecom.orders":"id=value.id, amount=value.amount"}``. Use ``key.*`` to reference record-key fields (primary-key columns) and ``value.*`` for record-value fields. Each entry materializes to the engine key ``topic.<topic>.<keyspace>.<table>.mapping``. A single topic may map to multiple tables (fan-out) by adding multiple entries.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: JSON object mapping each ``<topic>.<keyspace>.<table>`` to its field-to-column mapping, e.g. ``{"orders.ecom.orders":"id=value.id, amount=value.amount"}``. Use ``key.*`` to reference record-key fields (primary-key columns) and ``value.*`` for record-value fields. Each entry materializes to the engine key ``topic.<topic>.<keyspace>.<table>.mapping``. A single topic may map to multiple tables (fan-out) by adding multiple entries.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 topic.override.map
 
@@ -348,12 +348,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 csfle.onFailure
 
@@ -390,12 +390,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -420,39 +420,39 @@ The class name of the schema ID deserializer for values. This is used to deseria
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 consumer.override.isolation.level
 
+Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -465,12 +465,12 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.schemas.enable
 
@@ -483,12 +483,12 @@ Include schemas within each of the serialized values. Input messages must contai
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -510,12 +510,12 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.deserializer
 
@@ -528,21 +528,21 @@ The class name of the schema ID deserializer for keys. This is used to deseriali
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.decimal.format
 
@@ -555,57 +555,57 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.schemas.enable
 
@@ -618,39 +618,39 @@ Include schemas within each of the serialized keys. Input message keys must cont
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.replace.null.with.default
 
@@ -672,12 +672,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -699,48 +699,48 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.scrub.invalid.names
 
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 consumer.override.auto.offset.reset
 
+Defines the behavior of the consumer when there is no committed position (which occurs when the group is first initialized) or when an offset is out of range. You can choose either to reset the position to the “earliest” offset (the default) or the “latest” offset. You can also select “none” if you would rather set the initial offset yourself and you are willing to handle out of range errors manually. More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#auto-offset-reset
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Defines the behavior of the consumer when there is no committed position (which occurs when the group is first initialized) or when an offset is out of range. You can choose either to reset the position to the “earliest” offset (the default) or the “latest” offset. You can also select “none” if you would rather set the initial offset yourself and you are willing to handle out of range errors manually. More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#auto-offset-reset
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -759,10 +759,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

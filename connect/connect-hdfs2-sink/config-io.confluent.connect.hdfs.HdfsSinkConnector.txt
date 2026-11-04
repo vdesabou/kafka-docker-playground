@@ -12,21 +12,21 @@ The HDFS connection URL. This configuration has the format of hdfs://hostname:po
 
 🔘 hadoop.conf.dir
 
+The Hadoop configuration directory.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Hadoop configuration directory.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hadoop.home
 
+The Hadoop home directory.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Hadoop home directory.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 logs.dir
 
@@ -60,30 +60,30 @@ Configuration indicating whether HDFS is using Kerberos for authentication.
 
 🔘 connect.hdfs.principal
 
+The principal to use when HDFS is using Kerberos to for authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The principal to use when HDFS is using Kerberos to for authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connect.hdfs.keytab
 
+The path to the keytab file for the HDFS connector principal. This keytab file should only be readable by the connector user.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the keytab file for the HDFS connector principal. This keytab file should only be readable by the connector user.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hdfs.namenode.principal
 
+The principal for HDFS Namenode.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The principal for HDFS Namenode.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kerberos.ticket.renew.period.ms
 
@@ -261,12 +261,12 @@ The partitioner to use when writing data to the store. You can use ``DefaultPart
 
 🔘 partition.field.name
 
+The name of the partitioning field when FieldPartitioner is used.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The name of the partitioning field when FieldPartitioner is used.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 partition.duration.ms
 
@@ -279,30 +279,30 @@ The duration of a partition milliseconds used by ``TimeBasedPartitioner``. The d
 
 🔘 path.format
 
+This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to proper directories strings. For example, if you set ``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have the format ``/year=2015/month=12/day=07/hour=15/``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This configuration is used to set the format of the data directories when partitioning with ``TimeBasedPartitioner``. The format set in this configuration converts the Unix timestamp to proper directories strings. For example, if you set ``path.format='year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, the data directories will have the format ``/year=2015/month=12/day=07/hour=15/``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 locale
 
+The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or ``fr-FR`` for French (in France). These may vary by Java version. See the `available locales <http://www.localeplanet.com/java/>`__.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The locale to use when partitioning with ``TimeBasedPartitioner``. Used to format dates and times. For example, use ``en-US`` for US English, ``en-GB`` for UK English, or ``fr-FR`` for French (in France). These may vary by Java version. See the `available locales <http://www.localeplanet.com/java/>`__.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timezone
 
+The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and compute dates and times. All timezone IDs must be specified in the long format, such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. Alternatively a locale independent, fixed offset, datetime zone can be specified in form ``[+-]hh:mm``. Support for these timezones may vary by Java version. See the `available timezones within each locale <http://www.localeplanet.com/java/>`__, such as `those within the US English locale <http://www.localeplanet.com/java/en-US/index.html>`__.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The timezone to use when partitioning with ``TimeBasedPartitioner``. Used to format and compute dates and times. All timezone IDs must be specified in the long format, such as ``America/Los_Angeles``, ``America/New_York``, and ``Europe/Paris``, or ``UTC``. Alternatively a locale independent, fixed offset, datetime zone can be specified in form ``[+-]hh:mm``. Support for these timezones may vary by Java version. See the `available timezones within each locale <http://www.localeplanet.com/java/>`__, such as `those within the US English locale <http://www.localeplanet.com/java/en-US/index.html>`__.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.extractor
 
@@ -336,30 +336,30 @@ Configuration indicating whether to integrate with Hive when running the connect
 
 🔘 hive.metastore.uris
 
+The Hive metastore URIs, can be IP address or fully-qualified domain name and port of the metastore host.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Hive metastore URIs, can be IP address or fully-qualified domain name and port of the metastore host.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hive.conf.dir
 
+Hive configuration directory
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Hive configuration directory
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hive.home
 
+Hive home directory.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Hive home directory.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 hive.database
 

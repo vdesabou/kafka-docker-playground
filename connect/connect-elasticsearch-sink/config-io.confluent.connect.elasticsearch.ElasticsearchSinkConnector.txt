@@ -39,12 +39,12 @@ The type of resource the connector writes to, such as indices, datastreams or al
 
 🔘 topic.to.external.resource.mapping
 
+A list of topic-to-resource mappings in the format 'topic:resource'. If specified, the connector will use the provided resource name (index, data stream, or alias) instead of the topic name for writing to Elasticsearch. The resource must exist in Elasticsearch before configuring the connector. The type of resource (index, data stream, or alias) is determined by the 'external.resource.usage' configuration.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of topic-to-resource mappings in the format 'topic:resource'. If specified, the connector will use the provided resource name (index, data stream, or alias) instead of the topic name for writing to Elasticsearch. The resource must exist in Elasticsearch before configuring the connector. The type of resource (index, data stream, or alias) is determined by the 'external.resource.usage' configuration.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 max.external.resource.mappings
 
@@ -66,12 +66,12 @@ Generic type describing the data to be written to data stream. The default is NO
 
 🔘 data.stream.dataset
 
+Generic name describing data ingested and its structure to be written to a data stream. Can be any arbitrary string that is no longer than 100 characters, is in all lowercase, and does not contain spaces or any of these special characters ``/\*"<>|,#:-``. Otherwise, no value indicates the connector will write to regular indices instead. If set, this configuration will be used alongside ``data.stream.type`` and ``data.stream.namespace`` to construct the data stream name in the form of {``data.stream.type``}-{``data.stream.dataset``}-{``data.stream.namespace``}.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Generic name describing data ingested and its structure to be written to a data stream. Can be any arbitrary string that is no longer than 100 characters, is in all lowercase, and does not contain spaces or any of these special characters ``/\*"<>|,#:-``. Otherwise, no value indicates the connector will write to regular indices instead. If set, this configuration will be used alongside ``data.stream.type`` and ``data.stream.namespace`` to construct the data stream name in the form of {``data.stream.type``}-{``data.stream.dataset``}-{``data.stream.namespace``}.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 data.stream.namespace
 
@@ -84,12 +84,13 @@ Generic name describing user-configurable arbitrary grouping to be written to a 
 
 🔘 data.stream.timestamp.field
 
+The Kafka record field to use as the timestamp for the ``@timestamp`` field in documents sent to a data stream.
  All documents sent to a data stream needs an ``@timestamp`` field with values of type ``date`` or ``data_nanos``. Otherwise, the document will not be sent. If multiple fields are provided, the first field listed that also appears in the record will be used. If this configuration is left empty, all of the documents will use the Kafka record timestamp as the ``@timestamp`` field value. Note that ``@timestamp`` still needs to be explicitly listed if records already contain this field. This configuration can only be set if ``data.stream.type`` and ``data.stream.dataset`` are set.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The Kafka record field to use as the timestamp for the ``@timestamp`` field in documents sent to a data stream.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 batch.size
 
@@ -240,21 +241,21 @@ Defines how map entries with string keys within record values should be written 
 
 🔘 topic.key.ignore
 
+List of topics for which ``key.ignore`` should be ``true``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for which ``key.ignore`` should be ``true``.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topic.schema.ignore
 
+List of topics for which ``schema.ignore`` should be ``true``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for which ``schema.ignore`` should be ``true``.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 drop.invalid.message
 
@@ -285,12 +286,12 @@ How to handle records that Elasticsearch rejects due to some malformation of the
 
 🔘 external.version.header
 
+Header name to pull value for external versioning, defaults to using the kafka record offset.  Must have a numeric value.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Header name to pull value for external versioning, defaults to using the kafka record offset.  Must have a numeric value.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 write.method
 
@@ -318,12 +319,12 @@ Proxy
 ==========================
 🔘 proxy.host
 
+The address of the proxy host to connect through. Supports the basic authentication scheme only.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The address of the proxy host to connect through. Supports the basic authentication scheme only.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxy.port
 
@@ -336,12 +337,12 @@ The port of the proxy host to connect through.
 
 🔘 proxy.username
 
+The username for the proxy host.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username for the proxy host.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxy.password
 
@@ -483,12 +484,12 @@ The file format of the trust store file. The values currently supported by the d
 
 🔘 elastic.https.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 elastic.https.ssl.endpoint.identification.algorithm
 

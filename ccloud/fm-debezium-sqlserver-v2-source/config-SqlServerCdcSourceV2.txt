@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,30 +33,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -90,90 +90,90 @@ Fetch sensitive configuration values from a secret manager.
 
 🔘 provider.integration.id
 
+Select an existing integration that has access to your resource.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing integration that has access to your resource.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Secret manager configuration
 ==========================
 🔘 secret.manager
 
+Select the secret manager to use for retrieving sensitive data.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the secret manager to use for retrieving sensitive data.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.managed.configs
 
+Select the configurations to fetch their values from the secret manager.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Select the configurations to fetch their values from the secret manager.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.provider.integration.id
 
+Select an existing provider integration that has access to your secret manager.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing provider integration that has access to your secret manager.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 How should we connect to your database?
 ==========================
 🔘 database.hostname
 
+IP address or hostname of the SQL Server database server.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: IP address or hostname of the SQL Server database server.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.port
 
+Port number of the SQL Server database server.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Port number of the SQL Server database server.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.user
 
+The name of the SQL Server database user that has the required authorization.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the SQL Server database user that has the required authorization.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 database.password
 
+The password for the SQL Server database user that has the required authorization.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for the SQL Server database user that has the required authorization.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 database.names
 
+The comma-separated list of the SQL Server database names from which to stream the changes.
 
-
-	 - Type: true
-	 - Default: LIST
-	 - Importance: The comma-separated list of the SQL Server database names from which to stream the changes.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.encrypt
 
@@ -198,12 +198,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Output messages
@@ -228,12 +228,12 @@ Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOB
 
 🔘 output.delegate.format
 
+Sets the delegate value format used by the BYTES output (``io.debezium.converters.BinaryDataConverter``) to serialize structured records that are not raw byte payloads, such as heartbeats, transaction-metadata markers, and schema-change events (where the connector publishes them). Required and applicable only when ``output.data.format`` is set to BYTES. Valid entries are AVRO, JSON_SR, or JSON. You need to have Confluent Cloud Schema Registry configured if using a schema-based delegate format like AVRO and JSON_SR. Note that the delegate format currently does not support PROTOBUF.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Sets the delegate value format used by the BYTES output (``io.debezium.converters.BinaryDataConverter``) to serialize structured records that are not raw byte payloads, such as heartbeats, transaction-metadata markers, and schema-change events (where the connector publishes them). Required and applicable only when ``output.data.format`` is set to BYTES. Valid entries are AVRO, JSON_SR, or JSON. You need to have Confluent Cloud Schema Registry configured if using a schema-based delegate format like AVRO and JSON_SR. Note that the delegate format currently does not support PROTOBUF.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 after.state.only
 
@@ -267,12 +267,12 @@ How should we name your topic(s)?
 ==========================
 🔘 topic.prefix
 
+Topic prefix that provides a namespace (logical server name) for the particular SQL Server database server or cluster in which Debezium is capturing changes. The prefix should be unique across all other connectors, since it is used as a topic name prefix for all Kafka topics that receive records from this connector. Only alphanumeric characters, hyphens, dots and underscores must be used. The connector automatically creates Kafka topics using the naming convention: `<topic.prefix>.<databaseName>.<schemaName>.<tableName>`.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Topic prefix that provides a namespace (logical server name) for the particular SQL Server database server or cluster in which Debezium is capturing changes. The prefix should be unique across all other connectors, since it is used as a topic name prefix for all Kafka topics that receive records from this connector. Only alphanumeric characters, hyphens, dots and underscores must be used. The connector automatically creates Kafka topics using the naming convention: `<topic.prefix>.<databaseName>.<schemaName>.<tableName>`.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 schema.history.internal.kafka.topic
 
@@ -330,12 +330,12 @@ Database config
 ==========================
 🔘 signal.data.collection
 
+Fully-qualified name of the data collection that needs to be used to send signals to the connector. Use the following format to specify the fully-qualified collection name: `databaseName.schemaName.tableName`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Fully-qualified name of the data collection that needs to be used to send signals to the connector. Use the following format to specify the fully-qualified collection name: `databaseName.schemaName.tableName`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Connector config
@@ -369,21 +369,23 @@ A mode to control which transaction isolation level is used and how long the con
 
 🔘 table.include.list
 
+An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you want to capture. When this property is set, the connector captures changes only from the specified tables. Each identifier is of the form `schemaName.tableName`. By default, the connector captures changes in every non-system table in each schema whose changes are being captured. 
 To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you want to capture. When this property is set, the connector captures changes only from the specified tables. Each identifier is of the form `schemaName.tableName`. By default, the connector captures changes in every non-system table in each schema whose changes are being captured. 
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.exclude.list
 
+An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you do not want to capture. Each identifier is of the form `schemaName.tableName`. When this property is set, the connector captures changes from every table that you do not specify. 
 To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you do not want to capture. Each identifier is of the form `schemaName.tableName`. When this property is set, the connector captures changes from every table that you do not specify. 
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 event.processing.failure.handling.mode
 
@@ -396,12 +398,13 @@ Specifies how the connector should react to exceptions during processing of even
 
 🔘 column.exclude.list
 
+An optional, comma-separated list of regular expressions that match the fully-qualified names of columns to exclude from change event record values. Fully-qualified names for columns are of the form `schemaName.tableName.columnName`. 
 To match the name of a column, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire name string of the column; it does not match substrings that might be present in a column name.
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: An optional, comma-separated list of regular expressions that match the fully-qualified names of columns to exclude from change event record values. Fully-qualified names for columns are of the form `schemaName.tableName.columnName`. 
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 schema.name.adjustment.mode
 
@@ -432,21 +435,23 @@ Controls how frequently the connector sends heartbeat messages to a Kafka topic.
 
 🔘 snapshot.select.statement.overrides.data.map
 
+A JSON object that maps fully-qualified table identifiers (``schemaName.tableName``) to custom SELECT statements. The connector uses these statements during snapshots instead of the default SELECT * statement. Use this property for large append-only tables to resume a snapshot from a specific point if a previous attempt was interrupted. These values are sensitive and are masked in the configuration. 
 Note the following: 
 
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: A JSON object that maps fully-qualified table identifiers (``schemaName.tableName``) to custom SELECT statements. The connector uses these statements during snapshots instead of the default SELECT * statement. Use this property for large append-only tables to resume a snapshot from a specific point if a previous attempt was interrupted. These values are sensitive and are masked in the configuration. 
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 heartbeat.action.query
 
+If specified, the connector executes this query on every heartbeat against the source database. The query must be a valid SQL DML statement, typically an ``INSERT`` or ``UPDATE``, that targets a dedicated heartbeat table. 
 This configuration helps in scenarios where the connector is capturing changes only from low-traffic database tables. Extended periods of inactivity in these tables can prevent the connector from advancing the LSN position in its stored offsets. To address this, create a heartbeat table in the database, and set this property to a DML statement that periodically updates the table by either inserting a new row or repeatedly updating the same row. Additionally, enable CDC on the heartbeat table and include the heartbeat table in the connector's capture set using the schema or table include configuration properties. This ensures the connector receives changes from the heartbeat table and can continue advancing the LSN in its stored offsets. The heartbeat query executes at regular intervals, as specified by the ``heartbeat.interval.ms`` configuration property. 
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If specified, the connector executes this query on every heartbeat against the source database. The query must be a valid SQL DML statement, typically an ``INSERT`` or ``UPDATE``, that targets a dedicated heartbeat table. 
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 schema.history.internal.skip.unparseable.ddl
 
@@ -513,33 +518,34 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks that the connector can use to capture data from the database instance. If the database.names list contains more than one element, you can increase the value of this property to a number less than or equal to the number of elements in the list.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: Maximum number of tasks that the connector can use to capture data from the database instance. If the database.names list contains more than one element, you can increase the value of this property to a number less than or equal to the number of elements in the list.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Additional Configs
 ==========================
 🔘 message.key.columns
 
+A semicolon-separated list of expressions that match fully-qualified tables and column(s) to be used as message key. Each expression must match the pattern '<fully-qualified table name>:<key columns>', where the fully qualified table name could be defined as <schemaName>.<tableName> and the key columns are a comma-separated list of columns representing the custom key. For any table without an explicit key configuration the table's primary key column(s) will be used as message key. Example: ``dbserver1.inventory.orderlines:orderId,orderLineId;dbserver1.inventory.orders:id``
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A semicolon-separated list of expressions that match fully-qualified tables and column(s) to be used as message key. Each expression must match the pattern '<fully-qualified table name>:<key columns>', where the fully qualified table name could be defined as <schemaName>.<tableName> and the key columns are a comma-separated list of columns representing the custom key. For any table without an explicit key configuration the table's primary key column(s) will be used as message key. Example: ``dbserver1.inventory.orderlines:orderId,orderLineId;dbserver1.inventory.orders:id``
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 signal.enabled.channels
 
+A comma-separated list of channel names that are enabled for the connector. If not set, the connector enables only the ``source`` channel by default. Supported values are: 
 ``source`` (default): Signals are read from a signaling table in the source database. 
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of channel names that are enabled for the connector. If not set, the connector enables only the ``source`` channel by default. Supported values are: 
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topic.heartbeat.prefix
 
@@ -606,30 +612,30 @@ Detect schema change during an incremental snapshot and re-select a current chun
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -651,12 +657,12 @@ Include schemas within each of the serialized values. Input messages must contai
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -696,12 +702,12 @@ The maximum number of rows that the connector fetches and reads into memory duri
 
 🔘 value.converter.delegate.converter.type.schemas.enable
 
+Include schemas within each serialized values. Input messages must contain ``schema`` and ``payload`` fields and may not contain additional fields. For plain JSON data, set this property to ``false``. Applicable only for the JSON Converter.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Include schemas within each serialized values. Input messages must contain ``schema`` and ``payload`` fields and may not contain additional fields. For plain JSON data, set this property to ``false``. Applicable only for the JSON Converter.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 snapshot.delay.ms
 
@@ -732,48 +738,48 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 🔘 schema.exclude.list
 
+A comma-separated list of regular expressions that match names of schemas for which you do not want to capture changes. Any schema whose name is not included in schema.exclude.list has its changes captured, with the exception of system schemas.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match names of schemas for which you do not want to capture changes. Any schema whose name is not included in schema.exclude.list has its changes captured, with the exception of system schemas.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 snapshot.include.collection.list
 
+A comma-separated list of regular expressions that match the fully-qualified names (<dbName>.<schemaName>.<tableName>) of the tables to include in a snapshot. If not explicitly set, the connector defaults to snapshotting all tables listed in table.include.list. The specified items must be named in the connector’s table.include.list property. This property takes effect only if the connector’s snapshot.mode property is set to a value other than never.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names (<dbName>.<schemaName>.<tableName>) of the tables to include in a snapshot. If not explicitly set, the connector defaults to snapshotting all tables listed in table.include.list. The specified items must be named in the connector’s table.include.list property. This property takes effect only if the connector’s snapshot.mode property is set to a value other than never.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 notification.enabled.channels
 
+List of notification channels names that are enabled. The following channels are available: ``log`` and ``sink``. When ``sink`` is enabled, the connector sends notifications to a topic specified by the ``notification.sink.topic.name`` property.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of notification channels names that are enabled. The following channels are available: ``log`` and ``sink``. When ``sink`` is enabled, the connector sends notifications to a topic specified by the ``notification.sink.topic.name`` property.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 schema.history.internal.kafka.recovery.poll.interval.ms
 
@@ -786,21 +792,21 @@ The number of milliseconds to wait while polling for persisted data during recov
 
 🔘 notification.sink.topic.name
 
+The name of the topic for the notifications. This is required in case ``sink`` is in the list of enabled channels. If you set this name so that it starts with your topic prefix followed by a period, the topic uses the same partition, retention, and cleanup settings as your other topics with that prefix; otherwise it is created with a single partition.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic for the notifications. This is required in case ``sink`` is in the list of enabled channels. If you set this name so that it starts with your topic prefix followed by a period, the topic uses the same partition, retention, and cleanup settings as your other topics with that prefix; otherwise it is created with a single partition.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 max.iteration.transactions
 
@@ -822,12 +828,12 @@ Enable to skip publishing messages when there is no change in included columns. 
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 streaming.delay.ms
 
@@ -840,12 +846,12 @@ A delay period after the snapshot is completed and the streaming begins, given i
 
 🔘 schema.include.list
 
+A comma-separated list of regular expressions that match names of schemas for which you want to capture changes. Any schema name not included in schema.include.list is excluded from having its changes captured. By default, all non-system schemas have their changes captured.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match names of schemas for which you want to capture changes. Any schema name not included in schema.include.list is excluded from having its changes captured. By default, all non-system schemas have their changes captured.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.decimal.format
 
@@ -858,21 +864,21 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 producer.override.linger.ms
 
+The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
-	 - Required: LOW
+	 - Type: LONG
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 poll.interval.ms
 
@@ -885,30 +891,30 @@ Time to wait for new change events to appear after receiving no events, given in
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 datatype.propagate.source.type
 
+A comma-separated list of regular expressions matching the database-specific data type names that adds the data type's original type and original length as parameters to the corresponding field schemas in the emitted change records. When this property is set, the connector adds the following fields to the schema of event records with prefix ``__debezium.source.column``. These parameters propagate a column’s original type name and length (for variable-width types), respectively. Include '.*' to match all data types.'
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions matching the database-specific data type names that adds the data type's original type and original length as parameters to the corresponding field schemas in the emitted change records. When this property is set, the connector adds the following fields to the schema of event records with prefix ``__debezium.source.column``. These parameters propagate a column’s original type name and length (for variable-width types), respectively. Include '.*' to match all data types.'
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 driver.sendTimeAsDatetime
 
@@ -939,66 +945,66 @@ Specify the strategy used for watermarking during an incremental snapshot: 'INSE
 
 🔘 signal.kafka.topic
 
+The name of the Kafka topic that the connector monitors for ad hoc signals. Note that you can currently send signal messages to this topic via the Confluent CLI. Note that `signal.kafka.topic` must have exactly 1 partition as the connector's signal consumer reads only from `partition-0`. Any signal messages routed to other partitions are silently ignored in a multi-partition topic.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topic that the connector monitors for ad hoc signals. Note that you can currently send signal messages to this topic via the Confluent CLI. Note that `signal.kafka.topic` must have exactly 1 partition as the connector's signal consumer reads only from `partition-0`. Any signal messages routed to other partitions are silently ignored in a multi-partition topic.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 column.include.list
 
+A comma-separated list of regular expressions that match the fully-qualified names of columns that should be included in change event record values. Fully-qualified names for columns are of the form schemaName.tableName.columnName. Do not set ``column.exclude.list`` if you set this property.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of columns that should be included in change event record values. Fully-qualified names for columns are of the form schemaName.tableName.columnName. Do not set ``column.exclude.list`` if you set this property.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 column.propagate.source.type
 
+A comma-separated list of regular expressions matching fully-qualified names of columns that adds the column’s original type and original length as parameters to the corresponding field schemas in the emitted change records. When this property is set, the connector adds the following fields to the schema of event records with prefix ``__debezium.source.column``. These parameters propagate a column’s original type name and length (for variable-width types), respectively. Include '.*' to match all column types.'
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions matching fully-qualified names of columns that adds the column’s original type and original length as parameters to the corresponding field schemas in the emitted change records. When this property is set, the connector adds the following fields to the schema of event records with prefix ``__debezium.source.column``. These parameters propagate a column’s original type name and length (for variable-width types), respectively. Include '.*' to match all column types.'
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 skipped.operations
 
@@ -1011,12 +1017,12 @@ The comma-separated list of operations to skip during streaming, defined as: 'c'
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -1047,12 +1053,12 @@ Determines whether the connector generates events with transaction boundaries an
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -1083,12 +1089,12 @@ Controls whether to use the RECOMPILE query hint for incremental snapshot querie
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -1101,21 +1107,21 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.scrub.invalid.names
 
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topic.transaction
 
@@ -1143,10 +1149,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

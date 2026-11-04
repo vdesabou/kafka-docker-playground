@@ -111,21 +111,21 @@ Proxy Configuration
 ==========================
 🔘 aws.lambda.proxy.url
 
+HTTPS Proxy Server URL. This property is meant to be used only if you need to access SQS through an HTTPS proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTPS Proxy Server URL. This property is meant to be used only if you need to access SQS through an HTTPS proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 aws.lambda.proxy.user
 
+HTTPS Proxy User. This property is meant to be used only if you need to access SQS through a proxy. Using ``aws.lambda.proxy.user`` instead of embedding the username and password in ``aws.lambda.proxy.url`` allows the password to be hidden in the logs.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTPS Proxy User. This property is meant to be used only if you need to access SQS through a proxy. Using ``aws.lambda.proxy.user`` instead of embedding the username and password in ``aws.lambda.proxy.url`` allows the password to be hidden in the logs.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 aws.lambda.proxy.password
 
@@ -141,36 +141,36 @@ reporter.result.topic.name
 ==========================
 🔘 ${connector}-success
 
+The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.result.topic.replication.factor
 ==========================
 🔘 3
 
+The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
-
-	 - Type: false
-	 - Default: SHORT
-	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
-	 - Required: MEDIUM
+	 - Type: SHORT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.result.topic.partitions
 ==========================
 🔘 1
 
+The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
-	 - Required: MEDIUM
+	 - Type: INT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Formatter
@@ -243,36 +243,36 @@ reporter.error.topic.name
 ==========================
 🔘 ${connector}-error
 
+The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.error.topic.replication.factor
 ==========================
 🔘 3
 
+The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
-
-	 - Type: false
-	 - Default: SHORT
-	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
-	 - Required: MEDIUM
+	 - Type: SHORT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 reporter.error.topic.partitions
 ==========================
 🔘 1
 
+The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
-	 - Required: MEDIUM
+	 - Type: INT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Formatter

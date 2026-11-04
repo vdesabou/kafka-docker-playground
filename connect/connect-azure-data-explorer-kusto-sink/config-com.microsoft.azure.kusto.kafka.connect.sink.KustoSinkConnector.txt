@@ -144,21 +144,21 @@ Behavior on error setting for ingestion of records into Kusto table. Must be con
 
 🔘 misc.deadletterqueue.bootstrap.servers
 
+Configure this list to Kafka broker's address(es) to which the Connector should write records failed due to restrictions while writing to the file in `tempdir.path`, network interruptions or unavailability of Kusto cluster. This list should be in the form host-1:port-1,host-2:port-2,…host-n:port-n.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Configure this list to Kafka broker's address(es) to which the Connector should write records failed due to restrictions while writing to the file in `tempdir.path`, network interruptions or unavailability of Kusto cluster. This list should be in the form host-1:port-1,host-2:port-2,…host-n:port-n.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 misc.deadletterqueue.topic.name
 
+Set this to the Kafka topic's name to which the Connector should write records failed due to restrictions while writing to the file in `tempdir.path`, network interruptions or unavailability of Kusto cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Set this to the Kafka topic's name to which the Connector should write records failed due to restrictions while writing to the file in `tempdir.path`, network interruptions or unavailability of Kusto cluster.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.retry.max.time.ms
 

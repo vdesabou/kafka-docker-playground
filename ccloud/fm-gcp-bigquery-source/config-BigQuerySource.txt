@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,30 +33,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -84,12 +84,12 @@ How do you want to prefix table names?
 ==========================
 🔘 topic.prefix
 
+Prefix to prepend to table names to generate the name of the Apache Kafka® topic to publish data to.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Prefix to prepend to table names to generate the name of the Apache Kafka® topic to publish data to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 How should we configure the topic(s)?
@@ -138,12 +138,12 @@ GCP credentials
 ==========================
 🔘 provider.integration.id
 
+Select an existing integration that has access to your resource. In case you need to integrate a new Google Service Account, use provider integration
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new Google Service Account, use provider integration
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 authentication.method
 
@@ -156,54 +156,54 @@ Select how you want to authenticate with BigQuery.
 
 🔘 bigquery.credentials.json
 
+GCP service account JSON file with read permissions for BigQuery.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: GCP service account JSON file with read permissions for BigQuery.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 How should we connect to your BigQuery project?
 ==========================
 🔘 catalog.pattern
 
+The ID of the GCP project containing the BigQuery dataset to read from.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The ID of the GCP project containing the BigQuery dataset to read from.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 schema.pattern
 
+The BigQuery dataset to read tables from.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The BigQuery dataset to read tables from.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Connector Details
 ==========================
 🔘 table.include.list
 
+A comma-separated list of regular expressions that match the fully-qualified names of tables to copy, in the form ``project.dataset.table``. For example, ``my-project.my_dataset.orders,my-project.my_dataset.customer.*``. Only tables in the project and dataset selected above are considered. Table names are case sensitive. Not required if a custom Query Config is provided instead. To copy every table in the dataset, set this to ``.*`` explicitly.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to copy, in the form ``project.dataset.table``. For example, ``my-project.my_dataset.orders,my-project.my_dataset.customer.*``. Only tables in the project and dataset selected above are considered. Table names are case sensitive. Not required if a custom Query Config is provided instead. To copy every table in the dataset, set this to ``.*`` explicitly.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 table.exclude.list
 
+A comma-separated list of regular expressions that match the fully-qualified names of tables not to copy, in the form ``project.dataset.table``. For example, ``my-project.my_dataset.orders_archive,my-project.my_dataset.tmp_.*``. This only applies to the tables filtered using the include list. Table names are case sensitive.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables not to copy, in the form ``project.dataset.table``. For example, ``my-project.my_dataset.orders_archive,my-project.my_dataset.tmp_.*``. This only applies to the tables filtered using the include list. Table names are case sensitive.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 mode
 
@@ -216,48 +216,48 @@ The mode for updating a table each time it is polled. ``bulk`` performs a bulk l
 
 🔘 timestamp.columns.mapping
 
+A comma-separated list of fully-qualified table name to timestamp columns mappings. When you specify multiple timestamp columns, the connector uses the ``COALESCE`` SQL function to determine the effective timestamp for a row. Use the format ``table1:[col1|col2],table2:[col3]``, where table1/table2 can also be a pattern (regular expression) matched against the fully-qualified table names.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of fully-qualified table name to timestamp columns mappings. When you specify multiple timestamp columns, the connector uses the ``COALESCE`` SQL function to determine the effective timestamp for a row. Use the format ``table1:[col1|col2],table2:[col3]``, where table1/table2 can also be a pattern (regular expression) matched against the fully-qualified table names.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 incrementing.column.mapping
 
+A comma-separated list of fully-qualified table name to incrementing column mappings. Use the format ``table1:col1,table2:col2``, where table1/table2 can also be a pattern (regular expression) matched against the fully-qualified table names.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of fully-qualified table name to incrementing column mappings. Use the format ``table1:col1,table2:col2``, where table1/table2 can also be a pattern (regular expression) matched against the fully-qualified table names.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 query
 
+If specified, the connector uses this custom SQL query instead of Tables Included/Tables Excluded to select rows, allowing joins or a subset of columns. Only SELECT statements are supported; don't add a WHERE/ORDER BY/GROUP BY clause in incremental modes, since the connector appends those itself. STRUCT/ARRAY columns fall back to JSON strings in this mode, since their real nested schema can't be resolved without a table name.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: If specified, the connector uses this custom SQL query instead of Tables Included/Tables Excluded to select rows, allowing joins or a subset of columns. Only SELECT statements are supported; don't add a WHERE/ORDER BY/GROUP BY clause in incremental modes, since the connector appends those itself. STRUCT/ARRAY columns fall back to JSON strings in this mode, since their real nested schema can't be resolved without a table name.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.column.name
 
+Comma-separated timestamp column(s) used for incremental polling when a Custom Query is set. Use this instead of the table-to-timestamp mappings in custom query mode, since there is no table to match. When you specify multiple columns, the connector uses ``COALESCE`` to determine the effective timestamp.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Comma-separated timestamp column(s) used for incremental polling when a Custom Query is set. Use this instead of the table-to-timestamp mappings in custom query mode, since there is no table to match. When you specify multiple columns, the connector uses ``COALESCE`` to determine the effective timestamp.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 incrementing.column.name
 
+Incrementing column used for incremental polling when a Custom Query is set. Use this instead of the table-to-incrementing mappings in custom query mode, since there is no table to match.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Incrementing column used for incremental polling when a Custom Query is set. Use this instead of the table-to-incrementing mappings in custom query mode, since there is no table to match.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.granularity
 
@@ -297,12 +297,12 @@ Isolation level determines how transaction integrity is visible to other users a
 
 🔘 timestamp.initial
 
+The epoch timestamp used for initial queries that use timestamp criteria. Set to ``-1`` to use the current time as the initial timestamp. If not specified, the connector retrieves all data.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The epoch timestamp used for initial queries that use timestamp criteria. Set to ``-1`` to use the current time as the initial timestamp. If not specified, the connector retrieves all data.
-	 - Required: MEDIUM
+	 - Type: LONG
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.delay.interval.ms
 
@@ -381,21 +381,21 @@ Row count above which the driver switches from REST to the Storage Read API. Onl
 
 🔘 bigquery.query.location
 
+The location where BigQuery runs query jobs. BigQuery determines this automatically if you leave it blank.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The location where BigQuery runs query jobs. BigQuery determines this automatically if you leave it blank.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 bigquery.query.labels
 
+Labels attached to query jobs for cost attribution, as a comma-separated list of ``key=value`` pairs, for example ``team=data-eng,env=prod``. None by default.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Labels attached to query jobs for cost attribution, as a comma-separated list of ``key=value`` pairs, for example ``team=data-eng,env=prod``. None by default.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 bigquery.query.use.cache
 
@@ -465,12 +465,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Output messages
@@ -498,12 +498,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -519,30 +519,30 @@ Whether to replace fields that have a default value and that are null to the def
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -564,12 +564,12 @@ Include schemas within each of the serialized values. Input messages must contai
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -591,39 +591,39 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.decimal.format
 
@@ -636,39 +636,39 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 producer.override.linger.ms
 
+The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
-	 - Required: LOW
+	 - Type: LONG
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.serializer
 
@@ -681,12 +681,12 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.schemas.enable
 
@@ -699,39 +699,39 @@ Include schemas within each of the serialized keys. Input message keys must cont
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.replace.null.with.default
 
@@ -753,12 +753,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -780,12 +780,12 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -798,21 +798,21 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.scrub.invalid.names
 
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -831,10 +831,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 

@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,30 +33,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
@@ -81,24 +81,24 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Which topic do you want to send data to?
 ==========================
 🔘 kafka.topic
 
+Identifies the topic name to write the data to.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Identifies the topic name to write the data to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Schema Config
@@ -129,39 +129,39 @@ ServiceNow details
 ==========================
 🔘 servicenow.url
 
+ServiceNow Instance URL.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: ServiceNow Instance URL.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 servicenow.table
 
+ServiceNow table name.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: ServiceNow table name.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 servicenow.user
 
+ServiceNow basic authentication username.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: ServiceNow basic authentication username.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 servicenow.password
 
+ServiceNow basic authentication password.
 
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: ServiceNow basic authentication password.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 connection.timeout.ms
 
@@ -204,33 +204,33 @@ Maximum number of rows to include in a single batch when polling for new data. T
 
 🔘 servicenow.since
 
+Time to start fetching all updates/creation. Default uses the time connector launched. Note that the time is in UTC and has required format: yyyy-MM-dd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Time to start fetching all updates/creation. Default uses the time connector launched. Note that the time is in UTC and has required format: yyyy-MM-dd.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 servicenow.view.variable.prefix
 
+Prefix to be used for Service Now Database Views for timestamp and id columns. The prefix will be pre-appended to the columns `sys_updated_on` and `sys_id` i.e. `{servicenow.view.variable.prefix}_sys_updated_on` and `{servicenow.view.variable.prefix}_sys_id` to support sourcing data from views with prefix on these columns.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix to be used for Service Now Database Views for timestamp and id columns. The prefix will be pre-appended to the columns `sys_updated_on` and `sys_id` i.e. `{servicenow.view.variable.prefix}_sys_updated_on` and `{servicenow.view.variable.prefix}_sys_id` to support sourcing data from views with prefix on these columns.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Additional Configs
@@ -291,12 +291,12 @@ Use this property if you would like to configure the connector's error handling 
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -351,10 +351,10 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
