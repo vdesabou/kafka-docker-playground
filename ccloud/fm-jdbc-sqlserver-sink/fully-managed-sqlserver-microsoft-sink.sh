@@ -128,10 +128,10 @@ playground topic produce -t sqlserver_table --nb-messages 1 --forced-value '{"id
 }
 EOF
 
-sleep 5
+playground db wait-for-rows --table sqlserver_table --min-expected-rows 2
 
 log "Show content of sqlserver_table table:"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+playground db sql > /tmp/result.log  2>&1 <<-EOF
 select * from sqlserver_table
 GO
 EOF

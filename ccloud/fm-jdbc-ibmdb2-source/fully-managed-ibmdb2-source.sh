@@ -53,17 +53,13 @@ do
   sleep 5
 done
 
-docker exec -i ibmdb2 bash << EOF
-su - db2inst1
-db2 connect to testdb user db2inst1 using passw0rd
-db2 -x "CREATE TABLE CUSTOMERS(ID INT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) NOT NULL,FIRST_NAME VARCHAR(50),LAST_NAME VARCHAR(50),EMAIL VARCHAR(50),GENDER VARCHAR(50),CLUB_STATUS VARCHAR(20),COMMENTS VARCHAR(90),CREATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,UPDATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,PRIMARY KEY(ID))"
-db2 -x "CREATE TRIGGER T_CUSTOMERS_UPDATE_TS NO CASCADE BEFORE UPDATE ON CUSTOMERS REFERENCING NEW AS N FOR EACH ROW MODE DB2SQL SET N.UPDATE_TS = CURRENT TIMESTAMP"
+playground db sql --database testdb << EOF
+CREATE TABLE CUSTOMERS(ID INT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) NOT NULL,FIRST_NAME VARCHAR(50),LAST_NAME VARCHAR(50),EMAIL VARCHAR(50),GENDER VARCHAR(50),CLUB_STATUS VARCHAR(20),COMMENTS VARCHAR(90),CREATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,UPDATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,PRIMARY KEY(ID));
+CREATE TRIGGER T_CUSTOMERS_UPDATE_TS NO CASCADE BEFORE UPDATE ON CUSTOMERS REFERENCING NEW AS N FOR EACH ROW MODE DB2SQL SET N.UPDATE_TS = CURRENT TIMESTAMP;
 EOF
 
-docker exec -i ibmdb2 bash << EOF
-su - db2inst1
-db2 connect to testdb user db2inst1 using passw0rd
-db2 describe table CUSTOMERS
+playground db sql --database testdb << EOF
+describe table CUSTOMERS;
 EOF
 
 # Column name                     schema    Data type name      Length     Scale Nulls
@@ -78,17 +74,15 @@ EOF
 # CREATE_TS                       SYSIBM    TIMESTAMP                   10     6 No    
 # UPDATE_TS                       SYSIBM    TIMESTAMP                   10     6 No   
 
-docker exec -i ibmdb2 bash << EOF
-su - db2inst1
-db2 connect to testdb user db2inst1 using passw0rd
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy')"
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface')"
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability')"
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Hashim', 'Rumke', 'hrumke3@sohu.com', 'Male', 'platinum', 'Self-enabling 24/7 firmware')"
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach')"
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Robinet', 'Leheude', 'rleheude5@reddit.com', 'Female', 'platinum', 'Virtual upward-trending definition')"
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Fay', 'Huc', 'fhuc6@quantcast.com', 'Female', 'bronze', 'Operative composite capacity')"
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Patti', 'Rosten', 'prosten7@ihg.com', 'Female', 'silver', 'Integrated bandwidth-monitored instruction set')"
+playground db sql --database testdb << EOF
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability');
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Hashim', 'Rumke', 'hrumke3@sohu.com', 'Male', 'platinum', 'Self-enabling 24/7 firmware');
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach');
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Robinet', 'Leheude', 'rleheude5@reddit.com', 'Female', 'platinum', 'Virtual upward-trending definition');
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Fay', 'Huc', 'fhuc6@quantcast.com', 'Female', 'bronze', 'Operative composite capacity');
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Patti', 'Rosten', 'prosten7@ihg.com', 'Female', 'silver', 'Integrated bandwidth-monitored instruction set');
 EOF
 
 connector_name="IbmDb2Source_$USER"
@@ -124,10 +118,8 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 5
 
-docker exec -i ibmdb2 bash << EOF
-su - db2inst1
-db2 connect to testdb user db2inst1 using passw0rd
-db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Romy', 'Mitchell', 'rmitchell0@rambler.db', 'Female', 'bronze', 'new inserted record')"
+playground db sql --database testdb << EOF
+INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Romy', 'Mitchell', 'rmitchell0@rambler.db', 'Female', 'bronze', 'new inserted record');
 EOF
 
 sleep 5

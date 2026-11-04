@@ -46,5 +46,5 @@ playground run -f fully-managed-jdbc-oracle19-sink.sh
 2. Starts Oracle and Ngrok, waits for the database to be ready and creates user `C##MYUSER`.
 3. Produces 2 Avro records to topic `ORDERS`.
 4. Creates the `OracleDatabaseSink` fully managed connector (`auto.create`, `auto.evolve`, `ssl.mode` disabled).
-5. Queries table `ORDERS` with `sqlplus` and checks that the `foo` record is present.
+5. Waits for the 2 rows with `playground db wait-for-rows`, then queries table `ORDERS` with `playground db sql` (`sqlplus`) and checks that the `foo` record is present.
 6. Asks before deleting the connector.

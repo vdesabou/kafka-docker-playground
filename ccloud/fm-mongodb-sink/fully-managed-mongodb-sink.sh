@@ -52,12 +52,12 @@ done
 
 
 log "Initialize MongoDB replica set"
-docker exec -i mongodb mongosh --eval 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
+playground db sql --sql 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
 
 sleep 5
 
 log "Create a user profile"
-docker exec -i mongodb mongosh << EOF
+playground db sql << EOF
 use admin
 db.createUser(
 {
@@ -148,20 +148,12 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 10
+playground db wait-for-rows --database inventory --table customers --min-expected-rows 2
 
 log "View record"
-docker exec -i mongodb mongosh << EOF
-use inventory
-db.customers.find().pretty();
-EOF
-
-docker exec -i mongodb mongosh << EOF > output.txt
-use inventory
-db.customers.find().pretty();
-EOF
-grep "foo" output.txt
-rm output.txt
+playground db sql --database inventory --sql "db.customers.find().pretty();" > /tmp/result.log  2>&1
+cat /tmp/result.log
+grep "foo" /tmp/result.log
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

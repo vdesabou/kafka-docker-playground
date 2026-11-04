@@ -95,7 +95,7 @@ log "Waiting for SQL Server to be ready"
 set +e
 while true
 do
-  docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! -Q "SELECT 1" > /dev/null 2>&1
+  playground db sql --sql "SELECT 1" > /dev/null 2>&1
   if [ $? -eq 0 ]; then
     log "SQL Server is ready"
     break
@@ -106,7 +106,7 @@ done
 set -e
 
 log "Create table"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
+playground db sql << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -164,7 +164,7 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
+playground db sql << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO

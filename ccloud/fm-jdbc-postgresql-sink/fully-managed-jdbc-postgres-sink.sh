@@ -133,11 +133,10 @@ playground topic produce -t myproducts --nb-messages 1 --forced-value '{"id":2,"
 }
 EOF
 
-sleep 5
-
+playground db wait-for-rows --table MYPRODUCTS --min-expected-rows 2
 
 log "Show content of MYPRODUCTS table:"
-docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM MYPRODUCTS'" > /tmp/result.log  2>&1
+playground db sql --sql "SELECT * FROM MYPRODUCTS" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

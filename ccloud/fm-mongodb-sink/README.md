@@ -36,5 +36,5 @@ playground run -f fully-managed-mongodb-sink.sh
 2. Starts MongoDB, mongo-express and Ngrok, initializes the replica set and creates user `myuser`.
 3. Produces 2 Avro records to `mongodb.orders`.
 4. Creates the `MongoDbAtlasSink` fully managed connector with `mongodb.instance.type` `MONGODB_SELF_MANAGED`, pointing to the Ngrok address.
-5. Queries `inventory.customers` with `mongosh` and checks that the `foo` record is present.
+5. Waits for the 2 documents with `playground db wait-for-rows`, then queries `inventory.customers` with `playground db sql` (`mongosh`) and checks that the `foo` record is present.
 6. Asks before deleting the connector.

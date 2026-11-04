@@ -56,7 +56,7 @@ done
 
 
 log "Create table"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground db sql --database mydb << EOF
 USE mydb;
 
 CREATE TABLE CUSTOMERS (
@@ -79,7 +79,7 @@ select * from CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground db sql --database mydb << EOF
 USE mydb;
 
 INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
