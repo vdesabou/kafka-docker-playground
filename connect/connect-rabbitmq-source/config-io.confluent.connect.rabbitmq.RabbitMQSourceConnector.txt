@@ -472,3 +472,4 @@ How the connector distributes the queues in `rabbitmq.queue` across Connect task
 	 - Importance: LOW
 	 - Required: false
 
+
