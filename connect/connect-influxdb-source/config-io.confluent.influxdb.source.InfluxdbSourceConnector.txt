@@ -100,6 +100,10 @@ Prefix that should be prepended to measurment names to determine the name of the
 🔘 topic.mapper
 
 Configuration to decide how to map topics Supported options are :
+``db``
+   Topic name is Topic Prefix + Database name. All the records from same database go into same topic.
+``measurement`` or ``series``
+   Topic name is Topic Prefix + Measurement name. All the records from same measurement go into same topic.
 
 	 - Type: STRING
 	 - Default: db
@@ -118,6 +122,10 @@ The InfluxDB database name from which record have to be read and publish data to
 🔘 mode
 
 The mode in which measurements in InfluxDB has to be polled. Supported modes are :
+``bulk``
+   performs a bulk load of the entire measurement to desired Apache Kafka topic, each time it is polled.
+``timestamp``
+   uses the timestamp to detect newly created rows and writes them to desired Apache Kafka topic.
 
 	 - Type: STRING
 	 - Default: timestamp
@@ -127,6 +135,8 @@ The mode in which measurements in InfluxDB has to be polled. Supported modes are
 🔘 query
 
 If specified, this query will be executed and the resultant records will be pushed to desired Apache Kafka topic. Use this setting if there's a need to select subset of fields or tags, perform aggregations or filter data.
+In case of mode=bulk, the connector will run the query as-is each time it polls.
+If you use mode=timestamp, the query must contain time > $lastFetchedTimestamp in the where clause. The connector will replace $lastFetchedTimestamp with the appropriate value to fetch new records each time it polls.
 
 	 - Type: STRING
 	 - Default: null
@@ -255,4 +265,5 @@ When set, this is used as the schema for all messages, and the schemas within ea
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
+
 
