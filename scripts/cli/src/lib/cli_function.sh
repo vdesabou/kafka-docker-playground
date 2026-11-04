@@ -9287,12 +9287,18 @@ function run_transactional_copier () {
     log "🐞 CLI command used (in $container)"
     echo "${copier_cmd[*]}"
   fi
+  # container cp: docker cp, or on cfk kubectl cp with a stream fallback (the connect image of cfk has no tar, which
+  # kubectl cp needs: exec: "tar": executable file not found in $PATH)
+  local copy_output
+  if ! copy_output=$(playground container cp --source "$jar" --destination "$container:/tmp/transactional-copier.jar" 2>&1)
+  then
+    logerror "❌ could not copy the transactional copier to $container: $(echo "$copy_output" | grep -v "Copying files" | tail -3)"
+    return 1
+  fi
   if [[ "$environment" == cfk* ]]
   then
-    kubectl -n confluent cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
-    output=$(kubectl -n confluent exec -i "$container" -- "${copier_cmd[@]}" 2>&1) || rc=$?
+    output=$(kubectl -n confluent exec -i "$container" -c connect -- "${copier_cmd[@]}" 2>&1) || rc=$?
   else
-    docker cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
     output=$(docker exec -i "$container" "${copier_cmd[@]}" 2>&1) || rc=$?
   fi
   if [ $rc -ne 0 ] || ! echo "$output" | grep -q -E "^transaction (committed|aborted|left open)"
