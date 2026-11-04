@@ -8185,15 +8185,16 @@ subcommands:
     of the running example, and wait for a\nsink connector to write rows, without
     docker exec and the client command\nline of each database.\n\n  sql             run
     statements (heredoc, --file or --sql) with the database client\n  wait-for-rows
-    \  wait until a table contains N rows\n\nSupported: Oracle (sqlplus), PostgreSQL
-    (psql), MySQL and MariaDB (mysql /\nmariadb), SQL Server (sqlcmd), IBM Db2 (db2)
-    and MongoDB (mongosh).\n\nThe database is the only running container whose image
-    is one of them\n(oracle, postgres, mysql, sqlserver, mongodb, ibmdb2... in the
-    examples):\npass --container when there are several, and --engine when the image
-    name\ndoes not tell which database it is.\n\nThe user, password and database come
-    from the environment variables of the\ncontainer (POSTGRES_USER, MYSQL_ROOT_PASSWORD,
-    SA_PASSWORD, ORACLE_PWD,\nMONGO_INITDB_ROOT_USERNAME, DB2INST1_PASSWORD...), so
-    most examples need no\nflag: pass --user, --password and --database to connect
+    \  wait until a table contains N rows\n  cdc-check       are the CDC prerequisites
+    of the database met? (archivelog, wal_level, binlog...)\n\nSupported: Oracle (sqlplus),
+    PostgreSQL (psql), MySQL and MariaDB (mysql /\nmariadb), SQL Server (sqlcmd),
+    IBM Db2 (db2) and MongoDB (mongosh).\n\nThe database is the only running container
+    whose image is one of them\n(oracle, postgres, mysql, sqlserver, mongodb, ibmdb2...
+    in the examples):\npass --container when there are several, and --engine when
+    the image name\ndoes not tell which database it is.\n\nThe user, password and
+    database come from the environment variables of the\ncontainer (POSTGRES_USER,
+    MYSQL_ROOT_PASSWORD, SA_PASSWORD, ORACLE_PWD,\nMONGO_INITDB_ROOT_USERNAME, DB2INST1_PASSWORD...),
+    so most examples need no\nflag: pass --user, --password and --database to connect
     as another user.\n\n\U0001F393 Tip: in an example script, use 'db wait-for-rows'
     instead of a fixed\nsleep before checking what a sink connector wrote."
   usage: playground db COMMAND
@@ -8355,6 +8356,78 @@ subcommands:
       argument: INTERVAL
       description: "\U0001F501 Interval in seconds between checks (default is 5)\n\nDefault
         value: 5"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: cdc-check
+    description: "\U0001F50D Check the CDC prerequisites of the database\n\nOne verdict
+      per prerequisite of the CDC connectors (Oracle CDC and\nXStream, Debezium),
+      with its value and the statement that fixes it, and\nexit code 1 when one is
+      missing:\n\n  oracle      ARCHIVELOG, minimal and all columns supplemental logging\n
+      \             (database, or --table), XStream outbound servers and their\n              capture,
+      enable_goldengate_replication, connector user\n              (common user, CREATE
+      SESSION, LogMiner privileges)\n  postgres    wal_level=logical, wal senders,
+      replication slots (free,\n              inactive ones retaining WAL, invalidated),
+      publications,\n              published tables without replica identity, connector
+      user\n              REPLICATION\n  mysql       log_bin, binlog_format=ROW, binlog_row_image=FULL,\n
+      \ mariadb     server_id, gtid_mode, binlog retention, connector user\n              privileges\n
+      \ sqlserver   SQL Server Agent, databases and tables with CDC, capture job\n
+      \ mongodb     replica set (change streams), oplog window\n\nIt connects as the
+      admin user of the container (see 'playground db\nsql'), and checks the privileges
+      of the connector user with\n--connector-user.\n\n\U0001F393 Tip: the classic
+      \"connector RUNNING but no records\" of a CDC source\nis a prerequisite missing
+      in the database: run it before reading the\nconnector logs."
+    usage: playground db cdc-check [OPTIONS]
+    options:
+    - names:
+      - "--container"
+      - "-c"
+      argument: CONTAINER
+      description: "\U0001F433 Container of the database\n\nℹ️ If not set, the only
+        running container whose image is a supported database"
+    - names:
+      - "--engine"
+      argument: ENGINE
+      description: "\U0001F6E2️ Database engine, when the image name of the container
+        does not tell it\n\nAllowed values: oracle, postgres, mysql, mariadb, sqlserver,
+        db2, mongodb"
+    - names:
+      - "--user"
+      - "-u"
+      argument: USER
+      description: "\U0001F464 User to connect with\n\nℹ️ If not set, the admin user
+        of the container environment (see above)"
+    - names:
+      - "--password"
+      argument: PASSWORD
+      description: "\U0001F511 Password of --user\n\nℹ️ If not set, the password of
+        the container environment"
+    - names:
+      - "--database"
+      - "-d"
+      argument: DATABASE
+      description: "\U0001F5C4️ Database (Oracle: service name, ORCLPDB1 for the pluggable
+        database)\n\nℹ️ If not set, the database of the container environment"
+    - names:
+      - "--connector-user"
+      argument: CONNECTOR_USER
+      description: "\U0001F464 User of the connector, to check its privileges (oracle,
+        postgres, mysql, mariadb)"
+    - names:
+      - "--table"
+      - "-t"
+      argument: TABLE
+      description: "\U0001F5C2️ Captured table to check: all columns supplemental
+        logging (oracle, <owner>.<table>), replica identity (postgres, <schema>.<table>),
+        CDC enabled (sqlserver, <schema>.<table>)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print {\"engine\", \"container\", \"verdict\", \"ok\",
+        \"fail\", \"warn\", \"checks\": [{\"status\", \"check\", \"value\", \"fix\"}]}
+        and nothing else"
     - names:
       - "--verbose"
       - "-v"

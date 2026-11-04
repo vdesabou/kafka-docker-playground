@@ -37,7 +37,7 @@ playground run -f cdc-xstream-oracle19.sh
 
 1. Gets or builds the Oracle 19c image, installs the Instant Client into the connector plugin and starts the environment (for TLS variants, the `oracle` container is started first to create the wallets with `orapki` and reconfigure the listener with the `.ora` files from `ssl/` or `mtls/`).
 2. Prepares the `connect` container (JDK 17 for CP < 7.7, `libaio` and `libnsl` packages).
-3. Enables XStream (`enable_goldengate_replication`), `ARCHIVELOG` mode and supplemental logging, and creates the XStream tablespaces, the `c##cfltadmin` administrator and the `c##cfltuser` connect user.
+3. Enables XStream (`enable_goldengate_replication`) and supplemental logging (`ARCHIVELOG` mode is already on, set by the setup scripts of the Oracle image), and creates the XStream tablespaces, the `c##cfltadmin` administrator and the `c##cfltuser` connect user.
 4. Creates the XStream outbound server `XOUT` capturing `C##CFLTUSER.CUSTOMERS` (plus `C##CFLTUSER.CFLT_SIGNALS` for the blocking snapshot variants) and runs Confluent's `orclcdc_readiness.sql` check.
 5. Creates the `CUSTOMERS` table with 5 rows and the XStream CDC source connector (`topic.prefix` = `cflt`), then waits with `playground topic wait-for-records` until the 5 snapshot records are in the topic, so that the changes below are streamed and not absorbed into the snapshot.
 6. Inserts, updates and deletes rows and alters the table (basic and TLS variants), or inserts rows then triggers a blocking snapshot (blocking snapshot variants).
