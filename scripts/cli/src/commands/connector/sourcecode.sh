@@ -15,8 +15,8 @@ test_file=$(playground state get run.test_file)
 connector_type=$(playground state get run.connector_type)
 if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "playground connector sourcecode command is not supported with $connector_type connector"
-    exit 0
+    logerror "❌ playground connector sourcecode command is not supported with $connector_type connector"
+    exit 1
 fi
 
 if [ ! -f "$test_file" ]

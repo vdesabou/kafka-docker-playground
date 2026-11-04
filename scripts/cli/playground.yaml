@@ -9184,39 +9184,57 @@ subcommands:
 - name: connector
   description: "\U0001F517 Connector commands\n\nEverything you would otherwise do
     with curl on the Connect REST API, with\nthe right host, port and credentials
-    already figured out. The same\ncommands work whether the connector is self managed
-    in the connect\ncontainer or fully managed in Confluent Cloud.\n\n\U0001F50D Look
-    at what is running\n  status                  is it RUNNING, and if not, the full
-    stack trace\n  wait                    wait until it is RUNNING (or another state)\n
-    \ error-recommendations   suggested fixes for a failed fully managed connector\n
-    \ show-config             the configuration actually applied\n  diff                    running
-    config vs a file, another connector or the defaults\n  logs                    tail
-    connect logs, filtered and followed\n  show-lag                consumer lag of
-    a sink, until it reaches zero\n  benchmark               records per second, compared
-    with the previous run\n  offsets get             where the connector is reading
-    or writing\n  smt test                what a transform chain does to a record,
-    step by step\n\n\U0001F6E0️ Change it\n  create-or-update        create it, or
-    apply a new config, from stdin\n  validate                check a config with
-    the plugin, without creating it\n  update                  edit the running config
-    in your editor\n  pause / resume / stop / restart / delete\n  offsets alter /
-    reset   rewind or fast-forward a connector\n\n\U0001F9D1‍\U0001F52C Understand
-    it\n  show-config-parameters  every parameter the plugin accepts\n  select-config
-    \          pick parameters interactively\n  versions                installed
-    version vs latest on Confluent Hub\n  sourcecode              open the source
-    on GitHub, or diff two versions\n  open-docs               open the Confluent
-    documentation\n  snippets                ready-to-paste converter and dlq config\n\n\U0001F41E
-    Dig deeper\n  log-level               raise connect log level for this connector\n
-    \ enable-remote-debugging attach a java debugger to the connector code\n  translate
-    \              self managed config to fully managed config\n\nWithout --connector,
-    commands apply to every connector of the example,\nwhich is usually what you want
-    since most examples run only one."
+    already figured out. Most commands\nwork whether the connector is self managed
+    in the connect container or\nfully managed in Confluent Cloud: the \"☁️ Fully
+    managed\" line of the help\nof each command says whether it does.\n\n\U0001F50D
+    Look at what is running\n  diagnose                status, errors, lag or offsets,
+    next steps\n  status                  is it RUNNING, and if not, the stack trace\n
+    \ wait                    wait until it is RUNNING (or another state)\n  tasks
+    \                  state, worker, config, partitions of each task\n  history                 states,
+    failures, restarts, config changes\n  metrics                 throughput, time
+    and errors per task\n  show-lag                consumer lag of a sink (--once:
+    a snapshot)\n  offsets get             where the connector is reading or writing\n
+    \ topics                  the topics a connector is using\n  show-config             the
+    configuration actually applied\n  diff                    config vs a file, a
+    connector or the defaults\n  logs                    connect logs, or the fully
+    managed logs\n  error-recommendations   fixes for a failed fully managed connector\n
+    \ display-metrics-api     Telemetry API metrics (fully managed)\n  display-metrics-api-with-grafana\n
+    \                         the same, plotted in Grafana\n  display-leader-name
+    \    the leader of the connect workers\n  open-ccloud-connector-in-browser\n                          its
+    page in the Confluent Cloud console\n  benchmark               records per second,
+    vs the previous run\n  smt test                what a transform chain does to
+    a record\n\n\U0001F6E0️ Change it\n  create-or-update        create it, or apply
+    a new config, from stdin\n  validate                check a config with the plugin,
+    create nothing\n  convert                 a customer config (CFK, terraform...)
+    to another\n                          format\n  update                  edit the
+    running config in your editor\n  pause / resume / stop / restart / delete\n  offsets
+    alter / reset   rewind or fast-forward a connector\n  offsets get-offsets-request-status\n
+    \                         did the last fully managed change apply\n\n\U0001F9D1‍\U0001F52C
+    Understand it\n  show-config-parameters  every parameter the plugin accepts\n
+    \ select-config           pick parameters interactively\n  snippets                converter
+    (or data format) and dlq config\n  plugins                 plugins installed (--all:
+    transforms...)\n  versions                installed version vs latest on Confluent
+    Hub\n  sourcecode              the source on GitHub, grep it, diff versions\n
+    \ open-docs               open the Confluent documentation\n\n\U0001F41E Dig deeper\n
+    \ log-level               raise connect log level for this connector\n  enable-remote-debugging
+    / disable-remote-debugging\n                          attach a java debugger to
+    the connector code\n  oracle-cdc-xstream      Oracle XStream queries and diagnostics
+    report\n\n\U0001F69A Move it to Confluent Cloud\n  translate               self
+    managed config to fully managed config\n  connect-migration-utility\n                          discovery,
+    then migrate with the offsets\n\nWithout --connector, commands apply to every
+    connector of the example,\nwhich is usually what you want since most examples
+    run only one.\n\n\U0001F916 For scripts and AI agents: status, wait, diagnose,
+    validate, tasks,\ntopics, history, metrics, show-lag, offsets get, diff and smt
+    test take\n--json (only the JSON on stdout, the log lines on stderr), and status\nand
+    diagnose take --fail-on-error for an exit code."
   usage: playground connector COMMAND
   options: []
   subcommands:
   - name: status
     description: "\U0001F9E9 Show status of all connectors\n\nThe connector state,
       the state of each task, and for a failed task the\nfull stack trace, which is
-      the thing you actually need. Add --verbose to\nsee the underlying REST call."
+      the thing you actually need. Add --verbose to\nsee the underlying REST call.\n\n☁️
+      Fully managed: supported (custom connectors too)"
     usage: playground connector status [OPTIONS]
     options:
     - names:
@@ -9230,6 +9248,16 @@ subcommands:
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
         the command will apply to all connectors"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
+    - names:
+      - "--fail-on-error"
+      argument: ''
+      description: "❌ Exit 1 when a connector or one of its tasks is FAILED, or the
+        connector is not found (by default the command exits 0, it only displays)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -9258,7 +9286,8 @@ subcommands:
       one of its tasks is FAILED (the connector itself usually stays\nRUNNING when
       only a task fails).\n\n\U0001F393 Tip: 'connector create-or-update' already
       waits for RUNNING. Use\nit for another state, or after 'connector create-or-update
-      --no-wait'.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      --no-wait'.\n\n☁️ Fully managed: supported (custom connectors too)\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed"
     usage: playground connector wait [OPTIONS]
     options:
@@ -9282,14 +9311,19 @@ subcommands:
       - "--max-wait"
       argument: MAX_WAIT
       description: |-
-        ⏳ Max time in seconds to wait (default is 120)
+        ⏳ Max time to wait: seconds, or 30s, 5m, 1h (default is 120 seconds)
 
         Default value: 120
     - names:
       - "--interval"
       argument: INTERVAL
-      description: "\U0001F501 Interval in seconds between status checks (default
-        is 5)\n\nDefault value: 5"
+      description: "\U0001F501 Interval between status checks: seconds, or 30s, 1m
+        (default is 5 seconds)\n\nDefault value: 5"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -9309,8 +9343,8 @@ subcommands:
       connector, for example after switching to another\nconnector version.\n\nThe
       same automatic config as 'create-or-update' is added for the\nenvironment of
       the example (security settings on sasl-ssl...),\nunless --skip-automatic-connector-config
-      is set.\n\n\U0001F393 Tip: works for fully managed connectors too, with the
-      validate\nendpoint of Confluent Cloud.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      is set.\n\n☁️ Fully managed: supported, with the validate endpoint of Confluent
+      Cloud (custom connectors too)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed"
     usage: playground connector validate [JSON] [OPTIONS]
     options:
@@ -9331,6 +9365,11 @@ subcommands:
       argument: ''
       description: "\U0001F916 Do not add the automatic configuration of the environment
         (security settings on sasl-ssl...) before validating"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -9356,7 +9395,8 @@ subcommands:
       in an interactive terminal (--no-open to skip): the keys side by side with the
       documentation, type and default of each one (from the configuration reference
       of the plugin), what the important differences mean (converters, error handling,
-      transforms...), and the secrets masked.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
+      transforms...), and the secrets masked.\n\n☁️ Fully managed: supported (custom
+      connectors too)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
     usage: playground connector diff [OPTIONS]
     options:
     - names:
@@ -9376,7 +9416,7 @@ subcommands:
       argument: FILE
       description: "\U0001F4C4 File with the config to compare with (json, a create-or-update
         heredoc, a CFK / Strimzi custom resource, terraform, .properties, a dump of
-        GET /connectors?expand=info)"
+        GET /connectors?expand=info), @file works too"
     - names:
       - "--with-connector"
       argument: WITH_CONNECTOR
@@ -9389,17 +9429,19 @@ subcommands:
     - names:
       - "--json"
       argument: ''
-      description: "\U0001F916 Print the result as JSON (no HTML report)"
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
     - names:
       - "--output-dir"
       - "-o"
       argument: OUTPUT_DIR
-      description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-connector-diff)\n\nDefault
-        value: /tmp/playground-connector-diff"
+      description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-<command>,
+        printed at the end)"
     - names:
       - "--no-open"
       argument: ''
-      description: "\U0001F648 Do not open the HTML report in the browser"
+      description: "\U0001F648 Do not open the HTML report in the browser (it is still
+        written, and its path printed)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -9426,7 +9468,9 @@ subcommands:
       the\noutput can be redirected to a file.\n\n\U0001F393 Tip: answer a customer
       in their own format, --to cfk or --to\nterraform, or compare their config with
       the running one with\n'playground connector diff --connector <c> --file <their
-      file>' (any\nof these formats).\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
+      file>' (any\nof these formats).\n\n☁️ Fully managed: supported (works on files,
+      no running connector needed: --to terraform writes a confluent_connector resource)\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
     usage: playground connector convert [FILE] [OPTIONS]
     options:
     - names:
@@ -9482,7 +9526,8 @@ subcommands:
       Cloud analyses the failure stack trace of a failed fully\nmanaged or custom
       connector and suggests remediation steps. Nothing is\nreturned for a healthy
       connector, or for one that only failed config\nvalidation: 'playground connector
-      status' shows those errors."
+      status' shows those errors.\n\n☁️ Fully managed only (fully managed and custom
+      connectors)"
     usage: playground connector error-recommendations [OPTIONS]
     options:
     - names:
@@ -9514,7 +9559,8 @@ subcommands:
         the diagnostics script Confluent support asks for, and opens the\nresult.
         This is the file to attach to a case rather than pasting\nindividual query
         outputs.\n\n\U0001F50E 'playground analyze oracle-xstream-report -c oracle'
-        generates it and\nanalyzes it in one go.\n\nSee https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n\U0001F36A
+        generates it and\nanalyzes it in one go.\n\n☁️ Fully managed: not supported
+        (needs the oracle container of a self managed example)\n\nSee https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n\U0001F36A
         Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc"
       usage: playground connector oracle-cdc-xstream generate-report
       options: []
@@ -9528,8 +9574,9 @@ subcommands:
         apply settings actually in effect\n  rules               the rules the XStream
         components are using\n\nRead it top to bottom when a connector is RUNNING
         but idle: a capture\nprocess not in CAPTURING CHANGES, or an SCN that never
-        moves, tells\nyou the problem is in the database and not in the connector.\n\n\U0001F36A
-        Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc"
+        moves, tells\nyou the problem is in the database and not in the connector.\n\n☁️
+        Fully managed: not supported (needs the oracle container of a self managed
+        example)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc"
       usage: playground connector oracle-cdc-xstream debug
       options: []
   - name: smt
@@ -9559,9 +9606,11 @@ subcommands:
         report of the steps (the value after each step with the added, changed and
         removed fields highlighted, the schema diff, the predicates, the error with
         its stack trace, and with --cp-version a comparison of the versions) is written
-        to /tmp/playground-smt-test, and opened in the browser in an interactive terminal.\n\n\U0001F393
-        Tip: the connector config can be a whole connector config: only transforms.*,
-        predicates.* and the converters are used."
+        to --output-dir (default /tmp/playground-smt-test), and opened in the browser
+        in an interactive terminal.\n\n\U0001F393 Tip: the connector config can be
+        a whole connector config: only transforms.*, predicates.* and the converters
+        are used.\n\n☁️ Fully managed: give the config with --config @file (the transforms
+        run on a self managed worker, the result is indicative)"
       usage: playground connector smt test [OPTIONS]
       options:
       - names:
@@ -9593,7 +9642,7 @@ subcommands:
           a value {\"id\": 1, \"name\": \"foo\"}"
       - names:
         - "--from-topic"
-        argument: FROM-TOPIC
+        argument: FROM_TOPIC
         description: "\U0001F5F3 Read the record from this topic instead of --record,
           and convert it with the converters of the connector"
       - names:
@@ -9613,20 +9662,20 @@ subcommands:
           of --connector, sink otherwise)\n\nAllowed values: sink, source"
       - names:
         - "--cp-version"
-        argument: CP-VERSION
+        argument: CP_VERSION
         description: "\U0001F522 Run the test with the built-in transforms of these
           CP versions (repeat the flag), in throwaway cp-server-connect containers,
           to compare them. The plugins of the running worker are not available there,
           only --smt-plugin and --smt-jar\n\nRepeatable: ✓ Yes"
       - names:
         - "--smt-plugin"
-        argument: SMT-PLUGIN
+        argument: SMT_PLUGIN
         description: "\U0001F9E9 Confluent Hub plugin with transforms, installed for
           the test only (owner/name:version), e.g. confluentinc/connect-transforms:1.6.2\n\nRepeatable:
           ✓ Yes"
       - names:
         - "--smt-jar"
-        argument: SMT-JAR
+        argument: SMT_JAR
         description: |-
           ☕ Jar with transforms to add for the test (custom SMT development). Repeat it for the jars it depends on: they are loaded together, as one plugin
 
@@ -9634,11 +9683,18 @@ subcommands:
       - names:
         - "--json"
         argument: ''
-        description: "\U0001F4C4 Print the steps as json"
+        description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+          (the log lines go to stderr)"
+      - names:
+        - "--output-dir"
+        - "-o"
+        argument: OUTPUT_DIR
+        description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-<command>,
+          printed at the end)"
       - names:
         - "--no-open"
         argument: ''
-        description: "\U0001F6AB Do not open the html report in the browser (it is
+        description: "\U0001F648 Do not open the HTML report in the browser (it is
           still written, and its path printed)"
       - names:
         - "--cluster"
@@ -9670,9 +9726,10 @@ subcommands:
       description: "\U0001F3F9 Get current offsets for source and sink connectors\n\nPrints
         the offsets json returned by the Connect REST API, or the\nConfluent Cloud
         offsets API for a fully managed connector. For a sink\non CP older than 7.5,
-        it falls back to kafka-consumer-groups\n--describe on the connect-<connector>
-        consumer group.\n\nRun it before and after alter or reset to check what really
-        moved.\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
+        it falls back to kafka-consumer-groups\n--describe on the consumer group of
+        the connector (connect-<connector>,\nor the one set with consumer.override.group.id).\n\nRun
+        it before and after alter or reset to check what really moved.\n\n☁️ Fully
+        managed: supported (custom connectors too)\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
       usage: playground connector offsets get [OPTIONS]
       options:
       - names:
@@ -9687,6 +9744,11 @@ subcommands:
         description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
           the command will apply to all connectors"
       - names:
+        - "--json"
+        argument: ''
+        description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+          (the log lines go to stderr)"
+      - names:
         - "--cluster"
         argument: CLUSTER
         description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
@@ -9699,7 +9761,8 @@ subcommands:
         origin from the beginning, a sink re-consumes its topics\nfrom the earliest
         offset. The connector is stopped and resumed around\nthe reset.\n\n⚠️ Everything
         is reprocessed, so expect duplicates downstream unless\nthe target is idempotent.
-        Use alter when you only want to move back\nto a specific point.\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
+        Use alter when you only want to move back\nto a specific point.\n\n☁️ Fully
+        managed: supported (custom connectors too)\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
       usage: playground connector offsets reset [OPTIONS]
       options:
       - names:
@@ -9733,6 +9796,8 @@ subcommands:
         Confluent Cloud the change is asynchronous, so the command then polls
         get-offsets-request-status and prints the resulting offsets.
 
+        ☁️ Fully managed: supported (custom connectors too)
+
         See https://docs.confluent.io/cloud/current/connectors/offsets.html
       usage: playground connector offsets alter [OPTIONS]
       options:
@@ -9759,7 +9824,8 @@ subcommands:
         request\n\nOn Confluent Cloud, alter and reset only queue a request. This
         shows\nwhether it was APPLIED or FAILED, and the error when it failed, which\nis
         the only place the reason shows up.\n\nOnly for fully managed and custom connectors,
-        self managed connectors\napply the change synchronously.\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
+        self managed connectors\napply the change synchronously.\n\n☁️ Fully managed
+        only (fully managed and custom connectors)\n\nSee https://docs.confluent.io/cloud/current/connectors/offsets.html"
       usage: playground connector offsets get-offsets-request-status [OPTIONS]
       options:
       - names:
@@ -9778,7 +9844,8 @@ subcommands:
       transforms, converters and predicates using --all flag\n\nThe first thing to
       check when a connector fails to be created with\n\"Failed to find any class
       that implements Connector\": the class you\nasked for is not in this list, so
-      the plugin was not installed or not\npicked up from the plugin path."
+      the plugin was not installed or not\npicked up from the plugin path.\n\n☁️ Fully
+      managed: supported, without --all (the plugins available in Confluent Cloud)"
     usage: playground connector plugins [OPTIONS]
     options:
     - names:
@@ -9804,6 +9871,8 @@ subcommands:
       Tasks stop processing but stay assigned, and the configuration is kept.
       Handy to let a backlog build up, or to freeze a connector while you
       change the system it talks to. Resume with 'playground connector resume'.
+
+      ☁️ Fully managed: supported (custom connectors too)
     usage: playground connector pause [OPTIONS]
     options:
     - names:
@@ -9832,7 +9901,9 @@ subcommands:
       Confluent plugins, the last 5 versions come with their release notes\n(playground
       connector-plugin versions --with-changelog), and an outdated\nversion with the
       playground connector-plugin changelog command that lists\neverything that changed
-      since.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+      since.\n\n☁️ Fully managed: the connector version shipped by each cc-connect
+      image (playground connector-plugin fm-versions, Confluent employees); custom
+      connectors: not supported\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version"
     usage: playground connector versions
     options: []
@@ -9842,7 +9913,9 @@ subcommands:
       two times, in such case it will open github in comparison mode\n\n\U0001F48C
       Confluent employees only: for fully managed connectors, use the cc-connect image
       version for the pcc. You must have a Confluent Github token set with GITHUB_TOKEN
-      or GH_TOKEN environment variable and also be using Confluent VPN."
+      or GH_TOKEN environment variable and also be using Confluent VPN.\n\n☁️ Fully
+      managed: supported (Confluent employees, see above); custom connectors: not
+      supported"
     usage: playground connector sourcecode [OPTIONS]
     options:
     - names:
@@ -9882,12 +9955,13 @@ subcommands:
       (required for remote debugging).\n\n\U0001F48C Confluent employees only: make
       sure to follow \"Maven FAQ\", you also need to be on Confluent VPN with proper
       AWS credentials set in order to be able to download proprietary dependencies.\n\n⚠️
-      This does not work for fully and custom connectors.\n\n\U0001F36A Deep dive:
-      https://kafka-docker-playground.io/#/deep-dive-java-debugging"
+      This does not work for fully and custom connectors.\n\n☁️ Fully managed: not
+      supported\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-java-debugging"
     usage: playground connector enable-remote-debugging
     options: []
   - name: disable-remote-debugging
-    description: "\U0001F6D1 Disable java remote debugging for the connector."
+    description: "\U0001F6D1 Disable java remote debugging for the connector.\n\n☁️
+      Fully managed: not supported"
     usage: playground connector disable-remote-debugging
     options: []
   - name: restart
@@ -9898,6 +9972,8 @@ subcommands:
       fixed the cause. Use --task-id to restart a single failed task and leave
       the healthy ones alone, or --only-failed to restart only what is FAILED,
       in every connector when --connector is not set.
+
+      ☁️ Fully managed: supported (custom connectors: not supported)
     usage: playground connector restart [OPTIONS]
     options:
     - names:
@@ -9913,7 +9989,6 @@ subcommands:
         the command will apply to all connectors"
     - names:
       - "--task-id"
-      - "-t"
       argument: TASK_ID
       description: "\U0001F527 Restart specific task ID only (instead of restarting
         entire connector), needs --connector\n\nConflicts with: --only-failed"
@@ -9944,8 +10019,9 @@ subcommands:
       \                     whole config of each task\n  partitions          for a
       sink, the topic partitions assigned to each\n                      task, from
       its consumer group connect-<connector>\n\n\U0001F393 Tip: 'tasks.max' is a maximum,
-      a source connector can create fewer\ntasks (one JDBC task per table at most).\n\n\U0001F36A
-      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+      a source connector can create fewer\ntasks (one JDBC task per table at most).\n\n☁️
+      Fully managed: supported (custom connectors: not supported)\n\n\U0001F36A Deep
+      dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
     usage: playground connector tasks [OPTIONS]
     options:
     - names:
@@ -9967,7 +10043,8 @@ subcommands:
     - names:
       - "--json"
       argument: ''
-      description: "\U0001F916 Print the result as JSON"
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -9984,7 +10061,7 @@ subcommands:
       Tip: feed the result to 'playground topic consume --topic <t>' or\n'playground
       topic dlq inspect'.\n\n⚠️ Self-managed connectors only (CP 5.5+, topic.tracking.enable=true
       on\nthe worker, the default). --reset also needs\ntopic.tracking.allow.reset=true
-      on the worker (the default)."
+      on the worker (the default).\n\n☁️ Fully managed: not supported"
     usage: playground connector topics [OPTIONS]
     options:
     - names:
@@ -10006,7 +10083,8 @@ subcommands:
     - names:
       - "--json"
       argument: ''
-      description: "\U0001F916 Print the result as JSON\n\nConflicts with: --reset"
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)\n\nConflicts with: --reset"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -10017,7 +10095,8 @@ subcommands:
   - name: stop
     description: "\U0001F6D1 Stop connector (only available since CP 7.5)\n\nStronger
       than pause: the tasks are shut down and unassigned, so the\nconnector consumes
-      no resources at all. This is the state in which\noffsets can be altered or reset."
+      no resources at all. This is the state in which\noffsets can be altered or reset.\n\n☁️
+      Fully managed: not supported (pause it instead)"
     usage: playground connector stop [OPTIONS]
     options:
     - names:
@@ -10044,6 +10123,8 @@ subcommands:
 
       Restarts processing after a pause or a stop, from the offsets where the
       connector left off.
+
+      ☁️ Fully managed: supported (custom connectors too)
     usage: playground connector resume [OPTIONS]
     options:
     - names:
@@ -10074,7 +10155,8 @@ subcommands:
       deleted as well: dead letter queue and, for\nconnectors with a reporter, success
       and error topics (dlq-lcc-xxxx,\nsuccess-lcc-xxxx, error-lcc-xxxx, or the names
       set in the config with\nerrors.deadletterqueue.topic.name, reporter.error.topic.name
-      and\nreporter.result.topic.name). Keep them with --keep-related-topics."
+      and\nreporter.result.topic.name). Keep them with --keep-related-topics.\n\n☁️
+      Fully managed: supported (custom connectors too)"
     usage: playground connector delete [OPTIONS]
     options:
     - names:
@@ -10114,7 +10196,8 @@ subcommands:
       report in --output-dir, to attach to a case, opened in the browser in an interactive
       terminal (--no-open to skip): verdict, findings, status and traces of the tasks,
       error records naming the connector, lag per partition or offsets, next steps,
-      and the configuration (secrets masked).\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\U0001F3AC
+      and the configuration (secrets masked).\n\n☁️ Fully managed: supported (custom
+      connectors too)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing"
     usage: playground connector diagnose [OPTIONS]
     options:
@@ -10142,15 +10225,26 @@ subcommands:
 
         Default value: 15
     - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
+    - names:
       - "--output-dir"
       - "-o"
       argument: OUTPUT_DIR
-      description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-diagnose)\n\nDefault
-        value: /tmp/playground-diagnose"
+      description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-<command>,
+        printed at the end)"
     - names:
       - "--no-open"
       argument: ''
-      description: "\U0001F648 Do not open the HTML report in the browser"
+      description: "\U0001F648 Do not open the HTML report in the browser (it is still
+        written, and its path printed)"
+    - names:
+      - "--fail-on-error"
+      argument: ''
+      description: "❌ Exit 1 when a connector or one of its tasks is FAILED, or the
+        connector is not found (by default the command exits 0, it only displays)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -10175,8 +10269,8 @@ subcommands:
       keeps the recent events.\n\n⚠️ These topics are compacted: on a long-running
       cluster, old states\nare gone, only the last one of each connector and task
       is kept for\nsure. Self-managed connectors only (the topic names are read from
-      the\nworker properties, --config-topic and --status-topic to override them).\n\n\U0001F36A
-      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+      the\nworker properties, --config-topic and --status-topic to override them).\n\n☁️
+      Fully managed: not supported\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
     usage: playground connector history [OPTIONS]
     options:
     - names:
@@ -10208,7 +10302,8 @@ subcommands:
     - names:
       - "--json"
       argument: ''
-      description: "\U0001F916 Print the events and the summary as JSON"
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -10221,9 +10316,10 @@ subcommands:
       sink, refreshed every --interval seconds, so you\nsee whether it is catching
       up, standing still or falling behind. A lag\nthat does not move while the connector
       reports RUNNING means the tasks\nare stuck rather than slow.\n\nIt will run
-      until all lag becomes 0 (press ctrl-c to exit), or until\n--max-wait seconds.
-      The consumer group is connect-<connector>, or the one\nset with consumer.override.group.id.\n\n\U0001F36A
-      Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n\U0001F3AC
+      until all lag becomes 0 (press ctrl-c to exit), or until\n--max-wait. --once
+      (or --json) takes a single snapshot instead. The\nconsumer group is connect-<connector>,
+      or the one set with\nconsumer.override.group.id.\n\n☁️ Fully managed: supported
+      (custom connectors too)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck"
     usage: playground connector show-lag [OPTIONS]
     options:
@@ -10241,15 +10337,13 @@ subcommands:
     - names:
       - "--interval"
       argument: INTERVAL
-      description: |-
-        Interval between lag checks (default is 20 seconds).
-
-        Default value: 20
+      description: "\U0001F501 Interval between lag checks: seconds, or 30s, 1m (default
+        is 20 seconds)\n\nDefault value: 20"
     - names:
       - "--max-wait"
       argument: MAX_WAIT
       description: |-
-        ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.
+        ⏳ Max time to wait for lag to become 0: seconds, or 30s, 5m, 1h. If set to 0 (default), it will run until all lag becomes 0.
 
         Default value: 0
     - names:
@@ -10257,6 +10351,17 @@ subcommands:
       argument: ''
       description: "❌ Exit 1 when the lag is still not 0 after --max-wait seconds
         (by default it logs a warning and exits 0)"
+    - names:
+      - "--once"
+      argument: ''
+      description: "\U0001F4F8 Show the lag once and exit, without waiting for it
+        to reach 0 (also when the tasks are not RUNNING: committed offsets)\n\nConflicts
+        with: --fail-on-timeout"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the lag per partition and the total as JSON on
+        stdout, and nothing else (implies --once, the log lines go to stderr)"
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -10544,7 +10649,8 @@ subcommands:
       description: "\U0001F4C4 Print the result as json instead of the summary"
   - name: show-config
     description: "\U0001F9F0 Show current connector config that was applied\n\nuse
-      --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)"
+      --force-rest-endpoint to get results with REST API /config endpoint (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)\n\n☁️
+      Fully managed: supported (custom connectors too)"
     usage: playground connector show-config [OPTIONS]
     options:
     - names:
@@ -10574,7 +10680,8 @@ subcommands:
       full reference of what the plugin accepts, with types, defaults,\nimportance
       and documentation, read from the plugin itself rather than\nfrom the website.
       Use it to check the exact spelling of a property, or\nto discover the knob you
-      need.\n\nUse --open to read it in your editor, --only-show-json to get it as\njson."
+      need.\n\nUse --open to read it in your editor, --only-show-json to get it as\njson.\n\n☁️
+      Fully managed: supported (custom connectors: not supported)"
     usage: playground connector show-config-parameters [OPTIONS]
     options:
     - names:
@@ -10590,7 +10697,6 @@ subcommands:
         the command will apply to all connectors"
     - names:
       - "--open"
-      - "-o"
       argument: ''
       description: "\U0001F516 Save output to a file and open with text editor set
         with playground config editor <editor> (default is code)"
@@ -10632,8 +10738,9 @@ subcommands:
       the metrics come from the Confluent\nCloud Telemetry API ('playground connector
       display-metrics-api').\n\n\U0001F393 Tip: use --watch 10s while a load runs,
       or 'playground connector\nbenchmark' to measure the throughput.\n\n⚠️ Not on
-      cfk environments: use 'playground get-jmx-metrics -c connect-0\n--domain kafka.connect'.\n\n\U0001F36A
-      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+      cfk environments: use 'playground get-jmx-metrics -c connect-0\n--domain kafka.connect'.\n\n☁️
+      Fully managed: supported, from the Confluent Cloud Telemetry API (custom connectors:
+      not supported)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
     usage: playground connector metrics [OPTIONS]
     options:
     - names:
@@ -10649,13 +10756,13 @@ subcommands:
         the command will apply to all connectors"
     - names:
       - "--watch"
-      - "-w"
       argument: INTERVAL
       description: "\U0001F501 Refresh every <interval> (30, 30s, 5m) until ctrl-c"
     - names:
       - "--json"
       argument: ''
-      description: "\U0001F916 Print the result as JSON\n\nConflicts with: --watch"
+      description: "\U0001F916 Print the result as JSON on stdout, and nothing else
+        (the log lines go to stderr)\n\nConflicts with: --watch"
   - name: display-metrics-api
     description: |-
       〽️ Display metrics api for fully managed connector
@@ -10664,6 +10771,8 @@ subcommands:
       with the connector and task statuses, then every metric that is not
       zero. A fully managed connector gives you no jmx and little logging, so
       this is how you tell whether it is actually doing work.
+
+      ☁️ Fully managed only (custom connectors: not supported)
 
       See https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud
     usage: playground connector display-metrics-api [OPTIONS]
@@ -10676,7 +10785,6 @@ subcommands:
         the command will apply to all connectors"
     - names:
       - "--open"
-      - "-o"
       argument: ''
       description: "\U0001F516 Save output to a file and open with text editor set
         with playground config editor <editor> (default is code)"
@@ -10692,7 +10800,8 @@ subcommands:
       throughput dropped, rather than the current value.\n\nIt starts its own prometheus
       and grafana containers with a dashboard\nalready provisioned, so there is nothing
       to enable beforehand and it\ndoes not interfere with the grafana of the example.\n\nNot
-      supported for custom connectors."
+      supported for custom connectors.\n\n☁️ Fully managed only (custom connectors:
+      not supported)"
     usage: playground connector display-metrics-api-with-grafana [OPTIONS]
     options:
     - names:
@@ -10709,7 +10818,8 @@ subcommands:
       macOS they are copied to your clipboard as well.\n\nFaster than show-config-parameters
       when you already know roughly what\nyou are after and just want the exact property
       names.\n\n\U0001F393 Tip: use <tab> to select multiple config at once, then
-      press <enter> to confirm"
+      press <enter> to confirm\n\n☁️ Fully managed: supported (custom connectors:
+      not supported)"
     usage: playground connector select-config [OPTIONS]
     options:
     - names:
@@ -10723,7 +10833,8 @@ subcommands:
       configuration: the key and\nvalue converter properties for a given format with
       --converter, and the\ndead letter queue properties with --dlq. Saves you from
       looking up the\nexact property names and the schema registry settings that go
-      with them."
+      with them.\n\n☁️ Fully managed: supported, prints input.data.format / output.data.format
+      instead of converters"
     usage: playground connector snippets [OPTIONS]
     options:
     - names:
@@ -10740,7 +10851,8 @@ subcommands:
       running connector(s)\n\nWorks out the documentation page from the connector
       class actually\nrunning and opens it, so you land on the right page for the
       right\nconnector without searching for it.\n\nUse --only-show-url to print the
-      link instead, for pasting in a case."
+      link instead, for pasting in a case.\n\n☁️ Fully managed: supported (custom
+      connectors: not supported)"
     usage: playground connector open-docs [OPTIONS]
     options:
     - names:
@@ -10756,8 +10868,8 @@ subcommands:
       will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to
       see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain
       (to see records before and after SMTs)\n        it will also set org.apache.kafka.connect.runtime.WorkerSinkTask
-      for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.\n\n\U0001F36A
-      Deep dive: https://kafka-docker-playground.io/#/deep-dive-log-levels\n\U0001F3AC
+      for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.\n\n☁️
+      Fully managed: not supported\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-log-levels\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AC-trace-on-a-running-connector-without-a-restart"
     usage: playground connector log-level [OPTIONS]
     options:
@@ -10798,7 +10910,8 @@ subcommands:
       keeps the ERROR level, --grep is a search text, and --wait-for-log polls until
       the text is found or --max-wait.\n\n\U0001F393 Tip: from a script or an AI agent,
       always pass --no-follow, --errors or --wait-for-log, otherwise the command never
-      returns for a self managed connector."
+      returns for a self managed connector.\n\n☁️ Fully managed: supported, with the
+      confluent CLI (see above)"
     usage: playground connector logs [OPTIONS]
     options:
     - names:
@@ -10809,7 +10922,6 @@ subcommands:
         the command will apply to all connectors"
     - names:
       - "--open"
-      - "-o"
       argument: ''
       description: "\U0001F516 Save output to a file and open with text editor set
         with playground config editor <editor> (default is code)\n\nConflicts with:
@@ -10825,7 +10937,7 @@ subcommands:
       - "-m"
       argument: MAX_WAIT
       description: |-
-        ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
+        ⏳ Max time to wait when using --wait-for-log: seconds, or 30s, 10m, 1h (default 600 seconds)
 
         Default value: 600
     - names:
@@ -10871,7 +10983,7 @@ subcommands:
     description: "\U0001F916 Open Fully Managed connector in browser (Confluent Cloud
       dashboard)\n\nJumps straight to the connector's page in the Confluent Cloud
       console,\nresolving its lcc id for you, so you do not have to hunt through the\nenvironment
-      and cluster menus."
+      and cluster menus.\n\n☁️ Fully managed only (fully managed and custom connectors)"
     usage: playground connector open-ccloud-connector-in-browser [OPTIONS]
     options:
     - names:
@@ -10885,6 +10997,10 @@ subcommands:
       argument: BROWSER
       description: "\U0001F30E browser name\n\nDefault browser from your system if
         not set"
+    - names:
+      - "--only-show-url"
+      argument: ''
+      description: "\U0001F310 Only show url\n\nConflicts with: --browser"
   - name: display-leader-name
     description: "\U0001F451 Display Connect Worker leader name using JMX MBean leader-name
       from kafka.connect:type=connect-worker-rebalance-metrics\n\nThis is useful when
@@ -10893,7 +11009,7 @@ subcommands:
       get-jmx-metrics --container <worker> --domain kafka.connect\" on each running
       connect worker (connect, connect2, connect3, or the connect-N pods on cfk) until
       one answers.\n\nFor Fully Managed connectors, this is not available as JMX is
-      not accessible."
+      not accessible.\n\n☁️ Fully managed: not supported"
     usage: playground connector display-leader-name [OPTIONS]
     options:
     - names:
@@ -10910,8 +11026,9 @@ subcommands:
       fully managed equivalent looks like.\nProperties are renamed, some disappear,
       some have no equivalent at all,\nand this tells you which before you promise
       a customer a migration.\n\nOnly translates the configuration. To actually move
-      the connector along\nwith its offsets, use 'playground connector connect-migration-utility'.\n\nSee
-      https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin\n\nThe
+      the connector along\nwith its offsets, use 'playground connector connect-migration-utility'.\n\n☁️
+      Fully managed: not applicable, it translates the config of a self managed connector
+      (ccloud environment)\n\nSee https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin\n\nThe
       connector example should be ran with --environment flag set to <ccloud>"
     usage: playground connector translate [OPTIONS]
     options:
@@ -10928,7 +11045,7 @@ subcommands:
       description: "\U0001F41E Show command being ran."
     - names:
       - "--connector-plugin"
-      argument: CONNECTOR-PLUGIN
+      argument: CONNECTOR_PLUGIN
       description: "\U0001F50C Connector plugin name\n\n\U0001F393 Tip: use <tab>
         completion to trigger fzf completion\n\nRequired: ✓ Yes"
   - name: connect-migration-utility
@@ -10948,7 +11065,9 @@ subcommands:
     subcommands:
     - name: discovery
       description: "\U0001F468‍\U0001F52C Discover connectors in the local connect
-        cluster and export their configurations to files\n  \n  see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration"
+        cluster and export their configurations to files\n  \n☁️ Fully managed: not
+        applicable, it reads the self managed connectors (ccloud environment)\n\n
+        \ see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-1-specify-the-connector-configuration"
       usage: playground connector connect-migration-utility discovery [OPTIONS]
       options:
       - names:
@@ -10957,14 +11076,15 @@ subcommands:
         argument: ''
         description: "\U0001F41E Show command being ran."
     - name: migrate
-      description: "\U0001FA84 Migrate discovered connectors to fully managed connectors\n\n
+      description: "\U0001FA84 Migrate discovered connectors to fully managed connectors\n\n☁️
+        Fully managed: creates the fully managed connectors (ccloud environment)\n\n
         \ see https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#step-2-migrate-the-connector\n
         \ ⚠️ <discovery> command should be run first"
       usage: playground connector connect-migration-utility migrate [OPTIONS]
       options:
       - names:
         - "--migration-mode"
-        argument: MIGRATION-MODE
+        argument: MIGRATION_MODE
         description: |-
           - create: Create connector without any offset consideration
           - stop_create_latest_offset: Create a connector with no data loss/duplication (the python script stops the self-managed connector and fetches the latest offset and creates a fully-managed connector on Confluent Cloud using the fetched offset). See https://github.com/confluentinc/connect-migration-utility/tree/master?tab=readme-ov-file#create-a-connector-with-no-data-lossduplication.
@@ -10974,7 +11094,7 @@ subcommands:
           Allowed values: stop_create_latest_offset, create, create_latest_offset
       - names:
         - "--sensitive-property"
-        argument: SENSITIVE-PROPERTY
+        argument: SENSITIVE_PROPERTY
         description: "\U0001F510 Pass sensitive config properties when migrating connector\n\n\U0001F393
           Tip: you can pass multiple properties by specifying --sensitive-property
           multiple times\n\nExample: --sensitive-property \"aws.access.key.id=xxx\"
@@ -11017,7 +11137,8 @@ subcommands:
       number of brokers, and on plaintext the security of\nthe clients whose bootstrap
       servers were rewritten. Masked secrets,\nconfig providers of the customer environment
       (${file:...}),\nterraform references and the keys still pointing to external
-      systems\nare listed. The heredocs of the examples are never changed.\n\n\U0001F36A
+      systems\nare listed. The heredocs of the examples are never changed.\n\n☁️ Fully
+      managed: supported (custom connectors too), waited for with --wait only\n\n\U0001F36A
       Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8F%97%EF%B8%8F-deploy-a-fully-managed-connector-with-terraform"
@@ -11089,7 +11210,7 @@ subcommands:
       - "--max-wait"
       argument: MAX_WAIT
       description: |-
-        ⏳ Max time in seconds to wait for the connector (default is 120, or 600 for fully managed connectors with --wait)
+        ⏳ Max time to wait for the connector: seconds, or 30s, 5m, 1h (default is 120 seconds, or 600 for fully managed connectors with --wait)
 
         Conflicts with: --no-wait
     - names:
@@ -11111,7 +11232,7 @@ subcommands:
         Only available for ccloud connectors, the connector should not really exists"
     - names:
       - "--initial-state"
-      argument: INITIAL-STATE
+      argument: INITIAL_STATE
       description: "\U0001FAB5 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)\n\nIf
         the connector already exists, its config is updated, then it is paused, stopped
         or resumed.\n\nOnly available if CP > 7.7\n\n⚠️ not available for ccloud connectors\n\nAllowed

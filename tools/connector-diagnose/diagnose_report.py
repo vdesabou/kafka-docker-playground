@@ -316,14 +316,42 @@ def html_report(connectors: List[dict]) -> str:
                    "A snapshot: run it again to see whether the state, the lag or the offsets move.")
 
 
+def json_summary(c: dict) -> dict:
+    """What playground connector diagnose --json prints: the verdict and the findings of the HTML report, no config (secrets)."""
+    return {
+        "connector": c["name"],
+        "connector_type": c["meta"].get("connector_type", ""),
+        "type": c["type"],
+        "state": c["state"],
+        "healthy": c["verdict"][0] == "ok",
+        "verdict": {"level": c["verdict"][0], "text": c["verdict"][1]},
+        "tasks": [{"id": t.get("id"), "state": t.get("state"), "worker_id": t.get("worker_id"), "trace": t.get("trace")}
+                  for t in c["tasks"]],
+        "findings": [{"severity": f["severity"], "text": f["text"]} for f in c["findings"]],
+        "total_lag": c["total_lag"] if c["lag"] else None,
+        "lag": c["lag"],
+        "offsets": c["offsets"],
+        "recommendations": c["recommendations"] or None,
+        "next_steps": c["next_steps"],
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--connector-dir", action="append", required=True, help="folder written by playground connector diagnose")
-    ap.add_argument("--html-out", required=True, metavar="PATH", help="write a self-contained HTML report")
+    ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
+    ap.add_argument("--json-out", metavar="PATH", help="write the verdict, findings, tasks, lag or offsets and next steps as JSON")
     args = ap.parse_args()
+    if not args.html_out and not args.json_out:
+        ap.error("--html-out or --json-out is required")
     connectors = [assess(load(d)) for d in args.connector_dir]
-    with open(args.html_out, "w", encoding="utf-8") as fh:
-        fh.write(html_report(connectors))
+    if args.html_out:
+        with open(args.html_out, "w", encoding="utf-8") as fh:
+            fh.write(html_report(connectors))
+    if args.json_out:
+        with open(args.json_out, "w", encoding="utf-8") as fh:
+            json.dump([json_summary(c) for c in connectors], fh, indent=2, ensure_ascii=False)
+            fh.write("\n")
     return 0
 
 

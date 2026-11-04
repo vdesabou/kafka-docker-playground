@@ -7,6 +7,7 @@ partition="${args[--partition]}"
 type="${args[--type]}"
 json="${args[--json]}"
 no_open="${args[--no-open]}"
+output_dir="${args[--output-dir]:-/tmp/playground-smt-test}"
 verbose="${args[--verbose]}"
 eval "cp_versions=(${args[--cp-version]:-})"
 eval "smt_plugins=(${args[--smt-plugin]:-})"
@@ -210,7 +211,7 @@ function run_in_image () {
 
 # html report of the run(s), opened in the browser in an interactive terminal
 function smt_report () {
-    local results=() file report_dir="/tmp/playground-smt-test" report title="SMT test"
+    local results=() file report_dir="$output_dir" report title="SMT test"
     for file in "$@"
     do
         [ -f "$file" ] && results+=(--result "$file")

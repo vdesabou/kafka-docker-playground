@@ -1,10 +1,12 @@
 connector="${args[--connector]}"
 file="${args[--file]}"
+# @file works too, like create-or-update and convert
+file="${file#@}"
 with_connector="${args[--with-connector]}"
 defaults="${args[--defaults]}"
 json="${args[--json]}"
 verbose="${args[--verbose]}"
-output_dir="${args[--output-dir]}"
+output_dir="${args[--output-dir]:-/tmp/playground-connector-diff}"
 no_open="${args[--no-open]}"
 
 connector_type=$(playground state get run.connector_type)

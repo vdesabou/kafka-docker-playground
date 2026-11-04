@@ -35,6 +35,8 @@ then
 else
   get_security_broker "--command-config"
 fi
+# get_connect_url_and_security (connect REST API) overwrites $security: kafka-consumer-groups uses the broker one
+broker_security="$security"
 
 if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
@@ -173,7 +175,7 @@ do
                 # if [[ -n "$verbose" ]]
                 # then
                 #     log "🐞 CLI command used"
-                #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
+                #     echo "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group --describe $broker_security"
                 # fi
                 get_environment_used
                 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
@@ -182,6 +184,8 @@ do
                     continue
                 else
                     file=$tmp_dir/offsets-$connector.csv
+                    # connect-<connector>, or the group set with consumer.override.group.id (read before the connector is deleted)
+                    get_connector_consumer_group "$connector"
 
                     if version_gt $tag "7.4.99"
                     then
@@ -192,7 +196,7 @@ do
                     fi
 
                     echo "topic,partition,current-offset" > $file
-                    playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run" >> $file
+                    playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group $broker_security --export --reset-offsets --to-current --all-topics --dry-run" >> $file
 
                     log "✨ Update the connector offsets as per your needs, save and close the file to continue"
                     playground open --file "${file}" --wait
@@ -202,7 +206,7 @@ do
                     grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
 
                     playground container cp --source $file --destination $container:/tmp/offsets.csv > /dev/null 2>&1
-                    playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute"
+                    playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group $consumer_group $broker_security --reset-offsets --from-file /tmp/offsets.csv --execute"
 
                     if version_gt $tag "7.4.99"
                     then

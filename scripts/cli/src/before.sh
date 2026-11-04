@@ -13,6 +13,14 @@ root_folder=$(echo ${dir1%/*})
 # and stderr, $(...) and 2>&1 in the commands don't capture it
 exec {playground_verbose_fd}>&2
 
+# --json: the log lines of this command go to stderr, stdout only holds the JSON result
+# not exported: nested playground calls must keep their normal stdout (bashly validators and callers parse what they
+# print with log); a --json command that runs nested commands sends their stdout to stderr itself (exec 3>&1 1>&2)
+if [[ -n "${args[--json]}" ]]
+then
+    PG_LOG_TO_STDERR=1
+fi
+
 vvv="${args[--vvv]}"
 level="${args[--output-level]}"
 

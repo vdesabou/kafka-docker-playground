@@ -1,8 +1,8 @@
 connector_type=$(playground state get run.connector_type)
 if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
 then
-    log "playground connector display-leader-name command is not supported with $connector_type connector"
-    exit 0
+    logerror "❌ playground connector display-leader-name command is not supported with $connector_type connector"
+    exit 1
 fi
 
 get_environment_used

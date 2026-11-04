@@ -9,8 +9,8 @@ connector_type=$(playground state get run.connector_type)
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "connector history command is not supported with $connector_type connector: the internal topics of the connect cluster are not readable"
-    exit 0
+    logerror "❌ connector history command is not supported with $connector_type connector: the internal topics of the connect cluster are not readable"
+    exit 1
 fi
 
 get_environment_used

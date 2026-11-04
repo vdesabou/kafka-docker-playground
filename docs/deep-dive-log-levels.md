@@ -158,7 +158,7 @@ Gotchas:
 - **The records show up in the log**: `TransformationChain` at TRACE prints each record, `RestService` prints the
   schemas. A log taken with these levels can contain customer data: check it before sharing it.
 - `--connector` is optional: without it, **every** connector gets the 4 loggers, sinks and sources alike.
-- Fully managed and custom connectors: `connector log-level is not supported with … connector`, exit 0.
+- Fully managed and custom connectors: `❌ connector log-level command is not supported with … connector`, exit 1.
 
 ---
 

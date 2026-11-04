@@ -1,9 +1,33 @@
 connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 state="${args[--state]}"
-max_wait="${args[--max-wait]}"
-interval="${args[--interval]}"
+max_wait=$(duration_to_seconds "${args[--max-wait]}")
+interval=$(duration_to_seconds "${args[--interval]}")
 
+json="${args[--json]}"
+# --interval 0 would poll in a busy loop
+if [ "$interval" -lt 1 ]; then interval=1; fi
+
+# --json: the log lines and the status tables go to stderr, one JSON object per connector goes to stdout (fd 3) at the end
+if [[ -n "$json" ]]
+then
+    exec 3>&1 1>&2
+fi
+json_entries=()
+# wait_result <reached true|false> <reason>: records the outcome of the current connector for --json
+function wait_result () {
+    json_entries+=("$(jq -cn --arg connector "$connector" --arg type "$connector_type" --arg wanted "$state" --argjson reached "$1" --arg reason "$2" \
+        --arg state "$connector_state" --arg tasks "$(echo $tasks_states | tr ' ' ',')" --argjson elapsed "${elapsed:-0}" \
+        '{connector: $connector, type: $type, wanted_state: $wanted, reached: $reached, reason: $reason, state: (if $state == "" then null else $state end), tasks: ($tasks | split(",") | map(select(. != ""))), elapsed_seconds: $elapsed}')")
+}
+# wait_exit <code>: prints the JSON array with --json, then exits
+function wait_exit () {
+    if [[ -n "$json" ]]
+    then
+        printf '%s\n' "${json_entries[@]}" | jq -s '.' >&3
+    fi
+    exit "$1"
+}
 connector_type=$(playground state get run.connector_type)
 
 if [[ ! -n "$connector" ]]
@@ -97,6 +121,7 @@ do
         if [ "$state" == "FAILED" ] && [ "$is_failed" == true ]
         then
             log "✅ $connector_type connector $connector is FAILED after $elapsed seconds"
+            wait_result true "FAILED"
             set +e
             playground connector status --connector "$connector"
             break
@@ -110,6 +135,7 @@ do
             elif [ $((elapsed - zero_tasks_since)) -ge $zero_tasks_max_seconds ]
             then
                 logwarn "⚠️ $connector_type connector $connector is RUNNING without any task for $zero_tasks_max_seconds seconds (nothing to process yet?), not waiting for tasks"
+                wait_result true "RUNNING without any task"
                 break
             fi
         else
@@ -126,6 +152,7 @@ do
                 if [ "$state" != "RUNNING" ] || [ "$running_seen" == true ]
                 then
                     log "✅ $connector_type connector $connector is $state ($nb_tasks task(s)) after $elapsed seconds"
+                    wait_result true "$state"
                     break
                 fi
                 running_seen=true
@@ -138,6 +165,7 @@ do
         if [ "$state" == "RUNNING" ] && [ "$is_failed" == true ]
         then
             logerror "❌ $connector_type connector $connector is FAILED, not waiting for it to be RUNNING"
+            wait_result false "FAILED"
             set +e
             if [ -n "$PG_SKIP_AUTO_DIAGNOSE" ]
             then
@@ -153,7 +181,7 @@ do
                 fi
                 playground connector diagnose --connector "$connector" --since "$((elapsed + 120))s" --max-findings 5 $maybe_no_open
             fi
-            exit 1
+            wait_exit 1
         fi
 
         current="${connector_state:-not available} tasks: $(echo $tasks_states | tr ' ' ',')"
@@ -168,13 +196,16 @@ do
             if [ -z "$connector_state" ]
             then
                 logerror "❌ $connector_type connector $connector was not found after $max_wait seconds"
-                exit 1
+                wait_result false "not found after --max-wait"
+                wait_exit 1
             fi
             logerror "❌ $connector_type connector $connector is not $state after $max_wait seconds"
+            wait_result false "not $state after --max-wait"
             set +e
             playground connector status --connector "$connector"
-            exit 1
+            wait_exit 1
         fi
         sleep $interval
     done
 done
+wait_exit 0

@@ -9,6 +9,7 @@ wait_for_zero_lag=${args[--wait-for-zero-lag]}
 wait=${args[--wait]}
 no_wait=${args[--no-wait]}
 max_wait=${args[--max-wait]}
+if [ -n "$max_wait" ]; then max_wait=$(duration_to_seconds "$max_wait"); fi
 skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
 no_clipboard="${args[--no-clipboard]}"

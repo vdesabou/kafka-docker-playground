@@ -6,8 +6,8 @@ environment=$(playground state get run.environment)
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    log "connector stop command is not available with $connector_type connector"
-    exit 0
+    logerror "❌ connector stop command is not available with $connector_type connector"
+    exit 1
 fi
 
 if [[ "$environment" == cfk* ]]

@@ -511,7 +511,8 @@ then
 
     sleep 10
 
-    playground connector versions
+    # display only: 'connector versions' exits 1 for a connector type it does not support (custom)
+    playground connector versions || true
 else
     sleep 4
 

@@ -24,7 +24,36 @@ then
     exit 1
 fi
 
-if [[ -n "$dlq" ]]
+connector_type=$(playground state get run.connector_type)
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+then
+    # fully managed connectors have no converters: the format is input.data.format (sink) / output.data.format (source)
+    if [[ -n "$dlq" ]]
+    then
+        dlq_file=$tmp_dir/dlq
+        echo -e "    \"errors.tolerance\": \"all\"," >> $dlq_file
+        log "💀 fully managed sink connectors send the records that fail to their dead letter queue topic dlq-<lcc id>, created for you (errors.tolerance all)"
+    fi
+    if [[ -n "$converter" ]]
+    then
+        case "${converter}" in
+            avro) data_format="AVRO" ;;
+            json-schema) data_format="JSON_SR" ;;
+            protobuf) data_format="PROTOBUF" ;;
+            json|json-schema-enabled) data_format="JSON" ;;
+            string) data_format="STRING" ;;
+            bytearray) data_format="BYTES" ;;
+        esac
+        converter_file=$tmp_dir/converter
+        echo -e "    \"input.data.format\": \"$data_format\"," >> $converter_file
+        echo -e "    \"output.data.format\": \"$data_format\"," >> $converter_file
+        log "☁️ fully managed connector: keep input.data.format for a sink, output.data.format for a source (the schema registry of the environment is used for AVRO, JSON_SR and PROTOBUF)"
+        if [ "$converter" == "json-schema-enabled" ]
+        then
+            logwarn "⚠️ fully managed connectors have no JSON with an embedded schema: use JSON_SR (--converter json-schema) for a schema"
+        fi
+    fi
+elif [[ -n "$dlq" ]]
 then
     dlq_file=$tmp_dir/dlq
     echo -e "    \"errors.tolerance\": \"all\"," >> $dlq_file
@@ -35,7 +64,7 @@ then
     echo -e "    \"errors.log.include.messages\": \"true\"," >> $dlq_file
 fi
 
-if [[ -n "$converter" ]]
+if [[ -n "$converter" ]] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ]
 then
     converter_file=$tmp_dir/converter
     case "${converter}" in

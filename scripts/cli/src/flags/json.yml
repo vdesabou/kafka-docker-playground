@@ -1,0 +1,4 @@
+long: --json
+required: false
+help: |-
+  🤖 Print the result as JSON on stdout, and nothing else (the log lines go to stderr)

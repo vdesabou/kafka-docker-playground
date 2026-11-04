@@ -1,0 +1,6 @@
+long: --output-dir
+short: -o
+arg: output_dir
+required: false
+help: |-
+  📂 Output directory for the HTML report (default: /tmp/playground-<command>, printed at the end)

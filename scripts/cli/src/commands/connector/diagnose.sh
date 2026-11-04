@@ -2,8 +2,18 @@ connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 since="${args[--since]}"
 max_findings="${args[--max-findings]}"
-output_dir="${args[--output-dir]}"
+output_dir="${args[--output-dir]:-/tmp/playground-diagnose}"
 no_open="${args[--no-open]}"
+json="${args[--json]}"
+fail_on_error="${args[--fail-on-error]}"
+
+# --json: the steps write to stderr, only the JSON array goes to stdout (fd 3); the HTML report is written, not opened
+if [[ -n "$json" ]]
+then
+    exec 3>&1 1>&2
+    no_open=1
+fi
+unhealthy=0
 
 connector_type=$(playground state get run.connector_type)
 get_environment_used
@@ -82,6 +92,10 @@ do
     type=$(echo "$curl_output" | jq -r '.type // empty')
     connector_state=$(echo "$curl_output" | jq -r '.connector.state // empty')
     task_states=$(echo "$curl_output" | jq -r '[.tasks[]?.state] | unique | join(",")')
+    if [ -z "$connector_state" ] || [[ "$connector_state" == "FAILED" ]] || [[ "$task_states" == *"FAILED"* ]]
+    then
+        unhealthy=$((unhealthy + 1))
+    fi
     echo "$curl_output" > "$cdir/status.json"
     jq -n --arg connector "$connector" --arg connector_type "$connector_type" --arg is_cloud "$is_cloud" --arg type "$type" \
         --arg since "$since" --arg environment "$playground_environment" \
@@ -160,10 +174,25 @@ do
     echo ""
 done
 
+# --fail-on-error: exit 1 when a connector or a task is FAILED, or the connector is not found (after the report)
+function diagnose_exit () {
+    if [[ -n "$fail_on_error" ]] && [ "$unhealthy" -gt 0 ]
+    then
+        logerror "❌ $unhealthy connector(s) FAILED, with a FAILED task, or not found"
+        exit 1
+    fi
+    exit 0
+}
+
 if ! command -v python3 &>/dev/null
 then
+    if [[ -n "$json" ]]
+    then
+        logerror "❌ python3 is not on PATH: --json needs it"
+        exit 1
+    fi
     logwarn "⚠️ python3 is not on PATH: no HTML report"
-    exit 0
+    diagnose_exit
 fi
 report_name="all"
 if ((length == 1))
@@ -178,9 +207,19 @@ for cdir in "${connector_dirs[@]}"
 do
     report_args+=(--connector-dir "$cdir")
 done
-if ! python3 -I "$root_folder/tools/connector-diagnose/diagnose_report.py" "${report_args[@]}" --html-out "$html_out"
+json_args=()
+if [[ -n "$json" ]]
+then
+    json_args=(--json-out "$report_tmp/diagnose.json")
+fi
+if ! python3 -I "$root_folder/tools/connector-diagnose/diagnose_report.py" "${report_args[@]}" --html-out "$html_out" "${json_args[@]}"
 then
     logerror "❌ could not write the HTML report"
     exit 1
 fi
 open_html_report "$html_out" "$no_open"
+if [[ -n "$json" ]]
+then
+    jq --arg html "$html_out" 'map(. + {html_report: $html})' "$report_tmp/diagnose.json" >&3
+fi
+diagnose_exit
