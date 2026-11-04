@@ -4,6 +4,18 @@ DynamoDB
 🔘 aws.dynamodb.pk.hash
 
 Defines how the table's hash key is extracted from the record. By default. partition is used as the hash key. The maximum size of a partition with this configuration is 10Gb as per DynamoDB limits.
+This hash key reference is created from a record reference and optional alias name. If the alias name is absent, then the last field of the reference is used as the column name.
+Valid record references: 
+#. ``partition`` - refers to the Kafka partition number where the record is originated
+#. ``offset`` - refers to the Kafka offset of the record
+#. ``key.[fieldNameOrDotDelimitedPath]`` - to use the record's key itself or one of the fields from the record key
+#. ``value.[fieldNameOrDotDelimitedPath]`` - to use the record's value itself or one of the fields from the record's value
+Valid examples:
+#. partition -  A field ``partition`` as hash Key
+#. key - Key of the record as a hash key
+#. key.customerId - When message key is a Struct use customerId as the field
+#. value.userId:user - Uses a hash field ``user``
+ 
 
 	 - Type: STRING
 	 - Default: partition
@@ -13,6 +25,17 @@ Defines how the table's hash key is extracted from the record. By default. parti
 🔘 aws.dynamodb.pk.sort
 
 Defines how the table's sort key is extracted from the record. By default, it uses the record offset as sort key. This sort key reference is created from a record reference and optional alias name. If the alias name is absent, then the last field of the reference is used as the column name. 
+If no sort key is required, configure this property to be an empty string.Valid record references: 
+#. ``partition`` - refers to the Kafka partition number where the record is originated
+#. ``offset`` - refers to the Kafka offset of the record
+#. ``key.[fieldNameOrDotDelimitedPath]`` - to use the record's key itself or one of the fields from the record key
+#. ``value.[fieldNameOrDotDelimitedPath]`` - to use the record's value itself or one of the fields from the record's value
+Valid examples:
+#. partition -  A field ``partition`` as hash key
+#. key - Key of the record as a hash key
+#. key.customerId - When message key is a Struct use customerId as the field
+#. value.userId:user - Uses a hash field ``user``
+ 
 
 	 - Type: STRING
 	 - Default: offset
@@ -109,6 +132,7 @@ The maximum time upto which DynamoDB client will try writing records. The least 
 🔘 table.name.format
 
 A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -144,4 +168,5 @@ null
 	 - Default: -1
 	 - Importance: LOW
 	 - Required: false
+
 

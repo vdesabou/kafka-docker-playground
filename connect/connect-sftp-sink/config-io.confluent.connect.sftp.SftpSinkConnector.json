@@ -1,4 +1,4 @@
-    "avro.codec": "",
+    "avro.codec": "null",
     "connect.meta.data": "true",
     "enhanced.avro.schema.support": "true",
     "extract.column.names": "false",

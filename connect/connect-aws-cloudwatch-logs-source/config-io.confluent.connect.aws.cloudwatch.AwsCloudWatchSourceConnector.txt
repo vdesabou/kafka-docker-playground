@@ -181,9 +181,15 @@ A format string for the topic name(s) in Kafka, which may contain '${log-group}'
 🔘 behavior.on.error
 
 Error handling behavior setting.Must be configured to one of the following:
+``FAIL``
+Stops the connector when an error occurs while processing records.
+``IGNORE``
+Continues to process next set of records when error occurs while processing records.A record is pushed to the error topic for the connector on encountering a malformed record.
+
 
 	 - Type: STRING
 	 - Default: FAIL
 	 - Importance: MEDIUM
 	 - Required: false
+
 

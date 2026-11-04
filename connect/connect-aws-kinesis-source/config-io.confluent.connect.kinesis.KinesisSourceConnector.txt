@@ -100,6 +100,7 @@ The number of milliseconds to backoff when the stream is empty.
 🔘 kinesis.throughput.exceeded.backoff.ms
 
 This property is now deprecated and will be removed in release `2.0.0` and later.
+The number of milliseconds to backoff when a throughput exceeded exception is thrown.
 
 	 - Type: LONG
 	 - Default: 10000
@@ -179,6 +180,7 @@ The AWS region for the Kinesis stream.
 
 The property kinesis.base.url can be used to specify a Kinesis endpoint. For example, if Kinesis is running on port 4567 on your localhost, you may specify http://localhost:4567.
 Examples of endpoints can be found on: https://docs.aws.amazon.com/general/latest/gr/rande.html#ak_region.
+More information on using endpoints: https://docs.aws.amazon.com/streams/latest/dev/vpc.html
 
 	 - Type: STRING
 	 - Default: 
@@ -219,6 +221,7 @@ Proxy Username. This property is meant to be used only if you need to access Kin
 🔘 kinesis.proxy.password
 
 This property is now deprecated and will be removed in release `2.0.0` and later.
+Proxy Password. This property is meant to be used only if you need to access Kinesis through an HTTP/HTTPS proxy. Using ``kinesis.proxy.password`` instead of embedding the username and password in ``kinesis.proxy.password`` allows the password to be hidden in the logs.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
@@ -254,4 +257,5 @@ Timeout in milliseconds for regex pattern matching.
 	 - Default: 100
 	 - Importance: MEDIUM
 	 - Required: false
+
 
