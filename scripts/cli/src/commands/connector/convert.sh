@@ -88,16 +88,16 @@ case "$to" in
             echo "EOF"
         else
             # the values to fill in become variables (AWS_SECRET_ACCESS_KEY for aws.secret.access.key), so the heredoc is
-            # not quoted: every other $ is escaped
+            # not quoted: every other \, ` and $ is escaped, so that bash gives back the exact json
             echo "# values to fill in before running it:"
             echo "$placeholders" | awk -F'|' '{ v = toupper($1); gsub(/[^A-Z0-9]/, "_", v); printf "#   export %s=...   # %s: %s\n", v, $1, $2 }'
             echo "playground connector create-or-update --connector $name << EOF"
             echo "$config" | jq --arg keys "$(echo "$placeholders" | cut -d'|' -f1)" '
                 ($keys | split("\n") | map(select(length > 0))) as $to_fill
                 | with_entries(
-                    if (.key as $k | $to_fill | index($k)) then .value = "${\(.key | ascii_upcase | gsub("[^A-Z0-9]"; "_"))}"
-                    else .value |= gsub("\\$"; "\\$") end)' \
-                | sed -E 's/"\$\{([A-Z0-9_]+)\}"/"${\1}"/; s/\\\\\$/\\$/g'
+                    if (.key as $k | $to_fill | index($k)) then .value = "@@PG_FILL@@\(.key | ascii_upcase | gsub("[^A-Z0-9]"; "_"))@@"
+                    else . end)' \
+                | sed -E 's/\\/\\\\/g; s/`/\\`/g; s/\$/\\$/g; s/"@@PG_FILL@@([A-Z0-9_]+)@@"/"${\1}"/g'
             echo "EOF"
         fi
         ;;

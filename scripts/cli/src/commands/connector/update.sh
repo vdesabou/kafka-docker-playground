@@ -19,6 +19,11 @@ then
     fi
 fi
 
+# the file is only applied if it was saved with a change: editors that do not block (subl, ...) return at once
+function file_checksum () {
+    cksum < "$1"
+}
+
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
 then
@@ -76,7 +81,13 @@ do
         } > "$file"
 
         log "✨ Update the CFK Connector CR as needed, save and close the file to continue"
+        checksum_before=$(file_checksum "$file")
         playground open --file "${file}" --wait
+        if [ "$(file_checksum "$file")" == "$checksum_before" ]
+        then
+            log "💤 the CFK Connector CR of $connector was not changed, nothing applied"
+            continue
+        fi
         log "☸️ kubectl -n confluent apply -f $file"
         kubectl -n confluent apply -f "$file"
         log "✅ CFK Connector CR $connector was updated"
@@ -88,14 +99,28 @@ do
         echo -e "" >> $file
         echo -e "##########################" >> $file
         echo "# this is the part to edit" >> $file
-        playground connector show-config --connector "$connector" --no-clipboard | grep -v "Current config for" >> $file
+        # captured first: in a pipeline, $? would be the status of the last command, not of show-config
+        current_config=$(playground connector show-config --connector "$connector" --no-clipboard)
         if [ $? -ne 0 ]
         then
             logerror "❌ playground connector show-config --connector $connector failed with:"
-            cat $file
+            echo "$current_config"
             exit 1
         fi
         set -e
+        # a Confluent Cloud connector config read from the REST API has its secrets masked: applying it would replace
+        # the real values with the mask
+        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+        then
+            masked_keys=$(echo "$current_config" | grep -E '"[^"]+" *: *"\*{3,}"' | sed -E 's/^ *"([^"]+)".*/\1/' | paste -sd ' ' -)
+            if [ -n "$masked_keys" ]
+            then
+                logerror "❌ the config of $connector_type connector $connector comes from the REST API, which masks secrets ($masked_keys): updating it would overwrite them with the mask"
+                logerror "👉 run 'playground connector create-or-update --connector $connector' with the full config instead (once it is done, 'connector update' reuses it)"
+                exit 1
+            fi
+        fi
+        echo "$current_config" | grep -v "Current config for" >> $file
         echo "# end of part to edit" >> $file
         echo -e "##########################" >> $file
         echo -e "" >> $file
@@ -120,7 +145,13 @@ do
         playground connector show-config-parameters --connector $connector  | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> $file
 
         log "✨ Update the connector config as per your needs, save and close the file to continue"
+        checksum_before=$(file_checksum "$file")
         playground open --file "${file}" --wait
+        if [ "$(file_checksum "$file")" == "$checksum_before" ]
+        then
+            log "💤 the config of $connector_type connector $connector was not changed, nothing applied"
+            continue
+        fi
         bash $file
     fi
 done

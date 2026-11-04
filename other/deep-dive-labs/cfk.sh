@@ -68,6 +68,8 @@ lab_expect_contains "with CFK, the connector name is the name of a Kubernetes Co
 lab_run playground connector show-config -c filestream-sink
 lab_expect_contains "(using CFK Connector CR)"
 lab_expect_contains '"file": "/tmp/output.json"'
+lab_expect_contains '"connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector"'
+lab_expect_contains "playground connector create-or-update --connector filestream-sink"
 lab_run playground connector validate -c filestream-sink
 lab_expect_contains "⚠️ validation with CFK currently performs basic checks only (no Connect REST validation endpoint)"
 lab_expect_contains "✅ Basic CFK validation passed"

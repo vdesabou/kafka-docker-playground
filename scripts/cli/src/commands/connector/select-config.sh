@@ -15,6 +15,14 @@ fi
 log "🗜️ Easily select config from all possible configuration parameters"
 log "🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm"
 
+tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $tmp_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
+
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -37,7 +45,7 @@ do
         fzf_option_pointer="--pointer=👉"
         fzf_option_rounded="--border=rounded"
     else
-        fzf_options=""
+        fzf_option_wrap=""
         fzf_option_pointer=""
         fzf_option_rounded=""
     fi
@@ -45,10 +53,17 @@ do
     set +e
     res=$(cat $json_file | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗜️" --header="<enter> to confirm, <esc> to cancel" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
+    set -e
+    if [ -z "$res" ]
+    then
+        # <esc>: nothing selected, the clipboard is left as it is
+        log "💤 no config parameter selected for connector $connector"
+        continue
+    fi
+
     log "🗜️ selected config parameter(s) for connector $connector"
     echo "$res"
 
-    set -e
     if [[ "$OSTYPE" == "darwin"* ]]
     then
         clipboard=$(playground config get clipboard)
@@ -59,16 +74,8 @@ do
 
         if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ]
         then
-            tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-            if [ -z "$PG_VERBOSE_MODE" ]
-            then
-                trap 'rm -rf $tmp_dir' EXIT
-            else
-                log "🐛📂 not deleting tmp dir $tmp_dir"
-            fi
-            echo "$res" > $tmp_dir/tmp
-
-            cat $tmp_dir/tmp | pbcopy
+            echo "$res" > "$tmp_dir/selected-$connector"
+            pbcopy < "$tmp_dir/selected-$connector"
             log "📋 config has been copied to the clipboard (disable with 'playground config clipboard false')"
         fi
     fi

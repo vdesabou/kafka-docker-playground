@@ -56,7 +56,8 @@ do
     class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
 
     version="unknown"
-    if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+    # an empty connector type: the environment was started with 'playground start-environment', not 'playground run'
+    if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ] || [ -z "$connector_type" ]
     then
         get_connect_url_and_security
         handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" $connect_url/connector-plugins/"
@@ -109,7 +110,14 @@ do
         fi
     fi
 
-    if [[ -n "$force_refresh" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
+    # a fully managed plugin has no version to key the cache with: refreshed after a week (for this connector only)
+    refresh_this_connector=""
+    if [ "$version" == "unknown" ] && [ -f "$filename" ] && [ -n "$(find "$filename" -mtime +7 2>/dev/null)" ]
+    then
+        log "🔄 cached parameters of $connector_class are more than a week old, refreshing them"
+        refresh_this_connector=1
+    fi
+    if [[ -n "$force_refresh" ]] || [[ -n "$refresh_this_connector" ]] || [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
         if [ -f $filename ]
         then
@@ -134,7 +142,7 @@ do
         if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
         then
             set +e
-            json_file=/tmp/json
+            json_file=$tmp_dir/invalid.json
             echo "$curl_output" > $json_file
             jq_output=$(jq . "$json_file" 2>&1)
             error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
@@ -157,20 +165,20 @@ do
             exit 1
         fi
 
-        echo "$curl_output" > /tmp/tmp-validate.json
-        write_connector_config_reference /tmp/tmp-validate.json "$filename" "$json_filename"
-        rm -f /tmp/tmp-validate.json
+        # $tmp_dir, not a shared /tmp path: this runs on every create-or-update, possibly in several sessions at once
+        echo "$curl_output" > "$tmp_dir/validate-$connector.json"
+        write_connector_config_reference "$tmp_dir/validate-$connector.json" "$filename" "$json_filename"
     fi
 
     if [ ! -f $filename ]
     then
-        logwarn "❌ there was no specific config for this $connector_type connector"
-        exit 0
+        logwarn "❌ there was no specific config for this $connector_type connector $connector"
+        continue
     fi
 
     # fix unwanted commits like this one #7231
-    cat $filename | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > /tmp/tmp
-    mv /tmp/tmp "$filename"
+    cat $filename | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z/YYYY-MM-DDTHH:mm:ss/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/YYYY-MM-DD HH:mm/g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}/YYYY-MM-DD/g' > "$tmp_dir/dated-$connector.txt"
+    mv "$tmp_dir/dated-$connector.txt" "$filename"
 
     if [[ -n "$open" ]]
     then
@@ -178,8 +186,10 @@ do
         then
             filename=$json_filename
         else
-            cat $filename > "/tmp/config-$connector_class-$version.txt"
-            filename="/tmp/config-$connector_class-$version.txt"
+            # outside $tmp_dir (removed on exit, before a non-blocking editor reads it), and unique to this run
+            open_file=$(mktemp "/tmp/config-$connector_class-$version-XXXXXX")
+            cat $filename > "$open_file"
+            filename="$open_file"
             cat $json_filename >> $filename
             echo "🔩 list of all available parameters for connector $connector ($class) and version $version (with default value when applicable)" >> $filename
         fi
@@ -194,7 +204,7 @@ do
             else
                 cat $json_filename
             fi
-            return
+            continue
         fi
 
         if [[ -n "$only_show_file_path" ]]

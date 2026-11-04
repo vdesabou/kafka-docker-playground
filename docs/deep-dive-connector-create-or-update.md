@@ -521,7 +521,8 @@ EOF
 ```
 
 The secret the CFK pod reads from a mounted file becomes a variable instead of a value that silently fails. The heredoc
-is unquoted for that variable, so `$1` is escaped as `\$1` (bash gives back `prod_$1`). The JDBC URL is listed as the
+is unquoted for that variable, so `$1` is escaped as `\$1` (bash gives back `prod_$1`), and so are backslashes and
+backticks (the `\\.` of a regex in the JSON is written `\\\\.`, bash gives back `\\.`). The JDBC URL is listed as the
 one thing to replace with the database of the example.
 
 *8d. Terraform, a fully managed connector.* `terraform-confluent-connector.tf` is a `confluent_connector` resource with

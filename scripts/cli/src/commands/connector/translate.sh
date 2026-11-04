@@ -31,7 +31,6 @@ then
 else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
-json_file=$tmp_dir/connector.json
 
 items=($connector)
 length=${#items[@]}
@@ -41,18 +40,22 @@ then
 fi
 for connector in "${items[@]}"
 do
-    playground --output-level WARN connector show-config --connector "$connector" --no-clipboard | grep -v "EOF" | sed 's/\\//g' >> $json_file
-    if [ $? -ne 0 ]
+    # one file per connector: the config is read as JSON from the REST API (or the CR on cfk), never from the
+    # show-config heredoc, so backslashes and quotes inside values reach the translate API untouched
+    json_file="$tmp_dir/connector-$connector.json"
+    if ! get_connector_config_json "$connector"
     then
-        logerror "❌ playground connector show-config --connector $connector failed with:"
-        cat $file
+        logerror "❌ could not read the config of connector $connector"
         exit 1
     fi
-
-    # connector_class=$(cat "$json_file" | jq -r '."connector.class"')
-    # class=$(echo $connector_class | rev | cut -d '.' -f 1 | rev)
+    echo "$curl_output" > "$json_file"
 
     log "💱 Translating $connector_type connector $connector ($connector_plugin)"
     get_ccloud_connect
     handle_ccloud_connect_rest_api "curl -s --request PUT -H \"Content-Type: application/json\" --data @$json_file \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_plugin/config/translate\" --header \"authorization: Basic $authorization\""
+    # the helper prints the answer itself when it has errors or warnings, print it otherwise
+    if ! echo "$curl_output" | jq -e 'has("errors") or has("warnings")' > /dev/null 2>&1
+    then
+        echo "$curl_output" | jq .
+    fi
 done
