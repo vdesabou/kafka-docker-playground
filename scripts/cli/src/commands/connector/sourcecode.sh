@@ -4,6 +4,8 @@ compile="${args[--compile]}"
 compile_jdk_version="${args[--compile-jdk-version]}"
 compile_verbose="${args[--compile-verbose]}"
 enable_remote_debugging="${args[--enable-remote-debugging]}"
+checkout_only="${args[--checkout-only]}"
+grep_regex="${args[--grep]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra connector_tag_array <<< "$connector_tags"
@@ -17,8 +19,8 @@ then
     exit 0
 fi
 
-if [ ! -f $test_file ]
-then 
+if [ ! -f "$test_file" ]
+then
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
 fi
@@ -29,12 +31,33 @@ then
     maybe_only_show_url="--only-show-url"
 fi
 
+# passed through to playground connector-plugin sourcecode (as an array, the regex may contain spaces)
+passthrough_flags=()
+if [[ -n "$checkout_only" ]]
+then
+    passthrough_flags+=(--checkout-only)
+fi
+if [[ -n "$grep_regex" ]]
+then
+    passthrough_flags+=(--grep "$grep_regex")
+fi
+# with 2 --connector-tag, --grep filters the commits between the two versions (connector-plugin sourcecode --log)
+comparison_flags=()
+if [[ -n "$checkout_only" ]] && ((${#connector_tag_array[@]} > 1))
+then
+    logwarn "--checkout-only is ignored when --connector-tag is set twice"
+fi
+if [[ -n "$grep_regex" ]]
+then
+    comparison_flags+=(--log --grep "$grep_regex")
+fi
+
 # Compile related optional flags
 maybe_compile=""
 if [[ -n "$compile" ]]; then
     maybe_compile="--compile"
     if [[ -n "$compile_jdk_version" ]]; then
-        maybe_compile_jdk_version="--compile_jdk_version $compile_jdk_version"
+        maybe_compile_jdk_version="--compile-jdk-version $compile_jdk_version"
     fi
     if [[ -n "$compile_verbose" ]]; then
         maybe_compile_verbose="--compile-verbose"
@@ -61,15 +84,18 @@ then
             exit 1
         fi
         connector_tag1="${connector_tag_array[0]}"
+        [ "$connector_tag1" = "\\" ] && connector_tag1=" "
         connector_tag2="${connector_tag_array[1]}"
-        playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
+        [ "$connector_tag2" = "\\" ] && connector_tag2=" "
+        playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url "${comparison_flags[@]}"
     else
         if ((length == 1))
         then
             connector_tag="${connector_tag_array[0]}"
-            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url
+            [ "$connector_tag" = "\\" ] && connector_tag=" "
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url "${passthrough_flags[@]}"
         else
-            playground connector-plugin sourcecode --connector-plugin "$owner/$name" $maybe_only_show_url
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" $maybe_only_show_url "${passthrough_flags[@]}"
         fi
     fi
     exit 0
@@ -77,7 +103,7 @@ fi
 
 get_connector_paths
 if [ "$connector_paths" == "" ]; then
-    logwarn "❌ skipping as it is not an example with connector, but --connector-tag is set"
+    logwarn "❌ skipping as $test_file is not an example with a connector plugin"
     exit 1
 fi
 
@@ -100,11 +126,10 @@ fi
 
 chosen_path="${eligible_paths[0]}"
 if [ ${#eligible_paths[@]} -gt 1 ]; then
-    log "🔌 multiple connectors detected, please choose one"
-
-    if [[ -n "$only_show_url" ]]
+    if [[ -n "$only_show_url" ]] || [[ -n "$checkout_only" ]] || [[ -n "$grep_regex" ]] || [ ! -t 0 ]
     then
         chosen_path="${eligible_paths[0]}"
+        log "🔌 multiple connectors detected, using the first one: $(basename "$chosen_path")"
     else
         log "🔌 multiple connectors detected, please choose one"
         if command -v fzf >/dev/null 2>&1; then
@@ -136,17 +161,17 @@ if ((length > 1)); then
     [ "$connector_tag1" = "\\" ] && connector_tag1=" "
     connector_tag2="${connector_tag_array[1]}"
     [ "$connector_tag2" = "\\" ] && connector_tag2=" "
-    playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url
+    playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag1" --connector-tag "$connector_tag2" $maybe_only_show_url "${comparison_flags[@]}"
 else
     if ((length == 1)); then
         connector_tag="${connector_tag_array[0]}"
         [ "$connector_tag" = "\\" ] && connector_tag=" "
-        playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose
+        playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$connector_tag" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose "${passthrough_flags[@]}"
     else
         manifest_file="$root_folder/confluent-hub/$full_connector_name/manifest.json"
         if [ -f "$manifest_file" ]; then
             version=$(jq -r '.version' "$manifest_file")
-            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose
+            playground connector-plugin sourcecode --connector-plugin "$owner/$name" --connector-tag "$version" $maybe_only_show_url $maybe_compile $maybe_compile_jdk_version $maybe_compile_verbose "${passthrough_flags[@]}"
         else
             logerror "❌ file $manifest_file does not exist, could not retrieve version"
             exit 1

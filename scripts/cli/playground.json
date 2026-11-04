@@ -9735,7 +9735,7 @@
         },
         {
           "name": "offsets",
-          "description": "💈 Handle source and sink connectors offsets\n\nWhere a connector is in its data: for a source, the position it keeps in\nthe system it reads from (a SCN, a binlog position, a file offset); for a\nsink, the consumer group offsets of the topics it consumes.\n\n  get                          show them\n  alter                        edit them in your editor, then apply\n  reset                        start over from the beginning\n  get-offsets-request-status   did the last change go through\n\nThis uses the first-class offsets API (KIP-875), so it needs CP 7.5 for\nget and CP 7.6 for alter and reset. On older CP the playground falls back\nto kafka-consumer-groups, which only covers sink connectors.\n\nThe connector must not be running while its offsets change: alter and\nreset stop it and resume it for you.\n\n🎓 Tip: a sink that reprocesses everything and a source that re-snapshots\nare usually offsets problems, not connector problems. Look here first.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck",
+          "description": "💈 Handle source and sink connectors offsets\n\nWhere a connector is in its data: for a source, the position it keeps in\nthe system it reads from (a SCN, a binlog position, a file offset); for a\nsink, the consumer group offsets of the topics it consumes.\n\n  get                          show them\n  alter                        edit them in your editor, then apply\n  reset                        start over from the beginning\n  get-offsets-request-status   did the last change go through\n\nThis uses the first-class offsets API (KIP-875), so it needs CP 7.5 for\nget and CP 7.6 for alter and reset. On older CP the playground falls back\nto kafka-consumer-groups, which only covers sink connectors.\n\nThe connector must not be running while its offsets change: alter and\nreset stop it and resume it for you, also when the change is refused\n(the command then exits 1).\n\n🎓 Tip: a sink that reprocesses everything and a source that re-snapshots\nare usually offsets problems, not connector problems. Look here first.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck",
           "usage": "playground connector offsets COMMAND",
           "options": [],
           "subcommands": [
@@ -9937,6 +9937,20 @@
               ],
               "argument": "CONNECTOR_TAG",
               "description": "🔗 Connector version to use\n\nBy default, for each connector, the current version is used (for Confluent employees, it will also get latest versions for fully managed connectors)\n\n🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent plugins, the preview shows the release notes of each version)\n\n🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--checkout-only"
+              ],
+              "argument": "",
+              "description": "📂 Checkout the code at the right tag and print the path of the folder, nothing else\n\nNo browser, no editor, no question (with several connectors in the example, the first one is used).\nThe path is the last line of the output.\n\n🎓 Tip: use it in scripts and from AI agents, which can then read the code\n\nConflicts with: --compile"
+            },
+            {
+              "names": [
+                "--grep"
+              ],
+              "argument": "GREP",
+              "description": "🔎 Grep the code at the version in use (or the --connector-tag one): checkout, file:line, 500 lines at most\n\nWith 2 --connector-tag: only the commits between the two versions whose message matches (case insensitive).\nExtended regular expression, for example \"BATCH_SIZE_DEFAULT|batch.size\"\n\nConflicts with: --compile"
             }
           ]
         },
@@ -9979,7 +9993,7 @@
                 "-t"
               ],
               "argument": "TASK_ID",
-              "description": "🔧 Restart specific task ID only (instead of restarting entire connector)\n\nConflicts with: --only-failed"
+              "description": "🔧 Restart specific task ID only (instead of restarting entire connector), needs --connector\n\nConflicts with: --only-failed"
             },
             {
               "names": [
@@ -10087,7 +10101,7 @@
         },
         {
           "name": "stop",
-          "description": "🛑 Stop connector (only available if CP > 7.5)\n\nStronger than pause: the tasks are shut down and unassigned, so the\nconnector consumes no resources at all. This is the state in which\noffsets can be altered or reset.",
+          "description": "🛑 Stop connector (only available since CP 7.5)\n\nStronger than pause: the tasks are shut down and unassigned, so the\nconnector consumes no resources at all. This is the state in which\noffsets can be altered or reset.",
           "usage": "playground connector stop [OPTIONS]",
           "options": [
             {

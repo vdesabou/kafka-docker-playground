@@ -47,24 +47,27 @@ then
     fi
 fi
 
+# returns 1 when the offsets could not be read: called as 'handle_first_class_offset || ...', so set -e does
+# not apply inside it and every failure must be checked explicitly
 function handle_first_class_offset() {
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
         get_ccloud_connect
-        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets\" --header \"authorization: Basic $authorization\""
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets\" --header \"authorization: Basic $authorization\"" || return 1
     else
         if ! version_gt $tag "7.4.99"
         then
             logerror "❌ command is available since CP 7.5 only"
-            return
+            return 1
         fi
 
         get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\""
+        handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/offsets\"" || return 1
     fi
 
     echo "$curl_output" | jq .
 }
+failed=0
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -84,18 +87,14 @@ do
         get_connect_url_and_security
         handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
     fi
-    log "🏹 Getting offsets for $connector_type $type connector $connector${maybe_id}"
     type=$(echo "$curl_output" | jq -r '.type')
+    log "🏹 Getting offsets for $connector_type $type connector $connector${maybe_id}"
     if [ "$type" == "source" ]
     then
         ##
         # SOURCE CONNECTOR
         ##
-        handle_first_class_offset
-        if [ $? != 0 ]
-        then
-            continue
-        fi
+        handle_first_class_offset || { failed=1; continue; }
     else
         ##
         # SINK CONNECTOR
@@ -108,18 +107,20 @@ do
         get_environment_used
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [[ "$environment" == "ccloud" ]]
         then
-            handle_first_class_offset 
+            handle_first_class_offset || { failed=1; continue; }
         else
-            if version_gt $tag "7.5.99"
+            # the offsets API (KIP-875) reads the offsets of a sink since CP 7.5, like for a source
+            if version_gt $tag "7.4.99"
             then
-                handle_first_class_offset
-                if [ $? != 0 ]
-                then
-                    continue
-                fi
+                handle_first_class_offset || { failed=1; continue; }
             else
                 playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
             fi
         fi
     fi
 done
+
+if [ $failed -ne 0 ]
+then
+    exit 1
+fi

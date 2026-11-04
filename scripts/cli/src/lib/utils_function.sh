@@ -5504,8 +5504,9 @@ function handle_ccloud_connect_rest_api () {
     log "🐞 curl command used"
     echo "$curl_request"
   fi
-  eval "curl_output=\$($curl_request)"
-  ret=$?
+  # the generated cli runs under set -e: read the exit code in a && || list, otherwise a failed curl (6: could not
+  # resolve host, 7: could not connect, 28: timeout) ends the command with the curl code before the error below is printed
+  eval "curl_output=\$($curl_request)" && ret=0 || ret=$?
   if [ $ret -eq 0 ]
   then
       if [ "$curl_output" == "[]" ]

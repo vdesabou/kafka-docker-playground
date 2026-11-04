@@ -2,6 +2,7 @@ connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
+get_environment_used
 
 if [[ ! -n "$connector" ]]
 then
@@ -46,26 +47,37 @@ then
     fi
 fi
 
+# returns 1 when the offsets could not be reset: called as 'handle_first_class_offset || ...', so set -e does
+# not apply inside it and every failure must be checked explicitly
 function handle_first_class_offset() {
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then
 
-        echo '{"type":"DELETE"}' > /tmp/delete.json
+        echo '{"type":"DELETE"}' > $tmp_dir/delete.json
         get_ccloud_connect
-        handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @/tmp/delete.json \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\""
+        handle_ccloud_connect_rest_api "curl -s --request POST -H \"Content-Type: application/json\" --data @$tmp_dir/delete.json \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/offsets/request\" --header \"authorization: Basic $authorization\"" || return 1
     else
         if ! version_gt $tag "7.5.99"; then
             logerror "❌ command is available since CP 7.6 only"
-            return
+            return 1
         fi
-        playground connector stop --connector $connector
+        playground connector stop --connector $connector || return 1
 
+        # always resume the connector, even when the DELETE is refused: otherwise it stays STOPPED
         get_connect_url_and_security
-        handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\""
+        delete_ret=0
+        handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector/offsets\"" || delete_ret=1
+        if [ $delete_ret -eq 0 ]
+        then
+            echo "$curl_output" | jq .
+        fi
 
-        echo "$curl_output" | jq .
-
-        playground connector resume --connector $connector
+        playground connector resume --connector $connector || return 1
+        if [ $delete_ret -ne 0 ]
+        then
+            logerror "❌ offsets of connector $connector were not reset (the connector has been resumed)"
+            return 1
+        fi
     fi
 }
 
@@ -77,6 +89,7 @@ else
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 
+failed=0
 items=($connector)
 length=${#items[@]}
 if ((length > 1))
@@ -103,37 +116,29 @@ do
         ##
         # SOURCE CONNECTOR
         ##
-        handle_first_class_offset
-        if [ $? != 0 ]
+        handle_first_class_offset || { failed=1; continue; }
+        if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
-            continue
+            # Confluent Cloud applies the request asynchronously
+            sleep 5
+            playground connector offsets get-offsets-request-status --connector $connector
+            sleep 20
         fi
-        sleep 5
-        playground connector offsets get-offsets-request-status --connector $connector
-        sleep 20
         playground connector offsets get --connector $connector
     else
         if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
         then
-            handle_first_class_offset
-            if [ $? != 0 ]
-            then
-                continue
-            fi
+            handle_first_class_offset || { failed=1; continue; }
             sleep 5
             playground connector offsets get-offsets-request-status --connector $connector
             sleep 20
             playground connector offsets get --connector $connector
-            exit 0
+            continue
         fi
 
         if version_gt $tag "7.5.99"
         then
-            handle_first_class_offset
-            if [ $? != 0 ]
-            then
-                continue
-            fi
+            handle_first_class_offset || { failed=1; continue; }
             playground connector offsets get --connector $connector
         else
             playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION
@@ -158,3 +163,8 @@ do
         fi
     fi
 done
+
+if [ $failed -ne 0 ]
+then
+    exit 1
+fi
