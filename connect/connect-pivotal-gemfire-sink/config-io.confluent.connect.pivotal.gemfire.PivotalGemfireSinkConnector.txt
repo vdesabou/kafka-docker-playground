@@ -70,6 +70,11 @@ Key
 🔘 key.mode
 
 The key mode, Supported modes are:
+``kafka``    topic name, partition, offset is used for gemfire key.
+``record_key``
+    Field(s) from the record key are used, which may be a primitive or a struct.
+``record_value``
+    Field(s) from the record value are used, which may be a primitive or a struct.
 
 	 - Type: STRING
 	 - Default: kafka
@@ -80,6 +85,11 @@ The key mode, Supported modes are:
 
 List of comma-separated with whitespace key field names. The runtime interpretation of this config depends on the ``key.mode``:
 ``kafka``
+    key fields are ignored in this mode.``record_key``
+    if empty, all the fields from key struct will be part of gemfire key, or else only the configured keys are extracted and set as gemfire key.
+``record_value``
+    if empty, all the fields from value struct will be part of gemfire key, or else only the configured keys are extracted and set as gemfire key.
+
 
 	 - Type: LIST
 	 - Default: 
@@ -106,4 +116,5 @@ Maximum number of records to be batched in a single insert operation.
 	 - Default: 100
 	 - Importance: MEDIUM
 	 - Required: false
+
 

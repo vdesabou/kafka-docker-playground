@@ -67,6 +67,7 @@ Data Mapping
 🔘 table.name.format
 
 A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -132,4 +133,5 @@ The time in milliseconds to wait following an error before a retry attempt is ma
 	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
+
 

@@ -195,8 +195,7 @@ Output file extension for when using the ByteArrayFormat.
 
 🔘 format.bytearray.separator
 
-String inserted between records in the same file for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
-``. An input record that contains the line separator will look like multiple records in the output Azure object.
+String inserted between records in the same file for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``\n``. An input record that contains the line separator will look like multiple records in the output Azure object.
 
 	 - Type: STRING
 	 - Default: null
@@ -490,4 +489,5 @@ null
 	 - Default: APN/1.0 Confluent/1.0 AzureBlobSink/
 	 - Importance: LOW
 	 - Required: false
+
 
