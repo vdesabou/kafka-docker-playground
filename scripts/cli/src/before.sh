@@ -10,8 +10,13 @@ dir1=$(echo ${DIR_CLI%/*})
 root_folder=$(echo ${dir1%/*})
 
 # a free file descriptor on stderr for the --verbose output of the kafka-* tools (see log_verbose_command): unlike stdout
-# and stderr, $(...) and 2>&1 in the commands don't capture it
-exec {playground_verbose_fd}>&2
+# and stderr, $(...) and 2>&1 in the commands don't capture it.
+# Only opened with --verbose: every child inherits it, even with '> file 2>&1 &', so a long-lived background process (the
+# kubectl port-forward of cfk) would keep 'playground run … 2>&1 | tee' of run-tests.sh open forever
+if [[ -n "${args[--verbose]}" ]]
+then
+    exec {playground_verbose_fd}>&2
+fi
 
 # --json: the log lines of this command go to stderr, stdout only holds the JSON result
 # not exported: nested playground calls must keep their normal stdout (bashly validators and callers parse what they
