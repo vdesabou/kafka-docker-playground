@@ -173,6 +173,7 @@ Overrides
 
 The overrides configuration allows for per topic customization of configuration. The customized overrides are merged with the default configuration, to create the specific configuration for a topic.
 For example, ``topic.override.foo.collection=bar`` will store data from the ``foo`` topic into the ``bar`` collection.
+Note: All configuration options apart from 'connection.uri' and 'topics' are overridable.
 
 	 - Type: STRING
 	 - Default: 
@@ -386,6 +387,7 @@ A comma separated list of field names for value projection
 🔘 field.renamer.mapping
 
 An inline JSON array with objects describing field name mappings.
+Example: `[{"oldName":"key.fieldA","newName":"field1"},{"oldName":"value.xyz","newName":"abc"}]`
 
 	 - Type: STRING
 	 - Default: []
@@ -395,6 +397,7 @@ An inline JSON array with objects describing field name mappings.
 🔘 field.renamer.regexp
 
 An inline JSON array with objects describing regexp settings.
+Example: `[{"regexp":"^key\\\\..*my.*$","pattern":"my","replace":""},{"regexp":"^value\\\\..*$","pattern":"\\\\.","replace":"_"}]`
 
 	 - Type: STRING
 	 - Default: []
@@ -595,4 +598,5 @@ The DateTimeFormatter locale language tag to use with the date pattern: Defaults
 	 - Default: 
 	 - Importance: LOW
 	 - Required: false
+
 
