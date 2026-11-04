@@ -1,5 +1,5 @@
     "allow.optional.map.keys": "false",
-    "avro.codec": "",
+    "avro.codec": "null",
     "behavior.on.null.values": "fail",
     "connect.meta.data": "true",
     "directory.delim": "/",

@@ -163,6 +163,8 @@ HTTPS Proxy Password. This property is  meant to be used only if you need to acc
 🔘 gcp.pubsub.data.format
 
 Pub/Sub Message Data format. This property defines  the initial format of message data obtained from the GCP Pub/Sub.
+ utf_8 will convert pub/sub message data (bytes) into utf-8 based string format.
+ bytes will keep the pub/sub message data (bytes) without any conversion.
 
 	 - Type: STRING
 	 - Default: utf_8
@@ -172,6 +174,8 @@ Pub/Sub Message Data format. This property defines  the initial format of messag
 🔘 gcp.pubsub.return.immediately
 
 Setting this field to true is generally discouraged due to performance implications.
+ When enabled, the connector will not wait in the Pull operation for messages from Pub/Sub if no records are available in the topic at that moment.
+ This behavior can increase the number of API calls and reduce the efficiency of subscriptions.pull operations, as it prevents the batching of records that can occur within the bounded waiting time defined by Pub/Sub internals.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -186,4 +190,5 @@ The fully qualified name of a class that implements the ``com.google.api.gax.cor
 	 - Default: 
 	 - Importance: LOW
 	 - Required: false
+
 

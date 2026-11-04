@@ -61,6 +61,12 @@ Writes
 🔘 insert.mode
 
 The insertion mode to use. Supported modes are:
+``insert``
+    Use standard SQL ``INSERT`` statements.
+``upsert``
+    Use the appropriate upsert semantics for the target database if it is supported by the connector, e.g. ``INSERT OR IGNORE``.
+``update``
+    Use the appropriate update semantics for the target database if it is supported by the connector, e.g. ``UPDATE``.
 
 	 - Type: STRING
 	 - Default: insert
@@ -82,6 +88,7 @@ Data Mapping
 🔘 table.name.format
 
 A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -91,6 +98,14 @@ A format string for the destination table name, which may contain '${topic}' as 
 🔘 pk.mode
 
 The primary key mode, also refer to ``pk.fields`` documentation for interplay. Supported modes are:
+``none``
+    No keys utilized.
+``kafka``
+    Kafka coordinates are used as the PK.
+``record_key``
+    Field(s) from the record key are used, which may be a primitive or a struct.
+``record_value``
+    Field(s) from the record value are used, which must be a struct.
 
 	 - Type: STRING
 	 - Default: none
@@ -101,6 +116,13 @@ The primary key mode, also refer to ``pk.fields`` documentation for interplay. S
 
 List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
 ``none``
+    Ignored as no fields are used as primary key in this mode.
+``kafka``
+    Must be a trio representing the Kafka coordinates, defaults to ``__connect_topic,__connect_partition,__connect_offset`` if empty.
+``record_key``
+    If empty, all fields from the key struct will be used, otherwise used to extract the desired fields - for primitive key only a single field name must be configured.
+``record_value``
+    If empty, all fields from the value struct will be used, otherwise used to extract the desired fields.
 
 	 - Type: LIST
 	 - Default: 
@@ -167,4 +189,5 @@ The time in milliseconds to wait following an error before a retry attempt is ma
 	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
+
 

@@ -183,8 +183,7 @@ Output file extension for ByteArrayFormat. Defaults to '.bin'
 
 🔘 format.bytearray.separator
 
-String inserted between records for ByteArrayFormat. Defaults to 'System.lineSeparator()' and may contain escape sequences like '
-'. An input record that contains the line separator will look like multiple records in the output GCS object.
+String inserted between records for ByteArrayFormat. Defaults to 'System.lineSeparator()' and may contain escape sequences like '\n'. An input record that contains the line separator will look like multiple records in the output GCS object.
 
 	 - Type: STRING
 	 - Default: null
@@ -397,4 +396,5 @@ The record field to be used as timestamp by the timestamp extractor.
 	 - Default: timestamp
 	 - Importance: MEDIUM
 	 - Required: false
+
 
