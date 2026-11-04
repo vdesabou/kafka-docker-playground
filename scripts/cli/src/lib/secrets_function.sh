@@ -268,14 +268,14 @@ function secret_backend_put () {
 
       if op item get "$title" --vault "$vault" > /dev/null 2>&1
       then
-        if ! op_error=$(op item edit "$title" --vault "$vault" "password=${value}" 2>&1 > /dev/null)
+        if ! op_error=$(op item edit "$title" --vault "$vault" "password=${value}" < /dev/null 2>&1 > /dev/null)
         then
           logerror "❌ could not update 1Password item $title: $op_error" >&2
           return 1
         fi
       else
         if ! op_error=$(op item create --category Password --vault "$vault" --title "$title" \
-            --tags "$PLAYGROUND_SECRETS_SERVICE" "password=${value}" 2>&1 > /dev/null)
+            --tags "$PLAYGROUND_SECRETS_SERVICE" "password=${value}" < /dev/null 2>&1 > /dev/null)
         then
           logerror "❌ could not create 1Password item $title in vault $vault: $op_error" >&2
           return 1
@@ -356,7 +356,7 @@ function secret_backend_update () {
       [ "$field" == "$item" ] && field="password"
 
       local op_error
-      if ! op_error=$(op item edit "$item" --vault "$vault" "${field}=${value}" 2>&1 > /dev/null)
+      if ! op_error=$(op item edit "$item" --vault "$vault" "${field}=${value}" < /dev/null 2>&1 > /dev/null)
       then
         logerror "❌ could not update 1Password item $item in vault $vault: $op_error" >&2
         logerror "👉 a service account token needs write_items on that vault to rotate a password" >&2

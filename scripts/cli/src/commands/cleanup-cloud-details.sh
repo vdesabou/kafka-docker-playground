@@ -11,3 +11,4 @@ playground state del ccloud.CLUSTER_REGION
 playground state del ccloud.CLUSTER_CREDS
 playground state del ccloud.SCHEMA_REGISTRY_CREDS
 playground state del ccloud.suggest_use_previous_example_ccloud
+playground state del ccloud.FLINK_COMPUTE_POOL

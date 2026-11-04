@@ -7,16 +7,35 @@ help: |-
   🐿️ Flink commands
 
   Run Flink SQL and manage the jobs of the Flink cluster started with
-  'playground run --enable-flink' (jobmanager REST API on port 18081).
+  'playground run --enable-flink' (jobmanager REST API on port 18081), or
+  the statements of a Confluent Cloud Flink compute pool (--environment ccloud,
+  the default after a ccloud example).
 
     sql         run Flink SQL statements (stdin or --file) with the SQL client
     list-jobs   jobs of the cluster with their state, start time and duration
     cancel      cancel a job, or all running jobs
 
   🎓 Tip: the Flink UI is served on the same port as the REST API:
-  http://localhost:18081. See the flink/flink-sql-kafka example.
+  http://localhost:18081. See the flink/flink-sql-kafka example, and
+  ccloud/flink-sql-kafka for Confluent Cloud.
 
   🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
+environment_variables:
+- name: playground_flink_environment
+  help: |-
+    🌍 local or ccloud, when --environment is not set (default: ccloud when the last example ran on Confluent Cloud)
+- name: flink_compute_pool
+  help: |-
+    🧮 Confluent Cloud: id of the Flink compute pool (lfcp-xxx). Default: the pool stored by ccloud/flink-sql-kafka
+    (ccloud.FLINK_COMPUTE_POOL in playground.ini), else the first provisioned pool of the environment in the region
+    of the cluster
+- name: flink_api_key
+  help: |-
+    🔑 Confluent Cloud: Flink API key used to read the results of the queries (with FLINK_API_SECRET). Default: a key
+    created once for the environment and region, kept in the playground secrets store (playground secrets)
+- name: flink_api_secret
+  help: |-
+    🔐 Confluent Cloud: secret of FLINK_API_KEY
 commands:
 
   - name: sql
@@ -42,8 +61,30 @@ commands:
       on a bounded source. Otherwise the client is stopped after
       --max-wait seconds.
 
+      ☁️ Confluent Cloud (--environment ccloud): each statement is a
+      statement of the compute pool, created with 'confluent flink statement
+      create' in the environment (catalog) and Kafka cluster (database) of the
+      last ccloud example. The topics with a schema are tables already. SET
+      and USE are sent as properties of the next statements. The rows of a
+      query (SELECT, SHOW, DESCRIBE…) are read with the statement results REST
+      API (a Flink API key is created once, see FLINK_API_KEY) and printed
+      with the changelog applied, so an aggregation prints its final value; the
+      query statement is then deleted. An INSERT INTO keeps RUNNING: follow it
+      with 'playground flink list-jobs'. --max-wait applies to each query.
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
     flags:
+    - &flink_environment
+      long: --environment
+      required: false
+      arg: environment
+      allowed:
+      - local
+      - ccloud
+      help: |-
+        🌍 local: the Flink cluster of --enable-flink. ccloud: a Confluent Cloud Flink compute pool
+
+        ℹ️ Default: PLAYGROUND_FLINK_ENVIRONMENT, else ccloud when the last example ran on Confluent Cloud, else local
     - long: --file
       short: -f
       required: false
@@ -75,6 +116,10 @@ commands:
       INSERT INTO sink SELECT * FROM orders;
       EOF
     - playground flink sql --file ./queries.sql
+    - |-
+      playground flink sql --environment ccloud << 'EOF'
+      SELECT COUNT(*) AS nb_orders FROM flink_orders /*+ OPTIONS('scan.bounded.mode'='latest-offset') */;
+      EOF
     x_example_outputs:
     - command: playground flink sql --file ./queries.sql
       output: |-
@@ -94,8 +139,13 @@ commands:
       Job id, state, name, start time and duration of every job, most
       recent first. For a FAILED job, the root exception is also printed.
 
+      ☁️ Confluent Cloud (--environment ccloud): the statements of the compute
+      pool (name, status, SQL, creation time and age), with the status detail
+      of the 5 most recent FAILED or DEGRADED statements.
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
     flags:
+    - *flink_environment
     - long: --state
       required: false
       arg: state
@@ -111,17 +161,26 @@ commands:
       - RESTARTING
       - SUSPENDED
       - RECONCILING
+      - PENDING
+      - COMPLETED
+      - DEGRADED
+      - STOPPING
+      - STOPPED
+      - DELETING
       help: |-
         🚦 Only list the jobs in this state
+
+        ℹ️ Confluent Cloud statements: PENDING, RUNNING, COMPLETED, DEGRADED, FAILING, FAILED, STOPPING, STOPPED, DELETING
     - long: --json
       required: false
       help: |-
-        📗 Print the jobs as a JSON array (the /jobs/overview REST API response) and nothing else
+        📗 Print the jobs as a JSON array (the /jobs/overview REST API response, or 'confluent flink statement list' on Confluent Cloud) and nothing else
     - import: src/flags/verbose.yml
     examples:
     - playground flink list-jobs
     - playground flink list-jobs --state RUNNING
     - playground flink list-jobs --json | jq -r '.[].jid'
+    - playground flink list-jobs --environment ccloud --state RUNNING
     x_example_outputs:
     - command: playground flink list-jobs
       output: |-
@@ -138,8 +197,15 @@ commands:
       job is CANCELED (30 seconds at most). Without --job and --all, the
       running job is cancelled when there is only one.
 
+      ☁️ Confluent Cloud (--environment ccloud): stops the statement (it can be
+      resumed with 'confluent flink statement resume'), or deletes it with
+      --delete. --all and the default only pick the running statements created
+      by 'playground flink sql' of this user (name pg-<user>-…), as the
+      compute pool can be shared: other statements need --job.
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-flink
     flags:
+    - *flink_environment
     - long: --job
       short: -j
       required: false
@@ -149,14 +215,20 @@ commands:
         dynamic:
         - playground get-flink-job-list
       help: |-
-        🆔 Id of the job to cancel (see playground flink list-jobs)
+        🆔 Id of the job to cancel, or name of the Confluent Cloud statement (see playground flink list-jobs)
     - long: --all
       required: false
       conflicts: [--job]
       help: |-
         💥 Cancel all running jobs
+    - long: --delete
+      required: false
+      help: |-
+        🗑️ Confluent Cloud only: delete the statements instead of stopping them. With --all: every statement
+        created by playground flink sql of this user, whatever its status (STOPPED, COMPLETED, FAILED…)
     - import: src/flags/verbose.yml
     examples:
     - playground flink cancel
     - playground flink cancel --job 972185f42739cba34766e6dea6d80a50
     - playground flink cancel --all
+    - playground flink cancel --environment ccloud --all --delete

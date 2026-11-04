@@ -1,5 +1,18 @@
 job="${args[--job]}"
 all="${args[--all]}"
+delete="${args[--delete]}"
+
+get_flink_environment
+if [[ "$flink_environment" == "ccloud" ]]
+then
+    flink_ccloud_cancel "$job" "$all" "$delete"
+    exit 0
+fi
+if [[ -n "$delete" ]]
+then
+    logerror "❌ --delete is only for Confluent Cloud statements (--environment ccloud): a cancelled job of the local cluster is kept in its history"
+    exit 1
+fi
 
 get_flink_rest_url
 running_jobs=$(playground get-flink-job-list)

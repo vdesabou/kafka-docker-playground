@@ -441,6 +441,7 @@ All the examples below run their statements with `playground ksqldb sql`, and wa
 
 ## 🐿️ Flink
 - [Flink SQL with Kafka](https://github.com/vdesabou/kafka-docker-playground/tree/master/flink/flink-sql-kafka): streaming and batch Flink SQL on Kafka topics with `playground flink sql|list-jobs|cancel` :flink/flink-sql-kafka:
+- [Flink SQL on Confluent Cloud](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/flink-sql-kafka): a compute pool and Flink SQL statements on Confluent Cloud topics with `playground flink sql|list-jobs|cancel --environment ccloud` :ccloud/flink-sql-kafka:
 
 ## 🔰 Schema Registry
 - [How to use Data Contracts](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/data-contracts) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)

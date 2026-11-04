@@ -14,6 +14,13 @@ then
     exit 1
 fi
 
+get_flink_environment
+if [[ "$flink_environment" == "ccloud" ]]
+then
+    flink_ccloud_sql "$sql" "$max_wait"
+    exit 0
+fi
+
 get_flink_rest_url
 flink_version=$(curl -s "${flink_rest_url}/overview" | jq -r '."flink-version"' 2>/dev/null)
 

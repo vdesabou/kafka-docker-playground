@@ -1,6 +1,13 @@
 state="${args[--state]}"
 json="${args[--json]}"
 
+get_flink_environment
+if [[ "$flink_environment" == "ccloud" ]]
+then
+    flink_ccloud_list_jobs "$state" "$json"
+    exit 0
+fi
+
 get_flink_rest_url
 overview=$(curl -s -f "${flink_rest_url}/overview") || { logerror "❌ could not reach the flink rest api on $flink_rest_url"; exit 1; }
 jobs=$(curl -s -f "${flink_rest_url}/jobs/overview") || { logerror "❌ could not list the jobs with ${flink_rest_url}/jobs/overview"; exit 1; }
