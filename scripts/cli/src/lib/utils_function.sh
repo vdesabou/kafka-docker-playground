@@ -5689,6 +5689,68 @@ function display_ngrok_warning () {
   check_if_continue
 }
 
+# waits for the ngrok tunnel(s) of an example (ngrok container, or the bore tunnel of tools/bore-tunnel, same agent API
+# on port 4040) and exports NGROK_URL, NGROK_HOSTNAME and NGROK_PORT (NGROK_URL2, NGROK_HOSTNAME2, NGROK_PORT2… for the
+# next tunnels, in the order of the agent API, as the examples always read them):
+#   get_ngrok_url [number of tunnels, default 1] [max wait in seconds, default 180]
+# Fails at once when the container stops (an invalid NGROK_AUTH_TOKEN, a session limit of the account: the end of its
+# logs says why), and after the max wait with the last answer of the agent API, instead of retrying forever
+function get_ngrok_url () {
+  local nb_tunnels="${1:-1}" max_wait="${2:-180}" start=$SECONDS container_id status tunnels nb_ready i url host port addr suffix
+  log "🚇 Waiting for the ngrok tunnel$( [ "$nb_tunnels" -gt 1 ] && echo "s") (up to ${max_wait}s)"
+  while true
+  do
+    container_id=$(docker ps -aq -f name=^ngrok$ 2> /dev/null | head -1) || container_id=""
+    if [ -n "$container_id" ]
+    then
+      status=$(docker inspect --format '{{.State.Status}}' "$container_id" 2> /dev/null) || status=""
+      if [ "$status" == "exited" ] || [ "$status" == "dead" ]
+      then
+        logerror "❌ the ngrok container stopped (exit code $(docker inspect --format '{{.State.ExitCode}}' "$container_id" 2> /dev/null)), end of its logs:"
+        docker logs --tail 15 "$container_id" 2>&1 | sed 's/^/   /' >&2
+        logerror "   🎓 an authentication error: check NGROK_AUTH_TOKEN; 'limited to 1 simultaneous ngrok agent session': stop the ngrok agents of your other runs"
+        exit 1
+      fi
+      if [ "$status" == "running" ]
+      then
+        # examples run with set -e: neither the agent API still starting (connection refused) nor an empty answer must end them
+        tunnels=$(curl --silent --max-time 5 http://127.0.0.1:4040/api/tunnels 2> /dev/null) || tunnels=""
+        nb_ready=$(jq '[.tunnels[]? | select(.public_url != null and .public_url != "")] | length' <<< "$tunnels" 2> /dev/null) || nb_ready=0
+        if [ "${nb_ready:-0}" -ge "$nb_tunnels" ]
+        then
+          for (( i = 0; i < nb_tunnels; i++ ))
+          do
+            url=$(jq -r ".tunnels[$i].public_url" <<< "$tunnels")
+            addr=$(jq -r ".tunnels[$i].config.addr // empty" <<< "$tunnels")
+            host=$(cut -d "/" -f3 <<< "$url" | cut -d ":" -f 1)
+            port=$(cut -d "/" -f3 <<< "$url" | cut -d ":" -f 2)
+            if ! [[ "$port" =~ ^[0-9]+$ ]]
+            then
+              break
+            fi
+            suffix=""
+            [ $i -gt 0 ] && suffix=$((i + 1))
+            export "NGROK_URL${suffix}=$url" "NGROK_HOSTNAME${suffix}=$host" "NGROK_PORT${suffix}=$port"
+            log "🚇 $url → ${addr:-the local service} (NGROK_HOSTNAME${suffix}=$host, NGROK_PORT${suffix}=$port)"
+          done
+          if [[ "$port" =~ ^[0-9]+$ ]]
+          then
+            return 0
+          fi
+        fi
+      fi
+    fi
+    if [ $((SECONDS - start)) -ge "$max_wait" ]
+    then
+      logerror "❌ no ngrok tunnel after ${max_wait}s (container: ${status:-not found}), last answer of http://127.0.0.1:4040/api/tunnels:"
+      echo "   ${tunnels:-none}" | cut -c1-500 >&2
+      [ -n "$container_id" ] && docker logs --tail 10 "$container_id" 2>&1 | sed 's/^/   /' >&2
+      exit 1
+    fi
+    sleep 3
+  done
+}
+
 function display_ngrok_token_checks () {
   set +e
   docker pull ngrok/ngrok > /dev/null 2>&1

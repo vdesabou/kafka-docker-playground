@@ -61,6 +61,10 @@ Fully managed:
   missing (see `ccloud/fm-marketo-sink/fully-managed-marketo-sink.sh`). Never hardcode a secret.
 - `bootstrap_ccloud_environment` (with `"<cloud>" "<region>"` when the connector needs a specific one)
   instead of `start-environment`.
+- A local system the connector must reach (database, HTTP server…): an `ngrok` service in the compose file
+  (copy a sibling such as `ccloud/fm-jdbc-postgresql-sink/`), `display_ngrok_warning` at the top, and
+  `get_ngrok_url` after `docker compose up` (`get_ngrok_url 2` for two tunnels): it exports `NGROK_HOSTNAME`
+  and `NGROK_PORT` for the connector config. Never copy the old `while true` loop on the agent API.
 - External resources (buckets, tables, leads…) named with
   `playground-${USER}-${GITHUB_RUN_NUMBER}${TAG_BASE}-$RANDOM`-style unique names, deleted by a
   `cleanup_cloud_resources` function registered with `trap cleanup_cloud_resources EXIT`, inside
