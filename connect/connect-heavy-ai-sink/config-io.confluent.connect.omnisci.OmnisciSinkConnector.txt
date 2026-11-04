@@ -4,6 +4,7 @@ Data Mapping
 🔘 table.name.format
 
 A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -70,6 +71,7 @@ Data Mapping
 🔘 fields.whitelist
 
 List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
+
 
 	 - Type: LIST
 	 - Default: 
@@ -144,4 +146,5 @@ OmniSci hostname or ipaddress.
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
+
 

@@ -148,6 +148,12 @@ Directory delimiter pattern.
 🔘 behavior.on.error
 
 Error handling behavior setting for storage connectors. Must be configured to one of the following:
+``fail``
+Stops the connector when an error occurs while processiong records.
+``ignore``
+Continues to process next set of records when error occurs while processiong records.
+``log``
+Logs the error message when error occurs while processiong records and continues to process next set of records, available in Connect logs.
 
 	 - Type: STRING
 	 - Default: fail
@@ -165,8 +171,7 @@ Output file extension for Byte Array Format. Defaults to ``.bin``.
 
 🔘 format.bytearray.separator
 
-String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
-``. An input record that contains the line separator looks like multiple records in the storage object output.
+String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``\n``. An input record that contains the line separator looks like multiple records in the storage object output.
 
 	 - Type: STRING
 	 - Default: 
@@ -272,6 +277,7 @@ Connector
 🔘 bucket.listing.max.objects.threshold
 
 	
+An integer that represents the max number of objects the connector will index from the bucket at a time before automatically failing. A value of -1 indicatees no limit.
 
 	 - Type: INT
 	 - Default: -1
@@ -426,26 +432,23 @@ Flag to determine if the RFC 4180 parser should be used instead of the default p
 	 - Required: false
 
 ==========================
-folders
-==========================
-🔘 LIST
-
-
-
-	 - Type: HIGH
-	 - Default: false
-	 - Importance: 
-	 - Required: 
 
 ==========================
-filename.regex
-==========================
-🔘 (.+)\+(\d+)\+.+$
+🔘 folders
+
+
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 filename.regex
 
 
 
 	 - Type: STRING
-	 - Default: 
+	 - Default: (.+)\+(\d+)\+.+$
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -547,4 +550,5 @@ The period in milliseconds to renew the Kerberos ticket.
 	 - Default: 3600000
 	 - Importance: LOW
 	 - Required: false
+
 

@@ -1,5 +1,5 @@
     "allow.optional.map.keys": "false",
-    "avro.codec": "",
+    "avro.codec": "null",
     "connect.hdfs.keytab": "",
     "connect.hdfs.principal": "",
     "connect.meta.data": "true",
