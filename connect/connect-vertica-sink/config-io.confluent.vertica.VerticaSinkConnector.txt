@@ -118,6 +118,12 @@ The type of compression for the data load.
 🔘 rejected.record.logging.mode
 
 Mode of logging when vertica rejects record. Must be configured to one of the following:
+``log``
+    Logs the rejected records, available in connect logs. 
+``file``
+    Writes the rejected records and exceptions to the configured files. The ``rejected.record.path`` and ``rejected.record.exception.path`` should be configured to the designated file paths. 
+``table``
+    Writes the rejected records and exceptions of vertica tables to respective rejected tables with the same table name appended with '_rejected'
 
 	 - Type: STRING
 	 - Default: log
@@ -172,6 +178,7 @@ The amount of time in milliseconds to cache the stream builder objects that are 
 🔘 table.name.format
 
 A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -217,6 +224,14 @@ DDL Support
 🔘 pk.mode
 
 The primary key mode, also refer to ``pk.fields`` documentation for interplay. Supported modes are:
+``none``
+    No keys utilized.
+``kafka``
+    Kafka coordinates are used as the PK.
+``record_key``
+    Field(s) from the record key are used, which may be a primitive or a struct.
+``record_value``
+    Field(s) from the record value are used, which must be a struct.
 
 	 - Type: STRING
 	 - Default: none
@@ -227,6 +242,13 @@ The primary key mode, also refer to ``pk.fields`` documentation for interplay. S
 
 List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
 ``none``
+    Ignored as no fields are used as primary key in this mode.
+``kafka``
+    Must be a trio representing the Kafka coordinates, defaults to ``__connect_topic,__connect_partition,__connect_offset`` if empty.
+``record_key``
+    If empty, all fields from the key struct will be used, otherwise used to extract the desired fields - for primitive key only a single field name must be configured.
+``record_value``
+    If empty, all fields from the value struct will be used, otherwise used to extract the desired fields.
 
 	 - Type: LIST
 	 - Default: 
@@ -244,4 +266,5 @@ To process delete requests for tombstone records, if Kafka record value is null,
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
 

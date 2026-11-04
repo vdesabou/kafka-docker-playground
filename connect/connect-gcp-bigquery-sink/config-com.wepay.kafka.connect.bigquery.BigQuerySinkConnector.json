@@ -1,4 +1,3 @@
-    "DAY": "",
     "allBQFieldsNullable": "false",
     "allowBigQueryRequiredFieldRelaxation": "false",
     "allowNewBigQueryFields": "false",
@@ -36,6 +35,7 @@
     "sanitizeTopics": "false",
     "schemaRetriever": "com.wepay.kafka.connect.bigquery.retrieve.IdentitySchemaRetriever",
     "threadPoolSize": "10",
+    "timePartitioningType": "DAY",
     "timestampPartitionFieldName": "",
     "topic2TableMap": "",
     "upsertEnabled": "false",

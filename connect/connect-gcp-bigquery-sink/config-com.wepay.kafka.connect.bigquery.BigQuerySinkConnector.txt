@@ -229,6 +229,7 @@ A suffix that will be appended to the names of destination tables to create the 
 🔘 mergeIntervalMs
 
 How often (in milliseconds) to perform a merge flush, if upsert/delete is enabled. Can be set to -1 to disable periodic flushing. Either mergeIntervalMs or mergeRecordsThreshold, or both must be enabled.
+This should not be set to less than 10 seconds. A validation would be introduced in a future release to this effect.
 
 	 - Type: LONG
 	 - Default: 60000
@@ -326,14 +327,14 @@ List of fields on which data should be clustered by in BigQuery, separated by co
 	 - Required: false
 
 ==========================
-timePartitioningType
+
 ==========================
-🔘 DAY
+🔘 timePartitioningType
 
 The time partitioning type to use when creating tables, or 'NONE' to create non-partitioned tables. Existing tables will not be altered to use this partitioning type.
 
 	 - Type: STRING
-	 - Default: 
+	 - Default: DAY
 	 - Importance: LOW
 	 - Required: false
 
@@ -375,4 +376,5 @@ The maximum number of times to retry on retriable errors before failing the task
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
 

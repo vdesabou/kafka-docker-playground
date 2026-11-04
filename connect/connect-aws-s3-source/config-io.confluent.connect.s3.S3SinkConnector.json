@@ -1,5 +1,5 @@
     "allow.optional.map.keys": "false",
-    "avro.codec": "",
+    "avro.codec": "null",
     "aws.access.key.id": "",
     "aws.secret.access.key": "[hidden]",
     "behavior.on.null.values": "fail",

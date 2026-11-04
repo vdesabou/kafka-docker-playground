@@ -61,6 +61,7 @@ Connection
 🔘 max.batch.size
 
 The maximum number of records sent in a single request to Google Cloud Functions. Values must be at least 1.
+ Note: Google Cloud Functions can only receive 10MB per request and large batch sizes may fail as a result.
 
 	 - Type: INT
 	 - Default: 1
@@ -95,38 +96,32 @@ The amount of time the connector takes to try to request the function if it cann
 	 - Required: false
 
 ==========================
-reporter.result.topic.name
+
 ==========================
-🔘 ${connector}-success
+🔘 reporter.result.topic.name
 
 The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
 	 - Type: STRING
-	 - Default: 
+	 - Default: ${connector}-success
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.result.topic.replication.factor
-==========================
-🔘 3
+🔘 reporter.result.topic.replication.factor
 
 The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
 	 - Type: SHORT
-	 - Default: 
+	 - Default: 3
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.result.topic.partitions
-==========================
-🔘 1
+🔘 reporter.result.topic.partitions
 
 The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
 
 	 - Type: INT
-	 - Default: 
+	 - Default: 1
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -275,38 +270,32 @@ Include schemas within each of the serialized values and keys.
 	 - Required: false
 
 ==========================
-reporter.error.topic.name
+
 ==========================
-🔘 ${connector}-error
+🔘 reporter.error.topic.name
 
 The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
 
 	 - Type: STRING
-	 - Default: 
+	 - Default: ${connector}-error
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.error.topic.replication.factor
-==========================
-🔘 3
+🔘 reporter.error.topic.replication.factor
 
 The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
 
 	 - Type: SHORT
-	 - Default: 
+	 - Default: 3
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-reporter.error.topic.partitions
-==========================
-🔘 1
+🔘 reporter.error.topic.partitions
 
 The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
 
 	 - Type: INT
-	 - Default: 
+	 - Default: 1
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -455,16 +444,16 @@ Include schemas within each of the serialized values and keys.
 	 - Required: false
 
 ==========================
-reporter.bootstrap.servers
+
 ==========================
-🔘 LIST
+🔘 reporter.bootstrap.servers
 
+A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
 
-
-	 - Type: MEDIUM
-	 - Default: false
-	 - Importance: 
-	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 null
@@ -504,4 +493,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 
