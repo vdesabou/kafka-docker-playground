@@ -370,7 +370,7 @@ playground stop
 | "the connector never recovers after a database failover / restart" | `tcp-proxy close-connection`, then `playground connector wait --connector <c> --max-wait 120` and `container logs -c connect --errors` |
 | "the task hangs forever, no error" (no socket / read timeout) | `tcp-proxy toggle-reads-service` or `tcp-proxy break --break-service-response 100`, then `playground analyze thread-dump -c connect` |
 | "the database is slow, the query times out" | `tcp-proxy delay --delay-service-response 30000` (or `start … --delay-service-response` to hit the reconnections too) |
-| "a slow API: the HTTP sink retries, records arrive late" | `tcp-proxy start --hostname httpserver --port 9006 --throttle-service-response 1000` |
+| "a slow API: the HTTP sink retries, records arrive late" | `tcp-proxy start --hostname httpserver --port 9006 --throttle-service-response 1000`; or without a proxy, `playground tools http-server set-response --delay 2000` (or `--status-code 503`, `--close-connection`) and `tools http-server requests` to see each retry |
 | "intermittent `Connection reset` / `Broken pipe`" | `tcp-proxy break --break-service-response 10`, then `close-all-connection-with-error` between runs |
 | "the connector can't reconnect after a failure, pool exhausted" | `tcp-proxy toggle-accept-connections` (`false`), `tcp-proxy close-connection`, wait, `toggle-accept-connections` again |
 | "garbage / protocol errors from the server" | `tcp-proxy start … --service-response-corrupt` |

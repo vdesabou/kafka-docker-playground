@@ -224,6 +224,7 @@ playground_usage() {
   printf "  %s   🔖 Read provided parquet file\n" "$(green "tools read-parquet-file")                   "
   printf "  %s   🔐 Generate keys and certificates used for SSL\n" "$(green "tools certs-create")                        "
   printf "  %s   🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)\n" "$(green "tools redos-check")                         "
+  printf "  %s   🌐 Drive the http test server of the http examples\n" "$(green "tools http-server")                         "
   echo
   printf "%s\n" "$(bold "Analyze commands:")"
   printf "  %s   🔎 Analyze commands\n" "$(green "analyze")                                   "
@@ -8929,7 +8930,7 @@ playground_tcp_proxy_open_ui_usage() {
 playground_tools_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools\n\n"
-    printf "  🧰 Tools commands\n  \n  Small utilities that are handy around the playground but are not tied to a\n  running environment:\n  \n    read-avro-file        dump an avro file as readable json\n    read-parquet-file     same, for parquet\n    certs-create          generate a keystore and truststore for a component\n    redos-check           check a topics.regex for catastrophic backtracking\n    install-vscode-extension   playground completion inside VS Code\n    install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n  \n  🎓 Tip: the file readers are what you use to check what a sink connector\n  really wrote, after pulling the file out with 'playground container cp'.\n\n"
+    printf "  🧰 Tools commands\n  \n  Small utilities that are handy around the playground but are not tied to a\n  running environment:\n  \n    read-avro-file        dump an avro file as readable json\n    read-parquet-file     same, for parquet\n    certs-create          generate a keystore and truststore for a component\n    redos-check           check a topics.regex for catastrophic backtracking\n    http-server           drive the http test server of the http examples:\n  set-response, reset, requests\n    install-vscode-extension   playground completion inside VS Code\n    install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n  \n  🎓 Tip: the file readers are what you use to check what a sink connector\n  really wrote, after pulling the file out with 'playground container cp'.\n\n"
   else
     printf "playground tools - 🧰 Tools commands\n\n"
   fi
@@ -8946,6 +8947,9 @@ playground_tools_usage() {
   printf "  %s   🔖 Read provided parquet file\n" "$(green "read-parquet-file")       "
   printf "  %s   🔐 Generate keys and certificates used for SSL\n" "$(green "certs-create")            "
   printf "  %s   🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)\n" "$(green "redos-check")             "
+  echo
+  printf "%s\n" "$(bold "Tools commands:")"
+  printf "  %s   🌐 Drive the http test server of the http examples\n" "$(green "http-server")             "
   echo
 
   # :command.long_usage
@@ -9176,6 +9180,236 @@ playground_tools_redos_check_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_http_server_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools http-server\n\n"
+    printf "  🌐 Drive the http test server of the http examples\n  \n  The httpserver container (connect/connect-http-sink/httpserver, port 9006)\n  used by the http sink, http v2 sink / source, custom SMT and fully managed\n  http examples answers every request with a configurable status code,\n  delay and body, and records the requests it receives:\n  \n    set-response   status code, body, delay, or close the connections\n    reset          back to 200, no delay, {} (and forget the requests)\n    requests       what the connector sent: method, url, headers, body,\n                   status sent back; or wait for N requests\n  \n  🎓 Tip: to reproduce a retry or a DLQ case, set-response --status-code 500,\n  produce, check the requests the connector retried, then reset.\n\n"
+  else
+    printf "playground tools http-server - 🌐 Drive the http test server of the http examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools http-server COMMAND\n"
+  printf "  playground tools http-server [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🎛️ Set how the http test server answers\n" "$(green "set-response")"
+  printf "  %s   🔄 Reset the http test server\n" "$(green "reset")       "
+  printf "  %s   📥 Show the requests received by the http test server\n" "$(green "requests")    "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_http_server_set_response_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools http-server set-response\n\n"
+    printf "  🎛️ Set how the http test server answers\n  \n  Any combination of a status code, a JSON body, a delay, and closing the\n  connections without answering (to reproduce 'Connection reset' and\n  'Unexpected end of stream' errors). The body can also come on stdin\n  (heredoc). The settings stay until the next set-response or reset.\n\n"
+  else
+    printf "playground tools http-server set-response - 🎛️ Set how the http test server answers\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools http-server set-response [OPTIONS]\n"
+  printf "  playground tools http-server set-response --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container of the http test server (default httpserver)\n"
+    printf "    %s\n" "Default: httpserver"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--status-code STATUS_CODE")"
+    printf "    🔢 HTTP status code of the responses (200, 400, 429, 500...)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--body BODY")"
+    printf "    📄 JSON object or array sent back as response body (or on stdin)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--delay DELAY")"
+    printf "    ⏳ Delay in milliseconds before answering (0 for none), to reproduce timeouts\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--close-connection")"
+    printf "    ✂️ Close the connections without answering, until reset\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground tools http-server set-response --status-code 500\n"
+    printf "  playground tools http-server set-response --status-code 429 --delay 2000\n"
+    printf "  playground tools http-server set-response << 'EOF'\n{\"store\": {\"book\": [{\"category\": \"reference\", \"price\": 8.95}]}}\nEOF\n"
+printf "  playground tools http-server set-response --close-connection\n"
+echo
+
+fi
+}
+
+# :command.usage
+playground_tools_http_server_reset_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools http-server reset\n\n"
+    printf "  🔄 Reset the http test server\n  \n  Back to the defaults: status 200, no delay, {} as body, connections kept\n  open. The received requests are forgotten too, unless --keep-requests.\n\n"
+  else
+    printf "playground tools http-server reset - 🔄 Reset the http test server\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools http-server reset [OPTIONS]\n"
+  printf "  playground tools http-server reset --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container of the http test server (default httpserver)\n"
+    printf "    %s\n" "Default: httpserver"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keep-requests")"
+    printf "    📥 Keep the requests received so far\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground tools http-server reset\n"
+    printf "  playground tools http-server reset --keep-requests\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_http_server_requests_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools http-server requests\n\n"
+    printf "  📥 Show the requests received by the http test server\n  \n  The current settings, then the last requests (oldest first): number,\n  time, method, url, status sent back (or 'connection closed'), content\n  type and size, and the body (300 characters, --full for all of it). The\n  server keeps the last 1000 requests since its start or the last reset.\n  \n  With --min-expected-requests, waits until that many requests (matching\n  --method and --grep) were received, instead of a sleep in an example.\n\n"
+  else
+    printf "playground tools http-server requests - 📥 Show the requests received by the http test server\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools http-server requests [OPTIONS]\n"
+  printf "  playground tools http-server requests --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container of the http test server (default httpserver)\n"
+    printf "    %s\n" "Default: httpserver"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--last LAST")"
+    printf "    🔢 Number of requests to show, the most recent ones (0 for all the kept ones,\n    default 20)\n"
+    printf "    %s\n" "Default: 20"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--method METHOD")"
+    printf "    🔀 Only the requests with this method (GET, POST, PUT...)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep GREP")"
+    printf "    🔎 Only the requests whose url or body match this regex\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--headers")"
+    printf "    📨 Show the headers of each request\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--full")"
+    printf "    📜 Show whole bodies, not only the first 300 characters\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print {\"settings\", \"total\", \"kept\", \"matched\", \"requests\": [...]} and\n    nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--min-expected-requests MIN_EXPECTED_REQUESTS")"
+    printf "    ⏳ Wait until at least this number of matching requests were received\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
+    printf "    ⏳ Max time in seconds to wait with --min-expected-requests (default 60)\n"
+    printf "    %s\n" "Default: 60"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--clear")"
+    printf "    🧹 Forget the received requests after showing them\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground tools http-server requests\n"
+    printf "  playground tools http-server requests --last 5 --headers\n"
+    printf "  playground tools http-server requests --method POST --grep '\"product\":\"foo\"'\n  --full\n"
+    printf "  playground tools http-server requests --min-expected-requests 2 --max-wait 120\n"
+    printf "  playground tools http-server requests --json | jq -r '.requests[].status'\n"
     echo
 
   fi
@@ -32245,6 +32479,72 @@ function db_filter_output () {
   else
     cat
   fi
+}
+
+# src/lib/http_server_function.sh
+# helpers of 'playground tools http-server': the http test server of the http examples (connect/connect-http-sink/httpserver,
+# container httpserver, port 9006). The calls run curl inside its container (docker exec, kubectl exec on cfk), so they
+# do not depend on the port published on the host
+
+# sets http_server_container and http_server_transport, exits when the container is not running
+function http_server_resolve () {
+  local wanted="${1:-httpserver}"
+  http_server_transport="docker"
+  get_environment_used
+  if [[ "$environment" == cfk* ]]
+  then
+    http_server_transport="kubectl"
+    http_server_container=$(resolve_container_name_for_environment "$wanted")
+    if ! kubectl -n confluent get pod "$http_server_container" -o jsonpath='{.status.phase}' 2>/dev/null | grep -q Running
+    then
+      logerror "❌ pod $http_server_container is not running: start an http example (connect/connect-http-sink, connect-http-v2-sink...)"
+      exit 1
+    fi
+    return 0
+  fi
+  http_server_container="$wanted"
+  if [[ -z "$(docker ps --filter "name=^${http_server_container}$" --filter "status=running" --format "{{.Names}}")" ]]
+  then
+    logerror "❌ container $http_server_container is not running: start an http example (connect/connect-http-sink, connect-http-v2-sink...)"
+    exit 1
+  fi
+}
+
+# http_server_call <method> <path> [json body]: prints the response body, returns 1 when the call fails
+function http_server_call () {
+  local method="$1" path="$2" body="${3:-}"
+  local curl_cmd=(curl -s -S --max-time 30 -X "$method" "http://localhost:9006$path")
+  if [[ -n "$body" ]]
+  then
+    curl_cmd+=(-H "Content-Type: application/json" --data-binary @-)
+  fi
+  if [[ "$http_server_transport" == "kubectl" ]]
+  then
+    printf '%s' "$body" | kubectl -n confluent exec -i "$http_server_container" -- "${curl_cmd[@]}"
+  else
+    printf '%s' "$body" | docker exec -i "$http_server_container" "${curl_cmd[@]}"
+  fi
+}
+
+# the settings and requests (GET /received-requests), exits with a hint when the image is older than the endpoint
+function http_server_received_requests () {
+  local response
+  response=$(http_server_call GET /received-requests) || {
+    logerror "❌ could not reach the http server in $http_server_container" >&2
+    exit 1
+  }
+  if ! jq -e '.settings and .requests' > /dev/null 2>&1 <<< "$response"
+  then
+    http_server_old_image_error
+  fi
+  printf '%s\n' "$response"
+}
+
+# on stderr: also shown when called in $(...)
+function http_server_old_image_error () {
+  logerror "❌ the $http_server_container container runs an image built before 'playground tools http-server' (no /reset nor /received-requests endpoint)" >&2
+  logerror "   🎓 rebuild it with the example: playground re-run (its compose service has pull_policy: build)" >&2
+  exit 1
 }
 
 # src/lib/ini.sh
@@ -57545,6 +57845,171 @@ playground_tools_redos_check_command() {
       logerror "❌ unexpected error while executing redos-check (exit code: $exit_code)"
       exit 1
   fi
+}
+
+# :command.function
+playground_tools_http_server_set_response_command() {
+
+  # src/commands/tools/http-server/set-response.sh
+  container="${args[--container]}"
+  status_code="${args[--status-code]}"
+  body="${args[--body]}"
+  delay="${args[--delay]}"
+  close_connection="${args[--close-connection]}"
+
+  if [[ -z "$body" && -z "$status_code" && -z "$delay" && -z "$close_connection" ]]
+  then
+      # the body can come on stdin (heredoc), when nothing else is set
+      body=$(read_stdin_if_any)
+  fi
+  if [[ -z "${body//[[:space:]]/}" && -z "$status_code" && -z "$delay" && -z "$close_connection" ]]
+  then
+      logerror "❌ nothing to set: pass --status-code, --body (or a JSON body on stdin), --delay and/or --close-connection"
+      exit 1
+  fi
+  if [[ -n "${body//[[:space:]]/}" ]] && ! jq -e 'type == "object" or type == "array"' > /dev/null 2>&1 <<< "$body"
+  then
+      logerror "❌ --body must be a JSON object or array, got: $(head -c 200 <<< "$body")"
+      exit 1
+  fi
+
+  http_server_resolve "$container"
+
+  # set_one <endpoint> <json>: fails with the message of the server when it refuses the value
+  function set_one () {
+      local response
+      response=$(http_server_call PUT "$1" "$2") || { logerror "❌ could not reach the http server in $http_server_container"; exit 1; }
+      if ! jq -e '.message' > /dev/null 2>&1 <<< "$response" || jq -e '.message | test("Please provide")' > /dev/null 2>&1 <<< "$response"
+      then
+          logerror "❌ $1 refused: $response"
+          exit 1
+      fi
+  }
+
+  if [[ -n "${body//[[:space:]]/}" ]]
+  then
+      set_one /set-response-body "$body"
+  fi
+  if [[ -n "$status_code" ]]
+  then
+      set_one /set-response-error-code "{\"errorCode\": $status_code}"
+  fi
+  if [[ -n "$delay" ]]
+  then
+      set_one /set-response-time "{\"delay\": $delay}"
+  fi
+  if [[ -n "$close_connection" ]]
+  then
+      set_one /set-connection-closed ""
+  fi
+
+  # the resulting settings (an image older than the requests endpoint only gets the summary of what was set)
+  response=$(http_server_call GET /received-requests 2>/dev/null)
+  if jq -e '.settings' > /dev/null 2>&1 <<< "$response"
+  then
+      jq -r --arg c "$http_server_container" '.settings | "🌐 \($c) now answers \(if .close_connection then "by closing the connection" else "\(.status_code) after \(.delay_ms) ms, body \(.body | tojson | if length > 120 then .[0:120] + "…" else . end)" end)"' <<< "$response" | while IFS= read -r line; do log "$line"; done
+  else
+      log "🌐 $http_server_container: set${status_code:+ status code $status_code}${delay:+ delay ${delay} ms}${body:+ body}${close_connection:+ connection closed}"
+  fi
+
+}
+
+# :command.function
+playground_tools_http_server_reset_command() {
+
+  # src/commands/tools/http-server/reset.sh
+  container="${args[--container]}"
+  keep_requests="${args[--keep-requests]}"
+
+  http_server_resolve "$container"
+  clear_requests="true"
+  if [[ -n "$keep_requests" ]]
+  then
+      clear_requests="false"
+  fi
+  response=$(http_server_call PUT "/reset?requests=$clear_requests") || { logerror "❌ could not reach the http server in $http_server_container"; exit 1; }
+  if ! jq -e '.message | test("reset")' > /dev/null 2>&1 <<< "$response"
+  then
+      http_server_old_image_error
+  fi
+  log "🔄 $http_server_container reset: answers 200 at once with {} as body, connections kept open$( [[ -z "$keep_requests" ]] && echo ", received requests forgotten")"
+
+}
+
+# :command.function
+playground_tools_http_server_requests_command() {
+
+  # src/commands/tools/http-server/requests.sh
+  container="${args[--container]}"
+  last="${args[--last]}"
+  method="${args[--method]}"
+  grep_regex="${args[--grep]}"
+  show_headers="${args[--headers]}"
+  full="${args[--full]}"
+  json="${args[--json]}"
+  min_expected="${args[--min-expected-requests]}"
+  max_wait="${args[--max-wait]}"
+  clear="${args[--clear]}"
+
+  http_server_resolve "$container"
+
+  method=$(tr '[:lower:]' '[:upper:]' <<< "$method")
+  # the requests matching --method and --grep (on the url and the body)
+  jq_filter='[.requests[] | select(($method == "" or .method == $method) and ($grep == "" or (((.url) + " " + (.body | if type == "string" then . else tojson end)) | test($grep))))]'
+
+  if [[ -n "$min_expected" ]]
+  then
+      log "⏳ Waiting up to $max_wait seconds for $http_server_container to receive at least $min_expected request(s)${method:+ $method}${grep_regex:+ matching $grep_regex}"
+      start_time=$SECONDS
+      last_count=""
+      while true
+      do
+          response=$(http_server_received_requests) || exit 1
+          count=$(jq --arg method "$method" --arg grep "$grep_regex" "$jq_filter | length" <<< "$response")
+          elapsed=$((SECONDS - start_time))
+          if [ "$count" -ge "$min_expected" ]
+          then
+              log "✅ $http_server_container received $count request(s) (expected at least $min_expected) after $elapsed seconds"
+              break
+          fi
+          if [ "$count" != "$last_count" ]
+          then
+              log "⌛ $http_server_container received $count request(s) (expected at least $min_expected)"
+              last_count="$count"
+          fi
+          if [ $elapsed -ge $max_wait ]
+          then
+              logerror "❌ $http_server_container received $count request(s) after $max_wait seconds, expected at least $min_expected"
+              exit 1
+          fi
+          sleep 2
+      done
+  fi
+
+  response=$(http_server_received_requests) || exit 1
+  if [[ -n "$json" ]]
+  then
+      jq --arg method "$method" --arg grep "$grep_regex" --argjson last "$last" \
+          "{settings, total, kept, matched: ($jq_filter | length), requests: ($jq_filter | if \$last > 0 then .[-\$last:] else . end)}" <<< "$response"
+  else
+      jq -r --arg method "$method" --arg grep "$grep_regex" --argjson last "$last" '
+          (.settings | "🌐 answers: \(if .close_connection then "connection closed" else "\(.status_code) after \(.delay_ms) ms, body \(.body | tojson | if length > 80 then .[0:80] + "…" else . end)" end)"),
+          "📥 \(.total) request(s) received since the start or the last reset (\(.kept) kept)\(if $method != "" or $grep != "" then ", \('"$jq_filter"' | length) matching" else "" end)"' <<< "$response" | while IFS= read -r line; do log "$line"; done
+      jq -r --arg method "$method" --arg grep "$grep_regex" --argjson last "$last" --arg headers "$show_headers" --arg full "$full" '
+          '"$jq_filter"' | (if $last > 0 then .[-$last:] else . end)[] |
+          "#\(.number) \(.time | sub("\\.[0-9]+Z$"; "Z") | fromdate | localtime | strftime("%H:%M:%S")) \(.method) \(.url) → \(.status)  \(.headers["content-type"] // "-"), \(.headers["content-length"] // "0") bytes",
+          (if $headers != "" then (.headers | to_entries[] | "   \(.key): \(.value)") else empty end),
+          (if .body == null then empty
+           elif $full != "" then (.body | if type == "string" then . else tojson end | split("\n")[] | "   " + .)
+           else "   " + (.body | if type == "string" then . else tojson end | gsub("\n"; " ") | if length > 300 then .[0:300] + "… (--full for the whole body)" else . end)
+           end)' <<< "$response"
+  fi
+
+  if [[ -n "$clear" ]]
+  then
+      http_server_call DELETE /received-requests > /dev/null && log "🧹 received requests cleared"
+  fi
+
 }
 
 # :command.function
@@ -106391,6 +106856,13 @@ playground_tools_parse_requirements() {
       shift $#
       ;;
 
+    http-server)
+      action="http-server"
+      shift
+      playground_tools_http_server_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_tools_usage >&2
@@ -107018,6 +107490,540 @@ playground_tools_redos_check_parse_requirements() {
     validation_output="$(validate_integer "${args['--timeout']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--timeout TIMEOUT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tools_http_server_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_http_server_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    set-response)
+      action="set-response"
+      shift
+      playground_tools_http_server_set_response_parse_requirements "$@"
+      shift $#
+      ;;
+
+    reset)
+      action="reset"
+      shift
+      playground_tools_http_server_reset_parse_requirements "$@"
+      shift $#
+      ;;
+
+    requests)
+      action="requests"
+      shift
+      playground_tools_http_server_requests_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_tools_http_server_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_tools_http_server_set_response_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_http_server_set_response_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tools http-server set-response"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --status-code)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--status-code']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--status-code requires an argument: --status-code STATUS_CODE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --body)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--body']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--body requires an argument: --body BODY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --delay)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--delay']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--delay requires an argument: --delay DELAY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --close-connection)
+
+        # :flag.case_no_arg
+        args['--close-connection']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="httpserver"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--status-code'] ]]; then
+    validation_output="$(validate_integer "${args['--status-code']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--status-code STATUS_CODE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--delay'] ]]; then
+    validation_output="$(validate_integer "${args['--delay']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--delay DELAY" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tools_http_server_reset_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_http_server_reset_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tools http-server reset"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --keep-requests)
+
+        # :flag.case_no_arg
+        args['--keep-requests']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="httpserver"
+
+}
+
+# :command.parse_requirements
+playground_tools_http_server_requests_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_http_server_requests_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tools http-server requests"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --last)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--last']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--last requires an argument: --last LAST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --method)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--method']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--method requires an argument: --method METHOD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep GREP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --headers)
+
+        # :flag.case_no_arg
+        args['--headers']=1
+        shift
+        ;;
+
+      # :flag.case
+      --full)
+
+        # :flag.case_no_arg
+        args['--full']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --min-expected-requests)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--min-expected-requests']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--min-expected-requests requires an argument: --min-expected-requests MIN_EXPECTED_REQUESTS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --clear)
+
+        # :flag.case_no_arg
+        args['--clear']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="httpserver"
+  [[ -n ${args['--last']:-} ]] || args['--last']="20"
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="60"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--last'] ]]; then
+    validation_output="$(validate_integer "${args['--last']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--last LAST" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--min-expected-requests'] ]]; then
+    validation_output="$(validate_integer "${args['--min-expected-requests']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--min-expected-requests MIN_EXPECTED_REQUESTS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -147085,6 +148091,11 @@ playground_tools_completion() {
         playground_tools_redos_check_completion "$completion_current" "$@"
         return
         ;;
+      http-server)
+        shift
+        playground_tools_http_server_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -147094,7 +148105,7 @@ playground_tools_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" install-vscode-extension install-alfred-workflow read-avro-file read-parquet-file certs-create redos-check
+  completion_candidates "$completion_current" install-vscode-extension install-alfred-workflow read-avro-file read-parquet-file certs-create redos-check http-server
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -147321,6 +148332,271 @@ playground_tools_redos_check_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --topic-regex "$completion_current" --topic-regex
     completion_flag_candidates --timeout "$completion_current" --timeout
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_http_server_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      set-response)
+        shift
+        playground_tools_http_server_set_response_completion "$completion_current" "$@"
+        return
+        ;;
+      reset)
+        shift
+        playground_tools_http_server_reset_completion "$completion_current" "$@"
+        return
+        ;;
+      requests)
+        shift
+        playground_tools_http_server_requests_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" set-response reset requests
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_http_server_set_response_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --status-code)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--status-code"]=1
+
+        ;;
+      --body)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--body"]=1
+
+        ;;
+      --delay)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--delay"]=1
+
+        ;;
+      --close-connection)
+        completion_blocked_flags["--close-connection"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --status-code "$completion_current" --status-code
+    completion_flag_candidates --body "$completion_current" --body
+    completion_flag_candidates --delay "$completion_current" --delay
+    completion_flag_candidates --close-connection "$completion_current" --close-connection
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_http_server_reset_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --keep-requests)
+        completion_blocked_flags["--keep-requests"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --keep-requests "$completion_current" --keep-requests
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_http_server_requests_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --last)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--last"]=1
+
+        ;;
+      --method)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--method"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --headers)
+        completion_blocked_flags["--headers"]=1
+
+        shift
+        ;;
+      --full)
+        completion_blocked_flags["--full"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --min-expected-requests)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--min-expected-requests"]=1
+
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --clear)
+        completion_blocked_flags["--clear"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --last "$completion_current" --last
+    completion_flag_candidates --method "$completion_current" --method
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --headers "$completion_current" --headers
+    completion_flag_candidates --full "$completion_current" --full
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --min-expected-requests "$completion_current" --min-expected-requests
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --clear "$completion_current" --clear
   fi
 
 }
@@ -163427,6 +164703,10 @@ run() {
     "tools read-parquet-file") playground_tools_read_parquet_file_command ;;
     "tools certs-create") playground_tools_certs_create_command ;;
     "tools redos-check") playground_tools_redos_check_command ;;
+    "tools http-server") playground_tools_http_server_command ;;
+    "tools http-server set-response") playground_tools_http_server_set_response_command ;;
+    "tools http-server reset") playground_tools_http_server_reset_command ;;
+    "tools http-server requests") playground_tools_http_server_requests_command ;;
     "analyze") playground_analyze_command ;;
     "analyze thread-dump") playground_analyze_thread_dump_command ;;
     "analyze heap-dump") playground_analyze_heap_dump_command ;;

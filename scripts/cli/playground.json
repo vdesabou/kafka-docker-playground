@@ -3790,7 +3790,7 @@
     },
     {
       "name": "tools",
-      "description": "🧰 Tools commands\n\nSmall utilities that are handy around the playground but are not tied to a\nrunning environment:\n\n  read-avro-file        dump an avro file as readable json\n  read-parquet-file     same, for parquet\n  certs-create          generate a keystore and truststore for a component\n  redos-check           check a topics.regex for catastrophic backtracking\n  install-vscode-extension   playground completion inside VS Code\n  install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n\n🎓 Tip: the file readers are what you use to check what a sink connector\nreally wrote, after pulling the file out with 'playground container cp'.",
+      "description": "🧰 Tools commands\n\nSmall utilities that are handy around the playground but are not tied to a\nrunning environment:\n\n  read-avro-file        dump an avro file as readable json\n  read-parquet-file     same, for parquet\n  certs-create          generate a keystore and truststore for a component\n  redos-check           check a topics.regex for catastrophic backtracking\n  http-server           drive the http test server of the http examples: set-response, reset, requests\n  install-vscode-extension   playground completion inside VS Code\n  install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n\n🎓 Tip: the file readers are what you use to check what a sink connector\nreally wrote, after pulling the file out with 'playground container cp'.",
       "usage": "playground tools COMMAND",
       "options": [],
       "subcommands": [
@@ -3894,6 +3894,157 @@
               ],
               "argument": "TIMEOUT",
               "description": "Max number of seconds to wait for ReDos check.\n\nDefault is 1 second\n\nDefault value: 1"
+            }
+          ]
+        },
+        {
+          "name": "http-server",
+          "description": "🌐 Drive the http test server of the http examples\n\nThe httpserver container (connect/connect-http-sink/httpserver, port 9006)\nused by the http sink, http v2 sink / source, custom SMT and fully managed\nhttp examples answers every request with a configurable status code,\ndelay and body, and records the requests it receives:\n\n  set-response   status code, body, delay, or close the connections\n  reset          back to 200, no delay, {} (and forget the requests)\n  requests       what the connector sent: method, url, headers, body,\n                 status sent back; or wait for N requests\n\n🎓 Tip: to reproduce a retry or a DLQ case, set-response --status-code 500,\nproduce, check the requests the connector retried, then reset.",
+          "usage": "playground tools http-server COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "set-response",
+              "description": "🎛️ Set how the http test server answers\n\nAny combination of a status code, a JSON body, a delay, and closing the\nconnections without answering (to reproduce 'Connection reset' and\n'Unexpected end of stream' errors). The body can also come on stdin\n(heredoc). The settings stay until the next set-response or reset.",
+              "usage": "playground tools http-server set-response [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--container",
+                    "-c"
+                  ],
+                  "argument": "CONTAINER",
+                  "description": "🐳 Container of the http test server (default httpserver)\n\nDefault value: httpserver"
+                },
+                {
+                  "names": [
+                    "--status-code"
+                  ],
+                  "argument": "STATUS_CODE",
+                  "description": "🔢 HTTP status code of the responses (200, 400, 429, 500...)"
+                },
+                {
+                  "names": [
+                    "--body"
+                  ],
+                  "argument": "BODY",
+                  "description": "📄 JSON object or array sent back as response body (or on stdin)"
+                },
+                {
+                  "names": [
+                    "--delay"
+                  ],
+                  "argument": "DELAY",
+                  "description": "⏳ Delay in milliseconds before answering (0 for none), to reproduce timeouts"
+                },
+                {
+                  "names": [
+                    "--close-connection"
+                  ],
+                  "argument": "",
+                  "description": "✂️ Close the connections without answering, until reset"
+                }
+              ]
+            },
+            {
+              "name": "reset",
+              "description": "🔄 Reset the http test server\n\nBack to the defaults: status 200, no delay, {} as body, connections kept\nopen. The received requests are forgotten too, unless --keep-requests.",
+              "usage": "playground tools http-server reset [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--container",
+                    "-c"
+                  ],
+                  "argument": "CONTAINER",
+                  "description": "🐳 Container of the http test server (default httpserver)\n\nDefault value: httpserver"
+                },
+                {
+                  "names": [
+                    "--keep-requests"
+                  ],
+                  "argument": "",
+                  "description": "📥 Keep the requests received so far"
+                }
+              ]
+            },
+            {
+              "name": "requests",
+              "description": "📥 Show the requests received by the http test server\n\nThe current settings, then the last requests (oldest first): number,\ntime, method, url, status sent back (or 'connection closed'), content\ntype and size, and the body (300 characters, --full for all of it). The\nserver keeps the last 1000 requests since its start or the last reset.\n\nWith --min-expected-requests, waits until that many requests (matching\n--method and --grep) were received, instead of a sleep in an example.",
+              "usage": "playground tools http-server requests [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--container",
+                    "-c"
+                  ],
+                  "argument": "CONTAINER",
+                  "description": "🐳 Container of the http test server (default httpserver)\n\nDefault value: httpserver"
+                },
+                {
+                  "names": [
+                    "--last"
+                  ],
+                  "argument": "LAST",
+                  "description": "🔢 Number of requests to show, the most recent ones (0 for all the kept ones, default 20)\n\nDefault value: 20"
+                },
+                {
+                  "names": [
+                    "--method"
+                  ],
+                  "argument": "METHOD",
+                  "description": "🔀 Only the requests with this method (GET, POST, PUT...)"
+                },
+                {
+                  "names": [
+                    "--grep"
+                  ],
+                  "argument": "GREP",
+                  "description": "🔎 Only the requests whose url or body match this regex"
+                },
+                {
+                  "names": [
+                    "--headers"
+                  ],
+                  "argument": "",
+                  "description": "📨 Show the headers of each request"
+                },
+                {
+                  "names": [
+                    "--full"
+                  ],
+                  "argument": "",
+                  "description": "📜 Show whole bodies, not only the first 300 characters"
+                },
+                {
+                  "names": [
+                    "--json"
+                  ],
+                  "argument": "",
+                  "description": "📗 Print {\"settings\", \"total\", \"kept\", \"matched\", \"requests\": [...]} and nothing else"
+                },
+                {
+                  "names": [
+                    "--min-expected-requests"
+                  ],
+                  "argument": "MIN_EXPECTED_REQUESTS",
+                  "description": "⏳ Wait until at least this number of matching requests were received"
+                },
+                {
+                  "names": [
+                    "--max-wait"
+                  ],
+                  "argument": "MAX_WAIT",
+                  "description": "⏳ Max time in seconds to wait with --min-expected-requests (default 60)\n\nDefault value: 60"
+                },
+                {
+                  "names": [
+                    "--clear"
+                  ],
+                  "argument": "",
+                  "description": "🧹 Forget the received requests after showing them"
+                }
+              ]
             }
           ]
         }

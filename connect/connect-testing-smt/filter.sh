@@ -38,8 +38,10 @@ EOF
 playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
+playground tools http-server set-response --status-code 200
+playground tools http-server set-response << 'EOF'
+{"message":"Hello, World!"}
+EOF
 
 log "Creating http-sink connector with the Confluent Filter SMT (io.confluent.connect.transforms) keeping only records where category == 'keep'"
 playground connector create-or-update --connector http-sink  << EOF
@@ -76,4 +78,4 @@ log "Check the success-responses topic: only the 5 'keep' records should have re
 playground topic consume --topic success-responses --min-expected-messages 5 --timeout 60
 
 log "Verify the Confluent Filter SMT was applied: the HTTP server received 'keep' records"
-playground container logs --container httpserver --wait-for-log "keep"
+playground tools http-server requests --min-expected-requests 1 --grep "keep" --max-wait 600

@@ -60,8 +60,8 @@ playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
 # log "Set webserver to reply with 200"
-# curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-# curl -X PUT -H "Content-Type: application/json" --data '{"delay": 2000}' http://localhost:9006/set-response-time
+# playground tools http-server set-response --status-code 200
+# playground tools http-server set-response --delay 2000
 
 
 log "Creating fully managed connector"

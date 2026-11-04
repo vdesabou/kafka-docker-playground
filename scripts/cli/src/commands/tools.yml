@@ -11,6 +11,7 @@ help: |-
     read-parquet-file     same, for parquet
     certs-create          generate a keystore and truststore for a component
     redos-check           check a topics.regex for catastrophic backtracking
+    http-server           drive the http test server of the http examples: set-response, reset, requests
     install-vscode-extension   playground completion inside VS Code
     install-alfred-workflow    kdp launcher for the playground CLI (macOS)
 
@@ -221,3 +222,150 @@ commands:
         Max number of seconds to wait for ReDos check.
 
         Default is 1 second
+
+- name: http-server
+  group: Tools
+  help: |-
+    🌐 Drive the http test server of the http examples
+
+    The httpserver container (connect/connect-http-sink/httpserver, port 9006)
+    used by the http sink, http v2 sink / source, custom SMT and fully managed
+    http examples answers every request with a configurable status code,
+    delay and body, and records the requests it receives:
+
+      set-response   status code, body, delay, or close the connections
+      reset          back to 200, no delay, {} (and forget the requests)
+      requests       what the connector sent: method, url, headers, body,
+                     status sent back; or wait for N requests
+
+    🎓 Tip: to reproduce a retry or a DLQ case, set-response --status-code 500,
+    produce, check the requests the connector retried, then reset.
+  commands:
+  - name: set-response
+    help: |-
+      🎛️ Set how the http test server answers
+
+      Any combination of a status code, a JSON body, a delay, and closing the
+      connections without answering (to reproduce 'Connection reset' and
+      'Unexpected end of stream' errors). The body can also come on stdin
+      (heredoc). The settings stay until the next set-response or reset.
+    flags:
+    - &http_server_container
+      long: --container
+      short: -c
+      required: false
+      arg: container
+      default: "httpserver"
+      help: |-
+        🐳 Container of the http test server (default httpserver)
+    - long: --status-code
+      required: false
+      arg: status_code
+      validate: integer
+      help: |-
+        🔢 HTTP status code of the responses (200, 400, 429, 500...)
+    - long: --body
+      required: false
+      arg: body
+      help: |-
+        📄 JSON object or array sent back as response body (or on stdin)
+    - long: --delay
+      required: false
+      arg: delay
+      validate: integer
+      help: |-
+        ⏳ Delay in milliseconds before answering (0 for none), to reproduce timeouts
+    - long: --close-connection
+      required: false
+      help: |-
+        ✂️ Close the connections without answering, until reset
+    examples:
+    - playground tools http-server set-response --status-code 500
+    - playground tools http-server set-response --status-code 429 --delay 2000
+    - |-
+      playground tools http-server set-response << 'EOF'
+      {"store": {"book": [{"category": "reference", "price": 8.95}]}}
+      EOF
+    - playground tools http-server set-response --close-connection
+
+  - name: reset
+    help: |-
+      🔄 Reset the http test server
+
+      Back to the defaults: status 200, no delay, {} as body, connections kept
+      open. The received requests are forgotten too, unless --keep-requests.
+    flags:
+    - *http_server_container
+    - long: --keep-requests
+      required: false
+      help: |-
+        📥 Keep the requests received so far
+    examples:
+    - playground tools http-server reset
+    - playground tools http-server reset --keep-requests
+
+  - name: requests
+    help: |-
+      📥 Show the requests received by the http test server
+
+      The current settings, then the last requests (oldest first): number,
+      time, method, url, status sent back (or 'connection closed'), content
+      type and size, and the body (300 characters, --full for all of it). The
+      server keeps the last 1000 requests since its start or the last reset.
+
+      With --min-expected-requests, waits until that many requests (matching
+      --method and --grep) were received, instead of a sleep in an example.
+    flags:
+    - *http_server_container
+    - long: --last
+      required: false
+      arg: last
+      validate: integer
+      default: "20"
+      help: |-
+        🔢 Number of requests to show, the most recent ones (0 for all the kept ones, default 20)
+    - long: --method
+      required: false
+      arg: method
+      help: |-
+        🔀 Only the requests with this method (GET, POST, PUT...)
+    - long: --grep
+      required: false
+      arg: grep
+      help: |-
+        🔎 Only the requests whose url or body match this regex
+    - long: --headers
+      required: false
+      help: |-
+        📨 Show the headers of each request
+    - long: --full
+      required: false
+      help: |-
+        📜 Show whole bodies, not only the first 300 characters
+    - long: --json
+      required: false
+      help: |-
+        📗 Print {"settings", "total", "kept", "matched", "requests": [...]} and nothing else
+    - long: --min-expected-requests
+      required: false
+      arg: min_expected_requests
+      validate: integer
+      help: |-
+        ⏳ Wait until at least this number of matching requests were received
+    - long: --max-wait
+      required: false
+      arg: max_wait
+      validate: integer
+      default: "60"
+      help: |-
+        ⏳ Max time in seconds to wait with --min-expected-requests (default 60)
+    - long: --clear
+      required: false
+      help: |-
+        🧹 Forget the received requests after showing them
+    examples:
+    - playground tools http-server requests
+    - playground tools http-server requests --last 5 --headers
+    - playground tools http-server requests --method POST --grep '"product":"foo"' --full
+    - playground tools http-server requests --min-expected-requests 2 --max-wait 120
+    - playground tools http-server requests --json | jq -r '.requests[].status'

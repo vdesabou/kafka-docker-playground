@@ -44,8 +44,10 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 playground debug log-level set --package "org.apache.http" --level TRACE
 
 log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-curl -X PUT -H "Content-Type: application/json" --data '{"store":{"book":[{"category":"reference","sold":false,"author":"Nigel Rees","title":"Sayings of the Century","price":8.95}],"bicycle":{"color":"red","price":19.95}}}' http://localhost:9006/set-response-body
+playground tools http-server set-response --status-code 200
+playground tools http-server set-response << 'EOF'
+{"store":{"book":[{"category":"reference","sold":false,"author":"Nigel Rees","title":"Sayings of the Century","price":8.95}],"bicycle":{"color":"red","price":19.95}}}
+EOF
 
 log "Creating http-source connector"
 playground connector create-or-update --connector http-source  << EOF
