@@ -131,6 +131,7 @@ The maximum number of records each task will buffer before blocking acceptance o
 🔘 linger.ms
 
 Linger time in milliseconds for batching.
+Records that arrive in between request transmissions are batched into a single bulk indexing request, based on the ``batch.size`` configuration. Normally this only occurs under load when records arrive faster than they can be sent out. However it may be desirable to reduce the number of requests even under light load and benefit from bulk indexing. This setting helps accomplish that - when a pending batch is not full, rather than immediately sending it out the task will wait up to the given delay to allow other records to be added so that they can be batched into a single request.
 
 	 - Type: LONG
 	 - Default: 1
@@ -215,6 +216,7 @@ Data Conversion
 🔘 key.ignore
 
 Whether to ignore the record key for the purpose of forming the Elasticsearch document ID. When this is set to ``true``, document IDs will be generated as the record's ``topic+partition+offset``.
+ Note that this is a global config that applies to all topics, use ``topic.key.ignore`` to override as ``true`` for specific topics.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -224,6 +226,7 @@ Whether to ignore the record key for the purpose of forming the Elasticsearch do
 🔘 schema.ignore
 
 Whether to ignore schemas during indexing. When this is set to ``true``, the record schema will be ignored for the purpose of registering an Elasticsearch mapping. Elasticsearch will infer the mapping from the data (dynamic mapping needs to be enabled by the user).
+ Note that this is a global config that applies to all topics, use ``topic.schema.ignore`` to override as ``true`` for specific topics.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -556,4 +559,5 @@ The path to the keytab file to use for authentication with Kerberos.
 	 - Default: null
 	 - Importance: LOW
 	 - Required: false
+
 
