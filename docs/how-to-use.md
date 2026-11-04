@@ -676,6 +676,8 @@ playground flink list-jobs            # state, start time, duration, root cause 
 playground flink cancel --all         # or --job <id>
 ```
 
+The same commands manage the statements of a **Confluent Cloud** Flink compute pool with `--environment ccloud` (the default after a ccloud example): see the [Flink SQL on Confluent Cloud](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/flink-sql-kafka) example and the [deep dive](/deep-dive-flink?id=_6-confluent-cloud-flink-environment-ccloud).
+
 ## 🔢 JMX Metrics
 
 JMX metrics are available locally on those ports:

@@ -16,6 +16,7 @@ Takes about 15 minutes to read and run.
 | cancel a job | `playground flink cancel --job <id>`, `--all`, or no flag when only one job runs |
 | the Flink UI | [http://localhost:18081](http://localhost:18081) (same port as the REST API) |
 | a ready-made streaming + batch example | `playground run -f flink/flink-sql-kafka/flink-sql-kafka.sh` |
+| the same on Confluent Cloud Flink (compute pool, statements) | `playground run -f ccloud/flink-sql-kafka/flink-sql-kafka.sh`, then `playground flink … --environment ccloud` ([section 6](/deep-dive-flink?id=_6-confluent-cloud-flink-environment-ccloud)) |
 
 ---
 
@@ -333,7 +334,76 @@ playground stop
 
 ---
 
-## 6. Recipes for support repros
+## 6. Confluent Cloud Flink: `--environment ccloud`
+
+The same three commands work on the statements of a Confluent Cloud Flink compute pool. `--environment ccloud` is the
+default when the last example ran on Confluent Cloud (`playground state get run.environment`), `--environment local`
+forces the local cluster, and `PLAYGROUND_FLINK_ENVIRONMENT=ccloud|local` sets it for a shell session.
+
+```bash
+# environment + cluster (bootstrap_ccloud_environment), a compute pool (an existing one of the region of the cluster,
+# else kdp-flink-<cloud>-<region> created with the confluent CLI), 10 Avro orders, a streaming statement, a query
+playground run -f ccloud/flink-sql-kafka/flink-sql-kafka.sh
+```
+
+What changes compared to the local cluster:
+
+| | local (`--enable-flink`) | Confluent Cloud (`--environment ccloud`) |
+| --- | --- | --- |
+| where it runs | `sql-client.sh -f` in the `sql-client` container | one `confluent flink statement create --wait` per statement, on the compute pool |
+| tables | `CREATE TABLE … WITH ('connector' = 'kafka', …)` in each call | **every topic with a schema is a table already**, in catalog = environment, database = cluster; `CREATE TABLE t (…)` creates the topic and its schema, and stays |
+| `SET` / `USE` | statements of the session | sent as properties (`--property`) of the next statements of the same call |
+| `INSERT INTO`, `CREATE TABLE … AS SELECT` | a job, its id printed | a statement `pg-<user>-<date>-<n>` that stays `RUNNING`, its name printed |
+| `CREATE` / `DROP` / `ALTER` | immediate | waits until the statement is `COMPLETED`, then deletes it |
+| `SELECT`, `SHOW`, `DESCRIBE`, `EXPLAIN` | tableau result mode | rows read with the statement results REST API, printed as a table **with the changelog applied** (final value of an aggregation), then the statement is deleted |
+| a bounded read | `SET 'execution.runtime-mode' = 'batch';` + `'scan.bounded.mode'` | `FROM t /*+ OPTIONS('scan.bounded.mode' = 'latest-offset') */`, or a `LIMIT` (stops reading once the rows are in) |
+| `--max-wait` | the whole client | each query: then it is stopped and deleted (exit 1) |
+| `list-jobs` | jobs of the jobmanager | statements of the compute pool (`confluent flink statement list`), with the `status_detail` of the 5 most recent FAILED / DEGRADED ones |
+| `cancel` | job → `CANCELED` | statement → `STOPPED` (can be resumed), `--delete` deletes it. `--all` and the default only pick the `RUNNING` statements named `pg-<user>-…`: the pool may be shared, others need `--job <name>` |
+
+```bash
+playground flink sql << 'EOF'
+SELECT product, SUM(quantity) AS q
+FROM flink_orders /*+ OPTIONS('scan.bounded.mode' = 'latest-offset') */
+GROUP BY product;
+EOF
+# 🐿️ Running Flink SQL statements on Confluent Cloud (compute pool lfcp-…, aws eu-west-3, catalog <environment>, database <cluster>)
+# Flink SQL> SELECT product, SUM(quantity) AS q FROM flink_orders /*+ OPTIONS('scan.bounded.mode' = 'latest-offset') */ GROUP BY product
+# +---------+----+
+# | product |  q |
+# +---------+----+
+# |  laptop | 12 |
+# |   phone | 20 |
+# |  tablet | 14 |
+# +---------+----+
+# 3 rows in set
+
+playground flink list-jobs --state RUNNING
+# 📋 Statements of Flink compute pool lfcp-… on Confluent Cloud (aws eu-west-3, environment env-…)
+# STATEMENT NAME                 STATUS   SQL                                                           CREATED              AGE
+# pg-<user>-20261104170653-4     RUNNING  INSERT INTO flink_orders_enriched SELECT id, UPPER(produ...  2026-11-04 17:07:11  22s
+
+playground flink cancel --all --delete      # what the example does when it exits, even on failure
+```
+
+Where the context comes from:
+
+- **environment, cloud, region, cluster**: `playground.ini` `[ccloud]` (written by `bootstrap_ccloud_environment`), else
+  `ENVIRONMENT`, `CLUSTER_NAME`, `CLUSTER_CLOUD`, `CLUSTER_REGION`.
+- **compute pool**: `FLINK_COMPUTE_POOL`, else `ccloud.FLINK_COMPUTE_POOL` (stored by `bootstrap_ccloud_flink_compute_pool`
+  in the example), else the first `PROVISIONED` pool of the environment in the region of the cluster. An idle pool
+  costs nothing (billed per CFU minute used), so the example keeps it.
+- **rows of a query**: `confluent flink statement create` prints the status of a statement, not its rows. They are read
+  from `https://flink.<region>.<cloud>.confluent.cloud/sql/v1/…/statements/<name>/results` with a **Flink API key**:
+  `FLINK_API_KEY` / `FLINK_API_SECRET`, else a key created once for the environment and region (owned by the user
+  logged in to the confluent CLI, description `kafka-docker-playground playground flink sql (<user>)`) and kept in the
+  [`playground secrets`](/playground%20secrets) store, outside the repository (`FLINK_API_KEY` and `FLINK_API_SECRET`
+  in the secret backend, `FLINK_API_KEY_SCOPE` = organization/environment/cloud/region as a plain variable). A statement with only DDL and `INSERT` never needs it. The CI deletes it at the end of the example
+  (`delete_ccloud_flink_api_key`). Public endpoints only: a private networking Flink endpoint is not supported.
+
+---
+
+## 7. Recipes for support repros
 
 | Customer symptom | Command |
 | --- | --- |
@@ -345,6 +415,7 @@ playground stop
 | "Avro records with Schema Registry" | `'format' = 'avro-confluent'`, `'avro-confluent.url' = 'http://schema-registry:8081'`, with the `flink-sql-avro-confluent-registry` jar in `FLINK_URL` |
 | "it worked in Flink X, not in Y" | the same statements with `FLINK_TAG=X` then `FLINK_TAG=Y` (and the matching Kafka connector jar) |
 | "the job keeps consuming after we stopped the client" | `playground flink list-jobs --state RUNNING`: an `INSERT INTO` (and a `SELECT` stopped by force) runs on the cluster until `playground flink cancel` |
+| "our Confluent Cloud Flink statement gives a wrong result / fails" | `playground run -f ccloud/flink-sql-kafka/flink-sql-kafka.sh` for the environment, cluster and compute pool, produce the customer's records with `playground topic produce`, then their statements with `playground flink sql` (topics are tables already); `list-jobs` prints the `status_detail` of a FAILED one |
 
 In a repro model, assert on the output instead of reading it:
 
@@ -357,13 +428,14 @@ playground flink cancel --all
 
 ---
 
-## 7. Cheat sheet
+## 8. Cheat sheet
 
 ```bash
 FLINK_TAG=2.2 FLINK_URL="<jar> [<jar>…]" playground run -f <plaintext example> --enable-flink   # or ENABLE_FLINK=1
 playground flink sql [--file <file.sql> | << 'EOF' … EOF] [--max-wait 120]
 playground flink list-jobs [--state RUNNING|FAILED|…] [--json]
 playground flink cancel [--job <id> | --all]
+playground flink sql|list-jobs|cancel --environment ccloud      # Confluent Cloud compute pool; cancel --delete
 ```
 
 - Plaintext only: `jobmanager` (REST API + UI on `18081`), `taskmanager`, `sql-client`. From Flink, Kafka is
@@ -374,19 +446,23 @@ playground flink cancel [--job <id> | --all]
 - Connectors = jars in `FLINK_URL`, downloaded when the containers start, built for one Flink minor version.
 - `list-jobs` prints the root cause of FAILED jobs. `cancel` waits for CANCELED, refuses to pick between several jobs,
   and is a no-op (exit 0) when nothing runs.
+- Confluent Cloud: one statement per SQL statement, topics are tables, query rows read with a Flink API key and the
+  changelog applied, `cancel` stops (or `--delete`s) only the `pg-<user>-…` statements unless `--job` is given.
 - Sources: [`flink/sql.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/flink/sql.sh),
   [`flink/list-jobs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/flink/list-jobs.sh),
   [`flink/cancel.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/flink/cancel.sh),
   helpers `get_flink_rest_url` / `filter_flink_running` in
   [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh),
   `set_profiles` in [`utils_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/utils_function.sh),
-  [`flink_download_connectors.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/flink_download_connectors.sh).
+  [`flink_download_connectors.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/flink_download_connectors.sh),
+  Confluent Cloud in [`flink_ccloud_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/flink_ccloud_function.sh).
 
 ---
 
 **Links**
 
-- 👉 Example: [`flink/flink-sql-kafka`](https://github.com/vdesabou/kafka-docker-playground/tree/master/flink/flink-sql-kafka)
+- 👉 Examples: [`flink/flink-sql-kafka`](https://github.com/vdesabou/kafka-docker-playground/tree/master/flink/flink-sql-kafka),
+  [`ccloud/flink-sql-kafka`](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/flink-sql-kafka) (Confluent Cloud)
 - 📖 [Enabling Flink](/how-to-use?id=🐹-enabling-flink) in How to use
 - 🍪 Deep dives: [`topic produce`](/deep-dive-topic-produce.md) for the records the jobs read,
   [`topic consume`](/deep-dive-topic-consume.md) to check what they write,

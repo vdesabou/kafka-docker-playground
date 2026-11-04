@@ -167,7 +167,7 @@ CLI change that makes a page wrong shows up as a failing test.
 ### 🐿️ Flink SQL: run statements, list and cancel jobs
 
 - 📖 [Read the deep dive](/deep-dive-flink.md)
-- 🧠 Commands: `run --enable-flink`, `flink sql`, `flink list-jobs`, `flink cancel`
+- 🧠 Commands: `run --enable-flink`, `flink sql`, `flink list-jobs`, `flink cancel`, the same with `--environment ccloud` for Confluent Cloud statements
 
 ### 🧮 ksqlDB: run statements, list, describe and wait for queries
 

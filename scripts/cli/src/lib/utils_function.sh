@@ -2768,6 +2768,81 @@ function bootstrap_ccloud_environment () {
   fi
 }
 
+# Flink compute pool for the ccloud/flink-* examples, in the environment, cloud and region of the cluster of
+# bootstrap_ccloud_environment: FLINK_COMPUTE_POOL when set, else an existing provisioned pool of the region, else a
+# new one (kdp-flink-<cloud>-<region>, --max-cfu ${FLINK_MAX_CFU:-10}). An idle pool costs nothing (billed per CFU
+# minute used), so it is kept. Stored in playground.ini (ccloud.FLINK_COMPUTE_POOL) for 'playground flink'.
+function bootstrap_ccloud_flink_compute_pool () {
+  local cloud region pool pools i status
+  cloud=$(echo "$CLUSTER_CLOUD" | tr '[:upper:]' '[:lower:]')
+  region="$CLUSTER_REGION"
+  pool="$FLINK_COMPUTE_POOL"
+
+  pools=$(confluent flink compute-pool list --environment "$ENVIRONMENT" -o json)
+  if [ -n "$pool" ]
+  then
+    if ! echo "$pools" | jq -e --arg id "$pool" 'any(.[]; .id == $id)' > /dev/null
+    then
+      logerror "❌ FLINK_COMPUTE_POOL=$pool is not a compute pool of environment $ENVIRONMENT"
+      exit 1
+    fi
+    log "🧮 FLINK_COMPUTE_POOL is set with $pool"
+  else
+    pool=$(echo "$pools" | jq -r --arg cloud "$cloud" --arg region "$region" \
+      '[.[] | select((.cloud | ascii_downcase) == $cloud and .region == $region and .status != "DELETING")] | sort_by(.status != "PROVISIONED") | .[0].id // empty')
+    if [ -n "$pool" ]
+    then
+      log "🧮 Using Flink compute pool $pool of environment $ENVIRONMENT ($cloud $region)"
+    else
+      log "🧮 Creating Flink compute pool kdp-flink-$cloud-$region in environment $ENVIRONMENT ($cloud $region)"
+      pool=$(confluent flink compute-pool create "kdp-flink-$cloud-$region" --cloud "$cloud" --region "$region" --max-cfu "${FLINK_MAX_CFU:-10}" --environment "$ENVIRONMENT" -o json | jq -r '.id // empty')
+      if [ -z "$pool" ]
+      then
+        logerror "❌ could not create the Flink compute pool"
+        exit 1
+      fi
+    fi
+  fi
+
+  for i in {1..60}
+  do
+    status=$(confluent flink compute-pool describe "$pool" --environment "$ENVIRONMENT" -o json 2>/dev/null | jq -r '.status // empty')
+    if [ "$status" == "PROVISIONED" ]
+    then
+      break
+    fi
+    log "⏳ compute pool $pool is $status, waiting for PROVISIONED"
+    sleep 10
+  done
+  if [ "$status" != "PROVISIONED" ]
+  then
+    logerror "❌ compute pool $pool is $status after 10 minutes"
+    exit 1
+  fi
+  export FLINK_COMPUTE_POOL="$pool"
+  playground state set ccloud.FLINK_COMPUTE_POOL "$pool"
+}
+
+# delete the Flink API key that 'playground flink sql' created to read query results (kept in the playground secrets
+# store). The CI calls it at the end of the ccloud/flink-* examples: its secrets store does not survive the job
+function delete_ccloud_flink_api_key () {
+  local key
+  # example scripts only source utils_function.sh, not the secrets library
+  if ! type secret_get_from_store > /dev/null 2>&1 && [ -f "${DIR_UTILS}/cli/src/lib/secrets_function.sh" ]
+  then
+    source "${DIR_UTILS}/cli/src/lib/secrets_function.sh"
+  fi
+  key=$(secret_get_from_store FLINK_API_KEY 2>/dev/null)
+  if [ -n "$key" ]
+  then
+    log "🔑 Deleting Flink API key $key"
+    confluent api-key delete "$key" --force > /dev/null 2>&1
+    secret_delete_value FLINK_API_KEY > /dev/null 2>&1
+    secret_delete_value FLINK_API_SECRET > /dev/null 2>&1
+    secret_delete_value FLINK_API_KEY_SCOPE > /dev/null 2>&1
+  fi
+}
+
 function create_ccloud_connector() {
   file=$1
 

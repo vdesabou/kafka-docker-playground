@@ -4028,7 +4028,7 @@ function filter_flink_running() {
   fi
 
   if [ $flink_ok == 0 ]; then
-    logerror "flink jobmanager rest api should be running to run this command: start an example with playground run --enable-flink"
+    logerror "flink jobmanager rest api should be running to run this command: start an example with playground run --enable-flink (or pass --environment ccloud for the statements of a Confluent Cloud compute pool)"
   fi
 }
 
