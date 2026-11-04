@@ -92,10 +92,10 @@ What the CDC examples have in common:
 - **The database setup is in the script**, as `sqlplus` heredocs run with `playground db sql` (as `sys AS SYSDBA` by
   default, `--user` / `--password` / `--database ORCLPDB1` for the connector user or the pluggable database):
   copy those blocks to understand or change what the customer has (grants, supplemental logging, a second table in
-  the outbound server). XStream: `enable_goldengate_replication`, `ARCHIVELOG`, supplemental logging (all columns),
-  tablespaces, `c##cfltadmin` (admin) and `c##cfltuser` (connect user, owner of `CUSTOMERS`), outbound server `XOUT`
-  on `C##CFLTUSER.CUSTOMERS`. LogMiner: `ARCHIVELOG` is set by the setup script of the image
-  (`ora-setup-scripts-cdb-table/01_user-setup.sh`), then the `C##CDC_PRIVS` role, the `C##MYUSER` user and
+  the outbound server). `ARCHIVELOG` is set by the setup script of the image for both
+  (`connect-cdc-oracle19-source/ora-setup-scripts-cdb-table/01_user-setup.sh`). XStream: `enable_goldengate_replication`,
+  supplemental logging (all columns), tablespaces, `c##cfltadmin` (admin) and `c##cfltuser` (connect user, owner of `CUSTOMERS`), outbound server `XOUT`
+  on `C##CFLTUSER.CUSTOMERS`. LogMiner: the `C##CDC_PRIVS` role, the `C##MYUSER` user and
   supplemental logging.
 - **The connector is created only once the database is set up**, and the XStream examples wait for the 5 records of
   the snapshot (`topic wait-for-records`) before the DML: `RUNNING` doesn't mean the snapshot is done, and changes
@@ -409,7 +409,7 @@ playground stop
 | "the capture aborted with ORA-01291 / ORA-00308" | pattern H / I: the archived log is gone or unreadable; the finding gives the `RMAN> RESTORE ARCHIVELOG FROM SEQUENCE …` to run, and the capture resumes on its own. `--sample missing_archived_log` / `synthetic_failures` show both findings |
 | "the outbound server is DETACHED" | pattern D: no task attached (connector stopped, deleted, failed, or network; a **paused** connector stays `ATTACHED`, see step 6). `playground connector status`, `connector diagnose`, then the report again |
 | "it lags during the nightly batch" | the report during the batch: flow control (C), spills and streams pool advice (A), large transactions (B). Reproduce with `playground connector benchmark --shape bulk` on the XStream example (see the [benchmark deep dive](/deep-dive-connector-benchmark.md)) |
-| "is supplemental logging / ARCHIVELOG set?" | the `✅ Prerequisites` block of the digest (XStream, pattern G), or `SELECT log_mode, supplemental_log_data_min, supplemental_log_data_all FROM v$database;` as SYSDBA in any Oracle example |
+| "is supplemental logging / ARCHIVELOG set? does the connector user have its grants?" | `playground db cdc-check [--connector-user C##MYUSER] [--table C##MYUSER.CUSTOMERS]` on a running example (ARCHIVELOG, supplemental logging of the database or the table, XStream outbound servers and capture, `enable_goldengate_replication`, common user, LogMiner grants; exit 1 and the statement to run for each missing one, `--json`); on a customer report, the `✅ Prerequisites` block of the digest (XStream, pattern G) |
 | "the customer sent a report, what does it say?" | `analyze oracle-xstream-report -f <file> -p "…" --output-dir /tmp/case` (HTML to share), skill `kdp-xstream-report` for the write-up |
 | "the same on a healthy database, to compare" | run `cdc-xstream-oracle19.sh`, then `analyze oracle-xstream-report -c oracle --output-dir /tmp/xstream` |
 | "TLS / wallet to the database" | `cdc-xstream-oracle19-ssl.sh`, `-ssl-wallet`, `-mtls-wallet`; LogMiner: `cdc-oracle19-*-ssl.sh`, `-mtls`, `-mtls-db-auth` |

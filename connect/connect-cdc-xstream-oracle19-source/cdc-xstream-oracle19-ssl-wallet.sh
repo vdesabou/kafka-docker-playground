@@ -152,13 +152,8 @@ playground db sql << EOF
      SHOW PARAMETER GOLDEN;
 EOF
 
-log "Configure ARCHIVELOG mode"
-playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
-     SHUTDOWN IMMEDIATE;
-     STARTUP MOUNT;
-     ALTER DATABASE ARCHIVELOG;
-     ALTER DATABASE OPEN;
-EOF
+# ARCHIVELOG mode: already on, set when the Oracle image is built by its setup scripts
+# (connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table/01_user-setup.sh)
 
 
 log "Configure supplemental logging"

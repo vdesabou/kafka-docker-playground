@@ -274,6 +274,18 @@ EOF
 playground db wait-for-rows --database inventory --table customers --where '{"name": "alice"}'
 ```
 
+Before reading the logs of a CDC source that is RUNNING but produces nothing, check the database: `playground db cdc-check` prints one ✅ ❌ ⚠️ line per prerequisite (Oracle ARCHIVELOG, supplemental logging and XStream, PostgreSQL `wal_level` and slots, MySQL binlog, SQL Server Agent and CDC tables, MongoDB replica set) with the statement that fixes it, and exits with code 1 when one is missing:
+
+```bash
+playground db cdc-check --connector-user C##MYUSER --table C##MYUSER.CUSTOMERS
+#    ✅ ARCHIVELOG mode                                      ARCHIVELOG
+#    ✅ minimal supplemental logging                         YES
+#    ✅ all columns supplemental logging                     YES (database level: every table)
+#    ✅ connector user C##MYUSER                             exists, common user
+#    ✅ LOGMINING of C##MYUSER (LogMiner)                    granted
+#    ...
+```
+
 A heredoc with a quoted delimiter (`<< 'EOF'`) is the easiest to copy and paste, and to grow into a longer query: `$` and quotes are kept as is (use `<< EOF` to interpolate shell variables). `--sql "<statement>"` exists for a quick one-liner in a terminal. `--container` picks the database when several are running, `--engine` when the image name does not tell which database it is, and `--ignore-errors` runs every statement even after a failing one.
 
 ## 🧪 Testing SMTs

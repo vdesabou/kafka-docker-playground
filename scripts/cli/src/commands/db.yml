@@ -12,6 +12,7 @@ help: |-
 
     sql             run statements (heredoc, --file or --sql) with the database client
     wait-for-rows   wait until a table contains N rows
+    cdc-check       are the CDC prerequisites of the database met? (archivelog, wal_level, binlog...)
 
   Supported: Oracle (sqlplus), PostgreSQL (psql), MySQL and MariaDB (mysql /
   mariadb), SQL Server (sqlcmd), IBM Db2 (db2) and MongoDB (mongosh).
@@ -268,3 +269,87 @@ commands:
         10:51:21 ℹ️ ⏳ Waiting up to 3 seconds for table nope to contain at least 1 rows (postgres container)
         10:51:21 ℹ️ ⌛ table nope does not exist yet (expected at least 1)
         10:51:24 🔥 ❌ table nope does not exist yet after 3 seconds, expected at least 1 rows
+
+  - name: cdc-check
+    group: Database
+    help: |-
+      🔍 Check the CDC prerequisites of the database
+
+      One verdict per prerequisite of the CDC connectors (Oracle CDC and
+      XStream, Debezium), with its value and the statement that fixes it, and
+      exit code 1 when one is missing:
+
+        oracle      ARCHIVELOG, minimal and all columns supplemental logging
+                    (database, or --table), XStream outbound servers and their
+                    capture, enable_goldengate_replication, connector user
+                    (common user, CREATE SESSION, LogMiner privileges)
+        postgres    wal_level=logical, wal senders, replication slots (free,
+                    inactive ones retaining WAL, invalidated), publications,
+                    published tables without replica identity, connector user
+                    REPLICATION
+        mysql       log_bin, binlog_format=ROW, binlog_row_image=FULL,
+        mariadb     server_id, gtid_mode, binlog retention, connector user
+                    privileges
+        sqlserver   SQL Server Agent, databases and tables with CDC, capture job
+        mongodb     replica set (change streams), oplog window
+
+      It connects as the admin user of the container (see 'playground db
+      sql'), and checks the privileges of the connector user with
+      --connector-user.
+
+      🎓 Tip: the classic "connector RUNNING but no records" of a CDC source
+      is a prerequisite missing in the database: run it before reading the
+      connector logs.
+    flags:
+    - *db_container
+    - *db_engine
+    - *db_user
+    - *db_password
+    - *db_database
+    - long: --connector-user
+      required: false
+      arg: connector_user
+      help: |-
+        👤 User of the connector, to check its privileges (oracle, postgres, mysql, mariadb)
+    - long: --table
+      short: -t
+      required: false
+      arg: table
+      help: |-
+        🗂️ Captured table to check: all columns supplemental logging (oracle, <owner>.<table>), replica identity (postgres, <schema>.<table>), CDC enabled (sqlserver, <schema>.<table>)
+    - long: --json
+      required: false
+      help: |-
+        📗 Print {"engine", "container", "verdict", "ok", "fail", "warn", "checks": [{"status", "check", "value", "fix"}]} and nothing else
+    - import: src/flags/verbose.yml
+    examples:
+    - playground db cdc-check
+    - playground db cdc-check --connector-user C##MYUSER --table C##MYUSER.CUSTOMERS
+    - playground db cdc-check --connector-user debezium --table public.customers
+    - playground db cdc-check --database testDB --table dbo.customers
+    - playground db cdc-check --json | jq -r '.checks[] | select(.status == "fail") | .fix'
+    x_example_outputs:
+    - command: playground db cdc-check --connector-user C##CFLTUSER --table C##CFLTUSER.CUSTOMERS
+      output: |-
+        12:59:47 ℹ️ 🔍 Checking the CDC prerequisites of oracle container (oracle, connector user C##CFLTUSER, table C##CFLTUSER.CUSTOMERS)
+           ℹ️  Oracle version                           19.0.0.0.0 (CDB, PDBs: ORCLPDB1 READ WRITE)
+           ✅ ARCHIVELOG mode                          ARCHIVELOG
+           ℹ️  archived logs of the last 24 hours       1
+           ✅ minimal supplemental logging             IMPLICIT
+           ✅ all columns supplemental logging         YES (database level: every table)
+           ✅ enable_goldengate_replication (XStream)  TRUE
+           ✅ XStream outbound server XOUT             capture CAP$_XOUT_1 ENABLED, connect user C##CFLTUSER
+           ℹ️  streams_pool_size (XStream)              0 (0: sized automatically in the SGA)
+           ✅ connector user C##CFLTUSER               exists, common user
+           ✅ CREATE SESSION of C##CFLTUSER            granted
+        12:59:48 ℹ️ ✅ the 7 CDC prerequisites are met
+    - command: playground db cdc-check
+      output: |-
+        12:52:12 ℹ️ 🔍 Checking the CDC prerequisites of postgres container (postgres)
+           ℹ️  PostgreSQL version  15.18 (Debian 15.18-1.pgdg13+1)
+           ❌ wal_level           replica
+              👉 ALTER SYSTEM SET wal_level = logical; then restart PostgreSQL (docker compose: command: postgres -c wal_level=logical)
+           ✅ max_wal_senders     10
+           ✅ replication slots   0 used of 10
+           ℹ️  publications        none (pgoutput: the connector creates one, publication.autocreate.mode)
+        12:52:12 🔥 ❌ 1 CDC prerequisite(s) missing, ✅ 2 ok, ⚠️ 0 warning(s)
