@@ -18,7 +18,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create ORDERS table"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 CREATE TABLE orders (
         id SERIAL PRIMARY KEY,
         customer_id INT NOT NULL,

@@ -14,7 +14,7 @@ topic="cflt.C__CFLTUSER.CUSTOMERS"
 
 # runs SQL*Plus as SYSDBA in the oracle container, the statements on stdin
 function lab_sysdba () {
-    playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus -s /nolog\""
+    playground db sql
 }
 
 # number of records of the topic of the CUSTOMERS table (offsets: latest - earliest)
@@ -100,7 +100,6 @@ report_running=$(ls "$out"/live/orclcdc_diag_*.html | tail -1)
 
 log "Step 5: RUNNING, but the capture process is stopped"
 lab_run lab_sysdba << 'EOF'
-CONNECT sys/Admin123 AS SYSDBA
 DECLARE
      capture VARCHAR2(128);
 BEGIN
@@ -112,7 +111,7 @@ SELECT capture_name, status FROM dba_capture;
 EOF
 lab_expect_contains "PL/SQL procedure successfully completed."
 lab_expect_contains "DISABLED"
-playground container exec --container oracle --command "sqlplus -s c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << 'EOF'
+playground db sql --user c##cfltuser --password password << 'EOF'
 insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Max', 'Brod', 'mbrod@confluent.io', 'Male', 'gold', 'Inserted while the capture is stopped');
 commit;
 exit;
@@ -132,7 +131,6 @@ lab_expect_contains "🔴 CRITICAL Capture CAP\$_XOUT_1 is DISABLED"
 lab_expect_contains "👉 Fix the error, then EXEC DBMS_CAPTURE_ADM.START_CAPTURE('CAP\$_XOUT_1');"
 lab_expect_contains "H. XStream component disabled or aborted (1 finding(s))"
 lab_run lab_sysdba << 'EOF'
-CONNECT sys/Admin123 AS SYSDBA
 DECLARE
      capture VARCHAR2(128);
 BEGIN

@@ -10,8 +10,8 @@ ibmdb2-wait-sample-db-ready() {
 
   log "Waiting for DB2 sample database to be ready..."
   while true; do
-    if playground container exec --container ibmdb2 --command "bash" >/dev/null 2>/dev/null << 'EOF'
-su - db2inst1 -c "db2 connect to sample user db2inst1 using passw0rd >/dev/null"
+    if playground db sql --database sample >/dev/null 2>/dev/null << 'EOF'
+values 1;
 EOF
     then
       log "DB2 sample database is ready"
@@ -187,10 +187,8 @@ EOF
 sleep 15
 
 log "Check data is in IBM DB2"
-playground container exec --container ibmdb2 --command "bash" > /tmp/result.log << EOF
-su - db2inst1
-db2 connect to sample user db2inst1 using passw0rd
-db2 select ID,PRODUCT,QUANTITY,PRICE from ORDERS
+playground db sql --database sample > /tmp/result.log << EOF
+select ID,PRODUCT,QUANTITY,PRICE from ORDERS;
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log

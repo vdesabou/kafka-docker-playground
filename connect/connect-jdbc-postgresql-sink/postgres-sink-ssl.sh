@@ -117,6 +117,8 @@ EOF
 sleep 5
 
 log "Show content of ORDERS table:"
-playground container exec --container postgres --command "bash -c \"psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'\"" > /tmp/result.log  2>&1
+playground db sql > /tmp/result.log 2>&1 << 'EOF'
+SELECT * FROM ORDERS;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log

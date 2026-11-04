@@ -2935,12 +2935,29 @@ function benchmark_load_args () {
 }
 
 # sqlplus connection of an oracle example script (the user, cdb or pdb of the variant that was run), for benchmark_sql_load:
-# the first 'sqlplus <user>/<password>@...' that is not sys or the xstream admin, unescaped like the double quotes of the script do
+# the first 'sqlplus <user>/<password>@...' that is not sys or the xstream admin, unescaped like the double quotes of the script do,
+# or else the first 'playground db sql --user <user> --password <password> [--database <service>]' that is not one of them
 function benchmark_oracle_client_from_example () {
-  local test_file="$1" client=""
+  local test_file="$1" client="" line user password service
   if [ -f "$test_file" ]
   then
     client=$(grep -o -E 'sqlplus [^ "]+/[^ "]+@[^ "]+' "$test_file" | grep -v -i -E 'sqlplus (sys|system|[^ ]*cfltadmin)/' | head -1 | sed 's/\\\\/\\/g')
+    if [ -z "$client" ]
+    then
+      line=$(grep -E 'playground db sql .*--user [^ ]+ .*--password [^ ]+' "$test_file" | grep -v -i -E -- '--user (sys|system|[^ ]*cfltadmin) ' | head -1)
+      if [ -n "$line" ]
+      then
+        user=$(sed -E 's/.*--user ([^ ]+).*/\1/' <<< "$line")
+        password=$(sed -E 's/.*--password ([^ ]+).*/\1/' <<< "$line")
+        service=ORCLCDB
+        if [[ "$line" == *"--database "* ]]
+        then
+          service=$(sed -E 's/.*--database ([^ ]+).*/\1/' <<< "$line")
+        fi
+        # the # of c## users are escaped, like in the default below
+        client="sqlplus ${user//#/\\#}/${password}@//localhost:1521/${service}"
+      fi
+    fi
   fi
   echo "${client:-sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB}"
 }

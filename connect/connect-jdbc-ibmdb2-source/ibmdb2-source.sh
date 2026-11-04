@@ -10,8 +10,8 @@ ibmdb2-wait-sample-db-ready() {
 
   log "Waiting for DB2 sample database to be ready..."
   while true; do
-    if playground container exec --container ibmdb2 --command "bash" >/dev/null 2>/dev/null << 'EOF'
-su - db2inst1 -c "db2 connect to sample user db2inst1 using passw0rd >/dev/null"
+    if playground db sql --database sample >/dev/null 2>/dev/null << 'EOF'
+values 1;
 EOF
     then
       log "DB2 sample database is ready"
@@ -71,10 +71,8 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 # sample DB is used https://www.ibm.com/docs/en/db2/11.5?topic=samples-sample-database
 log "List tables"
-playground container exec --container ibmdb2 --command "bash" << EOF
-su - db2inst1
-db2 connect to sample user db2inst1 using passw0rd
-db2 LIST TABLES
+playground db sql --database sample << EOF
+LIST TABLES;
 EOF
 
 log "Creating JDBC IBM DB2 source connector"

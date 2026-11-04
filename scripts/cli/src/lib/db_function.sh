@@ -280,12 +280,11 @@ function db_exec () {
       then
         connect_as=" AS SYSDBA"
       fi
-      # the CONNECT line keeps the password out of the process list. DEFINE OFF: a & in the statements must not
-      # prompt for a substitution variable (it would read the next statements as its value)
+      # the CONNECT line keeps the password out of the process list. The other settings are the sqlplus defaults the
+      # scripts were written for: DEFINE ON (@script.sql arg1 arg2 uses &1 &2), SQLBLANKLINES OFF
       prolog="WHENEVER SQLERROR EXIT FAILURE
 WHENEVER OSERROR EXIT FAILURE
-CONNECT ${db_user}/\"${db_password}\"@//localhost:1521/${db_database}${connect_as}
-SET DEFINE OFF"
+CONNECT ${db_user}/\"${db_password}\"@//localhost:1521/${db_database}${connect_as}"
       if [[ "$mode" == "scalar" ]]
       then
         prolog="$prolog
@@ -294,7 +293,7 @@ SET HEADING OFF FEEDBACK OFF PAGESIZE 0 VERIFY OFF ECHO OFF TRIMOUT ON TAB OFF"
 ;"
       else
         prolog="$prolog
-SET LINESIZE 250 PAGESIZE 1000 TRIMOUT ON TAB OFF FEEDBACK ON SQLBLANKLINES ON"
+SET LINESIZE 250 PAGESIZE 1000 TRIMOUT ON TAB OFF FEEDBACK ON"
       fi
       if [[ "$stop" != "stop" ]]
       then
@@ -302,6 +301,10 @@ SET LINESIZE 250 PAGESIZE 1000 TRIMOUT ON TAB OFF FEEDBACK ON SQLBLANKLINES ON"
 WHENEVER SQLERROR CONTINUE"
       fi
       epilog="EXIT"
+      # like the examples did (ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog): a CONNECT user/password without
+      # @service in the statements connects locally to this instance
+      db_exec_env+=("ORACLE_SID=$(db_container_env ORACLE_SID)")
+      [[ "${db_exec_env[-1]}" == "ORACLE_SID=" ]] && db_exec_env[-1]="ORACLE_SID=ORCLCDB"
       client_cmd=(sqlplus -S -L /nolog)
     ;;
     postgres)

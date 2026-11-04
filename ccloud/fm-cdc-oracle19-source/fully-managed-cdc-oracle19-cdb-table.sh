@@ -71,8 +71,7 @@ fi
 
 log "Running oracle-readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-cdc-source/oracle-cdc-setup-includes/prereqs-validation.html#automated-readiness-check"
 playground container cp --source oracle-readiness.sql --destination oracle:/tmp/oracle-readiness.sql
-playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
-     CONNECT sys/Admin123 AS SYSDBA
+playground db sql << EOF
      @/tmp/oracle-readiness.sql C##MYUSER ''
 /
 EOF

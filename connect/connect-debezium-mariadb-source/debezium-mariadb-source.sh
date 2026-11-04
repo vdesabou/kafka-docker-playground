@@ -46,7 +46,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create table"
-playground container exec --container mariadb --command "mariadb --user=root --password=password db" << EOF
+playground db sql --database db << EOF
 USE mydb;
 
 CREATE TABLE CUSTOMERS (
@@ -69,7 +69,7 @@ select * from CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
-playground container exec --container mariadb --command "mariadb --user=root --password=password db" << EOF
+playground db sql --database db << EOF
 USE mydb;
 
 INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');

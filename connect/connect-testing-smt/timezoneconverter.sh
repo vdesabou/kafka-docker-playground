@@ -24,7 +24,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.debezium-postgres.yml"
 
 log "Create a table with a timestamptz column"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 create table tz_test (
     id int primary key,
     created_at timestamptz
@@ -57,7 +57,7 @@ EOF
 sleep 5
 
 log "Insert a row with a known UTC timestamp (2023-01-01 12:00:00+00 -> should become 17:30:00+05:30)"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 insert into tz_test (id, created_at) values (1, '2023-01-01 12:00:00+00');
 EOF
 

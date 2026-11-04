@@ -23,7 +23,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.debezium-postgres.yml"
 
 log "Create the outbox table"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 create table outbox (
     id varchar(50) primary key,
     aggregatetype varchar(255),
@@ -57,7 +57,7 @@ EOF
 sleep 5
 
 log "Insert an outbox event (aggregatetype=customer) — EventRouter routes by this field to topic outbox.event.customer"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 insert into outbox (id, aggregatetype, aggregateid, type, payload) values ('11111111-1111-1111-1111-111111111111', 'customer', '1', 'CustomerCreated', '{"name":"EVENTROUTER_PAYLOAD"}');
 EOF
 

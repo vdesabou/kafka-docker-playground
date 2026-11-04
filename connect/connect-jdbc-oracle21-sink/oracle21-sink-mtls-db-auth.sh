@@ -20,8 +20,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
-playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
-     CONNECT sys/Admin123 AS SYSDBA
+playground db sql << EOF
      CREATE USER  C##MYUSER IDENTIFIED BY mypassword;
      GRANT CONNECT TO  C##MYUSER;
      GRANT CREATE SESSION TO  C##MYUSER;
@@ -115,7 +114,7 @@ docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keyto
 cd ${DIR}
 
 log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
-playground container exec --container oracle --command "sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba" <<- EOF
+playground db sql <<- EOF
      ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
      exit;
 EOF
@@ -211,13 +210,15 @@ EOF
 sleep 10
 
 log "Alter user 'C##MYUSER' in order to be identified as by password (in order to use sqlplus)"
-playground container exec --container oracle --command "sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba" <<- EOF
+playground db sql <<- EOF
      ALTER USER C##MYUSER IDENTIFIED BY mypassword;
      exit;
 EOF
 
 log "Show content of ORDERS table:"
-playground container exec --container oracle --command "bash -c \"echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB\"" > /tmp/result.log  2>&1
+playground db sql --user C##MYUSER --password mypassword > /tmp/result.log 2>&1 << 'EOF'
+select * from ORDERS;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

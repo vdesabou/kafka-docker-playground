@@ -32001,12 +32001,11 @@ function db_exec () {
       then
         connect_as=" AS SYSDBA"
       fi
-      # the CONNECT line keeps the password out of the process list. DEFINE OFF: a & in the statements must not
-      # prompt for a substitution variable (it would read the next statements as its value)
+      # the CONNECT line keeps the password out of the process list. The other settings are the sqlplus defaults the
+      # scripts were written for: DEFINE ON (@script.sql arg1 arg2 uses &1 &2), SQLBLANKLINES OFF
       prolog="WHENEVER SQLERROR EXIT FAILURE
 WHENEVER OSERROR EXIT FAILURE
-CONNECT ${db_user}/\"${db_password}\"@//localhost:1521/${db_database}${connect_as}
-SET DEFINE OFF"
+CONNECT ${db_user}/\"${db_password}\"@//localhost:1521/${db_database}${connect_as}"
       if [[ "$mode" == "scalar" ]]
       then
         prolog="$prolog
@@ -32015,7 +32014,7 @@ SET HEADING OFF FEEDBACK OFF PAGESIZE 0 VERIFY OFF ECHO OFF TRIMOUT ON TAB OFF"
 ;"
       else
         prolog="$prolog
-SET LINESIZE 250 PAGESIZE 1000 TRIMOUT ON TAB OFF FEEDBACK ON SQLBLANKLINES ON"
+SET LINESIZE 250 PAGESIZE 1000 TRIMOUT ON TAB OFF FEEDBACK ON"
       fi
       if [[ "$stop" != "stop" ]]
       then
@@ -32023,6 +32022,10 @@ SET LINESIZE 250 PAGESIZE 1000 TRIMOUT ON TAB OFF FEEDBACK ON SQLBLANKLINES ON"
 WHENEVER SQLERROR CONTINUE"
       fi
       epilog="EXIT"
+      # like the examples did (ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog): a CONNECT user/password without
+      # @service in the statements connects locally to this instance
+      db_exec_env+=("ORACLE_SID=$(db_container_env ORACLE_SID)")
+      [[ "${db_exec_env[-1]}" == "ORACLE_SID=" ]] && db_exec_env[-1]="ORACLE_SID=ORCLCDB"
       client_cmd=(sqlplus -S -L /nolog)
     ;;
     postgres)
@@ -36170,12 +36173,29 @@ function benchmark_load_args () {
 }
 
 # sqlplus connection of an oracle example script (the user, cdb or pdb of the variant that was run), for benchmark_sql_load:
-# the first 'sqlplus <user>/<password>@...' that is not sys or the xstream admin, unescaped like the double quotes of the script do
+# the first 'sqlplus <user>/<password>@...' that is not sys or the xstream admin, unescaped like the double quotes of the script do,
+# or else the first 'playground db sql --user <user> --password <password> [--database <service>]' that is not one of them
 function benchmark_oracle_client_from_example () {
-  local test_file="$1" client=""
+  local test_file="$1" client="" line user password service
   if [ -f "$test_file" ]
   then
     client=$(grep -o -E 'sqlplus [^ "]+/[^ "]+@[^ "]+' "$test_file" | grep -v -i -E 'sqlplus (sys|system|[^ ]*cfltadmin)/' | head -1 | sed 's/\\\\/\\/g')
+    if [ -z "$client" ]
+    then
+      line=$(grep -E 'playground db sql .*--user [^ ]+ .*--password [^ ]+' "$test_file" | grep -v -i -E -- '--user (sys|system|[^ ]*cfltadmin) ' | head -1)
+      if [ -n "$line" ]
+      then
+        user=$(sed -E 's/.*--user ([^ ]+).*/\1/' <<< "$line")
+        password=$(sed -E 's/.*--password ([^ ]+).*/\1/' <<< "$line")
+        service=ORCLCDB
+        if [[ "$line" == *"--database "* ]]
+        then
+          service=$(sed -E 's/.*--database ([^ ]+).*/\1/' <<< "$line")
+        fi
+        # the # of c## users are escaped, like in the default below
+        client="sqlplus ${user//#/\\#}/${password}@//localhost:1521/${service}"
+      fi
+    fi
   fi
   echo "${client:-sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB}"
 }

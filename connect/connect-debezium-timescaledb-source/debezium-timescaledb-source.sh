@@ -65,12 +65,12 @@ EOF
 sleep 5
 
 log "Adding an element to the table"
-playground container exec --container timescaledb --command "psql -U postgres -d postgres" << EOF
+playground db sql --container timescaledb --user postgres --database postgres << EOF
 INSERT INTO conditions VALUES (now(), 'Prague', 30, 50);
 EOF
 
 log "Show content of conditions table:"
-playground container exec --container timescaledb --command "psql -U postgres -d postgres" << EOF
+playground db sql --container timescaledb --user postgres --database postgres << EOF
 SELECT * FROM conditions;
 EOF
 
