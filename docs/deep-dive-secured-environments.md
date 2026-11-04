@@ -295,6 +295,7 @@ playground stop
 | "the connector can't create its topics / its DLQ" | RBAC: give `connectorSA` a narrower role on the topics (for example `DeveloperWrite`) instead of `ResourceOwner`: creating a topic needs more, see the Confluent RBAC role reference |
 | "Kerberos ticket / principal errors" | `--environment kerberos` (or `ssl_kerberos`), principals and keytabs in `environment/kerberos/` |
 | "users in LDAP, ACLs per group" | `ldap-authorizer-sasl-plain` |
+| "`kafka-acls --list` shows nothing but the user is authorized" / centralized ACLs, DENY vs role binding, LDAP group ACLs with RBAC | [other/rbac-centralized-acls](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-centralized-acls): `playground rbac acl create\|list\|delete` (MDS) next to `--kafka-acls` |
 | "Schema Registry over HTTPS with client certificates" | `sasl-ssl` / `2way-ssl`: the converter keys get the keystore / truststore, `playground schema …` uses the client certificate |
 | "certificates expired in our repro folder" | `playground tools cert create --output-folder <dir>` |
 | "`PKIX path building failed` / `No subject alternative names matching` with our certificates" | `playground tools cert inspect --file <their certificate or keystore> --truststore <their truststore> --hostname <their bootstrap host>` (or `--server <host:port>`) |
