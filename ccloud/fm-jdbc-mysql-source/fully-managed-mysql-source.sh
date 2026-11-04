@@ -56,7 +56,9 @@ INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, commen
 EOF
 
 log "Show content of CUSTOMERS table:"
-playground db sql --sql "select * from CUSTOMERS"
+playground db sql << 'EOF'
+select * from CUSTOMERS;
+EOF
 
 log "Waiting for ngrok to start"
 while true

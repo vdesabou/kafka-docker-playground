@@ -10,7 +10,7 @@ help: |-
   sink connector to write rows, without docker exec and the client command
   line of each database.
 
-    sql             run statements (stdin, --file or --sql) with the database client
+    sql             run statements (heredoc, --file or --sql) with the database client
     wait-for-rows   wait until a table contains N rows
 
   Supported: Oracle (sqlplus), PostgreSQL (psql), MySQL and MariaDB (mysql /
@@ -35,8 +35,10 @@ commands:
     help: |-
       🛢️ Run SQL statements with the client of the database
 
-      The statements are read from stdin (heredoc), --file or --sql, and run
-      in one session of the client of the database, inside its container:
+      The statements are read from stdin (a heredoc, the easiest to copy and
+      paste and to grow into a longer query), --file, or --sql for a quick
+      one-liner, and run in one session of the client of the database,
+      inside its container:
 
         engine       client    default user / database (from the container environment)
         oracle       sqlplus   sys AS SYSDBA (ORACLE_PWD or ORACLE_PASSWORD) / ORACLE_SID (ORCLCDB)
@@ -145,10 +147,20 @@ commands:
       CREATE TABLE customers (id INT PRIMARY KEY, name VARCHAR(50));
       INSERT INTO customers VALUES (1, 'alice');
       EOF
-    - playground db sql --sql "select * from customers"
+    - |-
+      playground db sql > /tmp/result.log 2>&1 << 'EOF'
+      select * from customers;
+      EOF
+    - |-
+      playground db sql --database ORCLPDB1 --user C##MYUSER --password mypassword << 'EOF'
+      select count(*) from customers;
+      EOF
+    - |-
+      playground db sql --container postgres-source << 'EOF'
+      select * from pg_replication_slots;
+      EOF
     - playground db sql --file ./setup.sql --ignore-errors
-    - playground db sql --database ORCLPDB1 --user C##MYUSER --password mypassword --sql "select count(*) from customers;"
-    - playground db sql --container postgres-source --sql "select * from pg_replication_slots"
+    - playground db sql --sql "select * from customers"
     - |-
       playground db sql << 'EOF'
       use inventory

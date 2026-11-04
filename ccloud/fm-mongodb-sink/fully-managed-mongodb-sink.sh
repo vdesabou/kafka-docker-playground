@@ -52,7 +52,9 @@ done
 
 
 log "Initialize MongoDB replica set"
-playground db sql --sql 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
+playground db sql << 'EOF'
+rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})
+EOF
 
 sleep 5
 
@@ -151,7 +153,9 @@ wait_for_ccloud_connector_up $connector_name 180
 playground db wait-for-rows --database inventory --table customers --min-expected-rows 2
 
 log "View record"
-playground db sql --database inventory --sql "db.customers.find().pretty();" > /tmp/result.log  2>&1
+playground db sql --database inventory > /tmp/result.log 2>&1 << 'EOF'
+db.customers.find().pretty();
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

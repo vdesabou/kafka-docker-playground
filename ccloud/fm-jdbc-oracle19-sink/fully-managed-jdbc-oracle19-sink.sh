@@ -146,7 +146,9 @@ wait_for_ccloud_connector_up $connector_name 180
 playground db wait-for-rows --user C##MYUSER --password mypassword --table ORDERS --min-expected-rows 2
 
 log "Show content of ORDERS table:"
-playground db sql --user C##MYUSER --password mypassword --sql "select * from ORDERS;" > /tmp/result.log  2>&1
+playground db sql --user C##MYUSER --password mypassword > /tmp/result.log 2>&1 << 'EOF'
+select * from ORDERS;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

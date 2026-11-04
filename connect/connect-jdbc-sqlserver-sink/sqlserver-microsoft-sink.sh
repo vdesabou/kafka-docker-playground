@@ -83,6 +83,8 @@ EOF
 playground db wait-for-rows --table orders --min-expected-rows 2
 
 log "Show content of orders table:"
-playground db sql --sql "select * from orders" > /tmp/result.log  2>&1
+playground db sql > /tmp/result.log 2>&1 << 'EOF'
+select * from orders;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log

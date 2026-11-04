@@ -252,7 +252,7 @@ playground topic consume --topic a-topic --open
 [playground db](/playground%20db) runs SQL in the database container of the running example, with its own client (`sqlplus`, `psql`, `mysql` / `mariadb`, `sqlcmd`, `db2`, `mongosh`), and waits for a sink connector to write rows. The container, the user, the password and the database are found from the container environment (`POSTGRES_USER`, `MYSQL_ROOT_PASSWORD`, `SA_PASSWORD`, `ORACLE_PWD`…), so most examples need no flag.
 
 ```bash
-# statements on stdin (or --file, --sql): stops at the first failing statement and exits with code 1
+# statements in a heredoc (or --file): stops at the first failing statement and exits with code 1
 playground db sql << 'EOF'
 CREATE TABLE customers (id INT PRIMARY KEY, name VARCHAR(50));
 INSERT INTO customers VALUES (1, 'alice');
@@ -260,17 +260,21 @@ EOF
 
 # instead of a sleep: wait until the sink has written 10 rows (a table that does not exist yet counts as empty)
 playground db wait-for-rows --table orders --min-expected-rows 10
-playground db sql --sql "select * from orders" > /tmp/result.log 2>&1
+playground db sql > /tmp/result.log 2>&1 << 'EOF'
+select * from orders;
+EOF
 grep "foo" /tmp/result.log
 
 # another user or database (Oracle: --database is the service name, ORCLPDB1 for the pluggable database)
-playground db sql --database ORCLPDB1 --user C##MYUSER --password mypassword --sql "select count(*) from ORDERS;"
+playground db sql --database ORCLPDB1 --user C##MYUSER --password mypassword << 'EOF'
+select count(*) from ORDERS;
+EOF
 
 # MongoDB: mongosh commands, --table is the collection and --where a filter document
 playground db wait-for-rows --database inventory --table customers --where '{"name": "alice"}'
 ```
 
-`--container` picks the database when several are running, `--engine` when the image name does not tell which database it is, and `--ignore-errors` runs every statement even after a failing one.
+A heredoc with a quoted delimiter (`<< 'EOF'`) is the easiest to copy and paste, and to grow into a longer query: `$` and quotes are kept as is (use `<< EOF` to interpolate shell variables). `--sql "<statement>"` exists for a quick one-liner in a terminal. `--container` picks the database when several are running, `--engine` when the image name does not tell which database it is, and `--ignore-errors` runs every statement even after a failing one.
 
 ## 🧪 Testing SMTs
 

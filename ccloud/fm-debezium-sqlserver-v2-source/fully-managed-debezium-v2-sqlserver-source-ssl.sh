@@ -95,7 +95,9 @@ log "Waiting for SQL Server to be ready"
 set +e
 while true
 do
-  playground db sql --sql "SELECT 1" > /dev/null 2>&1
+  playground db sql > /dev/null 2>&1 << 'EOF'
+  SELECT 1;
+EOF
   if [ $? -eq 0 ]; then
     log "SQL Server is ready"
     break

@@ -51,7 +51,9 @@ do
 done
 
 log "Initialize MongoDB replica set"
-playground db sql --sql 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
+playground db sql << 'EOF'
+rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})
+EOF
 
 sleep 5
 
