@@ -203,7 +203,7 @@ log "Verifying topic success-$connectorId2"
 playground topic consume --topic success-$connectorId2 --min-expected-messages 1 --timeout 60
 
 # log "Verify topic error-responses"
-playground topic consume --topic error-$connectorId2 --min-expected-messages 0 --timeout 60
+playground topic consume --topic error-$connectorId2 --min-expected-messages 0
 
 log "Login with sfdx CLI on the account #2"
 salesforce_sfdx_login "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2"

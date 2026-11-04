@@ -195,7 +195,7 @@ connectorId=$(get_ccloud_connector_lcc $connector_name)
 log "Verifying topic success-$connectorId"
 playground topic consume --topic success-$connectorId --min-expected-messages 3 --timeout 60
 
-playground topic consume --topic error-$connectorId --min-expected-messages 0 --timeout 60
+playground topic consume --topic error-$connectorId --min-expected-messages 0
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
