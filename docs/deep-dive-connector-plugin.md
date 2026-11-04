@@ -226,6 +226,11 @@ Gotchas:
   `📅 timestamp.precision.mode was added in confluentinc/kafka-connect-jdbc 10.8.3 (absent in 10.8.2)`. It needs one
   connector (`-c`); the plugin is the one the examples of that class mount, or `--connector-plugin`. "First" is in
   version order: with minor lines patched in parallel, check the line of the customer.
+- **Debezium keys newer than Confluent Hub**: for an `io.debezium.*` connector, when no Hub version has the key (Hub
+  lags upstream), `--since-version` goes on with the upstream `.Final` releases of Maven Central: it searches their
+  jars (connector, `debezium-core`, `debezium-connector-binlog`) for the key string, about 3 s per release probed.
+  This also works for a full class that CI never tested (`-c io.debezium.connector.db2.Db2Connector`):
+  `📅 offset.mismatch.strategy was added in upstream Debezium 3.4.0.Final (absent in 3.3.2.Final), io.debezium:debezium-connector-postgres on Maven Central`.
 - **Framework keys are not in a plugin's reference**: `errors.tolerance`, `transforms.*`, `topics`, converters,
   `consumer.override.*`… are answered with `🧩 … is a Kafka Connect framework key, common to every connector` and the
   links to the Connect docs.

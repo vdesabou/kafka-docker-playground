@@ -57,6 +57,7 @@ function config_key_class () {
 # the versions of Confluent Hub; each probed version is downloaded and its configuration read (get_connector_plugin_configs)
 function config_key_since_version () {
     local class="$1" file="$2" plugin="$since_plugin" lo hi mid
+    since_not_on_hub=1
     if [[ "$class" != *.* ]]
     then
         echo "   📅 --since-version: $class is a fully managed connector, it has no versions on Confluent Hub"
@@ -99,12 +100,18 @@ function config_key_since_version () {
     hi=$((${#versions[@]} - 1))
     if ! config_key_has_key "${versions[$hi]}"
     then
-        echo "   📅 $key is not in the latest version of $plugin (${versions[$hi]}): removed, or not a key of this plugin"
+        if [[ "$class" == io.debezium.* ]]
+        then
+            echo "   📅 $key is not in the latest version of $plugin on Confluent Hub (${versions[$hi]}): checking the upstream Debezium releases"
+        else
+            echo "   📅 $key is not in the latest version of $plugin (${versions[$hi]}): removed, or not a key of this plugin"
+        fi
         return
     fi
     if config_key_has_key "${versions[0]}"
     then
         echo "   📅 $key is already in the oldest version of $plugin on Confluent Hub (${versions[0]})"
+        since_not_on_hub=0
         return
     fi
     while [ $((hi - lo)) -gt 1 ]
@@ -117,8 +124,103 @@ function config_key_since_version () {
             lo=$mid
         fi
     done
+    since_not_on_hub=0
     echo "   📅 $key was added in $plugin ${versions[$hi]} (absent in ${versions[$lo]})"
     echo "      🎓 versions of several minor lines are interleaved: the first version in version order, check the line of the customer"
+}
+
+# --since-version for a Debezium connector the Confluent Hub versions cannot answer (key not in the latest one, plugin
+# unknown): the first upstream Debezium release (Maven Central, .Final only) having the key, by binary search. A key is
+# a string constant of the classes: the connector jar is probed, with debezium-core (common keys) and
+# debezium-connector-binlog (MySQL / MariaDB keys, 3.0+) when they exist for that release
+function config_key_since_upstream_debezium () {
+    local class="$1" package artifact lo hi mid cache_dir="/tmp/connector-plugin-jars/debezium-upstream"
+    package=$(echo "$class" | sed -n 's/^io\.debezium\.connector\.\([a-z0-9]*\)\..*/\1/p')
+    case "$package" in
+        "") echo "   📅 upstream Debezium: cannot tell the Maven artifact of $class"; return ;;
+        postgresql) artifact="debezium-connector-postgres" ;;
+        *) artifact="debezium-connector-$package" ;;
+    esac
+    local versions=()
+    while IFS= read -r v
+    do
+        versions+=("$v")
+    done < <(curl -s -f "https://repo1.maven.org/maven2/io/debezium/$artifact/maven-metadata.xml" | sed -n 's|.*<version>\([^<]*\.Final\)</version>.*|\1|p' | sort -V)
+    if [ ${#versions[@]} -eq 0 ]
+    then
+        echo "   📅 upstream Debezium: no release of io.debezium:$artifact found on Maven Central"
+        return
+    fi
+    local key_regex
+    key_regex="(^|[^A-Za-z0-9._-])$(echo "$key" | sed 's/[][\.*^$/+?(){}|]/\\&/g')([^A-Za-z0-9._-]|$)"
+    # true when upstream release $1 has the key; 2 when its connector jar cannot be downloaded
+    function config_key_upstream_has_key () {
+        local version="$1" a jar found=1
+        for a in "$artifact" debezium-core debezium-connector-binlog
+        do
+            jar="$cache_dir/$a/$a-$version.jar"
+            if [ ! -s "$jar" ]
+            then
+                mkdir -p "$cache_dir/$a"
+                if ! curl -s -f -o "$jar.tmp" "https://repo1.maven.org/maven2/io/debezium/$a/$version/$a-$version.jar"
+                then
+                    rm -f "$jar.tmp"
+                    [ "$a" == "$artifact" ] && return 2
+                    continue
+                fi
+                mv "$jar.tmp" "$jar"
+            fi
+            if unzip -p "$jar" '*.class' 2>/dev/null | LC_ALL=C grep -a -q -E "$key_regex"
+            then
+                found=0
+                break
+            fi
+        done
+        if [ $found -eq 0 ]
+        then
+            log "   🔍 upstream Debezium $version: ✅ $key" >&2
+        else
+            log "   🔍 upstream Debezium $version: ❌ no $key" >&2
+        fi
+        return $found
+    }
+    log "📅 Looking for the first upstream Debezium release having $key, among ${#versions[@]} .Final release(s) of io.debezium:$artifact on Maven Central (binary search)"
+    lo=0
+    hi=$((${#versions[@]} - 1))
+    if ! config_key_upstream_has_key "${versions[$hi]}"
+    then
+        echo "   📅 $key is not in the latest upstream Debezium release either (${versions[$hi]}): removed, or not a key of this connector"
+        return
+    fi
+    if config_key_upstream_has_key "${versions[0]}"
+    then
+        echo "   📅 $key is already in the oldest upstream Debezium release on Maven Central (${versions[0]})"
+        return
+    fi
+    while [ $((hi - lo)) -gt 1 ]
+    do
+        mid=$(( (lo + hi) / 2 ))
+        if config_key_upstream_has_key "${versions[$mid]}"
+        then
+            hi=$mid
+        else
+            lo=$mid
+        fi
+    done
+    echo "   📅 $key was added in upstream Debezium ${versions[$hi]} (absent in ${versions[$lo]}), io.debezium:$artifact on Maven Central"
+    echo "      🎓 not on Confluent Hub yet: the Confluent build (debezium/debezium-connector-*) of that line is not published, the customer runs upstream Debezium or waits for it"
+    echo "      🎓 release lines are interleaved: the first release in version order, a backport to an older line is possible (check the release notes of the customer's line)"
+}
+
+# --since-version: Confluent Hub first, then upstream Debezium releases when Hub has no version with the key
+function config_key_since () {
+    local class="$1" file="$2"
+    since_not_on_hub=0
+    config_key_since_version "$class" "$file"
+    if [ "$since_not_on_hub" == "1" ] && [[ "$class" == io.debezium.* ]]
+    then
+        config_key_since_upstream_debezium "$class"
+    fi
 }
 
 cd "$root_folder" > /dev/null
@@ -146,7 +248,11 @@ then
             filtered+=("$file")
         fi
     done
-    if [ ${#filtered[@]} -eq 0 ]
+    if [ ${#filtered[@]} -eq 0 ] && [[ -n "$since_version" ]] && [[ "$connector_class_filter" == io.debezium.connector.*.* ]]
+    then
+        log "🔌 no configuration reference recorded by CI for $connector_class_filter: only --since-version can answer"
+        filtered=("/dev/null")
+    elif [ ${#filtered[@]} -eq 0 ]
     then
         logerror "❌ no connector matching --connector-class $connector_class_filter, connectors with a configuration reference are:"
         for file in "${reference_files[@]}"
@@ -219,6 +325,26 @@ then
         log "💡 similar keys (number of connectors having it):"
         echo "$suggestions"
     fi
+    # not in the configuration recorded by CI (latest version tested): a newer version may have it
+    if [[ -n "$since_version" ]] && [[ -n "$connector_class_filter" ]]
+    then
+        since_classes=$(for file in "${reference_files[@]}"; do config_key_class "$file"; done | grep '\.' | sort -u)
+        if [[ -z "$since_classes" ]] && [[ "$connector_class_filter" == io.debezium.* ]]
+        then
+            since_classes="$connector_class_filter"
+        fi
+        if [ -z "$since_classes" ]
+        then
+            echo "   📅 --since-version: $connector_class_filter matches no self-managed connector"
+        elif [ "$(echo "$since_classes" | wc -l | tr -d ' ')" -gt 1 ]
+        then
+            echo "   📅 --since-version: $connector_class_filter matches several self-managed connectors, use the full class:"
+            echo "$since_classes" | sed 's/^/      /'
+        else
+            config_key_since "$since_classes" ""
+        fi
+    fi
+    echo ""
 fi
 
 classes=""
@@ -299,7 +425,7 @@ do
     fi
     if [[ -n "$since_version" ]]
     then
-        config_key_since_version "$class" "$file"
+        config_key_since "$class" "$file"
     fi
     echo ""
     shown=$((shown+1))
