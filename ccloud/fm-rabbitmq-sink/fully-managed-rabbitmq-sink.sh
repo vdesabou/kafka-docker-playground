@@ -22,32 +22,7 @@ docker compose up -d --quiet-pull
 
 sleep 5
 
-log "Waiting for ngrok to start"
-while true
-do
-  container_id=$(docker ps -q -f name=ngrok)
-  if [ -n "$container_id" ]
-  then
-    status=$(docker inspect --format '{{.State.Status}}' $container_id)
-    if [ "$status" = "running" ]
-    then
-      log "Getting ngrok hostname and port"
-      NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-      NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
-      NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
-
-      if ! [[ $NGROK_PORT =~ ^[0-9]+$ ]]
-      then
-        log "NGROK_PORT is not a valid number, keep retrying..."
-        continue
-      else 
-        break
-      fi
-    fi
-  fi
-  log "Waiting for container ngrok to start..."
-  sleep 5
-done
+get_ngrok_url
 
 sleep 5
 

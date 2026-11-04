@@ -26,32 +26,7 @@ docker compose up -d --quiet-pull
 playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 900
 log "ibmdb2 DB has started!"
 
-log "Waiting for ngrok to start"
-while true
-do
-  container_id=$(docker ps -q -f name=ngrok)
-  if [ -n "$container_id" ]
-  then
-    status=$(docker inspect --format '{{.State.Status}}' $container_id)
-    if [ "$status" = "running" ]
-    then
-      log "Getting ngrok hostname and port"
-      NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-      NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
-      NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
-
-      if ! [[ $NGROK_PORT =~ ^[0-9]+$ ]]
-      then
-        log "NGROK_PORT is not a valid number, keep retrying..."
-        continue
-      else 
-        break
-      fi
-    fi
-  fi
-  log "Waiting for container ngrok to start..."
-  sleep 5
-done
+get_ngrok_url
 
 playground db sql --database testdb << EOF
 CREATE TABLE CUSTOMERS(ID INT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) NOT NULL,FIRST_NAME VARCHAR(50),LAST_NAME VARCHAR(50),EMAIL VARCHAR(50),GENDER VARCHAR(50),CLUB_STATUS VARCHAR(20),COMMENTS VARCHAR(90),CREATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,UPDATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,PRIMARY KEY(ID));

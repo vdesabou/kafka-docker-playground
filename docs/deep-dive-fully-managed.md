@@ -70,8 +70,11 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
    connector at the end, after `check_if_continue`.
 
 **Local systems are reached through a tunnel.** When the connector reads or writes a container of the example (Postgres,
-MongoDB, an HTTP server…), an `ngrok` service exposes it and the example reads the public endpoint from
-`http://127.0.0.1:4040/api/tunnels`. That needs `NGROK_AUTH_TOKEN`, or `BORE_SERVER` and `BORE_SECRET`: with those set, the same
+MongoDB, an HTTP server…), an `ngrok` service exposes it and the example calls `get_ngrok_url` (`get_ngrok_url 2` for
+two tunnels): it waits for the tunnel on the agent API (`http://127.0.0.1:4040/api/tunnels`) and exports
+`NGROK_HOSTNAME` / `NGROK_PORT` (`NGROK_URL`, and `…2` for the second tunnel) for the connector config. It fails at once
+with the end of the ngrok logs when the container stops (an invalid token, the session limit of an account), and
+after 180 s otherwise, instead of retrying forever. That needs `NGROK_AUTH_TOKEN`, or `BORE_SERVER` and `BORE_SECRET`: with those set, the same
 service opens the tunnels on a [bore](https://github.com/ekzhang/bore) server instead (image built from
 [`tools/bore-tunnel`](https://github.com/vdesabou/kafka-docker-playground/tree/master/tools/bore-tunnel), same API, no ngrok
 quota). CI uses bore.
