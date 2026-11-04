@@ -4,6 +4,8 @@ Writes
 🔘 insert.mode
 
 Defines the insertion mode to use. Supported modes are:
+``insert`` -     Insert new record only. If the row to be written already exists in the table, an error is thrown.
+``upsert`` -     If the row to be written already exists, then its column values are overwritten with the ones provided. 
 
 	 - Type: STRING
 	 - Default: INSERT
@@ -22,6 +24,10 @@ The maximum number of records that can be batched into a batch of upserts. Note 
 🔘 error.mode
 
 Specifies how to handle errors that result from writes, after retries.Supported modes:
+``fail`` -     The connector fails and must be manually restarted.
+``warn`` -     The connector logs a warning and continues operating normally.
+``ignore`` -    The connector does not log a warning but continues operating normally.
+
 
 	 - Type: STRING
 	 - Default: FAIL
@@ -34,6 +40,7 @@ Data Mapping
 🔘 table.name.format
 
 Name of the destination table. Use '${topic}' within the table name to specify the originating topic name.
+For example, ``user_${topic}`` for the topic 'stats' will map to the table name 'user_stats'.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -44,6 +51,10 @@ Name of the destination table. Use '${topic}' within the table name to specify t
 
 A comma separated list of Kafka Record key field names that specifies the order of kafka key fields to be concatenated to form the row key. For example the list: 'username, post_id, time_stamp' when applied to a kafka key: {'username': 'bob','post_id': '213', 'time_stamp': '123123'} and with delimiter '#' gives the row key 'bob#213#123123'. Terms nested in the key maybe also accessed using '.' as a delimiter.
 If this configuration is empty or unspecified and the Kafka Message Key is a:
+      * ``struct``, all the fields in the struct are used to construct the row key.
+      * ``byte`` array, the row key is set to the byte array as is.
+      * ``primitive``, the row key is set to the primitive stringified.
+If prefixes, more complicated delimiters and string constants are required in your Row Key, consider configuring an SMT to add relevant fields to the Kafka Record key.
 
 	 - Type: LIST
 	 - Default: 
@@ -182,6 +193,13 @@ Kerberos user principal to login as to the hbase.master.kerberos.principal. Requ
 🔘 hbase.rpc.protection
 
 The level of encryption for RPC communication. The supported levels are:
+``privacy``
+	Authentication, integrity, and confidentiality checking.
+``integrity``
+	Authentication and integrity checking.
+``authentication``
+	Authentication checking.
+
 
 	 - Type: STRING
 	 - Default: AUTHENTICATION
@@ -253,4 +271,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 

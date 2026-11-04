@@ -322,3 +322,4 @@ If true, Kafka consumer offsets will be stored in Cassandra table. If false, con
 	 - Importance: MEDIUM
 	 - Required: false
 
+

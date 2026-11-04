@@ -127,6 +127,11 @@ Provides the user for the JMS connection
 🔘 connect.jms.error.policy
 
 Specifies the action to be taken if an error occurs while inserting the data.
+There are two available options:
+NOOP - the error is swallowed
+THROW - the error is allowed to propagate.
+RETRY - The exception causes the Connect framework to retry the message. The number of retries is based on
+The error will be logged automatically
 
 	 - Type: STRING
 	 - Default: THROW
@@ -192,8 +197,10 @@ Converter
 ==========================
 🔘 connect.jms.source.default.converter
 
+
 Contains a canonical class name for the default converter of a raw JMS message bytes to a SourceRecord.
 Overrides to the default can be done by using connect.jms.source.converters still.
+i.e. com.datamountaineer.streamreactor.connect.source.converters.AvroConverter
 
 	 - Type: STRING
 	 - Default: 
@@ -220,6 +227,7 @@ If the AvroConverter is used you need to provide an avro Schema to be able to re
 
 🔘 connect.jms.headers
 
+
 Contains collection of static JMS headers included in every SinkRecord
 The format is connect.jms.headers="$MQTT_TOPIC=rmq.jms.message.type:TextMessage,rmq.jms.message.priority:2;$MQTT_TOPIC2=rmq.jms.message.type:JSONMessage"
 
@@ -239,4 +247,5 @@ Enables the output for how many records have been processed
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
 
