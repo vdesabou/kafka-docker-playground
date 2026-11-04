@@ -20,8 +20,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
-playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
-     CONNECT sys/Admin123 AS SYSDBA
+playground db sql << EOF
      CREATE USER  C##MYUSER IDENTIFIED BY mypassword;
      GRANT CONNECT TO  C##MYUSER;
      GRANT CREATE SESSION TO  C##MYUSER;
@@ -104,7 +103,9 @@ sleep 5
 
 
 log "Show content of ORDERS table:"
-playground container exec --container oracle --command "bash -c \"echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB\"" > /tmp/result.log  2>&1
+playground db sql --user C##MYUSER --password mypassword > /tmp/result.log 2>&1 << 'EOF'
+select * from ORDERS;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

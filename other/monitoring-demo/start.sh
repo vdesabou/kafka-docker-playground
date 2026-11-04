@@ -59,18 +59,19 @@ playground connector create-or-update --connector mysql-source  << EOF
 EOF
 
 log "Adding an element to the table"
-docker exec mysql mysql --user=root --password=password --database=db -e "
-INSERT INTO application (   \
-  id,   \
-  name, \
-  team_email,   \
-  last_modified \
-) VALUES (  \
-  2,    \
-  'another',  \
-  'another@apache.org',   \
-  NOW() \
-);"
+playground db sql --database db << 'EOF'
+INSERT INTO application (
+  id,
+  name,
+  team_email,
+  last_modified
+) VALUES (
+  2,
+  'another',
+  'another@apache.org',
+  NOW()
+);
+EOF
 
 
 

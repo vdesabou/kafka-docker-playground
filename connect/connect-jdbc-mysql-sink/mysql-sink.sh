@@ -92,14 +92,17 @@ playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"prod
 }
 EOF
 
-sleep 5
-
+playground db wait-for-rows --table orders --min-expected-rows 2
 
 log "Describing the orders table in DB 'db':"
-playground container exec --container mysql --command "bash -c \"mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=db -e 'describe orders'\""
+playground db sql << 'EOF'
+describe orders;
+EOF
 
 log "Show content of orders table:"
-playground container exec --container mysql --command "bash -c \"mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=db -e 'select * from orders'\"" > /tmp/result.log  2>&1
+playground db sql > /tmp/result.log 2>&1 << 'EOF'
+select * from orders;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

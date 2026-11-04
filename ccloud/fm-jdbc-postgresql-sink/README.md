@@ -38,5 +38,5 @@ playground run -f fully-managed-jdbc-postgres-sink.sh
 3. Starts PostgreSQL and Ngrok.
 4. Creates the `PostgresSink` fully managed connector (`auto.create`).
 5. Produces 2 Avro records to `myproducts`.
-6. Queries table `MYPRODUCTS` with `psql` and checks that the `foo` record is present.
+6. Waits for the 2 rows with `playground db wait-for-rows`, then queries table `MYPRODUCTS` with `playground db sql` (`psql`) and checks that the `foo` record is present.
 7. Asks before deleting the connector.

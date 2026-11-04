@@ -35,5 +35,5 @@ playground run -f fully-managed-mysql-sink.sh
 1. Bootstraps the Confluent Cloud environment, deletes topic `mysqlorders` and produces 2 Avro records to it.
 2. Starts MySQL and Ngrok.
 3. Creates the `MySqlSink` fully managed connector (`insert.mode` INSERT, `auto.create` and `auto.evolve`).
-4. Describes and queries table `mysqlorders` and checks that the `foo` record is present.
+4. Waits for the 2 rows with `playground db wait-for-rows`, then describes and queries table `mysqlorders` with `playground db sql` and checks that the `foo` record is present.
 5. Asks before deleting the connector.

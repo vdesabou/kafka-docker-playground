@@ -96,8 +96,12 @@ sleep 5
 
 
 log "Describing the orders table in DB 'db':"
-playground container exec --container mariadb --command "bash -c \"mariadb --user=user --password=password db -e 'describe orders;'\""
+playground db sql --user user --password password --database db << 'EOF'
+describe orders;
+EOF
 
 log "Show content of orders table:"
-playground container exec --container mariadb --command "bash -c \"mariadb --user=user --password=password db -e 'select * from orders;'\""
+playground db sql --user user --password password --database db << 'EOF'
+select * from orders;
+EOF
 

@@ -8,12 +8,14 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Initialize MongoDB replica set"
-playground container exec --container mongodb --command "mongosh --eval 'rs.initiate({_id: \"myuser\", members:[{_id: 0, host: \"mongodb:27017\"}]})'"
+playground db sql << 'EOF'
+rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})
+EOF
 
 sleep 5
 
 log "Create a user profile"
-playground container exec --container mongodb --command "mongosh" << EOF
+playground db sql << EOF
 use admin
 db.createUser(
 {
@@ -89,17 +91,11 @@ playground connector create-or-update --connector mongodb-sink  << EOF
 }
 EOF
 
-sleep 10
+playground db wait-for-rows --database inventory --table customers --min-expected-rows 2
 
 log "View record"
-playground container exec --container mongodb --command "mongosh" << EOF
-use inventory
+playground db sql --database inventory > /tmp/result.log 2>&1 << 'EOF'
 db.customers.find().pretty();
 EOF
-
-playground container exec --container mongodb --command "mongosh" << EOF > output.txt
-use inventory
-db.customers.find().pretty();
-EOF
-grep "foo" output.txt
-rm output.txt
+cat /tmp/result.log
+grep "foo" /tmp/result.log

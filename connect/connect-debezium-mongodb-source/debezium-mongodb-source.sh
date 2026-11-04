@@ -21,12 +21,14 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Initialize MongoDB replica set"
-playground container exec --container mongodb --command "mongosh --eval 'rs.initiate({_id: \"debezium\", members:[{_id: 0, host: \"mongodb:27017\"}]})'"
+playground db sql << 'EOF'
+rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})
+EOF
 
 sleep 5
 
 log "Create a user profile"
-playground container exec --container mongodb --command "mongosh" << EOF
+playground db sql << EOF
 use admin
 db.createUser(
 {
@@ -40,7 +42,7 @@ EOF
 sleep 2
 
 log "Insert a record"
-playground container exec --container mongodb --command "mongosh" << EOF
+playground db sql << EOF
 use inventory
 db.customers.insert([
 { _id : 1006, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
@@ -48,7 +50,7 @@ db.customers.insert([
 EOF
 
 log "View record"
-playground container exec --container mongodb --command "mongosh" << EOF
+playground db sql << EOF
 use inventory
 db.customers.find().pretty();
 EOF

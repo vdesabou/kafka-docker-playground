@@ -36,5 +36,5 @@ playground run -f fully-managed-sqlserver-microsoft-sink.sh
 2. Starts SQL Server and Ngrok.
 3. Creates the `MicrosoftSqlServerSink` fully managed connector (`auto.create`).
 4. Produces 2 Avro records to `sqlserver_table`.
-5. Queries table `sqlserver_table` with `sqlcmd` and checks that the `foo` record is present.
+5. Waits for the 2 rows with `playground db wait-for-rows`, then queries table `sqlserver_table` with `playground db sql` (`sqlcmd`) and checks that the `foo` record is present.
 6. Asks before deleting the connector.

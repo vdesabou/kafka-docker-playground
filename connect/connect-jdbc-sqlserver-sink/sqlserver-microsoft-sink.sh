@@ -80,12 +80,11 @@ playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"prod
 }
 EOF
 
-sleep 5
+playground db wait-for-rows --table orders --min-expected-rows 2
 
 log "Show content of orders table:"
-playground container exec --container sqlserver --command '/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!' > /tmp/result.log  2>&1 <<-EOF
-select * from orders
-GO
+playground db sql > /tmp/result.log 2>&1 << 'EOF'
+select * from orders;
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log

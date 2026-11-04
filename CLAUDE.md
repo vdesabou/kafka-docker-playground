@@ -37,6 +37,7 @@ The full catalog is `docs/which-command.md` (🥇 question → command, "Good to
 | customer configs | `connector create-or-update\|validate\|diff\|convert` read CFK / Strimzi / terraform / `.properties` / `expand=info` dumps; `repro bootstrap --config` |
 | schemas | `schema check-compatibility\|diff\|history\|describe\|validate\|import\|export\|test-rules\|exporter\|compare` |
 | Kafka admin | `topic produce\|consume\|wait-for-records\|compare\|reassign\|elect-leader`, `consumer-group`, `quota`, `broker config\|stop\|start\|rolling-restart\|transactions\|metrics`, `ksqldb`, `flink` |
+| databases of the examples | `db sql` (Oracle, PostgreSQL, MySQL, SQL Server, Db2, MongoDB, credentials found for you), `db wait-for-rows` |
 | CI, performance, specific | `get-ci-result --logs`, `connector benchmark` (skill `kdp-benchmark`), `analyze oracle-xstream-report` (skill `kdp-xstream-report`), `debug cfk sourcecode` |
 
 Gotchas that bite every time (the rest is in "Good to know" of `docs/which-command.md`):
@@ -87,7 +88,7 @@ playground connector create-or-update --connector s3-sink << EOF   # waits for R
 { ... }
 EOF
 playground topic produce -t s3-topic --nb-messages 10 ...
-sleep 10   # data lands outside Kafka; a source example uses 'topic consume --min-expected-messages' or 'topic wait-for-records'
+sleep 10   # data lands outside Kafka (a database sink: 'db wait-for-rows'); a source example uses 'topic consume --min-expected-messages' or 'topic wait-for-records'
 # ... assert the data landed ...
 ```
 

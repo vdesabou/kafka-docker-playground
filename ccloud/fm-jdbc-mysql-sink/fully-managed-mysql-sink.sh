@@ -126,13 +126,17 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 5
+playground db wait-for-rows --table mysqlorders --min-expected-rows 2
 
 log "Describing the mysqlorders table in DB 'mydb':"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe mysqlorders'"
+playground db sql << 'EOF'
+describe mysqlorders;
+EOF
 
 log "Show content of mysqlorders table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from mysqlorders'" > /tmp/result.log  2>&1
+playground db sql > /tmp/result.log 2>&1 << 'EOF'
+select * from mysqlorders;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

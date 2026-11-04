@@ -30,7 +30,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create table"
-playground container exec --container mysql --command "mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
+playground db sql --database mydb << EOF
 USE mydb;
 
 CREATE TABLE CUSTOMERS (
@@ -53,14 +53,16 @@ select * from CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
-playground container exec --container mysql --command "mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
+playground db sql --database mydb << EOF
 USE mydb;
 
 INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
 EOF
 
 log "Show content of CUSTOMERS table:"
-playground container exec --container mysql --command "bash -c \"mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb -e 'select * from CUSTOMERS'\""
+playground db sql --database mydb << 'EOF'
+select * from CUSTOMERS;
+EOF
 
 log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-source << EOF

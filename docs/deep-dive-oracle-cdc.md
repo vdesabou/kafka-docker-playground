@@ -89,7 +89,8 @@ What the CDC examples have in common:
 - **The XStream examples also need the Oracle Instant Client** (`instantclient_19_25_x86.zip` or `_arm64.zip`, from
   S3 or downloaded by hand): `ojdbc8.jar`, `xstreams.jar` and the libraries are copied into the connector plugin
   folder, `LD_LIBRARY_PATH` points to them, and `libaio` / `libnsl` are installed in the `connect` container.
-- **The database setup is in the script**, as `sqlplus` heredocs run with `playground container exec -c oracle`:
+- **The database setup is in the script**, as `sqlplus` heredocs run with `playground db sql` (as `sys AS SYSDBA` by
+  default, `--user` / `--password` / `--database ORCLPDB1` for the connector user or the pluggable database):
   copy those blocks to understand or change what the customer has (grants, supplemental logging, a second table in
   the outbound server). XStream: `enable_goldengate_replication`, `ARCHIVELOG`, supplemental logging (all columns),
   tablespaces, `c##cfltadmin` (admin) and `c##cfltuser` (connect user, owner of `CUSTOMERS`), outbound server `XOUT`
@@ -330,8 +331,7 @@ in the playground image.
 **Step 5: `RUNNING`, but the capture process is stopped**
 
 ```bash
-playground container exec -c oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus -s /nolog\"" << 'EOF'
-CONNECT sys/Admin123 AS SYSDBA
+playground db sql << 'EOF'
 DECLARE
      capture VARCHAR2(128);
 BEGIN
@@ -434,8 +434,10 @@ playground run -f connect/connect-cdc-oracle19-source/cdc-oracle19-cdb-table.sh 
 playground connector oracle-cdc-xstream debug                                               # raw XStream views
 playground connector oracle-cdc-xstream generate-report                                    # /tmp/orclcdc_diag_<date>.html
 playground analyze oracle-xstream-report [-c oracle | -f <report.html>… | --sample <name>…] [-p "<symptom, since when>"] [--json] [--top 10] [--output-dir <d>]
-playground container exec -c oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
-CONNECT sys/Admin123 AS SYSDBA
+playground db sql << 'EOF'                                                                   # as sys AS SYSDBA
+…
+EOF
+playground db sql --user C##MYUSER --password mypassword --database ORCLPDB1 << 'EOF'         # connector user, PDB
 …
 EOF
 ```

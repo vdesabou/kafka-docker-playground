@@ -22,7 +22,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create CUSTOMERS table:"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 create table CUSTOMERS (
         id SERIAL PRIMARY KEY,
         first_name VARCHAR(50),
@@ -72,17 +72,17 @@ insert into CUSTOMERS (first_name, last_name, email, gender, club_status, commen
 EOF
 
 log "Show content of CUSTOMERS table:"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 SELECT * FROM CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 insert into customers (first_name, last_name, email, gender, comments) values ('Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');
 EOF
 
 log "Show content of CUSTOMERS table:"
-playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
+playground db sql << EOF
 SELECT * FROM CUSTOMERS;
 EOF
 

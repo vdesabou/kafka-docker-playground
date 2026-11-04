@@ -53,8 +53,7 @@ log "Oracle DB has started!"
 
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
-     CONNECT sys/Admin123 AS SYSDBA
+playground db sql << EOF
      CREATE USER  C##MYUSER IDENTIFIED BY mypassword;
      GRANT CONNECT TO  C##MYUSER;
      GRANT CREATE SESSION TO  C##MYUSER;
@@ -144,10 +143,12 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 5
+playground db wait-for-rows --user C##MYUSER --password mypassword --table ORDERS --min-expected-rows 2
 
 log "Show content of ORDERS table:"
-docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB" > /tmp/result.log  2>&1
+playground db sql --user C##MYUSER --password mypassword > /tmp/result.log 2>&1 << 'EOF'
+select * from ORDERS;
+EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

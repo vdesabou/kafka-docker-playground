@@ -16,10 +16,14 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Describing the calls table in DB 'mydb':"
-playground container exec -c mysql --command "mysql --user=root --password=password --database=mydb -e 'describe calls'"
+playground db sql --database mydb << 'EOF'
+describe calls;
+EOF
 
 log "Show content of calls table:"
-playground container exec -c mysql --command "mysql --user=root --password=password --database=mydb -e 'select * from calls'"
+playground db sql --database mydb << 'EOF'
+select * from calls;
+EOF
 
 
 log "Create source connector"
