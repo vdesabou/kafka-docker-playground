@@ -12,6 +12,14 @@ log "Setup: an Avro topic that also contains two plain JSON records"
 playground topic produce -t orders --nb-messages 3 < ${DIR}/../../scripts/cli/predefined-schemas/avro/customer.avsc
 playground topic produce -t orders --nb-messages 2 --value '{"id": %g}'
 
+log "Before any connector: which records will a converter fail on?"
+lab_run playground topic check-format --topic orders
+lab_expect_exit 1
+lab_expect_contains "0          0-2          3        Avro, schema id 1 (orders-value v1)"
+lab_expect_contains "0          3-4          2        JSON, no schema  ❌"
+lab_expect_contains "❌ 2 values are plain JSON (no schema), the others are in the Schema Registry wire format: partition 0 offsets 3-4"
+lab_expect_contains "fails with 'Unknown magic byte!' at partition 0 offset 3"
+
 log "Step 1: the default is a loud failure"
 playground connector create-or-update --connector strict-sink --no-wait << 'EOF'
 {

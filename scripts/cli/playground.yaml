@@ -6581,6 +6581,91 @@ subcommands:
       - "-v"
       argument: ''
       description: "\U0001F41E Show command being ran."
+  - name: check-format
+    description: "\U0001F9EC Check the format of the records of a topic, from their
+      bytes\n\nLooks at the first bytes of each key and value, and gives a census
+      per\npartition and offset range: Schema Registry wire format (magic byte +\nschema
+      id, looked up in Schema Registry: Avro, Protobuf with its\nmessage, JSON Schema,
+      or ❌ not found), schema id in a\n__key_schema_id / __value_schema_id header,
+      JSON with or without the\nJsonConverter {\"schema\":…,\"payload\":…} envelope,
+      string, binary, Avro\ncontainer file, tombstones and null keys.\n\nThen the
+      findings, and the converter to use:\n\n  ❌ mixed formats      some records are
+      not in the format of the others,\n                       and the error each
+      converter gives on them\n                       ('Unknown magic byte!', 'JsonConverter
+      with\n                       schemas.enable requires \"schema\" and \"payload\"\n
+      \                      fields', 'Converting byte[] to Kafka Connect data\n                       failed
+      due to serialization error')\n  ❌ unknown schema id  'Error retrieving Avro
+      schema for id …',\n                       'Schema not found': another registry,
+      or a hard\n                       deleted schema\n  ❌ subject, no wire   a <topic>-value
+      subject exists, but the values\n     format             are JSON or strings\n
+      \ ⚠️ subject mismatch   the schema id is not a version of\n                       <topic>-value
+      (RecordNameStrategy producer)\n  ℹ️ tombstones, null keys, schema id in a header,
+      JSON envelope\n  ✅ key.converter / value.converter when each side has one format\n\n'topic
+      consume' picks one format for the whole topic from its subjects:\na topic where
+      some records differ is decoded wrong, with no hint of\nwhere the bad records
+      are. This command reads raw bytes (never\ndecoded), so it shows them. Exit code
+      1 on a ❌ finding.\n\nReads --max-messages records (default 1000) spread across
+      the\npartitions: the last ones of each partition, the first ones with\n--from-beginning,
+      or the ones around --offset (the offset of a\nconnector error). Works on every
+      environment, Confluent Cloud\nincluded.\n\n\U0001F393 Tip: then test the converters
+      of a connector on one record with\n'playground connector smt test --from-topic
+      <topic> --offset <o>'."
+    usage: playground topic check-format [OPTIONS]
+    options:
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Topic name\n\nRequired: ✓ Yes"
+    - names:
+      - "--max-messages"
+      argument: MAX_MESSAGES
+      description: "\U0001F522 Number of records to read, spread across the partitions
+        (default is 1000)\n\nDefault value: 1000"
+    - names:
+      - "--from-beginning"
+      argument: ''
+      description: |-
+        ⏮️ Read the first records of each partition instead of the last ones
+
+        Conflicts with: --offset
+    - names:
+      - "--partition"
+      argument: PARTITION
+      description: "\U0001F522 Only this partition"
+    - names:
+      - "--offset"
+      argument: OFFSET
+      description: "\U0001F4CD Read the records around this offset (the one of a converter
+        error), on each partition or on --partition\n\nConflicts with: --from-beginning"
+    - names:
+      - "--key-only"
+      argument: ''
+      description: "\U0001F511 Only check the keys\n\nConflicts with: --value-only"
+    - names:
+      - "--value-only"
+      argument: ''
+      description: "\U0001F4E6 Only check the values\n\nConflicts with: --key-only"
+    - names:
+      - "--samples"
+      argument: ''
+      description: "\U0001F50E Show the first record of each range, as text and hex"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the census and the findings as JSON"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
   - name: set-schema-compatibility
     description: "\U0001F6E1️ Change topic's schema compatibility\n\nSets the compatibility
       level on the value subject of the topic\n(<topic>-value), and on its key subject
