@@ -8236,6 +8236,186 @@
       ]
     },
     {
+      "name": "db",
+      "description": "🛢️ Database commands\n\nRun SQL in the database container of the running example, and wait for a\nsink connector to write rows, without docker exec and the client command\nline of each database.\n\n  sql             run statements (stdin, --file or --sql) with the database client\n  wait-for-rows   wait until a table contains N rows\n\nSupported: Oracle (sqlplus), PostgreSQL (psql), MySQL and MariaDB (mysql /\nmariadb), SQL Server (sqlcmd), IBM Db2 (db2) and MongoDB (mongosh).\n\nThe database is the only running container whose image is one of them\n(oracle, postgres, mysql, sqlserver, mongodb, ibmdb2... in the examples):\npass --container when there are several, and --engine when the image name\ndoes not tell which database it is.\n\nThe user, password and database come from the environment variables of the\ncontainer (POSTGRES_USER, MYSQL_ROOT_PASSWORD, SA_PASSWORD, ORACLE_PWD,\nMONGO_INITDB_ROOT_USERNAME, DB2INST1_PASSWORD...), so most examples need no\nflag: pass --user, --password and --database to connect as another user.\n\n🎓 Tip: in an example script, use 'db wait-for-rows' instead of a fixed\nsleep before checking what a sink connector wrote.",
+      "usage": "playground db COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "sql",
+          "description": "🛢️ Run SQL statements with the client of the database\n\nThe statements are read from stdin (heredoc), --file or --sql, and run\nin one session of the client of the database, inside its container:\n\n  engine       client    default user / database (from the container environment)\n  oracle       sqlplus   sys AS SYSDBA (ORACLE_PWD or ORACLE_PASSWORD) / ORACLE_SID (ORCLCDB)\n  postgres     psql      POSTGRES_USER / POSTGRES_DB\n  mysql        mysql     root (MYSQL_ROOT_PASSWORD) / MYSQL_DATABASE\n  mariadb      mariadb   root (MARIADB_ROOT_PASSWORD) / MARIADB_DATABASE\n  sqlserver    sqlcmd    sa (SA_PASSWORD or MSSQL_SA_PASSWORD) / master\n  db2          db2       db2inst1 (DB2INST1_PASSWORD) / DBNAME\n  mongodb      mongosh   MONGO_INITDB_ROOT_USERNAME (none if not set) / test\n\nFor Oracle, --database is the service name: ORCLPDB1 (or FREEPDB1,\nXEPDB1) for the pluggable database, and a user other than sys connects\nas a normal user. For MongoDB, the statements are mongosh commands\n(use, db.collection.insertOne(...)...). For SQL Server, separate the\nbatches with GO, as with sqlcmd.\n\nThe execution stops at the first statement that fails, and the command\nexits with code 1 (so an example script with set -e stops there).\nWith --ignore-errors, every statement is run, the errors are printed\nand counted, and the command exits with code 0. MongoDB always runs\nevery command: a failing one makes the command exit with code 1.\n\n🎓 Tip: quote the heredoc (<< 'EOF') when the statements contain $,\nfor example Oracle views such as V$DATABASE.",
+          "usage": "playground db sql [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Container of the database\n\nℹ️ If not set, the only running container whose image is a supported database"
+            },
+            {
+              "names": [
+                "--engine"
+              ],
+              "argument": "ENGINE",
+              "description": "🛢️ Database engine, when the image name of the container does not tell it\n\nAllowed values: oracle, postgres, mysql, mariadb, sqlserver, db2, mongodb"
+            },
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "👤 User to connect with\n\nℹ️ If not set, the admin user of the container environment (see above)"
+            },
+            {
+              "names": [
+                "--password"
+              ],
+              "argument": "PASSWORD",
+              "description": "🔑 Password of --user\n\nℹ️ If not set, the password of the container environment"
+            },
+            {
+              "names": [
+                "--database",
+                "-d"
+              ],
+              "argument": "DATABASE",
+              "description": "🗄️ Database (Oracle: service name, ORCLPDB1 for the pluggable database)\n\nℹ️ If not set, the database of the container environment"
+            },
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "📄 File with the statements\n\nℹ️ If neither --file nor --sql is set, the statements are read from stdin\n\nConflicts with: --sql"
+            },
+            {
+              "names": [
+                "--sql",
+                "-s"
+              ],
+              "argument": "SQL",
+              "description": "✍️ Statements, inline\n\nConflicts with: --file"
+            },
+            {
+              "names": [
+                "--ignore-errors"
+              ],
+              "argument": "",
+              "description": "🙈 Run every statement, even after a failing one, and exit with code 0 (the errors are still printed)"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            }
+          ]
+        },
+        {
+          "name": "wait-for-rows",
+          "description": "⏳ Wait for a table to contain a minimum number of rows\n\nCounts the rows of --table (SELECT COUNT(*), with --where if set) every\n--interval seconds until there are at least --min-expected-rows, and\nfails after --max-wait seconds. A table that does not exist yet counts\nas empty, so it can be used before a sink connector has created it\n(auto.create=true).\n\n--query replaces the count with any query that returns one number.\nFor MongoDB, --table is the collection and --where a filter document\n({\"status\": \"done\"}).\n\nThe database, user and password are found as for 'playground db sql'.\n\n🎓 Tip: in an example script, use it instead of a fixed sleep before\nchecking what a sink connector wrote, then show the rows with\n'playground db sql'.",
+          "usage": "playground db wait-for-rows [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Container of the database\n\nℹ️ If not set, the only running container whose image is a supported database"
+            },
+            {
+              "names": [
+                "--engine"
+              ],
+              "argument": "ENGINE",
+              "description": "🛢️ Database engine, when the image name of the container does not tell it\n\nAllowed values: oracle, postgres, mysql, mariadb, sqlserver, db2, mongodb"
+            },
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "👤 User to connect with\n\nℹ️ If not set, the admin user of the container environment (see above)"
+            },
+            {
+              "names": [
+                "--password"
+              ],
+              "argument": "PASSWORD",
+              "description": "🔑 Password of --user\n\nℹ️ If not set, the password of the container environment"
+            },
+            {
+              "names": [
+                "--database",
+                "-d"
+              ],
+              "argument": "DATABASE",
+              "description": "🗄️ Database (Oracle: service name, ORCLPDB1 for the pluggable database)\n\nℹ️ If not set, the database of the container environment"
+            },
+            {
+              "names": [
+                "--table",
+                "-t"
+              ],
+              "argument": "TABLE",
+              "description": "🗂️ Table (or MongoDB collection) to count the rows of, schema prefix allowed (MYUSER.CUSTOMERS)\n\nℹ️ The name is used as is: quote it as the database expects when it is case sensitive (\"orders\" for Oracle)\n\nConflicts with: --query"
+            },
+            {
+              "names": [
+                "--where"
+              ],
+              "argument": "WHERE",
+              "description": "🔎 Condition of the count (SQL: id > 10, MongoDB: a filter document)"
+            },
+            {
+              "names": [
+                "--query"
+              ],
+              "argument": "QUERY",
+              "description": "✍️ Query that returns one number, instead of --table / --where\n\nConflicts with: --table"
+            },
+            {
+              "names": [
+                "--min-expected-rows"
+              ],
+              "argument": "MIN_EXPECTED_ROWS",
+              "description": "🔢 Minimum number of rows to wait for (default is 1)\n\nDefault value: 1"
+            },
+            {
+              "names": [
+                "--max-wait"
+              ],
+              "argument": "MAX_WAIT",
+              "description": "⏳ Max time in seconds to wait (default is 120)\n\nDefault value: 120"
+            },
+            {
+              "names": [
+                "--interval"
+              ],
+              "argument": "INTERVAL",
+              "description": "🔁 Interval in seconds between checks (default is 5)\n\nDefault value: 5"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "rbac",
       "description": "🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)\n\nChange permissions of the running rbac-sasl-plain or cfk-rbac environment\nwithout opening a shell in a container: the commands call the MDS REST API\n(http://localhost:8091, a port-forward to the kafka service on cfk-rbac) as\nsuperUser.\n\n  role-binding   create, delete and list role bindings\n  user           add, delete and list LDAP users and their groups\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls). On a Confluent\n                 Cloud run, ACLs of the Confluent Cloud cluster\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac",
       "usage": "playground rbac COMMAND",

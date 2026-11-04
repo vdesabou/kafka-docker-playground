@@ -75,7 +75,9 @@ Both:
   --min-expected-messages N --timeout 60`. No raw `docker`, `curl` on Connect/SR, or `kafka-*` (see the
   🥈 mapping table in `docs/which-command.md`).
 - **Assert the result**: data landed in the target (sink), or records consumed (source), with a bounded
-  wait loop (`MAX_WAIT`, `CUR_WAIT`, `logerror` + `exit 1` on timeout), not just `sleep`.
+  wait, not just `sleep`: `playground db wait-for-rows --table <t> --min-expected-rows N` then
+  `playground db sql --sql "select …"` for a sink to a database (Oracle, PostgreSQL, MySQL, MariaDB, SQL
+  Server, Db2, MongoDB), otherwise a wait loop (`MAX_WAIT`, `CUR_WAIT`, `logerror` + `exit 1` on timeout).
 - `log` / `logwarn` / `logerror`, never bare `echo` for messages.
 - `chmod +x` the script.
 

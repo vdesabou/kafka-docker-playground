@@ -77,9 +77,9 @@ playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"prod
 }
 EOF
 
-sleep 5
+playground db wait-for-rows --table ORDERS --min-expected-rows 2
 
 log "Show content of ORDERS table:"
-playground container exec --container postgres --command "bash -c \"psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'\"" > /tmp/result.log  2>&1
+playground db sql --sql "SELECT * FROM ORDERS" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log

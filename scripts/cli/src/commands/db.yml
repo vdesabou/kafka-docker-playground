@@ -1,0 +1,258 @@
+name: db
+expose: always
+group: Database
+filters:
+- docker_running
+help: |-
+  🛢️ Database commands
+
+  Run SQL in the database container of the running example, and wait for a
+  sink connector to write rows, without docker exec and the client command
+  line of each database.
+
+    sql             run statements (stdin, --file or --sql) with the database client
+    wait-for-rows   wait until a table contains N rows
+
+  Supported: Oracle (sqlplus), PostgreSQL (psql), MySQL and MariaDB (mysql /
+  mariadb), SQL Server (sqlcmd), IBM Db2 (db2) and MongoDB (mongosh).
+
+  The database is the only running container whose image is one of them
+  (oracle, postgres, mysql, sqlserver, mongodb, ibmdb2... in the examples):
+  pass --container when there are several, and --engine when the image name
+  does not tell which database it is.
+
+  The user, password and database come from the environment variables of the
+  container (POSTGRES_USER, MYSQL_ROOT_PASSWORD, SA_PASSWORD, ORACLE_PWD,
+  MONGO_INITDB_ROOT_USERNAME, DB2INST1_PASSWORD...), so most examples need no
+  flag: pass --user, --password and --database to connect as another user.
+
+  🎓 Tip: in an example script, use 'db wait-for-rows' instead of a fixed
+  sleep before checking what a sink connector wrote.
+commands:
+
+  - name: sql
+    group: Database
+    help: |-
+      🛢️ Run SQL statements with the client of the database
+
+      The statements are read from stdin (heredoc), --file or --sql, and run
+      in one session of the client of the database, inside its container:
+
+        engine       client    default user / database (from the container environment)
+        oracle       sqlplus   sys AS SYSDBA (ORACLE_PWD or ORACLE_PASSWORD) / ORACLE_SID (ORCLCDB)
+        postgres     psql      POSTGRES_USER / POSTGRES_DB
+        mysql        mysql     root (MYSQL_ROOT_PASSWORD) / MYSQL_DATABASE
+        mariadb      mariadb   root (MARIADB_ROOT_PASSWORD) / MARIADB_DATABASE
+        sqlserver    sqlcmd    sa (SA_PASSWORD or MSSQL_SA_PASSWORD) / master
+        db2          db2       db2inst1 (DB2INST1_PASSWORD) / DBNAME
+        mongodb      mongosh   MONGO_INITDB_ROOT_USERNAME (none if not set) / test
+
+      For Oracle, --database is the service name: ORCLPDB1 (or FREEPDB1,
+      XEPDB1) for the pluggable database, and a user other than sys connects
+      as a normal user. For MongoDB, the statements are mongosh commands
+      (use, db.collection.insertOne(...)...). For SQL Server, separate the
+      batches with GO, as with sqlcmd.
+
+      The execution stops at the first statement that fails, and the command
+      exits with code 1 (so an example script with set -e stops there).
+      With --ignore-errors, every statement is run, the errors are printed
+      and counted, and the command exits with code 0. MongoDB always runs
+      every command: a failing one makes the command exit with code 1.
+
+      🎓 Tip: quote the heredoc (<< 'EOF') when the statements contain $,
+      for example Oracle views such as V$DATABASE.
+    flags:
+    - &db_container
+      long: --container
+      short: -c
+      required: false
+      arg: container
+      completions:
+        dynamic:
+        - playground get-container-list
+      help: |-
+        🐳 Container of the database
+
+        ℹ️ If not set, the only running container whose image is a supported database
+    - &db_engine
+      long: --engine
+      required: false
+      arg: engine
+      allowed:
+        - oracle
+        - postgres
+        - mysql
+        - mariadb
+        - sqlserver
+        - db2
+        - mongodb
+      help: |-
+        🛢️ Database engine, when the image name of the container does not tell it
+    - &db_user
+      long: --user
+      short: -u
+      required: false
+      arg: user
+      help: |-
+        👤 User to connect with
+
+        ℹ️ If not set, the admin user of the container environment (see above)
+    - &db_password
+      long: --password
+      required: false
+      arg: password
+      help: |-
+        🔑 Password of --user
+
+        ℹ️ If not set, the password of the container environment
+    - &db_database
+      long: --database
+      short: -d
+      required: false
+      arg: database
+      help: |-
+        🗄️ Database (Oracle: service name, ORCLPDB1 for the pluggable database)
+
+        ℹ️ If not set, the database of the container environment
+    - long: --file
+      short: -f
+      required: false
+      arg: file
+      validate: file_exists
+      conflicts: [--sql]
+      completions:
+        dynamic:
+        - playground get-specific-file-extension "$completion_current" --extension "sql"
+      help: |-
+        📄 File with the statements
+
+        ℹ️ If neither --file nor --sql is set, the statements are read from stdin
+    - long: --sql
+      short: -s
+      required: false
+      arg: sql
+      conflicts: [--file]
+      help: |-
+        ✍️ Statements, inline
+    - long: --ignore-errors
+      required: false
+      help: |-
+        🙈 Run every statement, even after a failing one, and exit with code 0 (the errors are still printed)
+    - import: src/flags/verbose.yml
+    examples:
+    - |-
+      playground db sql << 'EOF'
+      CREATE TABLE customers (id INT PRIMARY KEY, name VARCHAR(50));
+      INSERT INTO customers VALUES (1, 'alice');
+      EOF
+    - playground db sql --sql "select * from customers"
+    - playground db sql --file ./setup.sql --ignore-errors
+    - playground db sql --database ORCLPDB1 --user C##MYUSER --password mypassword --sql "select count(*) from customers;"
+    - playground db sql --container postgres-source --sql "select * from pg_replication_slots"
+    - |-
+      playground db sql << 'EOF'
+      use inventory
+      db.customers.insertOne({_id: 1, name: "alice"})
+      EOF
+    x_example_outputs:
+    - command: playground db sql --sql "select * from customers"
+      output: |-
+        10:51:17 ℹ️ 🛢️ Running SQL in postgres container (postgres, psql, user myuser, database postgres)
+         id | name
+        ----+-------
+          1 | alice
+          2 | bob
+        (2 rows)
+    - command: playground db sql --sql "select * from nope; select 1;"
+      output: |-
+        10:51:18 ℹ️ 🛢️ Running SQL in postgres container (postgres, psql, user myuser, database postgres)
+        ERROR:  relation "nope" does not exist
+        LINE 1: select * from nope;
+                              ^
+        10:51:18 🔥 ❌ a statement failed (the next ones were not run), see the error above
+        10:51:18 🔥    🎓 add --ignore-errors to run every statement
+
+  - name: wait-for-rows
+    group: Database
+    help: |-
+      ⏳ Wait for a table to contain a minimum number of rows
+
+      Counts the rows of --table (SELECT COUNT(*), with --where if set) every
+      --interval seconds until there are at least --min-expected-rows, and
+      fails after --max-wait seconds. A table that does not exist yet counts
+      as empty, so it can be used before a sink connector has created it
+      (auto.create=true).
+
+      --query replaces the count with any query that returns one number.
+      For MongoDB, --table is the collection and --where a filter document
+      ({"status": "done"}).
+
+      The database, user and password are found as for 'playground db sql'.
+
+      🎓 Tip: in an example script, use it instead of a fixed sleep before
+      checking what a sink connector wrote, then show the rows with
+      'playground db sql'.
+    flags:
+    - *db_container
+    - *db_engine
+    - *db_user
+    - *db_password
+    - *db_database
+    - long: --table
+      short: -t
+      required: false
+      arg: table
+      conflicts: [--query]
+      help: |-
+        🗂️ Table (or MongoDB collection) to count the rows of, schema prefix allowed (MYUSER.CUSTOMERS)
+
+        ℹ️ The name is used as is: quote it as the database expects when it is case sensitive ("orders" for Oracle)
+    - long: --where
+      required: false
+      arg: where
+      help: |-
+        🔎 Condition of the count (SQL: id > 10, MongoDB: a filter document)
+    - long: --query
+      required: false
+      arg: query
+      conflicts: [--table]
+      help: |-
+        ✍️ Query that returns one number, instead of --table / --where
+    - long: --min-expected-rows
+      arg: min_expected_rows
+      validate: integer
+      required: false
+      default: "1"
+      help: |-
+        🔢 Minimum number of rows to wait for (default is 1)
+    - long: --max-wait
+      arg: max_wait
+      validate: integer
+      default: "120"
+      help: |-
+        ⏳ Max time in seconds to wait (default is 120)
+    - long: --interval
+      arg: interval
+      validate: integer
+      default: "5"
+      help: |-
+        🔁 Interval in seconds between checks (default is 5)
+    - import: src/flags/verbose.yml
+    examples:
+    - playground db wait-for-rows --table customers --min-expected-rows 10
+    - playground db wait-for-rows --table ORDERS --database ORCLPDB1 --user C##MYUSER --password mypassword
+    - playground db wait-for-rows --table orders --where "status = 'done'" --max-wait 300
+    - playground db wait-for-rows --query "select count(distinct id) from orders" --min-expected-rows 5
+    - |-
+      playground db wait-for-rows --table customers --where '{"name": "alice"}' --database inventory
+    x_example_outputs:
+    - command: playground db wait-for-rows --table customers --min-expected-rows 4 --interval 2
+      output: |-
+        10:53:09 ℹ️ ⏳ Waiting up to 120 seconds for table customers to contain at least 4 rows (postgres container)
+        10:53:09 ℹ️ ⌛ table customers contains 2 rows (expected at least 4)
+        10:53:13 ℹ️ ✅ table customers contains 4 rows (expected at least 4) after 4 seconds
+    - command: playground db wait-for-rows --table nope --max-wait 3 --interval 1
+      output: |-
+        10:51:21 ℹ️ ⏳ Waiting up to 3 seconds for table nope to contain at least 1 rows (postgres container)
+        10:51:21 ℹ️ ⌛ table nope does not exist yet (expected at least 1)
+        10:51:24 🔥 ❌ table nope does not exist yet after 3 seconds, expected at least 1 rows

@@ -23,7 +23,7 @@ With `mongo-sink.sh`, the mongo-express UI is available at [http://localhost:180
 2. Initializes the MongoDB replica set (host `mongodb:27017` is important here) and creates user `myuser` with role `dbOwner`.
 3. Produces 2 Avro records to topic `orders` with `playground topic produce`.
 4. Creates the MongoDB sink connector `mongodb-sink` (database `inventory`, collection `customers`).
-5. Verifies with `mongosh` that the records are in collection `inventory.customers`.
+5. Waits for the 2 documents with `playground db wait-for-rows`, then verifies with `playground db sql` (`mongosh`) that they are in collection `inventory.customers`.
 
 Example of document:
 
