@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,34 +33,36 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -81,12 +83,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Schema Config
@@ -126,42 +128,42 @@ Secret manager configuration
 ==========================
 🔘 secret.manager
 
+Select the secret manager to use for retrieving sensitive data.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the secret manager to use for retrieving sensitive data.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.managed.configs
 
+Select the configurations to fetch their values from the secret manager.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Select the configurations to fetch their values from the secret manager.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.provider.integration.id
 
+Select an existing provider integration that has access to your secret manager.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing provider integration that has access to your secret manager.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 How should we connect to your database?
 ==========================
 🔘 database.hostname
 
+IP address or hostname of the Oracle database server.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: IP address or hostname of the Oracle database server.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.port
 
@@ -174,61 +176,64 @@ Port number of the Oracle database server.
 
 🔘 database.user
 
+Name of the Oracle database user to use when connecting to the database.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Name of the Oracle database user to use when connecting to the database.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.password
 
+Password of the Oracle database user to use when connecting to the database.
 
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: Password of the Oracle database user to use when connecting to the database.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.dbname
 
+Name of the database to connect to. In a multitenant container database, this is the name of the container database (CDB).
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Name of the database to connect to. In a multitenant container database, this is the name of the container database (CDB).
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.service.name
 
+Name of the database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream. Escape special characters (for example, ``$``) in the service name using a single backslash (``\$``).
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Name of the database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream. Escape special characters (for example, ``$``) in the service name using a single backslash (``\$``).
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.pdb.name
 
+Name of the pluggable database to connect to in a multitenant architecture. The container database (CDB) name must be given via ``database.dbname`` in this case. This configuration should not be specified when connecting to a non-container database.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the pluggable database to connect to in a multitenant architecture. The container database (CDB) name must be given via ``database.dbname`` in this case. This configuration should not be specified when connecting to a non-container database.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 database.out.server.name
 
+Name of the XStream outbound server to connect to.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Name of the XStream outbound server to connect to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 database.tls.mode
 
 Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle database. Select one of the following options: 
+`disable` (default): Does not use a TLS connection.
+`one-way`: Uses a TLS encrypted connection and also verifies the server's TLS certificate. The trusted CA root certificate used to sign the server's certificate must be present either in the default certificate store of the system running the connector or stored within a client wallet provided to the connector using the database.wallet.location configuration property.
+`two-way`: Uses a TLS encrypted connection and also verifies the server's TLS certificate. In addition, the client presents its own certificate, which the server verifies to authenticate the client (mutual TLS). The client certificate and the trusted CA root certificate used to sign the server's certificate must be stored within a client wallet and provided to the connector using the database.wallet.location configuration property.
 
 	 - Type: STRING
 	 - Default: disable
@@ -237,30 +242,30 @@ Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle
 
 🔘 database.wallet.file
 
+Specifies the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Specifies the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 database.processor.licenses
 
+Specifies the number of Oracle processor licenses required for the source database server or cluster. The is determined by multiplying the total number of processor cores by a core processor licensing factor, as specified in the Oracle Processor Core Factor Table. Confluent shares this value with Oracle for audit purposes. Enter the exact number of processor licenses for your Oracle database.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Specifies the number of Oracle processor licenses required for the source database server or cluster. The is determined by multiplying the total number of processor cores by a core processor licensing factor, as specified in the Oracle Processor Core Factor Table. Confluent shares this value with Oracle for audit purposes. Enter the exact number of processor licenses for your Oracle database.
-	 - Required: MEDIUM
+	 - Type: INT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: true
 
 🔘 downstream.database.hostname
 
+IP address or hostname of the downstream Oracle database server. When specified, enables downstream capture mode where the snapshot and metadata are read from the source database, and streaming occurs from the downstream database.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: IP address or hostname of the downstream Oracle database server. When specified, enables downstream capture mode where the snapshot and metadata are read from the source database, and streaming occurs from the downstream database.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 downstream.database.port
 
@@ -273,25 +278,28 @@ Port number of the downstream Oracle database server. Required when downstream c
 
 🔘 downstream.database.dbname
 
+Name of the downstream database to connect to. In a multitenant container database, this is the name of the container database (CDB). Required when downstream capture is enabled.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the downstream database to connect to. In a multitenant container database, this is the name of the container database (CDB). Required when downstream capture is enabled.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 downstream.database.service.name
 
+Name of the downstream database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream. Required when downstream capture is enabled.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the downstream database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream. Required when downstream capture is enabled.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 downstream.database.tls.mode
 
 Specifies whether to use Transport Layer Security (TLS) to connect to the downstream Oracle database. Select one of the following options: 
+`disable` (default): Does not use a TLS connection.
+`one-way`: Uses a TLS encrypted connection and also verifies the server's TLS certificate. The trusted CA root certificate used to sign the server's certificate must be present either in the default certificate store of the system running the connector or stored within a client wallet provided to the connector using the downstream.database.wallet.location configuration property.
+`two-way`: Uses a TLS encrypted connection and also verifies the server's TLS certificate. In addition, the client presents its own certificate, which the server verifies to authenticate the client (mutual TLS). The client certificate and the trusted CA root certificate used to sign the server's certificate must be stored within a client wallet and provided to the connector using the downstream.database.wallet.location configuration property.
 
 	 - Type: STRING
 	 - Default: disable
@@ -300,12 +308,12 @@ Specifies whether to use Transport Layer Security (TLS) to connect to the downst
 
 🔘 downstream.database.wallet.file
 
+Specifies the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the downstream database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Specifies the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the downstream database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Output messages
@@ -333,37 +341,41 @@ How should we name your topic(s)?
 ==========================
 🔘 topic.prefix
 
+Topic prefix that provides a namespace for the Oracle database server or cluster from which the connector captures changes. The topic prefix should be unique across all other connectors, since it is used as a prefix for all Kafka topic names that receive events from this connector. Only alphanumeric characters, hyphens, dots and underscores are accepted. 
 Warning: Do not change the value of this property. If you change the value, after a restart, instead of continuing to emit events to the original topics, the connector emits subsequent events to topics whose names are based on the new value. The connector is also unable to recover its database schema history topic.
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Topic prefix that provides a namespace for the Oracle database server or cluster from which the connector captures changes. The topic prefix should be unique across all other connectors, since it is used as a prefix for all Kafka topic names that receive events from this connector. Only alphanumeric characters, hyphens, dots and underscores are accepted. 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Connector configuration
 ==========================
 🔘 table.include.list
 
+An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for the tables whose changes you want to capture. When this property is set, the connector will only capture changes from the specified tables. Each identifier is of the form `schemaName.tableName`. By default, the connector captures changes from all non-system tables in each captured database. To match the name of a table, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. If you include this property in the configuration, do not set the ``table.exclude.list`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for the tables whose changes you want to capture. When this property is set, the connector will only capture changes from the specified tables. Each identifier is of the form `schemaName.tableName`. By default, the connector captures changes from all non-system tables in each captured database. To match the name of a table, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. If you include this property in the configuration, do not set the ``table.exclude.list`` property.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 table.exclude.list
 
+An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for the tables whose changes you do not want to capture. When this property is set, the connector captures changes from any table that is not specified in the exclude list. Each identifier is of the form `schemaName.tableName`. To match the name of a table, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. If you include this property in the configuration, do not set the ``table.include.list`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for the tables whose changes you do not want to capture. When this property is set, the connector captures changes from any table that is not specified in the exclude list. Each identifier is of the form `schemaName.tableName`. To match the name of a table, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. If you include this property in the configuration, do not set the ``table.include.list`` property.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 snapshot.mode
 
 The criteria for running a snapshot upon startup of the connector. Select one of the following snapshot options: 
+`initial` (default): The snapshot includes both the structure (schema) and data of the captured tables. Specify this value to populate topics with a complete representation of the data from the captured tables. After the snapshot completes, the connector begins to stream event records for subsequent database changes. 
+`no_data`: The snapshot includes only the structure (schema) of captured tables. Specify this value if you want the connector to capture data only for changes that occur after the snapshot. After the snapshot completes, the connector begins to stream event records for subsequent database changes. 
+`recovery`: Set this option to restore a database schema history topic that is lost or corrupted. After a restart, the connector runs a snapshot that rebuilds the topic from the source tables. You can also set the property to periodically prune a database schema history topic that experiences unexpected growth. WARNING: Do not use this mode to perform a snapshot if schema changes were committed to the database after the last connector shutdown.
 
 	 - Type: STRING
 	 - Default: initial
@@ -391,6 +403,9 @@ Specifies the number of retry attempts the connector will make to snapshot a tab
 🔘 tombstones.on.delete
 
 Controls whether a delete event is followed by a tombstone event. The following values are possible: 
+`true`: For each delete operation, the connector emits a delete event and a subsequent tombstone event. 
+`false`: For each delete operation, the connector emits only a delete event. 
+After a source record is deleted, a tombstone event (the default behavior) enables Kafka to completely delete all events that share the key of the deleted row in topics that have log compaction enabled.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -409,6 +424,9 @@ A comma-separated list of operations to skip during streaming. You can configure
 🔘 schema.name.adjustment.mode
 
 Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. The following values are possible:  
+`none` (the default) does not apply any adjustment. 
+`avro` replaces the characters that cannot be used in the Avro type name with underscore. 
+`avro_unicode` replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode like _uxxxx. Note: _ is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -418,6 +436,9 @@ Specifies how schema names should be adjusted for compatibility with the message
 🔘 field.name.adjustment.mode
 
 Specifies how field names should be adjusted for compatibility with the message converter used by the connector. The following values are possible: 
+`none` (the default) does not apply any adjustment. 
+`avro` replaces the characters that cannot be used in the Avro type name with underscore. 
+`avro_unicode` replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode like _uxxxx. Note: _ is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -444,21 +465,21 @@ Specifies the database server's operating system timezone. This is used to read 
 
 🔘 column.include.list
 
+An optional, comma-separated list of regular expressions that match fully-qualified column identifiers to be included in change event values. Each identifier is of the form `schemaName.tableName.columnName`. To match the name of a column, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the column; it does not match substrings that might be present in a column name. If you include this property in the configuration, do not set the `column.exclude.list` property. Note: Primary key columns are always included in an event's key, even if you do not use this property to explicitly include its value.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified column identifiers to be included in change event values. Each identifier is of the form `schemaName.tableName.columnName`. To match the name of a column, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the column; it does not match substrings that might be present in a column name. If you include this property in the configuration, do not set the `column.exclude.list` property. Note: Primary key columns are always included in an event's key, even if you do not use this property to explicitly include its value.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 column.exclude.list
 
+An optional, comma-separated list of regular expressions that match fully-qualified column identifiers to be excluded from change event values. Each identifier is of the form `schemaName.tableName.columnName`. To match the name of a column, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the column; it does not match substrings that might be present in a column name. If you include this property in the configuration, do not set the `column.include.list` property. Note: Primary key columns are always included in an event's key, even if you use this property to explicitly exclude its value.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: An optional, comma-separated list of regular expressions that match fully-qualified column identifiers to be excluded from change event values. Each identifier is of the form `schemaName.tableName.columnName`. To match the name of a column, the connector applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the column; it does not match substrings that might be present in a column name. If you include this property in the configuration, do not set the `column.include.list` property. Note: Primary key columns are always included in an event's key, even if you use this property to explicitly exclude its value.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 unavailable.value.placeholder
 
@@ -481,6 +502,8 @@ Specifies the maximum size threshold (in bytes) for large object (LOB) column va
 🔘 lob.oversize.handling.mode
 
 Defines how the connector handles large object (LOB) column values that exceed the size threshold specified using the ``lob.oversize.threshold`` configuration. Select one of the following options: 
+`fail` (default): The connector stop processing and reports an error.
+`skip`: The connector replaces the LOB value with a placeholder specified using the ``skip.value.placeholder`` configuration.
 
 	 - Type: STRING
 	 - Default: fail
@@ -498,16 +521,21 @@ Specifies the constant provided by the connector to indicate that the original v
 
 🔘 signal.data.collection
 
+Specifies the fully qualified name of the signaling table in the format: `databaseName.schemaName.tableName`.
 The case of object names in the fully-qualified name must match exactly how they are stored in the Oracle database. Unquoted identifiers are case-insensitive and are treated as uppercase by default, whereas quoted identifiers are case-sensitive. 
+When connecting to a pluggable database (PDB), use the name of the PDB as the database name component of the fully qualified name.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Specifies the fully qualified name of the signaling table in the format: `databaseName.schemaName.tableName`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 signal.enabled.channels
 
 Specifies which signaling channels are enabled for the connector. Supported values are:
+`source`: Signals are read from a signaling table in the source database.
+`kafka`: Signals are consumed from a Kafka topic.
+You can enable multiple channels by providing a comma-separated list. If not set, only the source channel is enabled by default.
 
 	 - Type: LIST
 	 - Default: source
@@ -516,25 +544,30 @@ Specifies which signaling channels are enabled for the connector. Supported valu
 
 🔘 signal.kafka.topic
 
+Specifies the name of the Kafka topic that the connector monitors for signals. The topic must have a single partition to ensure signal ordering is preserved.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Specifies the name of the Kafka topic that the connector monitors for signals. The topic must have a single partition to ensure signal ordering is preserved.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 snapshot.select.statement.overrides.data.map
 
+An optional JSON object that maps fully-qualified table identifiers to custom SELECT statements that determine which rows to include in the initial snapshot. Each identifier is of the form ``schemaName.tableName``. The connector runs these statements during the initial snapshot instead of selecting all rows. It does not apply to events that the connector reads from the log during the streaming phase. Tables configured with a custom SELECT statement are read as of the statement's own execution SCN rather than the shared snapshot SCN, and are therefore not captured with the same point-in-time consistency as other tables.
 The case of object names in the fully-qualified table identifier must match exactly how they are stored in the Oracle database. Unquoted identifiers are case-insensitive and are treated as uppercase by default, whereas quoted identifiers are case-sensitive and must be enclosed in double quotes. Any double quotes inside the key or value must be escaped with a backslash.
 
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: An optional JSON object that maps fully-qualified table identifiers to custom SELECT statements that determine which rows to include in the initial snapshot. Each identifier is of the form ``schemaName.tableName``. The connector runs these statements during the initial snapshot instead of selecting all rows. It does not apply to events that the connector reads from the log during the streaming phase. Tables configured with a custom SELECT statement are read as of the statement's own execution SCN rather than the shared snapshot SCN, and are therefore not captured with the same point-in-time consistency as other tables.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 outbound.server.attach.position.mode
 
 Specifies the position the connector passes when attaching to the XStream outbound server. Select one of the following options:
+`connector_managed` (default): The connector passes the last position it persisted to the Kafka Connect offsets topic. The outbound server resumes streaming from the first LCR with a position greater than this value. If no offset is stored, the connector passes the position corresponding to the database's current SCN.
+`server_managed`: The connector passes NULL to the outbound server instead of the stored position. The outbound server automatically determines the processed low position and starts streaming from the first LCR with a position greater than this value. The connector then discards any LCR with a position less than or equal to the last position it persisted to the Kafka Connect offsets topic.
+Warning: In this mode, resetting the connector's stored offset to a position below the outbound server's processed low position does not cause the connector to fail (as it would in `connector_managed` mode). The reset has no effect, the connector resumes from the outbound server's processed low position.
+Note: Change the default value only after consulting Confluent support.
 
 	 - Type: STRING
 	 - Default: connector_managed
@@ -547,6 +580,9 @@ How should we handle data types?
 🔘 decimal.handling.mode
 
 Specifies how the connector should handle NUMBER, DECIMAL and NUMERIC columns. You can set one of the following options: 
+`precise` (the default): Uses `java.math.BigDecimal` to represent values, which are encoded in the change events using a binary representation and Kafka Connect's `org.apache.kafka.connect.data.Decimal` type. Depending on the precision and scale, the most appropriate Kafka Connect integer type is used for integral values, ensuring that the value is represented without any loss of precision. 
+`string`: Encodes values as formatted strings. Using the `string` option is easier to consume, but results in a loss of semantic information about the real type. 
+`double`: Represents values using Java's `double`. Using `double` values is easier, but can result in a loss of precision.
 
 	 - Type: STRING
 	 - Default: precise
@@ -556,6 +592,10 @@ Specifies how the connector should handle NUMBER, DECIMAL and NUMERIC columns. Y
 🔘 binary.handling.mode
 
 Specifies how the connector should handle binary (BLOB) columns. You can set one of the following options: 
+`bytes` (the default): Represents binary data as byte array. 
+`base64`: Represents binary data as base64-encoded string. 
+`base64-url-safe`: Represents binary data as base64-url-safe-encoded string. 
+`hex`: Represents binary data as hex-encoded (base16) string.
 
 	 - Type: STRING
 	 - Default: bytes
@@ -565,6 +605,8 @@ Specifies how the connector should handle binary (BLOB) columns. You can set one
 🔘 time.precision.mode
 
 Specifies how the connector should handle time, date, and timestamp columns. You can set one of the following options: 
+`adaptive` (the default): Bases the precision of time, date, and timestamp values on the database column's precision. 
+`connect`: always represents time, date, and timestamp values using Kafka Connect's built-in representations for Time, Date, and Timestamp, which uses millisecond precision regardless of the database columns' precision.
 
 	 - Type: STRING
 	 - Default: adaptive
@@ -588,30 +630,30 @@ Additional Configs
 ==========================
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -624,12 +666,12 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -642,43 +684,45 @@ Use this property if you would like to configure the connector's error handling 
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -687,39 +731,39 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 producer.override.linger.ms
 
+The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
 
-
-	 - Type: false
-	 - Default: LONG
-	 - Importance: The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
-	 - Required: LOW
+	 - Type: LONG
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.serializer
 
@@ -732,48 +776,48 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -786,12 +830,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -813,12 +857,12 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -831,12 +875,12 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy
@@ -855,10 +899,11 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
 

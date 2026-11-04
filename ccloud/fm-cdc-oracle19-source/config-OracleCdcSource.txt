@@ -5,19 +5,19 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Kafka Cluster credentials
@@ -33,34 +33,36 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -84,12 +86,12 @@ How should we connect to your database?
 ==========================
 🔘 oracle.server
 
+The hostname or address for the Oracle server.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The hostname or address for the Oracle server.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 oracle.port
 
@@ -102,66 +104,66 @@ The port number used to connect to Oracle.
 
 🔘 oracle.sid
 
+The Oracle system identifier (SID) of a multi-tenant container database (CDB) or non-multitenant database where tables reside. Confluent recommends you use ``oracle.service.name`` to connect to the database using service names instead of using the SID. Maps to the SID parameter in the connect descriptor.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The Oracle system identifier (SID) of a multi-tenant container database (CDB) or non-multitenant database where tables reside. Confluent recommends you use ``oracle.service.name`` to connect to the database using service names instead of using the SID. Maps to the SID parameter in the connect descriptor.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 oracle.pdb.name
 
+The name of the pluggable database (PDB). This is not required when tables reside in the CDB$ROOT database, or if you're using a non-container database.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the pluggable database (PDB). This is not required when tables reside in the CDB$ROOT database, or if you're using a non-container database.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oracle.service.name
 
+The Oracle service name. If set, the connector always connects to the database using the provided service name. The ``oracle.service.name`` maps to the SERVICE_NAME parameter in the connect descriptor. For the multitenant container database (CDB) or non-multitenant database, this does not need to be specified. Confluent recommends you set the ``oracle.service.name`` to the container database (CDB) service name when using a pluggable database (PDB). When this property is set, it is used in the connect descriptor instead of ``oracle.sid``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Oracle service name. If set, the connector always connects to the database using the provided service name. The ``oracle.service.name`` maps to the SERVICE_NAME parameter in the connect descriptor. For the multitenant container database (CDB) or non-multitenant database, this does not need to be specified. Confluent recommends you set the ``oracle.service.name`` to the container database (CDB) service name when using a pluggable database (PDB). When this property is set, it is used in the connect descriptor instead of ``oracle.sid``.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 oracle.username
 
+The name of the Oracle database user.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The name of the Oracle database user.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 oracle.password
 
+The password for the Oracle database user.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for the Oracle database user.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 ssl.truststorefile
 
+The trust store containing server CA certificate. Only required when using SSL to connect to the database.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store containing server CA certificate. Only required when using SSL to connect to the database.
-	 - Required: LOW
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 ssl.truststorepassword
 
+The trust store password containing server CA certificate. Only required when using SSL to connect to the database.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store password containing server CA certificate. Only required when using SSL to connect to the database.
-	 - Required: LOW
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 oracle.fan.events.enable
 
@@ -177,21 +179,21 @@ Database details
 ==========================
 🔘 table.inclusion.regex
 
+The regular expression that matches the fully-qualified table names. The values are matched (case sensitive) with the object names stored in the data dictionary (Uppercase unless created as a quoted identifier. Database and PDB names are always stored as uppercase in the data dictionary). Ensure consistent casing for the sid part in the identifier with the ``oracle.sid`` value specified. For non-container database, the fully-qualified name includes the SID and schema name. e.g. ``ORCLDB[.]MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLDB\.MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (CDB), the fully-qualified name includes the SID and schema name. e.g. ``ORCLCDB[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLCDB\.C##MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (PDB), the fully-qualified name includes the PDB and schema name. e.g. ``ORCLPDB1[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLPDB1\.C##MYUSER\.(ORDERS|CUSTOMERS)``.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The regular expression that matches the fully-qualified table names. The values are matched (case sensitive) with the object names stored in the data dictionary (Uppercase unless created as a quoted identifier. Database and PDB names are always stored as uppercase in the data dictionary). Ensure consistent casing for the sid part in the identifier with the ``oracle.sid`` value specified. For non-container database, the fully-qualified name includes the SID and schema name. e.g. ``ORCLDB[.]MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLDB\.MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (CDB), the fully-qualified name includes the SID and schema name. e.g. ``ORCLCDB[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLCDB\.C##MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (PDB), the fully-qualified name includes the PDB and schema name. e.g. ``ORCLPDB1[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLPDB1\.C##MYUSER\.(ORDERS|CUSTOMERS)``.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 table.exclusion.regex
 
+The regular expression that matches the fully-qualified table names. The values are matched (case sensitive) with the object names stored in the data dictionary (Uppercase unless created as a quoted identifier. Database and PDB names are always stored as uppercase in the data dictionary). Ensure consistent casing for the sid part in the identifier with the ``oracle.sid`` value specified. For non-container database, the fully-qualified name includes the SID and schema name. e.g. ``ORCLDB[.]MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLDB\.MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (CDB), the fully-qualified name includes the SID and schema name. e.g. ``ORCLCDB[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLCDB\.C##MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (PDB), the fully-qualified name includes the PDB and schema name. e.g. ``ORCLPDB1[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLPDB1\.C##MYUSER\.(ORDERS|CUSTOMERS)``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The regular expression that matches the fully-qualified table names. The values are matched (case sensitive) with the object names stored in the data dictionary (Uppercase unless created as a quoted identifier. Database and PDB names are always stored as uppercase in the data dictionary). Ensure consistent casing for the sid part in the identifier with the ``oracle.sid`` value specified. For non-container database, the fully-qualified name includes the SID and schema name. e.g. ``ORCLDB[.]MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLDB\.MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (CDB), the fully-qualified name includes the SID and schema name. e.g. ``ORCLCDB[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLCDB\.C##MYUSER\.(ORDERS|CUSTOMERS)``. For multitenant database (PDB), the fully-qualified name includes the PDB and schema name. e.g. ``ORCLPDB1[.]C##MYUSER[.](ORDERS|CUSTOMERS)`` or ``ORCLPDB1\.C##MYUSER\.(ORDERS|CUSTOMERS)``.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 start.from
 
@@ -252,12 +254,12 @@ Default timezone to assume when parsing Oracle ``DATE`` and ``TIMESTAMP`` types 
 
 🔘 db.timezone.date
 
+The default timezone to assume when parsing Oracle ``DATE`` type for which timezone information is not available. If ``db.timezone.date`` is set, the value of ``db.timezone`` for ``DATE`` type will be overwritten with the value in ``db.timezone.date``. For example, if ``db.timezone=UTC`` and ``db.timezone.date=America/Los_Angeles``, the data ``TIMESTAMP`` will be parsed as if it is in UTC timezone, and the data in ``DATE`` will be parsed as if in America/Los_Angeles timezone. The value has to be a valid ``java.util.TimeZone`` ID.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The default timezone to assume when parsing Oracle ``DATE`` type for which timezone information is not available. If ``db.timezone.date`` is set, the value of ``db.timezone`` for ``DATE`` type will be overwritten with the value in ``db.timezone.date``. For example, if ``db.timezone=UTC`` and ``db.timezone.date=America/Los_Angeles``, the data ``TIMESTAMP`` will be parsed as if it is in UTC timezone, and the data in ``DATE`` will be parsed as if in America/Los_Angeles timezone. The value has to be a valid ``java.util.TimeZone`` ID.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.startup.polling.limit.ms
 
@@ -288,12 +290,12 @@ Calculates the end SCN of log mining sessions as the approximate SCN that corres
 
 🔘 log.mining.archive.destination.name
 
+The name of the archive log destination to use when mining archived redo logs. For example, when configured with ``LOG_ARCHIVE_DEST_2``, the connector exclusively refers to the second destination for retrieving archived redo logs. This is only applicable for Oracle database versions 19c and later.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the archive log destination to use when mining archived redo logs. For example, when configured with ``LOG_ARCHIVE_DEST_2``, the connector exclusively refers to the second destination for retrieving archived redo logs. This is only applicable for Oracle database versions 19c and later.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 log.mining.transaction.age.threshold.ms
 
@@ -381,39 +383,39 @@ The number of rows to provide as a hint to the JDBC driver when fetching rows fr
 
 🔘 redo.log.row.poll.fields.include
 
+A comma-separated list of fields from the V$LOGMNR_CONTENTS view to include in the redo log events.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of fields from the V$LOGMNR_CONTENTS view to include in the redo log events.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.row.poll.username.include
 
+A comma-separated list of database usernames. When this property is set, the connector captures changes only from the specified set of database users. You cannot set this property along with the ``redo.log.row.poll.username.exclude`` property
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from the specified set of database users. You cannot set this property along with the ``redo.log.row.poll.username.exclude`` property
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.row.poll.username.exclude
 
+A comma-separated list of database usernames. When this property is set, the connector captures changes only from database users that are not specified in this list. You cannot set this property along with the ``redo.log.row.poll.username.include`` property
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of database usernames. When this property is set, the connector captures changes only from database users that are not specified in this list. You cannot set this property along with the ``redo.log.row.poll.username.include`` property
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 redo.log.row.poll.fields.exclude
 
+A comma-separated list of fields from the V$LOGMNR_CONTENTS view to exclude in the redo log events.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of fields from the V$LOGMNR_CONTENTS view to exclude in the redo log events.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 oracle.validation.result.fetch.size
 
@@ -438,12 +440,12 @@ The template that defines the name of the Kafka topic where the change event is 
 
 🔘 redo.log.corruption.topic
 
+The name of the Kafka topic to which the connector will record events that describe the information about corruption in the Oracle redo log, and which signify missed data. This can optionally use the template variables ``${connectorName}``, ``${databaseName}``, and ``${schemaName}``. A blank topic name (the default) signals that this information should not be written to Kafka.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topic to which the connector will record events that describe the information about corruption in the Oracle redo log, and which signify missed data. This can optionally use the template variables ``${connectorName}``, ``${databaseName}``, and ``${schemaName}``. A blank topic name (the default) signals that this information should not be written to Kafka.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 redo.log.topic.name
 
@@ -492,21 +494,21 @@ The name of the field in the change record written to Kafka that contains the Or
 
 🔘 output.commit.scn.field
 
+The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when the transaction was committed. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the Oracle system change number (SCN) when the transaction committed as a header with the given name.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the Oracle system change number (SCN) when the transaction was committed. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the Oracle system change number (SCN) when the transaction committed as a header with the given name.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.before.state.field
 
+The name of the field in the change record written to Kafka that contains the before state of changed database rows for an update operation. A blank value signals that this field should not be included in the change records.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the before state of changed database rows for an update operation. A blank value signals that this field should not be included in the change records.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.op.type.field
 
@@ -555,21 +557,21 @@ The name of the field in the change record written to Kafka that contains the na
 
 🔘 output.redo.field
 
+The name of the field in the change record written to Kafka that contains the original redo DML statement from which this change record was created. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the original redo DML statement from which this change record was created as a header with the given name.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the original redo DML statement from which this change record was created. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the original redo DML statement from which this change record was created as a header with the given name.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.undo.field
 
+The name of the field in the change record written to Kafka that contains the original undo DML statement that effectively undoes this change and represents the "before" state of the row. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the  original undo DML statement that effectively undoes this change and represents the "before" state of the row as a header with the given name.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the field in the change record written to Kafka that contains the original undo DML statement that effectively undoes this change and represents the "before" state of the row. A blank value signals that this field should not be included in the change records. Use unescaped ``.`` characters to designate nested fields within structs, or prefix with ``header:`` to write the  original undo DML statement that effectively undoes this change and represents the "before" state of the row as a header with the given name.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 output.op.type.read.value
 
@@ -609,12 +611,12 @@ The value of the operation type for a delete change event. By default this is "D
 
 🔘 lob.topic.name.template
 
+The template that defines the name of the Kafka topic to which LOB objects should be written. The value can be a constant if all LOB objects from all captured tables are to be written to one topic, or the value can include any supported template variables, including ``${columnName}``, ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}``, etc. The default is empty, which will ignore all LOB type columns if any exist on captured tables. Special-meaning characters ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable. Any character that is not a valid character for topic name is replaced by an underscore in the topic name.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The template that defines the name of the Kafka topic to which LOB objects should be written. The value can be a constant if all LOB objects from all captured tables are to be written to one topic, or the value can include any supported template variables, including ``${columnName}``, ``${databaseName}``, ``${schemaName}``, ``${tableName}``, ``${connectorName}``, etc. The default is empty, which will ignore all LOB type columns if any exist on captured tables. Special-meaning characters ``\``, ``$``, ``{``, and ``}`` must be escaped with ``\`` when not intended to be part of a template variable. Any character that is not a valid character for topic name is replaced by an underscore in the topic name.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 snapshot.by.table.partitions
 
@@ -717,30 +719,30 @@ Additional Configs
 ==========================
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -753,52 +755,54 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 producer.override.compression.type
 
+The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -807,30 +811,30 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.schema.id.serializer
 
@@ -843,48 +847,48 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -897,12 +901,12 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.key.subject.name.strategy
 
@@ -924,12 +928,12 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.serializer
 
@@ -942,22 +946,23 @@ The class name of the schema ID serializer for values. This is used to serialize
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
 
