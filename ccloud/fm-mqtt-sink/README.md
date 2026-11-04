@@ -37,7 +37,7 @@ playground run -f fully-managed-mqtt-sink.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-mqtt-sink.sh` | `tcp://` connection with username/password |
-| `fully-managed-mqtt-sink-mtls.sh` | `ssl://` connection with mutual TLS (keystore and truststore generated with `playground tools certs-create`) |
+| `fully-managed-mqtt-sink-mtls.sh` | `ssl://` connection with mutual TLS (keystore and truststore generated with `playground tools cert create`) |
 
 ## What the script does
 

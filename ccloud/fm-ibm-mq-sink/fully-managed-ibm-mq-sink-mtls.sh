@@ -21,7 +21,7 @@ set -e
 
 mkdir -p ../../ccloud/fm-ibm-mq-sink/security
 cd ../../ccloud/fm-ibm-mq-sink/security
-playground tools certs-create --output-folder "$PWD" --container ibmmq
+playground tools cert create --output-folder "$PWD" --container ibmmq
 cd -
 
 docker compose -f docker-compose-mtls.yml build

@@ -7,7 +7,7 @@ NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
 
 mkdir -p ../../ccloud/fm-rabbitmq-sink/security
 cd ../../ccloud/fm-rabbitmq-sink/security
-playground tools certs-create --output-folder "$PWD" --container connect --container rabbitmq
+playground tools cert create --output-folder "$PWD" --container connect --container rabbitmq
 # RabbitMQ process runs as user 'rabbitmq'; ensure it can read mounted TLS key.
 chmod 644 rabbitmq.key
 base64_truststore=$(cat $PWD/kafka.connect.truststore.jks | base64 | tr -d '\n')

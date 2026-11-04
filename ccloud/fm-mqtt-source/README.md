@@ -37,7 +37,7 @@ playground run -f fully-managed-mqtt-source.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-mqtt-source.sh` | `tcp://` connection with username/password |
-| `fully-managed-mqtt-source-mtls.sh` | `ssl://` connection with mutual TLS (keystore and truststore generated with `playground tools certs-create`) |
+| `fully-managed-mqtt-source-mtls.sh` | `ssl://` connection with mutual TLS (keystore and truststore generated with `playground tools cert create`) |
 
 ## What the script does
 

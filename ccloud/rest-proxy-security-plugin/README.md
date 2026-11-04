@@ -33,7 +33,7 @@ playground run -f start.sh
 
 1. Bootstraps the Confluent Cloud environment (`bootstrap_ccloud_environment`).
 2. Generates `kafka-rest.jaas.conf` from `kafka-rest.jaas-template.conf` with the API key and secret.
-3. Generates certificates for `restproxy` and for a client whose CN is the API key (`playground tools certs-create`).
+3. Generates certificates for `restproxy` and for a client whose CN is the API key (`playground tools cert create`).
 4. Starts the `restproxy` container (HTTPS listener on port `8082`, client authentication required, `KafkaRestSecurityResourceExtension`).
 5. Creates the `rest-proxy-security-plugin` topic in Confluent Cloud.
 6. Produces a JSON record with `curl` over mTLS using the client certificate: the API key is the principal propagated to the Confluent Cloud cluster.

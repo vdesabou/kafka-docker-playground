@@ -13,7 +13,7 @@ fi
 
 mkdir -p ../../connect/connect-mqtt-sink/security
 cd ../../connect/connect-mqtt-sink/security
-playground tools certs-create --output-folder "$PWD" --container connect --container mosquitto
+playground tools cert create --output-folder "$PWD" --container connect --container mosquitto
 cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}

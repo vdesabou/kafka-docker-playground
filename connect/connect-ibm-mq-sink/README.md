@@ -32,7 +32,7 @@ playground run -f ibm-mq-sink.sh
 ## What the script does
 
 1. Extracts the IBM MQ client jars from `IBM-MQ-Install-Java-All.jar` (first run only) and copies them to the connector.
-2. For SSL/mTLS variants: generates certificates with `playground tools certs-create` and configures TLS on channel `DEV.APP.SVRCONN` (mTLS also sets `SSLCAUTH(REQUIRED)` and refreshes security).
+2. For SSL/mTLS variants: generates certificates with `playground tools cert create` and configures TLS on channel `DEV.APP.SVRCONN` (mTLS also sets `SSLCAUTH(REQUIRED)` and refreshes security).
 3. For the EOS variant: creates the exclusive local queue `KAFKA.OFFSETS.QUEUE` and grants user `app` access to it.
 4. Produces 1 message to topic `sink-messages`.
 5. Creates the IBM MQ sink connector to queue `DEV.QUEUE.1` of queue manager `QM1`.

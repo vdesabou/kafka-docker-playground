@@ -38,7 +38,7 @@ playground run -f fully-managed-ibm-mq-sink.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-ibm-mq-sink.sh` | Plain connection with user/password |
-| `fully-managed-ibm-mq-sink-ssl.sh` | TLS (truststore generated with `playground tools certs-create`) |
+| `fully-managed-ibm-mq-sink-ssl.sh` | TLS (truststore generated with `playground tools cert create`) |
 | `fully-managed-ibm-mq-sink-mtls.sh` | Mutual TLS (`SSLCAUTH(REQUIRED)` on the channel, keystore and truststore, no user/password) |
 | `fully-managed-ibm-mq-sink-eos.sh` | Exactly once semantics (`exactly.once.enabled`), using exclusive offsets queue `KAFKA.OFFSETS.QUEUE` |
 

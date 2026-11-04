@@ -26,6 +26,7 @@ container (most of them recreate it) and how to read what they print. Takes abou
 | which jar a class is loaded from (`ClassNotFoundException`, `NoSuchMethodError`) | `playground debug java-debug -c connect --type class_loading` |
 | the traces off again | `playground debug java-debug -c <c> --type <type> --action disable` |
 | the protocols, ciphers and certificate of a TLS endpoint | `playground debug testssl --uri <host:port>` |
+| why a keystore, truststore or certificate is refused (expired, incomplete chain, hostname not in the SANs, `PKIX path building failed`, key that does not match), explained for beginners | `playground tools cert inspect --file <keystore\|pem> [--truststore <t>] [--hostname <h>]` or `--server broker:9093 --truststore <t>` (HTML report) |
 | a Diagnostics Bundle Tool zip for support | `playground debug generate-diagnostics -c connect` (or `-c broker`) |
 
 ---
@@ -218,7 +219,26 @@ Gotchas:
 
 ---
 
-## 4. TLS endpoints from the outside: `testssl`
+## 4. TLS endpoints from the outside: `testssl`, and the certificates themselves: `cert inspect`
+
+`playground tools cert inspect` answers the other question, "why is this certificate refused?", on the files a
+customer sends (keystore, truststore, PEM, DER) or on the chain a server presents (`--server broker:9093`: a
+playground container is reached in its network): expiry, chain order and end, `--hostname` in the subject alternative
+names, `--truststore` trusting the chain (like Java, an intermediate in the truststore is enough), private key
+matching the certificate, `--purpose server|client`. It prints a digest and writes an HTML report written for someone
+new to TLS (what each problem means, the Java error it causes, the command that fixes it), and exits with code 1 on a
+problem:
+
+```bash
+playground tools cert inspect --file broker.keystore.p12 --password confluent --hostname broker
+playground tools cert inspect --server broker:9092 --truststore environment/2way-ssl/security/kafka.client.truststore.jks
+#    ✅ chain order                             2 certificates, each one issued by the next one
+#    ✅ chain end                               ends with the root (ca1.test.confluent.io)
+#    ✅ hostname broker                         in the SANs (DNS:broker,DNS:localhost,DNS:broker.kerberos-demo.local)
+#    ✅ truststore kafka.client.truststore.jks  trusts the chain
+```
+
+`testssl`:
 
 ```bash
 playground debug testssl --uri "https://google.com" --fast

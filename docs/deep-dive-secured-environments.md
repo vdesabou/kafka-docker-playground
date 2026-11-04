@@ -20,7 +20,9 @@ SSL cluster" or "the connector gets `TopicAuthorizationException`". Takes about 
 | the client config a component really loaded | `playground container get-properties -c connect` |
 | the security keys added to a connector config | `playground connector create-or-update … --dry-run` |
 | the config exactly as written, without them | `create-or-update … --skip-automatic-connector-config` |
-| new certificates (expired, or another container) | `playground tools certs-create --output-folder <dir> [-c <container>]` |
+| new certificates (expired, or another container) | `playground tools cert create --output-folder <dir> [-c <container>]` |
+| why a certificate, keystore or truststore is refused (expired, chain, hostname, `PKIX path building failed`) | `playground tools cert inspect --file <f> [--truststore <t>] [--hostname <h>]` or `--server broker:9092` (HTML report for beginners) |
+| a keystore in another format: JKS ↔ PKCS12, PEM files for librdkafka clients, Kafka properties with PEM inline | `playground tools cert convert --file <f> --to pkcs12\|jks\|pem\|der\|properties` |
 | an authorization error (RBAC) | `playground rbac role-binding delete --principal User:connectorSA …` |
 | an authorization error (Confluent Cloud ACLs) | `playground rbac acl delete --connector <c> …` (see [🚦 Reproduce an authorization error](/toolkit-fully-managed?id=🚦-reproduce-an-authorization-error)) |
 
@@ -84,9 +86,11 @@ Gotchas:
 - **Kerberos needs FQDNs**: the broker is `broker.kerberos-demo.local:9092`, the console clients run in the `client`
   container after `kinit -k -t /var/lib/secret/kafka-connect.key connect` (the CLI does it). A short name fails the
   GSSAPI handshake.
-- **SSL certificates expire**: `start.sh` of the SSL types runs `playground tools certs-create` in
-  `environment/<type>/security` on every start. If you copied a `security/` folder somewhere, regenerate it with the
-  same command.
+- **SSL certificates are regenerated on every start**: `start.sh` of the SSL types runs `playground tools cert create`
+  in `environment/<type>/security`. The CA and the certificates are valid 9999 days; a `security/` folder copied
+  before that fix has a CA valid one year only, which then invalidates every certificate it signed: regenerate it with
+  the same command. `cert create` only replaces its own files in the folder (the CA, and the files named after each
+  `--container`), and fails with the end of its log when a step fails.
 - **RBAC starts more**: OpenLDAP, MDS on the brokers (`http://broker:8091`), and the default role bindings of
   `environment/rbac-sasl-plain/role-bindings.txt`. Connectors are created by `connectorSubmitter` and run as
   `connectorSA` (`principal.service.name` / `principal.service.password`, added for you). It's the slowest type to
@@ -95,6 +99,57 @@ Gotchas:
   copy of `role-bindings.txt`, remove what the customer doesn't grant.
 
 ---
+
+### Certificates: create, inspect, convert
+
+`playground tools cert` groups the three certificate commands. They run `keytool` and `openssl` in the connect image:
+nothing to install.
+
+- `cert create` generates a certificate authority, then a keystore and a truststore per container (what `start.sh`
+  of the SSL types runs).
+- `cert inspect` explains why a certificate is refused, on the files a customer sends or on what a server presents
+  (`--server broker:9092`), and writes an HTML report written for someone new to TLS:
+
+```bash
+playground tools cert inspect --file broker.pem --truststore truststore.jks --truststore-password confluent --hostname kafka.example.com
+#    ❌ expiry of #1 (expired)           expired on 2021-01-01
+#    ✅ chain order                      2 certificates, each one issued by the next one
+#    ❌ hostname kafka.example.com       not in the SANs (DNS:broker,DNS:localhost)
+#       👉 java fails with 'No subject alternative names matching ... found': regenerate with -ext SAN=dns:kafka.example.com, …
+#    ❌ truststore truststore.jks        does not trust the chain: the truststore does not have the CA that issued the last certificate of the chain (CN=Test Root CA)
+#       👉 java fails with 'PKIX path building failed: unable to find valid certification path to requested target': import the root (or the intermediate) CA of the chain into the truststore
+```
+
+- `cert convert` changes the format: a JKS keystore for a python / go / .net (librdkafka) client, PEM files for a
+  Java client, or Kafka properties with the certificates inline (`ssl.keystore.type=PEM`, Kafka 2.7+, no file to
+  mount):
+
+```bash
+# JKS or PKCS12 keystore -> the PEM files of librdkafka clients
+playground tools cert convert --file kafka.client.keystore.jks --to pem
+# ✅ /tmp/certs/kafka.client.keystore-client.certificate.pem
+#    certificate chain of 'client' (2 certificate(s), the first one is its own): librdkafka ssl.certificate.location
+# ✅ /tmp/certs/kafka.client.keystore-client.key.pem
+#    private key of 'client' (PKCS#8, not encrypted: keep it private): librdkafka ssl.key.location
+# ✅ /tmp/certs/kafka.client.keystore.truststore.pem
+#    1 trusted certificate(s) (CA bundle): librdkafka ssl.ca.location
+
+# keystore -> Kafka client properties with the certificates inline
+playground tools cert convert --file kafka.client.keystore.jks --to properties
+# ✅ /tmp/certs/kafka.client.keystore.properties
+#    Kafka client properties with PEM inline: ssl.keystore.* (key + 2 certificate(s)), ssl.truststore.* (1 trusted certificate(s))
+head -4 /tmp/certs/kafka.client.keystore.properties | tail -2
+# ssl.keystore.type=PEM
+# ssl.keystore.certificate.chain=-----BEGIN CERTIFICATE-----\n\
+
+# certificate + private key (PEM) -> a PKCS12 keystore for a Java client (certificates only: a truststore)
+playground tools cert convert --file broker.crt --key broker.key --to pkcs12 --output-password secret123
+# ✅ /tmp/certs/broker.p12
+#    PKCS12 keystore: key pair entry 'broker' (private key + 1 certificate(s) of chain)
+```
+
+The files are written next to `--file` (`--output-folder` to change it), never over an existing one without
+`--force`. Check a result with `cert inspect`.
 
 ## 3. What changes in a connector config
 
@@ -241,7 +296,9 @@ playground stop
 | "Kerberos ticket / principal errors" | `--environment kerberos` (or `ssl_kerberos`), principals and keytabs in `environment/kerberos/` |
 | "users in LDAP, ACLs per group" | `ldap-authorizer-sasl-plain` |
 | "Schema Registry over HTTPS with client certificates" | `sasl-ssl` / `2way-ssl`: the converter keys get the keystore / truststore, `playground schema …` uses the client certificate |
-| "certificates expired in our repro folder" | `playground tools certs-create --output-folder <dir>` |
+| "certificates expired in our repro folder" | `playground tools cert create --output-folder <dir>` |
+| "`PKIX path building failed` / `No subject alternative names matching` with our certificates" | `playground tools cert inspect --file <their certificate or keystore> --truststore <their truststore> --hostname <their bootstrap host>` (or `--server <host:port>`) |
+| "we have a JKS keystore but a python client" (or PEM files but a Java client) | `playground tools cert convert --file <keystore> --to pem` (or `--to pkcs12` with `--key`, `--to properties` for PEM inline) |
 | "the same on Confluent Cloud" | a `ccloud/fm-*` example, and `playground rbac acl` for the service account |
 
 In a repro model, keep `PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"<customer's type>"}` at the top: `playground
@@ -257,7 +314,9 @@ playground start-environment --environment <type> [--docker-compose-override-fil
 playground state get run.environment
 playground container get-properties -c connect|broker|schema-registry
 playground connector create-or-update -c <c> [--dry-run] [--skip-automatic-connector-config] << EOF … EOF
-playground tools certs-create --output-folder <dir> [-c <container>]...
+playground tools cert create --output-folder <dir> [-c <container>]...
+playground tools cert inspect --file <keystore|pem|der> [--truststore <t>] [--hostname <h>]   |   --server <host:port>
+playground tools cert convert --file <f> --to pkcs12|jks|pem|der|properties [--key <k>] [--output-password <p>]
 playground rbac role-binding list|create|delete …    playground rbac user add|list|delete …    playground rbac acl …
 ```
 
@@ -281,4 +340,4 @@ playground rbac role-binding list|create|delete …    playground rbac user add|
   [containers](/deep-dive-container-lifecycle.md) (`get-properties`)
 - 📖 [How it works: environments](/how-it-works.md) and [🚦 Reproduce an authorization error](/toolkit-fully-managed?id=🚦-reproduce-an-authorization-error)
 - 🧠 CLI reference: [playground run](/playground%20run),
-  [playground rbac](/playground%20rbac), [playground tools certs-create](/playground%20tools%20certs-create)
+  [playground rbac](/playground%20rbac), [playground tools cert create](/playground%20tools%20cert%20create)

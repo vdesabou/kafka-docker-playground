@@ -222,7 +222,8 @@ playground_usage() {
   printf "  %s   🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n" "$(green "tools install-alfred-workflow")             "
   printf "  %s   🔖 Read provided avro file\n" "$(green "tools read-avro-file")                      "
   printf "  %s   🔖 Read provided parquet file\n" "$(green "tools read-parquet-file")                   "
-  printf "  %s   🔐 Generate keys and certificates used for SSL\n" "$(green "tools certs-create")                        "
+  printf "  %s   🔐 Certificate commands\n" "$(green "tools cert")                                "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🔐 Former name of 'playground tools cert create', kept so that existing scripts keep working\n" "$(green "tools certs-create")                        "
   printf "  %s   🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)\n" "$(green "tools redos-check")                         "
   printf "  %s   🌐 Drive the http test server of the http examples\n" "$(green "tools http-server")                         "
   echo
@@ -8930,7 +8931,7 @@ playground_tcp_proxy_open_ui_usage() {
 playground_tools_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools\n\n"
-    printf "  🧰 Tools commands\n  \n  Small utilities that are handy around the playground but are not tied to a\n  running environment:\n  \n    read-avro-file        dump an avro file as readable json\n    read-parquet-file     same, for parquet\n    certs-create          generate a keystore and truststore for a component\n    redos-check           check a topics.regex for catastrophic backtracking\n    http-server           drive the http test server of the http examples:\n  set-response, reset, requests\n    install-vscode-extension   playground completion inside VS Code\n    install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n  \n  🎓 Tip: the file readers are what you use to check what a sink connector\n  really wrote, after pulling the file out with 'playground container cp'.\n\n"
+    printf "  🧰 Tools commands\n  \n  Small utilities that are handy around the playground but are not tied to a\n  running environment:\n  \n    read-avro-file        dump an avro file as readable json\n    read-parquet-file     same, for parquet\n    cert create           generate a keystore and truststore for a component\n    cert inspect          why TLS fails: keystores, certificates, server chains\n    cert convert          JKS, PKCS12, PEM, DER, Kafka properties with PEM\n  inline\n    redos-check           check a topics.regex for catastrophic backtracking\n    http-server           drive the http test server of the http examples:\n  set-response, reset, requests\n    install-vscode-extension   playground completion inside VS Code\n    install-alfred-workflow    kdp launcher for the playground CLI (macOS)\n  \n  🎓 Tip: the file readers are what you use to check what a sink connector\n  really wrote, after pulling the file out with 'playground container cp'.\n\n"
   else
     printf "playground tools - 🧰 Tools commands\n\n"
   fi
@@ -8945,7 +8946,8 @@ playground_tools_usage() {
   printf "  %s   🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n" "$(green "install-alfred-workflow") "
   printf "  %s   🔖 Read provided avro file\n" "$(green "read-avro-file")          "
   printf "  %s   🔖 Read provided parquet file\n" "$(green "read-parquet-file")       "
-  printf "  %s   🔐 Generate keys and certificates used for SSL\n" "$(green "certs-create")            "
+  printf "  %s   🔐 Certificate commands\n" "$(green "cert")                    "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🔐 Former name of 'playground tools cert create', kept so that existing scripts keep working\n" "$(green "certs-create")            "
   printf "  %s   🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)\n" "$(green "redos-check")             "
   echo
   printf "%s\n" "$(bold "Tools commands:")"
@@ -9103,13 +9105,271 @@ playground_tools_read_parquet_file_usage() {
 }
 
 # :command.usage
-playground_tools_certs_create_usage() {
+playground_tools_cert_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground tools certs-create\n\n"
+    printf "playground tools cert\n\n"
+    printf "  🔐 Certificate commands\n  \n    create    a CA, then a keystore and a truststore per container\n    inspect   why TLS fails: keystore, truststore, certificate or server\n              chain, explained in an HTML report for TLS beginners\n    convert   JKS, PKCS12, PEM, DER, or Kafka properties with PEM inline\n  \n  🎓 Tip: for a customer error 'PKIX path building failed' or 'No subject\n  alternative names matching', run 'inspect' on their certificate with their\n  truststore and the hostname the clients use.\n\n"
+  else
+    printf "playground tools cert - 🔐 Certificate commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools cert COMMAND\n"
+  printf "  playground tools cert [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🔐 Generate keys and certificates used for SSL\n" "$(green "create") "
+  printf "  %s   🔍 Inspect certificates and explain what breaks TLS\n" "$(green "inspect")"
+  printf "  %s   🔄 Convert certificates and keystores between formats\n" "$(green "convert")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_cert_create_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools cert create\n\n"
     printf "  🔐 Generate keys and certificates used for SSL\n  \n  Creates a certificate authority and, for each container, a keystore and\n  a truststore in --output-folder. This is how the certificates of the\n  ssl environments are produced; regenerate them when they have expired,\n  or to build a set for a container the playground does not know about.\n\n"
   else
-    printf "playground tools certs-create - 🔐 Generate keys and certificates used for SSL\n\n"
+    printf "playground tools cert create - 🔐 Generate keys and certificates used for SSL\n\n"
   fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools cert create [OPTIONS]\n"
+  printf "  playground tools cert create --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c, --pod, -p CONTAINER (repeatable)")"
+    printf "    🐳 container name (or pod name when cfk environment is used)\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
+    printf "    %s\n" "Default: broker, broker2, broker3, client, schema-registry, restproxy, connect, connect2, connect3, control-center, clientrestproxy, ksqldb-server, conduktor"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-folder FOLDER (required)")"
+    printf "    📁 Folder where certificates are created\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_cert_inspect_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools cert inspect\n\n"
+    printf "  🔍 Inspect certificates and explain what breaks TLS\n  \n  Reads a keystore or truststore (JKS, PKCS12), a PEM or DER certificate\n  (a chain, a private key), and / or the chain a server sends\n  (--server host:port), and checks what makes Kafka clients fail:\n  \n    expired (or not yet valid) certificates, and the ones expiring soon\n    the order and the end of each chain (a missing intermediate)\n    --hostname in the subject alternative names (No subject alternative names\n  matching)\n    --truststore trusts the chain (PKIX path building failed)\n    the private key belongs to the certificate (in the PEM, or --key)\n    --purpose server|client in the extended key usage, CA used as leaf,\n    RSA keys under 2048 bits, SHA-1 signatures\n  \n  It prints a digest and writes an HTML report made for someone new to\n  TLS: every problem with what it means, why it matters, the java error it\n  causes and how to fix it, each chain drawn certificate by certificate,\n  and a glossary. Exit code 1 when a problem is found.\n  \n  keytool and openssl run in the connect image: nothing to install. A\n  keystore opens with --password, or else with an empty, 'confluent' or\n  'changeit' password (the report says which one).\n  \n  🎓 Tip: for a customer error 'PKIX path building failed', run it on their\n  server certificate (or --server) with --truststore <their truststore>.\n\n"
+  else
+    printf "playground tools cert inspect - 🔍 Inspect certificates and explain what breaks TLS\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools cert inspect [OPTIONS]\n"
+  printf "  playground tools cert inspect --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    📄 Keystore, truststore (.jks, .p12, .pfx), PEM (.pem, .crt, .cer:\n    certificates, private key) or DER certificate\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔑 Password of the keystore of --file (or of the encrypted private key)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key KEY")"
+    printf "    🗝️ Private key (PEM) to check against the first certificate\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--truststore TRUSTSTORE")"
+    printf "    📒 Truststore (JKS, PKCS12 or PEM bundle) that should trust the chain(s)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--truststore-password TRUSTSTORE_PASSWORD")"
+    printf "    🔑 Password of --truststore\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--server SERVER")"
+    printf "    🖥️ <host>:<port> of a TLS server whose chain to inspect (a playground\n    container such as broker:9093, or any reachable server)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--servername SERVERNAME")"
+    printf "    🏷️ SNI sent to --server (default: its host)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--hostname HOSTNAME")"
+    printf "    🏷️ Hostname the clients use to connect: checked against the subject\n    alternative names (default: the host of --server)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--purpose PURPOSE")"
+    printf "    🎯 Role of the certificate, checked against its extended key usage: server\n    (broker, schema registry...) or client (mTLS)\n"
+    printf "    %s\n" "Allowed: server, client"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir OUTPUT_DIR")"
+    printf "    📂 Output directory of the HTML report (default:\n    /tmp/playground-cert-inspect)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🚫 Do not open the HTML report in the browser\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON (no HTML report)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground tools cert inspect --file keystore.jks --password confluent\n"
+    printf "  playground tools cert inspect --file broker.pem --truststore\n  client-truststore.jks --hostname broker.example.com\n"
+    printf "  playground tools cert inspect --server broker:9093 --truststore\n  ./security/kafka.client.truststore.jks\n"
+    printf "  playground tools cert inspect --file client.crt --key client.key --purpose\n  client\n"
+    printf "  playground tools cert inspect --file keystore.p12 --password secret --json |\n  jq -r '.entries[].checks[] | select(.status == \"fail\") | .check'\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_cert_convert_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground tools cert convert\n\n"
+    printf "  🔄 Convert certificates and keystores between formats\n  \n  --to pkcs12 | jks   a keystore (JKS / PKCS12) in the other format; PEM\n                      with a private key (in the file or --key): a\n                      keystore with the key and its chain; PEM or DER\n                      certificates only: a truststore\n  --to pem            from a keystore, per key pair entry\n                      <name>-<alias>.certificate.pem (chain) and\n                      <name>-<alias>.key.pem (PKCS#8), the trusted\n                      certificates in <name>.truststore.pem: the files of\n                      librdkafka (python, go, .net) clients\n  --to der            the first certificate (of each key pair entry)\n  --to properties     Kafka client properties with the certificates\n                      inline (ssl.keystore.type=PEM,\n                      ssl.keystore.certificate.chain, ssl.keystore.key,\n                      ssl.truststore.certificates): no file to copy\n                      (Apache Kafka 2.7+, CP 6.1+)\n  \n  The files are written next to --file (--output-folder to change it),\n  never over an existing file unless --force. A keystore opens with\n  --password, or else an empty, 'confluent' or 'changeit' password; the\n  outputs use --output-password (default: the input password, or\n  'confluent').\n  \n  🎓 Tip: check the result with 'playground tools cert inspect'.\n\n"
+  else
+    printf "playground tools cert convert - 🔄 Convert certificates and keystores between formats\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground tools cert convert [OPTIONS]\n"
+  printf "  playground tools cert convert --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
+    printf "    📄 Keystore or truststore (.jks, .p12, .pfx), PEM (certificates, private key)\n    or DER certificate to convert\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to TO (required)")"
+    printf "    🎯 Output format\n"
+    printf "    %s\n" "Allowed: pkcs12, jks, pem, der, properties"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key KEY")"
+    printf "    🗝️ Private key (PEM) of the first certificate of --file, for a keystore from\n    PEM\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--password PASSWORD")"
+    printf "    🔑 Password of --file (keystore), or of the encrypted private key\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-password OUTPUT_PASSWORD")"
+    printf "    🔑 Password of the output keystore, or of the output private key (--to pem:\n    encrypted only when set)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--alias ALIAS")"
+    printf "    🏷️ Only this entry of the keystore, or the name of the entry created from\n    PEM (default: the CN of the certificate)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-folder OUTPUT_FOLDER")"
+    printf "    📁 Folder of the output files (default: the folder of --file)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force")"
+    printf "    💪 Replace the output files when they exist\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground tools cert convert --file kafka.client.keystore.jks --password\n  confluent --to pkcs12\n"
+    printf "  playground tools cert convert --file kafka.client.keystore.jks --password\n  confluent --to pem\n"
+    printf "  playground tools cert convert --file client.crt --key client.key --to pkcs12\n  --output-password secret123\n"
+    printf "  playground tools cert convert --file ca-bundle.pem --to jks --output-password\n  changeit\n"
+    printf "  playground tools cert convert --file kafka.client.truststore.jks --password\n  confluent --to properties\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_tools_certs_create_usage() {
+  printf "playground tools certs-create - 🔐 Former name of 'playground tools cert create', kept so that existing scripts keep working\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground tools certs-create [OPTIONS]\n"
@@ -57761,52 +58021,668 @@ playground_tools_read_parquet_file_command() {
 }
 
 # :command.function
-playground_tools_certs_create_command() {
+playground_tools_cert_create_command() {
 
-  # src/commands/tools/certs-create.sh
+  # src/commands/tools/cert/create.sh
   output_folder="${args[--output-folder]}"
   verbose="${args[--verbose]}"
   # Convert the space delimited string to an array
   eval "containers=(${args[--container]})"
 
+  get_connect_image
+  # get_connect_image ends with set -e: the errors are handled below, with a message
+  set +e
+
+  if ! mkdir -p "${output_folder}" || ! output_folder=$(cd "${output_folder}" && pwd)
+  then
+      logerror "❌ cannot create the output folder ${output_folder}"
+      exit 1
+  fi
+
+  new_open_ssl=0
+  if docker run --rm "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" openssl version | grep -q "OpenSSL 3"
+  then
+      new_open_ssl=1
+  fi
+
+  # only the files of a previous run of the command (the CA, and the files named after each container): the folder can
+  # hold other files (an example folder, a customer certificate next to a repro model)
+  rm -f "${output_folder}/snakeoil-ca-1.crt" "${output_folder}/snakeoil-ca-1.key" "${output_folder}/snakeoil-ca-1.srl" "${output_folder}/extfile"
+  for container in "${containers[@]}"
+  do
+      for f in "kafka.${container}.keystore.jks" "kafka.${container}.truststore.jks" "${container}.csr" "${container}-ca1-signed.crt" \
+          "${container}_sslkey_creds" "${container}_keystore_creds" "${container}_truststore_creds" "${container}.der" \
+          "${container}.certificate.pem" "${container}.keystore.p12" "${container}.key" "${container}.p12"
+      do
+          rm -f "${output_folder}/${f}"
+      done
+  done
+  rm -rf "${output_folder}/hsperfdata_root"
+
+  log_file=$(mktemp -t pg-certs-create-XXXXXXXXXX)
   function cleanup {
       set +e
-      rm -f "${output_folder}/certs-create.sh"
+      rm -f "${output_folder}/certs-create.sh" "${output_folder}/extfile" "${output_folder}/snakeoil-ca-1.srl" "${log_file}"
+      rm -rf "${output_folder}/hsperfdata_root"
   }
   trap cleanup EXIT
 
-  maybe_redirect_output="> /dev/null 2>&1"
+  cp "${root_folder}/scripts/cli/src/ssl/certs-create.sh" "${output_folder}/certs-create.sh"
+  maybe_create_image
+  set +e
+  log "🔐 Generate keys and certificates in folder ${output_folder}"
+  # -XX:-UsePerfData: the output folder is mounted as /tmp, where the JVM would leave its hsperfdata_root folder
+  docker run -u0 --rm -e "_JAVA_OPTIONS=-XX:-UsePerfData" -v "${output_folder}:/tmp" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" \
+      bash -c '/tmp/certs-create.sh "$1" "$2"; rc=$?; chown -R "$3" /tmp/; exit $rc' _ "${containers[*]}" "$new_open_ssl" "$(id -u):$(id -g)" > "$log_file" 2>&1
+  rc=$?
   if [[ -n "$verbose" ]]
   then
-      maybe_redirect_output=""
+      grep -v "Picked up _JAVA_OPTIONS" "$log_file"
   fi
 
-  container_list="${containers[*]}"
+  missing=()
+  for container in "${containers[@]}"
+  do
+      for f in "kafka.${container}.keystore.jks" "kafka.${container}.truststore.jks"
+      do
+          if [[ ! -s "${output_folder}/${f}" ]]
+          then
+              missing+=("$f")
+          fi
+      done
+  done
+  if [ $rc -ne 0 ] || [ ${#missing[@]} -gt 0 ]
+  then
+      logerror "❌ the certificates could not be generated (exit code $rc${missing[*]:+, missing: ${missing[*]}}), end of the log:"
+      grep -vE "Picked up _JAVA_OPTIONS|^[.+*-]+$" "$log_file" | tail -15 >&2
+      exit 1
+  fi
+  ca_end=""
+  if command -v openssl > /dev/null 2>&1
+  then
+      ca_end=$(openssl x509 -in "${output_folder}/snakeoil-ca-1.crt" -noout -enddate 2> /dev/null | sed 's/notAfter=/, valid until /')
+  fi
+  log "✅ keystores and truststores of ${containers[*]} (password: confluent), CA snakeoil-ca-1.crt${ca_end}"
+
+}
+
+# :command.function
+playground_tools_cert_inspect_command() {
+
+  # src/commands/tools/cert/inspect.sh
+  file="${args[--file]}"
+  key="${args[--key]}"
+  truststore="${args[--truststore]}"
+  password="${args[--password]}"
+  truststore_password="${args[--truststore-password]}"
+  server="${args[--server]}"
+  servername="${args[--servername]}"
+  hostname="${args[--hostname]}"
+  purpose="${args[--purpose]}"
+  json="${args[--json]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -z "$file" && -z "$server" ]]
+  then
+      logerror "❌ pass --file (keystore, truststore, PEM or DER certificate) and/or --server <host:port>"
+      exit 1
+  fi
+  if [[ -n "$server" && "$server" != *:* ]]
+  then
+      logerror "❌ --server must be <host>:<port>, for example broker:9093"
+      exit 1
+  fi
+  if [[ -n "$key" && -z "$file" && -z "$server" ]]
+  then
+      logerror "❌ --key needs the certificate: --file or --server"
+      exit 1
+  fi
+
+  # --server: the hostname of the connection is the host of the server, unless --hostname
+  if [[ -n "$server" && -z "$hostname" ]]
+  then
+      hostname="${server%:*}"
+  fi
 
   get_connect_image
-  new_open_ssl=0
-  # Replace the version_gt logic with a direct binary check
-  if docker run --rm ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} openssl version | grep -q "OpenSSL 3"; then
-      new_open_ssl=1
-  else
-      new_open_ssl=0
+  set +e
+
+  tmp_dir=$(mktemp -d -t pg-cert-inspect-XXXXXXXXXX)
+  trap 'rm -rf "$tmp_dir"' EXIT
+  mkdir -p "$tmp_dir/in"
+  cp "$root_folder/scripts/cli/src/ssl/cert-inspect.sh" "$tmp_dir/cert-inspect.sh"
+  # copies with a prefix: the file, the key and the truststore may have the same name in different folders
+  env_args=()
+  if [[ -n "$file" ]]
+  then
+      cp "$file" "$tmp_dir/in/$(basename "$file")"
+      env_args+=(-e "FILE=$(basename "$file")")
   fi
-  mkdir -p "${output_folder}"
-  cd "${output_folder}"
-  rm -f *.crt
-  rm -f *.csr
-  rm -f *_creds
-  rm -f *.jks
-  rm -f *.srl
-  rm -f *.key
-  rm -f *.req
-  rm -f *.pem
-  rm -f *.der
-  rm -f *.p12
-  cp $root_folder/scripts/cli/src/ssl/certs-create.sh .
+  if [[ -n "$key" ]]
+  then
+      cp "$key" "$tmp_dir/in/key-$(basename "$key")"
+      env_args+=(-e "KEY=key-$(basename "$key")")
+  fi
+  if [[ -n "$truststore" ]]
+  then
+      cp "$truststore" "$tmp_dir/in/truststore-$(basename "$truststore")"
+      env_args+=(-e "TRUSTSTORE=truststore-$(basename "$truststore")")
+  fi
+  env_args+=(-e "PASSWORD=$password" -e "TRUSTSTORE_PASSWORD=$truststore_password" -e "SERVER=$server" -e "SERVERNAME=$servername")
+
+  # --server on a container of the playground: run in its network, so that its name resolves
+  network_args=()
+  if [[ -n "$server" ]]
+  then
+      network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "${server%:*}" 2> /dev/null | awk '{print $1}')
+      if [[ -n "$network" ]]
+      then
+          network_args=(--network "$network")
+      fi
+  fi
+
+  docker_cmd=(docker run --rm -u0 "${network_args[@]}" -v "$tmp_dir:/work" "${env_args[@]}" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" bash /work/cert-inspect.sh)
+  if [[ -n "$verbose" ]]
+  then
+      log_verbose_command "$(printf '%s ' "${docker_cmd[@]}" | sed -E 's/(PASSWORD=)[^ ]+/\1*****/g')"
+  fi
+  records=$("${docker_cmd[@]}" 2> "$tmp_dir/docker.err")
+  if [[ -z "$records" ]]
+  then
+      logerror "❌ the inspection did not run in ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}:"
+      tail -5 "$tmp_dir/docker.err" >&2
+      exit 1
+  fi
+
+  # the inner script writes "-" for an empty field (read collapses consecutive tabs): dash_empty turns it back
+  function dash_empty () {
+      [[ "$1" == "-" ]] && echo "" || echo "$1"
+  }
+
+  now=$(date +%s)
+  function day () {
+      jq -rn --argjson e "$1" '$e | strftime("%Y-%m-%d")'
+  }
+
+  # hostname verification like java: a SAN DNS entry (a wildcard covers one label) or a SAN IP; the CN is not used
+  function host_matches () {
+      local host san value
+      host=$(tr '[:upper:]' '[:lower:]' <<< "$1")
+      for san in ${2//,/ }
+      do
+          value=$(tr '[:upper:]' '[:lower:]' <<< "${san#*:}")
+          case "$san" in
+              DNS:*)
+                  if [[ "$value" == "$host" ]]
+                  then
+                      return 0
+                  fi
+                  if [[ "$value" == \*.* && "$host" == *.* && "${host#*.}" == "${value#\*.}" ]]
+                  then
+                      return 0
+                  fi
+              ;;
+              IP:*)
+                  [[ "$value" == "$host" ]] && return 0
+              ;;
+          esac
+      done
+      return 1
+  }
+
+  # checks: one per line "<entry>\t<status>\t<check>\t<value>\t<fix>"
+  checks_file="$tmp_dir/checks"
+  : > "$checks_file"
+  function check () {
+      printf '%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" "${5:-}" >> "$checks_file"
+  }
+
+  entries=$(awk -F'\t' '$1 == "ENTRY" { print $2 "\t" $3 }' <<< "$records")
+  while IFS=$'\t' read -r entry kind
+  do
+      [[ -z "$entry" ]] && continue
+      certs=$(awk -F'\t' -v e="$entry" '$1 == "CERT" && $2 == e' <<< "$records")
+      nb=$(grep -c . <<< "$certs")
+      # expiry of every certificate
+      while IFS=$'\t' read -r _ _ index subject issuer serial not_before not_after sans key_alg key_bits sig_alg ku eku ca self fp
+      do
+          sans=$(dash_empty "$sans"); ku=$(dash_empty "$ku"); eku=$(dash_empty "$eku")
+          days=$(( (not_after - now) / 86400 ))
+          cn=$(sed -E 's/^.*CN=([^,]*).*$/\1/' <<< "$subject")
+          if [ "$not_after" -lt "$now" ]
+          then
+              check "$entry" fail "expiry of #$index ($cn)" "expired on $(day "$not_after")" "renew the certificate ('playground tools cert create' for the playground ones)"
+          elif [ "$not_before" -gt "$now" ]
+          then
+              check "$entry" fail "validity of #$index ($cn)" "not valid before $(day "$not_before")" "check the clock of the machine that created it"
+          elif [ "$days" -lt 30 ]
+          then
+              check "$entry" warn "expiry of #$index ($cn)" "expires in $days day(s), on $(day "$not_after")" "renew it before"
+          fi
+          if [[ "$key_alg" == rsaEncryption && "$key_bits" =~ ^[0-9]+$ && "$key_bits" -lt 2048 ]]
+          then
+              check "$entry" warn "key size of #$index ($cn)" "RSA $key_bits bits" "java 8u291+ and recent JDKs refuse RSA keys under 2048 bits by default (jdk.certpath.disabledAlgorithms)"
+          fi
+          if [[ "$sig_alg" == *sha1* || "$sig_alg" == *SHA1* ]] && [[ "$self" != "yes" ]]
+          then
+              check "$entry" warn "signature of #$index ($cn)" "$sig_alg" "SHA-1 signatures are disabled in recent JDKs: re-sign with SHA-256"
+          fi
+      done <<< "$certs"
+
+      if [[ "$kind" == "trustedCertEntry" ]]
+      then
+          continue
+      fi
+
+      # the chain: each certificate issued by the next one, ending at a root (self signed) or not
+      order_ok=1
+      prev_issuer=""
+      while IFS=$'\t' read -r _ _ index subject issuer _
+      do
+          if [[ -n "$prev_issuer" && "$prev_issuer" != "$subject" ]]
+          then
+              order_ok=0
+          fi
+          prev_issuer="$issuer"
+      done <<< "$certs"
+      last=$(tail -1 <<< "$certs")
+      last_self=$(cut -f16 <<< "$last")
+      last_issuer=$(cut -f5 <<< "$last")
+      if [ "$nb" -gt 1 ]
+      then
+          if [ $order_ok -eq 1 ]
+          then
+              check "$entry" ok "chain order" "$nb certificates, each one issued by the next one"
+          else
+              check "$entry" fail "chain order" "a certificate is not issued by the next one: out of order, or an intermediate is missing" "rebuild the chain in order: leaf, intermediate(s), root (keytool -importcert of the CA reply with the whole chain)"
+          fi
+      fi
+      if [[ "$last_self" == "yes" ]]
+      then
+          [ "$nb" -gt 1 ] && check "$entry" ok "chain end" "ends with the root ($(sed -E 's/^.*CN=([^,]*).*$/\1/' <<< "$last_issuer"))"
+      elif [[ ( "$kind" != "pem" && "$kind" != "der" ) || "$nb" -gt 1 ]]
+      then
+          check "$entry" info "chain end" "ends at a certificate issued by $last_issuer, not included: the truststore of the peers must contain it"
+      fi
+
+      leaf=$(head -1 <<< "$certs")
+      leaf_subject=$(cut -f4 <<< "$leaf")
+      leaf_sans=$(dash_empty "$(cut -f9 <<< "$leaf")")
+      leaf_eku=$(dash_empty "$(cut -f14 <<< "$leaf")")
+      leaf_ca=$(cut -f15 <<< "$leaf")
+      if [[ "$leaf_ca" == "true" && "$nb" -gt 1 ]]
+      then
+          check "$entry" warn "first certificate" "is a CA (basicConstraints CA:TRUE)" "the first certificate of a keystore should be the certificate of the server or client itself"
+      fi
+      if [[ -n "$hostname" ]]
+      then
+          if [[ -z "$leaf_sans" ]]
+          then
+              check "$entry" fail "hostname $hostname" "no subject alternative name (the CN is not used)" "java fails with 'No subject alternative names present': regenerate with -ext SAN=dns:$hostname"
+          elif host_matches "$hostname" "$leaf_sans"
+          then
+              check "$entry" ok "hostname $hostname" "in the SANs ($leaf_sans)"
+          else
+              check "$entry" fail "hostname $hostname" "not in the SANs ($leaf_sans)" "java fails with 'No subject alternative names matching ... found': regenerate with -ext SAN=dns:$hostname, or set ssl.endpoint.identification.algorithm= (empty) on the client to skip the check"
+          fi
+      fi
+      if [[ -n "$purpose" && -z "$leaf_eku" ]]
+      then
+          check "$entry" ok "extended key usage ($purpose)" "none: the certificate may be used by a server and by a client"
+      elif [[ -n "$purpose" ]]
+      then
+          wanted="TLS Web Server Authentication"
+          [[ "$purpose" == "client" ]] && wanted="TLS Web Client Authentication"
+          if [[ "$leaf_eku" == *"$wanted"* ]]
+          then
+              check "$entry" ok "extended key usage ($purpose)" "$leaf_eku"
+          else
+              check "$entry" fail "extended key usage ($purpose)" "$leaf_eku" "the peer refuses it ('extended key usage does not permit use for TLS $purpose authentication'): add ${purpose}Auth to the extendedKeyUsage of the certificate"
+          fi
+      fi
+  done <<< "$entries"
+
+  while IFS=$'\t' read -r _ entry result detail
+  do
+      [[ -z "$entry" ]] && continue
+      case "$result" in
+          match) check "$entry" ok "private key" "$detail" ;;
+          mismatch) check "$entry" fail "private key" "$detail" "use the key the certificate was created from (a keystore built from another CSR: 'Public keys in reply and keystore don't match')" ;;
+          *) check "$entry" warn "private key" "$detail" ;;
+      esac
+  done < <(awk -F'\t' '$1 == "KEY"' <<< "$records")
+
+  while IFS=$'\t' read -r _ entry result detail
+  do
+      [[ -z "$entry" ]] && continue
+      if [[ "$result" == "ok" ]]
+      then
+          check "$entry" ok "truststore $(basename "$truststore")" "trusts the chain"
+      else
+          # the openssl verify error, in the words of the chain
+          case "$detail" in
+              *"self-signed certificate in certificate chain"*|*"self signed certificate in certificate chain"*)
+                  detail="none of the certificates of the chain is in the truststore (it ends with a root the truststore does not have)" ;;
+              *"unable to get local issuer certificate"*|*"unable to get issuer certificate"*)
+                  detail="the truststore does not have the CA that issued the last certificate of the chain ($(awk -F'\t' -v e="$entry" '$1 == "CERT" && $2 == e { i = $5 } END { print i }' <<< "$records"))" ;;
+              *"certificate has expired"*)
+                  detail="a certificate of the chain has expired" ;;
+          esac
+          check "$entry" fail "truststore $(basename "$truststore")" "does not trust the chain: $detail" "java fails with 'PKIX path building failed: unable to find valid certification path to requested target': import the root (or the intermediate) CA of the chain into the truststore"
+      fi
+  done < <(awk -F'\t' '$1 == "VERIFY"' <<< "$records")
+
+  errors=$(awk -F'\t' '$1 == "ERROR" { print $2 }' <<< "$records")
+  nb_fail=$(awk -F'\t' '$2 == "fail"' "$checks_file" | grep -c .)
+  nb_warn=$(awk -F'\t' '$2 == "warn"' "$checks_file" | grep -c .)
+  nb_ok=$(awk -F'\t' '$2 == "ok"' "$checks_file" | grep -c .)
+  [[ -n "$errors" ]] && nb_fail=$((nb_fail + $(grep -c . <<< "$errors")))
+
+  json_result=$(jq -n --rawfile records <(printf '%s\n' "$records") --rawfile checks "$checks_file" --argjson fail "$nb_fail" --argjson warn "$nb_warn" --argjson ok "$nb_ok" '
+          ($records | split("\n") | map(select(length > 0) | split("\t") | map(if . == "-" then "" else . end))) as $r
+          | ($checks | split("\n") | map(select(length > 0) | split("\t"))) as $c
+          | {
+              verdict: (if $fail > 0 then "fail" elif $warn > 0 then "warn" else "ok" end), ok: $ok, fail: $fail, warn: $warn,
+              errors: [$r[] | select(.[0] == "ERROR") | .[1]],
+              info: [$r[] | select(.[0] == "INFO") | .[1]],
+              entries: [$r[] | select(.[0] == "ENTRY") | . as $e | {
+                  entry: $e[1], kind: $e[2],
+                  tls: ([$r[] | select(.[0] == "TLS" and .[1] == $e[1]) | {protocol: .[2], cipher: .[3]}] | first),
+                  certificates: [$r[] | select(.[0] == "CERT" and .[1] == $e[1]) | {index: (.[2] | tonumber), subject: .[3], issuer: .[4], serial: .[5],
+                      not_before: (.[6] | tonumber | todate), not_after: (.[7] | tonumber | todate), sans: (.[8] | if . == "" then [] else split(",") end),
+                      key: "\(.[9]) \(.[10])", signature: .[11], key_usage: .[12], extended_key_usage: .[13], ca: (.[14] == "true"), self_signed: (.[15] == "yes"), sha256: .[16]}],
+                  checks: [$c[] | select(.[0] == $e[1]) | {status: .[1], check: .[2], value: .[3]} + (if (.[4] // "") == "" then {} else {fix: .[4]} end)]
+              }]
+          }')
+
+  if [[ -n "$json" ]]
+  then
+      printf '%s\n' "$json_result"
+  else
+      while IFS=$'\t' read -r _ message
+      do
+          [[ -n "$message" ]] && log "$message"
+      done < <(awk -F'\t' '$1 == "INFO"' <<< "$records")
+      while IFS= read -r message
+      do
+          [[ -n "$message" ]] && logerror "❌ $message"
+      done <<< "$errors"
+      while IFS=$'\t' read -r entry kind
+      do
+          [[ -z "$entry" ]] && continue
+          tls=$(awk -F'\t' -v e="$entry" '$1 == "TLS" && $2 == e { print $3 ", " $4 }' <<< "$records")
+          log "🔐 $entry ($kind${tls:+, $tls})"
+          while IFS=$'\t' read -r _ _ index subject issuer serial not_before not_after sans key_alg key_bits sig_alg ku eku ca self fp
+          do
+              [[ -z "$index" ]] && continue
+              sans=$(dash_empty "$sans"); ku=$(dash_empty "$ku"); eku=$(dash_empty "$eku")
+              days=$(( (not_after - now) / 86400 ))
+              printf '   #%s %s%s\n' "$index" "$subject" "$( [[ "$self" == "yes" ]] && echo "  (self signed)" )"
+              [[ "$self" != "yes" ]] && printf '      issuer   %s\n' "$issuer"
+              printf '      valid    %s → %s (%s)\n' "$(day "$not_before")" "$(day "$not_after")" "$( [ "$days" -ge 0 ] && echo "$days days left" || echo "expired $(( -days )) days ago")"
+              [[ -n "$sans" ]] && printf '      SAN      %s\n' "$sans"
+              printf '      key      %s %s bits, %s%s\n' "${key_alg/rsaEncryption/RSA}" "$key_bits" "$sig_alg" "$( [[ "$ca" == "true" ]] && echo ", CA")"
+              [[ -n "$ku$eku" ]] && printf '      usage    %s\n' "$(sed 's/^ | //;s/ | $//' <<< "$ku | $eku")"
+              printf '      sha256   %s\n' "$fp"
+          done < <(awk -F'\t' -v e="$entry" '$1 == "CERT" && $2 == e' <<< "$records")
+          width=0
+          while IFS=$'\t' read -r _ _ name _
+          do
+              [ ${#name} -gt $width ] && width=${#name}
+          done < <(awk -F'\t' -v e="$entry" '$1 == e' "$checks_file")
+          while IFS=$'\t' read -r _ status name value fix
+          do
+              case "$status" in
+                  ok) icon="✅" ;;
+                  fail) icon="❌" ;;
+                  warn) icon="⚠️ " ;;
+                  *) icon="ℹ️ " ;;
+              esac
+              printf '   %s %-*s  %s\n' "$icon" "$width" "$name" "$value"
+              [[ -n "$fix" ]] && printf '      👉 %s\n' "$fix"
+          done < <(awk -F'\t' -v e="$entry" '$1 == e' "$checks_file")
+      done <<< "$entries"
+      # the HTML report: the same result, explained for someone new to TLS
+      output_dir="${output_dir:-/tmp/playground-cert-inspect}"
+      mkdir -p "$output_dir"
+      output_dir=$(cd "$output_dir" && pwd)
+      label=$(printf '%s' "${file:+$(basename "$file")}${server:+${file:+-}$server}" | tr -c 'A-Za-z0-9._-' '_')
+      report="$output_dir/cert-inspect-${label}-$(date '+%Y%m%d-%H%M%S').html"
+      printf '%s\n' "$json_result" > "$tmp_dir/result.json"
+      if python3 -I -B "$root_folder/tools/cert-inspect/cert_report.py" --json-file "$tmp_dir/result.json" --out "$report" \
+          --file "$file" --server "$server" --hostname "$hostname" --truststore "$truststore" --purpose "$purpose" 2> "$tmp_dir/report.err"
+      then
+          open_html_report "$report" "$no_open"
+      else
+          logwarn "⚠️ could not write the HTML report: $(tail -1 "$tmp_dir/report.err")"
+      fi
+      if [ "$nb_fail" -gt 0 ]
+      then
+          logerror "❌ $nb_fail problem(s), ⚠️ $nb_warn warning(s), ✅ $nb_ok ok"
+      elif [ "$nb_warn" -gt 0 ]
+      then
+          logwarn "⚠️ $nb_warn warning(s), ✅ $nb_ok ok"
+      else
+          log "✅ no problem found ($nb_ok check(s) ok)"
+      fi
+  fi
+
+  if [ "$nb_fail" -gt 0 ]
+  then
+      exit 1
+  fi
+
+}
+
+# :command.function
+playground_tools_cert_convert_command() {
+
+  # src/commands/tools/cert/convert.sh
+  file="${args[--file]}"
+  key="${args[--key]}"
+  to="${args[--to]}"
+  password="${args[--password]}"
+  output_password="${args[--output-password]}"
+  alias="${args[--alias]}"
+  output_folder="${args[--output-folder]}"
+  force="${args[--force]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$key" ]] && grep -q -- "-----BEGIN CERTIFICATE" "$key" 2> /dev/null && ! grep -q -- "PRIVATE KEY-----" "$key"
+  then
+      logerror "❌ --key $key holds no private key (-----BEGIN ... PRIVATE KEY-----)"
+      exit 1
+  fi
+
+  output_folder="${output_folder:-$(dirname "$file")}"
+  mkdir -p "$output_folder"
+  output_folder=$(cd "$output_folder" && pwd)
+  base=$(basename "$file")
+  base="${base%.*}"
+
+  get_connect_image
+  set +e
+
+  tmp_dir=$(mktemp -d -t pg-cert-convert-XXXXXXXXXX)
+  trap 'rm -rf "$tmp_dir"' EXIT
+  mkdir -p "$tmp_dir/in" "$tmp_dir/out"
+  cp "$root_folder/scripts/cli/src/ssl/cert-convert.sh" "$tmp_dir/cert-convert.sh"
+  cp "$file" "$tmp_dir/in/$(basename "$file")"
+  env_args=(-e "FILE=$(basename "$file")" -e "TO=$to" -e "PASSWORD=$password" -e "OUTPUT_PASSWORD=$output_password" -e "ALIAS=$alias" -e "BASE=$base")
+  if [[ -n "$key" ]]
+  then
+      cp "$key" "$tmp_dir/in/key-$(basename "$key")"
+      env_args+=(-e "KEY=key-$(basename "$key")")
+  fi
+
+  docker_cmd=(docker run --rm -u0 -v "$tmp_dir:/work" "${env_args[@]}" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" bash /work/cert-convert.sh)
+  if [[ -n "$verbose" ]]
+  then
+      log_verbose_command "$(printf '%s ' "${docker_cmd[@]}" | sed -E 's/(PASSWORD=)[^ ]+/\1*****/g')"
+  fi
+  log "🔄 Converting $(basename "$file") to $to"
+  records=$("${docker_cmd[@]}" 2> "$tmp_dir/docker.err")
+  if [[ -z "$records" ]]
+  then
+      logerror "❌ the conversion did not run in ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}:"
+      tail -5 "$tmp_dir/docker.err" >&2
+      exit 1
+  fi
+
+  while IFS=$'\t' read -r _ message
+  do
+      [[ -n "$message" ]] && log "$message"
+  done < <(awk -F'\t' '$1 == "INFO"' <<< "$records")
+  errors=$(awk -F'\t' '$1 == "ERROR" { print $2 }' <<< "$records")
+  while IFS= read -r message
+  do
+      [[ -n "$message" ]] && logerror "❌ $message"
+  done <<< "$errors"
+
+  outputs=$(awk -F'\t' '$1 == "OUT"' <<< "$records")
+  if [[ -z "$outputs" ]]
+  then
+      exit 1
+  fi
+
+  # the files written in the container, copied to the output folder: an existing file is only replaced with --force
+  written=()
+  while IFS=$'\t' read -r _ name what
+  do
+      [[ -z "$name" ]] && continue
+      if [[ -e "$output_folder/$name" && -z "$force" ]]
+      then
+          logerror "❌ $output_folder/$name exists already: not replaced (pass --force, or --output-folder)"
+          continue
+      fi
+      cp "$tmp_dir/out/$name" "$output_folder/$name"
+      written+=("$output_folder/$name")
+      log "✅ $output_folder/$name"
+      printf '   %s\n' "$what"
+  done <<< "$outputs"
+
+  if [ ${#written[@]} -eq 0 ]
+  then
+      exit 1
+  fi
+
+  store_pass_hint="${output_password:-the password of $(basename "$file") (or 'confluent')}"
+  case "$to" in
+      pkcs12|jks)
+          log "🎓 use it with ssl.keystore.location (or ssl.truststore.location), ssl.*.type=$( [[ "$to" == "jks" ]] && echo JKS || echo PKCS12) and the password: $store_pass_hint"
+      ;;
+      pem)
+          log "🎓 librdkafka clients (python, go, .net, C): ssl.ca.location, ssl.certificate.location, ssl.key.location$( [[ -n "$output_password" ]] && echo ", ssl.key.password")"
+      ;;
+      properties)
+          log "🎓 add these lines to the client properties (security.protocol=SSL or SASL_SSL): the certificates are inline, no file to copy"
+      ;;
+  esac
+  first_inspectable=""
+  for f in "${written[@]}"
+  do
+      case "$f" in
+          *.properties|*.key.pem) ;;
+          *) first_inspectable="$f"; break ;;
+      esac
+  done
+  if [[ -n "$first_inspectable" ]]
+  then
+      log "🔍 check the result: playground tools cert inspect --file $first_inspectable$( [[ "$to" == "pkcs12" || "$to" == "jks" ]] && [[ -n "$output_password" ]] && echo " --password <output password>")"
+  fi
+  if [[ -n "$errors" ]]
+  then
+      exit 1
+  fi
+
+}
+
+# :command.function
+playground_tools_certs_create_command() {
+
+  # src/commands/tools/cert/create.sh
+  output_folder="${args[--output-folder]}"
+  verbose="${args[--verbose]}"
+  # Convert the space delimited string to an array
+  eval "containers=(${args[--container]})"
+
+  get_connect_image
+  # get_connect_image ends with set -e: the errors are handled below, with a message
+  set +e
+
+  if ! mkdir -p "${output_folder}" || ! output_folder=$(cd "${output_folder}" && pwd)
+  then
+      logerror "❌ cannot create the output folder ${output_folder}"
+      exit 1
+  fi
+
+  new_open_ssl=0
+  if docker run --rm "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" openssl version | grep -q "OpenSSL 3"
+  then
+      new_open_ssl=1
+  fi
+
+  # only the files of a previous run of the command (the CA, and the files named after each container): the folder can
+  # hold other files (an example folder, a customer certificate next to a repro model)
+  rm -f "${output_folder}/snakeoil-ca-1.crt" "${output_folder}/snakeoil-ca-1.key" "${output_folder}/snakeoil-ca-1.srl" "${output_folder}/extfile"
+  for container in "${containers[@]}"
+  do
+      for f in "kafka.${container}.keystore.jks" "kafka.${container}.truststore.jks" "${container}.csr" "${container}-ca1-signed.crt" \
+          "${container}_sslkey_creds" "${container}_keystore_creds" "${container}_truststore_creds" "${container}.der" \
+          "${container}.certificate.pem" "${container}.keystore.p12" "${container}.key" "${container}.p12"
+      do
+          rm -f "${output_folder}/${f}"
+      done
+  done
+  rm -rf "${output_folder}/hsperfdata_root"
+
+  log_file=$(mktemp -t pg-certs-create-XXXXXXXXXX)
+  function cleanup {
+      set +e
+      rm -f "${output_folder}/certs-create.sh" "${output_folder}/extfile" "${output_folder}/snakeoil-ca-1.srl" "${log_file}"
+      rm -rf "${output_folder}/hsperfdata_root"
+  }
+  trap cleanup EXIT
+
+  cp "${root_folder}/scripts/cli/src/ssl/certs-create.sh" "${output_folder}/certs-create.sh"
   maybe_create_image
+  set +e
   log "🔐 Generate keys and certificates in folder ${output_folder}"
-  docker run -u0 --rm -v $root_folder/scripts/cli/src/openssl.cnf:/usr/local/ssl/openssl.cnf -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "/tmp/certs-create.sh $maybe_redirect_output \"$container_list\" $new_open_ssl && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+  # -XX:-UsePerfData: the output folder is mounted as /tmp, where the JVM would leave its hsperfdata_root folder
+  docker run -u0 --rm -e "_JAVA_OPTIONS=-XX:-UsePerfData" -v "${output_folder}:/tmp" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" \
+      bash -c '/tmp/certs-create.sh "$1" "$2"; rc=$?; chown -R "$3" /tmp/; exit $rc' _ "${containers[*]}" "$new_open_ssl" "$(id -u):$(id -g)" > "$log_file" 2>&1
+  rc=$?
+  if [[ -n "$verbose" ]]
+  then
+      grep -v "Picked up _JAVA_OPTIONS" "$log_file"
+  fi
+
+  missing=()
+  for container in "${containers[@]}"
+  do
+      for f in "kafka.${container}.keystore.jks" "kafka.${container}.truststore.jks"
+      do
+          if [[ ! -s "${output_folder}/${f}" ]]
+          then
+              missing+=("$f")
+          fi
+      done
+  done
+  if [ $rc -ne 0 ] || [ ${#missing[@]} -gt 0 ]
+  then
+      logerror "❌ the certificates could not be generated (exit code $rc${missing[*]:+, missing: ${missing[*]}}), end of the log:"
+      grep -vE "Picked up _JAVA_OPTIONS|^[.+*-]+$" "$log_file" | tail -15 >&2
+      exit 1
+  fi
+  ca_end=""
+  if command -v openssl > /dev/null 2>&1
+  then
+      ca_end=$(openssl x509 -in "${output_folder}/snakeoil-ca-1.crt" -noout -enddate 2> /dev/null | sed 's/notAfter=/, valid until /')
+  fi
+  log "✅ keystores and truststores of ${containers[*]} (password: confluent), CA snakeoil-ca-1.crt${ca_end}"
+
 }
 
 # :command.function
@@ -106842,6 +107718,13 @@ playground_tools_parse_requirements() {
       shift $#
       ;;
 
+    cert)
+      action="cert"
+      shift
+      playground_tools_cert_parse_requirements "$@"
+      shift $#
+      ;;
+
     certs-create)
       action="certs-create"
       shift
@@ -107276,6 +108159,678 @@ playground_tools_read_parquet_file_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tools_cert_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_cert_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    create)
+      action="create"
+      shift
+      playground_tools_cert_create_parse_requirements "$@"
+      shift $#
+      ;;
+
+    inspect)
+      action="inspect"
+      shift
+      playground_tools_cert_inspect_parse_requirements "$@"
+      shift $#
+      ;;
+
+    convert)
+      action="convert"
+      shift
+      playground_tools_cert_convert_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_tools_cert_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_tools_cert_create_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_cert_create_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tools cert create"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c | --pod | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          elif [[ -z "${unique_lookup["--container:${escaped}"]:-}" ]]; then
+            args['--container']="${args['--container']} $escaped"
+          fi
+          unique_lookup["--container:${escaped}"]=1
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c, --pod, -p CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --output-folder)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-folder']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-folder requires an argument: --output-folder FOLDER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--output-folder']+x} ]]; then
+    printf "missing required flag: --output-folder FOLDER\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="broker broker2 broker3 client schema-registry restproxy connect connect2 connect3 control-center clientrestproxy ksqldb-server conduktor"
+
+}
+
+# :command.parse_requirements
+playground_tools_cert_inspect_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_cert_inspect_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tools cert inspect"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key requires an argument: --key KEY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --truststore)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--truststore']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--truststore requires an argument: --truststore TRUSTSTORE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --truststore-password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--truststore-password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--truststore-password requires an argument: --truststore-password TRUSTSTORE_PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --server)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--server']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--server requires an argument: --server SERVER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --servername)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--servername']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--servername requires an argument: --servername SERVERNAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --hostname)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--hostname']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--hostname requires an argument: --hostname HOSTNAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --purpose)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--purpose']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--purpose requires an argument: --purpose PURPOSE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--key'] ]]; then
+    validation_output="$(validate_file_exists "${args['--key']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--key KEY" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--truststore'] ]]; then
+    validation_output="$(validate_file_exists "${args['--truststore']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--truststore TRUSTSTORE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--purpose']:-} ]] && [[ ! ${args['--purpose']:-} =~ ^(server|client)$ ]]; then
+    printf "%s\n" "--purpose must be one of: server, client" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_tools_cert_convert_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_tools_cert_convert_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="tools cert convert"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to TO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key requires an argument: --key KEY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--password requires an argument: --password PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-password)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-password']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-password requires an argument: --output-password OUTPUT_PASSWORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --alias)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--alias']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--alias requires an argument: --alias ALIAS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-folder)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-folder']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-folder requires an argument: --output-folder OUTPUT_FOLDER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --force)
+
+        # :flag.case_no_arg
+        args['--force']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--file']+x} ]]; then
+    printf "missing required flag: --file, -f FILE\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--to']+x} ]]; then
+    printf "missing required flag: --to TO\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--key'] ]]; then
+    validation_output="$(validate_file_exists "${args['--key']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--key KEY" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--to']:-} ]] && [[ ! ${args['--to']:-} =~ ^(pkcs12|jks|pem|der|properties)$ ]]; then
+    printf "%s\n" "--to must be one of: pkcs12, jks, pem, der, properties" >&2
+    exit 1
   fi
 
 }
@@ -148081,9 +149636,9 @@ playground_tools_completion() {
         playground_tools_read_parquet_file_completion "$completion_current" "$@"
         return
         ;;
-      certs-create)
+      cert)
         shift
-        playground_tools_certs_create_completion "$completion_current" "$@"
+        playground_tools_cert_completion "$completion_current" "$@"
         return
         ;;
       redos-check)
@@ -148105,7 +149660,7 @@ playground_tools_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" install-vscode-extension install-alfred-workflow read-avro-file read-parquet-file certs-create redos-check http-server
+  completion_candidates "$completion_current" install-vscode-extension install-alfred-workflow read-avro-file read-parquet-file cert redos-check http-server
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -148235,6 +149790,373 @@ playground_tools_read_parquet_file_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_cert_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      create)
+        shift
+        playground_tools_cert_create_completion "$completion_current" "$@"
+        return
+        ;;
+      inspect)
+        shift
+        playground_tools_cert_inspect_completion "$completion_current" "$@"
+        return
+        ;;
+      convert)
+        shift
+        playground_tools_cert_convert_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" create inspect convert
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_cert_create_completion() {
+  local completion_current="$1"
+  local -A completion_used_flag_values=()
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c | --pod | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        completion_used_flag_values["--container:$1"]=1
+        shift
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --output-folder)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-folder"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c --pod -p
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --output-folder "$completion_current" --output-folder
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_cert_inspect_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --key)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--key"]=1
+
+        ;;
+      --truststore)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--truststore"]=1
+
+        ;;
+      --truststore-password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--truststore-password"]=1
+
+        ;;
+      --server)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--server"]=1
+
+        ;;
+      --servername)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--servername"]=1
+
+        ;;
+      --hostname)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--hostname"]=1
+
+        ;;
+      --purpose)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "server"
+            "client"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--purpose"]=1
+
+        ;;
+      --output-dir)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --key "$completion_current" --key
+    completion_flag_candidates --truststore "$completion_current" --truststore
+    completion_flag_candidates --truststore-password "$completion_current" --truststore-password
+    completion_flag_candidates --server "$completion_current" --server
+    completion_flag_candidates --servername "$completion_current" --servername
+    completion_flag_candidates --hostname "$completion_current" --hostname
+    completion_flag_candidates --purpose "$completion_current" --purpose
+    completion_flag_candidates --output-dir "$completion_current" --output-dir
+    completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_tools_cert_convert_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "pkcs12"
+            "jks"
+            "pem"
+            "der"
+            "properties"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --key)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--key"]=1
+
+        ;;
+      --password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--password"]=1
+
+        ;;
+      --output-password)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-password"]=1
+
+        ;;
+      --alias)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--alias"]=1
+
+        ;;
+      --output-folder)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-folder"]=1
+
+        ;;
+      --force)
+        completion_blocked_flags["--force"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --key "$completion_current" --key
+    completion_flag_candidates --password "$completion_current" --password
+    completion_flag_candidates --output-password "$completion_current" --output-password
+    completion_flag_candidates --alias "$completion_current" --alias
+    completion_flag_candidates --output-folder "$completion_current" --output-folder
+    completion_flag_candidates --force "$completion_current" --force
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
 }
@@ -164701,6 +166623,10 @@ run() {
     "tools install-alfred-workflow") playground_tools_install_alfred_workflow_command ;;
     "tools read-avro-file") playground_tools_read_avro_file_command ;;
     "tools read-parquet-file") playground_tools_read_parquet_file_command ;;
+    "tools cert") playground_tools_cert_command ;;
+    "tools cert create") playground_tools_cert_create_command ;;
+    "tools cert inspect") playground_tools_cert_inspect_command ;;
+    "tools cert convert") playground_tools_cert_convert_command ;;
     "tools certs-create") playground_tools_certs_create_command ;;
     "tools redos-check") playground_tools_redos_check_command ;;
     "tools http-server") playground_tools_http_server_command ;;

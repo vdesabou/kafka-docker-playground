@@ -39,7 +39,7 @@ playground run -f fully-managed-rabbitmq-sink.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-rabbitmq-sink.sh` | Plain AMQP connection (port 5672) |
-| `fully-managed-rabbitmq-sink-ssl.sh` | SSL connection (port 5671), keystore and truststore generated with `playground tools certs-create` |
+| `fully-managed-rabbitmq-sink-ssl.sh` | SSL connection (port 5671), keystore and truststore generated with `playground tools cert create` |
 
 ## What the script does
 

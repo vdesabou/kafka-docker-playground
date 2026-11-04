@@ -32,7 +32,7 @@ then
   log "🔍 Starting only services: $START_SERVICES"
 fi
 
-playground tools certs-create --output-folder "${PWD}/../../environment/2way-ssl/security"
+playground tools cert create --output-folder "${PWD}/../../environment/2way-ssl/security"
 
 docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/2way-ssl/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_controller_nodes_command} ${profile_connect_nodes_command} build --quiet
 

@@ -40,7 +40,7 @@ cd -
 
 mkdir -p ../../connect/connect-ibm-mq-sink/security
 cd ../../connect/connect-ibm-mq-sink/security
-playground tools certs-create --output-folder "$PWD" --container connect --container ibmmq
+playground tools cert create --output-folder "$PWD" --container connect --container ibmmq
 cd -
 
 

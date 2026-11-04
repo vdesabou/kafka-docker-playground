@@ -12,7 +12,7 @@ then
 fi
 
 cd ../../connect/connect-ftps-sink/security
-playground tools certs-create --output-folder "$PWD" --container ftps-server
+playground tools cert create --output-folder "$PWD" --container ftps-server
 docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout /tmp/vsftpd.pem -out /tmp/vsftpd.pem  -config /tmp/cert_config -reqexts 'my server exts'
 cd -
 

@@ -20,7 +20,7 @@ playground run -f ftps-sink.sh --tag 7.9.0
 
 ## What the script does
 
-1. Generates the keystore/truststore with `playground tools certs-create` and the vsftpd certificate with `openssl`.
+1. Generates the keystore/truststore with `playground tools cert create` and the vsftpd certificate with `openssl`.
 2. Creates the `ftps-sink` connector (`AvroFormat`, `flush.size=1`) connecting to `ftps-server` as user `bob`.
 3. Produces 10 Avro records to topic `test_ftps_sink` with `playground topic produce`.
 4. Lists `/home/vsftpd/bob/test_ftps_sink/partition=0/` on the FTPS server.
