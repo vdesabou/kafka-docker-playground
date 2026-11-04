@@ -6,7 +6,7 @@
     "azure.eventhubs.max.retries": "5",
     "azure.eventhubs.namespace": "",
     "azure.eventhubs.offset.type": "OFFSET",
-    "azure.eventhubs.partition.id.regex": ".gitignore",
+    "azure.eventhubs.partition.id.regex": ".*",
     "azure.eventhubs.partition.starting.position": "start_of_stream",
     "azure.eventhubs.poll.timeout.ms": "3600000",
     "azure.eventhubs.sas.key": "[hidden]",

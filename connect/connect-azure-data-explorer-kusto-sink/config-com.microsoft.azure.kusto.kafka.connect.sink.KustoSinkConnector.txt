@@ -97,6 +97,9 @@ Writes
 🔘 kusto.tables.topics.mapping
 
 A JSON array mapping ingestion from topic to table, e.g: [{'topic':'topic1','db':'kustoDb', 'table': 'table1', 'format': 'csv', 'mapping': 'csvMapping', 'streaming': 'false'}..].
+The 'topic' field also supports '*' as a wildcard. If a record's topic is not explicitly mapped, the wildcard mapping (if present) will be used.
+Streaming is optional, defaults to false. Mind usage and cogs of streaming ingestion, read here: https://docs.microsoft.com/en-us/azure/data-explorer/ingest-data-streaming.
+Note: If the streaming ingestion fails transiently, queued ingest would apply for this specific batch ingestion. Batching latency is configured regularly viaingestion batching policy
 
 	 - Type: STRING
 	 - Default: null
@@ -136,6 +139,12 @@ Error Handling and Retries
 🔘 behavior.on.error
 
 Behavior on error setting for ingestion of records into Kusto table. Must be configured to one of the following:
+``fail``
+    Stops the connector when an error occurs while processing records or ingesting records in Kusto table.
+``ignore``
+    Continues to process next set of records when error occurs while processing records or ingesting records in Kusto table.
+``log``
+    Logs the error message and continues to process subsequent records when an error occurs while processing records or ingesting records in Kusto table, available in connect logs.
 
 	 - Type: STRING
 	 - Default: FAIL
@@ -198,4 +207,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 

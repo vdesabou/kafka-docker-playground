@@ -267,7 +267,7 @@ Default position in the event hub to reset to if no offsets are stored.
 Regex that matches the names of partitions in the event hub from which the connector polls data.
 
 	 - Type: STRING
-	 - Default: .gitignore
+	 - Default: .*
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -309,4 +309,5 @@ null
 	 - Default: 600000
 	 - Importance: LOW
 	 - Required: false
+
 

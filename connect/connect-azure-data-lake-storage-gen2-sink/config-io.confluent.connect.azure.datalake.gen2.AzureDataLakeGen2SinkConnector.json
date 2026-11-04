@@ -1,5 +1,5 @@
     "allow.optional.map.keys": "false",
-    "avro.codec": "",
+    "avro.codec": "null",
     "az.compression.type": "none",
     "azure.datalake.gen2.access.key": "",
     "azure.datalake.gen2.account.name": "",
