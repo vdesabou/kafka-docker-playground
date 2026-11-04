@@ -79,6 +79,12 @@ Writes
 🔘 insert.mode
 
 The insertion mode to use. Supported modes are:
+``insert``
+Use the standard ``INSERT`` functionality. An error is thrown if the row to be inserted already exists in the table.
+``update``
+Use the ``UPDATE`` functionality. An error is thrown if the row to update does not exist in the table.
+``upsert``
+This mode works like ``INSERT``, except that if the row already exists, then its column values are overwritten with the ones provided.
 
 	 - Type: STRING
 	 - Default: INSERT
@@ -109,6 +115,8 @@ Data Mapping
 🔘 table.name.format
 
 A format string for the destination table name, which may contain '${topic}' as a placeholder for the originating topic name.
+For example, ``kafka_${topic}`` for the topic 'orders' will map to the table name 'kafka_orders'.
+Spanner constraints for table names are {a—z|A—Z}[{a—z|A—Z|0—9|_}+].
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -118,6 +126,12 @@ A format string for the destination table name, which may contain '${topic}' as 
 🔘 pk.mode
 
 The primary key mode, also refer to ``pk.fields`` documentation for interplay. Supported modes are:
+``kafka``
+Kafka coordinates are used as the PK.
+``record_key``
+Field(s) from the record key are used, which may be a primitive or a struct.
+``record_value``
+Field(s) from the record value are used, which must be a struct.
 
 	 - Type: STRING
 	 - Default: kafka
@@ -128,6 +142,12 @@ The primary key mode, also refer to ``pk.fields`` documentation for interplay. S
 
 List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
 ``kafka``
+Must be a trio representing the Kafka coordinates, defaults to ``connect_topic__, connect_partition__, connect_offset__`` if empty.
+``record_key``
+If empty, all fields from the key struct will be used, otherwise used to extract the desired fields - for primitive key only a single field name must be configured.
+``record_value``
+If empty, all fields from the value struct will be used, otherwise used to extract the desired fields.
+Spanner does not allow Array type columns to be selected as PKs.
 
 	 - Type: LIST
 	 - Default: 
@@ -185,4 +205,5 @@ The amount of time to wait on a request to Spanner before timing out and retry-i
 	 - Default: 6000
 	 - Importance: MEDIUM
 	 - Required: false
+
 

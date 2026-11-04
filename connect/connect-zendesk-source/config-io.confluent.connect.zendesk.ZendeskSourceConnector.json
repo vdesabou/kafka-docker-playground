@@ -1,4 +1,3 @@
-    "any": "",
     "bearer.token": "[hidden]",
     "confluent.license": "[hidden]",
     "confluent.topic": "_confluent-command",
@@ -42,6 +41,7 @@
     "max.retries": "10",
     "oauth2.client.id": "",
     "oauth2.client.mode": "header",
+    "oauth2.client.scope": "any",
     "oauth2.client.secret": "[hidden]",
     "oauth2.token.property": "access_token",
     "oauth2.token.url": "",
