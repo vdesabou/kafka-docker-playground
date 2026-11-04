@@ -122,7 +122,7 @@ sleep 20
 log "Verifying topic success-responses"
 playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
 
-playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60
+playground topic consume --topic error-responses --min-expected-messages 0
 
 playground connector show-lag --max-wait 300
 

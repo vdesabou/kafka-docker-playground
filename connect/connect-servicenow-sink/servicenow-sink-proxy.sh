@@ -106,7 +106,7 @@ sleep 15
 log "Verifying topic test-result"
 playground topic consume --topic test-result --min-expected-messages 3 --timeout 60
 
-playground topic consume --topic test-error --min-expected-messages 0 --timeout 60
+playground topic consume --topic test-error --min-expected-messages 0
 
 log "Confirm that the messages were delivered to the ServiceNow table"
 playground container exec --container connect --command "bash" << EOF > /tmp/result.log 2>&1

@@ -101,7 +101,7 @@ connectorId=$(get_ccloud_connector_lcc $connector_name)
 log "Verifying topic success-$connectorId"
 playground topic consume --topic success-$connectorId --min-expected-messages 3 --timeout 60
 
-playground topic consume --topic error-$connectorId --min-expected-messages 0 --timeout 60
+playground topic consume --topic error-$connectorId --min-expected-messages 0
 
 # log "Confirm that the messages were delivered to the ServiceNow table"
 # curl -X GET \

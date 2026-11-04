@@ -150,4 +150,4 @@ log "Verify topic success-responses"
 playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
 
 # log "Verify topic error-responses"
-playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60
+playground topic consume --topic error-responses --min-expected-messages 0
