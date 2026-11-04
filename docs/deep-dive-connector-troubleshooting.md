@@ -18,6 +18,7 @@ whether it moves, how to recover. Takes about 20 minutes to read and run.
 | what is in the DLQ, and why | `playground topic dlq inspect [--connector <c> \| --topic <dlq>]` |
 | only one kind of error | `… inspect --grep "Unknown magic byte"` (Java regex) |
 | the groups as data | `… inspect --json` |
+| which records of the topic a converter cannot read, before or after the DLQ | `playground topic check-format --topic <t>` (`--partition p --offset o`, `--samples`) |
 | what a replay would do | `playground topic dlq replay --connector <c> --dry-run` |
 | send the records back to their topic | `playground topic dlq replay --connector <c>` |
 | send them somewhere else | `… replay --to <topic>` (`--keep-error-headers` to keep the error headers) |
@@ -343,6 +344,19 @@ playground topic produce -t orders --nb-messages 3 < scripts/cli/predefined-sche
 playground topic produce -t orders --nb-messages 2 --value '{"id": %g}'           # no magic byte
 ```
 
+**Before any connector: which records will a converter fail on?**
+
+```bash
+playground topic check-format --topic orders
+#    value
+#    partition  offsets      records  format
+#    0          0-2          3        Avro, schema id 1 (orders-value v1)
+#    0          3-4          2        JSON, no schema  ❌
+#    ❌ 2 values are plain JSON (no schema), the others are in the Schema Registry wire format: partition 0 offsets 3-4
+#       👉 a sink with value.converter=AvroConverter (or Protobuf / JsonSchema) fails with 'Unknown magic byte!' at partition 0 offset 3
+# exit code 1                           <- the two records the next steps send to the DLQ
+```
+
 **Step 1: the default is a loud failure**
 
 ```bash
@@ -489,6 +503,7 @@ playground stop
 | "which topics does this connector really use?" (`topics.regex`, a source with a topic per table) | `connector tasks` for the split, `connector topics` for the active topics (`--reset` to start the list over) |
 | "which records failed, and since when?" | `dlq inspect`: original topic / partition / offset range per error, `--json` for the full list |
 | "`Unknown magic byte!` in the DLQ" | produce raw records to an Avro topic (`topic produce --value '{"id": %g}'`, see the [`topic produce` deep dive](/deep-dive-topic-produce.md)), sink with `AvroConverter` |
+| "which records are not Avro? is schema id N in this registry? which converter for this topic?" | `topic check-format --topic <t>`: the format of each key and value per partition and offset range, the converter error each range gives, the converters to use |
 | "schema registry was down for an hour" | `playground container kill -c schema-registry`, produce, restart it, `dlq replay` (the 🩺 video session) |
 | "an SMT drops records into the DLQ" | stage `TRANSFORMATION` in `dlq inspect`; test the chain with `playground connector smt test` |
 | "it failed last night", "it keeps restarting", "what changed before it broke?" | `connector history`: every state of the connector and of each task with the worker and the first line of the trace, each config change key by key, pause / resume / delete, then a summary (`--since 12h`, `--json`; deleted connectors too) |

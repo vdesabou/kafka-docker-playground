@@ -289,6 +289,7 @@ playground_usage() {
   printf "  %s   🔀 Move the replicas of a topic to other brokers\n" "$(green "topic reassign")                            "
   printf "  %s   👑 Elect the leaders of a topic\n" "$(green "topic elect-leader")                        "
   printf "  %s   🔬 Dump the log segments of a partition: batches, producers, transactions\n" "$(green "topic dump-log")                            "
+  printf "  %s   🧬 Check the format of the records of a topic, from their bytes\n" "$(green "topic check-format")                        "
   printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")            "
   printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                             "
   printf "  %s   📤 Produce to a topic\n" "$(green "topic produce")                             "
@@ -12945,6 +12946,7 @@ playground_topic_usage() {
   printf "  %s   🔀 Move the replicas of a topic to other brokers\n" "$(green "reassign")                "
   printf "  %s   👑 Elect the leaders of a topic\n" "$(green "elect-leader")            "
   printf "  %s   🔬 Dump the log segments of a partition: batches, producers, transactions\n" "$(green "dump-log")                "
+  printf "  %s   🧬 Check the format of the records of a topic, from their bytes\n" "$(green "check-format")            "
   printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "set-schema-compatibility")"
   printf "  %s   📥 Consume topic from beginning\n" "$(green "consume")                 "
   printf "  %s   📤 Produce to a topic\n" "$(green "produce")                 "
@@ -13658,6 +13660,103 @@ playground_topic_dump_log_usage() {
     printf "  playground topic dump-log --topic orders --partition 2 --offset 15234\n  --records\n"
     printf "  playground topic dump-log --topic orders --all-segments --json | jq\n  '.summary.open_transactions'\n"
     printf "  playground topic dump-log --topic orders --broker 2 --raw\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_check_format_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic check-format\n\n"
+    printf "  🧬 Check the format of the records of a topic, from their bytes\n  \n  Looks at the first bytes of each key and value, and gives a census per\n  partition and offset range: Schema Registry wire format (magic byte +\n  schema id, looked up in Schema Registry: Avro, Protobuf with its\n  message, JSON Schema, or ❌ not found), schema id in a\n  __key_schema_id / __value_schema_id header, JSON with or without the\n  JsonConverter {\"schema\":…,\"payload\":…} envelope, string, binary, Avro\n  container file, tombstones and null keys.\n  \n  Then the findings, and the converter to use:\n  \n    ❌ mixed formats      some records are not in the format of the others,\n                         and the error each converter gives on them\n                         ('Unknown magic byte!', 'JsonConverter with\n                         schemas.enable requires \"schema\" and \"payload\"\n                         fields', 'Converting byte[] to Kafka Connect data\n                         failed due to serialization error')\n    ❌ unknown schema id  'Error retrieving Avro schema for id …',\n                         'Schema not found': another registry, or a hard\n                         deleted schema\n    ❌ subject, no wire   a <topic>-value subject exists, but the values\n       format             are JSON or strings\n    ⚠️ subject mismatch   the schema id is not a version of\n                         <topic>-value (RecordNameStrategy producer)\n    ℹ️ tombstones, null keys, schema id in a header, JSON envelope\n    ✅ key.converter / value.converter when each side has one format\n  \n  'topic consume' picks one format for the whole topic from its subjects:\n  a topic where some records differ is decoded wrong, with no hint of\n  where the bad records are. This command reads raw bytes (never\n  decoded), so it shows them. Exit code 1 on a ❌ finding.\n  \n  Reads --max-messages records (default 1000) spread across the\n  partitions: the last ones of each partition, the first ones with\n  --from-beginning, or the ones around --offset (the offset of a\n  connector error). Works on every environment, Confluent Cloud\n  included.\n  \n  🎓 Tip: then test the converters of a connector on one record with\n  'playground connector smt test --from-topic <topic> --offset <o>'.\n\n"
+  else
+    printf "playground topic check-format - 🧬 Check the format of the records of a topic, from their bytes\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic check-format [OPTIONS]\n"
+  printf "  playground topic check-format --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-messages MAX_MESSAGES")"
+    printf "    🔢 Number of records to read, spread across the partitions (default is 1000)\n"
+    printf "    %s\n" "Default: 1000"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from-beginning")"
+    printf "    ⏮️ Read the first records of each partition instead of the last ones\n"
+    printf "    %s\n" "Conflicts: --offset"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--partition PARTITION")"
+    printf "    🔢 Only this partition\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--offset OFFSET")"
+    printf "    📍 Read the records around this offset (the one of a converter error), on\n    each partition or on --partition\n"
+    printf "    %s\n" "Conflicts: --from-beginning"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key-only")"
+    printf "    🔑 Only check the keys\n"
+    printf "    %s\n" "Conflicts: --value-only"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--value-only")"
+    printf "    📦 Only check the values\n"
+    printf "    %s\n" "Conflicts: --key-only"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--samples")"
+    printf "    🔎 Show the first record of each range, as text and hex\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the census and the findings as JSON\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic check-format --topic orders\n"
+    printf "  playground topic check-format --topic orders --partition 0 --offset 1488\n  --samples\n"
+    printf "  playground topic check-format --topic orders --value-only --max-messages 10000\n"
+    printf "  playground topic check-format --topic orders --json\n"
     echo
 
   fi
@@ -67382,6 +67481,190 @@ playground_topic_dump_log_command() {
 }
 
 # :command.function
+playground_topic_check_format_command() {
+
+  # src/commands/topic/check-format.sh
+  topic="${args[--topic]}"
+  max_messages="${args[--max-messages]}"
+  from_beginning="${args[--from-beginning]}"
+  partition="${args[--partition]}"
+  offset="${args[--offset]}"
+  key_only="${args[--key-only]}"
+  value_only="${args[--value-only]}"
+  samples="${args[--samples]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logerror "❌ python3 is required by playground topic check-format"
+      exit 1
+  fi
+
+  sides="key,value"
+  [[ -n "$key_only" ]] && sides="key"
+  [[ -n "$value_only" ]] && sides="value"
+
+  classes=$(dlq_tool_classes) || exit 1
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  tool_args=(raw --topic "$topic" --max-messages "$max_messages")
+  [[ -n "$from_beginning" ]] && tool_args+=(--from-beginning)
+  [[ -n "$partition" ]] && tool_args+=(--partition "$partition")
+  [[ -n "$offset" ]] && tool_args+=(--offset "$offset")
+
+  # raw bytes, read with kafka-clients: a console consumer would corrupt binary keys and values
+  # '|| ret=$?': get_connect_image turns set -e back on in run_kafka_java_tool
+  ret=0
+  run_kafka_java_tool "$classes" DlqTool "${tool_args[@]}" > $tmp_dir/out 2> $tmp_dir/err || ret=$?
+
+  if grep -q "^DLQ_ERROR " $tmp_dir/out
+  then
+      logerror "❌ $(grep -m1 "^DLQ_ERROR " $tmp_dir/out | cut -c11-)"
+      exit 1
+  fi
+  if [ $ret -ne 0 ] || ! grep -q "^RAW_SUMMARY " $tmp_dir/out
+  then
+      logerror "❌ could not read topic $topic"
+      grep -v "^RAW_" $tmp_dir/out | tail -20
+      tail -20 $tmp_dir/err
+      exit 1
+  fi
+  grep "^RAW_RECORD " $tmp_dir/out | cut -c12- > $tmp_dir/records.json || true
+  summary=$(grep -m1 "^RAW_SUMMARY " $tmp_dir/out | cut -c13-)
+  read_count=$(echo "$summary" | jq -r .read)
+  total=$(echo "$summary" | jq -r .total)
+  nb_partitions=$(echo "$summary" | jq '.partitions | length')
+
+  if [ "$read_count" == "0" ]
+  then
+      if [[ -n "$json" ]]
+      then
+          jq -n --argjson summary "$summary" --arg topic "$topic" '{topic: $topic, total: $summary.total, read: 0, partitions: $summary.partitions, census: {}, findings: [], problems: 0, warnings: 0}'
+      else
+          logwarn "⚠️ no record to read in topic $topic (total $total)"
+      fi
+      exit 0
+  fi
+
+  # the schema ids and guids of the records, looked up once each, and the <topic>-key / <topic>-value subjects
+  get_sr_url_and_security
+  echo '{"ids": {}, "guids": {}}' > $tmp_dir/schemas.json
+  add_schema () {
+      local kind="$1" key="$2" entry="$3"
+      jq --arg kind "$kind" --arg key "$key" --argjson entry "$entry" '.[$kind][$key] = $entry' $tmp_dir/schemas.json > $tmp_dir/schemas.tmp && mv $tmp_dir/schemas.tmp $tmp_dir/schemas.json
+  }
+  unreachable=""
+  while read -r kind key
+  do
+      [ -z "$kind" ] && continue
+      if [ "$kind" == "id" ]
+      then
+          path="/schemas/ids/$key"
+      else
+          path="/schemas/guids/$key"
+      fi
+      if sr_request GET "$path"
+      then
+          schema="$sr_response"
+          id="$key"
+          if [ "$kind" == "guid" ]
+          then
+              # a guid (schema id in a header) has its numeric id(s) per context
+              id=""
+              if sr_request GET "/schemas/guids/$key/ids"
+              then
+                  id=$(echo "$sr_response" | jq -r '[.[] | select(.context == "." or .context == null)][0].id // .[0].id // empty' 2> /dev/null)
+              fi
+          fi
+          versions="[]"
+          if [ -n "$id" ] && sr_request GET "/schemas/ids/$id/versions"
+          then
+              versions="$sr_response"
+          fi
+          add_schema "${kind}s" "$key" "$(jq -n --argjson s "$schema" --argjson v "$versions" '{found: true, schemaType: ($s.schemaType // "AVRO"), schema: (if ($s.schemaType // "") == "PROTOBUF" then $s.schema else null end), versions: $v}')"
+      elif [ "$sr_error_code" == "curl" ] || [ -z "$sr_error_code" ] || [[ "$sr_error_code" == 401* ]] || [[ "$sr_error_code" == 403* ]]
+      then
+          unreachable="${sr_error_message:-no response from $sr_url}"
+          break
+      else
+          add_schema "${kind}s" "$key" '{"found": false}'
+      fi
+  done < <(python3 -I "$root_folder/tools/dlq-tool/check_format.py" ids --records $tmp_dir/records.json --sides "$sides")
+  if [ -n "$unreachable" ]
+  then
+      jq --arg u "$unreachable" '.unreachable = $u' $tmp_dir/schemas.json > $tmp_dir/schemas.tmp && mv $tmp_dir/schemas.tmp $tmp_dir/schemas.json
+  fi
+
+  echo '{}' > $tmp_dir/subjects.json
+  for side in key value
+  do
+      subject="${topic}-${side}"
+      entry="null"
+      if sr_request GET "/subjects/$(urlencode "$subject")/versions/latest"
+      then
+          entry=$(echo "$sr_response" | jq '{subject, id, version, schemaType: (.schemaType // "AVRO")}')
+      fi
+      jq --arg side "$side" --argjson entry "$entry" '.[$side] = $entry' $tmp_dir/subjects.json > $tmp_dir/subjects.tmp && mv $tmp_dir/subjects.tmp $tmp_dir/subjects.json
+  done
+
+  report_args=(report --records $tmp_dir/records.json --summary "$summary" --schemas $tmp_dir/schemas.json
+      --subjects $tmp_dir/subjects.json --topic "$topic" --sides "$sides" --status-out $tmp_dir/status.json)
+  [[ -n "$samples" ]] && report_args+=(--samples)
+  [[ -n "$json" ]] && report_args+=(--json)
+
+  if [[ -z "$json" ]]
+  then
+      if [[ -n "$offset" ]]
+      then
+          what="around offset $offset"
+      elif [[ -n "$from_beginning" ]]
+      then
+          what="the first ones"
+      else
+          what="the last ones"
+      fi
+      where="of each of the $nb_partitions partitions"
+      [ "$nb_partitions" == "1" ] && where="of its only partition"
+      [[ -n "$partition" ]] && where="of partition $partition"
+      log "🔍 $topic: $read_count record(s) read of $total, $what $where"
+      subjects_line=$(jq -r '[to_entries[] | select(.value != null) | "\(.value.subject) (\(.value.schemaType), latest version \(.value.version), id \(.value.id))"] | join(", ")' $tmp_dir/subjects.json)
+      log "🗂️ subjects: ${subjects_line:-no ${topic}-key / ${topic}-value subject}"
+  fi
+
+  if ! python3 -I "$root_folder/tools/dlq-tool/check_format.py" "${report_args[@]}"
+  then
+      logerror "❌ could not analyze the records"
+      exit 1
+  fi
+
+  problems=$(jq -r .problems $tmp_dir/status.json)
+  warnings=$(jq -r .warnings $tmp_dir/status.json)
+  if [ "$problems" != "0" ]
+  then
+      [[ -z "$json" ]] && logerror "❌ $problems problem(s): the records of $topic are not all in a format their converter can read"
+      exit 1
+  fi
+  if [[ -z "$json" ]]
+  then
+      if [ "$warnings" != "0" ]
+      then
+          logwarn "⚠️ no problem, $warnings warning(s)"
+      else
+          log "✅ the records of $topic are in one format per side"
+      fi
+  fi
+
+}
+
+# :command.function
 playground_topic_set_schema_compatibility_command() {
 
   # src/commands/topic/set-schema-compatibility.sh
@@ -118340,6 +118623,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    check-format)
+      action="check-format"
+      shift
+      playground_topic_check_format_parse_requirements "$@"
+      shift $#
+      ;;
+
     set-schema-compatibility)
       action="set-schema-compatibility"
       shift
@@ -120064,6 +120354,246 @@ playground_topic_dump_log_parse_requirements() {
   filter_error=$(filter_not_ccloud_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_check_format_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_check_format_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic check-format"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-messages requires an argument: --max-messages MAX_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --from-beginning)
+        # :flag.conflicts
+        if [[ -n "${args['--offset']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--offset" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--from-beginning']=1
+        shift
+        ;;
+
+      # :flag.case
+      --partition)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--partition']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--partition requires an argument: --partition PARTITION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --offset)
+        # :flag.conflicts
+        if [[ -n "${args['--from-beginning']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--from-beginning" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--offset']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--offset requires an argument: --offset OFFSET" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key-only)
+        # :flag.conflicts
+        if [[ -n "${args['--value-only']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--value-only" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--key-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --value-only)
+        # :flag.conflicts
+        if [[ -n "${args['--key-only']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--key-only" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--value-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --samples)
+
+        # :flag.case_no_arg
+        args['--samples']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="1000"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--max-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--partition'] ]]; then
+    validation_output="$(validate_integer "${args['--partition']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--partition PARTITION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--offset'] ]]; then
+    validation_output="$(validate_integer "${args['--offset']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--offset OFFSET" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
     exit 1
   fi
 
@@ -155556,6 +156086,11 @@ playground_topic_completion() {
         playground_topic_dump_log_completion "$completion_current" "$@"
         return
         ;;
+      check-format)
+        shift
+        playground_topic_check_format_completion "$completion_current" "$@"
+        return
+        ;;
       set-schema-compatibility)
         shift
         playground_topic_set_schema_compatibility_completion "$completion_current" "$@"
@@ -155605,7 +156140,7 @@ playground_topic_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets compare display-consumer-offsets list get-size describe reassign elect-leader dump-log set-schema-compatibility consume produce create delete alter dlq tag
+  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets compare display-consumer-offsets list get-size describe reassign elect-leader dump-log check-format set-schema-compatibility consume produce create delete alter dlq tag
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -156477,6 +157012,132 @@ playground_topic_dump_log_completion() {
     completion_flag_candidates --raw "$completion_current" --raw
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_check_format_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --max-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-messages"]=1
+
+        ;;
+      --from-beginning)
+        completion_blocked_flags["--from-beginning"]=1
+        completion_blocked_flags["--offset"]=1
+
+        shift
+        ;;
+      --partition)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--partition"]=1
+
+        ;;
+      --offset)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--offset"]=1
+        completion_blocked_flags["--from-beginning"]=1
+
+        ;;
+      --key-only)
+        completion_blocked_flags["--key-only"]=1
+        completion_blocked_flags["--value-only"]=1
+
+        shift
+        ;;
+      --value-only)
+        completion_blocked_flags["--value-only"]=1
+        completion_blocked_flags["--key-only"]=1
+
+        shift
+        ;;
+      --samples)
+        completion_blocked_flags["--samples"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --max-messages "$completion_current" --max-messages
+    completion_flag_candidates --from-beginning "$completion_current" --from-beginning
+    completion_flag_candidates --partition "$completion_current" --partition
+    completion_flag_candidates --offset "$completion_current" --offset
+    completion_flag_candidates --key-only "$completion_current" --key-only
+    completion_flag_candidates --value-only "$completion_current" --value-only
+    completion_flag_candidates --samples "$completion_current" --samples
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
 }
@@ -167612,6 +168273,7 @@ run() {
     "topic reassign") playground_topic_reassign_command ;;
     "topic elect-leader") playground_topic_elect_leader_command ;;
     "topic dump-log") playground_topic_dump_log_command ;;
+    "topic check-format") playground_topic_check_format_command ;;
     "topic set-schema-compatibility") playground_topic_set_schema_compatibility_command ;;
     "topic consume") playground_topic_consume_command ;;
     "topic produce") playground_topic_produce_command ;;
