@@ -850,7 +850,7 @@
             "--environment"
           ],
           "argument": "ENVIRONMENT",
-          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- cfk\n- cfk-rbac\n- 2way-ssl\n- kerberos\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is PLAYGROUND_ENVIRONMENT when it is exported in your shell (it is then\nadded to the flags of the run), plaintext otherwise. Not available with\nccloud examples (they run against Confluent Cloud).\nThis is only supported when example is a connector example\n\nAllowed values: ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain"
+          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- cfk\n- cfk-rbac\n- 2way-ssl\n- kerberos\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-oauthbearer\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is PLAYGROUND_ENVIRONMENT when it is exported in your shell (it is then\nadded to the flags of the run), plaintext otherwise. Not available with\nccloud examples (they run against Confluent Cloud).\nThis is only supported when example is a connector example\n\nAllowed values: ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, sasl-oauthbearer"
         },
         {
           "names": [

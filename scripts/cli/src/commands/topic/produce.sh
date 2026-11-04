@@ -336,7 +336,7 @@ then
     get_connect_container
     container=$connect_container
     security="$producer_config_name /service/kafka/users/client.properties"
-elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
+elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]] || [[ "$environment" == "sasl-oauthbearer" ]]
 then
     get_broker_container
     bootstrap_server="$broker_container:9092"

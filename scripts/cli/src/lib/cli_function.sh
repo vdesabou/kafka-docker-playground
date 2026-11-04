@@ -1149,7 +1149,7 @@ function get_security_broker() {
   elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
   then
       security="$config_file_name /service/kafka/users/kafka.properties"
-  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ] || [ "$environment" == "sasl-scram" ]
+  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ] || [ "$environment" == "sasl-scram" ] || [ "$environment" == "sasl-oauthbearer" ]
   then
       security="$config_file_name /tmp/client.properties"
   elif [[ "$environment" != *plaintext ]]
@@ -4011,6 +4011,11 @@ function filter_connect_running() {
 
 function filter_flink_running() {
   local flink_ok=0
+  get_flink_environment
+  if [[ "$flink_environment" == "ccloud" ]]; then
+    # Confluent Cloud statements: checked by get_ccloud_flink_context (confluent CLI logged in, compute pool)
+    return
+  fi
   # only wait for a jobmanager that is starting, not when there is none
   if get_flink_rest_url; then
     for i in {1..10}; do
@@ -4228,6 +4233,23 @@ function add_connector_config_based_on_environment () {
         jq ".[\"reporter.admin.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"reporter.admin.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"reporter.admin.sasl.mechanism\"] = \"PLAIN\" | .[\"reporter.producer.sasl.jaas.config\"] = \"org.apache.kafka.common.security.plain.PlainLoginModule required username=\\\"client\\\" password=\\\"client-secret\\\";\" | .[\"reporter.producer.security.protocol\"] = \"SASL_PLAINTEXT\" | .[\"reporter.producer.sasl.mechanism\"] = \"PLAIN\"" $tmp_dir/input.json > $tmp_dir/output.json
         json_content=$(cat $tmp_dir/output.json)
       fi
+    ;;
+
+    sasl-oauthbearer)
+      # the connector's own Kafka clients log in to Keycloak (environment/sasl-oauthbearer) as the client "client"
+      local oauth_keys='.["PREFIX.security.protocol"] = "SASL_PLAINTEXT" | .["PREFIX.sasl.mechanism"] = "OAUTHBEARER" | .["PREFIX.sasl.login.callback.handler.class"] = "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler" | .["PREFIX.sasl.oauthbearer.token.endpoint.url"] = "http://keycloak:8080/realms/kafka/protocol/openid-connect/token" | .["PREFIX.sasl.jaas.config"] = "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId=\"client\" clientSecret=\"client-secret\";"'
+      local oauth_marker oauth_prefixes oauth_prefix
+      for oauth_marker in "confluent.topic.bootstrap.servers:confluent.topic" "redo.log.consumer.bootstrap.servers:redo.log.consumer" "database.history.kafka.bootstrap.servers:database.history.producer database.history.consumer" "schema.history.internal.kafka.bootstrap.servers:schema.history.internal.producer schema.history.internal.consumer" "reporter.bootstrap.servers:reporter.admin reporter.producer"
+      do
+        if echo "$json_content" | jq -e ". | has(\"${oauth_marker%%:*}\")" > /dev/null 2>&1
+        then
+          oauth_prefixes="${oauth_marker#*:}"
+          for oauth_prefix in $(echo "$oauth_prefixes")
+          do
+            json_content=$(echo "$json_content" | jq "${oauth_keys//PREFIX/$oauth_prefix}")
+          done
+        fi
+      done
     ;;
 
     sasl-ssl)
@@ -4736,7 +4758,7 @@ function get_example_supported_environments () {
   then
     skips_cfk=1
   fi
-  for environment_name in plaintext ccloud cfk cfk-rbac 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos
+  for environment_name in plaintext ccloud cfk cfk-rbac 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
   do
     if [[ "$environment_name" == cfk* ]] && [ $skips_cfk == 1 ]
     then

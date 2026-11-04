@@ -367,6 +367,7 @@ Using single cluster:
 - [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext): no security :environment/plaintext:
 - [SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-plain): no SSL encryption, SASL/PLAIN authentication :environment/sasl-plain:
 - [SASL/SCRAM](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-scram) no SSL encryption, SASL/SCRAM-SHA-256 authentication :environment/sasl-scram:
+- [SASL/OAUTHBEARER](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-oauthbearer) no SSL encryption, SASL/OAUTHBEARER (OAuth 2.0 / OIDC) authentication with Keycloak as identity provider :environment/sasl-oauthbearer:
 - [SASL/SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-ssl): SSL encryption, SASL/PLAIN authentication :environment/sasl-ssl:
 - [2WAY/SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/2way-ssl): SSL encryption, SSL authentication :environment/2way-ssl:
 - [KERBEROS](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/kerberos): no SSL encryption, Kerberos GSSAPI authentication :environment/kerberos:
