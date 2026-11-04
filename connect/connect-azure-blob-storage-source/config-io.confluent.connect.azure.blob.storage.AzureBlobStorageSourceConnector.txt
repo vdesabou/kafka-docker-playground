@@ -174,13 +174,13 @@ Output file extension for Byte Array Format. Defaults to ``.bin``.
 
 🔘 format.bytearray.separator
 
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
+String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
 ``. An input record that contains the line separator looks like multiple records in the storage object output.
-	 - Required: MEDIUM
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 format.json.schema.enable
 
@@ -226,33 +226,33 @@ The partitioner to use when reading data to the store.
 
 🔘 partition.field.name
 
+The name of the partitioning fields when FieldPartitioner is used.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The name of the partitioning fields when FieldPartitioner is used.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 path.format
 
+This configuration that was used to set the format of the data directories when partitioning with a TimeBasedPartitioner. For example, if you set ``path.format`` to ``'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, then a valid data directories would be: ``/year=2015/month=12/day=07/hour=15/``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This configuration that was used to set the format of the data directories when partitioning with a TimeBasedPartitioner. For example, if you set ``path.format`` to ``'year'=YYYY/'month'=MM/'day'=dd/'hour'=HH``, then a valid data directories would be: ``/year=2015/month=12/day=07/hour=15/``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Topic
 ==========================
 🔘 topic.regex.list
 
+A comma-separated list of pairs of type '<kafka topic>:<regex>' that is used to map file paths to Kafka topics. An example might be `topic1:.*\.json` to source all files ending in .json to a kafka topic named topic1. You can specify multiple of these topic:regex mappings to sending sets of files to different topics. Any files that aren't mapped by a regex will be ignored and not  sourced. The `topic.regex.list` property matches the full path (for example, `folder/file.txt`), not just the filename.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of pairs of type '<kafka topic>:<regex>' that is used to map file paths to Kafka topics. An example might be `topic1:.*\.json` to source all files ending in .json to a kafka topic named topic1. You can specify multiple of these topic:regex mappings to sending sets of files to different topics. Any files that aren't mapped by a regex will be ignored and not  sourced. The `topic.regex.list` property matches the full path (for example, `folder/file.txt`), not just the filename.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Storage
@@ -310,12 +310,12 @@ csv
 ==========================
 🔘 value.schema
 
+The schema for the value written to Kafka.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema for the value written to Kafka.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 csv.skip.lines
 
@@ -453,10 +453,10 @@ filename.regex
 
 
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: 
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Connector
@@ -550,21 +550,21 @@ Proxy
 ==========================
 🔘 azblob.proxy.url
 
+Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access Azure through a proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Proxy settings encoded in URL syntax. This property is meant to be used only if you need to access Azure through a proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 azblob.proxy.user
 
+Proxy Username. This property is meant to be used only if you need to access Azure through a proxy. Using ``azblob.proxy.user`` instead of embedding the username and password in ``azblob.proxy.url`` allows the password to be hidden in the logs.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Proxy Username. This property is meant to be used only if you need to access Azure through a proxy. Using ``azblob.proxy.user`` instead of embedding the username and password in ``azblob.proxy.url`` allows the password to be hidden in the logs.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 azblob.proxy.password
 
@@ -616,12 +616,12 @@ The policy specifying the type of retry pattern to use. Should be either EXPONEN
 
 🔘 azblob.retry.secondary.host
 
+If a secondary host is specified, retries will be tried against this host. NOTE: Before setting this field, make sure you understand the issues around reading stale and potentially-inconsistent data at https://docs.microsoft.com/en-us/azure/storage/common/storage-designing-ha-apps-with-ragrs
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If a secondary host is specified, retries will be tried against this host. NOTE: Before setting this field, make sure you understand the issues around reading stale and potentially-inconsistent data at https://docs.microsoft.com/en-us/azure/storage/common/storage-designing-ha-apps-with-ragrs
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 azblob.connection.timeout.ms
 

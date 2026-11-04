@@ -63,12 +63,12 @@ Connection
 ==========================
 🔘 sftp.host
 
+Host address of the SFTP server.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Host address of the SFTP server.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 sftp.port
 
@@ -81,12 +81,12 @@ Port number of the SFTP server.
 
 🔘 sftp.username
 
+Username for the SFTP connection.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Username for the SFTP connection.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 sftp.password
 
@@ -102,21 +102,21 @@ Proxy
 ==========================
 🔘 sftp.proxy.url
 
+Proxy url for the SFTP connection.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Proxy url for the SFTP connection.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxy.username
 
+Proxy username for the SFTP connection.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Proxy username for the SFTP connection.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxy.password
 
@@ -159,30 +159,30 @@ Passphrase that will be used to decrypt the private key if the given private key
 
 🔘 tls.pemfile
 
+Path in the filesystem to a valid pemfile that will be used for public-key authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path in the filesystem to a valid pemfile that will be used for public-key authentication.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 kerberos.user.principal
 
+The principal to use when connecting to SFTP with Kerberos. The ``sftp.username`` is still required. Format: ``username@REALM``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The principal to use when connecting to SFTP with Kerberos. The ``sftp.username`` is still required. Format: ``username@REALM``.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 kerberos.keytab.path
 
+The path to the keytab file for the SFTP connector principal. This keytab file should only be readable by the connector.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the keytab file for the SFTP connector principal. This keytab file should only be readable by the connector.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 null

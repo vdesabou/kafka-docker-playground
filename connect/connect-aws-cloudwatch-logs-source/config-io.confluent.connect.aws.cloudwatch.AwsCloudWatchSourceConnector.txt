@@ -63,12 +63,12 @@ Credentials
 ==========================
 🔘 aws.access.key.id
 
+The access key ID used to authenticate personal AWS credentials such as IAM credentials.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The access key ID used to authenticate personal AWS credentials such as IAM credentials.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 aws.secret.access.key
 
@@ -120,12 +120,12 @@ Name of the log group on AWS CloudWatch under which the desired log streams are 
 
 🔘 aws.cloudwatch.log.streams
 
+Name of the log stream(s) on AWS CloudWatch under which the desired log records are sent through. If the field is left empty, all log streams under the log group will be tracked.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Name of the log stream(s) on AWS CloudWatch under which the desired log records are sent through. If the field is left empty, all log streams under the log group will be tracked.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 aws.poll.interval.ms
 

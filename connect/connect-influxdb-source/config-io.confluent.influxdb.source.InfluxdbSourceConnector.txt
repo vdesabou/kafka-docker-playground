@@ -90,12 +90,12 @@ The InfluxDB user's password used for establishing database connection.
 
 🔘 topic.prefix
 
+Prefix that should be prepended to measurment names to determine the name of the Apache Kafka topic to publish data to, in case of custom query, it should be the full name of the Apache Kafka topic.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix that should be prepended to measurment names to determine the name of the Apache Kafka topic to publish data to, in case of custom query, it should be the full name of the Apache Kafka topic.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topic.mapper
 
@@ -171,21 +171,21 @@ How long to wait after a record with certain timestamp appears before we include
 
 🔘 influxdb.measurement.whitelist
 
+Comma seperated list of measurements to include in copying. If specified, influxdb.measurement.blacklist cannot be set. If left empty, all measurements will be included.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma seperated list of measurements to include in copying. If specified, influxdb.measurement.blacklist cannot be set. If left empty, all measurements will be included.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 influxdb.measurement.blacklist
 
+Comma seperated list of measurements to exclude from copying. If specified, influxdb.measurement.whitelist cannot be set. 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma seperated list of measurements to exclude from copying. If specified, influxdb.measurement.whitelist cannot be set. 
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Serialization

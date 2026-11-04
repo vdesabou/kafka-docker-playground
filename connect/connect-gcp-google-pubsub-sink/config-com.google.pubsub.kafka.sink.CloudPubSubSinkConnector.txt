@@ -120,39 +120,39 @@ When using a struct or map value schema, this field or key name indicates that t
 
 🔘 gcp.credentials.file.path
 
+Due to a potential security vulnerability, prefer gcp.sa.credentials.file.path
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Due to a potential security vulnerability, prefer gcp.sa.credentials.file.path
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.sa.credentials.file.path
 
+Path to the GCP Service Account (SA) JSON key file.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path to the GCP Service Account (SA) JSON key file.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.credentials.json
 
+Due to a potential security vulnerability, prefer gcp.sa.credentials.json
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Due to a potential security vulnerability, prefer gcp.sa.credentials.json
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.sa.credentials.json
 
+The literal JSON content of the GCP Service Account (SA) key, passed as a string.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The literal JSON content of the GCP Service Account (SA) key, passed as a string.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 orderingKeySource
 

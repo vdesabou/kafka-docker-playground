@@ -39,30 +39,30 @@ Valid settings are true or false. When set to true Splunk Connect for Kafka will
 
 🔘 splunk.indexes
 
+Splunk index names for Kafka topic data separated by comma for multiple topics to indexers ("prod-index1,prod-index2,prod-index3").
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Splunk index names for Kafka topic data separated by comma for multiple topics to indexers ("prod-index1,prod-index2,prod-index3").
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 splunk.sourcetypes
 
+Splunk event sourcetype metadata for Kafka topic data. The same configuration rules as indexes can be applied here. If left unconfigured, the connector uses the default sourcetype associated with the HEC token. By default, this setting is empty.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Splunk event sourcetype metadata for Kafka topic data. The same configuration rules as indexes can be applied here. If left unconfigured, the connector uses the default sourcetype associated with the HEC token. By default, this setting is empty.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 splunk.sources
 
+Splunk event source metadata for Kafka topic data. The same configuration rules as indexes can be applied. If left un-configured, the default source binds to the HEC token. By default, this setting is empty.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Splunk event source metadata for Kafka topic data. The same configuration rules as indexes can be applied. If left un-configured, the default source binds to the HEC token. By default, this setting is empty.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 splunk.hec.http.keepalive
 
@@ -93,12 +93,12 @@ Valid settings are true or false. Enables or disables HTTPS certification valida
 
 🔘 splunk.hec.ssl.trust.store.path
 
+Path on the local disk to the certificate trust store.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path on the local disk to the certificate trust store.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 splunk.hec.ssl.trust.store.type
 
@@ -201,12 +201,12 @@ Max duration in seconds to read / write data to network before internal TCP Sock
 
 🔘 splunk.hec.json.event.enrichment
 
+Only applicable to /event HEC endpoint. This setting is used to enrich raw data with extra metadata fields. It contains a list of key value pairs separated by ",". The configured enrichment metadata will be indexed along with raw event data by Splunk software. Note: Data enrichment for /event HEC endpoint is only available in Splunk Enterprise 6.5 and above. By default, this setting is empty.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Only applicable to /event HEC endpoint. This setting is used to enrich raw data with extra metadata fields. It contains a list of key value pairs separated by ",". The configured enrichment metadata will be indexed along with raw event data by Splunk software. Note: Data enrichment for /event HEC endpoint is only available in Splunk Enterprise 6.5 and above. By default, this setting is empty.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 splunk.hec.track.data
 
@@ -237,12 +237,12 @@ Controls how many threads are spawned to do data injection via HEC in a single c
 
 🔘 splunk.hec.raw.line.breaker
 
+Only applicable to /raw HEC endpoint. The setting is used to specify a custom line breaker to help Splunk separate the events correctly. Note: For exampleyou can specify "#####" as a special line breaker.By default, this setting is empty.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Only applicable to /raw HEC endpoint. The setting is used to specify a custom line breaker to help Splunk separate the events correctly. Note: For exampleyou can specify "#####" as a special line breaker.By default, this setting is empty.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 splunk.hec.max.outstanding.events
 
@@ -300,12 +300,12 @@ Setting will enable Kafka Record headers to be used for meta data override
 
 🔘 splunk.header.custom
 
+Setting will enable look for Record headers with these values and add themto each event if present. Custom headers are configured separated by comma for multiple headers. ex,  ("custom_header_1,custom_header_2,custom_header_3").
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Setting will enable look for Record headers with these values and add themto each event if present. Custom headers are configured separated by comma for multiple headers. ex,  ("custom_header_1,custom_header_2,custom_header_3").
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 splunk.header.index
 
@@ -372,21 +372,21 @@ Disable validating splunk configurations before creating task.
 
 🔘 kerberos.user.principal
 
+Kerberos user principal
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Kerberos user principal
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 kerberos.keytab.path
 
+Kerberos keytab path
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Kerberos keytab path
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 enable.timestamp.extraction
 
@@ -399,12 +399,12 @@ Set to true if you want to extract the timestamp
 
 🔘 timestamp.regex
 
+Regex
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.regex.timeout.ms
 
@@ -417,21 +417,21 @@ Maximum time in milliseconds allowed for a timestamp regex evaluation. The conne
 
 🔘 timestamp.format
 
+Timestamp format
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Timestamp format
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.timezone
 
+Timestamp timezone
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Timestamp timezone
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 splunk.hec.concurrent.queue.capacity
 

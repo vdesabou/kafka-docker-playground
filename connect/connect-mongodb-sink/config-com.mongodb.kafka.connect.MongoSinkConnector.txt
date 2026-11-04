@@ -24,21 +24,21 @@ Connection
 ==========================
 🔘 topics
 
+A list of kafka topics for the sink connector, separated by commas
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of kafka topics for the sink connector, separated by commas
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 topics.regex
 
+Regular expression giving topics to consume. Under the hood, the regex is compiled to a <code>java.util.regex.Pattern</code>. Only one of topics or topics.regex should be specified.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression giving topics to consume. Under the hood, the regex is compiled to a <code>java.util.regex.Pattern</code>. Only one of topics or topics.regex should be specified.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connection.uri
 
@@ -54,12 +54,12 @@ Server Api
 ==========================
 🔘 server.api.version
 
+The server API version to use. Disabled by default.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The server API version to use. Disabled by default.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 server.api.deprecation.errors
 
@@ -84,12 +84,12 @@ SSL
 ==========================
 🔘 connection.ssl.truststore
 
+A trust store certificate location to be used for SSL enabled connections
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A trust store certificate location to be used for SSL enabled connections
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.ssl.truststorePassword
 
@@ -102,12 +102,12 @@ A trust store password to be used for SSL enabled connections
 
 🔘 connection.ssl.keystore
 
+A key store certificate location to be used for SSL enabled connections
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A key store certificate location to be used for SSL enabled connections
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.ssl.keystorePassword
 
@@ -132,12 +132,12 @@ Whether to enable Client-Side Field Level Encryption (CS-FLE) for the MongoDB co
 
 🔘 csfle.key.vault.namespace
 
+The key vault namespace for CS-FLE in the format 'database.collection'. Example: 'encryption.__keyVault'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The key vault namespace for CS-FLE in the format 'database.collection'. Example: 'encryption.__keyVault'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 csfle.local.master.key
 
@@ -150,12 +150,12 @@ The Base64-encoded 96-byte local master key for CS-FLE with the local KMS provid
 
 🔘 csfle.schema.map
 
+A JSON document defining the encryption schema map for CS-FLE. This maps namespaces to JSON schemas that specify which fields to encrypt and which encryption algorithm and key to use.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A JSON document defining the encryption schema map for CS-FLE. This maps namespaces to JSON schemas that specify which fields to encrypt and which encryption algorithm and key to use.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 csfle.bypass.query.analysis
 
@@ -171,12 +171,13 @@ Overrides
 ==========================
 🔘 topic.override.%s.%s
 
+The overrides configuration allows for per topic customization of configuration. The customized overrides are merged with the default configuration, to create the specific configuration for a topic.
 For example, ``topic.override.foo.collection=bar`` will store data from the ``foo`` topic into the ``bar`` collection.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The overrides configuration allows for per topic customization of configuration. The customized overrides are merged with the default configuration, to create the specific configuration for a topic.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 null
@@ -185,10 +186,10 @@ null
 
 
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: 
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Namespace
@@ -204,12 +205,12 @@ The database for the sink to write.
 
 🔘 collection
 
+Optional, single sink collection name to write to. If following multiple topics then this will be the default collection they are mapped to.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Optional, single sink collection name to write to. If following multiple topics then this will be the default collection they are mapped to.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Namespace mapping
@@ -225,39 +226,39 @@ The class that determines the namespace to write the sink data to. By default th
 
 🔘 namespace.mapper.key.database.field
 
+The key field to use as the destination database name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The key field to use as the destination database name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 namespace.mapper.key.collection.field
 
+The key field to use as the destination collection name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The key field to use as the destination collection name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 namespace.mapper.value.database.field
 
+The value field to use as the destination database name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The value field to use as the destination database name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 namespace.mapper.value.collection.field
 
+The value field to use as the destination collection name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The value field to use as the destination collection name. Requires the 'namespace.mapper' to be set to 'com.mongodb.kafka.connect.sink.topic.mapping.FieldPathNamespaceMapper'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 namespace.mapper.error.if.invalid
 
@@ -357,12 +358,12 @@ The type of key projection to use Use either `AllowList` or `BlockList`.
 
 🔘 key.projection.list
 
+A comma separated list of field names for key projection
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A comma separated list of field names for key projection
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.projection.type
 
@@ -375,12 +376,12 @@ The type of value projection to use
 
 🔘 value.projection.list
 
+A comma separated list of field names for value projection
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A comma separated list of field names for value projection
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 field.renamer.mapping
 
@@ -405,21 +406,21 @@ Field Value Transformation
 ==========================
 🔘 field.value.transformer
 
+The fully qualified class name of a FieldValueTransformer implementation. When configured, the specified transformer is applied to the fields listed in 'field.value.transformer.fields' before writing to MongoDB. The class must implement com.mongodb.kafka.connect.sink.processor.field.transform.FieldValueTransformer and have a public no-arg constructor.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The fully qualified class name of a FieldValueTransformer implementation. When configured, the specified transformer is applied to the fields listed in 'field.value.transformer.fields' before writing to MongoDB. The class must implement com.mongodb.kafka.connect.sink.processor.field.transform.FieldValueTransformer and have a public no-arg constructor.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 field.value.transformer.fields
 
+A comma-separated list of field names to which the configured FieldValueTransformer will be applied. Nested fields in sub-documents with matching names will also be transformed.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: A comma-separated list of field names to which the configured FieldValueTransformer will be applied. Nested fields in sub-documents with matching names will also be transformed.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Id Strategies
@@ -453,39 +454,39 @@ The bson output format when using the `UuidStrategy`. Either `String` or `Binary
 
 🔘 document.id.strategy.partial.key.projection.type
 
+For use with the `PartialKeyStrategy` allows custom key fields to be projected for the id strategy Use either `AllowList` or `BlockList`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: For use with the `PartialKeyStrategy` allows custom key fields to be projected for the id strategy Use either `AllowList` or `BlockList`.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 document.id.strategy.partial.key.projection.list
 
+For use with the `PartialKeyStrategy` allows custom key fields to be projected for the id strategy. A comma separated list of field names for key projection.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: For use with the `PartialKeyStrategy` allows custom key fields to be projected for the id strategy. A comma separated list of field names for key projection.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 document.id.strategy.partial.value.projection.type
 
+For use with the `PartialValueStrategy` allows custom value fields to be projected for the id strategy. Use either `AllowList` or `BlockList`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: For use with the `PartialValueStrategy` allows custom value fields to be projected for the id strategy. Use either `AllowList` or `BlockList`.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 document.id.strategy.partial.value.projection.list
 
+For use with the `PartialValueStrategy` allows custom value fields to be projected for the id strategy. A comma separated list of field names for value projection.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: For use with the `PartialValueStrategy` allows custom value fields to be projected for the id strategy. A comma separated list of field names for value projection.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Errors
@@ -513,12 +514,12 @@ Change Data Capture
 ==========================
 🔘 change.data.capture.handler
 
+The class name of the CDC handler to use for processing
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The class name of the CDC handler to use for processing
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 change.data.capture.handler.remove.null.values
 
@@ -534,21 +535,21 @@ Time series
 ==========================
 🔘 timeseries.timefield
 
+Name of the top level field used for time. Note: Inserted documents must have this field, and the field must be of the BSON datetime type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the top level field used for time. Note: Inserted documents must have this field, and the field must be of the BSON datetime type.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 timeseries.metafield
 
+The name of the top-level field which contains metadata in each time series document. The metadata in the specified field should be data that is used to label a unique series of documents. The metadata should rarely, if ever, change. Note: This field is used to group related data and may be of any BSON type, except for array. The meta field may not be the same as the `timeField` or `_id`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the top-level field which contains metadata in each time series document. The metadata in the specified field should be data that is used to label a unique series of documents. The metadata should rarely, if ever, change. Note: This field is used to group related data and may be of any BSON type, except for array. The meta field may not be the same as the `timeField` or `_id`.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 timeseries.expire.after.seconds
 
@@ -561,12 +562,12 @@ Determines the amount of time in seconds the data will be in MongoDB before bein
 
 🔘 timeseries.granularity
 
+Describes the expected interval between subsequent measurements for a time series. Possible values: "seconds" "minutes" "hours".
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Describes the expected interval between subsequent measurements for a time series. Possible values: "seconds" "minutes" "hours".
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 timeseries.timefield.auto.convert
 
@@ -588,10 +589,10 @@ The DateTimeFormatter pattern to use when converting String dates. Defaults to s
 
 🔘 timeseries.timefield.auto.convert.locale.language.tag
 
+The DateTimeFormatter locale language tag to use with the date pattern: Defaults to Locale.ROOT.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The DateTimeFormatter locale language tag to use with the date pattern: Defaults to Locale.ROOT.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 

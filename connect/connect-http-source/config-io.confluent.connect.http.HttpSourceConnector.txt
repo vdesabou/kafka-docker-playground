@@ -93,21 +93,21 @@ HTTP Request Method. Valid options are `get` and `post`.
 
 🔘 entity.names
 
+A list of entities that should be polled. Values from this list will replace the template variable ${entityName} in the configs topic.name.pattern, url, http.request.parameters, http.request.body. This config doesn't need to be set if none of the mentioned configs contain the template variable ${entityName}.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of entities that should be polled. Values from this list will replace the template variable ${entityName} in the configs topic.name.pattern, url, http.request.parameters, http.request.body. This config doesn't need to be set if none of the mentioned configs contain the template variable ${entityName}.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by the config value for 'http.request.headers.separator' (defaults to `|`). For example: `From:abcxyz@confluent.io|Content-Length:348`
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by the config value for 'http.request.headers.separator' (defaults to `|`). For example: `From:abcxyz@confluent.io|Content-Length:348`
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.request.sensitive.headers
 
@@ -147,12 +147,12 @@ The character that separates multiple distinct headers in the config 'http.reque
 
 🔘 http.request.parameters
 
+HTTP parameters to be added to the request. Parameter names and values should be separated by `=`. Distinct parameters should be separated by the config value for 'http.request.parameters.separator' (defaults to `&`). Parameter values can be templated with offset and entity information (for example: `entity=${entityName}&search_after=${offset}`) where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from http.initial.offset), and `${entityName}` will be substituted with values from the config entity.names. The parameters are only set if http.request.method = `get`
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to the request. Parameter names and values should be separated by `=`. Distinct parameters should be separated by the config value for 'http.request.parameters.separator' (defaults to `&`). Parameter values can be templated with offset and entity information (for example: `entity=${entityName}&search_after=${offset}`) where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from http.initial.offset), and `${entityName}` will be substituted with values from the config entity.names. The parameters are only set if http.request.method = `get`
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.request.parameters.separator
 
@@ -165,21 +165,21 @@ The character that separates multiple distinct request parameters in the config 
 
 🔘 http.request.body
 
+The payload to be sent along with the HTTP request. The value can be templated with offset and entity information - for example: `{"entity": "${entityName}", "search_after":"${offset}"` where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from http.initial.offset), and `${entityName}` will be substituted with values from the config entity.namesThe body is only set if http.request.method = `post`
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with the HTTP request. The value can be templated with offset and entity information - for example: `{"entity": "${entityName}", "search_after":"${offset}"` where `${offset}` will be substituted with the offset generated from the previous request's response (or if it's the first request, from http.initial.offset), and `${entityName}` will be substituted with values from the config entity.namesThe body is only set if http.request.method = `post`
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.initial.offset
 
+The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - url, http.request.parameters or http.request.body contain the template variable ${offset}
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - url, http.request.parameters or http.request.body contain the template variable ${offset}
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.offset.mode
 
@@ -228,42 +228,42 @@ Disallow Class E IP addresses after DNS resolution.
 
 🔘 connection.disallow.cidr.ranges
 
+Disallow IP addresses from the configured CIDR ranges after DNS resolution.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Disallow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connection.allow.cidr.ranges
 
+Allow IP addresses from the configured CIDR ranges after DNS resolution.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Allow IP addresses from the configured CIDR ranges after DNS resolution.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Response
 ==========================
 🔘 http.response.data.json.pointer
 
+The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.offset.json.pointer
 
+The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to http.response.data.json.pointer). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if http.offset.mode is set to `CHAINING`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to http.response.data.json.pointer). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if http.offset.mode is set to `CHAINING`.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 use.http.offset.json.pointer.as.string
 
@@ -276,12 +276,12 @@ By default the value of 'http.response.data.json.pointer' will be converted to s
 
 🔘 http.next.page.json.pointer
 
+The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if http.offset.mode is set to `CURSOR_PAGINATION`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if http.offset.mode is set to `CURSOR_PAGINATION`.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Retries
@@ -348,12 +348,12 @@ Authentication type of the endpoint. Valid values are ``none``, ``basic``, ``oau
 
 🔘 connection.user
 
+The username to be used with an endpoint requiring authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring authentication.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connection.password
 
@@ -375,21 +375,21 @@ The bearer authentication token to be used when ``auth.type=bearer``. The suppli
 
 🔘 oauth2.token.url
 
+The URL to be used for fetching OAUTH2 token. Client Credentials is the only supported grant type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching OAUTH2 token. Client Credentials is the only supported grant type.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.id
 
+The client id used when fetching OAuth2 token
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client id used when fetching OAuth2 token
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.client.secret
 
@@ -423,12 +423,12 @@ oauth2.client.scope
 ==========================
 🔘 any
 
+The scope parameter sent to the service when fetching OAuth2 token.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The scope parameter sent to the service when fetching OAuth2 token.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 SSL
@@ -462,12 +462,12 @@ The name of the security provider used for SSL connections. Default value is the
 
 🔘 https.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 https.ssl.enabled.protocols
 
@@ -618,12 +618,12 @@ Proxy
 ==========================
 🔘 http.proxy.host
 
+The host or ip of the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The host or ip of the http proxy.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.proxy.port
 
@@ -636,12 +636,12 @@ The port number of the http proxy.
 
 🔘 http.proxy.user
 
+The username to be used when authenticating with the http proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used when authenticating with the http proxy.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 http.proxy.password
 

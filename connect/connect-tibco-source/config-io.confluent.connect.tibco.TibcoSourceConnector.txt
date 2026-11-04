@@ -72,12 +72,12 @@ The URL of the TIBCO EMS broker.
 
 🔘 tibco.username
 
+The username used when connecting to TIBCO EMS.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username used when connecting to TIBCO EMS.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 tibco.password
 
@@ -165,21 +165,21 @@ Whether the subscription of the connector tasks to a JMS topic is durable or not
 
 🔘 jms.subscription.name
 
+The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 jms.message.selector
 
+The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Retry

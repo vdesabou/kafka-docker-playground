@@ -12,4 +12,4 @@
     "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",
-    "v3.security.context.users": "LIST",
+    "v3.security.context.users": "",

@@ -72,12 +72,12 @@ The URL of the Salesforce endpoint to use. The default is blank. This directs th
 
 🔘 salesforce.username
 
+Salesforce username for connector authentication
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Salesforce username for connector authentication
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.password
 
@@ -189,12 +189,12 @@ Authentication scheme to be used when authenticate the connector towards HTTP(s)
 
 🔘 http.proxy.user
 
+The HTTP(S) proxy user name
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP(S) proxy user name
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.proxy.password
 

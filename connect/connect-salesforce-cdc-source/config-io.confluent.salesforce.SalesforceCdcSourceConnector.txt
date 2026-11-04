@@ -72,12 +72,12 @@ The URL of the Salesforce endpoint to use. The default is blank. This directs th
 
 🔘 salesforce.username
 
+Salesforce username for connector authentication
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Salesforce username for connector authentication
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 salesforce.password
 
@@ -258,12 +258,12 @@ Whether to convert field names within changed fields section of the ChangeEventH
 
 🔘 salesforce.channel.entities
 
+List of entities in custom channel or ``ChangeEvents`` channel that the connector should process and write to Kafka.Any other entities in the channel will be ignored by the connector. This config is valid only when ``salesforce.cdc.channel`` isn't a single entity channel.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of entities in custom channel or ``ChangeEvents`` channel that the connector should process and write to Kafka.Any other entities in the channel will be ignored by the connector. This config is valid only when ``salesforce.cdc.channel`` isn't a single entity channel.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 invalid.replay.id.behaviour
 

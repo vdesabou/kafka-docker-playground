@@ -3,24 +3,24 @@ Add connector details
 ==========================
 🔘 name
 
+Sets a name for your connector.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets a name for your connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Which topics do you want to get data from?
 ==========================
 🔘 topics
 
+Identifies the topic name or a comma-separated list of topic names.
 
-
-	 - Type: true
-	 - Default: LIST
-	 - Importance: Identifies the topic name or a comma-separated list of topic names.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Schema Config
@@ -53,10 +53,10 @@ How should we connect to your data?
 
 
 
-	 - Type: true
-	 - Default: STRING
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 use.open.api.spec
 
@@ -78,21 +78,21 @@ How you want to provide the OpenAPI specification — either a URL endpoint or a
 
 🔘 open.api.spec.url
 
+URL endpoint that hosts the OpenAPI specification (OAS 3.0 or higher) in YAML or JSON format.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: URL endpoint that hosts the OpenAPI specification (OAS 3.0 or higher) in YAML or JSON format.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 open.api.spec.file
 
+Uploaded OpenAPI specification (OAS 3.0 or higher) in YAML or JSON format. Maximum file size 3 MB.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Uploaded OpenAPI specification (OAS 3.0 or higher) in YAML or JSON format. Maximum file size 3 MB.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Kafka Cluster credentials
@@ -108,30 +108,30 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 🔘 kafka.service.account.id
 
+The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.key
 
+Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 kafka.api.secret
 
+Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 CSFLE
@@ -147,12 +147,12 @@ Determines whether the connector honours CSFLE rules or not
 
 🔘 sr.service.account.id
 
+Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 csfle.onFailure
 
@@ -189,12 +189,12 @@ Number of tasks for this connector
 ==========================
 🔘 tasks.max
 
+Maximum number of tasks for the connector.
 
-
-	 - Type: true
-	 - Default: INT
-	 - Importance: Maximum number of tasks for the connector.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 Authentication
@@ -222,12 +222,12 @@ Service connection
 ==========================
 🔘 http.api.base.url
 
+The HTTP API Base URL. For example: ``http://example.com/absenceManagement/v1``. When an OpenAPI spec is provided, this is dynamically populated from the parsed spec's base URLs.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The HTTP API Base URL. For example: ``http://example.com/absenceManagement/v1``. When an OpenAPI spec is provided, this is dynamically populated from the parsed spec's base URLs.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 auth.type
 
@@ -240,30 +240,30 @@ Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAU
 
 🔘 bearer.token
 
+The bearer authentication token to be used with an endpoint requiring bearer token based authentication.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The bearer authentication token to be used with an endpoint requiring bearer token based authentication.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.id
 
+The client id used when fetching the OAuth2 token.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The client id used when fetching the OAuth2 token.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.secret
 
+The client secret used when fetching the OAuth2 token.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The client secret used when fetching the OAuth2 token.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.auth.mode
 
@@ -276,12 +276,12 @@ Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 author
 
 🔘 connection.user
 
+The username to be used with an endpoint requiring basic authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.scope
 
@@ -312,39 +312,39 @@ The name of the property containing the OAuth2 token returned by the OAuth2 toke
 
 🔘 connection.password
 
+The password to be used with an endpoint requiring basic authentication.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.token.url
 
+The URL to be used for fetching the OAuth2 token. Client Credentials is the only supported grant type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching the OAuth2 token. Client Credentials is the only supported grant type.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.client.headers
 
+HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``.
-	 - Required: LOW
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 gcp.credentials.json
 
+GCP service account JSON file.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: GCP service account JSON file.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 oauth2.jwt.enabled
 
@@ -357,21 +357,21 @@ Whether to generate and add JWT token to request. If selected, JWT token will be
 
 🔘 oauth2.jwt.keystore.path
 
+Keystore containing private key to use to sign JWT.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Keystore containing private key to use to sign JWT.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.jwt.keystore.password
 
+Password to access keystore.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password to access keystore.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 oauth2.jwt.keystore.type
 
@@ -384,12 +384,12 @@ JWT keystore type
 
 🔘 oauth2.jwt.claimset
 
+JSON containing JWT claims
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON containing JWT claims
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 https.ssl.enabled
 
@@ -402,39 +402,39 @@ Controls whether to enforce TLSv1.3 for HTTPS connections. If false, the connect
 
 🔘 https.ssl.keystorefile
 
+The keystore that contains the client certificate and private key. Supported formats are JKS or PKCS12. File system paths are not supported.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The keystore that contains the client certificate and private key. Supported formats are JKS or PKCS12. File system paths are not supported.
-	 - Required: LOW
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 https.ssl.keystore.password
 
+The store password for the key store file.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The store password for the key store file.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.key.password
 
+The password for the private key in the key store file.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for the private key in the key store file.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.truststorefile
 
+The truststore that contains the server CA certificate(s). Supported formats are JKS or PKCS12. File system paths are not supported.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The truststore that contains the server CA certificate(s). Supported formats are JKS or PKCS12. File system paths are not supported.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 https.ssl.protocol
 
@@ -447,12 +447,12 @@ The protocol to use for SSL connections
 
 🔘 https.ssl.truststore.password
 
+The trust store password containing a server CA certificate.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The trust store password containing a server CA certificate.
-	 - Required: HIGH
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api.key.location
 
@@ -474,48 +474,48 @@ The identifier for the API key used in authentication. The format depends on the
 
 🔘 api.key.value
 
+The API key to be used with an endpoint that requires API key-based authentication
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The API key to be used with an endpoint that requires API key-based authentication
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.proxy.host
 
+The host name or IP address of the HTTP proxy used to route connector requests to the HTTP endpoint.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The host name or IP address of the HTTP proxy used to route connector requests to the HTTP endpoint.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.proxy.port
 
+The port number on which the HTTP proxy is listening.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The port number on which the HTTP proxy is listening.
-	 - Required: MEDIUM
+	 - Type: INT
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.proxy.user
 
+The username for authenticating with the HTTP proxy, if the proxy requires authentication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username for authenticating with the HTTP proxy, if the proxy requires authentication.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.proxy.password
 
+The password for authenticating with the HTTP proxy, if the proxy requires authentication.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password for authenticating with the HTTP proxy, if the proxy requires authentication.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 http.proxy.enabled
 
@@ -531,30 +531,30 @@ Secret manager configuration
 ==========================
 🔘 secret.manager
 
+Select the secret manager to use for retrieving sensitive data.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select the secret manager to use for retrieving sensitive data.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.provider.integration.id
 
+Select an existing provider integration that has access to your secret manager.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing provider integration that has access to your secret manager.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 secret.manager.managed.configs
 
+Select the configurations to fetch their values from the secret manager.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Select the configurations to fetch their values from the secret manager.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 APIs
@@ -573,21 +573,21 @@ Additional Configs
 ==========================
 🔘 value.converter.optional.for.proto2
 
+Whether proto2 optionals are supported. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 consumer.override.isolation.level
 
+Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.schemas.enable
 
@@ -600,57 +600,57 @@ Include schemas within each of the serialized values. Input messages must contai
 
 🔘 value.converter.generate.struct.for.nulls
 
+Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.raw.primitives
 
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.int.for.enums
 
+Whether to represent enums as integers. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.latest.version
 
+Use latest version of schema in subject for serialization when auto.register.schemas is false.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.enhanced.avro.schema.support
 
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.optional.for.nonrequired
 
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.replace.null.with.default
 
@@ -663,21 +663,21 @@ Whether to replace fields that have a default value and that are null to the def
 
 🔘 header.converter
 
+The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 errors.tolerance
 
@@ -708,21 +708,21 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 🔘 value.converter.object.additional.properties
 
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.schema.id.deserializer
 
@@ -735,57 +735,57 @@ The class name of the schema ID deserializer for values. This is used to deseria
 
 🔘 value.converter.flatten.unions
 
+Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.wrapper.for.nullables
 
+Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.use.schema.guid
 
+The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.latest.compatibility.strict
 
+Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.auto.register.schemas
 
+Specify if the Serializer should attempt to register the Schema.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Specify if the Serializer should attempt to register the Schema.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.connect.meta.data
 
+Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
@@ -807,12 +807,12 @@ How to construct the subject name for key schema registration.
 
 🔘 consumer.override.auto.offset.reset
 
+Defines the behavior of the consumer when there is no committed position (which occurs when the group is first initialized) or when an offset is out of range. You can choose either to reset the position to the “earliest” offset (the default) or the “latest” offset. You can also select “none” if you would rather set the initial offset yourself and you are willing to handle out of range errors manually. More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#auto-offset-reset
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Defines the behavior of the consumer when there is no committed position (which occurs when the group is first initialized) or when an offset is out of range. You can choose either to reset the position to the “earliest” offset (the default) or the “latest” offset. You can also select “none” if you would rather set the initial offset yourself and you are willing to handle out of range errors manually. More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#auto-offset-reset
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -834,30 +834,30 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 🔘 value.converter.generate.index.for.unions
 
+Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.allow.optional.map.keys
 
+Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.optional.for.nullables
 
+Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.flatten.singleton.unions
 
@@ -870,30 +870,30 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 value.converter.enhanced.protobuf.schema.support
 
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.scrub.invalid.names
 
+Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 key.converter.use.schema.id
 
+The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: INT
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 json.decimal.format
 
@@ -957,24 +957,24 @@ API-1 | Topic
 ==========================
 🔘 api1.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-1 | Path
 ==========================
 🔘 api1.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api1.http.request.method
 
@@ -990,48 +990,48 @@ API-1 | Request configuration
 ==========================
 🔘 api1.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-1 | Settings
@@ -1083,12 +1083,12 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api1.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api1.max.retries
 
@@ -1128,12 +1128,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api1.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api1.retry.on.status.codes
 
@@ -1146,12 +1146,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api1.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api1.http.request.headers.separator
 
@@ -1200,30 +1200,30 @@ Flag to determine if the api needs to be tested
 
 🔘 api1.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.allow.get.request.body
 
@@ -1263,21 +1263,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api1.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api1.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api1.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api1.upsert.method`` is set to ``POST``. This property must not be set if ``api1.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api1.upsert.method`` is set to ``POST``. This property must not be set if ``api1.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.forward.kafka.headers
 
@@ -1293,24 +1293,24 @@ API-2 | Topic
 ==========================
 🔘 api2.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-2 | Path
 ==========================
 🔘 api2.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api2.http.request.method
 
@@ -1326,48 +1326,48 @@ API-2 | Request configuration
 ==========================
 🔘 api2.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-2 | Settings
@@ -1419,12 +1419,12 @@ Specify whether to enable GZip compression on HTTP responses. Valid options are 
 
 🔘 api2.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api2.max.retries
 
@@ -1455,12 +1455,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 
 🔘 api2.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api2.retry.backoff.ms
 
@@ -1473,12 +1473,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api2.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api2.retry.on.status.codes
 
@@ -1527,12 +1527,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api2.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.test.api
 
@@ -1545,21 +1545,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api2.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.allow.get.request.body
 
@@ -1599,21 +1599,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api2.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api2.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api2.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api2.upsert.method`` is set to ``POST``. This property must not be set if ``api2.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api2.upsert.method`` is set to ``POST``. This property must not be set if ``api2.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.forward.kafka.headers
 
@@ -1629,24 +1629,24 @@ API-3 | Topic
 ==========================
 🔘 api3.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-3 | Path
 ==========================
 🔘 api3.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api3.http.request.method
 
@@ -1662,48 +1662,48 @@ API-3 | Request configuration
 ==========================
 🔘 api3.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-3 | Settings
@@ -1755,12 +1755,12 @@ Specify whether to enable GZip compression on HTTP responses. Valid options are 
 
 🔘 api3.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api3.max.retries
 
@@ -1791,12 +1791,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 
 🔘 api3.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api3.retry.backoff.ms
 
@@ -1809,12 +1809,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api3.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api3.retry.on.status.codes
 
@@ -1872,30 +1872,30 @@ Flag to determine if the api needs to be tested
 
 🔘 api3.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.allow.get.request.body
 
@@ -1935,21 +1935,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api3.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api3.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api3.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api3.upsert.method`` is set to ``POST``. This property must not be set if ``api3.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api3.upsert.method`` is set to ``POST``. This property must not be set if ``api3.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.forward.kafka.headers
 
@@ -1965,24 +1965,24 @@ API-4 | Topic
 ==========================
 🔘 api4.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-4 | Path
 ==========================
 🔘 api4.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api4.http.request.method
 
@@ -1998,48 +1998,48 @@ API-4 | Request configuration
 ==========================
 🔘 api4.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-4 | Settings
@@ -2091,12 +2091,12 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api4.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api4.max.retries
 
@@ -2127,12 +2127,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 
 🔘 api4.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api4.retry.backoff.ms
 
@@ -2154,12 +2154,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api4.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api4.http.request.headers.separator
 
@@ -2208,30 +2208,30 @@ Flag to determine if the api needs to be tested
 
 🔘 api4.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.allow.get.request.body
 
@@ -2271,21 +2271,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api4.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api4.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api4.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api4.upsert.method`` is set to ``POST``. This property must not be set if ``api4.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api4.upsert.method`` is set to ``POST``. This property must not be set if ``api4.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api4.forward.kafka.headers
 
@@ -2301,24 +2301,24 @@ API-5 | Topic
 ==========================
 🔘 api5.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-5 | Path
 ==========================
 🔘 api5.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api5.http.request.method
 
@@ -2334,48 +2334,48 @@ API-5 | Request configuration
 ==========================
 🔘 api5.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-5 | Settings
@@ -2427,12 +2427,12 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api5.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api5.max.retries
 
@@ -2463,12 +2463,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 🔘 api5.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api5.retry.backoff.ms
 
@@ -2490,12 +2490,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api5.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api5.batch.separator
 
@@ -2535,12 +2535,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api5.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.test.api
 
@@ -2553,21 +2553,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api5.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.allow.get.request.body
 
@@ -2607,21 +2607,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api5.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api5.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api5.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api5.upsert.method`` is set to ``POST``. This property must not be set if ``api5.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api5.upsert.method`` is set to ``POST``. This property must not be set if ``api5.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.forward.kafka.headers
 
@@ -2637,24 +2637,24 @@ API-6 | Topic
 ==========================
 🔘 api6.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-6 | Path
 ==========================
 🔘 api6.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api6.http.request.method
 
@@ -2670,48 +2670,48 @@ API-6 | Request configuration
 ==========================
 🔘 api6.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-6 | Settings
@@ -2772,12 +2772,12 @@ The maximum number of times to retry on errors before failing the task. Must be 
 
 🔘 api6.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api6.max.batch.size
 
@@ -2808,21 +2808,21 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api6.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api6.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api6.retry.on.status.codes
 
@@ -2871,12 +2871,12 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api6.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.test.api
 
@@ -2889,21 +2889,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api6.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.allow.get.request.body
 
@@ -2943,21 +2943,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api6.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api6.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api6.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api6.upsert.method`` is set to ``POST``. This property must not be set if ``api6.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api6.upsert.method`` is set to ``POST``. This property must not be set if ``api6.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.forward.kafka.headers
 
@@ -2973,24 +2973,24 @@ API-7 | Topic
 ==========================
 🔘 api7.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-7 | Path
 ==========================
 🔘 api7.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api7.http.request.method
 
@@ -3006,48 +3006,48 @@ API-7 | Request configuration
 ==========================
 🔘 api7.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-7 | Settings
@@ -3099,12 +3099,12 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api7.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api7.max.retries
 
@@ -3135,12 +3135,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 🔘 api7.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api7.retry.backoff.ms
 
@@ -3153,12 +3153,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api7.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api7.retry.on.status.codes
 
@@ -3207,12 +3207,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api7.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.test.api
 
@@ -3225,21 +3225,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api7.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.allow.get.request.body
 
@@ -3279,21 +3279,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api7.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api7.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api7.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api7.upsert.method`` is set to ``POST``. This property must not be set if ``api7.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api7.upsert.method`` is set to ``POST``. This property must not be set if ``api7.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.forward.kafka.headers
 
@@ -3309,24 +3309,24 @@ API-8 | Topic
 ==========================
 🔘 api8.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-8 | Path
 ==========================
 🔘 api8.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api8.http.request.method
 
@@ -3342,48 +3342,48 @@ API-8 | Request configuration
 ==========================
 🔘 api8.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-8 | Settings
@@ -3435,12 +3435,12 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api8.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api8.max.retries
 
@@ -3471,12 +3471,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 🔘 api8.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api8.retry.backoff.ms
 
@@ -3489,12 +3489,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api8.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api8.retry.on.status.codes
 
@@ -3543,12 +3543,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api8.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.test.api
 
@@ -3561,21 +3561,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api8.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.allow.get.request.body
 
@@ -3615,21 +3615,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api8.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api8.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api8.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api8.upsert.method`` is set to ``POST``. This property must not be set if ``api8.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api8.upsert.method`` is set to ``POST``. This property must not be set if ``api8.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.forward.kafka.headers
 
@@ -3645,24 +3645,24 @@ API-9 | Topic
 ==========================
 🔘 api9.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-9 | Path
 ==========================
 🔘 api9.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api9.http.request.method
 
@@ -3678,48 +3678,48 @@ API-9 | Request configuration
 ==========================
 🔘 api9.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-9 | Settings
@@ -3771,12 +3771,12 @@ Specify whether to enable GZip compression on HTTP responses. Valid options are 
 
 🔘 api9.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api9.max.retries
 
@@ -3807,12 +3807,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 
 🔘 api9.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api9.retry.backoff.ms
 
@@ -3825,12 +3825,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api9.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api9.retry.on.status.codes
 
@@ -3879,12 +3879,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api9.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.test.api
 
@@ -3897,21 +3897,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api9.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.allow.get.request.body
 
@@ -3951,21 +3951,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api9.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api9.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api9.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api9.upsert.method`` is set to ``POST``. This property must not be set if ``api9.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api9.upsert.method`` is set to ``POST``. This property must not be set if ``api9.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.forward.kafka.headers
 
@@ -3981,24 +3981,24 @@ API-10 | Topic
 ==========================
 🔘 api10.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-10 | Path
 ==========================
 🔘 api10.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api10.http.request.method
 
@@ -4014,48 +4014,48 @@ API-10 | Request configuration
 ==========================
 🔘 api10.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-10 | Settings
@@ -4116,12 +4116,12 @@ The maximum number of times to retry on errors before failing the task. Must be 
 
 🔘 api10.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api10.max.batch.size
 
@@ -4143,12 +4143,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 🔘 api10.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api10.retry.backoff.ms
 
@@ -4161,12 +4161,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api10.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api10.retry.on.status.codes
 
@@ -4224,30 +4224,30 @@ Flag to determine if the api needs to be tested
 
 🔘 api10.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.allow.get.request.body
 
@@ -4287,21 +4287,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api10.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api10.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api10.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api10.upsert.method`` is set to ``POST``. This property must not be set if ``api10.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api10.upsert.method`` is set to ``POST``. This property must not be set if ``api10.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.forward.kafka.headers
 
@@ -4317,24 +4317,24 @@ API-11 | Topic
 ==========================
 🔘 api11.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-11 | Path
 ==========================
 🔘 api11.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api11.http.request.method
 
@@ -4350,48 +4350,48 @@ API-11 | Request configuration
 ==========================
 🔘 api11.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-11 | Settings
@@ -4452,12 +4452,12 @@ The maximum number of times to retry on errors before failing the task. Must be 
 
 🔘 api11.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api11.max.batch.size
 
@@ -4479,12 +4479,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 🔘 api11.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api11.retry.backoff.ms
 
@@ -4497,12 +4497,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api11.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api11.retry.on.status.codes
 
@@ -4551,12 +4551,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api11.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.test.api
 
@@ -4569,21 +4569,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api11.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.allow.get.request.body
 
@@ -4623,21 +4623,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api11.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api11.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api11.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api11.upsert.method`` is set to ``POST``. This property must not be set if ``api11.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api11.upsert.method`` is set to ``POST``. This property must not be set if ``api11.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.forward.kafka.headers
 
@@ -4653,24 +4653,24 @@ API-12 | Topic
 ==========================
 🔘 api12.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-12 | Path
 ==========================
 🔘 api12.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api12.http.request.method
 
@@ -4686,48 +4686,48 @@ API-12 | Request configuration
 ==========================
 🔘 api12.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-12 | Settings
@@ -4788,12 +4788,12 @@ The maximum number of times to retry on errors before failing the task. Must be 
 
 🔘 api12.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api12.retry.backoff.policy
 
@@ -4815,12 +4815,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 
 🔘 api12.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api12.retry.backoff.ms
 
@@ -4842,12 +4842,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api12.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api12.batch.separator
 
@@ -4887,12 +4887,12 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api12.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.test.api
 
@@ -4905,21 +4905,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api12.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.allow.get.request.body
 
@@ -4959,21 +4959,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api12.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api12.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api12.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api12.upsert.method`` is set to ``POST``. This property must not be set if ``api12.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api12.upsert.method`` is set to ``POST``. This property must not be set if ``api12.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.forward.kafka.headers
 
@@ -4989,24 +4989,24 @@ API-13 | Topic
 ==========================
 🔘 api13.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-13 | Path
 ==========================
 🔘 api13.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api13.http.request.method
 
@@ -5022,48 +5022,48 @@ API-13 | Request configuration
 ==========================
 🔘 api13.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-13 | Settings
@@ -5124,12 +5124,12 @@ The maximum number of times to retry on errors before failing the task. Must be 
 
 🔘 api13.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api13.max.batch.size
 
@@ -5151,12 +5151,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 🔘 api13.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api13.retry.backoff.ms
 
@@ -5178,12 +5178,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api13.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api13.http.request.headers.separator
 
@@ -5223,12 +5223,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api13.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.test.api
 
@@ -5241,21 +5241,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api13.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.allow.get.request.body
 
@@ -5295,21 +5295,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api13.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api13.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api13.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api13.upsert.method`` is set to ``POST``. This property must not be set if ``api13.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api13.upsert.method`` is set to ``POST``. This property must not be set if ``api13.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.forward.kafka.headers
 
@@ -5325,24 +5325,24 @@ API-14 | Topic
 ==========================
 🔘 api14.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-14 | Path
 ==========================
 🔘 api14.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api14.http.request.method
 
@@ -5358,48 +5358,48 @@ API-14 | Request configuration
 ==========================
 🔘 api14.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-14 | Settings
@@ -5460,12 +5460,12 @@ The maximum number of times to retry on errors before failing the task. Must be 
 
 🔘 api14.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api14.max.batch.size
 
@@ -5487,12 +5487,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 🔘 api14.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api14.retry.backoff.ms
 
@@ -5514,12 +5514,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api14.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api14.batch.separator
 
@@ -5559,12 +5559,12 @@ The character that separates multiple distinct request parameters within ``http.
 
 🔘 api14.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.test.api
 
@@ -5577,21 +5577,21 @@ Flag to determine if the api needs to be tested
 
 🔘 api14.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.allow.get.request.body
 
@@ -5631,21 +5631,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api14.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api14.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api14.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api14.upsert.method`` is set to ``POST``. This property must not be set if ``api14.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api14.upsert.method`` is set to ``POST``. This property must not be set if ``api14.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api14.forward.kafka.headers
 
@@ -5661,24 +5661,24 @@ API-15 | Topic
 ==========================
 🔘 api15.topics
 
+List of topics for this API
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics for this API
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 API-15 | Path
 ==========================
 🔘 api15.http.api.path
 
+The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api15.http.request.method
 
@@ -5694,48 +5694,48 @@ API-15 | Request configuration
 ==========================
 🔘 api15.http.request.parameters
 
+HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.http.request.headers
 
+HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.http.request.sensitive.headers
 
+Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
+	 - Type: PASSWORD
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.http.request.body
 
+The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.http.path.parameters
 
+HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${key}``, ``${topic}``, or other field references from Kafka record.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 API-15 | Settings
@@ -5796,12 +5796,12 @@ The maximum number of times to retry on errors before failing the task. Must be 
 
 🔘 api15.batch.key.pattern
 
+Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api15.retry.backoff.policy
 
@@ -5832,21 +5832,21 @@ The initial duration in milliseconds to wait following an error before a retry a
 
 🔘 api15.batch.prefix
 
+Prefix added to record batches. This is applied once at the beginning of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api15.batch.suffix
 
+Suffix added to record batches. This is applied once at the end of the batch of records
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api15.retry.on.status.codes
 
@@ -5904,30 +5904,30 @@ Flag to determine if the api needs to be tested
 
 🔘 api15.regex.patterns
 
+Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.regex.replacements
 
+Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.regex.separator
 
+Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.allow.get.request.body
 
@@ -5967,21 +5967,21 @@ The HTTP method to use for upserting. Valid options are ``POST`` or ``NONE``. Se
 
 🔘 api15.upsert.on.field.value
 
+When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api15.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When this property is set, the connector performs an upsert if the record value has a matching ``jsonPath=expected_value``. This property must not be set if ``api15.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.upsert.api.path
 
+The API path the connector uses when performing an UPSERT. This is mandatory when ``api15.upsert.method`` is set to ``POST``. This property must not be set if ``api15.upsert.method`` is ``NONE``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The API path the connector uses when performing an UPSERT. This is mandatory when ``api15.upsert.method`` is set to ``POST``. This property must not be set if ``api15.upsert.method`` is ``NONE``.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api15.forward.kafka.headers
 
@@ -6009,42 +6009,42 @@ Egress allowlist
 ==========================
 🔘 connector.egress.whitelist
 
+List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Transforms: insertuuid
 ==========================
 🔘 transforms.insertuuid.type
 
+Class for the 'insertuuid' transformation.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Class for the 'insertuuid' transformation.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 transforms.insertuuid.plugin.version
 
+Version of the 'insertuuid' transformation.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Version of the 'insertuuid' transformation.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 transforms.insertuuid.custom.smt.artifact.id
 
 
 
-	 - Type: false
-	 - Default: NONE
-	 - Importance: 
-	 - Required: NONE
+	 - Type: NONE
+	 - Default: 
+	 - Importance: NONE
+	 - Required: false
 
 🔘 transforms.insertuuid.uuid.field.name
 
@@ -6066,10 +6066,10 @@ Whether the configured predicate should be negated.
 
 🔘 transforms.insertuuid.predicate
 
+The alias of a predicate used to determine whether to apply this transformation.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The alias of a predicate used to determine whether to apply this transformation.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 

@@ -267,12 +267,12 @@ The file format of the trust store file. The values currently supported by the d
 
 🔘 rabbitmq.https.ssl.cipher.suites
 
+A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 rabbitmq.https.ssl.endpoint.identification.algorithm
 
@@ -378,12 +378,12 @@ If enabled, Kafka record headers are added to the RabbitMQ Message as headers.
 
 🔘 rabbitmq.topic.queue.map
 
+JSON object mapping Kafka topic names to RabbitMQ queue names, e.g. {"topic-a":"queue-1","topic-b":"queue-2"}. Records from a mapped topic are published directly to their mapped queue via the RabbitMQ default (nameless) exchange. Unmapped topics fall back to `rabbitmq.exchange` with `rabbitmq.routing.key`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON object mapping Kafka topic names to RabbitMQ queue names, e.g. {"topic-a":"queue-1","topic-b":"queue-2"}. Records from a mapped topic are published directly to their mapped queue via the RabbitMQ default (nameless) exchange. Unmapped topics fall back to `rabbitmq.exchange` with `rabbitmq.routing.key`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 RabbitMQ Publishing

@@ -123,12 +123,12 @@ Parsing
 ==========================
 🔘 splunk.s2s.sourcetypes
 
+Source types to use while parsing Splunk S2S Events.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Source types to use while parsing Splunk S2S Events.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 splunk.s2s.headers.metadata
 
@@ -180,21 +180,21 @@ Enable Client Authentication in SSL communication between the connector and Splu
 
 🔘 splunk.s2s.ssl.key.path
 
+Path to a PKCS#8 private key file in PEM format
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path to a PKCS#8 private key file in PEM format
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 splunk.s2s.ssl.cert.chain.path
 
+Path to X.509 cert chain file in PEM format.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path to X.509 cert chain file in PEM format.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 splunk.s2s.ssl.key.password
 
@@ -207,21 +207,21 @@ The password of the key file or blank if it's not password-protected
 
 🔘 splunk.s2s.ssl.root.ca.cert.chain.path
 
+Path to X.509 root CA certificate chain file in PEM format to verify client certificate when client authentication is enabled in SSL Communication.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path to X.509 root CA certificate chain file in PEM format to verify client certificate when client authentication is enabled in SSL Communication.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 splunk.s2s.ssl.cn.list
 
+A list of one or more common names which will be checked for a match in the certificate that the client presents. This setting is only valid if "Enable Client Authentication" is set to "true".
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of one or more common names which will be checked for a match in the certificate that the client presents. This setting is only valid if "Enable Client Authentication" is set to "true".
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Netty

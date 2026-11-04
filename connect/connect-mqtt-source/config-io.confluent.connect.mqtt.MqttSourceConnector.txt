@@ -126,12 +126,12 @@ The maximum time in ms the connector will spend backing off and retrying failed 
 
 🔘 mqtt.ssl.trust.store.path
 
+The location of the Java TrustStore file containing the certificates required to validate the SSL connection to the server.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The location of the Java TrustStore file containing the certificates required to validate the SSL connection to the server.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mqtt.ssl.trust.store.password
 
@@ -144,12 +144,12 @@ Password used to open the Java TrustStore file.
 
 🔘 mqtt.ssl.key.store.path
 
+The location of the Java KeyStore file containing the private key to use for authenticating with the server.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The location of the Java KeyStore file containing the private key to use for authenticating with the server.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mqtt.ssl.key.store.password
 

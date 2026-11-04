@@ -3,12 +3,12 @@ IBM MQ Connection
 ==========================
 🔘 mq.hostname
 
+The hostname of the IBM MQ broker. Either mq.hostname or mq.connection.list must be specified, but not both.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The hostname of the IBM MQ broker. Either mq.hostname or mq.connection.list must be specified, but not both.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.port
 
@@ -21,21 +21,21 @@ The TCP listener port of the IBM MQ broker. This is only used when mq.hostname i
 
 🔘 mq.connection.list
 
+Comma-separated list of IBM MQ broker connections in the format host1:port1,host2:port2,host3:port3. When configured, the connector will attempt to connect to each instance in sequence until a successful connection is established. This property is mutually exclusive with mq.hostname. Either mq.hostname or mq.connection.list must be specified, but not both.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma-separated list of IBM MQ broker connections in the format host1:port1,host2:port2,host3:port3. When configured, the connector will attempt to connect to each instance in sequence until a successful connection is established. This property is mutually exclusive with mq.hostname. Either mq.hostname or mq.connection.list must be specified, but not both.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.username
 
+The username to use when connecting to IBM MQ.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to use when connecting to IBM MQ.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.password
 
@@ -57,30 +57,30 @@ Whether to disable MQCSP authentication in the connector. By default, the connec
 
 🔘 security.exit.classpath
 
+Full classpath location of the IBM MQ Security Exit implementation class. This should be the complete Java class name (e.g., com.example.CustomSecurityExit) of your custom security exit that implements the com.ibm.mq.exits.WMQSecurityExit interface. The security exit is called during connection establishment to perform custom authentication and authorization logic beyond standard IBM MQ security mechanisms.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Full classpath location of the IBM MQ Security Exit implementation class. This should be the complete Java class name (e.g., com.example.CustomSecurityExit) of your custom security exit that implements the com.ibm.mq.exits.WMQSecurityExit interface. The security exit is called during connection establishment to perform custom authentication and authorization logic beyond standard IBM MQ security mechanisms.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 security.exit.init.data
 
+Initialization data string passed to the Security Exit class during setup. This data can contain configuration parameters, authentication tokens, or other context information that the Security Exit implementation needs to properly authenticate and authorize the connection to IBM MQ. Maximum length is 32 characters.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Initialization data string passed to the Security Exit class during setup. This data can contain configuration parameters, authentication tokens, or other context information that the Security Exit implementation needs to properly authenticate and authorize the connection to IBM MQ. Maximum length is 32 characters.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 credentials.provider.classpath
 
+Fully qualified class name of the credentials provider implementation. This class must implement the io.confluent.connect.jms.creds.IbmMqCredentialsProvider interface. If the class also implements org.apache.kafka.common.Configurable, it will be passed a map of configuration properties with the prefix ``credentials.provider.`` . If not specified, no credentials provider will be used.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Fully qualified class name of the credentials provider implementation. This class must implement the io.confluent.connect.jms.creds.IbmMqCredentialsProvider interface. If the class also implements org.apache.kafka.common.Configurable, it will be passed a map of configuration properties with the prefix ``credentials.provider.`` . If not specified, no credentials provider will be used.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 mq.transport.type
 
@@ -111,12 +111,12 @@ The channel for client connections. This is only required when ``mq.transport.ty
 
 🔘 mq.ssl.cipher.suite
 
+The CipherSuite for SSL connections.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The CipherSuite for SSL connections.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.ssl.fips.required
 
@@ -129,12 +129,12 @@ Whether SSL FIPS is required.
 
 🔘 mq.ssl.peer.name
 
+Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern can ensure that the correct queue manager is used. The connection attempt fails if the DN provided by the queue manager does not match this pattern.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern can ensure that the correct queue manager is used. The connection attempt fails if the DN provided by the queue manager does not match this pattern.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.destination.suppress.rfh2
 
@@ -159,12 +159,12 @@ Enables exactly-once delivery semantics by using transacted JMS sessions and sto
 
 🔘 mq.offsets.queue.name
 
+Optional. Name of the dedicated IBM MQ queue that stores Kafka offset information in JSON format. When configured, the task will synchronize offsets from this queue during startup. If not configured, offset synchronization is disabled.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Optional. Name of the dedicated IBM MQ queue that stores Kafka offset information in JSON format. When configured, the task will synchronize offsets from this queue during startup. If not configured, offset synchronization is disabled.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 max.offset.sync.failures
 

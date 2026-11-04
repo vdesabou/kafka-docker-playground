@@ -1,6 +1,6 @@
-    "aws.access.key.id": "STRING",
+    "aws.access.key.id": "",
     "aws.cloudwatch.log.group": "",
-    "aws.cloudwatch.log.streams": "LIST",
+    "aws.cloudwatch.log.streams": "",
     "aws.cloudwatch.logs.url": "",
     "aws.cloudwatch.signing.region": "",
     "aws.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",

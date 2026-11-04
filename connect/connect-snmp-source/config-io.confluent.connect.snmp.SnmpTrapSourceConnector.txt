@@ -141,10 +141,10 @@ Flag indicating if SNMP v3 protocol is enabled.
 
 🔘 v3.security.context.users
 
+List of unique usernames in each security context.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of unique usernames in each security context.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 

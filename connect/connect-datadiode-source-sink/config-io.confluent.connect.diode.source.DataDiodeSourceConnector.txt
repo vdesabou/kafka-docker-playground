@@ -93,21 +93,21 @@ The udp port to listen to.
 
 🔘 kafka.topic.prefix
 
+The prefix to attach to topic names. When the Sink connector writes records at the source, it encodes the topic name in the payload. This source connector will try to write to the same topic. Sometimes, it is desirable to prepend a prefix to the topic name. This configuration parameter is used to specify the prefix to attach to topic names. 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The prefix to attach to topic names. When the Sink connector writes records at the source, it encodes the topic name in the payload. This source connector will try to write to the same topic. Sometimes, it is desirable to prepend a prefix to the topic name. This configuration parameter is used to specify the prefix to attach to topic names. 
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 missing.records.topic
 
+The Apache Kafka topic to which the missing records will be written to. Also provide the |ak| producer configurations such as ``bootstrap.servers`` and ``client.id`` with ``missing.records.`` as prefix. When this topic is not configured, the missing records will be available in Connect logs.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The Apache Kafka topic to which the missing records will be written to. Also provide the |ak| producer configurations such as ``bootstrap.servers`` and ``client.id`` with ``missing.records.`` as prefix. When this topic is not configured, the missing records will be available in Connect logs.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 socket.receive.buffer.bytes
 

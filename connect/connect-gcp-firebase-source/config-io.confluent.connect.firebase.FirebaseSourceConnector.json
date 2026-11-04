@@ -1,6 +1,6 @@
     "exactly.once.support": "requested",
     "gcp.firebase.credentials.json": "",
-    "gcp.firebase.credentials.path": "STRING",
+    "gcp.firebase.credentials.path": "",
     "gcp.firebase.database.reference": "",
     "gcp.firebase.snapshot": "false",
     "task.parallel.transform.chunk.size": "10000",

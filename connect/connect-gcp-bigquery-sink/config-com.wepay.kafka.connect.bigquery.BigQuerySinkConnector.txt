@@ -3,12 +3,12 @@ null
 ==========================
 🔘 enableBatchLoad
 
+Beta Feature; use with caution: The sublist of topics to be batch loaded through GCS
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Beta Feature; use with caution: The sublist of topics to be batch loaded through GCS
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 batchLoadIntervalSec
 
@@ -21,21 +21,21 @@ The interval, in seconds, in which to attempt to run GCS to BQ load jobs. Only r
 
 🔘 gcsBucketName
 
+The name of the bucket in which gcs blobs used to batch load to BigQuery should be located. Only relevant if enableBatchLoad is configured.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the bucket in which gcs blobs used to batch load to BigQuery should be located. Only relevant if enableBatchLoad is configured.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcsFolderName
 
+The name of the folder under the bucket in which gcs blobs used to batch load to BigQuery should be located. Only relevant if enableBatchLoad is configured.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the folder under the bucket in which gcs blobs used to batch load to BigQuery should be located. Only relevant if enableBatchLoad is configured.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 project
 
@@ -93,12 +93,12 @@ Whether to automatically sanitize topic names before using them as table names; 
 
 🔘 topic2TableMap
 
+Map of topics to tables (optional). Format: comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,... Note that topic name should not be modified using regex SMT while using this option.Also note that SANITIZE_TOPICS_CONFIG would be ignored if this config is set.Lastly, if the topic2table map doesn't contain the topic for a record, a table with the same name as the topic name would be created
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Map of topics to tables (optional). Format: comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,... Note that topic name should not be modified using regex SMT while using this option.Also note that SANITIZE_TOPICS_CONFIG would be ignored if this config is set.Lastly, if the topic2table map doesn't contain the topic for a record, a table with the same name as the topic name would be created
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 sanitizeFieldNames
 
@@ -330,12 +330,12 @@ timePartitioningType
 ==========================
 🔘 DAY
 
+The time partitioning type to use when creating tables, or 'NONE' to create non-partitioned tables. Existing tables will not be altered to use this partitioning type.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The time partitioning type to use when creating tables, or 'NONE' to create non-partitioned tables. Existing tables will not be altered to use this partitioning type.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 null

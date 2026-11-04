@@ -84,12 +84,12 @@ Fully qualified AWS SQS URL from which this source connector polls messages.
 
 🔘 sqs.region
 
+The AWS region for SQS.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The AWS region for SQS.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 sqs.messages.max
 
@@ -162,12 +162,12 @@ Proxy
 ==========================
 🔘 sqs.proxy.url
 
+HTTPS Proxy Server URL. This property is meant to be used only if you need to access SQS through an HTTPS proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTPS Proxy Server URL. This property is meant to be used only if you need to access SQS through an HTTPS proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 sqs.proxy.user
 

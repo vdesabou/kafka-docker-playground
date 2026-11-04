@@ -156,39 +156,39 @@ Number of messages to send from each task, or less than 1 for unlimited
 
 🔘 schema.string
 
+The literal JSON-encoded Avro schema to use
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The literal JSON-encoded Avro schema to use
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 schema.filename
 
+Filename of schema to use
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Filename of schema to use
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 schema.keyfield
 
+Name of field to use as the message key
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of field to use as the message key
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 quickstart
 
+Name of quickstart to use
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of quickstart to use
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 random.seed
 

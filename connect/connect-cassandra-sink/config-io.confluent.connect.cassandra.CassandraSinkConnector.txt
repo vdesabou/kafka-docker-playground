@@ -126,21 +126,21 @@ Kerberos
 ==========================
 🔘 connect.cassandra.principal
 
+The principal to use when connecting to Cassandra with Kerberos
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The principal to use when connecting to Cassandra with Kerberos
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connect.cassandra.keytab
 
+The path to the keytab file for the Cassandra connector principal. This keytab file should only be readable by the connector.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the keytab file for the Cassandra connector principal. This keytab file should only be readable by the connector.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 cassandra.kerberos.sasl.protocol
 
@@ -177,12 +177,12 @@ SSL
 ==========================
 🔘 cassandra.ssl.truststore.path
 
+Path to the Java Truststore.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Path to the Java Truststore.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 cassandra.ssl.truststore.password
 

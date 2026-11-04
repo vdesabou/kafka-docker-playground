@@ -7,7 +7,7 @@
     "connection.port": "",
     "connection.user": "",
     "db.timezone": "UTC",
-    "fields.whitelist": "LIST",
+    "fields.whitelist": "",
     "max.retries": "10",
     "retry.backoff.ms": "3000",
     "table.name.format": "${topic}",

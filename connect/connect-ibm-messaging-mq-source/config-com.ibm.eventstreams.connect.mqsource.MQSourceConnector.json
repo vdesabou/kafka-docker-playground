@@ -1,5 +1,5 @@
     "errors.deadletterqueue.context.headers.enable": "false",
-    "errors.deadletterqueue.topic.name": "STRING",
+    "errors.deadletterqueue.topic.name": "",
     "exactly.once.support": "requested",
     "key.converter.converter.encoding": "UTF-8",
     "key.converter.converter.type": "",

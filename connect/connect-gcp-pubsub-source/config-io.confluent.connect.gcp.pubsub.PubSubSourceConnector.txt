@@ -72,39 +72,39 @@ The Apache Kafka topic to publish data to. Only a single topic must be specified
 
 🔘 gcp.pubsub.project.id
 
+The id of the GCP Pub/Sub project. 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The id of the GCP Pub/Sub project. 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.pubsub.topic.id
 
+The id of Pub/Sub topic from which messages have to be pulled. 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The id of Pub/Sub topic from which messages have to be pulled. 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.pubsub.subscription.id
 
+The id of Pub/Sub subscription for the configured Pub/Sub topic. 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The id of Pub/Sub subscription for the configured Pub/Sub topic. 
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.pubsub.credentials.path
 
+The path to the JSON service key file. If empty, credentials are read from the gcp.pubsub.credentials.json configuration.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the JSON service key file. If empty, credentials are read from the gcp.pubsub.credentials.json configuration.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gcp.pubsub.credentials.json
 
@@ -180,10 +180,10 @@ Setting this field to true is generally discouraged due to performance implicati
 
 🔘 gcp.pubsub.credentials.provider.class
 
+The fully qualified name of a class that implements the ``com.google.api.gax.core.CredentialsProvider`` interface to use a custom credentials provider. 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The fully qualified name of a class that implements the ``com.google.api.gax.core.CredentialsProvider`` interface to use a custom credentials provider. 
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 

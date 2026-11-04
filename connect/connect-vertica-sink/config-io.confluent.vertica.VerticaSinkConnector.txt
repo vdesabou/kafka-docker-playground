@@ -126,21 +126,21 @@ Mode of logging when vertica rejects record. Must be configured to one of the fo
 
 🔘 rejected.record.path
 
+Local directory path where the rejected records from vertica will be stored. This config is only required when rejected.record.logging.mode is set to 'FILE'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Local directory path where the rejected records from vertica will be stored. This config is only required when rejected.record.logging.mode is set to 'FILE'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 rejected.record.exception.path
 
+Local directory path where the exceptions of rejected records from vertica will be stored. This config is only required when rejected.record.logging.mode is set to 'FILE'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Local directory path where the exceptions of rejected records from vertica will be stored. This config is only required when rejected.record.logging.mode is set to 'FILE'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 rejected.record.table.suffix
 
@@ -153,12 +153,12 @@ Suffix value for Vertica rejected records table name. With this configuration, w
 
 🔘 rejected.record.table.schema
 
+Schema name for Vertica rejected records table name. This config is only required when rejected.record.logging.mode is set to 'TABLE'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Schema name for Vertica rejected records table name. This config is only required when rejected.record.logging.mode is set to 'TABLE'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 stream.builder.cache.ms
 
@@ -225,12 +225,13 @@ The primary key mode, also refer to ``pk.fields`` documentation for interplay. S
 
 🔘 pk.fields
 
+List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
 ``none``
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated primary key field names. The runtime interpretation of this config depends on the ``pk.mode``:
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Writes

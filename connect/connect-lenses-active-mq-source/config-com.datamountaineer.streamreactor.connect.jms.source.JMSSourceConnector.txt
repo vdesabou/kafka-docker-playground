@@ -162,12 +162,12 @@ Selector to use for destination lookup. Either CDI or JNDI.
 
 🔘 connect.jms.initial.context.extra.params
 
+List (comma separated) of extra properties as key/value pairs with a colon delimiter to supply to the initial context e.g. SOLACE_JMS_VPN:my_solace_vp
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List (comma separated) of extra properties as key/value pairs with a colon delimiter to supply to the initial context e.g. SOLACE_JMS_VPN:my_solace_vp
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 connect.jms.batch.size
 
@@ -192,12 +192,13 @@ Converter
 ==========================
 🔘 connect.jms.source.default.converter
 
+Contains a canonical class name for the default converter of a raw JMS message bytes to a SourceRecord.
 Overrides to the default can be done by using connect.jms.source.converters still.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Contains a canonical class name for the default converter of a raw JMS message bytes to a SourceRecord.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connect.jms.converter.throw.on.error
 
@@ -210,21 +211,22 @@ If set to false the conversion exception will be swallowed and everything carrie
 
 🔘 connect.converter.avro.schemas
 
+If the AvroConverter is used you need to provide an avro Schema to be able to read and translate the raw bytes to an avro record. The format is $MQTT_TOPIC=$PATH_TO_AVRO_SCHEMA_FILE
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If the AvroConverter is used you need to provide an avro Schema to be able to read and translate the raw bytes to an avro record. The format is $MQTT_TOPIC=$PATH_TO_AVRO_SCHEMA_FILE
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 connect.jms.headers
 
+Contains collection of static JMS headers included in every SinkRecord
 The format is connect.jms.headers="$MQTT_TOPIC=rmq.jms.message.type:TextMessage,rmq.jms.message.priority:2;$MQTT_TOPIC2=rmq.jms.message.type:JSONMessage"
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Contains collection of static JMS headers included in every SinkRecord
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Metrics

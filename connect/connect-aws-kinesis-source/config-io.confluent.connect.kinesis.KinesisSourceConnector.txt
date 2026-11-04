@@ -62,10 +62,10 @@ Number of records processed per parallel chunk when task.parallel.transform.enab
 
 
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: 
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Connector Details
@@ -111,12 +111,12 @@ AWS Credentials
 ==========================
 🔘 aws.access.key.id
 
+The AWS access key that will be used to connect to Kinesis with.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The AWS access key that will be used to connect to Kinesis with.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 aws.secret.key.id
 
@@ -159,12 +159,12 @@ The position in the stream to reset to if no offsets are stored. Note: AFTER_SEQ
 
 🔘 kinesis.shard.timestamp
 
+Timestamp (the Unix epoch date with precision in milliseconds) after which to start reading records from. To be used only in combination with kinesis.position=AT_TIMESTAMP. Allowed formats: yyyy-MM-dd'T'HH:mm:ss.SSSXXX or epoch time in ms. Note: this will apply to every specified shard in the stream.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Timestamp (the Unix epoch date with precision in milliseconds) after which to start reading records from. To be used only in combination with kinesis.position=AT_TIMESTAMP. Allowed formats: yyyy-MM-dd'T'HH:mm:ss.SSSXXX or epoch time in ms. Note: this will apply to every specified shard in the stream.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 kinesis.region
 
@@ -177,12 +177,13 @@ The AWS region for the Kinesis stream.
 
 🔘 kinesis.base.url
 
+The property kinesis.base.url can be used to specify a Kinesis endpoint. For example, if Kinesis is running on port 4567 on your localhost, you may specify http://localhost:4567.
 Examples of endpoints can be found on: https://docs.aws.amazon.com/general/latest/gr/rande.html#ak_region.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The property kinesis.base.url can be used to specify a Kinesis endpoint. For example, if Kinesis is running on port 4567 on your localhost, you may specify http://localhost:4567.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 kinesis.record.deaggregation.enable
 
@@ -198,21 +199,22 @@ Proxy
 ==========================
 🔘 kinesis.proxy.url
 
+Proxy Server URL. This property is meant to be used only if you need to access Kinesis through an HTTP/HTTPS proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Proxy Server URL. This property is meant to be used only if you need to access Kinesis through an HTTP/HTTPS proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 kinesis.proxy.username
 
+This property is now deprecated and will be removed in release `2.0.0` and later.
 Proxy Username. This property is meant to be used only if you need to access Kinesis through an HTTP/HTTPS proxy. Using ``kinesis.proxy.username`` instead of embedding the username and password in ``kinesis.proxy.url`` allows the password to be hidden in the logs.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This property is now deprecated and will be removed in release `2.0.0` and later.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 kinesis.proxy.password
 
@@ -225,12 +227,12 @@ This property is now deprecated and will be removed in release `2.0.0` and later
 
 🔘 kinesis.non.proxy.hosts
 
+Non Proxy Hosts. This property is meant to be used for defining non proxy hosts.For example, this can be configured as ``localhost, 127.0.0.1, host-address-1`` or ``localhost|127.0.0.1|host-address-1``.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Non Proxy Hosts. This property is meant to be used for defining non proxy hosts.For example, this can be configured as ``localhost, 127.0.0.1, host-address-1`` or ``localhost|127.0.0.1|host-address-1``.
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Regex Configurations

@@ -1,5 +1,5 @@
     "file": "",
-    "transforms.dropTombstone.expr": "STRING",
+    "transforms.dropTombstone.expr": "",
     "transforms.dropTombstone.max.depth": "1000",
     "transforms.dropTombstone.negate": "false",
     "transforms.dropTombstone.plugin.version": "undefined",

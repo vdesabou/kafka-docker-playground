@@ -6,7 +6,7 @@
     "azure.sql.dw.user": "",
     "batch.size": "3000",
     "db.timezone": "UTC",
-    "fields.whitelist": "LIST",
+    "fields.whitelist": "",
     "max.retries": "10",
     "quote.sql.identifiers": "ALWAYS",
     "retry.backoff.ms": "3000",

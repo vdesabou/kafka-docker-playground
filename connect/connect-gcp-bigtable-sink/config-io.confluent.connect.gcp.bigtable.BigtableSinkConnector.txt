@@ -42,21 +42,22 @@ Name of the destination table. Use '${topic}' within the table name to specify t
 
 🔘 row.key.definition
 
+A comma separated list of Kafka Record key field names that specifies the order of kafka key fields to be concatenated to form the row key. For example the list: 'username, post_id, time_stamp' when applied to a kafka key: {'username': 'bob','post_id': '213', 'time_stamp': '123123'} and with delimiter '#' gives the row key 'bob#213#123123'. Terms nested in the key maybe also accessed using '.' as a delimiter.
 If this configuration is empty or unspecified and the Kafka Message Key is a:
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma separated list of Kafka Record key field names that specifies the order of kafka key fields to be concatenated to form the row key. For example the list: 'username, post_id, time_stamp' when applied to a kafka key: {'username': 'bob','post_id': '213', 'time_stamp': '123123'} and with delimiter '#' gives the row key 'bob#213#123123'. Terms nested in the key maybe also accessed using '.' as a delimiter.
-	 - Required: MEDIUM
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 row.key.delimiter
 
+The delimiter used in concatenating kafka key fields in the row key. If this configuration is empty or unspecified, the key fields will be concatenated together directly.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The delimiter used in concatenating kafka key fields in the row key. If this configuration is empty or unspecified, the key fields will be concatenated together directly.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 auto.create.tables
 
@@ -93,21 +94,21 @@ Proxy
 ==========================
 🔘 proxy.url
 
+The url of a proxy to connect through. This property should only be used if you want to access through a proxy.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The url of a proxy to connect through. This property should only be used if you want to access through a proxy.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxy.user
 
+Proxy user. This property should only be used if you want to access through a proxy. Using proxy.user instead of embedding the username in proxy.url allows the proxy credentials to be hidden in logs.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Proxy user. This property should only be used if you want to access through a proxy. Using proxy.user instead of embedding the username in proxy.url allows the proxy credentials to be hidden in logs.
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxy.password
 
@@ -141,12 +142,12 @@ ID of the Bigtable instance
 
 🔘 gcp.bigtable.credentials.path
 
+The path to the JSON service key file. Configure exactly one of 'gcp.bigtable.credentials.path' and 'gcp.bigtable.credentials.json'.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The path to the JSON service key file. Configure exactly one of 'gcp.bigtable.credentials.path' and 'gcp.bigtable.credentials.json'.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 gcp.bigtable.credentials.json
 

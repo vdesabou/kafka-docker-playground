@@ -39,12 +39,12 @@ database
 
 🔘 username
 
+username
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: username
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 password
 
@@ -66,12 +66,12 @@ enabled SSL. default: false
 
 🔘 jdbcConnectionProperties
 
+Clickhouse JDBC connection properties. default: empty
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Clickhouse JDBC connection properties. default: empty
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 timeoutSeconds
 
@@ -120,21 +120,21 @@ suppress table existence exception. default: false
 
 🔘 clickhouseSettings
 
+A comma-separated list of ClickHouse settings to be appended to the JDBC URL
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of ClickHouse settings to be appended to the JDBC URL
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 topic2TableMap
 
+A comma-separated list of topic=table mappings
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A comma-separated list of topic=table mappings
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 retryOnSocketException
 
@@ -165,21 +165,21 @@ Set insert format when using org.apache.kafka.connect.storage.StringConverter
 
 🔘 proxyType
 
+What type of proxy to use. Default: none
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: What type of proxy to use. Default: none
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxyHost
 
+If we're using a proxy, what is the host?
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If we're using a proxy, what is the host?
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 proxyPort
 
@@ -219,21 +219,21 @@ enable database topic split from topic name. default: false
 
 🔘 dbTopicSplitChar
 
+Database topic split character. Default: none
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Database topic split character. Default: none
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 keeperOnCluster
 
+Which cluster keeper is on. Only needed for self-hosted clusters using exactly-once. Default: ''
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Which cluster keeper is on. Only needed for self-hosted clusters using exactly-once. Default: ''
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 bypassRowBinary
 
@@ -246,21 +246,21 @@ Bypass RowBinary format, sometimes needed with data gaps. default: false
 
 🔘 dateTimeFormats
 
+Date time formats for parsing date time fields (e.g. 'someDateField=yyyy-MM-dd HH:mm:ss.SSSSSSSSS'). default: ''
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Date time formats for parsing date time fields (e.g. 'someDateField=yyyy-MM-dd HH:mm:ss.SSSSSSSSS'). default: ''
-	 - Required: LOW
+	 - Type: LIST
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 client_version
 
+Client version
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Client version
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 tolerateStateMismatch
 
@@ -345,12 +345,12 @@ Report only successfully inserted offsets in preCommit. default: false
 
 🔘 ssl_socket_sni
 
+Override the SNI hostname sent in the client handshake. When set, the client will explicitly include the specified name as the server_name extension in the TLS ClientHello.This is useful to avoid handshake failure when routing TLS traffic through a proxy, where the proxy hostname and the server hostname may differ. Default: ''
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Override the SNI hostname sent in the client handshake. When set, the client will explicitly include the specified name as the server_name extension in the TLS ClientHello.This is useful to avoid handshake failure when routing TLS traffic through a proxy, where the proxy hostname and the server hostname may differ. Default: ''
-	 - Required: LOW
+	 - Type: STRING
+	 - Default: 
+	 - Importance: LOW
+	 - Required: false
 
 🔘 enableReplicaPinning
 
@@ -402,10 +402,10 @@ Whether to map Connect STRUCT fields to ClickHouse JSON columns during schema ev
 
 🔘 clusterName
 
+Cluster name to include in all distributed DDL queries run by the connector
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Cluster name to include in all distributed DDL queries run by the connector
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 

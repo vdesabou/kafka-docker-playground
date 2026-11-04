@@ -63,12 +63,12 @@ IBM MQ Connection
 ==========================
 🔘 mq.hostname
 
+The hostname of the IBM MQ broker.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The hostname of the IBM MQ broker.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.port
 
@@ -81,12 +81,12 @@ The port of the IBM MQ broker.
 
 🔘 mq.connection.list
 
+For IBM's HA/DR support with multiple MQ instances, enter hosts as comma-separated values, e.g., host1:port1, host2:port2.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: For IBM's HA/DR support with multiple MQ instances, enter hosts as comma-separated values, e.g., host1:port1, host2:port2.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.transport.type
 
@@ -144,12 +144,12 @@ Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern c
 
 🔘 mq.username
 
+The username to use when connecting to IBM MQ.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to use when connecting to IBM MQ.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 mq.password
 
@@ -171,30 +171,30 @@ Whether to disable MQCSP authentication in the connector. By default, the connec
 
 🔘 security.exit.classpath
 
+Full classpath location of the IBM MQ Security Exit implementation class. This should be the complete Java class name (e.g., com.example.CustomSecurityExit) of your custom security exit that implements the com.ibm.mq.exits.WMQSecurityExit interface. The security exit is called during connection establishment to perform custom authentication and authorization logic beyond standard IBM MQ security mechanisms.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Full classpath location of the IBM MQ Security Exit implementation class. This should be the complete Java class name (e.g., com.example.CustomSecurityExit) of your custom security exit that implements the com.ibm.mq.exits.WMQSecurityExit interface. The security exit is called during connection establishment to perform custom authentication and authorization logic beyond standard IBM MQ security mechanisms.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 security.exit.init.data
 
+Initialization data string passed to the Security Exit class during setup. This data can contain configuration parameters, authentication tokens, or other context information that the Security Exit implementation needs to properly authenticate and authorize the connection to IBM MQ. Maximum length is 32 characters.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Initialization data string passed to the Security Exit class during setup. This data can contain configuration parameters, authentication tokens, or other context information that the Security Exit implementation needs to properly authenticate and authorize the connection to IBM MQ. Maximum length is 32 characters.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 credentials.provider.classpath
 
+Fully qualified class name of the credentials provider implementation. This class must implement the io.confluent.connect.ibm.mq.creds.IbmMqCredentialsProvider interface. If the class also implements org.apache.kafka.common.Configurable, it will be passed a map of configuration properties with the prefix ``credentials.provider.`` . If not specified, no credentials provider will be used. 
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Fully qualified class name of the credentials provider implementation. This class must implement the io.confluent.connect.ibm.mq.creds.IbmMqCredentialsProvider interface. If the class also implements org.apache.kafka.common.Configurable, it will be passed a map of configuration properties with the prefix ``credentials.provider.`` . If not specified, no credentials provider will be used. 
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 IBM MQ Secure Connection
@@ -402,21 +402,21 @@ Whether the subscription of the connector tasks to a JMS topic is durable or not
 
 🔘 jms.subscription.name
 
+The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the JMS subscription. Supported only in durable subscriptions (``jms.subscription.durable = true``) and is applicable only to JMS topics.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 jms.message.selector
 
+The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The `message selector <http://docs.oracle.com/javaee/6/api/javax/jms/Session.html#createConsumer(javax.jms.Destination, java.lang.String, boolean)>`_ that should be applied to messages in the destination.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Retry
@@ -435,12 +435,12 @@ Exactly Once Support
 ==========================
 🔘 state.topic.name
 
+The name of the topic to be used in the IBM MQ system to be able to enable EOS support. The connector will use the data to guarantee eos guarantees on restarts. Configuring this config name will make the connector a EOS connector.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the topic to be used in the IBM MQ system to be able to enable EOS support. The connector will use the data to guarantee eos guarantees on restarts. Configuring this config name will make the connector a EOS connector.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Kafka

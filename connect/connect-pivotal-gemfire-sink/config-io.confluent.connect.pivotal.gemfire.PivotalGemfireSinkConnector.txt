@@ -3,12 +3,12 @@ Connection
 ==========================
 🔘 gemfire.locator.host
 
+Gemfire Locator Host Name
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Gemfire Locator Host Name
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gemfire.locator.port
 
@@ -21,12 +21,12 @@ Gemfire Locator Port Number
 
 🔘 gemfire.server.host
 
+Gemfire Server Host Name
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Gemfire Server Host Name
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gemfire.server.port
 
@@ -39,12 +39,12 @@ Gemfire Server Port Number
 
 🔘 gemfire.username
 
+Gemfire Username
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Gemfire Username
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 gemfire.password
 
@@ -78,12 +78,13 @@ The key mode, Supported modes are:
 
 🔘 key.fields
 
+List of comma-separated with whitespace key field names. The runtime interpretation of this config depends on the ``key.mode``:
 ``kafka``
 
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of comma-separated with whitespace key field names. The runtime interpretation of this config depends on the ``key.mode``:
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: 
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 Writes
