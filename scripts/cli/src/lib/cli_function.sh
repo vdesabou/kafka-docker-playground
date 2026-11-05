@@ -4886,7 +4886,175 @@ function menu_label () {
 # Does the example build a client whose version --client-version (CLIENT_VERSION) sets: a java application built with
 # the Apache Kafka clients (mvn -Dkafka.client.tag=$KAFKA_CLIENT_TAG), or a client example reading CLIENT_VERSION
 function example_uses_client_version () {
-  grep -q "kafka.client.tag\|CLIENT_VERSION" "$1" 2> /dev/null
+  example_files_contain "$1" "kafka.client.tag\|CLIENT_VERSION"
+}
+
+# Does the example file, or a file of its folder that it sources, match the grep pattern
+function example_files_contain () {
+  local example_file
+  while IFS= read -r example_file
+  do
+    if grep -q "$2" "$example_file" 2> /dev/null
+    then
+      return 0
+    fi
+  done < <(get_example_files_with_sourced "$1")
+  return 1
+}
+
+# The example file and the files of its folder that it sources (source ${DIR}/streams-functions.bash: the build of
+# other/kafka-streams is there), one per line
+function get_example_files_with_sourced () {
+  local file="$1"
+  local dir sourced
+  [ -f "$file" ] || return 0
+  echo "$file"
+  dir=$(dirname "$file")
+  for sourced in $(sed -n 's|^[[:space:]]*source[[:space:]]*"\{0,1\}\${DIR}/\([^/"[:space:]]*\)"\{0,1\}[[:space:]]*$|\1|p' "$file")
+  do
+    if [ -f "$dir/$sourced" ]
+    then
+      echo "$dir/$sourced"
+    fi
+  done
+}
+
+# The client whose version --client-version sets for this example, as a key of get_client_version_list (empty: none).
+# ccloud/client-* build the image of other/client-*, so the same client
+function get_example_client_kind () {
+  local file="$1"
+  case "$file" in
+    */client-c/*) echo "librdkafka" ;;
+    */client-dotnet/*) echo "confluent-kafka-dotnet" ;;
+    */client-go/*) echo "confluent-kafka-go" ;;
+    */client-java/*) echo "kafka-clients" ;;
+    */client-javascript/*) echo "confluent-kafka-javascript" ;;
+    */client-kafkajs/*) echo "kafkajs" ;;
+    */client-python/*) echo "confluent-kafka-python" ;;
+    */client-rust/*) echo "confluent-kafka-rust" ;;
+    *)
+      if example_files_contain "$file" "kafka.client.tag"
+      then
+        echo "kafka-clients"
+      fi
+      ;;
+  esac
+}
+
+# Published versions of a client (a key printed by get_example_client_kind), newest first, from its package registry.
+# Cached one day in /tmp/playground-client-version-list/<client>.txt, the stale cache is used when the registry is unreachable
+function get_client_version_list () {
+  local kind="$1"
+  local cache_dir="/tmp/playground-client-version-list"
+  local cache_file="$cache_dir/$kind.txt"
+  local list=""
+
+  if [ -s "$cache_file" ] && [ -z "$(find "$cache_file" -mmin +1440 2> /dev/null)" ]
+  then
+    cat "$cache_file"
+    return
+  fi
+
+  case "$kind" in
+    kafka-clients)
+      # client-java supports kafka-clients 2.x onwards
+      list=$(curl -fsSL --max-time 10 "https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/maven-metadata.xml" 2> /dev/null | sed -n 's:.*<version>\(.*\)</version>.*:\1:p' | grep -E '^[2-9]\.')
+      ;;
+    librdkafka)
+      # the packages that other/client-c installs (librdkafka1=<version>-*)
+      list=$(curl -fsSL --max-time 15 "https://packages.confluent.io/clients/deb/dists/bookworm/main/binary-amd64/Packages.gz" 2> /dev/null | gunzip 2> /dev/null | awk '/^Package: librdkafka1$/{p=1} p && /^Version:/{print $2; p=0}' | sed 's/-.*//')
+      ;;
+    confluent-kafka-dotnet)
+      list=$(curl -fsSL --max-time 10 "https://api.nuget.org/v3-flatcontainer/confluent.kafka/index.json" 2> /dev/null | jq -r '.versions[]' 2> /dev/null)
+      ;;
+    confluent-kafka-go)
+      list=$(curl -fsSL --max-time 10 "https://proxy.golang.org/github.com/confluentinc/confluent-kafka-go/v2/@v/list" 2> /dev/null | sed 's/^v//')
+      ;;
+    confluent-kafka-javascript)
+      list=$(curl -fsSL --max-time 10 "https://registry.npmjs.org/@confluentinc/kafka-javascript" 2> /dev/null | jq -r '.versions | keys[]' 2> /dev/null)
+      ;;
+    kafkajs)
+      list=$(curl -fsSL --max-time 10 "https://registry.npmjs.org/kafkajs" 2> /dev/null | jq -r '.versions | keys[]' 2> /dev/null)
+      ;;
+    confluent-kafka-python)
+      list=$(curl -fsSL --max-time 10 "https://pypi.org/pypi/confluent-kafka/json" 2> /dev/null | jq -r '.releases | keys[]' 2> /dev/null)
+      ;;
+    confluent-kafka-rust)
+      list=$(curl -fsSL --max-time 10 -A "kafka-docker-playground" "https://crates.io/api/v1/crates/confluent-kafka/versions" 2> /dev/null | jq -r '.versions[].num' 2> /dev/null)
+      ;;
+    *)
+      return
+      ;;
+  esac
+
+  # releases first, then the pre-releases and dev builds (rc, beta, -devel-…), newest first in both
+  list=$(echo "$list" | grep -v '^$' | sort -urV)
+  list=$( { echo "$list" | grep -E '^[0-9]+(\.[0-9]+)+$'; echo "$list" | grep -vE '^[0-9]+(\.[0-9]+)+$'; } | grep -v '^$')
+  if [ -n "$list" ]
+  then
+    mkdir -p "$cache_dir"
+    echo "$list" > "$cache_file"
+    echo "$list"
+  elif [ -s "$cache_file" ]
+  then
+    cat "$cache_file"
+  fi
+}
+
+# The example file of a command line being completed: the value of -f / --file, else the example of the last run
+function get_example_file_from_completion_words () {
+  local file="" previous=""
+  local word
+  for word in "$@"
+  do
+    case "$previous" in
+      -f|--file) file="$word" ;;
+    esac
+    case "$word" in
+      --file=*) file="${word#--file=}" ;;
+    esac
+    previous="$word"
+  done
+  # the completion of --file prints <cur>@<file>
+  file="${file#*@}"
+  file="${file/#\~/$HOME}"
+  if [ -z "$file" ]
+  then
+    file=$(playground state get run.test_file 2> /dev/null)
+  fi
+  echo "$file"
+}
+
+# fzf picker of the versions of the client that the example builds (get_example_client_kind); a version that is not in
+# the list can be typed (alt-enter, or Enter when nothing matches). Prints the version, empty when cancelled or when the
+# example builds no client
+function get_client_version_with_fzf () {
+  local cur="$1"
+  local file="$2"
+  local kind list res
+
+  kind=$(get_example_client_kind "$file")
+  if [ -z "$kind" ]
+  then
+    return
+  fi
+  list=$(get_client_version_list "$kind")
+
+  local fzf_option_pointer="" fzf_option_rounded=""
+  if version_gt "$(get_fzf_version)" "0.38"
+  then
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  fi
+
+  # --print-query: line 1 is the query, line 2 the selection (none when nothing matches); Esc exits 130
+  res=$(echo "$list" | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="☕" --header="select the $kind version that $(example_relative_path "$file") builds (alt-enter: the typed version, Esc: the default)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_pointer --print-query --bind "alt-enter:print-query") || [ $? -eq 1 ] || return 0
+  if [ "$(echo "$res" | wc -l)" -gt 1 ]
+  then
+    echo "$res" | tail -1
+  else
+    echo "$res"
+  fi
 }
 
 # playground run: known-bad combinations of the current flags / variables, one

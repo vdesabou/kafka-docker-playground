@@ -104,6 +104,7 @@ commands:
 - import: src/commands/get-ccloud-cluster-list.yml
 
 - import: src/commands/get-tag-list.yml
+- import: src/commands/get-client-version-list.yml
 
 - import: src/commands/get-kafka-region-list.yml
 
