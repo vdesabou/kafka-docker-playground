@@ -1090,7 +1090,8 @@ def first_names(names: List[str], top: int = 3) -> str:
 
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
-                sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None) -> str:
+                sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
+                html_sections: List[Tuple[str, str]] = ()) -> str:
     """unit: what a label is (file, container, script); links: (label, url) in the header; sections: (title, text)
     shown as is after the findings (the last lines of a failed CI script...); viewers: label -> page of the file
     (log_viewer), the labels and line numbers link to it"""
@@ -1127,6 +1128,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     ])
     body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), findings_html(res["findings"])]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
+    # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
+    body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
     # the filter bar first: everything under it (the charts, the root causes, the records) follows the filters
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
     body.append(filter_html(s["by_level"], s["by_connector"], without_connector))
@@ -1229,6 +1232,9 @@ def main() -> int:
     ap.add_argument("--link", nargs=2, action="append", default=[], metavar=("LABEL", "URL"), help="link in the header")
     ap.add_argument("--section", nargs=2, action="append", default=[], metavar=("TITLE", "FILE"),
                     help="text file shown as is after the findings")
+    ap.add_argument("--html-section", nargs=2, action="append", default=[], metavar=("TITLE", "FILE"),
+                    help="HTML fragment written by another playground tool (the 🌊 Kafka Streams view of "
+                         "tools/streams-analyzer), shown after the findings and the text sections")
     ap.add_argument("--sources", metavar="FILE",
                     help="label<tab>path<tab>1 when the file stays on disk, of each file analyzed: with --html-out, a page "
                          "per file with findings next to the report (<report>-files/), linked from its locations")
@@ -1273,9 +1279,13 @@ def main() -> int:
             for title, path in args.section:
                 with open(path, encoding="utf-8", errors="replace") as sf:
                     sections.append((title, sf.read()))
+            html_sections = []
+            for title, path in args.html_section:
+                with open(path, encoding="utf-8", errors="replace") as sf:
+                    html_sections.append((title, sf.read()))
             viewers = write_viewers(args.html_out, files, res, args.sources) if args.sources else {}
             fh.write(html_report(res, args.title, args.levels, args.skipped, args.heading, args.command, args.unit,
-                                 [tuple(l) for l in args.link], sections, viewers))
+                                 [tuple(l) for l in args.link], sections, viewers, html_sections))
     return 0
 
 

@@ -8856,6 +8856,74 @@
       ]
     },
     {
+      "name": "streams",
+      "description": "🌊 Kafka Streams commands\n\nLook at the Kafka Streams applications of the running example (the\ninstances of other/kafka-streams, or the Streams containers of a\nreproduction model), from what the Kafka Streams library logs and from\ntheir consumer group: no JMX, no code in the application.\n\n  status     state of each instance, rebalances, threads, active and standby tasks, restoration, known errors\n\n🎓 Tip: the same Kafka Streams view of a customer's log files is in\n'playground analyze logs' (🌊 Kafka Streams section).",
+      "usage": "playground streams COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "status",
+          "description": "🌊 Show the state of the Kafka Streams instances\n\nFor each application (application.id) and each instance (container):\nthe state of the KafkaStreams client and since when, the number of\nrebalances and the time spent in REBALANCING, the stream threads with\ntheir active and standby tasks, the active tasks not restored yet, the\nchangelog partitions being restored, the records restored, and the\nknown Kafka Streams errors of the logs (task migrated, fenced producer,\ndeserialization or production handler, missing source topic, topics\nnot co-partitioned, state directory locked, uncaught exception...) with\ntheir advice. Then the consumer group of each application: its state,\nmembers and lag.\n\nEverything comes from the lines that the Kafka Streams library logs at\nINFO (State transition from ... to ..., Handle new assignment with:,\nRestored and ready to run, Finished restoring changelog...), so it works\nwith any application and any Kafka Streams version since 3.0, as long\nas its logs are at INFO. The logs of a restarted container hold its\nprevious runs too: only the current run is shown, the restarts are\ncounted (and drawn in the timeline of --html).\n\n--html also writes an HTML report (timeline of the states, task\nassignment, errors). The same view of a customer's log files is the\n🌊 Kafka Streams section of 'playground analyze logs'.\n\nExits with 1 when an instance is not RUNNING (or its container is\nstopped), so that an example can check it.",
+          "usage": "playground streams status [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Container of a Kafka Streams instance, can be set several times\n\nℹ️ If not set, the containers named streams, streams2, streams3... (other/kafka-streams)\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--application-id",
+                "-a"
+              ],
+              "argument": "APPLICATION_ID",
+              "description": "🆔 Only this application.id (an instance can run several applications, like the demo\napplications of other/kafka-streams)"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON (applications, instances, threads, tasks, errors, consumer group)"
+            },
+            {
+              "names": [
+                "--html"
+              ],
+              "argument": "",
+              "description": "📊 Also write an HTML report: the same view with a timeline of the state of each instance\n(restarts and the time without logs), the task assignment (task × instance) and the\nknown errors with their advice, opened in the browser"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Folder of the HTML report of --html (default is /tmp/playground-streams)\n\nDefault value: /tmp/playground-streams"
+            },
+            {
+              "names": [
+                "--no-open"
+              ],
+              "argument": "",
+              "description": "🙈 Do not open the HTML report in the browser (it is still written, and its path printed)"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "db",
       "description": "🛢️ Database commands\n\nRun SQL in the database container of the running example, and wait for a\nsink connector to write rows, without docker exec and the client command\nline of each database.\n\n  sql             run statements (heredoc, --file or --sql) with the database client\n  wait-for-rows   wait until a table contains N rows\n  cdc-check       are the CDC prerequisites of the database met? (archivelog, wal_level, binlog...)\n\nSupported: Oracle (sqlplus), PostgreSQL (psql), MySQL and MariaDB (mysql /\nmariadb), SQL Server (sqlcmd), IBM Db2 (db2) and MongoDB (mongosh).\n\nThe database is the only running container whose image is one of them\n(oracle, postgres, mysql, sqlserver, mongodb, ibmdb2... in the examples):\npass --container when there are several, and --engine when the image name\ndoes not tell which database it is.\n\nThe user, password and database come from the environment variables of the\ncontainer (POSTGRES_USER, MYSQL_ROOT_PASSWORD, SA_PASSWORD, ORACLE_PWD,\nMONGO_INITDB_ROOT_USERNAME, DB2INST1_PASSWORD...), so most examples need no\nflag: pass --user, --password and --database to connect as another user.\n\n🎓 Tip: in an example script, use 'db wait-for-rows' instead of a fixed\nsleep before checking what a sink connector wrote.",
       "usage": "playground db COMMAND",

@@ -235,6 +235,8 @@ commands:
 
 - import: src/commands/ksqldb.yml
 
+- import: src/commands/streams.yml
+
 - import: src/commands/db.yml
 
 - import: src/commands/rbac.yml

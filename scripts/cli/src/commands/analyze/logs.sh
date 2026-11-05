@@ -524,6 +524,46 @@ then
     exit 0
 fi
 sanitize_file "$records_file"
+
+# 🌊 Kafka Streams: state transitions, rebalances, task assignment, restoration and known errors of the Kafka Streams
+# applications of the logs (tools/streams-analyzer/streams_report.py, also used by playground streams status). Only the
+# files with Kafka Streams lines are read again
+streams_json="null"
+streams_text_file="$tmp_dir/kafka-streams.txt"
+streams_sources_file="$tmp_dir/streams-sources"
+: > "$streams_sources_file"
+while IFS=$'\t' read -r streams_label streams_path streams_rest
+do
+    if [ -f "$streams_path" ] && grep -q -m1 -F -e 'stream-client [' -e 'stream-thread [' "$streams_path" 2>/dev/null
+    then
+        printf '%s\t%s\n' "$streams_label" "$streams_path" >> "$streams_sources_file"
+    fi
+done < "$sources_file"
+if [ -s "$streams_sources_file" ]
+then
+    if python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --sources "$streams_sources_file" > "$streams_text_file" 2>/dev/null
+    then
+        streams_json=$(python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --json --sources "$streams_sources_file" 2>/dev/null || echo null)
+        if [[ -n "$sanitize" ]]
+        then
+            python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$streams_text_file" > "$streams_text_file.sanitized" && mv "$streams_text_file.sanitized" "$streams_text_file"
+            streams_json=$(printf '%s\n' "$streams_json" | python3 -I "$sanitizer" --state "$sanitize_state" --no-count)
+        fi
+        # the HTML section, from the JSON (sanitized with --sanitize, never the raw files)
+        printf '%s\n' "$streams_json" > "$tmp_dir/kafka-streams.json"
+        python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --from-json "$tmp_dir/kafka-streams.json" --html-fragment "$tmp_dir/kafka-streams.html" 2>/dev/null || rm -f "$tmp_dir/kafka-streams.html"
+        if [[ -z "$json_out" ]]
+        then
+            echo ""
+            log "🌊 Kafka Streams applications of the logs (playground streams status for a running example)"
+            cat "$streams_text_file"
+        fi
+    else
+        streams_json="null"
+        rm -f "$streams_text_file"
+    fi
+fi
+
 redaction='{}'
 if [[ -n "$sanitize" ]]
 then
@@ -566,7 +606,7 @@ then
     fi
     python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" "${json_args[@]}" > "$tmp_dir/logs.json" || exit $?
     # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
-    jq --argjson redaction "$redaction" '. + {redaction_summary: $redaction}' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
+    jq --argjson redaction "$redaction" --argjson streams "$streams_json" '. + {redaction_summary: $redaction} + (if $streams != null then {kafka_streams: $streams} else {} end)' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
     if [ ${#cfk_json_files[@]} -eq 0 ]
     then
         cat "$tmp_dir/logs-redacted.json" >&3
@@ -595,6 +635,13 @@ else
     report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
 fi
 # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
+if [ -f "$tmp_dir/kafka-streams.html" ]
+then
+    report_args+=(--html-section "🌊 Kafka Streams" "$tmp_dir/kafka-streams.html")
+elif [ -f "$streams_text_file" ]
+then
+    report_args+=(--section "🌊 Kafka Streams" "$streams_text_file")
+fi
 report_args+=(--sources "$sources_file")
 export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"

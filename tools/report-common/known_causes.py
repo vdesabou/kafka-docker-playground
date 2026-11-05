@@ -109,6 +109,49 @@ KNOWN_CAUSES = [
      "pattern": r"ClassNotFoundException|NoClassDefFoundError|NoSuchMethodError|NoSuchFieldError",
      "title": "📦 Class loading error",
      "advice": "a jar is missing from the plugin, or two versions of a library clash in the plugin path"},
+    # Kafka Streams (the 🌊 Kafka Streams section of analyze logs and playground streams status explain the same errors,
+    # tools/streams-analyzer/streams_report.py). Before the generic serialization and Kafka entries: a Kafka Streams
+    # deserialization error is also a SerializationException
+    {"name": "streams_copartition", "severity": "high", "category": "Kafka Streams Issues",
+     "pattern": r"Topics not co-partitioned",
+     "title": "🧩 Kafka Streams: topics not co-partitioned",
+     "advice": "the source topics of a join do not have the same number of partitions: repartition one side or create "
+               "them with the same partition count. Since Kafka Streams 3.2 two source topics joined directly are no "
+               "longer refused and join results are silently missing for some keys (other/kafka-streams/join.sh)"},
+    {"name": "streams_missing_source", "severity": "high", "category": "Kafka Streams Issues",
+     "pattern": r"MissingSourceTopicException|One or more source topics were missing",
+     "title": "🕳️ Kafka Streams: missing source topic",
+     "advice": "a source topic of the topology does not exist, or the application cannot describe it (ACL): create it "
+               "before starting the application"},
+    {"name": "streams_fenced", "severity": "high", "category": "Kafka Streams Issues",
+     "pattern": r"Detected that the thread is being fenced|Producer got fenced",
+     "title": "🧟 Kafka Streams: producer fenced (exactly-once)",
+     "advice": "another instance took over the tasks of this thread (paused, too slow, session lost): its transaction is "
+               "aborted and the tasks migrate. Look at GC pauses, max.poll.interval.ms and transaction.timeout.ms "
+               "(other/kafka-streams/eos.sh, playground streams status)"},
+    {"name": "streams_task_migrated", "severity": "medium", "category": "Kafka Streams Issues",
+     "pattern": r"TaskMigratedException",
+     "title": "🔀 Kafka Streams: task migrated",
+     "advice": "a stream thread lost the ownership of its tasks (rebalance during processing, fenced producer, kicked out "
+               "of the group) and rejoins: frequent occurrences point at slow processing between polls "
+               "(max.poll.interval.ms), GC pauses or unstable members (playground streams status counts the rebalances)"},
+    {"name": "streams_deserialization", "severity": "high", "category": "Kafka Streams Issues",
+     "pattern": r"Exception caught during Deserialization|deserialization error callback",
+     "title": "🧪 Kafka Streams: deserialization error",
+     "advice": "a record does not match the serdes (poison pill, wrong format): deserialization.exception.handler "
+               "(default.deserialization.exception.handler before 4.0) stops the thread with LogAndFailExceptionHandler, "
+               "skips it with LogAndContinueExceptionHandler (other/kafka-streams/serde-errors.sh)"},
+    {"name": "streams_state_dir_lock", "severity": "high", "category": "Kafka Streams Issues",
+     "pattern": r"Failed to lock the state directory|Failed to lock state directory|streams\.errors\.LockException",
+     "title": "🔒 Kafka Streams: state directory locked",
+     "advice": "two threads or instances use the same state.dir for a task (two instances on one volume, a previous "
+               "instance still running): give each instance its own state.dir"},
+    {"name": "streams_uncaught", "severity": "high", "category": "Kafka Streams Issues",
+     "pattern": r"Encountered the following exception during processing|stream thread will shut down"
+                r"|Replacing thread in the streams uncaught exception handler",
+     "title": "💀 Kafka Streams: stream thread died",
+     "advice": "an exception killed a stream thread: the StreamsUncaughtExceptionHandler replaces the thread, shuts down "
+               "the client or the application. The cause is in the exception chain of the record"},
     {"name": "unknown_magic_byte", "severity": "high", "category": "Serialization Issues",
      "pattern": r"Unknown magic byte",
      "title": "🧲 Unknown magic byte",
