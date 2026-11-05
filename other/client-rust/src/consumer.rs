@@ -2,12 +2,15 @@
 // KIP-848 consumer group protocol (group.protocol=consumer, the only one the
 // client supports), and commits the offsets after each batch.
 // Exits 0 once <nb-messages> records are consumed, 1 after <timeout-seconds>.
+// SASL_USERNAME / SASL_PASSWORD environment variables: SASL_SSL (Confluent Cloud).
 //
 // usage: consumer <bootstrap-servers> <topic> <group-id> <nb-messages> <timeout-seconds>
 
 use std::collections::HashMap;
 use std::env;
 use std::time::{Duration, Instant};
+
+mod common;
 
 use confluent_kafka::common::serialization::StringDeserializer;
 use confluent_kafka::consumer::{Consumer, ConsumerConfig, KafkaConsumer};
@@ -28,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let nb_messages: usize = args[4].parse()?;
     let timeout = Duration::from_secs(args[5].parse()?);
 
-    let props = HashMap::from([
+    let mut props = HashMap::from([
         ("bootstrap.servers".to_string(), bootstrap_servers.to_string()),
         ("group.id".to_string(), group_id.to_string()),
         ("group.protocol".to_string(), "consumer".to_string()),
@@ -36,6 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("enable.auto.commit".to_string(), "false".to_string()),
         ("client.id".to_string(), "client-rust-consumer".to_string()),
     ]);
+    common::add_sasl_config(&mut props);
     let config = ConsumerConfig::new(&props)?;
     let mut consumer = KafkaConsumer::<String, String>::new(
         config,
@@ -69,6 +73,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // leave the group now: without close(), the member stays in the group until its session times out
+    consumer.close().await?;
     println!("{nb_consumed} records were consumed from topic {topic} by group {group_id}");
     Ok(())
 }
