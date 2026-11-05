@@ -2380,7 +2380,8 @@ then
       cat /tmp/ccloud-costs-history.txt
     fi
     log "👀 all the details are in the HTML report above, or run <playground cloud-resources ccloud costs-history --detailed>"
-    display_ccloud_leftovers
+    # best effort: the example already succeeded, a failure to list the leftovers must not change the exit code
+    display_ccloud_leftovers || true
   elif [[ $test_file_rel == *"aws"* ]]
   then
     echo ""
