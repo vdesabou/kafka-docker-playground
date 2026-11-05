@@ -30,7 +30,12 @@ set -e
 playground topic create --topic $TOPIC --nb-partitions 3
 
 log "Building the Rust client image (same code as other/client-rust), the first build takes a few minutes"
-docker build -q -t kdp-client-rust ${DIR}/../../other/client-rust > /dev/null
+if [ -n "$CLIENT_VERSION" ]
+then
+     log "📦 CLIENT_VERSION is set: building the image with client version $CLIENT_VERSION"
+fi
+docker build -q --build-arg CLIENT_VERSION="${CLIENT_VERSION:-}" -t kdp-client-rust ${DIR}/../../other/client-rust > /dev/null
+log "Rust client version: $(docker run --rm kdp-client-rust cat /usr/local/share/client-version.txt)"
 
 # the API key and secret are passed as environment variables (-e NAME without a value): never on a command line
 export SASL_USERNAME="$CLOUD_KEY"

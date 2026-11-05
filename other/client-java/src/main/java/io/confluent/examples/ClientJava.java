@@ -52,6 +52,8 @@ public class ClientJava {
         Properties props = loadConfig(args[2]);
         int nbMessages = args.length == 4 ? Integer.parseInt(args[3]) : 10;
 
+        System.out.println("kafka-clients " + kafkaClientsVersion());
+
         switch (mode) {
             case "produce" -> produce(topic, props, nbMessages, false);
             case "produce-avro" -> produce(topic, props, nbMessages, true);
@@ -61,6 +63,20 @@ public class ClientJava {
                 System.err.println(USAGE);
                 System.exit(1);
             }
+        }
+    }
+
+    // the version of the kafka-clients jar (pom.xml, or CLIENT_VERSION in the Dockerfile): kafka/kafka-version.properties,
+    // shipped in every kafka-clients jar
+    static String kafkaClientsVersion() {
+        try (var in = ClientJava.class.getClassLoader().getResourceAsStream("kafka/kafka-version.properties")) {
+            Properties p = new Properties();
+            if (in != null) {
+                p.load(in);
+            }
+            return p.getProperty("version", "unknown");
+        } catch (java.io.IOException e) {
+            return "unknown";
         }
     }
 

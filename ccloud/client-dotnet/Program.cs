@@ -41,6 +41,8 @@ var topic = args[1];
 var nbMessages = args.Length == 4 ? int.Parse(args[3]) : 10;
 var (clientProps, schemaRegistryProps) = LoadConfig(args[2]);
 
+Console.WriteLine($"Confluent.Kafka {typeof(Library).Assembly.GetName().Version}, librdkafka {Library.VersionString}");
+
 try
 {
     switch (mode)

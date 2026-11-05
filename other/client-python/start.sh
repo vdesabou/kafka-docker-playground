@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ -n "$CLIENT_VERSION" ]
+then
+     log "📦 CLIENT_VERSION is set: building the client-python image with client version $CLIENT_VERSION"
+fi
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 # only the client-python container and what it depends on (broker, schema-registry): no connect, nothing to wait for
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --service client-python

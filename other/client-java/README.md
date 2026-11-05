@@ -35,3 +35,13 @@ playground run -f start.sh
 5. Shows the schema registered under subject `java-avro-value` with `playground schema get`, and the committed offsets of both groups with `playground consumer-group describe`.
 
 The client logs warnings and errors only (`src/main/resources/simplelogger.properties`). To try your own client code or configuration, edit `ClientJava.java` (rebuild with `playground container recreate`) or `client.properties` (read at each run, no rebuild needed). [ccloud/client-java](../../ccloud/client-java/) uses the same image against Confluent Cloud.
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another kafka-clients version than the default, the `kafka.version` of `pom.xml` (`-Dkafka.version` in the build when set). `kafka-avro-serializer` follows with the Confluent Platform release of that Apache Kafka version: the `confluent.version` of `pom.xml` for 4.x, `7.N.0` for 3.N, `6.0.0`-`6.2.0` for 2.6-2.8, `5.N.0` for 2.0-2.5 (the 8.x serializer needs kafka-clients 4.x):
+
+```bash
+CLIENT_VERSION=3.9.1 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`. An old version may not support everything the example uses (the Avro serializer API changed over time).

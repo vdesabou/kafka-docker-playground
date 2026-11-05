@@ -6,6 +6,7 @@
 # The config file has one librdkafka property per line (bootstrap.servers, security.protocol, sasl.*...), plus the
 # schema.registry.* properties of the Schema Registry client (schema.registry.url, schema.registry.basic.auth.user.info).
 
+import importlib.metadata
 import sys
 import time
 
@@ -129,7 +130,7 @@ def main():
     mode, topic, config_file = sys.argv[1], sys.argv[2], sys.argv[3]
     nb_messages = int(sys.argv[4]) if len(sys.argv) == 5 else 10
 
-    print(f"confluent-kafka {confluent_kafka.version()[0]}, librdkafka {confluent_kafka.libversion()[0]}")
+    print(f"confluent-kafka {importlib.metadata.version('confluent-kafka')}, librdkafka {confluent_kafka.libversion()[0]}")
     client_conf, schema_registry_conf = load_config(config_file)
 
     if mode == "produce":

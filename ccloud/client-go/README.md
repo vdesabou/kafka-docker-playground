@@ -34,3 +34,13 @@ playground run -f start.sh
 
 5. Same with Avro records (`produce-avro` / `consume-avro`): the `avrov2` serializer registers the schema of the Go struct `Payment` under subject `client_go_avro_<TAG>-value` in Confluent Cloud Schema Registry.
 6. Checks the Avro records with `playground topic consume --min-expected-messages 10` (Java deserializer, same schema).
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another confluent-kafka-go v2 version than the default, the version of `go.mod` (`go get` + `go mod tidy` in the build when set):
+
+```bash
+CLIENT_VERSION=2.10.1 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. The image is the one of [other/client-go](../../other/client-go/), built with `docker build --build-arg CLIENT_VERSION`. An old version may not support everything the example uses (the Avro serializer API changed over time).

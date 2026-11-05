@@ -34,3 +34,13 @@ playground run -f start.sh
 
 5. Same with Avro records (`produce-avro` / `consume-avro`): `AvroSerializer` registers the schema under subject `client_python_avro_<TAG>-value` in the Schema Registry of the environment, `AvroDeserializer` reads it back.
 6. Checks the Avro records with `playground topic consume --min-expected-messages 10` (Java deserializer, same schema).
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another confluent-kafka (with the avro and schemaregistry extras) version than the default, the version of `requirements.txt`:
+
+```bash
+CLIENT_VERSION=2.10.1 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. The image is the one of [other/client-python](../../other/client-python/), built with `docker build --build-arg CLIENT_VERSION`. An old version may not support everything the example uses (the Avro serializer API changed over time).

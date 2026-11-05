@@ -33,3 +33,13 @@ playground run -f start.sh
    ```
 
 5. Checks the records with `playground topic consume --min-expected-messages 10`.
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another librdkafka version than the default, `2.16.0` (`DEFAULT_CLIENT_VERSION` in the `Dockerfile`, packages `librdkafka1` / `librdkafka-dev` of the Confluent apt repository):
+
+```bash
+CLIENT_VERSION=2.10.1 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. The image is the one of [other/client-c](../../other/client-c/), built with `docker build --build-arg CLIENT_VERSION`. An old version may not support everything the example uses (the Avro serializer API changed over time).

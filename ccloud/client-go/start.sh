@@ -47,7 +47,11 @@ playground topic create --topic $STRING_TOPIC
 playground topic create --topic $AVRO_TOPIC
 
 log "Building the Go client image (same code as other/client-go: confluent-kafka-go v2.16.1)"
-docker build -q -t vdesabou/go-ccloud-example-docker ${DIR}/../../other/client-go > /dev/null
+if [ -n "$CLIENT_VERSION" ]
+then
+     log "📦 CLIENT_VERSION is set: building the image with client version $CLIENT_VERSION"
+fi
+docker build -q --build-arg CLIENT_VERSION="${CLIENT_VERSION:-}" -t vdesabou/go-ccloud-example-docker ${DIR}/../../other/client-go > /dev/null
 
 # the client containers run with shorter TCP keepalives than the Linux default (2 hours), below the idle timeout of the
 # Confluent Cloud load balancers

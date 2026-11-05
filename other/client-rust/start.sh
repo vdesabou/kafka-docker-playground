@@ -11,10 +11,18 @@ then
      exit 111
 fi
 
+if [ -n "$CLIENT_VERSION" ]
+then
+     log "📦 CLIENT_VERSION is set: building the client-rust image with client version $CLIENT_VERSION"
+fi
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 NB_MESSAGES=100
+
+log "Rust client version (confluent-kafka crate) in the image"
+playground container exec -c client-rust --command "cat /usr/local/share/client-version.txt"
 
 log "Creating topic client-rust"
 playground topic create --topic client-rust --nb-partitions 3

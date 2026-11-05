@@ -4,6 +4,9 @@ services:
   client-dotnet:
     build:
       context: ../../other/client-dotnet/
+      args:
+        # optional: another client version, see README.md
+        CLIENT_VERSION: ${CLIENT_VERSION:-}
     hostname: client-dotnet
     container_name: client-dotnet
     volumes:

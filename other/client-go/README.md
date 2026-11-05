@@ -35,3 +35,13 @@ playground run -f start.sh
 5. Shows the schema registered under subject `go-avro-value` with `playground schema get`, and the committed offsets of both groups with `playground consumer-group describe`.
 
 To try your own client code or configuration, edit `main.go` (rebuild with `playground container recreate`) or `client.properties` (read at each run, no rebuild needed).
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another confluent-kafka-go v2 version than the default, the version of `go.mod` (`go get` + `go mod tidy` in the build when set):
+
+```bash
+CLIENT_VERSION=2.10.1 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`. An old version may not support everything the example uses (the Avro serializer API changed over time).

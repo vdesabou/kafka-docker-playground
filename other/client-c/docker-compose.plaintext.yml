@@ -4,6 +4,9 @@ services:
   client-c:
     build:
       context: ../../other/client-c/
+      args:
+        # optional: another client version, see README.md
+        CLIENT_VERSION: ${CLIENT_VERSION:-}
     hostname: client-c
     container_name: client-c
     volumes:

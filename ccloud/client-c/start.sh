@@ -40,7 +40,11 @@ set -e
 playground topic create --topic $TOPIC --nb-partitions 3
 
 log "Building the C client image (librdkafka, same code as other/client-c)"
-docker build -q -t kdp-client-c ${DIR}/../../other/client-c > /dev/null
+if [ -n "$CLIENT_VERSION" ]
+then
+     log "📦 CLIENT_VERSION is set: building the image with client version $CLIENT_VERSION"
+fi
+docker build -q --build-arg CLIENT_VERSION="${CLIENT_VERSION:-}" -t kdp-client-c ${DIR}/../../other/client-c > /dev/null
 
 # the client containers run with shorter TCP keepalives than the Linux default (2 hours), below the idle timeout of the
 # Confluent Cloud load balancers

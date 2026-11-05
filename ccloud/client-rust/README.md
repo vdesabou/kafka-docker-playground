@@ -38,3 +38,13 @@ playground run -f start.sh
    ```
 
 6. Checks the records with `playground topic consume --min-expected-messages 100`, and shows the committed offsets of the group with `playground consumer-group describe`.
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another confluent-kafka crate version than the default, the version pinned in `Cargo.toml`:
+
+```bash
+CLIENT_VERSION=1.0.0-rc.2 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. The image is the one of [other/client-rust](../../other/client-rust/), built with `docker build --build-arg CLIENT_VERSION`. An old version may not support everything the example uses (the Avro serializer API changed over time).

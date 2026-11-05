@@ -35,3 +35,13 @@ playground run -f start.sh
 5. Shows the committed offsets of the group with `playground consumer-group describe --group c-string-group`.
 
 To try your own client code or configuration, edit `client.c` (rebuild with `playground container recreate`) or `client.properties` (read at each run, no rebuild needed). [ccloud/client-c](../../ccloud/client-c/) uses the same image against Confluent Cloud.
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another librdkafka version than the default, `2.16.0` (`DEFAULT_CLIENT_VERSION` in the `Dockerfile`, packages `librdkafka1` / `librdkafka-dev` of the Confluent apt repository):
+
+```bash
+CLIENT_VERSION=2.10.1 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`. An old version may not support everything the example uses (the Avro serializer API changed over time).

@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -175,7 +176,7 @@ func main() {
 	kafkaConfig, srConfig := loadConfig(os.Args[3])
 
 	_, libVersion := kafka.LibraryVersion()
-	fmt.Printf("confluent-kafka-go with librdkafka %s\n", libVersion)
+	fmt.Printf("confluent-kafka-go %s with librdkafka %s\n", clientVersion(), libVersion)
 
 	switch mode {
 	case "produce":
@@ -211,4 +212,16 @@ func main() {
 	default:
 		usage()
 	}
+}
+
+// clientVersion is the confluent-kafka-go version the binary was built with (go.mod, or CLIENT_VERSION in the Dockerfile).
+func clientVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, dep := range info.Deps {
+			if dep.Path == "github.com/confluentinc/confluent-kafka-go/v2" {
+				return dep.Version
+			}
+		}
+	}
+	return "unknown"
 }

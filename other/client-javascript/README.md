@@ -39,3 +39,13 @@ playground run -f start.sh
 [ccloud/client-javascript](../../ccloud/client-javascript/) uses the same image against Confluent Cloud.
 
 To try your own client code or configuration, edit `client.js` (rebuild with `playground container recreate`) or `client.properties` (read at each run, no rebuild needed).
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another @confluentinc/kafka-javascript version than the default, the version of `package.json` (`@confluentinc/schemaregistry` keeps the version of `package-lock.json`):
+
+```bash
+CLIENT_VERSION=1.6.0 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`. An old version may not support everything the example uses (the Avro serializer API changed over time).

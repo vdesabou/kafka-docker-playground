@@ -4,6 +4,9 @@ services:
   client-java:
     build:
       context: ../../other/client-java/
+      args:
+        # optional: another client version, see README.md
+        CLIENT_VERSION: ${CLIENT_VERSION:-}
     hostname: client-java
     container_name: client-java
     volumes:
