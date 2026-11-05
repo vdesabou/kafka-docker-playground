@@ -148,8 +148,6 @@ log "Running orclcdc_readiness.sql, see https://docs.confluent.io/cloud/current/
 playground container cp --source orclcdc_readiness.sql --destination oracle:/orclcdc_readiness.sql
 playground db sql << EOF
      @/orclcdc_readiness.sql C##CFLTADMIN C##CFLTUSER XOUT ''
-END;
-/
 EOF
 
 log "Creating signal table"

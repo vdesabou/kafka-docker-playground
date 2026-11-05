@@ -87,7 +87,8 @@ create table customers2 (
 
 
 -- Courtesy of https://techblog.covermymeds.com/databases/on-update-timestamps-mysql-vs-postgres/
-CREATE FUNCTION update_updated_at_column() RETURNS trigger
+-- OR REPLACE: the function was already created with the customers table
+CREATE OR REPLACE FUNCTION update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS \$\$
   BEGIN
