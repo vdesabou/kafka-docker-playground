@@ -8,4 +8,8 @@ ARG CLIENT_VERSION=""
 RUN npm ci --omit=dev \
     && if [ -n "$CLIENT_VERSION" ]; then npm install --omit=dev "kafkajs@$CLIENT_VERSION"; fi
 COPY client.js .
+# kafkajs passes a negative delay to setTimeout (its request timeouts), which Node.js 23+ reports on every client
+# with "TimeoutNegativeWarning: -1793882821993 is a negative number." (Node.js uses 1 ms instead): hide only that warning,
+# kafkajs is not maintained anymore
+ENV NODE_OPTIONS=--disable-warning=TimeoutNegativeWarning
 CMD ["sleep", "infinity"]
