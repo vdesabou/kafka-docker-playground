@@ -421,6 +421,25 @@ EOF
   fi
 
   local rc=0
+  if [[ "$db_engine" == "mysql" || "$db_engine" == "mariadb" ]]
+  then
+    # the client connects through the Unix socket by default. In the mysql pod of the cfk environment it sometimes
+    # answers ERROR 2002 (Can't connect to local MySQL server through socket) while the server is up and serving
+    # TCP: nothing ran then, retry once over TCP. Not TCP first: examples with MYSQL_ROOT_HOST: 172.% refuse root
+    # over 127.0.0.1
+    local output
+    output=$(printf '%s\n' "$input" | db_container_run "${client_cmd[@]}" 2>&1) || rc=$?
+    if [[ $rc -ne 0 ]] && grep -q '^ERROR 2002' <<< "$output"
+    then
+      # stderr: a scalar caller keeps only stdout
+      logwarn "$db_client could not connect through the socket of $db_container (ERROR 2002), retrying over TCP 127.0.0.1" >&2
+      client_cmd=("$db_client" --protocol=TCP --host=127.0.0.1 "${client_cmd[@]:1}")
+      rc=0
+      output=$(printf '%s\n' "$input" | db_container_run "${client_cmd[@]}" 2>&1) || rc=$?
+    fi
+    [[ -n "$output" ]] && printf '%s\n' "$output"
+    return $rc
+  fi
   {
     [[ -n "$prolog" ]] && printf '%s\n' "$prolog"
     [[ -n "$input" ]] && printf '%s\n' "$input"
