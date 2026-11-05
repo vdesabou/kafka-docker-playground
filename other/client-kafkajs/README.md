@@ -38,6 +38,7 @@ Set `CLIENT_VERSION` to build the image with another kafkajs version than the de
 
 ```bash
 CLIENT_VERSION=2.1.0 playground run -f start.sh
+playground run -f start.sh --client-version 2.1.0   # the same, also offered by the interactive menu
 ```
 
 Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`.
