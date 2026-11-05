@@ -1,4 +1,5 @@
 eval "containers=(${args[--container]})"
+sample="${args[--sample]}"
 application_id="${args[--application-id]}"
 json="${args[--json]}"
 verbose="${args[--verbose]}"
@@ -6,7 +7,20 @@ html="${args[--html]}"
 output_dir="${args[--output-dir]:-/tmp/playground-streams}"
 no_open="${args[--no-open]}"
 
-if [ ${#containers[@]} -eq 0 ]
+sample_dir=""
+if [[ -n "$sample" ]]
+then
+    case "$sample" in
+        kafka_streams) sample_dir="$root_folder/tools/log-analyzer/samples/kafka-streams" ;;
+    esac
+    log "🧪 sample $sample: the logs of $sample_dir, not the running containers (no consumer group)"
+elif ! docker info > /dev/null 2>&1
+then
+    logerror "❌ container engine must be running - run 'playground doctor' (or try --sample kafka_streams)"
+    exit 1
+fi
+
+if [ -z "$sample_dir" ] && [ ${#containers[@]} -eq 0 ]
 then
     # the instances of other/kafka-streams
     while IFS= read -r name
@@ -14,7 +28,7 @@ then
         [ -n "$name" ] && containers+=("$name")
     done < <(docker ps -a --format '{{.Names}}' | grep -E '^streams[0-9]*$' | sort)
 fi
-if [ ${#containers[@]} -eq 0 ]
+if [ -z "$sample_dir" ] && [ ${#containers[@]} -eq 0 ]
 then
     logerror "❌ no Kafka Streams container found (streams, streams2, streams3...): pass the containers of the instances with --container"
     exit 1
@@ -35,6 +49,13 @@ else
 fi
 
 report_args=()
+if [ -n "$sample_dir" ]
+then
+    for file in "$sample_dir"/*.log
+    do
+        report_args+=("$(basename "$file" .log)=$file")
+    done
+fi
 for container in "${containers[@]}"
 do
     status=$(docker inspect -f '{{.State.Status}}' "$container" 2>/dev/null)
@@ -61,7 +82,7 @@ rc=$?
 set -e
 if [ $rc -eq 2 ] || [ "$(jq '.applications | length' "$tmp_dir/report.json" 2>/dev/null)" == "0" ]
 then
-    logerror "❌ no Kafka Streams line found in the logs of ${containers[*]}${application_id:+ for application.id $application_id}: the Kafka Streams library logs at INFO (org.apache.kafka.streams)"
+    logerror "❌ no Kafka Streams line found in the logs of ${containers[*]}${sample_dir}${application_id:+ for application.id $application_id}: the Kafka Streams library logs at INFO (org.apache.kafka.streams)"
     exit 1
 elif [ $rc -ne 0 ]
 then
@@ -69,8 +90,9 @@ then
     exit 1
 fi
 
-# the consumer group of each application (group id = application.id): state, members, lag
+# the consumer group of each application (group id = application.id): state, members, lag. Not for a sample
 groups_json="{}"
+[ -n "$sample_dir" ] && apps_for_groups="" || apps_for_groups=$(jq -r '.applications[] | select(.instances | length > 0) | .application_id' "$tmp_dir/report.json")
 while IFS= read -r app
 do
     [ -z "$app" ] && continue
@@ -85,7 +107,7 @@ do
     group_lag=$(echo "$offsets_output" | awk -v g="$app" '$1 == g && $6 ~ /^[0-9]+$/ {sum += $6; found = 1} END {if (found) print sum}')
     groups_json=$(jq --arg app "$app" --arg state "$group_state" --arg members "$group_members" --arg lag "$group_lag" \
         '. + {($app): {state: (if $state == "" then null else $state end), members: (if $members == "" then null else ($members | tonumber? // $members) end), lag: (if $lag == "" then null else ($lag | tonumber) end)}}' <<< "$groups_json")
-done < <(jq -r '.applications[] | select(.instances | length > 0) | .application_id' "$tmp_dir/report.json")
+done <<< "$apps_for_groups"
 
 jq --argjson groups "$groups_json" '.applications |= map(. + {consumer_group: ($groups[.application_id] // null)})' "$tmp_dir/report.json" > "$tmp_dir/report-groups.json"
 

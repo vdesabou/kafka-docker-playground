@@ -17,8 +17,6 @@ commands:
 
   - name: status
     group: Kafka Streams
-    filters:
-    - docker_running
     help: |-
       🌊 Show the state of the Kafka Streams instances
 
@@ -45,6 +43,9 @@ commands:
       assignment, errors). The same view of a customer's log files is the
       🌊 Kafka Streams section of 'playground analyze logs'.
 
+      --sample kafka_streams shows it on the logs shipped in
+      tools/log-analyzer/samples/kafka-streams (no running example needed).
+
       Exits with 1 when an instance is not RUNNING (or its container is
       stopped), so that an example can check it.
     flags:
@@ -53,6 +54,7 @@ commands:
       required: false
       arg: container
       repeatable: true
+      conflicts: [--sample]
       completions:
         dynamic:
         - playground get-container-list
@@ -60,6 +62,18 @@ commands:
         🐳 Container of a Kafka Streams instance, can be set several times
 
         ℹ️ If not set, the containers named streams, streams2, streams3... (other/kafka-streams)
+    - long: --sample
+      short: -s
+      required: false
+      arg: sample
+      allowed: [kafka_streams]
+      conflicts: [--container]
+      help: |-
+        🧪 Read the logs of a sample instead of the running containers (no consumer group)
+
+          kafka_streams   the 3 instances of other/kafka-streams (serde-errors.sh): an application in ERROR
+                          after a poison pill, its dead stream thread, deserialization and production
+                          handler errors (tools/log-analyzer/samples/kafka-streams)
     - long: --application-id
       short: -a
       required: false
@@ -75,8 +89,9 @@ commands:
       required: false
       help: |-
         📊 Also write an HTML report: the same view with a timeline of the state of each instance
-        (restarts and the time without logs), the task assignment (task × instance) and the
-        known errors with their advice, opened in the browser
+        (restarts, the time without logs, a marker on each error), the Kafka Streams errors and
+        the rebalances over time, the task assignment (task × instance) and the known errors
+        with their advice, opened in the browser
     - long: --output-dir
       short: -o
       arg: output_dir
@@ -90,4 +105,5 @@ commands:
     - playground streams status
     - playground streams status --container streams2
     - playground streams status --html
+    - playground streams status --sample kafka_streams --html
     - playground streams status --application-id streams-count --json | jq '.applications[0].instances[] | {instance, state, rebalances}'

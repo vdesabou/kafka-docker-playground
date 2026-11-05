@@ -357,8 +357,12 @@ class Parser:
                     app = self.last_app.get(label, "")
                 e = self.errors.setdefault((app, key), {"key": key, "title": title, "advice": advice, "count": 0,
                                                         "first": ts, "last": ts, "labels": set(), "sample": line.strip()[:400],
-                                                        "first_line": line_no, "first_label": label})
+                                                        "first_line": line_no, "first_label": label,
+                                                        "occurrences": []})
                 e["count"] += 1
+                # each occurrence (time, instance), for the chart and the markers of the timeline (HTML view)
+                if ts and len(e["occurrences"]) < 1000:
+                    e["occurrences"].append([ts, label])
                 e["last"] = ts or e["last"]
                 e["first"] = e["first"] or ts
                 e["labels"].add(label)
@@ -431,7 +435,10 @@ class Parser:
         for a in apps.values():
             a["tasks"] = task_table(a["instances"])
             a["findings"] = findings(a)
-        return {"applications": list(apps.values())}
+        # the applications with a problem first: an instance not RUNNING, then the most errors
+        ordered = sorted(apps.values(), key=lambda a: (-sum(1 for i in a["instances"] if i["state"] != "RUNNING"),
+                                                       -sum(err["count"] for err in a["errors"]), a["application_id"]))
+        return {"applications": ordered}
 
 
 def task_table(instances):
@@ -533,6 +540,7 @@ def shorten_labels(rep):
         for err in a["errors"]:
             err["labels"] = [short(lab) for lab in err["labels"]]
             err["first_label"] = short(err["first_label"])
+            err["occurrences"] = [[at, short(lab)] for at, lab in err.get("occurrences", [])]
         a["tasks"] = {t: {k: [short(x) for x in v] for k, v in owners.items()} for t, owners in a["tasks"].items()}
         a["findings"] = [f.replace(common + "/", "") for f in a["findings"]]
 
