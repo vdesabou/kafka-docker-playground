@@ -5310,7 +5310,9 @@ function display_ccloud_leftovers () {
   local connectors_json
   connectors_json=$(confluent connect cluster list --environment "$environment_id" --cluster "$cluster_id" --output json 2>/dev/null | jq -c --arg u "_$user" '[.[] | select(.name | contains($u))]' 2>/dev/null)
   connectors=$(echo "$connectors_json" | jq -r '.[].name' 2>/dev/null | sort)
-  existing_topics=$(confluent kafka topic list --environment "$environment_id" --cluster "$cluster_id" --output json 2>/dev/null | jq -r '.[].name' 2>/dev/null | grep -v '^_')
+  # grep -v exits with 1 when every topic is internal (or there is none): without || true, set -e ends the command
+  # here, silently, and playground run of a successful example exits with 1
+  existing_topics=$(confluent kafka topic list --environment "$environment_id" --cluster "$cluster_id" --output json 2>/dev/null | jq -r '.[].name' 2>/dev/null | grep -v '^_' || true)
   if [[ $cluster_name = pg-${user}-* ]]
   then
     # cluster created by the playground for this user: every topic is theirs
