@@ -4457,7 +4457,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--client-version CLIENT_VERSION")"
-    printf "    ☕ Version of the client library that the example builds, for example the\n    customer's version\n    \n    It sets CLIENT_VERSION environment variable:\n    \n    * java applications built with the Apache Kafka clients (Kafka Streams,\n    producers, consumers, for example other/kafka-streams-count): the Apache\n    Kafka version (for example 3.7.1), used as KAFKA_CLIENT_TAG (mvn\n    -Dkafka.client.tag) instead of the X.Y.0 matching the CP version\n    \n    * client examples (other/client-*, ccloud/client-*): the version of their\n    Confluent client (librdkafka, confluent-kafka-go, confluent-kafka-python…),\n    see their README\n    \n    It can differ from the brokers, a patch version included\n    \n    🎓 Tip: the interactive menu only offers it for the examples that use it\n"
+    printf "    ☕ Version of the client library that the example builds, for example the\n    customer's version\n    \n    It sets CLIENT_VERSION environment variable:\n    \n    * java applications built with the Apache Kafka clients (Kafka Streams,\n    producers, consumers, for example other/kafka-streams): the Apache Kafka\n    version (for example 3.7.1), used as KAFKA_CLIENT_TAG (mvn\n    -Dkafka.client.tag) instead of the X.Y.0 matching the CP version\n    \n    * client examples (other/client-*, ccloud/client-*): the version of their\n    Confluent client (librdkafka, confluent-kafka-go, confluent-kafka-python…),\n    see their README\n    \n    It can differ from the brokers, a patch version included\n    \n    🎓 Tip: the interactive menu only offers it for the examples that use it\n"
     echo
 
     # :flag.usage

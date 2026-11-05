@@ -3,20 +3,41 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.confluent.playground</groupId>
-    <artifactId>kafka-streams-count</artifactId>
+    <artifactId>kafka-streams-app</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.release>11</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- overridden by the example with mvn -Dkafka.client.tag=$KAFKA_CLIENT_TAG, see playground run option client-version -->
-        <kafka.client.tag>4.2.0</kafka.client.tag>
+        <kafka.client.tag>4.4.0</kafka.client.tag>
+        <!-- Confluent release of the Avro serde (serde-errors scenario), matching the client version: 7.N.0 for 3.N,
+             8.N.0 for 4.N. Overridden by the example with mvn -Dconfluent.version -->
+        <confluent.version>8.4.0</confluent.version>
     </properties>
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-streams</artifactId>
             <version>${kafka.client.tag}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-streams-avro-serde</artifactId>
+            <version>${confluent.version}</version>
+            <!-- the Apache Kafka clients of the requested version, not the ones of the Confluent release -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.kafka</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- explicit slf4j-api 2: kafka-streams brings slf4j-api 1.7, which does not find the slf4j 2 binding below -->
         <dependency>
@@ -32,7 +53,7 @@
     </dependencies>
     <build>
         <!-- the jar name holds the client version: the example rebuilds when another version is asked for -->
-        <finalName>kafka-streams-count-${kafka.client.tag}</finalName>
+        <finalName>kafka-streams-app-${kafka.client.tag}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -44,7 +65,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>io.confluent.playground.streams.CountApp</mainClass>
+                            <mainClass>io.confluent.playground.streams.StreamsApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
