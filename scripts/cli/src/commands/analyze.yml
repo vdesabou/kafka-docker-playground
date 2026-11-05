@@ -134,7 +134,9 @@ commands:
     (MB read, speed, ETA), and with 20 MB or more of input the report opens
     in the browser right away as a progress page (step, a bar for the file
     being read and one for the whole input, elapsed time, speed, ETA of the file and of the whole input) that becomes the report when the analysis ends. The last line
-    gives the size read and the time it took. An archive (.tar, .tar.gz,
+    gives the size read and the time it took. 📤 Share in the report: the
+    .zip of the report and its file pages (written next to it when they are
+    under 200 MB), the summary to paste, an email. An archive (.tar, .tar.gz,
     .tgz…) shows a bar while it is extracted.
 
     🗂️ One tab in the browser: with CFK support bundles in the input, their
