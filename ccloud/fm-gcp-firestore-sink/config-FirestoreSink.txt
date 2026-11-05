@@ -121,6 +121,8 @@ The class that handles how to build the delete write models for the sink documen
 🔘 topic.override.map
 
 A JSON map to override sink connector properties for specific topics. Use the map as ``{"<topicName>.<property>": "<value>"}``. For example, ``{"orders.collection": "orders_collection", "orders.database": "orders_db"}`` routes the **orders** topic to the *orders_collection* in the *orders_db* database. 
+Supported overridable properties include ``collection``, ``database``, ``namespace.mapper.*``, ``delete.on.null.values``, ``writemodel.strategy``, ``delete.writemodel.strategy``, ``document.id.strategy.*``, ``key.projection.*``, ``value.projection.*``, ``field.renamer.*``, ``post.processor.chain``, ``errors.tolerance``, ``errors.log.enable``, ``errors.deadletterqueue.topic.name``, ``max.batch.size``, and ``rate.limiting.timeout``. 
+Properties that cannot be overridden include ``connection.host``, ``connection.user``, ``connection.password``, ``topics``, and ``topic.override.*``.
 
 	 - Type: STRING
 	 - Default: {}
@@ -592,6 +594,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -810,4 +814,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

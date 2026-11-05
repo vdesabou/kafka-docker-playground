@@ -61,6 +61,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -217,6 +219,9 @@ The number of partitions for automatically created data change topics. Per-row o
 🔘 tombstones.on.delete
 
 Controls whether a tombstone event should be generated after a delete event. 
+``true`` - a delete operation is represented by a delete event and a subsequent tombstone event. 
+``false`` - only a delete event is emitted. 
+Emitting tombstone events (the default behavior) allows Kafka to completely delete all events pertaining to the key of the deleted row when log compaction is enabled for the topic.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -244,6 +249,10 @@ The maximum number of missed heartbeats before the connector identifies that a p
 🔘 schema.name.adjustment.mode
 
 Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. Possible settings are ``none``, ``avro``, and ``avro_unicode``. 
+``none`` does not apply any adjustment. 
+``avro`` replaces the characters that cannot be used in the AVRO type name with an underscore. 
+``avro_unicode`` replaces the underscore or characters that cannot be used in the AVRO type name with corresponding unicode like _uxxxx. 
+Note that ``_`` is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -253,6 +262,10 @@ Specifies how schema names should be adjusted for compatibility with the message
 🔘 field.name.adjustment.mode
 
 Specifies how field names should be adjusted for compatibility with the message converter used by the connector. Possible settings are ``none``, ``avro``, and ``avro_unicode``. 
+``none`` does not apply any adjustment. 
+``avro`` replaces the characters that cannot be used in the AVRO type name with an underscore. 
+``avro_unicode`` replaces the underscore or characters that cannot be used in the AVRO type name with corresponding unicode like ``_uxxxx``. 
+Note that ``_`` is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -475,6 +488,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -654,4 +669,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

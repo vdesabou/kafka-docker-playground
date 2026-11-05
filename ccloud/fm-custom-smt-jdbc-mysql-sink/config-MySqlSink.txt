@@ -325,6 +325,7 @@ The insertion mode to use. `INSERT` uses the standard INSERT row function. An er
 🔘 table.name.format
 
 A format string for the destination table name, which may contain ${topic} as a placeholder for the originating topic name.
+For example, kafka_${topic} for the topic ‘orders’ will map to the table name ‘kafka_orders’.
 
 	 - Type: STRING
 	 - Default: ${topic}
@@ -410,6 +411,9 @@ Primary Key
 
 The primary key mode, also refer to pk.fields documentation for interplay. Supported modes are:
 none: No keys utilized.
+kafka: Apache Kafka® coordinates are used as the PK.
+record_value: Field(s) from the record value are used, which must be a struct. This mode is not supported when `input.data.format` is set to `STRING`.
+record_key: Field(s) from the record key are used, which must be a struct.
 
 	 - Type: STRING
 	 - Default: 
@@ -420,6 +424,9 @@ none: No keys utilized.
 
 List of comma-separated primary key field names. The runtime interpretation of this config depends on the pk.mode:
 none: Ignored as no fields are used as primary key in this mode.
+kafka: Must be a trio representing the Kafka coordinates, defaults to __connect_topic,__connect_partition,__connect_offset if empty.
+record_value: If empty, all fields from the value struct will be used, otherwise used to extract the desired fields.
+
 
 	 - Type: LIST
 	 - Default: 
@@ -651,6 +658,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -908,4 +917,5 @@ The alias of a predicate used to determine whether to apply this transformation.
 	 - Default: 
 	 - Importance: MEDIUM
 	 - Required: false
+
 

@@ -61,6 +61,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -205,6 +207,7 @@ Sets the document content format. 'json_string' mode (default) outputs records a
 🔘 document.schema.source
 
 Specifies the source of the document schema. This configuration is only used when 'document.content.format' is set to 'schema'. 'user_provided' (default) - records are validated against the schema specified in 'schema.user.schema' configuration. 'auto_infer' - the connector infers the schema from incoming records and registers it in Schema Registry. 
+WARNING: Using 'auto_infer' for tables with evolving or variable schemas is not recommended. Schema evolution may result in multiple schema versions being registered in Schema Registry, which can exceed registry limits or lead to operational issues. In addition, the connector may fail to register new schemas if they are not backward compatible with previously registered versions. As a workaround, you may set the Schema Compatibility mode to NONE in Confluent Cloud; however, carefully assess the impact of incompatible schema versions on downstream consumers before making this change.
 
 	 - Type: STRING
 	 - Default: user_provided
@@ -262,6 +265,8 @@ Define table sync mode. SNAPSHOT_CDC - start with SNAPSHOT and switch to CDC mod
 🔘 dynamodb.table.discovery.mode
 
 Specifies the table discovery mode that defines the list of tables to be captured. 
+TAG - use resource tag discovery using AWS Resource Tagging endpoint. 
+ INCLUDELIST- use explicit table names to be included
 
 	 - Type: STRING
 	 - Default: INCLUDELIST
@@ -526,6 +531,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -717,4 +724,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 
