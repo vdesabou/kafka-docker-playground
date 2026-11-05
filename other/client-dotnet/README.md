@@ -1,25 +1,37 @@
-# .NET client (producer)
+# .NET client (producer/consumer)
 
 ## Objective
 
-Quickly test basic producer [.NET example](https://github.com/confluentinc/confluent-kafka-dotnet/tree/master/examples/Producer)
-
+Quickly test the [Confluent .NET Client for Apache Kafka](https://docs.confluent.io/kafka-clients/dotnet/current/overview.html) (NuGet [`Confluent.Kafka`](https://www.nuget.org/packages/Confluent.Kafka), built on librdkafka) and its Avro serializer for Schema Registry ([`Confluent.SchemaRegistry.Serdes.Avro`](https://www.nuget.org/packages/Confluent.SchemaRegistry.Serdes.Avro)) against a local Confluent Platform cluster.
 
 ## How to run
 
-
-Simply run:
-
-```
-$ just use <playground run> command and search for start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path>  .sh in this folder
-```
-
-## Details of what the script is doing
-
-Starting producer
-
 ```bash
-$ docker exec -i client-dotnet bash -c "dotnet DotNet.dll broker:9092 dotnet-basic-producer"
+playground run -f start.sh
 ```
 
-Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+| Script | Description |
+| --- | --- |
+| `start.sh` | .NET producer and consumer, string and Avro records, in the `client-dotnet` container, against the plaintext broker and Schema Registry |
+
+## What the script does
+
+1. Starts only the `client-dotnet` container and what it depends on (broker, Schema Registry), with `playground start-environment --service client-dotnet`. The image is built from the `Dockerfile` (.NET 10 SDK, `dotnet publish` of [`Program.cs`](Program.cs) with `Confluent.Kafka` and `Confluent.SchemaRegistry.Serdes.Avro` 2.16.0 from [`ClientDotnet.csproj`](ClientDotnet.csproj)). The first build takes a minute or two. The client reads its configuration from [`client.properties`](client.properties), mounted in `/tmp/client.properties`: one librdkafka property per line, plus the `schema.registry.*` properties of the Schema Registry client.
+2. Creates topics `dotnet-string` and `dotnet-avro` with 3 partitions.
+3. Produces 10 string records (key `alice`, value `{"name":"alice","count":<i>}`) and waits for every acknowledgement, then consumes them with group `dotnet-string-group`. The consumer exits with an error if fewer than 10 records arrive within 60 seconds:
+
+   ```bash
+   playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll produce dotnet-string /tmp/client.properties 10"
+   playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll consume dotnet-string /tmp/client.properties 10"
+   ```
+
+4. Same with Avro records (`GenericRecord` of schema `io.confluent.playground.User` with fields `name` and `count`): `AvroSerializer` registers the schema under subject `dotnet-avro-value`, `AvroDeserializer` reads it back:
+
+   ```bash
+   playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll produce-avro dotnet-avro /tmp/client.properties 10"
+   playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll consume-avro dotnet-avro /tmp/client.properties 10"
+   ```
+
+5. Shows the schema registered under subject `dotnet-avro-value` with `playground schema get`, and the committed offsets of both groups with `playground consumer-group describe`.
+
+To try your own client code or configuration, edit `Program.cs` (rebuild with `playground container recreate`) or `client.properties` (read at each run, no rebuild needed).

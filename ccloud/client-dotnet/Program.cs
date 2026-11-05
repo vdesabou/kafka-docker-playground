@@ -1,228 +1,195 @@
-// Copyright 2019 Confluent Inc.
+// .NET producer and consumer of kafka-docker-playground, with the Confluent .NET client (Confluent.Kafka, built on
+// librdkafka) and its Avro serializer for Schema Registry (Confluent.SchemaRegistry.Serdes.Avro).
+//
+// usage: dotnet ClientDotnet.dll produce|consume|produce-avro|consume-avro <topic> <config file> [<number of messages>]
+//
+// The config file has one librdkafka property per line (key=value, # for comments): bootstrap.servers,
+// security.protocol, sasl.*, ssl.*… The keys starting with schema.registry. (schema.registry.url,
+// schema.registry.basic.auth.user.info…) go to the Schema Registry client.
+//
+// produce / produce-avro send <number of messages> records (10 by default), key "alice", and wait for every
+// acknowledgement. consume / consume-avro read from the beginning of the topic with group <topic>-group (unless the
+// config file sets group.id), commit, and exit with code 1 if fewer than <number of messages> records arrive within
+// 60 seconds.
 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-// http://www.apache.org/licenses/LICENSE-2.0
-
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
+using Avro;
+using Avro.Generic;
 using Confluent.Kafka;
-using Confluent.Kafka.Admin;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using Confluent.Kafka.SyncOverAsync;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 
+const string AvroSchema = @"{
+  ""type"": ""record"",
+  ""name"": ""User"",
+  ""namespace"": ""io.confluent.playground"",
+  ""fields"": [
+    { ""name"": ""name"", ""type"": ""string"" },
+    { ""name"": ""count"", ""type"": ""int"" }
+  ]
+}";
+const int ConsumeTimeoutSeconds = 60;
 
-namespace CCloud
+if (args.Length < 3 || args.Length > 4)
 {
-    class Program
+    Console.Error.WriteLine("usage: dotnet ClientDotnet.dll produce|consume|produce-avro|consume-avro <topic> <config file> [<number of messages>]");
+    return 1;
+}
+
+var mode = args[0];
+var topic = args[1];
+var nbMessages = args.Length == 4 ? int.Parse(args[3]) : 10;
+var (clientProps, schemaRegistryProps) = LoadConfig(args[2]);
+
+try
+{
+    switch (mode)
     {
-        static async Task<ClientConfig> LoadConfig(string configPath, string certDir)
+        case "produce":
+            return await ProduceStrings(topic, clientProps, nbMessages);
+        case "consume":
+            return ConsumeStrings(topic, clientProps, nbMessages);
+        case "produce-avro":
+            return await ProduceAvro(topic, clientProps, schemaRegistryProps, nbMessages);
+        case "consume-avro":
+            return ConsumeAvro(topic, clientProps, schemaRegistryProps, nbMessages);
+        default:
+            Console.Error.WriteLine($"unknown mode {mode}: produce, consume, produce-avro or consume-avro");
+            return 1;
+    }
+}
+catch (Exception e)
+{
+    Console.Error.WriteLine($"❌ {mode} failed: {e.GetType().Name}: {e.Message}");
+    return 1;
+}
+
+// librdkafka properties and Schema Registry properties (schema.registry.*) of a key=value file
+static (Dictionary<string, string>, Dictionary<string, string>) LoadConfig(string path)
+{
+    var client = new Dictionary<string, string>();
+    var schemaRegistry = new Dictionary<string, string>();
+    foreach (var raw in File.ReadAllLines(path))
+    {
+        var line = raw.Trim();
+        var eq = line.IndexOf('=');
+        if (line.Length == 0 || line.StartsWith('#') || eq <= 0)
         {
-            try
-            {
-                var cloudConfig = (await File.ReadAllLinesAsync(configPath))
-                    .Where(line => !line.StartsWith("#"))
-                    .ToDictionary(
-                        line => line.Substring(0, line.IndexOf('=')),
-                        line => line.Substring(line.IndexOf('=') + 1));
-                var clientConfig = new ClientConfig
-                {
-                    BootstrapServers = cloudConfig["bootstrap.servers"].Replace("\\", ""),
-                    SaslMechanism = SaslMechanism.Plain,
-                    SecurityProtocol = SecurityProtocol.SaslSsl,
-                    SaslUsername = cloudConfig["sasl.username"],
-                    SaslPassword = cloudConfig["sasl.password"],
-                    // MetadataRequestTimeoutMs = 30000,
-                    // TopicMetadataRefreshIntervalMs = 210000,
-                    // MetadataMaxAgeMs = 210000,
-                    // SocketTimeoutMs = 60000,
-                    SocketKeepaliveEnable = true
-                    // Debug = "broker,topic,msg"
-                };
-
-                if (certDir != null)
-                {
-                    clientConfig.SslCaLocation = certDir;
-                }
-
-                return clientConfig;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"An error occured reading the config file from '{configPath}': {e.Message}");
-                System.Environment.Exit(1);
-                return null; // avoid not-all-paths-return-value compiler error.
-            }
+            continue;
         }
+        var key = line[..eq].Trim();
+        var value = line[(eq + 1)..].Trim();
+        (key.StartsWith("schema.registry.") ? schemaRegistry : client)[key] = value;
+    }
+    return (client, schemaRegistry);
+}
 
-        static async Task CreateTopicMaybe(string name, int numPartitions, short replicationFactor, ClientConfig cloudConfig)
+static ConsumerConfig ConsumerConfigOf(Dictionary<string, string> props, string topic)
+{
+    var config = new ConsumerConfig(new Dictionary<string, string>(props));
+    config.GroupId ??= $"{topic}-group";
+    config.AutoOffsetReset ??= AutoOffsetReset.Earliest;
+    config.EnableAutoCommit ??= false;
+    return config;
+}
+
+static CachedSchemaRegistryClient SchemaRegistryClientOf(Dictionary<string, string> props)
+{
+    if (!props.ContainsKey("schema.registry.url"))
+    {
+        throw new ArgumentException("schema.registry.url is missing in the config file");
+    }
+    return new CachedSchemaRegistryClient(props);
+}
+
+static async Task<int> ProduceStrings(string topic, Dictionary<string, string> props, int nbMessages)
+{
+    using var producer = new ProducerBuilder<string, string>(new ProducerConfig(new Dictionary<string, string>(props)))
+        .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
+        .Build();
+    for (var i = 0; i < nbMessages; i++)
+    {
+        var value = $"{{\"name\":\"alice\",\"count\":{i}}}";
+        // throws a ProduceException when the record is not acknowledged
+        var report = await producer.ProduceAsync(topic, new Message<string, string> { Key = "alice", Value = value });
+        Console.WriteLine($"Produced record alice {value} to {report.TopicPartitionOffset}");
+    }
+    Console.WriteLine($"✅ {nbMessages} record(s) produced to topic {topic}");
+    return 0;
+}
+
+static async Task<int> ProduceAvro(string topic, Dictionary<string, string> props, Dictionary<string, string> schemaRegistryProps,
+                                   int nbMessages)
+{
+    var schema = (RecordSchema)Avro.Schema.Parse(AvroSchema);
+    using var schemaRegistry = SchemaRegistryClientOf(schemaRegistryProps);
+    // registers the schema under the subject <topic>-value (TopicNameStrategy) with the first record
+    using var producer = new ProducerBuilder<string, GenericRecord>(new ProducerConfig(new Dictionary<string, string>(props)))
+        .SetValueSerializer(new AvroSerializer<GenericRecord>(schemaRegistry))
+        .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
+        .Build();
+    for (var i = 0; i < nbMessages; i++)
+    {
+        var record = new GenericRecord(schema);
+        record.Add("name", "alice");
+        record.Add("count", i);
+        var report = await producer.ProduceAsync(topic, new Message<string, GenericRecord> { Key = "alice", Value = record });
+        Console.WriteLine($"Produced Avro record alice {{name=alice, count={i}}} to {report.TopicPartitionOffset}");
+    }
+    Console.WriteLine($"✅ {nbMessages} Avro record(s) produced to topic {topic}");
+    return 0;
+}
+
+static int ConsumeStrings(string topic, Dictionary<string, string> props, int nbMessages)
+{
+    using var consumer = new ConsumerBuilder<string, string>(ConsumerConfigOf(props, topic))
+        .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
+        .Build();
+    return ConsumeLoop(consumer, topic, nbMessages, value => value);
+}
+
+static int ConsumeAvro(string topic, Dictionary<string, string> props, Dictionary<string, string> schemaRegistryProps, int nbMessages)
+{
+    using var schemaRegistry = SchemaRegistryClientOf(schemaRegistryProps);
+    using var consumer = new ConsumerBuilder<string, GenericRecord>(ConsumerConfigOf(props, topic))
+        .SetValueDeserializer(new AvroDeserializer<GenericRecord>(schemaRegistry).AsSyncOverAsync())
+        .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
+        .Build();
+    return ConsumeLoop(consumer, topic, nbMessages, value => $"{{name={value["name"]}, count={value["count"]}}}");
+}
+
+static int ConsumeLoop<TValue>(IConsumer<string, TValue> consumer, string topic, int nbMessages, Func<TValue, string> show)
+{
+    consumer.Subscribe(topic);
+    var deadline = DateTime.UtcNow.AddSeconds(ConsumeTimeoutSeconds);
+    var consumed = 0;
+    try
+    {
+        while (consumed < nbMessages && DateTime.UtcNow < deadline)
         {
-            using (var adminClient = new AdminClientBuilder(cloudConfig).Build())
+            var result = consumer.Consume(TimeSpan.FromSeconds(1));
+            if (result == null || result.IsPartitionEOF)
             {
-                try
-                {
-                    await adminClient.CreateTopicsAsync(new List<TopicSpecification> {
-                        new TopicSpecification { Name = name, NumPartitions = numPartitions, ReplicationFactor = replicationFactor } });
-                }
-                catch (CreateTopicsException e)
-                {
-                    if (e.Results[0].Error.Code != ErrorCode.TopicAlreadyExists)
-                    {
-                        Console.WriteLine($"An error occured creating topic {name}: {e.Results[0].Error.Reason}");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Topic already exists");
-                    }
-                }
+                continue;
             }
+            consumed++;
+            Console.WriteLine($"Consumed record with key {result.Message.Key} and value {show(result.Message.Value)} from {result.TopicPartitionOffset}");
         }
-
-        static void Produce(string topic, ClientConfig config)
+        if (consumed > 0)
         {
-            using (var producer = new ProducerBuilder<string, string>(config).SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}")).Build())
-            {
-                int numProduced = 0;
-                int numMessages = 10;
-                for (int i=0; i<numMessages; ++i)
-                {
-                    var key = "alice";
-                    var val = JObject.FromObject(new { count = i }).ToString(Formatting.None);
-
-                    Console.WriteLine($"Producing record: {key} {val}");
-
-                    producer.Produce(topic, new Message<string, string> { Key = key, Value = val },
-                        (deliveryReport) =>
-                        {
-                            if (deliveryReport.Error.Code != ErrorCode.NoError)
-                            {
-                                Console.WriteLine($"Failed to deliver message: {deliveryReport.Error.Reason}");
-                            }
-                            else
-                            {
-                                Console.WriteLine($"Produced message to: {deliveryReport.TopicPartitionOffset}");
-                                numProduced += 1;
-                            }
-                        });
-                }
-
-                producer.Flush(TimeSpan.FromSeconds(10));
-
-                Console.WriteLine($"{numProduced} messages were produced to topic {topic}");
-                // Thread.Sleep(TimeSpan.FromSeconds(86400));
-            }
-        }
-
-        static void Consume(string topic, ClientConfig config)
-        {
-            var consumerConfig = new ConsumerConfig(config);
-            consumerConfig.GroupId = "dotnet-example-group-1";
-            consumerConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
-            consumerConfig.EnableAutoCommit = false;
-            consumerConfig.BrokerVersionFallback = "0.10.0.0";
-            consumerConfig.ApiVersionFallbackMs = 0;
-            consumerConfig.SocketKeepaliveEnable = true;
-            // consumerConfig.Debug = "consumer, cgrp, protocol";
-
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Console.CancelKeyPress += (_, e) => {
-                e.Cancel = true; // prevent the process from terminating.
-                cts.Cancel();
-            };
-
-            using (var consumer = new ConsumerBuilder<string, string>(consumerConfig)
-                // Note: All handlers are called on the main .Consume thread.
-                .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
-                .SetStatisticsHandler((_, json) => Console.WriteLine($"Statistics: {json}"))
-                .SetPartitionsAssignedHandler((c, partitions) =>
-                {
-                    Console.WriteLine($"Assigned partitions: [{string.Join(", ", partitions)}]");
-                    // possibly manually specify start offsets or override the partition assignment provided by
-                    // the consumer group by returning a list of topic/partition/offsets to assign to, e.g.:
-                    //
-                    // return partitions.Select(tp => new TopicPartitionOffset(tp, externalOffsets[tp]));
-                })
-                .SetPartitionsRevokedHandler((c, partitions) =>
-                {
-                    Console.WriteLine($"Revoking assignment: [{string.Join(", ", partitions)}]");
-                }).Build())
-            {
-                consumer.Subscribe(topic);
-                var totalCount = 0;
-                try
-                {
-                    while (true)
-                    {
-                        var cr = consumer.Consume(cts.Token);
-
-                        if (cr.IsPartitionEOF)
-                        {
-                            Console.WriteLine(
-                                $"Reached end of topic {cr.Topic}, partition {cr.Partition}, offset {cr.Offset}.");
-
-                            continue;
-                        }
-                        totalCount += JObject.Parse(cr.Value).Value<int>("count");
-                        Console.WriteLine($"Consumed record with key {cr.Key} and value {cr.Value}, and updated total count to {totalCount}");
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Ctrl-C was pressed.
-                }
-                catch (ConsumeException e)
-                {
-                    Console.WriteLine($"Consume error: {e.Error.Reason}");
-                }
-                finally
-                {
-                    consumer.Close();
-                }
-            }
-        }
-
-        static void PrintUsage()
-        {
-            Console.WriteLine("usage: .. produce|consume <topic> <configPath> [<certDir>]");
-            System.Environment.Exit(1);
-        }
-
-        static async Task Main(string[] args)
-        {
-            if (args.Length != 3 && args.Length != 4) { PrintUsage(); }
-
-            var mode = args[0];
-            var topic = args[1];
-            var configPath = args[2];
-            var certDir = args.Length == 4 ? args[3] : null;
-
-            var config = await LoadConfig(configPath, certDir);
-
-            switch (mode)
-            {
-                case "produce":
-                    await CreateTopicMaybe(topic, 1, 3, config);
-                    Produce(topic, config);
-                    break;
-                case "consume":
-                    Consume(topic, config);
-                    break;
-                default:
-                    PrintUsage();
-                    break;
-            }
+            // commits the offsets of the records consumed (enable.auto.commit=false)
+            consumer.Commit();
         }
     }
+    finally
+    {
+        consumer.Close();
+    }
+    if (consumed < nbMessages)
+    {
+        Console.Error.WriteLine($"❌ only {consumed} record(s) out of {nbMessages} consumed from topic {topic} in {ConsumeTimeoutSeconds} seconds");
+        return 1;
+    }
+    Console.WriteLine($"✅ {consumed} record(s) consumed from topic {topic}");
+    return 0;
 }
