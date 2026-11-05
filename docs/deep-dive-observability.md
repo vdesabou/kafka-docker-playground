@@ -16,8 +16,12 @@ answers which support question. Takes about 20 minutes to read and run.
 | --- | --- |
 | is a broker the bottleneck? (idle threads, queue, p99, ISR shrinks, failed requests) | `playground broker metrics` (`--topic <t>`, `--broker <id>`, `--json`) |
 | is a connector making progress? errors, retries, DLQ, poll / put time | `playground connector metrics` (`--connector <name>`, `--watch 10s`, `--json`) |
+| is there an active controller? offline partitions? (KRaft) | `playground broker metrics --controller` (also the last section of `broker metrics`) |
+| are the connect workers rebalancing? which one runs what? | `playground connector metrics --worker` |
+| is Schema Registry slow or failing requests? | `playground schema metrics` |
+| a ksqlDB query in ERROR, rebalancing, consuming nothing | `playground ksqldb metrics` |
 | the lag of a consumer group or a sink | `playground consumer-group describe --group <g>`, `connector show-lag` |
-| every attribute of every MBean of a container | `playground get-jmx-metrics -c broker` (`-c connect`, `-c controller`, `--domain "kafka.server kafka.network"`) |
+| the raw MBeans of a container | `playground get-jmx-metrics -c broker` (lists the domains), then `--domain kafka.server`, `--mbean "kafka.server:type=ReplicaManager,*"` or `--all` |
 | dashboards over time: Prometheus + Grafana + Pyroscope | `playground run … --enable-jmx-grafana` (or `ENABLE_JMX_GRAFANA=1`) |
 | Control Center (Next Gen) and its alerts | `playground run … --enable-control-center` (or `ENABLE_CONTROL_CENTER=1`); `--enable-legacy-control-center` for CP < 8, `--control-center-tag` |
 | the metrics of a fully managed connector | `playground connector display-metrics-api` (`display-metrics-api-with-grafana` for graphs) |
@@ -50,7 +54,7 @@ answers which support question. Takes about 20 minutes to read and run.
 
 ---
 
-## 2. The digests: `broker metrics`, `connector metrics`
+## 2. The digests: one `metrics` command per component
 
 ```bash
 playground broker metrics --topic lab-observability
@@ -104,19 +108,116 @@ playground connector metrics --connector filestream-sink
 The full description, and `connector diagnose` which adds the error digest and the lag, are in the
 [`connector diagnose` deep dive](/deep-dive-connector-troubleshooting.md).
 
+`broker metrics` ends with the **controller section** (`--controller` alone, also with `--json`):
+
+```bash
+playground broker metrics --controller
+# 🗳️ Controller metrics (KRaft controllers)
+# METRIC                                  CONTROLLER 4
+# Active controller                       yes
+# Offline partitions                      0
+# Partitions (cluster)                    212
+# Topics (cluster)                        15
+# Preferred replica imbalance             0
+# Last applied record lag                 357 ms
+# Unclean leader elections (since start)  0
+```
+
+In KRaft the columns are the controller containers (node ids 4, 5, 6 with `--enable-multiple-controllers`); with
+ZooKeeper (CP < 8) they are the brokers, one of which is the active controller. A ⚠️ follows when the cluster doesn't
+have exactly one active controller.
+
+```bash
+playground connector metrics --worker
+# 📈 Connect worker metrics
+# METRIC                              WORKER connect
+# Connectors                          1
+# Tasks                               1
+# Connector startup failures (total)  0
+# Task startup failures (total)       0
+# Assigned connectors                 1
+# Assigned tasks                      1
+# Rebalances (total)                  3
+# Failed rebalances (total)           1
+# Rebalances per hour                 2.9
+# Last rebalance (seconds ago)        67
+# Rebalance latency avg               -
+# Last heartbeat (seconds ago)        1
+```
+
+One column per worker (`--enable-multiple-connect-workers`: three). One failed rebalance is normal when a worker
+starts (its first join, before the group coordinator is ready); rebalances that keep growing with a small "last
+rebalance" are a rebalance loop.
+
+```bash
+playground ksqldb metrics
+# 📈 ksqlDB metrics (query states now, rates over the last samples)
+# METRIC                    CONTAINER ksqldb-server
+# Persistent queries        1
+# Running queries           1
+# Queries in ERROR          0
+# Not running queries       0
+# Rebalancing queries       0
+# Pending shutdown queries  0
+# Pending error queries     0
+# Error rate                0.0
+# Active queries            1
+# Idle queries              1
+# Messages consumed/s       0.0
+# Messages produced/s       0.0
+# Liveness indicator        1
+```
+
+The engine statistics of `ksqldb-server` (`io.confluent.ksql.metrics:type=_confluent-ksql-<service id>ksql-engine-query-stats`):
+then `ksqldb list` for the state of each query and `ksqldb describe --source <its sink>` for its errors.
+
+```bash
+playground schema metrics
+# 📈 Schema Registry metrics (rates and latencies over the last samples, counts since the start)
+# METRIC                      CONTAINER schema-registry
+# Leader                      yes
+# Requests/s                  0.7
+# Client errors (4xx)/s       0.2
+# Server errors (5xx)/s       0.0
+# Server errors (5xx, total)  0
+# Request latency avg         4 ms
+# Request latency p99         77 ms
+# Active connections          1
+# Registered schemas          1
+# Avro schemas created        1
+# …
+# 🎓 4xx are answers to the client (404: subject or version not found, 409: incompatible schema, 422: invalid schema),
+#    not failures of Schema Registry
+```
+
+The `kafka.schema.registry` MBeans of the server (`jersey-metrics` for the requests, per status code with
+`http_status_code=4xx|5xx`, `jetty-metrics`, `registered-count`, `<format>-schemas-created|deleted`,
+`master-slave-role`). ⚠️ only on 5xx: a 404 is the normal answer to a subject or a version that doesn't exist.
+
+All the digests share one engine (`jmx_digest_read` in `cli_function.sh`): `kafka-jmx` in the container when the image
+has it (brokers, controllers, connect), jmxterm otherwise (schema-registry, ksqldb-server), one column per container,
+⚠️ on the values to look at, `--json` for the raw values.
+
 ---
 
 ## 3. The raw MBeans: `get-jmx-metrics`
 
 ```bash
+playground get-jmx-metrics -c broker                                     # 📚 JMX domains of container broker
 playground get-jmx-metrics -c broker -d "kafka.server kafka.network"     # every attribute of the MBeans of these domains
+playground get-jmx-metrics -c broker --mbean "kafka.server:type=ReplicaManager,*"   # only the MBeans matching a name
 playground get-jmx-metrics -c controller -d kafka.controller             # KRaft: the controller metrics are on the controller
+playground get-jmx-metrics -c connect --all --open                       # every MBean, in your editor
 ```
+
+- Without a filter it lists the domains and the digest commands to try, instead of dumping thousands of lines.
+  `--mbean` is repeatable, takes a `*` in a value, and the keys can be in any order.
 
 - The MBean lines look like `#mbean = kafka.server:name=UnderReplicatedPartitions,type=ReplicaManager:` (keys in
   alphabetical order, then one line per attribute: `Value`, `Count`, `OneMinuteRate`, `99thPercentile`…).
 - JMX ports on the host, for jconsole or VisualVM: broker `10000` (`broker2` `12000`, `broker3` `13000`),
-  schema-registry `10001`, connect `10002`, ksqldb-server `10003`, controller `10005`.
+  schema-registry `10001`, connect `10002`, ksqldb-server `10003`, controller `10005`. Since CP 8.4 the
+  Schema Registry image opens remote JMX only on request: the environment sets `SCHEMA_REGISTRY_JMX_OPTS` to keep port 10001.
 - **KRaft**: `ActiveControllerCount`, `OfflinePartitionsCount`, `GlobalPartitionCount`, `PreferredReplicaImbalanceCount`
   are MBeans of the `controller` container (`kafka.controller:…,type=KafkaController`), not of the brokers.
 
@@ -204,13 +305,16 @@ playground run -f <example> --enable-control-center --control-center-tag <versio
 | a connector fails silently, sends to the DLQ | — (`connector metrics`) | `kafka.connect:type=task-error-metrics,connector=<c>,task=<t>` | `kafka_connect_task_error_metrics_deadletterqueue_produce_requests`, `…_total_record_errors`, Kafka Connect cluster |
 | long GC pauses, memory | — | `java.lang:type=GarbageCollector,name=*` | `jvm_gc_collection_seconds_sum`, `jvm_memory_bytes_used`, Kafka cluster › Time spent in GC; or `analyze gc-logs` |
 | which code burns the CPU | — | — | Pyroscope flame graph of the JVM (`broker.itimer`, `connect.itimer`) |
+| Schema Registry is slow or fails requests | — (`schema metrics`: requests/s, 4xx and 5xx errors, p99) | `kafka.schema.registry:type=jersey-metrics` (`http_status_code=5xx` for the server errors) | `kafka_schema_registry_jersey_metrics_request_rate`, `…_request_latency_99`, Schema Registry cluster |
+| a ksqlDB query is in ERROR or rebalancing | — (`ksqldb metrics`) | `io.confluent.ksql.metrics:type=_confluent-ksql-<service id>ksql-engine-query-stats` (`ERROR-queries`, `REBALANCING-queries`) | `ksql_ksql_engine_query_stats_error_queries`, ksqlDB cluster |
+| the connect workers rebalance in a loop | — (`connector metrics --worker`: rebalances, rebalances per hour, last rebalance) | `kafka.connect:type=connect-coordinator-metrics,client-id=*` | Kafka Connect cluster |
 
 ---
 
 ## 7. Hands-on lab (≈10 min)
 
 ```bash
-# Step 1: the playground with both flags (what the lab script does: ENABLE_JMX_GRAFANA=1 ENABLE_CONTROL_CENTER=1)
+# Step 1: the playground with the flags (what the lab script does: ENABLE_JMX_GRAFANA=1 ENABLE_CONTROL_CENTER=1 ENABLE_KSQLDB=1)
 playground run -f "$PWD/other/deep-dive-labs/observability.sh"
 playground status
 # … control-center, prometheus-c3-v2, alertmanager-c3-v2, grafana, prometheus, pyroscope, alertmanager, node-exporter, kafka-lag-exporter …
@@ -228,8 +332,14 @@ playground connector metrics --connector filestream-sink
 # 📈 Task metrics of 🌎onprem connector filestream-sink (sink, connector RUNNING)
 # sent to DLQ           0
 # ✅ Nothing stands out: no error, no skipped record, all tasks made progress
+playground broker metrics --controller          # 🗳️ Controller metrics (KRaft controllers): Active controller yes
+playground connector metrics --worker           # 📈 Connect worker metrics: Connectors 1
+playground schema metrics                       # 📈 Schema Registry metrics: Leader yes, Server errors (5xx, total) 0
+playground ksqldb metrics                       # 📈 ksqlDB metrics: Persistent queries 1, Queries in ERROR 0 (the lab creates a query)
 
 # Step 3: the MBeans behind them
+playground get-jmx-metrics -c broker            # 📚 JMX domains of container broker (no dump without a filter)
+playground get-jmx-metrics -c broker --mbean "kafka.server:type=ReplicaManager,*" | grep "^#mbean"
 playground get-jmx-metrics -c broker -d "kafka.server kafka.network" | grep "^#mbean" | grep UnderReplicatedPartitions
 # #mbean = kafka.server:name=UnderReplicatedPartitions,type=ReplicaManager:
 playground get-jmx-metrics -c controller -d kafka.controller | grep "^#mbean" | grep ActiveControllerCount
@@ -278,7 +388,11 @@ playground container exec -c prometheus-c3-v2 --shell sh --command "curl -s http
 ```bash
 playground broker metrics [--broker <id>] [--topic <t>] [--json]
 playground connector metrics [--connector <c>] [--watch 10s] [--json]
-playground get-jmx-metrics -c <container> [-c <container2>] [--domain "kafka.server kafka.network"] [--open]
+playground broker metrics --controller [--json]
+playground connector metrics --worker [--json]
+playground schema metrics [--json]
+playground ksqldb metrics [--json]
+playground get-jmx-metrics -c <container> [-c <container2>] [--domain "kafka.server kafka.network" | --mbean "<domain>:type=<t>,*" | --all] [--open]
 playground run -f <example> --enable-jmx-grafana          # ENABLE_JMX_GRAFANA=1
 playground run -f <example> --enable-control-center       # ENABLE_CONTROL_CENTER=1, --control-center-tag <v>
 playground run -f <example> --enable-legacy-control-center  # CP < 8

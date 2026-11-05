@@ -2324,7 +2324,8 @@ subcommands:
     \ describe             everything about a subject or a schema id\n  history              timeline
     from _schemas: registrations, deletes, rule changes\n  get                  every
     version of a subject, or of all subjects\n  get-compatibility    the compatibility
-    rule in force (subject or global)\n  get-mode / get-alias\n\n✍️ Write\n  register
+    rule in force (subject or global)\n  get-mode / get-alias\n  metrics              the
+    server: requests, errors, latency, schemas created and deleted\n\n✍️ Write\n  register
     \            add a new version to a subject\n  check-compatibility  would this
     schema be accepted? (nothing registered)\n  test-rules           do these records
     pass the data contract rules?\n  validate             accepted by Schema Registry
@@ -3585,6 +3586,35 @@ subcommands:
       description: "\U0001F5C2️ Schema Registry context (.europe, or europe): every
         call goes to /contexts/<context>/…\n\nThe subjects exported by Schema Linking
         land in a context of the destination registry. Default: the default context."
+    - names:
+      - "--cluster"
+      argument: CLUSTER
+      description: "\U0001F30D Cluster to use in an mdc-* environment (us or europe)\n\nDefault:
+        the PLAYGROUND_CLUSTER environment variable, else the value set with 'playground
+        state set run.cluster <cluster>'. Ignored in the other environments.\n\nAllowed
+        values: us, europe"
+  - name: metrics
+    description: "\U0001F4C8 Display the key JMX metrics of Schema Registry\n\nWhether
+      it is the leader, requests per second, client (4xx) and server\n(5xx) errors,
+      average and p99 request latency, active connections, registered\nschemas, and
+      the Avro / JSON / Protobuf schemas created and deleted\nsince it started. ⚠️
+      marks the values to look at.\n\nAnswers \"is Schema Registry slow or failing
+      requests?\" and \"how many\nschemas were registered or deleted?\", next to 'playground
+      schema list'\nfor the subjects themselves.\n\nRead over JMX in the schema-registry
+      container, with jmxterm (no\nrestart, nothing to install).\n\n\U0001F393 Tip:
+      every metric of the container: playground get-jmx-metrics -c\nschema-registry
+      --domain kafka.schema.registry\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability"
+    usage: playground schema metrics [OPTIONS]
+    options:
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the raw values as JSON, and nothing else"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
     - names:
       - "--cluster"
       argument: CLUSTER
@@ -5721,12 +5751,14 @@ subcommands:
           (also what the command does without --grep / --compare-with)"
 - name: get-jmx-metrics
   description: "\U0001F522 Get JMX metrics from a container\n\nDumps every attribute
-    of the MBeans of a container (all domains, or the\nones of --domain), with jmxterm
-    run inside the container: no local Java\nneeded. Works with any container that
-    exposes JMX (broker, broker2,\nconnect, schema-registry, ksqldb-server, broker-us
+    of the MBeans of a container: the ones of --domain,\nor of --mbean, or all of
+    them with --all. Without any of them, it lists\nthe domains of the container.
+    jmxterm runs inside the container: no local\nJava needed. Works with any container
+    that exposes JMX (broker, broker2,\nconnect, schema-registry, ksqldb-server, broker-us
     in mdc-*\nenvironments...) and with the pods of cfk.\n\n\U0001F393 Tip: for a
-    digest instead of raw MBeans, use 'playground broker\nmetrics' or 'playground
-    connector metrics'.\n\n\U0001F449 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics\n\n\U0001F36A
+    digest instead of raw MBeans: 'playground broker metrics'\n(brokers and controllers),
+    'playground connector metrics' (--worker for\nthe workers), 'playground schema
+    metrics', 'playground ksqldb metrics'.\n\n\U0001F449 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics\n\n\U0001F36A
     Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability"
   usage: playground get-jmx-metrics [OPTIONS]
   options:
@@ -5750,6 +5782,18 @@ subcommands:
     - "-d"
     argument: DOMAIN
     description: Domain name
+  - names:
+    - "--mbean"
+    - "-m"
+    argument: MBEAN
+    description: "\U0001FAD8 Only the MBeans matching this name (repeatable): a *
+      is allowed in a\nvalue, the keys can be in any order\n\nExample: --mbean \"kafka.server:type=ReplicaManager,*\"\n\nRepeatable:
+      ✓ Yes"
+  - names:
+    - "--all"
+    argument: ''
+    description: "\U0001F4E6 Every MBean of every domain (a large output: prefer --domain
+      or --mbean)"
 - name: container
   description: "\U0001F433 Container commands\n\nWork on the containers of the running
     example without having to remember\ntheir names, their users or their file layout.
@@ -8227,8 +8271,13 @@ subcommands:
       and expands, failed produce and\nfetch requests. ⚠️ marks the values to look
       at.\n\nAnswers \"is the broker the bottleneck?\", for example during a\n'playground
       connector benchmark'. With --topic, the rates and failed\nrequests are the ones
-      of this topic.\n\n\U0001F393 Tip: every metric of a broker: playground get-jmx-metrics
-      -c broker"
+      of this topic.\n\nThen the controller section: active controller, offline partitions,\npartitions
+      and topics of the cluster, preferred replica imbalance, last\napplied record
+      lag, unclean leader elections. In KRaft these metrics are\nthe ones of the controller
+      containers (controller, controller2,\ncontroller3); with ZooKeeper, of the broker
+      that is the active\ncontroller. --controller shows only this section.\n\n\U0001F393
+      Tip: every metric of a broker: playground get-jmx-metrics -c broker\n--domain
+      kafka.server\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability"
     usage: playground broker metrics [OPTIONS]
     options:
     - names:
@@ -8242,10 +8291,15 @@ subcommands:
       argument: TOPIC
       description: "\U0001F5F3 Rates and failed requests of this topic only"
     - names:
+      - "--controller"
+      argument: ''
+      description: "\U0001F5F3️ Only the controller section (KRaft controllers, or
+        the brokers with\nZooKeeper), with --json too"
+    - names:
       - "--json"
       argument: ''
-      description: "\U0001F4D7 Print the raw values as JSON, one object per broker,
-        and nothing else"
+      description: "\U0001F4D7 Print the raw values as JSON, one object per broker
+        (per controller\nwith --controller), and nothing else"
     - names:
       - "--verbose"
       - "-v"
@@ -8568,9 +8622,10 @@ subcommands:
     \ sql        run ksqlDB statements (stdin or --file) with the ksql cli\n  list
     \      streams, tables and persistent queries with their state\n  describe   fields,
     queries, statistics, errors and lag of a stream or table\n  wait       wait until
-    the persistent queries are RUNNING and have no lag\n\n\U0001F393 Tip: the REST
-    API of ksqldb-server is published on http://localhost:8088.\nThe records that
-    fail a query are in the KSQL_PROCESSING_LOG stream."
+    the persistent queries are RUNNING and have no lag\n  metrics    query states
+    (running, ERROR, rebalancing) and messages per second, over JMX\n\n\U0001F393
+    Tip: the REST API of ksqldb-server is published on http://localhost:8088.\nThe
+    records that fail a query are in the KSQL_PROCESSING_LOG stream."
   usage: playground ksqldb COMMAND
   options: []
   subcommands:
@@ -8698,6 +8753,29 @@ subcommands:
         ⏳ Maximum number of seconds to wait (default 120)
 
         Default value: 120
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: metrics
+    description: "\U0001F4C8 Display the key JMX metrics of the ksqlDB server\n\nThe
+      engine statistics of ksqldb-server: persistent queries, and how many\nare running,
+      in ERROR, not running, rebalancing or pending shutdown,\nactive and idle queries,
+      messages consumed and produced per second, and\nthe liveness indicator. ⚠️ marks
+      the values to look at.\n\nAnswers \"is a query in ERROR or stuck rebalancing?\"
+      and \"does ksqlDB\nconsume anything?\", next to 'playground ksqldb list' (the
+      state of each\nquery) and 'playground ksqldb describe' (its errors and lag).\n\nRead
+      over JMX in the ksqldb-server container, with jmxterm (no restart,\nnothing
+      to install).\n\n\U0001F393 Tip: every metric of the container: playground get-jmx-metrics
+      -c\nksqldb-server --domain io.confluent.ksql.metrics\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-observability"
+    usage: playground ksqldb metrics [OPTIONS]
+    options:
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4D7 Print the raw values as JSON, and nothing else"
     - names:
       - "--verbose"
       - "-v"
@@ -11565,6 +11643,12 @@ subcommands:
       - "--watch"
       argument: INTERVAL
       description: "\U0001F501 Refresh every <interval> (30, 30s, 5m) until ctrl-c"
+    - names:
+      - "--worker"
+      argument: ''
+      description: "\U0001F3ED The connect workers instead of one connector: connectors
+        and tasks\nthey run, startup failures, rebalances, heartbeats (one column
+        per worker)"
     - names:
       - "--json"
       argument: ''

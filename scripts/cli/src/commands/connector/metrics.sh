@@ -2,8 +2,23 @@ connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 watch="${args[--watch]}"
 json="${args[--json]}"
+worker="${args[--worker]}"
 
 connector_type=$(playground state get run.connector_type)
+
+if [[ -n "$worker" ]]
+then
+    if [[ -n "$connector" ]] || [[ -n "$watch" ]]
+    then
+        logerror "❌ --worker shows the connect workers: it can't be used with --connector or --watch"
+        exit 1
+    fi
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+        logerror "❌ --worker reads the JMX metrics of the local connect workers: not available with $connector_type connectors"
+        exit 1
+    fi
+fi
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
@@ -35,6 +50,61 @@ if [[ "$environment" == cfk* ]]
 then
     logerror "❌ connector metrics is not supported on $environment environment, use playground get-jmx-metrics -c connect-0 --domain kafka.connect"
     exit 1
+fi
+
+if [[ -n "$worker" ]]
+then
+    # the workers themselves, not one connector: connectors and tasks they run, startup failures, rebalances, leader
+    candidates="connect connect2 connect3"
+    if is_mdc_environment
+    then
+        get_mdc_cluster
+        candidates="connect-$mdc_cluster"
+    fi
+    targets=""
+    for c in $candidates
+    do
+        is_container_running "$c" && targets+="$c $c"$'\n'
+    done
+    if [[ -z "$targets" ]]
+    then
+        logerror "❌ no connect worker container is running"
+        exit 1
+    fi
+    # label|object name|attribute|format|warning (see jmx_digest_read)
+    worker_spec="Connectors|kafka.connect:type=connect-worker-metrics|connector-count|int|
+Tasks|kafka.connect:type=connect-worker-metrics|task-count|int|
+Connector startup failures (total)|kafka.connect:type=connect-worker-metrics|connector-startup-failure-total|int|gt0
+Task startup failures (total)|kafka.connect:type=connect-worker-metrics|task-startup-failure-total|int|gt0
+Assigned connectors|kafka.connect:type=connect-coordinator-metrics,client-id=*|assigned-connectors|int|
+Assigned tasks|kafka.connect:type=connect-coordinator-metrics,client-id=*|assigned-tasks|int|
+Rebalances (total)|kafka.connect:type=connect-coordinator-metrics,client-id=*|rebalance-total|int|
+Failed rebalances (total)|kafka.connect:type=connect-coordinator-metrics,client-id=*|failed-rebalance-total|int|
+Rebalances per hour|kafka.connect:type=connect-coordinator-metrics,client-id=*|rebalance-rate-per-hour|rate|
+Last rebalance (seconds ago)|kafka.connect:type=connect-coordinator-metrics,client-id=*|last-rebalance-seconds-ago|int|
+Rebalance latency avg|kafka.connect:type=connect-coordinator-metrics,client-id=*|rebalance-latency-avg|ms|
+Last heartbeat (seconds ago)|kafka.connect:type=connect-coordinator-metrics,client-id=*|last-heartbeat-seconds-ago|int|"
+    worker_spec=$(echo "$worker_spec" | sed 's/^[[:space:]]*//')
+    [[ -n "$verbose" ]] && log "🐞 reading the kafka.connect worker MBeans of $(echo "$targets" | awk '{print $2}' | paste -sd, -) with kafka-jmx"
+    jmx_digest_collect "$worker_spec" "$targets"
+    if [[ -z "$JMX_DIGEST_IDS" ]]
+    then
+        logerror "❌ no connect worker metrics could be read"
+        exit 1
+    fi
+    if [[ -n "$json" ]]
+    then
+        jmx_digest_json worker
+        exit 0
+    fi
+    log "📈 Connect worker metrics"
+    jmx_digest_table "WORKER" "$worker_spec"
+    # one failed rebalance when a worker starts (its first join, before the group coordinator is ready) is normal
+    log "🎓 rebalances keep growing (rebalances per hour), last rebalance seconds ago stays small: the workers rebalance in a loop,"
+    log "   see playground connector history and playground container logs -c <worker> --errors"
+    log "🎓 the leader of the workers: playground connector display-leader-name"
+    log "🎓 the tasks of one connector: playground connector metrics --connector <name>"
+    exit 0
 fi
 
 if [[ ! -n "$connector" ]]

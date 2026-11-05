@@ -312,6 +312,8 @@ playground connector metrics --connector jdbc-sink --watch 10s   # while a load 
   [`connector benchmark`](/deep-dive-connector-benchmark.md).
 - Read over JMX with the `kafka-jmx` tool of the connect image (no restart). Fully managed: the Telemetry API
   (`connector display-metrics-api`). Not on cfk (`playground get-jmx-metrics -c connect-0 --domain kafka.connect`).
+- `connector metrics --worker`: the connect workers instead of one connector (connectors and tasks per worker, startup
+  failures, rebalances, heartbeats).
 
 ### `connector restart --only-failed`: recover without touching the rest
 

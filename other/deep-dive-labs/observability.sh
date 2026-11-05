@@ -6,9 +6,11 @@ source ${DIR}/lab-utils.bash
 
 # lab of https://kafka-docker-playground.io/#/deep-dive-observability
 lab_require_plaintext
-# same as playground run --enable-jmx-grafana --enable-control-center
+# same as playground run --enable-jmx-grafana --enable-control-center --enable-ksqldb
 export ENABLE_JMX_GRAFANA=1
 export ENABLE_CONTROL_CENTER=1
+# for playground ksqldb metrics
+export ENABLE_KSQLDB=1
 lab_start_environment
 LAB_ENVIRONMENT_READY=$SECONDS
 
@@ -41,7 +43,49 @@ lab_expect_contains "📈 Task metrics of 🌎onprem connector filestream-sink (
 lab_expect_contains "sent to DLQ 0"
 lab_expect_contains "✅ Nothing stands out: no error, no skipped record, all tasks made progress"
 
+lab_run playground broker metrics --controller
+lab_expect_exit 0
+lab_expect_contains "🗳️ Controller metrics (KRaft controllers)"
+lab_expect_contains "Active controller yes"
+lab_expect_contains "Offline partitions 0"
+lab_expect_not_contains "active controller(s), there must be exactly 1"
+lab_run playground connector metrics --worker
+lab_expect_exit 0
+lab_expect_contains "📈 Connect worker metrics"
+lab_expect_contains "METRIC WORKER connect"
+lab_expect_contains "Connectors 1"
+lab_expect_contains "Task startup failures (total) 0"
+lab_run playground schema register --subject lab-observability-value << 'EOT'
+{"type": "record", "name": "Lab", "fields": [{"name": "id", "type": "int"}]}
+EOT
+lab_expect_exit 0
+lab_run playground schema metrics
+lab_expect_exit 0
+lab_expect_contains "📈 Schema Registry metrics"
+lab_expect_contains "Leader yes"
+lab_expect_contains "Avro schemas created 1"
+lab_expect_contains "Server errors (5xx, total) 0"
+lab_expect_contains "🎓 4xx are answers to the client"
+lab_run playground ksqldb sql << 'EOT'
+CREATE STREAM lab_stream (id INT, name VARCHAR) WITH (KAFKA_TOPIC='lab-observability', VALUE_FORMAT='JSON');
+CREATE STREAM lab_copy AS SELECT * FROM lab_stream;
+EOT
+lab_expect_exit 0
+lab_run playground ksqldb metrics
+lab_expect_exit 0
+lab_expect_contains "📈 ksqlDB metrics"
+lab_expect_contains "Persistent queries 1"
+lab_expect_contains "Queries in ERROR 0"
+lab_expect_contains "Liveness indicator 1"
+
 log "Step 3: the raw MBeans behind them"
+lab_run playground get-jmx-metrics -c broker
+lab_expect_contains "📚 JMX domains of container broker"
+lab_expect_contains "kafka.server"
+lab_expect_not_contains "#mbean =" "no dump without a filter"
+lab_run bash -c "playground get-jmx-metrics -c broker --mbean 'kafka.server:type=ReplicaManager,*' 2>&1 | grep -E '^#mbean' | sort"
+lab_expect_contains "#mbean = kafka.server:name=UnderReplicatedPartitions,type=ReplicaManager:"
+lab_expect_not_contains "type=KafkaRequestHandlerPool" "only the MBeans matching --mbean"
 lab_run bash -c "playground get-jmx-metrics -c broker -d 'kafka.server kafka.network' 2>&1 | grep -E '^#mbean' | grep -E 'name=(UnderReplicatedPartitions|UnderMinIsrPartitionCount|RequestHandlerAvgIdlePercent|NetworkProcessorAvgIdlePercent|RequestQueueSize|IsrShrinksPerSec),|name=TotalTimeMs,request=Produce,' | sort -u"
 lab_expect_contains "#mbean = kafka.server:name=UnderReplicatedPartitions,type=ReplicaManager:"
 lab_expect_contains "#mbean = kafka.server:name=RequestHandlerAvgIdlePercent,type=KafkaRequestHandlerPool:"

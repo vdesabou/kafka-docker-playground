@@ -1842,6 +1842,11 @@ commands:
     validate: duration
     help: |-
       🔁 Refresh every <interval> (30, 30s, 5m) until ctrl-c
+  - long: --worker
+    required: false
+    help: |-
+      🏭 The connect workers instead of one connector: connectors and tasks
+      they run, startup failures, rebalances, heartbeats (one column per worker)
   - long: --json
     required: false
     conflicts: [--watch]
@@ -1850,6 +1855,7 @@ commands:
   examples:
   - playground connector metrics
   - playground connector metrics --connector jdbc-sink --watch 10s
+  - playground connector metrics --worker
   - playground connector metrics --connector jdbc-sink --json
 
 - name: display-metrics-api

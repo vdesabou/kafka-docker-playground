@@ -293,6 +293,10 @@ services:
     environment:
       SCHEMA_REGISTRY_JMX_PORT: 10001
       SCHEMA_REGISTRY_JMX_HOSTNAME: localhost
+      # since CP 8.4 the image only opens remote JMX with SCHEMA_REGISTRY_JMX_REMOTE_ENABLE=true (and authentication),
+      # otherwise local-only JMX without a port: the same remote JMX as the other components, for get-jmx-metrics,
+      # schema metrics, jconsole on localhost:10001 (older versions add the same port again: harmless)
+      SCHEMA_REGISTRY_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=10001 -Dcom.sun.management.jmxremote.rmi.port=10001 -Djava.rmi.server.hostname=localhost"
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092

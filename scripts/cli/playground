@@ -200,6 +200,7 @@ playground_usage() {
   printf "  %s   🪄 Derive a schema based on payload\n" "$(green "schema derive-schema")                      "
   printf "  %s   🔯 Set a subject alias\n" "$(green "schema set-alias")                          "
   printf "  %s   🔯 Get subject alias\n" "$(green "schema get-alias")                          "
+  printf "  %s   📈 Display the key JMX metrics of Schema Registry\n" "$(green "schema metrics")                            "
   echo
   printf "%s\n" "$(bold "TCP Proxy commands:")"
   printf "  %s   🏚 Zazkia TCP Proxy commands\n" "$(green "tcp-proxy")                                 "
@@ -316,6 +317,7 @@ playground_usage() {
   printf "  %s   📋 List the streams, tables and persistent queries\n" "$(green "ksqldb list")                               "
   printf "  %s   🔎 Describe a stream or a table\n" "$(green "ksqldb describe")                           "
   printf "  %s   ⏳ Wait until the persistent queries are RUNNING and have no lag\n" "$(green "ksqldb wait")                               "
+  printf "  %s   📈 Display the key JMX metrics of the ksqlDB server\n" "$(green "ksqldb metrics")                            "
   echo
   printf "%s\n" "$(bold "Database commands:")"
   printf "  %s   🛢️ Database commands\n" "$(green "db")                                        "
@@ -6456,7 +6458,7 @@ playground_get_docker_compose_usage() {
 playground_schema_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground schema\n\n"
-    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    test-rules           do these records pass the data contract rules?\n    validate             accepted by Schema Registry X, refused by Y? (throwaway\n  registries)\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n    compare              two registries (mdc clusters) or two contexts\n    exporter             Schema Linking: create, list, status, pause…\n    contexts             the contexts of the registry (--context on the\n  commands)\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
+    printf "  🔰 Schema commands\n  \n  Talk to the Schema Registry of the running environment, whether it is the\n  local container or the one in Confluent Cloud, without building the urls\n  and the credentials yourself.\n  \n  🔍 Read\n    list                 every subject: versions, latest id, type, rule, mode\n    describe             everything about a subject or a schema id\n    history              timeline from _schemas: registrations, deletes, rule\n  changes\n    get                  every version of a subject, or of all subjects\n    get-compatibility    the compatibility rule in force (subject or global)\n    get-mode / get-alias\n    metrics              the server: requests, errors, latency, schemas created\n  and deleted\n  \n  ✍️ Write\n    register             add a new version to a subject\n    check-compatibility  would this schema be accepted? (nothing registered)\n    test-rules           do these records pass the data contract rules?\n    validate             accepted by Schema Registry X, refused by Y? (throwaway\n  registries)\n    delete               a version, or the whole subject\n    set-compatibility    relax or tighten the evolution rule (subject or global)\n    set-mode             READWRITE, READONLY or IMPORT (subject or global)\n    set-normalize, validate-new-schemas   registry-wide behaviour\n    set-alias            point one subject name at another\n  \n  📦 Move\n    export / import      a registry to a folder and back, keeping the ids\n    compare              two registries (mdc clusters) or two contexts\n    exporter             Schema Linking: create, list, status, pause…\n    contexts             the contexts of the registry (--context on the\n  commands)\n  \n  🔀 diff compares two versions (or a version and a file) field by field,\n  with the verdict of each compatibility rule.\n  \n  🪄 derive-schema turns a sample payload into an avro, json schema or\n  protobuf schema, which saves writing one by hand.\n  \n  A subject is normally named after the topic: <topic>-key and\n  <topic>-value. 'playground topic delete' removes both along with the\n  topic.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%B0-schema-not-found-after-a-cleanup\n\n"
   else
     printf "playground schema - 🔰 Schema commands\n\n"
   fi
@@ -6491,6 +6493,9 @@ playground_schema_usage() {
   printf "  %s   🪄 Derive a schema based on payload\n" "$(green "derive-schema")       "
   printf "  %s   🔯 Set a subject alias\n" "$(green "set-alias")           "
   printf "  %s   🔯 Get subject alias\n" "$(green "get-alias")           "
+  echo
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   📈 Display the key JMX metrics of Schema Registry\n" "$(green "metrics")             "
   echo
 
   # :command.long_usage
@@ -8463,6 +8468,56 @@ playground_schema_get_alias_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground schema get-alias --alias legacy-orders-value\n"
     printf "  playground schema get-alias --alias legacy-orders-value --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_schema_metrics_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground schema metrics\n\n"
+    printf "  📈 Display the key JMX metrics of Schema Registry\n  \n  Whether it is the leader, requests per second, client (4xx) and server\n  (5xx) errors, average and p99 request latency, active connections, registered\n  schemas, and the Avro / JSON / Protobuf schemas created and deleted\n  since it started. ⚠️ marks the values to look at.\n  \n  Answers \"is Schema Registry slow or failing requests?\" and \"how many\n  schemas were registered or deleted?\", next to 'playground schema list'\n  for the subjects themselves.\n  \n  Read over JMX in the schema-registry container, with jmxterm (no\n  restart, nothing to install).\n  \n  🎓 Tip: every metric of the container: playground get-jmx-metrics -c\n  schema-registry --domain kafka.schema.registry\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability\n\n"
+  else
+    printf "playground schema metrics - 📈 Display the key JMX metrics of Schema Registry\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground schema metrics [OPTIONS]\n"
+  printf "  playground schema metrics --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the raw values as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster CLUSTER")"
+    printf "    🌍 Cluster to use in an mdc-* environment (us or europe)\n    \n    Default: the PLAYGROUND_CLUSTER environment variable, else the value set\n    with 'playground state set run.cluster <cluster>'. Ignored in the other\n    environments.\n"
+    printf "    %s\n" "Allowed: us, europe"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground schema metrics\n"
+    printf "  playground schema metrics --json\n"
     echo
 
   fi
@@ -12036,7 +12091,7 @@ playground_debug_cfk_sourcecode_usage() {
 playground_get_jmx_metrics_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-jmx-metrics\n\n"
-    printf "  🔢 Get JMX metrics from a container\n  \n  Dumps every attribute of the MBeans of a container (all domains, or the\n  ones of --domain), with jmxterm run inside the container: no local Java\n  needed. Works with any container that exposes JMX (broker, broker2,\n  connect, schema-registry, ksqldb-server, broker-us in mdc-*\n  environments...) and with the pods of cfk.\n  \n  🎓 Tip: for a digest instead of raw MBeans, use 'playground broker\n  metrics' or 'playground connector metrics'.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability\n\n"
+    printf "  🔢 Get JMX metrics from a container\n  \n  Dumps every attribute of the MBeans of a container: the ones of --domain,\n  or of --mbean, or all of them with --all. Without any of them, it lists\n  the domains of the container. jmxterm runs inside the container: no local\n  Java needed. Works with any container that exposes JMX (broker, broker2,\n  connect, schema-registry, ksqldb-server, broker-us in mdc-*\n  environments...) and with the pods of cfk.\n  \n  🎓 Tip: for a digest instead of raw MBeans: 'playground broker metrics'\n  (brokers and controllers), 'playground connector metrics' (--worker for\n  the workers), 'playground schema metrics', 'playground ksqldb metrics'.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability\n\n"
   else
     printf "playground get-jmx-metrics - 🔢 Get JMX metrics from a container\n\n"
   fi
@@ -12068,6 +12123,16 @@ playground_get_jmx_metrics_usage() {
     printf "    Domain name\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--mbean, -m MBEAN (repeatable)")"
+    printf "    🫘 Only the MBeans matching this name (repeatable): a * is allowed in a\n    value, the keys can be in any order\n    \n    Example: --mbean \"kafka.server:type=ReplicaManager,*\"\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all")"
+    printf "    📦 Every MBean of every domain (a large output: prefer --domain or --mbean)\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12078,8 +12143,10 @@ playground_get_jmx_metrics_usage() {
     printf "  playground get-jmx-metrics --container connect\n"
     printf "  playground get-jmx-metrics --container connect --domain \"kafka.connect\n  kafka.consumer kafka.producer\"\n"
     printf "  playground get-jmx-metrics -c broker\n"
+    printf "  playground get-jmx-metrics -c broker --mbean\n  \"kafka.server:type=ReplicaManager,*\"\n"
+    printf "  playground get-jmx-metrics -c connect --all --open\n"
     printf "  playground get-jmx-metrics -c connect -c broker\n"
-    printf "  playground get-jmx-metrics --container schema-registry --container\n  ksqldb-server --open\n"
+    printf "  playground get-jmx-metrics --container schema-registry --container\n  ksqldb-server --domain \"kafka.schema.registry io.confluent.ksql.metrics\"\n  --open\n"
     printf "  playground get-jmx-metrics -c broker -c connect --domain \"kafka.server\"\n"
     echo
 
@@ -16100,7 +16167,7 @@ playground_broker_describe_usage() {
 playground_broker_metrics_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground broker metrics\n\n"
-    printf "  📈 Display the key JMX metrics of the brokers\n  \n  One column per broker: partitions and leaders, under-replicated and\n  under min ISR partitions, request handler and network processor idle\n  ratio, request queue size, produce and fetch p99 latency, messages and\n  bytes in and out per second, ISR shrinks and expands, failed produce and\n  fetch requests. ⚠️ marks the values to look at.\n  \n  Answers \"is the broker the bottleneck?\", for example during a\n  'playground connector benchmark'. With --topic, the rates and failed\n  requests are the ones of this topic.\n  \n  🎓 Tip: every metric of a broker: playground get-jmx-metrics -c broker\n\n"
+    printf "  📈 Display the key JMX metrics of the brokers\n  \n  One column per broker: partitions and leaders, under-replicated and\n  under min ISR partitions, request handler and network processor idle\n  ratio, request queue size, produce and fetch p99 latency, messages and\n  bytes in and out per second, ISR shrinks and expands, failed produce and\n  fetch requests. ⚠️ marks the values to look at.\n  \n  Answers \"is the broker the bottleneck?\", for example during a\n  'playground connector benchmark'. With --topic, the rates and failed\n  requests are the ones of this topic.\n  \n  Then the controller section: active controller, offline partitions,\n  partitions and topics of the cluster, preferred replica imbalance, last\n  applied record lag, unclean leader elections. In KRaft these metrics are\n  the ones of the controller containers (controller, controller2,\n  controller3); with ZooKeeper, of the broker that is the active\n  controller. --controller shows only this section.\n  \n  🎓 Tip: every metric of a broker: playground get-jmx-metrics -c broker\n  --domain kafka.server\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability\n\n"
   else
     printf "playground broker metrics - 📈 Display the key JMX metrics of the brokers\n\n"
   fi
@@ -16127,8 +16194,13 @@ playground_broker_metrics_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--controller")"
+    printf "    🗳️ Only the controller section (KRaft controllers, or the brokers with\n    ZooKeeper), with --json too\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    📗 Print the raw values as JSON, one object per broker, and nothing else\n"
+    printf "    📗 Print the raw values as JSON, one object per broker (per controller\n    with --controller), and nothing else\n"
     echo
 
     # :flag.usage
@@ -16152,6 +16224,7 @@ playground_broker_metrics_usage() {
     printf "  playground broker metrics\n"
     printf "  playground broker metrics --topic orders\n"
     printf "  playground broker metrics --broker 1 --json\n"
+    printf "  playground broker metrics --controller\n"
     echo
 
   fi
@@ -16682,7 +16755,7 @@ playground_flink_cancel_usage() {
 playground_ksqldb_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ksqldb\n\n"
-    printf "  🧮 ksqlDB commands\n  \n  Run ksqlDB statements and inspect the streams, tables and queries of the\n  ksqlDB server started with 'playground run --enable-ksqldb' (the ksqldb/\n  examples enable it), without docker exec or curl.\n  \n    sql        run ksqlDB statements (stdin or --file) with the ksql cli\n    list       streams, tables and persistent queries with their state\n    describe   fields, queries, statistics, errors and lag of a stream or table\n    wait       wait until the persistent queries are RUNNING and have no lag\n  \n  🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.\n  The records that fail a query are in the KSQL_PROCESSING_LOG stream.\n\n"
+    printf "  🧮 ksqlDB commands\n  \n  Run ksqlDB statements and inspect the streams, tables and queries of the\n  ksqlDB server started with 'playground run --enable-ksqldb' (the ksqldb/\n  examples enable it), without docker exec or curl.\n  \n    sql        run ksqlDB statements (stdin or --file) with the ksql cli\n    list       streams, tables and persistent queries with their state\n    describe   fields, queries, statistics, errors and lag of a stream or table\n    wait       wait until the persistent queries are RUNNING and have no lag\n    metrics    query states (running, ERROR, rebalancing) and messages per\n  second, over JMX\n  \n  🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.\n  The records that fail a query are in the KSQL_PROCESSING_LOG stream.\n\n"
   else
     printf "playground ksqldb - 🧮 ksqlDB commands\n\n"
   fi
@@ -16697,6 +16770,7 @@ playground_ksqldb_usage() {
   printf "  %s   📋 List the streams, tables and persistent queries\n" "$(green "list")    "
   printf "  %s   🔎 Describe a stream or a table\n" "$(green "describe")"
   printf "  %s   ⏳ Wait until the persistent queries are RUNNING and have no lag\n" "$(green "wait")    "
+  printf "  %s   📈 Display the key JMX metrics of the ksqlDB server\n" "$(green "metrics") "
   echo
 
   # :command.long_usage
@@ -16918,6 +16992,50 @@ playground_ksqldb_wait_usage() {
     printf "  playground ksqldb wait\n"
     printf "  playground ksqldb wait --source currentLocation --source\n  ridersNearMountainView\n"
     printf "  playground ksqldb wait --source ORDERS_ENRICHED --max-wait 3600\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ksqldb_metrics_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ksqldb metrics\n\n"
+    printf "  📈 Display the key JMX metrics of the ksqlDB server\n  \n  The engine statistics of ksqldb-server: persistent queries, and how many\n  are running, in ERROR, not running, rebalancing or pending shutdown,\n  active and idle queries, messages consumed and produced per second, and\n  the liveness indicator. ⚠️ marks the values to look at.\n  \n  Answers \"is a query in ERROR or stuck rebalancing?\" and \"does ksqlDB\n  consume anything?\", next to 'playground ksqldb list' (the state of each\n  query) and 'playground ksqldb describe' (its errors and lag).\n  \n  Read over JMX in the ksqldb-server container, with jmxterm (no restart,\n  nothing to install).\n  \n  🎓 Tip: every metric of the container: playground get-jmx-metrics -c\n  ksqldb-server --domain io.confluent.ksql.metrics\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability\n\n"
+  else
+    printf "playground ksqldb metrics - 📈 Display the key JMX metrics of the ksqlDB server\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ksqldb metrics [OPTIONS]\n"
+  printf "  playground ksqldb metrics --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the raw values as JSON, and nothing else\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ksqldb metrics\n"
+    printf "  playground ksqldb metrics --json\n"
     echo
 
   fi
@@ -21016,6 +21134,11 @@ playground_connector_metrics_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--worker")"
+    printf "    🏭 The connect workers instead of one connector: connectors and tasks\n    they run, startup failures, rebalances, heartbeats (one column per worker)\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🤖 Print the result as JSON on stdout, and nothing else (the log lines go to\n    stderr)\n"
     printf "    %s\n" "Conflicts: --watch"
@@ -21030,6 +21153,7 @@ playground_connector_metrics_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector metrics\n"
     printf "  playground connector metrics --connector jdbc-sink --watch 10s\n"
+    printf "  playground connector metrics --worker\n"
     printf "  playground connector metrics --connector jdbc-sink --json\n"
     echo
 
@@ -31906,6 +32030,23 @@ function get_broker_containers () {
   done | sort -n
 }
 
+# running docker containers of the KRaft controllers, one "<node id> <container>" per line, sorted by id (empty with
+# ZooKeeper, where the active controller is a broker)
+function get_controller_containers () {
+  local c id candidates="controller controller2 controller3"
+  if is_mdc_environment
+  then
+    get_mdc_cluster
+    candidates="controller-$mdc_cluster"
+  fi
+  for c in $candidates
+  do
+    is_container_running "$c" || continue
+    id=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$c" 2>/dev/null | grep -E "^KAFKA_NODE_ID=" | head -1 | cut -d= -f2)
+    [[ -n "$id" ]] && echo "$id $c"
+  done | sort -n
+}
+
 # docker container of broker $1: returns 1 (with an error) when there is none
 function get_broker_container_of_id () {
   local id="$1" containers
@@ -32647,6 +32788,209 @@ function resolve_connector_plugin () {
   fi
   log "☁️ $input is taken as the fully managed connector confluentinc/$input" >&2
   echo "confluentinc/$input"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# JMX digests: broker metrics (and its controller section), schema metrics, ksqldb metrics, connector metrics --worker
+#
+# A spec is one metric per line: label|object name|attribute|format|warning
+#   object name  an MBean name; a * is allowed in a value: io.confluent.ksql.metrics:type=*ksql-engine-query-stats
+#   format       int, pct (a ratio, shown in %), ms, rate, bytes, bool (true/false or 1/0, shown yes/no), str (as it is)
+#   warning      gt0 (⚠️ above 0), lt30 (⚠️ below 30%), yes (⚠️ when true), empty for none
+# The MBeans are read in the container: with kafka-jmx when the image has it (brokers, controllers, connect: no download),
+# otherwise with jmxterm (schema-registry, ksqldb-server), like get-jmx-metrics.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# the awk functions shared by the reader: MBean names are compared once normalized (keys sorted: kafka-jmx and jmxterm
+# don't print them in the same order), and a spec object name is a glob
+JMX_DIGEST_AWK_FUNCTIONS='
+function jmx_norm(n,    i, d, rest, cnt, arr, j, t, out) {
+    i = index(n, ":"); d = substr(n, 1, i - 1); rest = substr(n, i + 1)
+    cnt = split(rest, arr, ",")
+    for (i = 1; i <= cnt; i++) for (j = i + 1; j <= cnt; j++) if (arr[j] < arr[i]) { t = arr[i]; arr[i] = arr[j]; arr[j] = t }
+    out = d ":"
+    for (i = 1; i <= cnt; i++) out = out (i > 1 ? "," : "") arr[i]
+    return out
+}
+function jmx_glob_re(g,    r, i, c) {
+    r = "^"
+    for (i = 1; i <= length(g); i++) {
+        c = substr(g, i, 1)
+        if (c == "*") r = r ".*"
+        else if (index("\\.[](){}+?^$|", c) > 0) r = r "\\" c
+        else r = r c
+    }
+    return r "$"
+}
+'
+
+# jmx_digest_read <container> <spec>: prints "<label>|<raw value>" for each metric of the spec (empty value when the MBean
+# or the attribute doesn't exist). Returns 1 when the JMX metrics of the container can't be read.
+function jmx_digest_read () {
+    local container="$1" spec="$2" port raw="" jar beans work_dir
+    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2>/dev/null | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    if [[ -z "$port" ]]
+    then
+        logwarn "⚠️ JMX is not enabled on container $container (no *_JMX_PORT environment variable), skipped"
+        return 1
+    fi
+    work_dir=$(mktemp -d -t playground-jmx-digest.XXXXXX)
+    echo "$spec" > "$work_dir/spec"
+
+    local jmx_tool=""
+    if docker exec "$container" bash -c "command -v kafka-jmx" > /dev/null 2>&1
+    then
+        jmx_tool="kafka-jmx"
+    elif docker exec "$container" bash -c "command -v kafka-run-class" > /dev/null 2>&1
+    then
+        # before Kafka 3.5
+        jmx_tool="kafka-run-class kafka.tools.JmxTool"
+    fi
+
+    if [[ -n "$jmx_tool" ]]
+    then
+        local object_args=()
+        while read -r object
+        do
+            [[ -n "$object" ]] && object_args+=(--object-name "$object")
+        done < <(cut -d'|' -f2 "$work_dir/spec" | sort -u)
+        # "<object name>:<attribute>\t<value>" per line
+        docker exec "$container" $jmx_tool --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv > "$work_dir/raw" 2>&1 || true
+        # kafka-jmx gives up on the whole query when one MBean of it can't be read (no attribute, for example): jmxterm then
+        grep -q $'\t' "$work_dir/raw" || jmx_tool=""
+    fi
+    if [[ -z "$jmx_tool" ]]
+    then
+        jar=$(get_jmxterm_jar) || { rm -rf "$work_dir"; return 1; }
+        docker cp "$jar" "$container:$jar" > /dev/null 2>&1 || { logwarn "⚠️ could not copy jmxterm to container $container, skipped"; rm -rf "$work_dir"; return 1; }
+        printf 'beans\nexit\n' | docker exec -i "$container" java -jar "$jar" -l "localhost:$port" -n -v silent > "$work_dir/beans" 2>/dev/null || true
+        # the attributes of the spec, per MBean that exists: "get -b <bean> <attribute>..." prints the "#mbean = <name>:"
+        # header, then one line per attribute found (not "get *": one attribute that can't be read, like "schemas" of the
+        # jersey-metrics of Schema Registry, would hide the others)
+        awk -F'|' "$JMX_DIGEST_AWK_FUNCTIONS"'
+            NR == FNR { if ($0 != "") beans[++nb] = $0; next }
+            $2 != "" {
+                re = jmx_glob_re(jmx_norm($2))
+                for (i = 1; i <= nb; i++) if (jmx_norm(beans[i]) ~ re && index(" " wanted[beans[i]] " ", " " $3 " ") == 0) wanted[beans[i]] = wanted[beans[i]] " " $3
+            }
+            END { for (b in wanted) print "get -b " b wanted[b] }' "$work_dir/beans" "$work_dir/spec" > "$work_dir/commands"
+        echo "exit" >> "$work_dir/commands"
+        # "#mbean = <name>:" then "<attribute> = <value>;" lines, turned into the kafka-jmx format
+        # (jmxterm prints the values of "get" on stderr)
+        docker exec -i "$container" java -jar "$jar" -l "localhost:$port" -n < "$work_dir/commands" 2>&1 | awk '
+            /^#mbean = / { bean = substr($0, 10); sub(/:$/, "", bean); next }
+            / = / && bean != "" {
+                i = index($0, " = "); attr = substr($0, 1, i - 1); value = substr($0, i + 3)
+                sub(/;$/, "", value); gsub(/"/, "", value); gsub(/^[ \t]+/, "", attr)
+                print bean ":" attr "\t" value
+            }' > "$work_dir/raw"
+    fi
+
+    if ! grep -q $'\t' "$work_dir/raw"
+    then
+        logwarn "⚠️ could not read the JMX metrics of container $container:"
+        grep -v -E "^[[:space:]]+at " "$work_dir/raw" | tail -3
+        rm -rf "$work_dir"
+        return 1
+    fi
+
+    awk -F'\t' "$JMX_DIGEST_AWK_FUNCTIONS"'
+        NR == FNR {
+            # the attribute is after the last ":" of the key (a value of the MBean name may contain ":")
+            key = $1; last = 0
+            for (i = 1; i <= length(key); i++) if (substr(key, i, 1) == ":") last = i
+            if (last == 0) next
+            n++; names[n] = jmx_norm(substr(key, 1, last - 1)); attrs[n] = substr(key, last + 1); values[n] = $2
+            next
+        }
+        {
+            split($0, f, "|")
+            re = jmx_glob_re(jmx_norm(f[2])); value = ""
+            for (i = 1; i <= n; i++) if (attrs[i] == f[3] && names[i] ~ re) { value = values[i]; break }
+            print f[1] "|" value
+        }' "$work_dir/raw" "$work_dir/spec"
+    rm -rf "$work_dir"
+}
+
+# jmx_digest_collect <spec> <targets: "<column id> <container>" per line>: reads every target, sets JMX_DIGEST_IDS (the
+# columns that could be read) and JMX_DIGEST_VALUES ("<column id>|<label>|<raw value>" per line)
+function jmx_digest_collect () {
+    local spec="$1" targets="$2" id container output
+    JMX_DIGEST_IDS=""
+    JMX_DIGEST_VALUES=""
+    while read -r id container
+    do
+        [[ -z "$id" ]] && continue
+        if ! is_container_running "$container"
+        then
+            logwarn "⚠️ container $container is not running, skipped"
+            continue
+        fi
+        output=$(jmx_digest_read "$container" "$spec") || continue
+        JMX_DIGEST_IDS+="$id "
+        JMX_DIGEST_VALUES+=$(echo "$output" | sed "s/^/$id|/")$'\n'
+    done <<< "$targets"
+}
+
+# jmx_digest_table <column header> <spec>: prints JMX_DIGEST_VALUES as a table, one column per JMX_DIGEST_IDS
+function jmx_digest_table () {
+    local header="$1" spec="$2" id label object attribute format warning value
+    {
+        printf 'METRIC'
+        for id in $JMX_DIGEST_IDS
+        do
+            printf '\t%s %s' "$header" "$id"
+        done
+        printf '\n'
+        while IFS='|' read -r label object attribute format warning
+        do
+            [[ -z "$label" ]] && continue
+            printf '%s' "$label"
+            for id in $JMX_DIGEST_IDS
+            do
+                value=$(echo -n "$JMX_DIGEST_VALUES" | awk -F'|' -v id="$id" -v label="$label" '$1 == id && $2 == label { print $3 ; exit }')
+                printf '\t%s' "$(echo "$value" | awk -v format="$format" -v warning="$warning" '
+                    $0 == "" || $0 == "NaN" { print "-" ; exit }
+                    format == "str" { print ; exit }
+                    format == "bool" {
+                        yes = ($0 == "true" || $0 == "1" || $0 == "1.0")
+                        out = yes ? "yes" : "no"
+                        if (warning == "yes" && yes) out = out " ⚠️"
+                        print out ; exit
+                    }
+                    {
+                        v = $0 + 0
+                        if (format == "pct") out = sprintf("%.0f%%", v * 100)
+                        else if (format == "ms") out = sprintf("%.0f ms", v)
+                        else if (format == "rate") out = sprintf("%.1f", v)
+                        else if (format == "bytes") {
+                            if (v >= 1048576) out = sprintf("%.1f MB", v / 1048576)
+                            else if (v >= 1024) out = sprintf("%.1f KB", v / 1024)
+                            else out = sprintf("%.0f B", v)
+                        }
+                        else out = sprintf("%.0f", v)
+                        if ((warning == "gt0" && v > 0) || (warning == "lt30" && v < 0.3)) out = out " ⚠️"
+                        print out
+                    }')"
+            done
+            printf '\n'
+        done <<< "$spec"
+    } | column -t -s $'\t'
+}
+
+# jmx_digest_json <id key>: prints JMX_DIGEST_VALUES as a JSON array, one object per column: {"<id key>": <id>,
+# "metrics": {"<label>": <value>}} (numbers when numeric, true/false, null when missing, strings otherwise)
+function jmx_digest_json () {
+    local id_key="$1"
+    echo -n "$JMX_DIGEST_VALUES" | jq -R -s --arg key "$id_key" 'split("\n") | map(select(length > 0) | split("|"))
+        | group_by(.[0]) | map({ ($key): (.[0][0] | tonumber? // .), metrics: (map({ (.[1]): (.[2] as $v
+            | if $v == "" or $v == "NaN" then null elif $v == "true" then true elif $v == "false" then false
+              else ($v | tonumber? // $v) end) }) | add) })'
+}
+
+# jmx_digest_value <id> <label>: the raw value of one metric of JMX_DIGEST_VALUES (for the findings of a command)
+function jmx_digest_value () {
+    echo -n "$JMX_DIGEST_VALUES" | awk -F'|' -v id="$1" -v label="$2" '$1 == id && $2 == label { print $3 ; exit }'
 }
 
 # src/lib/colors.sh
@@ -36689,16 +37033,10 @@ function display_jmx_info() {
     log "    - ksqldb-server   : 10003"
   fi
 }
-# prints the JMX metrics of the domains $2 (space separated, all of them when empty) of container $1 (docker container,
-# or cfk pod or docker-style name), with jmxterm run inside the container: saved to a file and opened when $3 is set.
-# returns 1 when the container or its JMX port can't be found
-function get_jmx_metrics() {
-  local container="$1" domains="$2" open="$3"
+# downloads jmxterm once (cached in /tmp) and prints the path of the jar; returns 1 when the download fails
+function get_jmxterm_jar() {
   local JMXTERM_VERSION="1.0.2"
   local JMXTERM_UBER_JAR="/tmp/jmxterm-$JMXTERM_VERSION-uber.jar"
-  local jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
-  local target_container="$container" port="" work_dir output_file domain
-
   if [ ! -s "$JMXTERM_UBER_JAR" ]
   then
     # downloaded to a temporary file first: a failed download must not be cached as the jar
@@ -36710,6 +37048,21 @@ function get_jmx_metrics() {
     fi
     mv "$JMXTERM_UBER_JAR.tmp" "$JMXTERM_UBER_JAR"
   fi
+  echo "$JMXTERM_UBER_JAR"
+}
+
+# prints the JMX metrics of container $1 (docker container, or cfk pod or docker-style name), with jmxterm run inside
+# the container: the MBeans of the domains $2 (space separated), or the ones matching the patterns $4 (space separated,
+# * allowed in a value: "kafka.server:type=ReplicaManager,*"), or every MBean when $5 is set; with none of them, the list
+# of domains and the digest commands to try. Saved to a file and opened when $3 is set.
+# returns 1 when the container or its JMX port can't be found
+function get_jmx_metrics() {
+  local container="$1" domains="$2" open="$3" mbeans="$4" all="$5"
+  local JMXTERM_UBER_JAR
+  local jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
+  local target_container="$container" port="" work_dir output_file domain
+
+  JMXTERM_UBER_JAR=$(get_jmxterm_jar) || return 1
 
   get_environment_used
 
@@ -36744,11 +37097,6 @@ function get_jmx_metrics() {
     fi
   fi
 
-  if [ "$domains" = "" ]
-  then
-    logwarn "You did not specify a list of domains, all domains will be exported!"
-  fi
-
   work_dir=$(mktemp -d -t playground-jmx.XXXXXX)
   output_file="/tmp/jmx_metrics-$container.log"
   rm -f "$output_file"
@@ -36764,16 +37112,30 @@ function get_jmx_metrics() {
 
   playground container cp --source "$JMXTERM_UBER_JAR" --destination "$target_container:$JMXTERM_UBER_JAR"
 
-  if [ "$domains" = "" ]
+  if [ "$domains" = "" ] && [ "$mbeans" = "" ]
   then
-    log "This is the list of domains for container $container"
+    log "📚 JMX domains of container $container"
     if ! printf 'domains\nexit\n' | jmx_exec "-v silent"
     then
       logwarn "JMX endpoint is unavailable for $container. JMX may be disabled. $jmx_disabled_hint"
       rm -rf "$work_dir"
       return 0
     fi
+    if [ "$all" = "" ]
+    then
+      log "🎓 dump one domain with --domain <domain>, some MBeans with --mbean \"<domain>:type=<type>,*\", everything with --all"
+      log "   a digest instead of raw MBeans: playground broker metrics (brokers and controllers), playground connector metrics"
+      log "   (--worker for the workers), playground schema metrics, playground ksqldb metrics"
+      rm -rf "$work_dir"
+      return 0
+    fi
+    logwarn "--all: every MBean of every domain is exported"
     # one pass on the beans of every domain
+    domains="ALL"
+  fi
+  if [ "$mbeans" != "" ]
+  then
+    # one pass on the beans of every domain, filtered below
     domains="ALL"
   fi
 
@@ -36790,6 +37152,22 @@ function get_jmx_metrics() {
       logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
       rm -rf "$work_dir"
       return 0
+    fi
+    if [ "$mbeans" != "" ]
+    then
+      # the MBeans matching one of the patterns (keys compared in any order, * in a value)
+      tr ' ' '\n' <<< "$mbeans" > "$work_dir/patterns"
+      awk "$JMX_DIGEST_AWK_FUNCTIONS"'
+        NR == FNR { if ($0 != "") patterns[++np] = jmx_glob_re(jmx_norm($0)); next }
+        $0 != "" { for (i = 1; i <= np; i++) if (jmx_norm($0) ~ patterns[i]) { print; break } }' "$work_dir/patterns" "$work_dir/beans.log" > "$work_dir/beans.filtered"
+      if [ ! -s "$work_dir/beans.filtered" ]
+      then
+        logwarn "no MBean of container $container matches $mbeans (list the domains: playground get-jmx-metrics -c $container)"
+        rm -rf "$work_dir"
+        return 0
+      fi
+      mv "$work_dir/beans.filtered" "$work_dir/beans.log"
+      domain="$mbeans"
     fi
     while read -r line
     do
@@ -58510,6 +58888,66 @@ playground_schema_get_alias_command() {
 }
 
 # :command.function
+playground_schema_metrics_command() {
+
+  # src/commands/schema/metrics.sh
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  container="schema-registry"
+  if is_mdc_environment
+  then
+      get_mdc_cluster
+      container="schema-registry-$mdc_cluster"
+  fi
+
+  # label|object name|attribute|format|warning (see jmx_digest_read)
+  spec="Leader|kafka.schema.registry:type=master-slave-role|master-slave-role|bool|
+  Requests/s|kafka.schema.registry:type=jersey-metrics|request-rate|rate|
+  Client errors (4xx)/s|kafka.schema.registry:type=jersey-metrics,http_status_code=4xx|request-error-rate|rate|
+  Server errors (5xx)/s|kafka.schema.registry:type=jersey-metrics,http_status_code=5xx|request-error-rate|rate|gt0
+  Server errors (5xx, total)|kafka.schema.registry:type=jersey-metrics,http_status_code=5xx|request-error-total|int|gt0
+  Request latency avg|kafka.schema.registry:type=jersey-metrics|request-latency-avg|ms|
+  Request latency p99|kafka.schema.registry:type=jersey-metrics|request-latency-99|ms|
+  Active connections|kafka.schema.registry:type=jetty-metrics|connections-active|int|
+  Registered schemas|kafka.schema.registry:type=registered-count|registered-count|int|
+  Avro schemas created|kafka.schema.registry:type=avro-schemas-created|avro-schemas-created|int|
+  JSON schemas created|kafka.schema.registry:type=json-schemas-created|json-schemas-created|int|
+  Protobuf schemas created|kafka.schema.registry:type=protobuf-schemas-created|protobuf-schemas-created|int|
+  Avro schemas deleted|kafka.schema.registry:type=avro-schemas-deleted|avro-schemas-deleted|int|
+  JSON schemas deleted|kafka.schema.registry:type=json-schemas-deleted|json-schemas-deleted|int|
+  Protobuf schemas deleted|kafka.schema.registry:type=protobuf-schemas-deleted|protobuf-schemas-deleted|int|"
+  spec=$(echo "$spec" | sed 's/^[[:space:]]*//')
+
+  [[ -n "$verbose" ]] && log "🐞 reading the kafka.schema.registry MBeans of $container (jmxterm in the container)"
+  jmx_digest_collect "$spec" "$container $container"
+  if [[ -z "$JMX_DIGEST_IDS" ]]
+  then
+      logerror "❌ no Schema Registry metrics could be read from container $container"
+      exit 1
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      jmx_digest_json container
+      exit 0
+  fi
+
+  log "📈 Schema Registry metrics (rates and latencies over the last samples, counts since the start)"
+  jmx_digest_table "CONTAINER" "$spec"
+
+  errors=$(jmx_digest_value "$container" "Server errors (5xx, total)")
+  if awk -v v="${errors:-0}" 'BEGIN { exit !(v + 0 > 0) }'
+  then
+      logwarn "⚠️ requests failed with a 5xx: playground container logs -c $container --errors"
+  fi
+  log "🎓 4xx are answers to the client (404: subject or version not found, 409: incompatible schema, 422: invalid schema),"
+  log "   not failures of Schema Registry"
+  log "🎓 subjects, versions and compatibility: playground schema list; the requests of the clients: playground container logs -c $container"
+
+}
+
+# :command.function
 playground_tcp_proxy_start_command() {
 
   # src/commands/tcp-proxy/start.sh
@@ -65010,6 +65448,14 @@ playground_get_jmx_metrics_command() {
   containers="${args[--container]}"
   domain="${args[--domain]}"
   open="${args[--open]}"
+  # repeatable: the values are quoted by bashly (and a pattern holds a *: never let the shell expand it)
+  mbeans=""
+  if [[ -n "${args[--mbean]}" ]]
+  then
+      eval "mbean_array=(${args[--mbean]})"
+      mbeans="${mbean_array[*]}"
+  fi
+  all="${args[--all]}"
 
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
@@ -65017,7 +65463,7 @@ playground_get_jmx_metrics_command() {
   # the container names and their JMX port are checked by get_jmx_metrics
   for container in "${container_array[@]}"
   do
-  	get_jmx_metrics "$container" "$domain" "$open" || exit 1
+  	get_jmx_metrics "$container" "$domain" "$open" "$mbeans" "$all" || exit 1
   done
 
 }
@@ -73320,26 +73766,14 @@ playground_broker_metrics_command() {
   broker="${args[--broker]}"
   topic="${args[--topic]}"
   json="${args[--json]}"
+  controller_only="${args[--controller]}"
   verbose="${args[--verbose]}"
-
-  if [[ -n "$broker" ]]
-  then
-      get_broker_container_of_id "$broker" || exit 1
-      targets="$broker $broker_id_container"
-  else
-      targets=$(get_broker_containers)
-      if [[ -z "$targets" ]]
-      then
-          logerror "❌ no broker container found, is an environment running? (playground status)"
-          exit 1
-      fi
-  fi
 
   topic_suffix=""
   [[ -n "$topic" ]] && topic_suffix=",topic=$topic"
 
-  # label|object name|attribute|format|warning
-  metrics_spec="Partitions|kafka.server:type=ReplicaManager,name=PartitionCount|Value|int|
+  # label|object name|attribute|format|warning (see jmx_digest_read)
+  broker_spec="Partitions|kafka.server:type=ReplicaManager,name=PartitionCount|Value|int|
   Leaders|kafka.server:type=ReplicaManager,name=LeaderCount|Value|int|
   Under-replicated partitions|kafka.server:type=ReplicaManager,name=UnderReplicatedPartitions|Value|int|gt0
   Under min ISR partitions|kafka.server:type=ReplicaManager,name=UnderMinIsrPartitionCount|Value|int|gt0
@@ -73357,55 +73791,76 @@ playground_broker_metrics_command() {
   Failed produce requests (since start)|kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec$topic_suffix|Count|int|
   Failed fetch requests (since start)|kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec$topic_suffix|Count|int|"
 
-  # the generated CLI indents the lines of this string
-  metrics_spec=$(echo "$metrics_spec" | sed 's/^[[:space:]]*//')
+  # KRaft: MBeans of the controllers; ZooKeeper: of the broker that is the active controller
+  controller_spec="Active controller|kafka.controller:type=KafkaController,name=ActiveControllerCount|Value|bool|
+  Offline partitions|kafka.controller:type=KafkaController,name=OfflinePartitionsCount|Value|int|gt0
+  Partitions (cluster)|kafka.controller:type=KafkaController,name=GlobalPartitionCount|Value|int|
+  Topics (cluster)|kafka.controller:type=KafkaController,name=GlobalTopicCount|Value|int|
+  Preferred replica imbalance|kafka.controller:type=KafkaController,name=PreferredReplicaImbalanceCount|Value|int|gt0
+  Last applied record lag|kafka.controller:type=KafkaController,name=LastAppliedRecordLagMs|Value|ms|
+  Unclean leader elections (since start)|kafka.controller:type=ControllerStats,name=UncleanLeaderElectionsPerSec|Count|int|gt0"
 
-  object_args=()
-  while IFS='|' read -r label object attribute format warning
-  do
-      object_args+=(--object-name "$object")
-  done <<< "$metrics_spec"
+  # the generated CLI indents the lines of these strings
+  broker_spec=$(echo "$broker_spec" | sed 's/^[[:space:]]*//')
+  controller_spec=$(echo "$controller_spec" | sed 's/^[[:space:]]*//')
 
-  # "<broker id>|<label>|<raw value>" for every metric of every running broker
-  values=""
-  ids=""
-  while read -r id container
-  do
-      [[ -z "$id" ]] && continue
-      if ! is_container_running "$container"
+  # the controller section: KRaft controllers, or the brokers with ZooKeeper
+  function display_controller_metrics () {
+      local controller_targets header="CONTROLLER"
+      controller_targets=$(get_controller_containers)
+      if [[ -z "$controller_targets" ]]
       then
-          logwarn "⚠️ broker $id (container $container) is not running, skipped"
-          continue
+          controller_targets=$(get_broker_containers)
+          header="BROKER"
       fi
-      port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
-      if [[ -z "$port" ]]
+      jmx_digest_collect "$controller_spec" "$controller_targets"
+      if [[ -z "$JMX_DIGEST_IDS" ]]
       then
-          logwarn "⚠️ JMX is not enabled on broker $id (no KAFKA_JMX_PORT), skipped"
-          continue
+          logerror "❌ no controller metrics could be read"
+          return 1
       fi
-      jmx_tool="kafka-jmx"
-      if ! docker exec "$container" bash -c "command -v kafka-jmx" > /dev/null 2>&1
+      if [[ -n "$json" ]]
       then
-          # before Kafka 3.5
-          jmx_tool="kafka-run-class kafka.tools.JmxTool"
+          jmx_digest_json "$(echo "$header" | tr '[:upper:]' '[:lower:]')"
+          return 0
       fi
-      [[ -n "$verbose" ]] && log "🐞 $jmx_tool --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv (in $container)"
-      output=$(docker exec "$container" $jmx_tool --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv 2>&1) || true
-      if ! echo "$output" | grep -q -E "^kafka\."
-      then
-          logwarn "⚠️ could not read the JMX metrics of broker $id:"
-          echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3
-          continue
-      fi
-      ids+="$id "
-      while IFS='|' read -r label object attribute format warning
+      log "🗳️ Controller metrics ($([[ "$header" == "CONTROLLER" ]] && echo "KRaft controllers" || echo "ZooKeeper mode: the active controller is a broker"))"
+      jmx_digest_table "$header" "$controller_spec"
+      local active=0 id
+      for id in $JMX_DIGEST_IDS
       do
-          value=$(echo "$output" | awk -F'\t' -v key="$object:$attribute" '$1 == key { print $2 ; exit }')
-          values+="$id|$label|$value"$'\n'
-      done <<< "$metrics_spec"
-  done <<< "$targets"
+          case "$(jmx_digest_value "$id" "Active controller")" in
+              1|1.0|true) active=$((active + 1)) ;;
+          esac
+      done
+      if [[ "$active" != "1" ]]
+      then
+          logwarn "⚠️ $active active controller(s), there must be exactly 1"
+      fi
+  }
 
-  if [[ -z "$ids" ]]
+  if [[ -n "$controller_only" ]]
+  then
+      display_controller_metrics
+      exit $?
+  fi
+
+  if [[ -n "$broker" ]]
+  then
+      get_broker_container_of_id "$broker" || exit 1
+      targets="$broker $broker_id_container"
+  else
+      targets=$(get_broker_containers)
+      if [[ -z "$targets" ]]
+      then
+          logerror "❌ no broker container found, is an environment running? (playground status)"
+          exit 1
+      fi
+  fi
+
+  [[ -n "$verbose" ]] && log "🐞 reading the MBeans of $(echo "$targets" | awk '{print $2}' | paste -sd, -) with kafka-jmx"
+  jmx_digest_collect "$broker_spec" "$targets"
+  if [[ -z "$JMX_DIGEST_IDS" ]]
   then
       logerror "❌ no broker metrics could be read"
       exit 1
@@ -73413,51 +73868,25 @@ playground_broker_metrics_command() {
 
   if [[ -n "$json" ]]
   then
-      echo -n "$values" | jq -R -s 'split("\n") | map(select(length > 0) | split("|"))
-          | group_by(.[0]) | map({ broker: (.[0][0] | tonumber), metrics: (map({ (.[1]): (.[2] | tonumber? // null) }) | add) })'
+      jmx_digest_json broker
       exit 0
   fi
 
   log "📈 Broker metrics$([[ -n "$topic" ]] && echo " (rates and failed requests of topic $topic)")"
-  if [[ -n "$topic" ]] && ! echo -n "$values" | awk -F'|' '$2 == "Messages in/s (1m)" && $3 != ""' | grep -q .
+  if [[ -n "$topic" ]] && ! echo -n "$JMX_DIGEST_VALUES" | awk -F'|' '$2 == "Messages in/s (1m)" && $3 != ""' | grep -q .
   then
       logwarn "⚠️ no metric for topic $topic: it does not exist, or no broker received or served records of it since it started"
   fi
-  {
-      printf 'METRIC'
-      for id in $ids
-      do
-          printf '\tBROKER %s' "$id"
-      done
-      printf '\n'
-      while IFS='|' read -r label object attribute format warning
-      do
-          printf '%s' "$label"
-          for id in $ids
-          do
-              value=$(echo -n "$values" | awk -F'|' -v id="$id" -v label="$label" '$1 == id && $2 == label { print $3 ; exit }')
-              printf '\t%s' "$(echo "$value" | awk -v format="$format" -v warning="$warning" '
-                  $0 == "" { print "-" ; exit }
-                  {
-                      v = $0 + 0
-                      if (format == "pct") out = sprintf("%.0f%%", v * 100)
-                      else if (format == "ms") out = sprintf("%.0f ms", v)
-                      else if (format == "rate") out = sprintf("%.1f", v)
-                      else if (format == "bytes") {
-                          if (v >= 1048576) out = sprintf("%.1f MB", v / 1048576)
-                          else if (v >= 1024) out = sprintf("%.1f KB", v / 1024)
-                          else out = sprintf("%.0f B", v)
-                      }
-                      else out = sprintf("%.0f", v)
-                      if ((warning == "gt0" && v > 0) || (warning == "lt30" && v < 0.3)) out = out " ⚠️"
-                      print out
-                  }')"
-          done
-          printf '\n'
-      done <<< "$metrics_spec"
-  } | column -t -s $'\t'
+  jmx_digest_table "BROKER" "$broker_spec"
   log "🎓 idle below 30% means the broker threads are saturated (num.io.threads, num.network.threads)"
   log "   fetch p99 includes the time a fetch waits for data (fetch.max.wait.ms, replica.fetch.wait.max.ms: 500 ms by default)"
+
+  # the controller section, unless one broker was asked for
+  if [[ -z "$broker" ]]
+  then
+      echo ""
+      display_controller_metrics || true
+  fi
 
 }
 
@@ -74303,6 +74732,62 @@ playground_ksqldb_wait_command() {
       first_pass=""
       sleep 2
   done
+
+}
+
+# :command.function
+playground_ksqldb_metrics_command() {
+
+  # src/commands/ksqldb/metrics.sh
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  container="ksqldb-server"
+
+  # label|object name|attribute|format|warning (see jmx_digest_read). The MBean name holds the ksql.service.id
+  # (_confluent-ksql-<service id>ksql-engine-query-stats): matched with a *
+  stats="io.confluent.ksql.metrics:type=*ksql-engine-query-stats"
+  spec="Persistent queries|$stats|num-persistent-queries|int|
+  Running queries|$stats|RUNNING-queries|int|
+  Queries in ERROR|$stats|ERROR-queries|int|gt0
+  Not running queries|$stats|NOT_RUNNING-queries|int|gt0
+  Rebalancing queries|$stats|REBALANCING-queries|int|gt0
+  Pending shutdown queries|$stats|PENDING_SHUTDOWN-queries|int|
+  Pending error queries|$stats|PENDING_ERROR-queries|int|gt0
+  Error rate|$stats|error-rate|rate|gt0
+  Active queries|$stats|num-active-queries|int|
+  Idle queries|$stats|num-idle-queries|int|
+  Messages consumed/s|$stats|messages-consumed-per-sec|rate|
+  Messages produced/s|$stats|messages-produced-per-sec|rate|
+  Liveness indicator|$stats|liveness-indicator|int|"
+  spec=$(echo "$spec" | sed 's/^[[:space:]]*//')
+
+  [[ -n "$verbose" ]] && log "🐞 reading the io.confluent.ksql.metrics MBeans of $container (jmxterm in the container)"
+  jmx_digest_collect "$spec" "$container $container"
+  if [[ -z "$JMX_DIGEST_IDS" ]]
+  then
+      logerror "❌ no ksqlDB metrics could be read from container $container"
+      exit 1
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      jmx_digest_json container
+      exit 0
+  fi
+
+  log "📈 ksqlDB metrics (query states now, rates over the last samples)"
+  jmx_digest_table "CONTAINER" "$spec"
+
+  for label in "Queries in ERROR" "Not running queries" "Rebalancing queries"
+  do
+      value=$(jmx_digest_value "$container" "$label")
+      if awk -v v="${value:-0}" 'BEGIN { exit !(v + 0 > 0) }'
+      then
+          logwarn "⚠️ $label: $(printf '%.0f' "$value"), see playground ksqldb list (state of each query) and playground ksqldb describe --source <its sink> (its errors)"
+      fi
+  done
+  log "🎓 the records a query could not process are in the KSQL_PROCESSING_LOG stream"
 
 }
 
@@ -85201,8 +85686,23 @@ playground_connector_metrics_command() {
   verbose="${args[--verbose]}"
   watch="${args[--watch]}"
   json="${args[--json]}"
+  worker="${args[--worker]}"
 
   connector_type=$(playground state get run.connector_type)
+
+  if [[ -n "$worker" ]]
+  then
+      if [[ -n "$connector" ]] || [[ -n "$watch" ]]
+      then
+          logerror "❌ --worker shows the connect workers: it can't be used with --connector or --watch"
+          exit 1
+      fi
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+          logerror "❌ --worker reads the JMX metrics of the local connect workers: not available with $connector_type connectors"
+          exit 1
+      fi
+  fi
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
@@ -85234,6 +85734,61 @@ playground_connector_metrics_command() {
   then
       logerror "❌ connector metrics is not supported on $environment environment, use playground get-jmx-metrics -c connect-0 --domain kafka.connect"
       exit 1
+  fi
+
+  if [[ -n "$worker" ]]
+  then
+      # the workers themselves, not one connector: connectors and tasks they run, startup failures, rebalances, leader
+      candidates="connect connect2 connect3"
+      if is_mdc_environment
+      then
+          get_mdc_cluster
+          candidates="connect-$mdc_cluster"
+      fi
+      targets=""
+      for c in $candidates
+      do
+          is_container_running "$c" && targets+="$c $c"$'\n'
+      done
+      if [[ -z "$targets" ]]
+      then
+          logerror "❌ no connect worker container is running"
+          exit 1
+      fi
+      # label|object name|attribute|format|warning (see jmx_digest_read)
+      worker_spec="Connectors|kafka.connect:type=connect-worker-metrics|connector-count|int|
+  Tasks|kafka.connect:type=connect-worker-metrics|task-count|int|
+  Connector startup failures (total)|kafka.connect:type=connect-worker-metrics|connector-startup-failure-total|int|gt0
+  Task startup failures (total)|kafka.connect:type=connect-worker-metrics|task-startup-failure-total|int|gt0
+  Assigned connectors|kafka.connect:type=connect-coordinator-metrics,client-id=*|assigned-connectors|int|
+  Assigned tasks|kafka.connect:type=connect-coordinator-metrics,client-id=*|assigned-tasks|int|
+  Rebalances (total)|kafka.connect:type=connect-coordinator-metrics,client-id=*|rebalance-total|int|
+  Failed rebalances (total)|kafka.connect:type=connect-coordinator-metrics,client-id=*|failed-rebalance-total|int|
+  Rebalances per hour|kafka.connect:type=connect-coordinator-metrics,client-id=*|rebalance-rate-per-hour|rate|
+  Last rebalance (seconds ago)|kafka.connect:type=connect-coordinator-metrics,client-id=*|last-rebalance-seconds-ago|int|
+  Rebalance latency avg|kafka.connect:type=connect-coordinator-metrics,client-id=*|rebalance-latency-avg|ms|
+  Last heartbeat (seconds ago)|kafka.connect:type=connect-coordinator-metrics,client-id=*|last-heartbeat-seconds-ago|int|"
+      worker_spec=$(echo "$worker_spec" | sed 's/^[[:space:]]*//')
+      [[ -n "$verbose" ]] && log "🐞 reading the kafka.connect worker MBeans of $(echo "$targets" | awk '{print $2}' | paste -sd, -) with kafka-jmx"
+      jmx_digest_collect "$worker_spec" "$targets"
+      if [[ -z "$JMX_DIGEST_IDS" ]]
+      then
+          logerror "❌ no connect worker metrics could be read"
+          exit 1
+      fi
+      if [[ -n "$json" ]]
+      then
+          jmx_digest_json worker
+          exit 0
+      fi
+      log "📈 Connect worker metrics"
+      jmx_digest_table "WORKER" "$worker_spec"
+      # one failed rebalance when a worker starts (its first join, before the group coordinator is ready) is normal
+      log "🎓 rebalances keep growing (rebalances per hour), last rebalance seconds ago stays small: the workers rebalance in a loop,"
+      log "   see playground connector history and playground container logs -c <worker> --errors"
+      log "🎓 the leader of the workers: playground connector display-leader-name"
+      log "🎓 the tasks of one connector: playground connector metrics --connector <name>"
+      exit 0
   fi
 
   if [[ ! -n "$connector" ]]
@@ -103582,6 +104137,13 @@ playground_schema_parse_requirements() {
       shift $#
       ;;
 
+    metrics)
+      action="metrics"
+      shift
+      playground_schema_metrics_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_schema_usage >&2
@@ -108257,6 +108819,114 @@ playground_schema_get_alias_parse_requirements() {
 
   # :command.user_filter
   filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_schema_metrics_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_schema_metrics_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="schema metrics"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cluster)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--cluster']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster requires an argument: --cluster CLUSTER" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ${args['--cluster']:-} ]] && [[ ! ${args['--cluster']:-} =~ ^(us|europe)$ ]]; then
+    printf "%s\n" "--cluster must be one of: us, europe" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_cfk_environment)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
     exit 1
@@ -117528,6 +118198,33 @@ playground_get_jmx_metrics_parse_requirements() {
           printf "%s\n" "--domain requires an argument: --domain, -d DOMAIN" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --mbean | -m)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--mbean']+x} ]]; then
+            args['--mbean']="$escaped"
+          else
+            args['--mbean']="${args['--mbean']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--mbean requires an argument: --mbean, -m MBEAN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
         ;;
 
       --)
@@ -127525,6 +128222,14 @@ playground_broker_metrics_parse_requirements() {
         ;;
 
       # :flag.case
+      --controller)
+
+        # :flag.case_no_arg
+        args['--controller']=1
+        shift
+        ;;
+
+      # :flag.case
       --json)
 
         # :flag.case_no_arg
@@ -128805,6 +129510,13 @@ playground_ksqldb_parse_requirements() {
       shift $#
       ;;
 
+    metrics)
+      action="metrics"
+      shift
+      playground_ksqldb_metrics_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_ksqldb_usage >&2
@@ -129305,6 +130017,88 @@ playground_ksqldb_wait_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-wait, -w MAX_WAIT" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ksqldb_metrics_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ksqldb_metrics_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ksqldb metrics"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_not_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
   fi
 
 }
@@ -138848,6 +139642,14 @@ playground_connector_metrics_parse_requirements() {
           printf "%s\n" "--watch requires an argument: --watch INTERVAL" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --worker)
+
+        # :flag.case_no_arg
+        args['--worker']=1
+        shift
         ;;
 
       # :flag.case
@@ -148855,6 +149657,11 @@ playground_schema_completion() {
         playground_schema_get_alias_completion "$completion_current" "$@"
         return
         ;;
+      metrics)
+        shift
+        playground_schema_metrics_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -148864,7 +149671,7 @@ playground_schema_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import test-rules contexts compare exporter validate get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias
+  completion_candidates "$completion_current" list get register check-compatibility diff describe history export import test-rules contexts compare exporter validate get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias metrics
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -151480,6 +152287,57 @@ playground_schema_get_alias_completion() {
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --context "$completion_current" --context
+    completion_flag_candidates --cluster "$completion_current" --cluster
+  fi
+
+}
+
+# :command.completion_function
+playground_schema_metrics_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --cluster)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "us"
+            "europe"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--cluster"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi
 
@@ -156212,6 +157070,20 @@ playground_get_jmx_metrics_completion() {
         completion_blocked_flags["--domain"]=1
 
         ;;
+      --mbean | -m)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --all)
+        completion_blocked_flags["--all"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -156223,6 +157095,8 @@ playground_get_jmx_metrics_completion() {
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
     completion_flag_candidates --open "$completion_current" --open -o
     completion_flag_candidates --domain "$completion_current" --domain -d
+    completion_flag_candidates --mbean "$completion_current" --mbean -m
+    completion_flag_candidates --all "$completion_current" --all
   fi
 
 }
@@ -161483,6 +162357,11 @@ playground_broker_metrics_completion() {
         completion_blocked_flags["--topic"]=1
 
         ;;
+      --controller)
+        completion_blocked_flags["--controller"]=1
+
+        shift
+        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -161518,6 +162397,7 @@ playground_broker_metrics_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --broker "$completion_current" --broker -b
     completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --controller "$completion_current" --controller
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
@@ -162190,6 +163070,11 @@ playground_ksqldb_completion() {
         playground_ksqldb_wait_completion "$completion_current" "$@"
         return
         ;;
+      metrics)
+        shift
+        playground_ksqldb_metrics_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -162199,7 +163084,7 @@ playground_ksqldb_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" sql list describe wait
+  completion_candidates "$completion_current" sql list describe wait metrics
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -162421,6 +163306,41 @@ playground_ksqldb_wait_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --source "$completion_current" --source -s
     completion_flag_candidates --max-wait "$completion_current" --max-wait -w
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_ksqldb_metrics_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
@@ -167576,6 +168496,11 @@ playground_connector_metrics_completion() {
         completion_blocked_flags["--watch"]=1
 
         ;;
+      --worker)
+        completion_blocked_flags["--worker"]=1
+
+        shift
+        ;;
       --json)
         completion_blocked_flags["--json"]=1
         completion_blocked_flags["--watch"]=1
@@ -167593,6 +168518,7 @@ playground_connector_metrics_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --watch "$completion_current" --watch
+    completion_flag_candidates --worker "$completion_current" --worker
     completion_flag_candidates --json "$completion_current" --json
   fi
 
@@ -169367,6 +170293,7 @@ run() {
     "schema derive-schema") playground_schema_derive_schema_command ;;
     "schema set-alias") playground_schema_set_alias_command ;;
     "schema get-alias") playground_schema_get_alias_command ;;
+    "schema metrics") playground_schema_metrics_command ;;
     "tcp-proxy") playground_tcp_proxy_command ;;
     "tcp-proxy start") playground_tcp_proxy_start_command ;;
     "tcp-proxy get-connections") playground_tcp_proxy_get_connections_command ;;
@@ -169513,6 +170440,7 @@ run() {
     "ksqldb list") playground_ksqldb_list_command ;;
     "ksqldb describe") playground_ksqldb_describe_command ;;
     "ksqldb wait") playground_ksqldb_wait_command ;;
+    "ksqldb metrics") playground_ksqldb_metrics_command ;;
     "db") playground_db_command ;;
     "db sql") playground_db_sql_command ;;
     "db wait-for-rows") playground_db_wait_for_rows_command ;;
