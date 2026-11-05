@@ -131,6 +131,14 @@ then
   get_connect_container
   container=$connect_container
     security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $consumer_config_name /etc/kafka/secrets/client_without_interceptors.config"
+elif [[ "$environment" == "rbac-oauth" ]]
+then
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
+  # Kafka: Keycloak client superuser (/tmp/client.properties), Schema Registry: Keycloak client client
+  security="$property_name bearer.auth.credentials.source=OAUTHBEARER $property_name bearer.auth.issuer.endpoint.url=http://keycloak:8080/realms/kafka/protocol/openid-connect/token $property_name bearer.auth.client.id=client $property_name bearer.auth.client.secret=client-secret $consumer_config_name /tmp/client.properties"
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
   get_broker_container

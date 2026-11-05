@@ -53,9 +53,9 @@ fi
 
 if [[ -n "$rbac_role_bindings_file" ]]
 then
-  if [ "$environment" != "rbac-sasl-plain" ]
+  if [ "$environment" != "rbac-sasl-plain" ] && [ "$environment" != "rbac-oauth" ]
   then
-    logerror "❌ --rbac-role-bindings-file only works with --environment rbac-sasl-plain (it is $environment)"
+    logerror "❌ --rbac-role-bindings-file only works with --environment rbac-sasl-plain or rbac-oauth (it is $environment)"
     exit 1
   fi
   export RBAC_ROLE_BINDINGS_FILE="$rbac_role_bindings_file"

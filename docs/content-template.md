@@ -372,6 +372,7 @@ Using single cluster:
 - [LDAP Authentication with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ldap-sasl-plain) no SSL encryption, SASL/PLAIN authentication using LDAP :environment/ldap-sasl-plain:
 - [LDAP Authorizer with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ldap-authorizer-sasl-plain) no SSL encryption, SASL/PLAIN authentication, LDAP Authorizer for ACL authorization :environment/ldap-authorizer-sasl-plain:
 - [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication :environment/rbac-sasl-plain:
+- [RBAC with OAuth/OIDC](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-oauth) RBAC with no SSL encryption, SASL/OAUTHBEARER authentication, MDS with Keycloak as identity provider (no LDAP) :environment/rbac-oauth:
 
 Using Confluent for Kubernetes (CFK) on k3d
 

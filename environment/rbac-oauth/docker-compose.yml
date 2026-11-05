@@ -1,0 +1,289 @@
+####
+#
+# This file overrides values from environment/plaintext/docker-compose.yml
+#
+# Confluent RBAC with OAuth / OIDC (CP 7.7+): Keycloak is the only identity provider, there is no LDAP.
+# - realm "kafka" (keycloak/kafka-realm.json): one confidential client per component and per user, client_credentials grant
+# - the tokens carry the audience "kafka", the client id in "azp" (the principal: sub.claim.name=azp) and the Keycloak
+#   groups of the client in "groups" (groups.claim.name=groups): a role binding on Group:kafka-developers applies to
+#   every client in that group
+# - brokers validate the tokens with io.confluent.kafka.server.plugins.auth.token.CompositeBearerValidatorCallbackHandler:
+#   IdP tokens (JWKS of Keycloak) and MDS tokens (public.pem), on the BROKER (9092) and HOST (29092) listeners
+# - MDS (http://broker:8091) authenticates bearer tokens of Keycloak (confluent.metadata.server.user.store=OAUTH)
+# - Schema Registry, Connect and ksqlDB REST APIs need a bearer token of Keycloak, and ask MDS for the permissions
+# - inter-broker traffic, the metrics reporter and the KRaft controller use SASL/PLAIN with the static user admin
+# - Kafka 4.x (CP 8.x) refuses any token or JWKS endpoint that is not listed in the JVM system property
+#   org.apache.kafka.sasl.oauthbearer.allowed.urls (empty by default): every JVM that logs in sets it
+#
+####
+
+x-oauth-allowed-urls: &oauth-allowed-urls "-Dorg.apache.kafka.sasl.oauthbearer.allowed.urls=http://keycloak:8080/realms/kafka/protocol/openid-connect/token,http://keycloak:8080/realms/kafka/protocol/openid-connect/certs"
+
+x-broker-volumes: &broker-volumes
+    - ../../environment/rbac-oauth/conf:/tmp/conf
+    - ../../environment/rbac-oauth/client.properties:/tmp/client.properties
+
+x-broker-environment: &broker-environment
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:SASL_PLAINTEXT,HOST:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
+    KAFKA_SASL_ENABLED_MECHANISMS: PLAIN,OAUTHBEARER
+    KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+    KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+    KAFKA_SUPER_USERS: User:admin;User:superuser
+    KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO,io.confluent.rest-utils=INFO,io.confluent.rbacapi=INFO,io.confluent.tokenapi=INFO,io.confluent.security.auth=INFO,io.confluent.security.store=INFO,io.confluent.common.security.jetty=INFO"
+    # the kafka-* tools run with 'docker exec' inherit it too
+    KAFKA_OPTS: *oauth-allowed-urls
+
+    # BROKER listener (9092): SASL/PLAIN for inter-broker traffic (static user admin), SASL/OAUTHBEARER for everyone else
+    KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN,OAUTHBEARER
+    KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret" user_admin="admin-secret";
+    KAFKA_LISTENER_NAME_BROKER_OAUTHBEARER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required unsecuredLoginStringClaim_sub="thePrincipalName" publicKeyPath="/tmp/conf/public.pem";
+    KAFKA_LISTENER_NAME_BROKER_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.CompositeBearerValidatorCallbackHandler
+    KAFKA_LISTENER_NAME_BROKER_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/certs
+    KAFKA_LISTENER_NAME_BROKER_SASL_OAUTHBEARER_EXPECTED_ISSUER: http://keycloak:8080/realms/kafka
+    KAFKA_LISTENER_NAME_BROKER_SASL_OAUTHBEARER_EXPECTED_AUDIENCE: kafka
+    KAFKA_LISTENER_NAME_BROKER_SASL_OAUTHBEARER_SUB_CLAIM_NAME: azp
+    KAFKA_LISTENER_NAME_BROKER_PRINCIPAL_BUILDER_CLASS: io.confluent.kafka.security.authenticator.OAuthKafkaPrincipalBuilder
+    # HOST listener (29092, localhost): same as BROKER
+    KAFKA_LISTENER_NAME_HOST_SASL_ENABLED_MECHANISMS: PLAIN,OAUTHBEARER
+    KAFKA_LISTENER_NAME_HOST_PLAIN_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret" user_admin="admin-secret";
+    KAFKA_LISTENER_NAME_HOST_OAUTHBEARER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required unsecuredLoginStringClaim_sub="thePrincipalName" publicKeyPath="/tmp/conf/public.pem";
+    KAFKA_LISTENER_NAME_HOST_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.CompositeBearerValidatorCallbackHandler
+    KAFKA_LISTENER_NAME_HOST_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/certs
+    KAFKA_LISTENER_NAME_HOST_SASL_OAUTHBEARER_EXPECTED_ISSUER: http://keycloak:8080/realms/kafka
+    KAFKA_LISTENER_NAME_HOST_SASL_OAUTHBEARER_EXPECTED_AUDIENCE: kafka
+    KAFKA_LISTENER_NAME_HOST_SASL_OAUTHBEARER_SUB_CLAIM_NAME: azp
+    KAFKA_LISTENER_NAME_HOST_PRINCIPAL_BUILDER_CLASS: io.confluent.kafka.security.authenticator.OAuthKafkaPrincipalBuilder
+    # Group:<name> principals come from this claim of the token
+    KAFKA_CONFLUENT_OAUTH_GROUPS_CLAIM_NAME: groups
+
+    CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+    CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+    CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret";
+
+    # Confluent Server Authorizer: role bindings (CONFLUENT) and ACLs (KRAFT_ACL)
+    KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+    KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT,KRAFT_ACL
+
+    # MDS
+    KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: ${PLAYGROUND_INTERNAL_TOPICS_REPLICATION_FACTOR:-1}
+    KAFKA_CONFLUENT_METADATA_SERVER_AUTHENTICATION_METHOD: BEARER
+    KAFKA_CONFLUENT_METADATA_SERVER_LISTENERS: http://0.0.0.0:8091
+    KAFKA_CONFLUENT_METADATA_SERVER_ADVERTISED_LISTENERS: http://broker:8091
+    # MDS tokens (impersonation, ksqlDB): signed with this key pair, generated by start.sh
+    KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_KEY_PATH: /tmp/conf/keypair.pem
+    # users are the clients of Keycloak, not LDAP
+    KAFKA_CONFLUENT_METADATA_SERVER_USER_STORE: OAUTH
+    KAFKA_CONFLUENT_METADATA_SERVER_OAUTHBEARER_JWKS_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/certs
+    KAFKA_CONFLUENT_METADATA_SERVER_OAUTHBEARER_EXPECTED_ISSUER: http://keycloak:8080/realms/kafka
+    KAFKA_CONFLUENT_METADATA_SERVER_OAUTHBEARER_EXPECTED_AUDIENCE: kafka
+    KAFKA_CONFLUENT_METADATA_SERVER_OAUTHBEARER_SUB_CLAIM_NAME: azp
+    KAFKA_CONFLUENT_METADATA_SERVER_OAUTHBEARER_GROUPS_CLAIM_NAME: groups
+
+x-depends-on-keycloak: &depends-on-keycloak
+    keycloak:
+        condition: service_healthy
+
+services:
+
+    keycloak:
+        image: quay.io/keycloak/keycloak:${KEYCLOAK_TAG:-26.0}
+        hostname: keycloak
+        container_name: keycloak
+        command: start-dev --import-realm
+        ports:
+            - "8180:8080"
+        volumes:
+            - ../../environment/rbac-oauth/keycloak/kafka-realm.json:/opt/keycloak/data/import/kafka-realm.json
+        environment:
+            KC_BOOTSTRAP_ADMIN_USERNAME: admin
+            KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+            KC_HEALTH_ENABLED: "true"
+            KC_HTTP_ENABLED: "true"
+            # same issuer (iss claim) whatever the host used to get the token: http://keycloak:8080/realms/kafka
+            KC_HOSTNAME: http://keycloak:8080
+            # admin console from the host: http://localhost:8180/admin (admin/admin)
+            KC_HOSTNAME_ADMIN: http://localhost:8180
+        healthcheck:
+            test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q '\"UP\"' <&3"]
+            interval: 5s
+            timeout: 5s
+            retries: 60
+            start_period: 10s
+
+    broker:
+        depends_on: *depends-on-keycloak
+        ports:
+            - "8091:8091"
+        volumes: *broker-volumes
+        environment: *broker-environment
+
+    broker2:
+        depends_on: *depends-on-keycloak
+        volumes: *broker-volumes
+        environment:
+            <<: *broker-environment
+            KAFKA_CONFLUENT_METADATA_SERVER_ADVERTISED_LISTENERS: http://broker2:8091
+
+    broker3:
+        depends_on: *depends-on-keycloak
+        volumes: *broker-volumes
+        environment:
+            <<: *broker-environment
+            KAFKA_CONFLUENT_METADATA_SERVER_ADVERTISED_LISTENERS: http://broker3:8091
+
+    schema-registry:
+        volumes:
+            - ../../environment/rbac-oauth/conf:/tmp/conf
+            - ../../environment/rbac-oauth/client.properties:/tmp/client.properties
+        environment:
+            CUB_CLASSPATH: '/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*:/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*'
+            SCHEMA_REGISTRY_OPTS: *oauth-allowed-urls
+            # the kafka-ready check of the image (ub kafka-ready) runs its own JVM with KAFKA_OPTS
+            KAFKA_OPTS: *oauth-allowed-urls
+            # Kafka store: logs in as the Keycloak client schemaregistry
+            SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: OAUTHBEARER
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="schemaregistry" clientSecret="schemaregistry-secret";
+            # REST API: bearer tokens of Keycloak (or MDS)
+            SCHEMA_REGISTRY_REST_SERVLET_INITIALIZOR_CLASSES: io.confluent.common.security.jetty.initializer.AuthenticationHandler
+            SCHEMA_REGISTRY_OAUTHBEARER_JWKS_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/certs
+            SCHEMA_REGISTRY_OAUTHBEARER_EXPECTED_ISSUER: http://keycloak:8080/realms/kafka
+            SCHEMA_REGISTRY_OAUTHBEARER_EXPECTED_AUDIENCE: kafka
+            SCHEMA_REGISTRY_OAUTHBEARER_SUB_CLAIM_NAME: azp
+            SCHEMA_REGISTRY_OAUTHBEARER_GROUPS_CLAIM_NAME: groups
+            SCHEMA_REGISTRY_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+            # RBAC: permissions asked to MDS
+            SCHEMA_REGISTRY_SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension
+            SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTHORIZER_CLASS: io.confluent.kafka.schemaregistry.security.authorizer.rbac.RbacAuthorizer
+            SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTH_MECHANISM: JETTY_AUTH
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: OAUTHBEARER
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_OAUTHBEARER_LOGIN_CLIENT_ID: schemaregistry
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_OAUTHBEARER_LOGIN_CLIENT_SECRET: schemaregistry-secret
+
+    connect: &rbac-oauth-connect
+        volumes:
+            - ../../environment/rbac-oauth/conf:/tmp/conf
+            - ../../environment/rbac-oauth/client.properties:/tmp/client.properties
+        environment:
+            CUB_CLASSPATH: '/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*'
+            # ⚠️ an example override that sets KAFKA_OPTS on connect must keep this system property (CP 8.x)
+            KAFKA_OPTS: "-Ddynamic.worker.config.file=/dev/null -Dorg.apache.kafka.sasl.oauthbearer.allowed.urls=http://keycloak:8080/realms/kafka/protocol/openid-connect/token,http://keycloak:8080/realms/kafka/protocol/openid-connect/certs"
+            # kafka-avro-console-producer / consumer (playground topic produce|consume run them in connect)
+            SCHEMA_REGISTRY_OPTS: *oauth-allowed-urls
+            # the worker logs in as the Keycloak client connect
+            CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_SASL_MECHANISM: OAUTHBEARER
+            CONNECT_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            CONNECT_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="connect" clientSecret="connect-secret";
+            # connectors log in as the Keycloak client connector ('playground connector create-or-update' adds the
+            # producer.override / consumer.override / admin.override keys), this policy allows it
+            CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+            # default value converter of the worker (AvroConverter): Schema Registry client as the Keycloak client connector
+            CONNECT_VALUE_CONVERTER_BEARER_AUTH_CREDENTIALS_SOURCE: OAUTHBEARER
+            CONNECT_VALUE_CONVERTER_BEARER_AUTH_ISSUER_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_VALUE_CONVERTER_BEARER_AUTH_CLIENT_ID: connector
+            CONNECT_VALUE_CONVERTER_BEARER_AUTH_CLIENT_SECRET: connector-secret
+            # producer
+            CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_PRODUCER_SASL_MECHANISM: OAUTHBEARER
+            CONNECT_PRODUCER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            CONNECT_PRODUCER_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_PRODUCER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="connect" clientSecret="connect-secret";
+            # consumer
+            CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONSUMER_SASL_MECHANISM: OAUTHBEARER
+            CONNECT_CONSUMER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            CONNECT_CONSUMER_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_CONSUMER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="connect" clientSecret="connect-secret";
+            # admin
+            CONNECT_ADMIN_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_ADMIN_SASL_MECHANISM: OAUTHBEARER
+            CONNECT_ADMIN_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            CONNECT_ADMIN_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_ADMIN_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="connect" clientSecret="connect-secret";
+            # monitoring interceptors
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: OAUTHBEARER
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="connect" clientSecret="connect-secret";
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: OAUTHBEARER
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="connect" clientSecret="connect-secret";
+            # centralized license is needed with CP 8.1+
+            CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: OAUTHBEARER
+            CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            CONNECT_CONFLUENT_TOPIC_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="connect" clientSecret="connect-secret";
+            # REST API: bearer tokens of Keycloak, permissions asked to MDS
+            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.security.ConnectSecurityExtension
+            CONNECT_REST_SERVLET_INITIALIZOR_CLASSES: io.confluent.common.security.jetty.initializer.AuthenticationHandler
+            CONNECT_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+            CONNECT_OAUTHBEARER_JWKS_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/certs
+            CONNECT_OAUTHBEARER_EXPECTED_ISSUER: http://keycloak:8080/realms/kafka
+            CONNECT_OAUTHBEARER_EXPECTED_AUDIENCE: kafka
+            CONNECT_OAUTHBEARER_SUB_CLAIM_NAME: azp
+            CONNECT_OAUTHBEARER_GROUPS_CLAIM_NAME: groups
+            CONNECT_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
+            CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: OAUTHBEARER
+            CONNECT_CONFLUENT_METADATA_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            CONNECT_CONFLUENT_METADATA_OAUTHBEARER_LOGIN_CLIENT_ID: connect
+            CONNECT_CONFLUENT_METADATA_OAUTHBEARER_LOGIN_CLIENT_SECRET: connect-secret
+
+    connect2: *rbac-oauth-connect
+
+    connect3: *rbac-oauth-connect
+
+    ksqldb-server:
+        volumes:
+            - ../../environment/rbac-oauth/conf:/tmp/conf
+        restart: always
+        healthcheck:
+            # the REST API needs a token
+            disable: true
+        environment:
+            CUB_CLASSPATH: '/usr/share/java/confluent-security/ksql/*:/usr/share/java/ksqldb-server/*:/usr/share/java/cp-base-new/*'
+            KSQL_OPTS: *oauth-allowed-urls
+            # the kafka-ready check of the image (ub kafka-ready) runs its own JVM with KAFKA_OPTS
+            KAFKA_OPTS: *oauth-allowed-urls
+            KSQL_KSQL_SERVICE_ID: "ksql-cluster"
+            KSQL_KSQL_SECURITY_EXTENSION_CLASS: io.confluent.ksql.security.KsqlConfluentSecurityExtension
+            # REST API: bearer tokens of Keycloak, permissions asked to MDS
+            KSQL_KSQL_AUTHENTICATION_PLUGIN_CLASS: io.confluent.ksql.security.VertxAuthenticationHandlerPlugin
+            KSQL_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+            KSQL_OAUTHBEARER_JWKS_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/certs
+            KSQL_OAUTHBEARER_EXPECTED_ISSUER: http://keycloak:8080/realms/kafka
+            KSQL_OAUTHBEARER_EXPECTED_AUDIENCE: kafka
+            KSQL_OAUTHBEARER_SUB_CLAIM_NAME: azp
+            KSQL_OAUTHBEARER_GROUPS_CLAIM_NAME: groups
+            KSQL_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
+            KSQL_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: OAUTHBEARER
+            KSQL_CONFLUENT_METADATA_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            KSQL_CONFLUENT_METADATA_OAUTHBEARER_LOGIN_CLIENT_ID: ksqldb
+            KSQL_CONFLUENT_METADATA_OAUTHBEARER_LOGIN_CLIENT_SECRET: ksqldb-secret
+            # Schema Registry client of ksqlDB
+            KSQL_KSQL_SCHEMA_REGISTRY_BEARER_AUTH_CREDENTIALS_SOURCE: OAUTHBEARER
+            KSQL_KSQL_SCHEMA_REGISTRY_BEARER_AUTH_ISSUER_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            KSQL_KSQL_SCHEMA_REGISTRY_BEARER_AUTH_CLIENT_ID: ksqldb
+            KSQL_KSQL_SCHEMA_REGISTRY_BEARER_AUTH_CLIENT_SECRET: ksqldb-secret
+            # the permission check of the Schema Registry client at startup does not support bearer tokens
+            KSQL_KSQL_SECURITY_EXTENSION_SR___PERMISSIONS_VALIDATOR_ENABLED: "false"
+            # Kafka clients of ksqlDB: log in as the Keycloak client ksqldb
+            KSQL_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            KSQL_SASL_MECHANISM: OAUTHBEARER
+            KSQL_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            KSQL_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            KSQL_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="ksqldb" clientSecret="ksqldb-secret";
+            KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: OAUTHBEARER
+            KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SASL_LOGIN_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler
+            KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL: http://keycloak:8080/realms/kafka/protocol/openid-connect/token
+            KSQL_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="ksqldb" clientSecret="ksqldb-secret";

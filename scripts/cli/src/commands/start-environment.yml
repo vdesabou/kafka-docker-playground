@@ -16,6 +16,7 @@ help: |-
   - mdc-sasl-plain
   - plaintext
   - rbac-sasl-plain
+  - rbac-oauth
   - sasl-oauthbearer
   - sasl-plain
   - sasl-scram
@@ -43,7 +44,7 @@ flags:
     required: false
     default: "plaintext"
     arg: environment
-    allowed: [ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+    allowed: [ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
     help: |-
       🔐 The environment to start . 
       
@@ -59,6 +60,7 @@ flags:
       - mdc-sasl-plain
       - plaintext
       - rbac-sasl-plain
+      - rbac-oauth
       - sasl-oauthbearer
       - sasl-plain
       - sasl-scram
@@ -94,7 +96,7 @@ flags:
     validate: file_exists
     arg: rbac-role-bindings-file
     help: |-
-      🔐 rbac-sasl-plain only: bash file sourced right after the default role bindings are created, before connect, schema-registry, ksqldb and control-center start.
+      🔐 rbac-sasl-plain and rbac-oauth only: bash file sourced right after the default role bindings are created, before connect, schema-registry, ksqldb and control-center start.
 
       Use it for role bindings or ACLs a component needs at startup, with 'playground rbac' commands, for example:
 
@@ -107,3 +109,4 @@ examples:
 - playground start-environment
 - playground start-environment --environment rbac-sasl-plain
 - playground start-environment --environment rbac-sasl-plain --rbac-role-bindings-file "\$PWD/role-bindings.sh"
+- playground start-environment --environment rbac-oauth

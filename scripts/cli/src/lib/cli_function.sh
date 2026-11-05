@@ -481,6 +481,10 @@ function get_connect_url_and_security() {
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       security="-u connectorSubmitter:connectorSubmitter"
+  elif [[ "$environment" == "rbac-oauth" ]]
+  then
+      # bearer token of the Keycloak client superuser (SystemAdmin on the connect cluster)
+      security="--oauth2-bearer $(get_rbac_oauth_token superuser)"
   fi
 }
 
@@ -816,6 +820,10 @@ function get_sr_url_and_security() {
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       sr_security="-u superUser:superUser"
+  elif [[ "$environment" == "rbac-oauth" ]]
+  then
+      # bearer token of the Keycloak client superuser (SystemAdmin on the schema registry cluster)
+      sr_security="--oauth2-bearer $(get_rbac_oauth_token superuser)"
     elif [[ "$environment" == cfk* ]]
     then
         # CFK Schema Registry is exposed as a Kubernetes service.
@@ -1149,7 +1157,7 @@ function get_security_broker() {
   elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
   then
       security="$config_file_name /service/kafka/users/kafka.properties"
-  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ] || [ "$environment" == "sasl-scram" ] || [ "$environment" == "sasl-oauthbearer" ]
+  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ] || [ "$environment" == "sasl-scram" ] || [ "$environment" == "sasl-oauthbearer" ] || [ "$environment" == "rbac-oauth" ]
   then
       security="$config_file_name /tmp/client.properties"
   elif [[ "$environment" != *plaintext ]]
@@ -2936,22 +2944,23 @@ function filter_cfk_environment() {
 function filter_rbac_environment() {
   get_environment_used
 
-  if [[ "$environment" != "rbac-sasl-plain" ]] && [[ "$environment" != "cfk-rbac" ]]
+  if [[ "$environment" != "rbac-sasl-plain" ]] && [[ "$environment" != "rbac-oauth" ]] && [[ "$environment" != "cfk-rbac" ]]
   then
-    logerror "environment should be rbac-sasl-plain or cfk-rbac with this command (it is $environment)!"
+    logerror "environment should be rbac-sasl-plain, rbac-oauth or cfk-rbac with this command (it is $environment)!"
   fi
 }
 
 function filter_rbac_or_ccloud_environment() {
   get_environment_used
 
-  if [[ "$environment" != "rbac-sasl-plain" ]] && [[ "$environment" != "cfk-rbac" ]] && [[ "$environment" != "ccloud" ]]
+  if [[ "$environment" != "rbac-sasl-plain" ]] && [[ "$environment" != "rbac-oauth" ]] && [[ "$environment" != "cfk-rbac" ]] && [[ "$environment" != "ccloud" ]]
   then
-    logerror "environment should be rbac-sasl-plain, cfk-rbac or ccloud with this command (it is $environment)!"
+    logerror "environment should be rbac-sasl-plain, rbac-oauth, cfk-rbac or ccloud with this command (it is $environment)!"
   fi
 }
 
-# call the MDS REST API of the rbac-sasl-plain or cfk-rbac environment as superUser
+# call the MDS REST API of the rbac-sasl-plain or cfk-rbac environment as superUser, or of the rbac-oauth environment
+# with a bearer token of the Keycloak client superuser
 # (on cfk-rbac, localhost:8091 is a port-forward to the MDS of the kafka service)
 # usage: mds_request <method> <path> [json body]
 # sets mds_output (response body), returns 1 when MDS is not reachable or answers an error
@@ -2960,7 +2969,28 @@ function mds_request() {
   local path="$2"
   local body="$3"
   local mds_url="http://localhost:8091"
-  local curl_args=(-s -w '\n%{http_code}' -u superUser:superUser -H "Content-Type: application/json" -X "$method" "$mds_url$path")
+  # bashly filters run in a subshell: environment is not set by filter_rbac_environment
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+  local mds_auth=(-u superUser:superUser)
+  local mds_auth_display="-u superUser:superUser"
+  if [[ "$environment" == "rbac-oauth" ]]
+  then
+    if [[ -z "$mds_oauth_token" ]]
+    then
+      mds_oauth_token=$(get_rbac_oauth_token superuser)
+      if [[ -z "$mds_oauth_token" ]]
+      then
+        logerror "❌ could not get a token of the Keycloak client superuser on http://localhost:8180, is the rbac-oauth environment running?"
+        return 1
+      fi
+    fi
+    mds_auth=(--oauth2-bearer "$mds_oauth_token")
+    mds_auth_display="--oauth2-bearer \$(curl -s -d grant_type=client_credentials -d client_id=superuser -d client_secret=superuser-secret http://localhost:8180/realms/kafka/protocol/openid-connect/token | jq -r .access_token)"
+  fi
+  local curl_args=(-s -w '\n%{http_code}' "${mds_auth[@]}" -H "Content-Type: application/json" -X "$method" "$mds_url$path")
 
   if [[ -n "$body" ]]
   then
@@ -2970,14 +3000,14 @@ function mds_request() {
   if [[ -n "$verbose" ]]
   then
     log "🐞 curl command used"
-    echo "curl -X $method -u superUser:superUser -H \"Content-Type: application/json\" $mds_url$path${body:+ -d '$body'}"
+    echo "curl -X $method $mds_auth_display -H \"Content-Type: application/json\" $mds_url$path${body:+ -d '$body'}"
   fi
 
   local response
   response=$(curl "${curl_args[@]}")
   if [ $? -ne 0 ]
   then
-    logerror "❌ MDS is not reachable at $mds_url, is the rbac-sasl-plain or cfk-rbac environment running?"
+    logerror "❌ MDS is not reachable at $mds_url, is the rbac-sasl-plain, rbac-oauth or cfk-rbac environment running?"
     return 1
   fi
   local http_code=$(tail -n 1 <<< "$response")
@@ -3000,7 +3030,7 @@ function get_mds_scope() {
     mds_kafka_cluster_id="$mds_output"
   fi
 
-  # cluster names used in environment/rbac-sasl-plain/docker-compose.yml, or cluster ids set by CFK on cfk-rbac
+  # cluster names used in environment/rbac-sasl-plain (and rbac-oauth), or cluster ids set by CFK on cfk-rbac
   local schema_registry_cluster="schema-registry"
   local connect_cluster="connect-cluster"
   # bashly filters run in a subshell: environment is not set by filter_rbac_environment
@@ -3935,6 +3965,42 @@ function rbac_ldap() {
   return $ret
 }
 
+# kcadm.sh of the keycloak container of the rbac-oauth environment, logged in as admin of the master realm.
+# Arguments are passed to kcadm.sh, stdin is forwarded (create ... -f -)
+function rbac_keycloak() {
+  if [[ -z "$rbac_keycloak_logged_in" ]]
+  then
+    if ! docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --config /tmp/kcadm.config --server http://localhost:8080 --realm master --user admin --password admin > /dev/null 2>&1
+    then
+      logerror "❌ could not log in to keycloak as admin, is the rbac-oauth environment running?"
+      return 1
+    fi
+    rbac_keycloak_logged_in=1
+  fi
+  docker exec -i keycloak /opt/keycloak/bin/kcadm.sh "$@" --config /tmp/kcadm.config
+}
+
+# Keycloak client of the rbac-oauth environment (same as keycloak/kafka-realm.json): confidential, client_credentials
+# grant (service account), audience kafka and groups claim in its tokens
+# usage: rbac_keycloak_client_json <client id> <secret>
+function rbac_keycloak_client_json() {
+  jq -n --arg id "$1" --arg secret "$2" '{
+    clientId: $id, name: $id, enabled: true, protocol: "openid-connect", publicClient: false,
+    clientAuthenticatorType: "client-secret", secret: $secret, serviceAccountsEnabled: true,
+    standardFlowEnabled: false, implicitFlowEnabled: false, directAccessGrantsEnabled: false,
+    protocolMappers: [
+      {name: "kafka-audience", protocol: "openid-connect", protocolMapper: "oidc-audience-mapper", consentRequired: false,
+       config: {"included.custom.audience": "kafka", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true"}},
+      {name: "groups", protocol: "openid-connect", protocolMapper: "oidc-group-membership-mapper", consentRequired: false,
+       config: {"claim.name": "groups", "full.path": "false", "access.token.claim": "true", "id.token.claim": "false", "introspection.token.claim": "true", "userinfo.token.claim": "false"}}
+    ]}'
+}
+
+# internal id of the Keycloak client <client id> of the realm kafka, empty if it does not exist
+function rbac_keycloak_client_uuid() {
+  rbac_keycloak get clients -r kafka -q "clientId=$1" --fields id,clientId | jq -r --arg id "$1" '.[] | select(.clientId == $id) | .id'
+}
+
 function filter_plaintext_or_ccloud_environment() {
   get_environment_used
 
@@ -4552,6 +4618,37 @@ function add_connector_config_based_on_environment () {
       fi
     ;;
 
+    rbac-oauth)
+      # connectors log in to Keycloak (environment/rbac-oauth) as the client "connector": their producer, consumer and
+      # admin clients (*.override.*, unless the config already sets their sasl.jaas.config), the extra Kafka clients of
+      # some connectors (confluent.topic.*, schema history, reporter...) and their Schema Registry clients (bearer.auth.*
+      # of each converter with a schema.registry.url, unless it already sets basic.auth or bearer.auth)
+      local rbac_oauth_jq='
+        def oauth($p): .[$p+".security.protocol"] = "SASL_PLAINTEXT"
+          | .[$p+".sasl.mechanism"] = "OAUTHBEARER"
+          | .[$p+".sasl.login.callback.handler.class"] = "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler"
+          | .[$p+".sasl.oauthbearer.token.endpoint.url"] = $token_url
+          | .[$p+".sasl.jaas.config"] = "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId=\"connector\" clientSecret=\"connector-secret\";";
+        def bearer($c): .[$c+".bearer.auth.credentials.source"] = "OAUTHBEARER"
+          | .[$c+".bearer.auth.issuer.endpoint.url"] = $token_url
+          | .[$c+".bearer.auth.client.id"] = "connector"
+          | .[$c+".bearer.auth.client.secret"] = "connector-secret";
+        reduce ("producer.override", "consumer.override", "admin.override") as $p
+          (.; if has($p + ".sasl.jaas.config") then . else oauth($p) end)
+        | reduce (
+            ["confluent.topic.bootstrap.servers", "confluent.topic"],
+            ["redo.log.consumer.bootstrap.servers", "redo.log.consumer"],
+            ["database.history.kafka.bootstrap.servers", "database.history.producer", "database.history.consumer"],
+            ["schema.history.internal.kafka.bootstrap.servers", "schema.history.internal.producer", "schema.history.internal.consumer"],
+            ["reporter.bootstrap.servers", "reporter.admin", "reporter.producer"]
+          ) as $m
+          (.; if has($m[0]) then reduce $m[1:][] as $p (.; oauth($p)) else . end)
+        | reduce (keys[] | select(endswith("converter.schema.registry.url")) | sub("\\.schema\\.registry\\.url$"; "")) as $c
+          (.; if has($c + ".basic.auth.credentials.source") or has($c + ".bearer.auth.credentials.source") then . else bearer($c) end)
+      '
+      json_content=$(echo "$json_content" | jq --arg token_url "http://keycloak:8080/realms/kafka/protocol/openid-connect/token" "$rbac_oauth_jq")
+    ;;
+
     *)
       return
     ;;
@@ -4758,7 +4855,7 @@ function get_example_supported_environments () {
   then
     skips_cfk=1
   fi
-  for environment_name in plaintext ccloud cfk cfk-rbac 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
+  for environment_name in plaintext ccloud cfk cfk-rbac 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain rbac-oauth sasl-oauthbearer sasl-plain sasl-scram sasl-ssl ssl_kerberos
   do
     if [[ "$environment_name" == cfk* ]] && [ $skips_cfk == 1 ]
     then
@@ -9179,6 +9276,13 @@ function get_ksqldb_url_and_security () {
   then
     ksqldb_security="-u ksqlDBAdmin:ksqlDBAdmin"
     ksqldb_cli_security="--user ksqlDBAdmin --password ksqlDBAdmin"
+  elif [[ "$environment" == "rbac-oauth" ]]
+  then
+    # bearer token of the Keycloak client superuser (SystemAdmin on the ksqlDB cluster)
+    local ksqldb_token
+    ksqldb_token=$(get_rbac_oauth_token superuser)
+    ksqldb_security="--oauth2-bearer $ksqldb_token"
+    ksqldb_cli_security="--token $ksqldb_token"
   fi
 }
 

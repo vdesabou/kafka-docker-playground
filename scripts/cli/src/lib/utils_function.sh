@@ -1490,6 +1490,31 @@ function host_check_mds_up() {
   return 0
 }
 
+# OAuth access token of a Keycloak client of the rbac-oauth environment (client_credentials grant), fetched from the
+# host on the published port of keycloak (8180). The secret of client <id> is <id>-secret (keycloak/kafka-realm.json).
+# Its issuer is http://keycloak:8080/realms/kafka whatever the URL used (KC_HOSTNAME), as the components expect.
+# usage: get_rbac_oauth_token [client id, default superuser] [client secret]
+function get_rbac_oauth_token() {
+  local client_id="${1:-superuser}"
+  local client_secret="${2:-${client_id}-secret}"
+  curl -s -m 10 -d grant_type=client_credentials -d "client_id=$client_id" -d "client_secret=$client_secret" \
+    http://localhost:8180/realms/kafka/protocol/openid-connect/token | jq -r '.access_token // empty' 2> /dev/null
+}
+
+function host_check_mds_up_oauth() {
+  # MDS is ready to create role bindings once it accepts a bearer token of the Keycloak client superuser
+  local token
+  token=$(get_rbac_oauth_token superuser)
+  if [ -z "$token" ]; then
+    return 1
+  fi
+  local http_code=$(curl -s -o /dev/null -m 5 -w "%{http_code}" --oauth2-bearer "$token" http://localhost:8091/security/1.0/metadataClusterId)
+  if [ "$http_code" != "200" ]; then
+    return 1
+  fi
+  return 0
+}
+
 function host_check_openldap_ready() {
   # osixia/openldap loads the users with a temporary slapd, then restarts it with TLS: wait for the
   # final one, on the LDAPS port used by the brokers, with the users loaded
@@ -1586,6 +1611,9 @@ function wait_for_datagen_connector_to_inject_data () {
   if [[ "$PLAYGROUND_ENVIRONMENT" == "rbac-sasl-plain" ]] || [[ "$PLAYGROUND_ENVIRONMENT" == "cfk-rbac" ]]
   then
     connect_auth="-u connectorSubmitter:connectorSubmitter"
+  elif [[ "$PLAYGROUND_ENVIRONMENT" == "rbac-oauth" ]]
+  then
+    connect_auth="--oauth2-bearer $(get_rbac_oauth_token superuser)"
   fi
   set +e
   # wait for all tasks to be FAILED with org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured xxx number of messages

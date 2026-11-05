@@ -160,6 +160,18 @@ then
                 echo -e "    \"value.converter.basic.auth.credentials.source\": \"USER_INFO\"," >> $converter_file
                 echo -e "    \"value.converter.basic.auth.user.info\": \"connectorSA:connectorSA\"," >> $converter_file
                 ;;
+            rbac-oauth)
+                # 'playground connector create-or-update' adds the bearer.auth.* keys itself on rbac-oauth
+                for converter_prefix in key.converter value.converter
+                do
+                    echo -e "    \"$converter_prefix\": \"$converter_class\"," >> $converter_file
+                    echo -e "    \"$converter_prefix.schema.registry.url\": \"http://schema-registry:8081\"," >> $converter_file
+                    echo -e "    \"$converter_prefix.bearer.auth.credentials.source\": \"OAUTHBEARER\"," >> $converter_file
+                    echo -e "    \"$converter_prefix.bearer.auth.issuer.endpoint.url\": \"http://keycloak:8080/realms/kafka/protocol/openid-connect/token\"," >> $converter_file
+                    echo -e "    \"$converter_prefix.bearer.auth.client.id\": \"connector\"," >> $converter_file
+                    echo -e "    \"$converter_prefix.bearer.auth.client.secret\": \"connector-secret\"," >> $converter_file
+                done
+                ;;
             mdc*)
                 # one schema registry per cluster: schema-registry-us / schema-registry-europe
                 sr_cluster="${PLAYGROUND_CLUSTER:-$(playground state get run.cluster 2> /dev/null)}"

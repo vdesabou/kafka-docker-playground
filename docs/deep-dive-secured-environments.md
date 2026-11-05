@@ -76,6 +76,7 @@ SSL cluster" or "the connector gets `TopicAuthorizationException`". Takes about 
 | `ldap-sasl-plain` | `SASL_PLAINTEXT` | `PLAIN`, users checked in OpenLDAP | `http` | `http` | `/tmp/client.properties` |
 | `ldap-authorizer-sasl-plain` | `SASL_PLAINTEXT` | `PLAIN`, `LdapAuthorizer` (groups from LDAP → ACLs) | `http` | `http` | `/service/kafka/users/client.properties` |
 | `rbac-sasl-plain` | `SASL_PLAINTEXT` (+ `TOKEN` listener) | `PLAIN`, clients `OAUTHBEARER` with MDS tokens, `ConfluentServerAuthorizer` | `http`, basic auth, `RbacAuthorizer` | `http`, basic auth (`connectorSubmitter`) | `/etc/kafka/secrets/client_without_interceptors.config` |
+| `rbac-oauth` | `SASL_PLAINTEXT` | inter-broker `PLAIN`, clients `OAUTHBEARER` with Keycloak tokens (principal = client id `azp`, `Group:` from the `groups` claim), MDS `user.store=OAUTH`, `ConfluentServerAuthorizer`, CP 7.7+ KRaft | `http`, bearer token, `RbacAuthorizer` | `http`, bearer token (Keycloak client `superuser`) | `/tmp/client.properties` (`environment/rbac-oauth/client.properties`, client `superuser`) |
 
 Other types, with their own pages: `cfk` / `cfk-rbac` (Confluent for Kubernetes, see its
 [deep dive](/deep-dive-cfk.md)), `mdc-plaintext` /
@@ -169,6 +170,7 @@ EOF
 | `2way-ssl` | `SSL`, keystore / truststore; the same for the Schema Registry url |
 | `kerberos`, `ssl_kerberos` | `GSSAPI`, `sasl.kerberos.service.name`, the keytab JAAS |
 | `rbac-sasl-plain` | `principal.service.name=connectorSA`, `principal.service.password=connectorSA`, `<prefix>` JAAS as `admin` |
+| `rbac-oauth` | `producer.override.*`, `consumer.override.*`, `admin.override.*` and `<prefix>` SASL/OAUTHBEARER keys as the Keycloak client `connector` (the connector runs as `User:connector`), `<converter>.bearer.auth.*` (`OAUTHBEARER`, client `connector`) for each converter with a `schema.registry.url` |
 | `plaintext` | nothing |
 
 `<prefix>` is each prefix found in the config: `confluent.topic`, `redo.log.consumer`, `reporter.admin` /
@@ -296,6 +298,7 @@ playground stop
 | "`TopicAuthorizationException` with RBAC" | `rbac-sasl-plain`, delete the role binding of `connectorSA` on the topic (or start with `--rbac-role-bindings-file`) |
 | "the connector can't create its topics / its DLQ" | RBAC: give `connectorSA` a narrower role on the topics (for example `DeveloperWrite`) instead of `ResourceOwner`: creating a topic needs more, see the Confluent RBAC role reference |
 | "we use OAuth / OIDC (Okta, Azure AD / Entra ID, Keycloak…)", `invalid_token`, `Allowed URL list: []` | `sasl-oauthbearer`: Keycloak issues the tokens, the brokers validate them with the JWKS endpoint. Key rotation, token lifespan, issuer / audience mismatch recipes: [environment/sasl-oauthbearer/README.md](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-oauthbearer) |
+| "RBAC with OAuth / OIDC, no LDAP" (MDS with Okta, Entra ID, Keycloak…), a `Group:` role binding that does not apply, REST API `401` with a token | `rbac-oauth`: Keycloak clients are the users, their groups come from the `groups` claim, MDS and the REST APIs take bearer tokens. `playground rbac user add --user <client> --group <group>` adds a Keycloak client: [environment/rbac-oauth/README.md](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-oauth) |
 | "Kerberos ticket / principal errors" | `--environment kerberos` (or `ssl_kerberos`), principals and keytabs in `environment/kerberos/` |
 | "users in LDAP, ACLs per group" | `ldap-authorizer-sasl-plain` |
 | "`kafka-acls --list` shows nothing but the user is authorized" / centralized ACLs, DENY vs role binding, LDAP group ACLs with RBAC | [other/rbac-centralized-acls](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-centralized-acls): `playground rbac acl create\|list\|delete` (MDS) next to `--kafka-acls` |
@@ -313,7 +316,7 @@ run` without `--environment` then uses the customer's setup, and CI can still ru
 ## 7. Cheat sheet
 
 ```bash
-playground run -f <example> --environment plaintext|sasl-plain|sasl-scram|sasl-oauthbearer|sasl-ssl|2way-ssl|kerberos|ssl_kerberos|ldap-sasl-plain|ldap-authorizer-sasl-plain|rbac-sasl-plain
+playground run -f <example> --environment plaintext|sasl-plain|sasl-scram|sasl-oauthbearer|sasl-ssl|2way-ssl|kerberos|ssl_kerberos|ldap-sasl-plain|ldap-authorizer-sasl-plain|rbac-sasl-plain|rbac-oauth
 playground start-environment --environment <type> [--docker-compose-override-file <example override>] [--rbac-role-bindings-file <file>]
 playground state get run.environment
 playground container get-properties -c connect|broker|schema-registry
