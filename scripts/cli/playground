@@ -76,6 +76,7 @@ playground_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for any files\n" "$(green "get-any-file-with-fzf")                     "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for export tgz files\n" "$(green "get-playground-repro-export-with-fzf")      "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for connector config files (json, yaml, tf, properties holding a connector config)\n" "$(green "get-connector-config-file-with-fzf")        "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for the input of analyze logs (log files, exports, archives and folders of Downloads, Desktop and the current folder)\n" "$(green "get-log-files-with-fzf")                    "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for predefined schemas\n" "$(green "get-predefined-schemas")                    "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "update-cache-versions")                     "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "update-readme")                             "
@@ -1423,6 +1424,36 @@ playground_get_connector_config_file_with_fzf_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-connector-config-file-with-fzf [CUR]\n"
   printf "  playground get-connector-config-file-with-fzf --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_log_files_with_fzf_usage() {
+  printf "playground get-log-files-with-fzf - Return some completion for the input of analyze logs (log files, exports, archives and folders of Downloads, Desktop and the current folder)\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-log-files-with-fzf [CUR]\n"
+  printf "  playground get-log-files-with-fzf --help | -h\n"
   echo
 
   # :command.long_usage
@@ -9992,7 +10023,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. So are JSON lines whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, MB read, elapsed\n  time) that becomes the report when the analysis ends. The last line\n  gives the size read and the time it took.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 --sanitize\n  replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best\n  effort: review before sharing). --logs-only gives the plain log digest\n  instead. 🎯 --problem \"<component, symptom, since when>\" matches the bundle\n  against what the customer reports: the issues that explain it first, a verdict\n  (explained, not explained, not covered by the logs), the changes before the\n  date. 📥 A Data to request section says what to ask the customer for next, with\n  why and the command: from the gaps of the bundle (logs that start too late,\n  previous logs of restarted containers, no events, no operator log), from its\n  findings (OOMKilled, Pending pods, TLS, failed connectors) and from the\n  symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record. Everything below the filter bar is one\n  view of the same records: the level chips, the connector picker and the period\n  selected by dragging over the occurrences chart all recount the two charts,\n  the root causes, the files with findings and the record cards (double-click\n  the chart, or ⤺ whole period, to go back). The findings keep the figures of\n  the whole report and only say how much of each of them is in the selection.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. So are JSON lines whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, MB read, elapsed\n  time) that becomes the report when the analysis ends. The last line\n  gives the size read and the time it took. An archive (.tar, .tar.gz,\n  .tgz…) shows a bar while it is extracted.\n  \n  🗂️ One tab in the browser: with CFK support bundles in the input, their\n  reports and their comparison are written but not opened one by one, the\n  log report links them in a ☸️ CFK support bundles section. With only CFK\n  bundles, the report of the bundle (or the comparison of several) is the\n  one opened. Several CFK bundles are analyzed in parallel, 4 at a time\n  (PLAYGROUND_CFK_PARALLELISM to change it), their output printed in order.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 --sanitize\n  replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best\n  effort: review before sharing). --logs-only gives the plain log digest\n  instead. 🎯 --problem \"<component, symptom, since when>\" matches the bundle\n  against what the customer reports: the issues that explain it first, a verdict\n  (explained, not explained, not covered by the logs), the changes before the\n  date. 📥 A Data to request section says what to ask the customer for next, with\n  why and the command: from the gaps of the bundle (logs that start too late,\n  previous logs of restarted containers, no events, no operator log), from its\n  findings (OOMKilled, Pending pods, TLS, failed connectors) and from the\n  symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record. Everything below the filter bar is one\n  view of the same records: the level chips, the connector picker and the period\n  selected by dragging over the occurrences chart all recount the two charts,\n  the root causes, the files with findings and the record cards (double-click\n  the chart, or ⤺ whole period, to go back). The findings keep the figures of\n  the whole report and only say how much of each of them is in the selection.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -10010,7 +10041,7 @@ playground_analyze_logs_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
-    printf "    🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze\n    \n    🎓 Tip: can be set several times\n"
+    printf "    🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze\n    \n    🎓 Tip: can be set several times. TAB lists the log files, exports, archives\n    and folders of Downloads, Desktop and the current folder, newest first\n"
     echo
 
     # :flag.usage
@@ -10103,6 +10134,11 @@ playground_analyze_logs_usage() {
 
     # :command.usage_environment_variables
     printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "PLAYGROUND_CFK_PARALLELISM")"
+    printf "    ⚡ CFK support bundles analyzed at the same time, a container each (default\n    4)\n"
+    echo
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "PLAYGROUND_CFK_RUNBOOKS_FILE")"
@@ -11138,7 +11174,7 @@ playground_debug_analyze_logs_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
-    printf "    🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze\n    \n    🎓 Tip: can be set several times\n"
+    printf "    🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze\n    \n    🎓 Tip: can be set several times. TAB lists the log files, exports, archives\n    and folders of Downloads, Desktop and the current folder, newest first\n"
     echo
 
     # :flag.usage
@@ -24229,6 +24265,102 @@ function get_connector_config_file_with_fzf() {
   echo "$cur@$res"
 }
 
+# fzf picker for --file of playground analyze logs: the log files, exports (.csv, .json, .jsonl), archives (.zip, .tar.gz,
+# .7z, .gz) and folders that a customer sends, newest first: files of ~/Downloads and ~/Desktop (3 levels deep, where
+# bundles land and get extracted) and of the current folder (2 levels, the repository itself left out), and the folders at
+# the top of ~/Downloads and ~/Desktop (an extracted bundle). The preview shows the size and the start of the file, the
+# content of an archive, or the newest files of a folder. When there is none, asks for the path
+function get_log_files_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=50%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_option_wrap=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  # modification time and path: GNU stat (Linux) or BSD stat (macOS)
+  if stat -c '%Y' / > /dev/null 2>&1
+  then
+    stat_mtime=(stat -c '%Y %n')
+  else
+    stat_mtime=(stat -f '%m %N')
+  fi
+
+  deep_folders=()
+  for folder in "$HOME/Downloads" "$HOME/Desktop"
+  do
+    if [ -d "$folder" ]
+    then
+      deep_folders+=("$folder")
+    fi
+  done
+  log_names=(\( -name '*.log' -o -name '*.log.*' -o -name '*.txt' -o -name '*.out' -o -name '*.gz' -o -name '*.zip' \
+    -o -name '*.tar' -o -name '*.tgz' -o -name '*.tbz2' -o -name '*.txz' -o -name '*.7z' -o -name '*.json' \
+    -o -name '*.jsonl' -o -name '*.ndjson' -o -name '*.csv' \))
+
+  files=$( {
+      if [ "$PWD" != "$HOME" ]
+      then
+        find "$PWD" -maxdepth 2 \
+          \( -path "$root_folder" -o -name node_modules -o -name target -o -name '.*' ! -name '.' \) -prune \
+          -o -type f "${log_names[@]}" -size +0 -print0 2>/dev/null
+      fi
+      if [ ${#deep_folders[@]} -gt 0 ]
+      then
+        find "${deep_folders[@]}" -maxdepth 3 \
+          \( -name node_modules -o -name target -o -name '.*' ! -name '.' \) -prune \
+          -o -type f "${log_names[@]}" -size +0 -print0 2>/dev/null
+        # an extracted bundle or a folder of logs
+        find "${deep_folders[@]}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null
+      fi
+    } \
+    | sort -zu \
+    | xargs -0 "${stat_mtime[@]}" 2>/dev/null \
+    | sort -rn | cut -d' ' -f2-)
+
+  if [ -z "$files" ]
+  then
+    # nothing found: the path is typed, pasted or dragged onto the terminal
+    res=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗒️ " --header="no log file, export, archive or folder found in $PWD (2 levels) nor in Downloads / Desktop (3 levels): type, paste or drag it here, then enter" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap --print-query 2>/dev/null | head -1)
+    # a dragged file comes quoted, or with its spaces escaped
+    res=$(echo "$res" | sed -E "s/^[[:space:]]*['\"]?//; s/['\"]?[[:space:]]*$//; s/\\\\ / /g")
+    res=${res/#\~/$HOME}
+    echo "$cur@$res"
+    return
+  fi
+
+  # size, then the start of a file, the content of an archive or the newest files of a folder
+  preview='if [ -d {} ]; then du -sh {} 2>/dev/null; ls -lt {} 2>/dev/null | head -40; else ls -lh {} | awk "{print \$5, \$6, \$7, \$8}"; case {} in
+    *.zip) unzip -l {} 2>/dev/null | head -40 ;;
+    *.tar|*.tar.gz|*.tgz|*.tbz2|*.tar.bz2|*.txz|*.tar.xz|*.7z) tar -tvf {} 2>/dev/null | head -40 ;;
+    *.gz) gzip -dc {} 2>/dev/null | head -c 6000 | head -40 ;;
+    *) head -c 6000 {} | head -40 ;;
+  esac; fi'
+
+  fzf_output=$(echo "$files" \
+    | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗒️" --header="select the log file, export, archive or folder to analyze, newest first (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "$preview" --print-query --bind "alt-enter:print-query")
+
+  # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
+  query_line=$(echo "$fzf_output" | head -n1)
+  selected_line=$(echo "$fzf_output" | tail -n1)
+
+  # If both lines are the same, user pressed alt-enter (use typed value)
+  if [ "$query_line" = "$selected_line" ]; then
+    res="$query_line"
+  else
+    res="$selected_line"
+  fi
+
+  echo "$cur@$res"
+}
+
 #
 # Reproduction model bundles (playground repro export / import)
 #
@@ -29920,6 +30052,28 @@ function write_ccloud_costs_range_report() {
     open_html_report "$report" "$no_open"
 }
 
+# Prints the image of cfk-analysis, built on first use: dependencies baked once, code mounted at run time. The tag changes
+# when the Dockerfile or requirements change, so the image is rebuilt only then. playground analyze logs calls it once
+# before analyzing several bundles in parallel (a single build). Messages on stderr: stdout is the image name
+function cfk_analyzer_image() {
+    local analyzer_dir="$root_folder/cfk-analysis"
+    local image_tag
+    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+    local image="cfk-bundle-analyzer:$image_tag"
+    if ! docker image inspect "$image" > /dev/null 2>&1
+    then
+        log "🏗️  Building $image (first run only)..." >&2
+        local build_log="/tmp/cfk-bundle-analyzer-build.log"
+        if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1
+        then
+            logerror "❌ Failed to build $image, see $build_log" >&2
+            tail -20 "$build_log" >&2
+            return 1
+        fi
+    fi
+    echo "$image"
+}
+
 # Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
 # HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
@@ -29943,23 +30097,8 @@ function analyze_cfk_bundle() {
         return 1
     fi
 
-    # analyzer image: dependencies baked once, code mounted at run time. The tag changes when the Dockerfile or
-    # requirements change, so the image is rebuilt only then
-    local image_tag
-    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
-    local image="cfk-bundle-analyzer:$image_tag"
-    if ! docker image inspect "$image" > /dev/null 2>&1
-    then
-        # stderr: stdout must stay valid JSON with --json
-        log "🏗️  Building $image (first run only)..." >&2
-        local build_log="/tmp/cfk-bundle-analyzer-build.log"
-        if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1
-        then
-            logerror "❌ Failed to build $image, see $build_log"
-            tail -20 "$build_log" >&2
-            return 1
-        fi
-    fi
+    local image
+    image=$(cfk_analyzer_image) || return 1
 
     local bundle_abs
     bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
@@ -30020,7 +30159,8 @@ function analyze_cfk_bundle() {
         bundle_basename="${bundle_basename%.tgz}"
         bundle_basename="${bundle_basename%.tar}"
         bundle_basename="${bundle_basename%.zip}"
-        html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
+        # CFK_ANALYSIS_REPORT_SUFFIX: set by playground analyze logs when bundles analyzed in parallel share a name
+        html_out="${output_dir_abs}/${bundle_basename}${CFK_ANALYSIS_REPORT_SUFFIX:-}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
         cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
         # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
         CFK_ANALYSIS_JSON="${html_out%.html}.json"
@@ -30052,10 +30192,14 @@ function analyze_cfk_bundle() {
         *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
     esac
 
+    # CFK_ANALYSIS_HTML: the report written, CFK_ANALYSIS_NO_OPEN: not opened (playground analyze logs links it from its
+    # own report, a tab per bundle is too many)
+    CFK_ANALYSIS_HTML=""
     if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]
     then
+        CFK_ANALYSIS_HTML="$html_out"
         log ""
-        open_html_report "$html_out"
+        open_html_report "$html_out" "${CFK_ANALYSIS_NO_OPEN:-}"
     fi
     return $exit_code
 }
@@ -30095,10 +30239,13 @@ function compare_cfk_bundles() {
     docker run "${docker_args[@]}" -v "$output_dir_abs:/tmp/output" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" \
         --html-out "/tmp/output/$html_out"
     local exit_code=$?
+    # CFK_COMPARISON_HTML: the report written, opened unless CFK_ANALYSIS_NO_OPEN (see analyze_cfk_bundle)
+    CFK_COMPARISON_HTML=""
     if [[ $exit_code -eq 0 && -f "$output_dir_abs/$html_out" ]]
     then
+        CFK_COMPARISON_HTML="$output_dir_abs/$html_out"
         log ""
-        open_html_report "$output_dir_abs/$html_out"
+        open_html_report "$output_dir_abs/$html_out" "${CFK_ANALYSIS_NO_OPEN:-}"
     fi
     return $exit_code
 }
@@ -43880,6 +44027,16 @@ playground_get_connector_config_file_with_fzf_command() {
   cur="${args[cur]}"
 
   get_connector_config_file_with_fzf "$cur"
+}
+
+# :command.function
+playground_get_log_files_with_fzf_command() {
+
+  # src/commands/get-log-files-with-fzf.sh
+  cur="${args[cur]}"
+
+  get_log_files_with_fzf "$cur"
+
 }
 
 # :command.function
@@ -61484,6 +61641,16 @@ playground_analyze_logs_command() {
       esac
   done
 
+  # the TAB picker of --file (get-log-files-with-fzf) answers "<typed>@<path>": the path is what follows the first @, unless
+  # the value is an existing path as it is
+  for i in "${!file_array[@]}"
+  do
+      if [[ ! -e "${file_array[$i]}" && "${file_array[$i]}" == *"@"* ]]
+      then
+          file_array[$i]="${file_array[$i]#*@}"
+      fi
+  done
+
   for file in "${file_array[@]}"
   do
       if [ ! -e "$file" ]
@@ -61509,6 +61676,19 @@ playground_analyze_logs_command() {
 
   function file_size_human () {
       python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$(file_size "$1")" 2>/dev/null
+  }
+
+  # opens a report written by another tool in the browser, once: the 🔄 progress page already open goes to it, else a new
+  # tab in an interactive terminal (open_html_report), else its path
+  function show_report () {
+      if [ -n "$progress_page" ] && [ -f "$progress_page" ] && grep -q "Log Analysis in progress" "$progress_page" 2>/dev/null
+      then
+          python3 -I -c 'import html, sys, urllib.parse; u = "file://" + urllib.parse.quote(sys.argv[1]); print(f"<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; url={html.escape(u)}\"></head><body><a href=\"{html.escape(u)}\">{html.escape(sys.argv[1])}</a></body></html>")' "$1" > "$progress_page.redirect" \
+              && mv "$progress_page.redirect" "$progress_page"
+          log "🌐 The page open in the browser shows $1"
+      else
+          open_html_report "$1"
+      fi
   }
 
   # a step of the 🔄 progress page open in the browser (none without it)
@@ -61904,9 +62084,27 @@ playground_analyze_logs_command() {
               extract_dir=$(basename "$path")
               extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
               mkdir -p "$extract_dir"
+              progress_step "📦 extracting $label ($(file_size_human "$path"))"
               case "$path" in
                   *.zip) unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1 ;;
-                  *) tar -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
+                  *)
+                      if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+                      then
+                          # read through progress.py cat: a bar in the terminal for a large archive. From a pipe, GNU tar
+                          # needs the compression flag
+                          local tar_z=""
+                          case "$path" in
+                              *.tar.gz|*.tgz) tar_z="z" ;;
+                              *.tar.bz2|*.tbz2) tar_z="j" ;;
+                              *.tar.xz|*.txz) tar_z="J" ;;
+                          esac
+                          PG_PROGRESS_STEP="📦 extracting $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" --size "$(file_size "$path")" < "$path" \
+                              | tar -x${tar_z}f - -C "$extract_dir" > /dev/null 2>&1
+                          test "${PIPESTATUS[1]}" -eq 0
+                      else
+                          tar -xf "$path" -C "$extract_dir" > /dev/null 2>&1
+                      fi
+                      ;;
               esac
               if [ $? -ne 0 ]
               then
@@ -61987,46 +62185,128 @@ playground_analyze_logs_command() {
   cfk_json_files=()
   # JSON of the analysis of each bundle, written next to its HTML report: compared when there are several bundles
   cfk_compare_files=()
+  # the reports of the bundles and of their comparison are not opened one by one (6 bundles: 8 tabs): the log report links
+  # them, or the one entry point (the report of a single bundle, the comparison of several) is opened at the end
+  CFK_ANALYSIS_NO_OPEN=1
+  cfk_reports=()
+  cfk_report_labels=()
+  # the bundles are analyzed in parallel (a container each, PLAYGROUND_CFK_PARALLELISM at a time, 4 by default): the output of
+  # each one goes to a file, printed in the order of the bundles as soon as it and the ones before it are done
+  cfk_parallelism="${PLAYGROUND_CFK_PARALLELISM:-4}"
+  [[ "$cfk_parallelism" =~ ^[1-9][0-9]*$ ]] || cfk_parallelism=4
+  if [ ${#cfk_bundles[@]} -gt 0 ]
+  then
+      # built once, not by each job
+      if ! cfk_analyzer_image > /dev/null
+      then
+          cfk_exit=1
+          cfk_bundles=()
+      fi
+  fi
+  if [ ${#cfk_bundles[@]} -gt 1 ]
+  then
+      log "☸️ Analyzing ${#cfk_bundles[@]} CFK support bundles, $cfk_parallelism at a time (PLAYGROUND_CFK_PARALLELISM)"
+  fi
+  progress_step "☸️ analyzing ${#cfk_bundles[@]} CFK support bundle(s)"
+  # bundles of the same name (two "bundle" folders): their reports get a -<n> suffix, written in the same second
+  declare -A cfk_name_count=()
   for i in "${!cfk_bundles[@]}"
   do
-      CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
-      # extracted from an archive: deleted at the end, the report copies its files for the editor
-      CFK_ANALYSIS_TEMPORARY=""
-      if [[ "${cfk_bundles[$i]}" == "$tmp_dir/"* ]]
-      then
-          CFK_ANALYSIS_TEMPORARY=1
-      fi
-      CFK_ANALYSIS_JSON=""
-      if [[ -n "$json_out" ]]
-      then
-          log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
-          cfk_json="$tmp_dir/cfk-$i.json"
-          analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$cfk_json"
-          rc=$?
-          if [ $rc -eq 0 ]
-          then
-              jq --arg label "${cfk_labels[$i]}" '. + {label: $label}' "$cfk_json" > "$cfk_json.labelled" && cfk_json_files+=("$cfk_json.labelled")
-          fi
-      else
-          log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
-          analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
-          rc=$?
-          if [ $rc -eq 0 ] && [ -f "$CFK_ANALYSIS_JSON" ]
-          then
-              cfk_compare_files+=("$CFK_ANALYSIS_JSON")
-          fi
-      fi
-      if [ $rc -ne 0 ]
-      then
-          cfk_exit=$rc
-      fi
+      cfk_name=$(basename "${cfk_bundles[$i]}")
+      cfk_name_count[$cfk_name]=$(( ${cfk_name_count[$cfk_name]:-0} + 1 ))
   done
+  cfk_next=0
+  cfk_done=0
+  # prints the output and takes the result of the bundles done, in order
+  function flush_cfk_bundles () {
+      local rc json html
+      while [ $cfk_next -lt ${#cfk_bundles[@]} ] && [ -f "$tmp_dir/cfk-$cfk_next.result" ]
+      do
+          IFS=$'\t' read -r rc json html < "$tmp_dir/cfk-$cfk_next.result"
+          if [[ -n "$json_out" ]]
+          then
+              log "📦 CFK support bundle detected: ${cfk_labels[$cfk_next]} (--logs-only for the plain log digest)"
+              cat "$tmp_dir/cfk-$cfk_next.out"
+              if [ "$rc" -eq 0 ]
+              then
+                  jq --arg label "${cfk_labels[$cfk_next]}" '. + {label: $label}' "$tmp_dir/cfk-$cfk_next.json" > "$tmp_dir/cfk-$cfk_next.json.labelled" && cfk_json_files+=("$tmp_dir/cfk-$cfk_next.json.labelled")
+              fi
+          else
+              log "📦 CFK support bundle detected: ${cfk_labels[$cfk_next]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
+              cat "$tmp_dir/cfk-$cfk_next.out"
+              if [ "$rc" -eq 0 ] && [ -n "$json" ] && [ -f "$json" ]
+              then
+                  cfk_compare_files+=("$json")
+              fi
+              if [ -n "$html" ]
+              then
+                  cfk_reports+=("$html")
+                  cfk_report_labels+=("${cfk_labels[$cfk_next]}")
+              fi
+          fi
+          if [ "$rc" -ne 0 ]
+          then
+              cfk_exit=$rc
+          fi
+          cfk_next=$((cfk_next+1))
+      done
+  }
+  for i in "${!cfk_bundles[@]}"
+  do
+      # at most cfk_parallelism jobs: wait for one to end (the jobs always exit 0, their result is in a file)
+      while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$cfk_parallelism" ]
+      do
+          wait -n 2> /dev/null || true
+          flush_cfk_bundles
+      done
+      (
+          CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
+          # extracted from an archive: deleted at the end, the report copies its files for the editor
+          CFK_ANALYSIS_TEMPORARY=""
+          if [[ "${cfk_bundles[$i]}" == "$tmp_dir/"* ]]
+          then
+              CFK_ANALYSIS_TEMPORARY=1
+          fi
+          CFK_ANALYSIS_REPORT_SUFFIX=""
+          if [ "${cfk_name_count[$(basename "${cfk_bundles[$i]}")]}" -gt 1 ]
+          then
+              CFK_ANALYSIS_REPORT_SUFFIX="-$((i+1))"
+          fi
+          CFK_ANALYSIS_JSON=""
+          CFK_ANALYSIS_HTML=""
+          if [[ -n "$json_out" ]]
+          then
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+          else
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+          fi
+          rc=$?
+          printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
+          mv "$tmp_dir/cfk-$i.result.tmp" "$tmp_dir/cfk-$i.result"
+          exit 0
+      ) &
+  done
+  while [ $cfk_next -lt ${#cfk_bundles[@]} ]
+  do
+      wait -n 2> /dev/null || sleep 0.2
+      # a job gone without its result (killed): the bundle counts as failed, instead of waiting for it forever
+      if [ -z "$(jobs -rp)" ] && [ ! -f "$tmp_dir/cfk-$cfk_next.result" ]
+      then
+          echo "❌ the analysis of this bundle ended without a result" >> "$tmp_dir/cfk-$cfk_next.out"
+          printf '1\t\t\n' > "$tmp_dir/cfk-$cfk_next.result"
+      fi
+      flush_cfk_bundles
+      progress_step "☸️ CFK support bundles: $cfk_next of ${#cfk_bundles[@]} analyzed"
+  done
+
   # several CFK bundles: compared, each one with the previous one (by collection time)
   cfk_comparison="$tmp_dir/cfk-comparison.json"
   echo "[]" > "$cfk_comparison"
   if [ ${#cfk_compare_files[@]} -ge 2 ]
   then
       log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
+      progress_step "🔁 comparing the ${#cfk_compare_files[@]} CFK support bundles"
+      CFK_COMPARISON_HTML=""
       compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
   elif [ ${#cfk_json_files[@]} -ge 2 ]
   then
@@ -62043,6 +62323,18 @@ playground_analyze_logs_command() {
           else
               jq -s --slurpfile comparison "$cfk_comparison" '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0]}' \
                   "${cfk_json_files[@]}" >&3
+          fi
+      else
+          # one tab: the report of the bundle, or the comparison of several (it lists the bundles), the others are in the
+          # log lines above
+          entry_report="${CFK_COMPARISON_HTML:-}"
+          if [ -z "$entry_report" ] && [ ${#cfk_reports[@]} -gt 0 ]
+          then
+              entry_report="${cfk_reports[$((${#cfk_reports[@]}-1))]}"
+          fi
+          if [ -n "$entry_report" ]
+          then
+              show_report "$entry_report"
           fi
       fi
       exit $cfk_exit
@@ -62211,6 +62503,25 @@ playground_analyze_logs_command() {
   if [ -f "$overview_text_file" ]
   then
       report_args+=(--section "🔭 Overview" "$overview_text_file")
+  fi
+  # the reports of the CFK support bundles of the input (not opened one by one): linked from the log report
+  if [ ${#cfk_reports[@]} -gt 0 ]
+  then
+      {
+          printf '%s\t%s\n' "${CFK_COMPARISON_HTML:+🔁 comparison of the ${#cfk_reports[@]} bundles}" "${CFK_COMPARISON_HTML:-}"
+          for i in "${!cfk_reports[@]}"
+          do
+              printf '%s\t%s\n' "${cfk_report_labels[$i]}" "${cfk_reports[$i]}"
+          done
+      } | python3 -I -c '
+  import html, sys, urllib.parse
+  rows = [l.rstrip("\n").split("\t", 1) for l in sys.stdin if l.strip()]
+  print("<p>Each CFK support bundle of the input has its own report (pods, custom resources, events, versions, recent changes):</p><ul>")
+  for label, path in rows:
+      if path:
+          href = html.escape("file://" + urllib.parse.quote(path))
+          print(f"<li><a href=\"{href}\" target=\"_blank\" rel=\"noopener\">{html.escape(label)}</a></li>")
+  print("</ul>")' > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "☸️ CFK support bundles" "$tmp_dir/cfk-reports.html")
   fi
   # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
   if [ -f "$tmp_dir/kafka-streams.html" ]
@@ -63699,6 +64010,16 @@ playground_debug_analyze_logs_command() {
       esac
   done
 
+  # the TAB picker of --file (get-log-files-with-fzf) answers "<typed>@<path>": the path is what follows the first @, unless
+  # the value is an existing path as it is
+  for i in "${!file_array[@]}"
+  do
+      if [[ ! -e "${file_array[$i]}" && "${file_array[$i]}" == *"@"* ]]
+      then
+          file_array[$i]="${file_array[$i]#*@}"
+      fi
+  done
+
   for file in "${file_array[@]}"
   do
       if [ ! -e "$file" ]
@@ -63724,6 +64045,19 @@ playground_debug_analyze_logs_command() {
 
   function file_size_human () {
       python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$(file_size "$1")" 2>/dev/null
+  }
+
+  # opens a report written by another tool in the browser, once: the 🔄 progress page already open goes to it, else a new
+  # tab in an interactive terminal (open_html_report), else its path
+  function show_report () {
+      if [ -n "$progress_page" ] && [ -f "$progress_page" ] && grep -q "Log Analysis in progress" "$progress_page" 2>/dev/null
+      then
+          python3 -I -c 'import html, sys, urllib.parse; u = "file://" + urllib.parse.quote(sys.argv[1]); print(f"<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; url={html.escape(u)}\"></head><body><a href=\"{html.escape(u)}\">{html.escape(sys.argv[1])}</a></body></html>")' "$1" > "$progress_page.redirect" \
+              && mv "$progress_page.redirect" "$progress_page"
+          log "🌐 The page open in the browser shows $1"
+      else
+          open_html_report "$1"
+      fi
   }
 
   # a step of the 🔄 progress page open in the browser (none without it)
@@ -64119,9 +64453,27 @@ playground_debug_analyze_logs_command() {
               extract_dir=$(basename "$path")
               extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
               mkdir -p "$extract_dir"
+              progress_step "📦 extracting $label ($(file_size_human "$path"))"
               case "$path" in
                   *.zip) unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1 ;;
-                  *) tar -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
+                  *)
+                      if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+                      then
+                          # read through progress.py cat: a bar in the terminal for a large archive. From a pipe, GNU tar
+                          # needs the compression flag
+                          local tar_z=""
+                          case "$path" in
+                              *.tar.gz|*.tgz) tar_z="z" ;;
+                              *.tar.bz2|*.tbz2) tar_z="j" ;;
+                              *.tar.xz|*.txz) tar_z="J" ;;
+                          esac
+                          PG_PROGRESS_STEP="📦 extracting $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" --size "$(file_size "$path")" < "$path" \
+                              | tar -x${tar_z}f - -C "$extract_dir" > /dev/null 2>&1
+                          test "${PIPESTATUS[1]}" -eq 0
+                      else
+                          tar -xf "$path" -C "$extract_dir" > /dev/null 2>&1
+                      fi
+                      ;;
               esac
               if [ $? -ne 0 ]
               then
@@ -64202,46 +64554,128 @@ playground_debug_analyze_logs_command() {
   cfk_json_files=()
   # JSON of the analysis of each bundle, written next to its HTML report: compared when there are several bundles
   cfk_compare_files=()
+  # the reports of the bundles and of their comparison are not opened one by one (6 bundles: 8 tabs): the log report links
+  # them, or the one entry point (the report of a single bundle, the comparison of several) is opened at the end
+  CFK_ANALYSIS_NO_OPEN=1
+  cfk_reports=()
+  cfk_report_labels=()
+  # the bundles are analyzed in parallel (a container each, PLAYGROUND_CFK_PARALLELISM at a time, 4 by default): the output of
+  # each one goes to a file, printed in the order of the bundles as soon as it and the ones before it are done
+  cfk_parallelism="${PLAYGROUND_CFK_PARALLELISM:-4}"
+  [[ "$cfk_parallelism" =~ ^[1-9][0-9]*$ ]] || cfk_parallelism=4
+  if [ ${#cfk_bundles[@]} -gt 0 ]
+  then
+      # built once, not by each job
+      if ! cfk_analyzer_image > /dev/null
+      then
+          cfk_exit=1
+          cfk_bundles=()
+      fi
+  fi
+  if [ ${#cfk_bundles[@]} -gt 1 ]
+  then
+      log "☸️ Analyzing ${#cfk_bundles[@]} CFK support bundles, $cfk_parallelism at a time (PLAYGROUND_CFK_PARALLELISM)"
+  fi
+  progress_step "☸️ analyzing ${#cfk_bundles[@]} CFK support bundle(s)"
+  # bundles of the same name (two "bundle" folders): their reports get a -<n> suffix, written in the same second
+  declare -A cfk_name_count=()
   for i in "${!cfk_bundles[@]}"
   do
-      CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
-      # extracted from an archive: deleted at the end, the report copies its files for the editor
-      CFK_ANALYSIS_TEMPORARY=""
-      if [[ "${cfk_bundles[$i]}" == "$tmp_dir/"* ]]
-      then
-          CFK_ANALYSIS_TEMPORARY=1
-      fi
-      CFK_ANALYSIS_JSON=""
-      if [[ -n "$json_out" ]]
-      then
-          log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
-          cfk_json="$tmp_dir/cfk-$i.json"
-          analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$cfk_json"
-          rc=$?
-          if [ $rc -eq 0 ]
-          then
-              jq --arg label "${cfk_labels[$i]}" '. + {label: $label}' "$cfk_json" > "$cfk_json.labelled" && cfk_json_files+=("$cfk_json.labelled")
-          fi
-      else
-          log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
-          analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
-          rc=$?
-          if [ $rc -eq 0 ] && [ -f "$CFK_ANALYSIS_JSON" ]
-          then
-              cfk_compare_files+=("$CFK_ANALYSIS_JSON")
-          fi
-      fi
-      if [ $rc -ne 0 ]
-      then
-          cfk_exit=$rc
-      fi
+      cfk_name=$(basename "${cfk_bundles[$i]}")
+      cfk_name_count[$cfk_name]=$(( ${cfk_name_count[$cfk_name]:-0} + 1 ))
   done
+  cfk_next=0
+  cfk_done=0
+  # prints the output and takes the result of the bundles done, in order
+  function flush_cfk_bundles () {
+      local rc json html
+      while [ $cfk_next -lt ${#cfk_bundles[@]} ] && [ -f "$tmp_dir/cfk-$cfk_next.result" ]
+      do
+          IFS=$'\t' read -r rc json html < "$tmp_dir/cfk-$cfk_next.result"
+          if [[ -n "$json_out" ]]
+          then
+              log "📦 CFK support bundle detected: ${cfk_labels[$cfk_next]} (--logs-only for the plain log digest)"
+              cat "$tmp_dir/cfk-$cfk_next.out"
+              if [ "$rc" -eq 0 ]
+              then
+                  jq --arg label "${cfk_labels[$cfk_next]}" '. + {label: $label}' "$tmp_dir/cfk-$cfk_next.json" > "$tmp_dir/cfk-$cfk_next.json.labelled" && cfk_json_files+=("$tmp_dir/cfk-$cfk_next.json.labelled")
+              fi
+          else
+              log "📦 CFK support bundle detected: ${cfk_labels[$cfk_next]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
+              cat "$tmp_dir/cfk-$cfk_next.out"
+              if [ "$rc" -eq 0 ] && [ -n "$json" ] && [ -f "$json" ]
+              then
+                  cfk_compare_files+=("$json")
+              fi
+              if [ -n "$html" ]
+              then
+                  cfk_reports+=("$html")
+                  cfk_report_labels+=("${cfk_labels[$cfk_next]}")
+              fi
+          fi
+          if [ "$rc" -ne 0 ]
+          then
+              cfk_exit=$rc
+          fi
+          cfk_next=$((cfk_next+1))
+      done
+  }
+  for i in "${!cfk_bundles[@]}"
+  do
+      # at most cfk_parallelism jobs: wait for one to end (the jobs always exit 0, their result is in a file)
+      while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$cfk_parallelism" ]
+      do
+          wait -n 2> /dev/null || true
+          flush_cfk_bundles
+      done
+      (
+          CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
+          # extracted from an archive: deleted at the end, the report copies its files for the editor
+          CFK_ANALYSIS_TEMPORARY=""
+          if [[ "${cfk_bundles[$i]}" == "$tmp_dir/"* ]]
+          then
+              CFK_ANALYSIS_TEMPORARY=1
+          fi
+          CFK_ANALYSIS_REPORT_SUFFIX=""
+          if [ "${cfk_name_count[$(basename "${cfk_bundles[$i]}")]}" -gt 1 ]
+          then
+              CFK_ANALYSIS_REPORT_SUFFIX="-$((i+1))"
+          fi
+          CFK_ANALYSIS_JSON=""
+          CFK_ANALYSIS_HTML=""
+          if [[ -n "$json_out" ]]
+          then
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+          else
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+          fi
+          rc=$?
+          printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
+          mv "$tmp_dir/cfk-$i.result.tmp" "$tmp_dir/cfk-$i.result"
+          exit 0
+      ) &
+  done
+  while [ $cfk_next -lt ${#cfk_bundles[@]} ]
+  do
+      wait -n 2> /dev/null || sleep 0.2
+      # a job gone without its result (killed): the bundle counts as failed, instead of waiting for it forever
+      if [ -z "$(jobs -rp)" ] && [ ! -f "$tmp_dir/cfk-$cfk_next.result" ]
+      then
+          echo "❌ the analysis of this bundle ended without a result" >> "$tmp_dir/cfk-$cfk_next.out"
+          printf '1\t\t\n' > "$tmp_dir/cfk-$cfk_next.result"
+      fi
+      flush_cfk_bundles
+      progress_step "☸️ CFK support bundles: $cfk_next of ${#cfk_bundles[@]} analyzed"
+  done
+
   # several CFK bundles: compared, each one with the previous one (by collection time)
   cfk_comparison="$tmp_dir/cfk-comparison.json"
   echo "[]" > "$cfk_comparison"
   if [ ${#cfk_compare_files[@]} -ge 2 ]
   then
       log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
+      progress_step "🔁 comparing the ${#cfk_compare_files[@]} CFK support bundles"
+      CFK_COMPARISON_HTML=""
       compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
   elif [ ${#cfk_json_files[@]} -ge 2 ]
   then
@@ -64258,6 +64692,18 @@ playground_debug_analyze_logs_command() {
           else
               jq -s --slurpfile comparison "$cfk_comparison" '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0]}' \
                   "${cfk_json_files[@]}" >&3
+          fi
+      else
+          # one tab: the report of the bundle, or the comparison of several (it lists the bundles), the others are in the
+          # log lines above
+          entry_report="${CFK_COMPARISON_HTML:-}"
+          if [ -z "$entry_report" ] && [ ${#cfk_reports[@]} -gt 0 ]
+          then
+              entry_report="${cfk_reports[$((${#cfk_reports[@]}-1))]}"
+          fi
+          if [ -n "$entry_report" ]
+          then
+              show_report "$entry_report"
           fi
       fi
       exit $cfk_exit
@@ -64426,6 +64872,25 @@ playground_debug_analyze_logs_command() {
   if [ -f "$overview_text_file" ]
   then
       report_args+=(--section "🔭 Overview" "$overview_text_file")
+  fi
+  # the reports of the CFK support bundles of the input (not opened one by one): linked from the log report
+  if [ ${#cfk_reports[@]} -gt 0 ]
+  then
+      {
+          printf '%s\t%s\n' "${CFK_COMPARISON_HTML:+🔁 comparison of the ${#cfk_reports[@]} bundles}" "${CFK_COMPARISON_HTML:-}"
+          for i in "${!cfk_reports[@]}"
+          do
+              printf '%s\t%s\n' "${cfk_report_labels[$i]}" "${cfk_reports[$i]}"
+          done
+      } | python3 -I -c '
+  import html, sys, urllib.parse
+  rows = [l.rstrip("\n").split("\t", 1) for l in sys.stdin if l.strip()]
+  print("<p>Each CFK support bundle of the input has its own report (pods, custom resources, events, versions, recent changes):</p><ul>")
+  for label, path in rows:
+      if path:
+          href = html.escape("file://" + urllib.parse.quote(path))
+          print(f"<li><a href=\"{href}\" target=\"_blank\" rel=\"noopener\">{html.escape(label)}</a></li>")
+  print("</ul>")' > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "☸️ CFK support bundles" "$tmp_dir/cfk-reports.html")
   fi
   # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
   if [ -f "$tmp_dir/kafka-streams.html" ]
@@ -91027,6 +91492,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-log-files-with-fzf)
+      action="get-log-files-with-fzf"
+      shift
+      playground_get_log_files_with_fzf_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-predefined-schemas)
       action="get-predefined-schemas"
       shift
@@ -93839,6 +94311,78 @@ playground_get_connector_config_file_with_fzf_parse_requirements() {
 
   # :command.command_filter
   action="get-connector-config-file-with-fzf"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['cur']+x} ]]; then
+            args['cur']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['cur']+x} ]]; then
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_log_files_with_fzf_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_log_files_with_fzf_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-log-files-with-fzf"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -114058,6 +114602,7 @@ playground_analyze_logs_parse_requirements() {
 
   # :command.environment_variables_filter
 
+  env_var_names+=("PLAYGROUND_CFK_PARALLELISM")
   env_var_names+=("PLAYGROUND_CFK_RUNBOOKS_FILE")
 
   # :command.command_filter
@@ -145858,6 +146403,35 @@ playground_get_connector_config_file_with_fzf_completion() {
 }
 
 # :command.completion_function
+playground_get_log_files_with_fzf_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
 playground_get_predefined_schemas_completion() {
   local completion_current="$1"
   local completion_arg_index=0
@@ -155781,6 +156355,9 @@ playground_analyze_logs_completion() {
       --file | -f)
         shift
         if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-log-files-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
 
           return
         fi
@@ -157257,6 +157834,9 @@ playground_debug_analyze_logs_completion() {
       --file | -f)
         shift
         if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-log-files-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
 
           return
         fi
@@ -171943,6 +172523,7 @@ run() {
     "get-any-file-with-fzf") playground_get_any_file_with_fzf_command ;;
     "get-playground-repro-export-with-fzf") playground_get_playground_repro_export_with_fzf_command ;;
     "get-connector-config-file-with-fzf") playground_get_connector_config_file_with_fzf_command ;;
+    "get-log-files-with-fzf") playground_get_log_files_with_fzf_command ;;
     "get-predefined-schemas") playground_get_predefined_schemas_command ;;
     "update-cache-versions") playground_update_cache_versions_command ;;
     "update-readme") playground_update_readme_command ;;

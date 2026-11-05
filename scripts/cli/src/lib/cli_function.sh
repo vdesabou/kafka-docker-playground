@@ -1553,6 +1553,102 @@ function get_connector_config_file_with_fzf() {
   echo "$cur@$res"
 }
 
+# fzf picker for --file of playground analyze logs: the log files, exports (.csv, .json, .jsonl), archives (.zip, .tar.gz,
+# .7z, .gz) and folders that a customer sends, newest first: files of ~/Downloads and ~/Desktop (3 levels deep, where
+# bundles land and get extracted) and of the current folder (2 levels, the repository itself left out), and the folders at
+# the top of ~/Downloads and ~/Desktop (an extracted bundle). The preview shows the size and the start of the file, the
+# content of an archive, or the newest files of a folder. When there is none, asks for the path
+function get_log_files_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=50%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_option_wrap=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  # modification time and path: GNU stat (Linux) or BSD stat (macOS)
+  if stat -c '%Y' / > /dev/null 2>&1
+  then
+    stat_mtime=(stat -c '%Y %n')
+  else
+    stat_mtime=(stat -f '%m %N')
+  fi
+
+  deep_folders=()
+  for folder in "$HOME/Downloads" "$HOME/Desktop"
+  do
+    if [ -d "$folder" ]
+    then
+      deep_folders+=("$folder")
+    fi
+  done
+  log_names=(\( -name '*.log' -o -name '*.log.*' -o -name '*.txt' -o -name '*.out' -o -name '*.gz' -o -name '*.zip' \
+    -o -name '*.tar' -o -name '*.tgz' -o -name '*.tbz2' -o -name '*.txz' -o -name '*.7z' -o -name '*.json' \
+    -o -name '*.jsonl' -o -name '*.ndjson' -o -name '*.csv' \))
+
+  files=$( {
+      if [ "$PWD" != "$HOME" ]
+      then
+        find "$PWD" -maxdepth 2 \
+          \( -path "$root_folder" -o -name node_modules -o -name target -o -name '.*' ! -name '.' \) -prune \
+          -o -type f "${log_names[@]}" -size +0 -print0 2>/dev/null
+      fi
+      if [ ${#deep_folders[@]} -gt 0 ]
+      then
+        find "${deep_folders[@]}" -maxdepth 3 \
+          \( -name node_modules -o -name target -o -name '.*' ! -name '.' \) -prune \
+          -o -type f "${log_names[@]}" -size +0 -print0 2>/dev/null
+        # an extracted bundle or a folder of logs
+        find "${deep_folders[@]}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null
+      fi
+    } \
+    | sort -zu \
+    | xargs -0 "${stat_mtime[@]}" 2>/dev/null \
+    | sort -rn | cut -d' ' -f2-)
+
+  if [ -z "$files" ]
+  then
+    # nothing found: the path is typed, pasted or dragged onto the terminal
+    res=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗒️ " --header="no log file, export, archive or folder found in $PWD (2 levels) nor in Downloads / Desktop (3 levels): type, paste or drag it here, then enter" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap --print-query 2>/dev/null | head -1)
+    # a dragged file comes quoted, or with its spaces escaped
+    res=$(echo "$res" | sed -E "s/^[[:space:]]*['\"]?//; s/['\"]?[[:space:]]*$//; s/\\\\ / /g")
+    res=${res/#\~/$HOME}
+    echo "$cur@$res"
+    return
+  fi
+
+  # size, then the start of a file, the content of an archive or the newest files of a folder
+  preview='if [ -d {} ]; then du -sh {} 2>/dev/null; ls -lt {} 2>/dev/null | head -40; else ls -lh {} | awk "{print \$5, \$6, \$7, \$8}"; case {} in
+    *.zip) unzip -l {} 2>/dev/null | head -40 ;;
+    *.tar|*.tar.gz|*.tgz|*.tbz2|*.tar.bz2|*.txz|*.tar.xz|*.7z) tar -tvf {} 2>/dev/null | head -40 ;;
+    *.gz) gzip -dc {} 2>/dev/null | head -c 6000 | head -40 ;;
+    *) head -c 6000 {} | head -40 ;;
+  esac; fi'
+
+  fzf_output=$(echo "$files" \
+    | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗒️" --header="select the log file, export, archive or folder to analyze, newest first (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "$preview" --print-query --bind "alt-enter:print-query")
+
+  # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
+  query_line=$(echo "$fzf_output" | head -n1)
+  selected_line=$(echo "$fzf_output" | tail -n1)
+
+  # If both lines are the same, user pressed alt-enter (use typed value)
+  if [ "$query_line" = "$selected_line" ]; then
+    res="$query_line"
+  else
+    res="$selected_line"
+  fi
+
+  echo "$cur@$res"
+}
+
 #
 # Reproduction model bundles (playground repro export / import)
 #
@@ -7210,6 +7306,28 @@ function write_ccloud_costs_range_report() {
     open_html_report "$report" "$no_open"
 }
 
+# Prints the image of cfk-analysis, built on first use: dependencies baked once, code mounted at run time. The tag changes
+# when the Dockerfile or requirements change, so the image is rebuilt only then. playground analyze logs calls it once
+# before analyzing several bundles in parallel (a single build). Messages on stderr: stdout is the image name
+function cfk_analyzer_image() {
+    local analyzer_dir="$root_folder/cfk-analysis"
+    local image_tag
+    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+    local image="cfk-bundle-analyzer:$image_tag"
+    if ! docker image inspect "$image" > /dev/null 2>&1
+    then
+        log "🏗️  Building $image (first run only)..." >&2
+        local build_log="/tmp/cfk-bundle-analyzer-build.log"
+        if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1
+        then
+            logerror "❌ Failed to build $image, see $build_log" >&2
+            tail -20 "$build_log" >&2
+            return 1
+        fi
+    fi
+    echo "$image"
+}
+
 # Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
 # HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
@@ -7233,23 +7351,8 @@ function analyze_cfk_bundle() {
         return 1
     fi
 
-    # analyzer image: dependencies baked once, code mounted at run time. The tag changes when the Dockerfile or
-    # requirements change, so the image is rebuilt only then
-    local image_tag
-    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
-    local image="cfk-bundle-analyzer:$image_tag"
-    if ! docker image inspect "$image" > /dev/null 2>&1
-    then
-        # stderr: stdout must stay valid JSON with --json
-        log "🏗️  Building $image (first run only)..." >&2
-        local build_log="/tmp/cfk-bundle-analyzer-build.log"
-        if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1
-        then
-            logerror "❌ Failed to build $image, see $build_log"
-            tail -20 "$build_log" >&2
-            return 1
-        fi
-    fi
+    local image
+    image=$(cfk_analyzer_image) || return 1
 
     local bundle_abs
     bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
@@ -7310,7 +7413,8 @@ function analyze_cfk_bundle() {
         bundle_basename="${bundle_basename%.tgz}"
         bundle_basename="${bundle_basename%.tar}"
         bundle_basename="${bundle_basename%.zip}"
-        html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
+        # CFK_ANALYSIS_REPORT_SUFFIX: set by playground analyze logs when bundles analyzed in parallel share a name
+        html_out="${output_dir_abs}/${bundle_basename}${CFK_ANALYSIS_REPORT_SUFFIX:-}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
         cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
         # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
         CFK_ANALYSIS_JSON="${html_out%.html}.json"
@@ -7342,10 +7446,14 @@ function analyze_cfk_bundle() {
         *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
     esac
 
+    # CFK_ANALYSIS_HTML: the report written, CFK_ANALYSIS_NO_OPEN: not opened (playground analyze logs links it from its
+    # own report, a tab per bundle is too many)
+    CFK_ANALYSIS_HTML=""
     if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]
     then
+        CFK_ANALYSIS_HTML="$html_out"
         log ""
-        open_html_report "$html_out"
+        open_html_report "$html_out" "${CFK_ANALYSIS_NO_OPEN:-}"
     fi
     return $exit_code
 }
@@ -7385,10 +7493,13 @@ function compare_cfk_bundles() {
     docker run "${docker_args[@]}" -v "$output_dir_abs:/tmp/output" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" \
         --html-out "/tmp/output/$html_out"
     local exit_code=$?
+    # CFK_COMPARISON_HTML: the report written, opened unless CFK_ANALYSIS_NO_OPEN (see analyze_cfk_bundle)
+    CFK_COMPARISON_HTML=""
     if [[ $exit_code -eq 0 && -f "$output_dir_abs/$html_out" ]]
     then
+        CFK_COMPARISON_HTML="$output_dir_abs/$html_out"
         log ""
-        open_html_report "$output_dir_abs/$html_out"
+        open_html_report "$output_dir_abs/$html_out" "${CFK_ANALYSIS_NO_OPEN:-}"
     fi
     return $exit_code
 }

@@ -3,10 +3,13 @@
   required: false
   repeatable: true
   arg: file
+  completions:
+    dynamic:
+    - playground get-log-files-with-fzf "$completion_current"
   help: |-
     🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze
 
-    🎓 Tip: can be set several times
+    🎓 Tip: can be set several times. TAB lists the log files, exports, archives and folders of Downloads, Desktop and the current folder, newest first
 - long: --sample
   short: -s
   required: false
