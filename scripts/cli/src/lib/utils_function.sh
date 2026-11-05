@@ -2394,8 +2394,23 @@ function create_or_get_oracle_image() {
   log "✨ Using Oracle prebuilt image $ORACLE_IMAGE (oracle version 🔢 $ORACLE_VERSION and 📂 setup folder $SETUP_FOLDER)"
 }
 
+# root of the repository (.ccloud/, playground.ini…): the first parent folder of this file with scripts/utils.sh and
+# environment/, whatever the name of the checkout (a git worktree such as ~/kdp-worktrees/<branch>, a clone in another
+# folder). This file is scripts/cli/src/lib/utils_function.sh for an example (sourced by scripts/utils.sh) and
+# scripts/cli/playground for the CLI (inlined): matching "kafka-docker-playground" in the path gave a different
+# folder for each when the checkout has another name
 function get_kafka_docker_playground_dir () {
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  local dir="$DIR_UTILS"
+  while [ -n "$dir" ] && [ "$dir" != "/" ]
+  do
+    if [ -f "$dir/scripts/utils.sh" ] && [ -d "$dir/environment" ]
+    then
+      KAFKA_DOCKER_PLAYGROUND_DIR="$dir"
+      return
+    fi
+    dir="$(dirname "$dir")"
+  done
   KAFKA_DOCKER_PLAYGROUND_DIR="$(echo $DIR_UTILS | sed 's|\(.*kafka-docker-playground\).*|\1|')"
 }
 
