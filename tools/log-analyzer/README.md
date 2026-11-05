@@ -15,6 +15,14 @@ line of the container) is parsed and its fields win over the columns, `-` is an 
 `Oct 14, 2026 @ 19:13:28.977` becomes ISO 8601. Exit `2` when the file is not an export of log events: `analyze logs`
 then reads it as it is.
 
+## Overview of logs without findings
+
+`log_overview.py --records <records> --sources <sources> [--exports <exports>] [--json]` runs when no file has a
+finding: lines, period covered (the `@@PGFILE@@` timestamps of the digest) and records by level of each file, the most
+frequent messages (masked: numbers, hex ids, UUIDs) and loggers, and hints (period shorter than 10 min, only
+INFO/DEBUG records, an export of a log console cut at its size limit). `analyze logs` prints it, adds it to the HTML
+report (🔭 Overview section) and to `--json` (`.overview`).
+
 ## HTML report and JSON
 
 With `--sources <label<tab>path<tab>1 when the file stays on disk>` (written by `analyze logs`) and `--html-out`,

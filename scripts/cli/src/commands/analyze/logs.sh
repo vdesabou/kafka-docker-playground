@@ -80,6 +80,9 @@ records_file="$tmp_dir/records"
 # them, and its ✏️ open the file in the editor (a copy for the extracted ones)
 sources_file="$tmp_dir/sources"
 : > "$sources_file"
+# label<tab>format<tab>number of events of each JSON / CSV export converted back to log lines (🔭 overview)
+exports_file="$tmp_dir/exports"
+: > "$exports_file"
 nb_files=0
 nb_files_with_findings=0
 nb_skipped=0
@@ -392,6 +395,7 @@ function analyze_logs_path () {
             if nb_events=$(python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted" 2>/dev/null)
             then
                 log "🔄 $label: $export_format export of $nb_events log events, analyzed as log lines (oldest first)"
+                printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
                 analyze_logs_digest "$label" "$converted" < "$converted"
             elif [[ "$path" == *.gz ]]
             then
@@ -530,6 +534,29 @@ then
 fi
 sanitize_file "$records_file"
 
+# 🔭 no finding: what the logs contain (period covered, levels, top messages and loggers) and what to ask for next,
+# instead of a bare "no record found" (tools/log-analyzer/log_overview.py)
+overview_json="null"
+overview_text_file="$tmp_dir/overview.txt"
+if [ $nb_files_with_findings -eq 0 ] && [ $nb_files -gt 0 ]
+then
+    overview_args=(--records "$records_file" --sources "$sources_file" --exports "$exports_file" --levels "$levels")
+    if python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" > "$overview_text_file" 2>/dev/null
+    then
+        overview_json=$(python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" --json 2>/dev/null || echo null)
+        if [[ -n "$sanitize" ]]
+        then
+            python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$overview_text_file" > "$overview_text_file.sanitized" && mv "$overview_text_file.sanitized" "$overview_text_file"
+            overview_json=$(printf '%s\n' "$overview_json" | python3 -I "$sanitizer" --state "$sanitize_state" --no-count)
+        fi
+        echo ""
+        cat "$overview_text_file"
+    else
+        overview_json="null"
+        rm -f "$overview_text_file"
+    fi
+fi
+
 # 🌊 Kafka Streams: state transitions, rebalances, task assignment, restoration and known errors of the Kafka Streams
 # applications of the logs (tools/streams-analyzer/streams_report.py, also used by playground streams status). Only the
 # files with Kafka Streams lines are read again
@@ -611,7 +638,7 @@ then
     fi
     python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" "${json_args[@]}" > "$tmp_dir/logs.json" || exit $?
     # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
-    jq --argjson redaction "$redaction" --argjson streams "$streams_json" '. + {redaction_summary: $redaction} + (if $streams != null then {kafka_streams: $streams} else {} end)' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
+    jq --argjson redaction "$redaction" --argjson streams "$streams_json" --argjson overview "$overview_json" '. + {redaction_summary: $redaction} + (if $streams != null then {kafka_streams: $streams} else {} end) + (if $overview != null then {overview: $overview} else {} end)' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
     if [ ${#cfk_json_files[@]} -eq 0 ]
     then
         cat "$tmp_dir/logs-redacted.json" >&3
@@ -638,6 +665,10 @@ then
 else
     echo "Not sanitized (--sanitize to redact them): this report may contain passwords, IPs and hostnames of the logs." > "$tmp_dir/sanitization.txt"
     report_args+=(--section "⚠️ Not sanitized" "$tmp_dir/sanitization.txt")
+fi
+if [ -f "$overview_text_file" ]
+then
+    report_args+=(--section "🔭 Overview" "$overview_text_file")
 fi
 # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
 if [ -f "$tmp_dir/kafka-streams.html" ]

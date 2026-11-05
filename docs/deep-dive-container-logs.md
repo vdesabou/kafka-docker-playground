@@ -184,6 +184,27 @@ What it does with what you give it:
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
 | a copy of a file or of a CFK support bundle already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …` / `⏭️ … same CFK support bundle as …`, only one report), counted in the last line |
 
+🔭 **No finding is not a verdict.** When no file has an ERROR/FATAL record (ERROR/FATAL/WARN with
+`--include-warnings`), `analyze logs` prints an overview of what the logs contain instead of stopping at `✅ no
+ERROR/FATAL record found`: each file with its lines, the period covered and its records by level, the 10 most frequent
+messages (numbers masked as `N`, identifiers as `<hex>` / `<uuid>`) and the 5 most frequent loggers, then 👉 what to
+ask for next:
+
+```text
+🔭 Overview: no ERROR/FATAL record, what the logs contain
+   📄 export.csv: 17946 lines, 2026-10-14 19:13:24 → 19:13:28 (4 s), CSV export of 17833 events
+      INFO 17833
+   🔝 Top messages (N: a number, <hex> / <uuid>: an identifier)
+        2393× INFO  Ended stream task for key … at offset N, partition N, and topic …
+   👉 What to ask for next
+      🕐 export.csv: shorter than 10 min of logs. Ask for the whole incident window, from before the problem started to after it ended
+      🔇 only INFO records: the logs (or the export) may be filtered on a level or a component, or the problem is not logged here. …
+      📤 CSV export of a log console: Kibana / OpenSearch Dashboards Discover exports the newest rows first and stops at a size limit …
+```
+
+The same overview is the 🔭 **Overview** section of the HTML report and `.overview` of `--json` (`files`,
+`top_messages`, `top_loggers`, `hints`).
+
 🔒 The digest, the HTML report and the JSON are **not sanitized by default**: `--sanitize` redacts them, before sharing
 them outside Confluent. Off by default because it can hide evidence (a dump of bytes taken for a secret, the IP of the
 broker you need to correlate) and doubles the time on a large bundle. With `--sanitize`:
