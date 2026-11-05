@@ -4456,6 +4456,11 @@ playground_run_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--client-version CLIENT_VERSION")"
+    printf "    ☕ Version of the client library that the example builds, for example the\n    customer's version\n    \n    It sets CLIENT_VERSION environment variable:\n    \n    * java applications built with the Apache Kafka clients (Kafka Streams,\n    producers, consumers, for example other/kafka-streams-count): the Apache\n    Kafka version (for example 3.7.1), used as KAFKA_CLIENT_TAG (mvn\n    -Dkafka.client.tag) instead of the X.Y.0 matching the CP version\n    \n    * client examples (other/client-*, ccloud/client-*): the version of their\n    Confluent client (librdkafka, confluent-kafka-go, confluent-kafka-python…),\n    see their README\n    \n    It can differ from the brokers, a patch version included\n    \n    🎓 Tip: the interactive menu only offers it for the examples that use it\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
     printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent\n    plugins, the preview shows the release notes of each version)\n"
     printf "    %s\n" "Conflicts: --connector-zip"
@@ -27214,6 +27219,12 @@ function menu_label () {
   printf '%s %s %*s %s' "$emoji" "$text" "$padding" ' ' "$flag"
 }
 
+# Does the example build a client whose version --client-version (CLIENT_VERSION) sets: a java application built with
+# the Apache Kafka clients (mvn -Dkafka.client.tag=$KAFKA_CLIENT_TAG), or a client example reading CLIENT_VERSION
+function example_uses_client_version () {
+  grep -q "kafka.client.tag\|CLIENT_VERSION" "$1" 2> /dev/null
+}
+
 # playground run: known-bad combinations of the current flags / variables, one
 # "error|<message>" or "warning|<message>" line each. Errors would make the run
 # fail after the environment is started, warnings are combinations that run but
@@ -27240,6 +27251,11 @@ function get_run_flag_combination_problems () {
   if [ -n "$(get_menu_flag_value --control-center-tag)" ] && [ -z "$ENABLE_CONTROL_CENTER" ] && [[ " ${array_flag_list[*]} " != *" --enable-legacy-control-center "* ]]
   then
     echo "warning|--control-center-tag has no effect without --enable-control-center"
+  fi
+
+  if [ -n "$(get_menu_flag_value --client-version)" ] && ! example_uses_client_version "$test_file"
+  then
+    echo "warning|--client-version has no effect: this example builds no client (no java application with the Apache Kafka clients, not a client example)"
   fi
 
   # the flag, not ENABLE_KRAFT: utils.sh exports ENABLE_KRAFT for every CP >= 8, so a run started from a shell that sourced
@@ -34964,10 +34980,18 @@ function yq() {
 
 # Apache Kafka version of the java clients that some examples build (mvn -Dkafka.client.tag=$KAFKA_CLIENT_TAG): derived
 # from the CP version (CP 5.y = AK 2.y, 6.y = 2.(y+6), 7.y = 3.y, 8.y = 4.y…), so a new CP version needs no change here.
-# A new CP release can come before its AK release on Maven Central: then the newest published X.Y.0 below is used
+# A new CP release can come before its AK release on Maven Central: then the newest published X.Y.0 below is used.
+# CLIENT_VERSION (playground run --client-version) wins over all of this
 function set_kafka_client_tag()
 {
     local cp_major cp_minor ak_major ak_minor
+    # playground run --client-version (or CLIENT_VERSION exported): the exact version asked for (a patch version like
+    # 3.7.1, or a version that differs from the brokers), no derivation and no fallback
+    if [ -n "$CLIENT_VERSION" ]
+    then
+      export KAFKA_CLIENT_TAG="$CLIENT_VERSION"
+      return
+    fi
     cp_major=$(echo "$TAG_BASE" | cut -d '.' -f 1)
     cp_minor=$(echo "$TAG_BASE" | cut -d '.' -f 2)
     if ! [[ "$cp_major" =~ ^[0-9]+$ ]] || ! [[ "$cp_minor" =~ ^[0-9]+$ ]] || [ "$cp_major" -lt 5 ]
@@ -41406,6 +41430,15 @@ function sanitize_ci_log () {
   mv "$file.sanitized" "$file"
 }
 
+# src/lib/validations/validate_client_version.sh
+validate_client_version() {
+  # java: an Apache Kafka version (3.7.1); client examples: the version of their Confluent client (2.6.0, v2.6.0…)
+  if [[ ! "$1" =~ ^v?[0-9]+(\.[0-9]+)+([.+_-][0-9A-Za-z.+_-]+)?$ ]]
+  then
+    echo "must be a version like 3.7.1 (java examples: the version of org.apache.kafka:kafka-clients; client examples: the version of their client, see their README)"
+  fi
+}
+
 # src/lib/validations/validate_connect_log_levels.sh
 validate_connect_log_levels() {
   for entry in ${1//,/ }
@@ -47130,6 +47163,7 @@ playground_run_command() {
   schema_registry_tag="${args[--schema-registry-tag]}"
   ksqldb_tag="${args[--ksqldb-tag]}"
   control_center_tag="${args[--control-center-tag]}"
+  client_version="${args[--client-version]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
@@ -47564,6 +47598,13 @@ playground_run_command() {
     export CP_CONTROL_CENTER_TAG=$control_center_tag
   fi
 
+  if [[ -n "$client_version" ]]
+  then
+    array_flag_list+=("--client-version=$client_version")
+    # read by the client examples, and by set_kafka_client_tag (utils_function.sh) for the java builds
+    export CLIENT_VERSION=$client_version
+  fi
+
   if [[ -n "$environment" ]]
   then
     if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
@@ -47912,6 +47953,7 @@ playground_run_command() {
     MENU_SCHEMA_REGISTRY_TAG="$(menu_label "🔰" "CP version (schema registry only)" "--schema-registry-tag")"
     MENU_KSQLDB_TAG="$(menu_label "🎏" "CP version (ksqlDB only)" "--ksqldb-tag")"
     MENU_CONTROL_CENTER_TAG="$(menu_label "💠" "Control Center version" "--control-center-tag")"
+    MENU_CLIENT_VERSION="$(menu_label "☕" "Client version (the client the example builds)" "--client-version")"
     MENU_CONNECTOR_TAG="$(menu_label "🔌" "Connector version" "--connector-tag")"
     MENU_CONNECTOR_ZIP="$(menu_label "🤐" "Connector zip" "--connector-zip")"
     MENU_CONNECTOR_JAR="$(menu_label "🤎" "Connector jar" "--connector-jar")"
@@ -48293,6 +48335,9 @@ playground_run_command() {
         # same rule as the --environment flag, and only if the example lets you choose
         if [ "$connector_paths" != "" ] && [ -n "$supported_environments" ]; then group+=("$(menu_value_label "$MENU_ENVIRONMENT" "$(get_menu_flag_value --environment)")"); fi
       fi
+      # only for the examples that build a client: java with the Apache Kafka clients (mvn -Dkafka.client.tag), or the
+      # client examples (CLIENT_VERSION)
+      if example_uses_client_version "$test_file"; then group+=("$(menu_value_label "$MENU_CLIENT_VERSION" "$(get_menu_flag_value --client-version)")"); fi
       add_menu_group "$MENU_SEPARATOR" "${group[@]}"
 
       toggle_group=()
@@ -48623,6 +48668,26 @@ playground_run_command() {
           export CP_CONTROL_CENTER_TAG=$control_center_tag
         else
           unset CP_CONTROL_CENTER_TAG
+        fi
+      fi
+
+      if [[ $res == *"$MENU_CLIENT_VERSION"* ]]
+      then
+        maybe_remove_flag "--client-version"
+        set +e
+        client_version=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="☕" --header="Enter the version of the client the example builds (java: the Apache Kafka version, for example 3.7.1; client examples: see their README), empty for the default" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
+        set -e
+        if [ -n "$client_version" ] && [ -n "$(validate_client_version "$client_version")" ]
+        then
+          logwarn "❌ --client-version $client_version ignored: $(validate_client_version "$client_version")"
+          client_version=""
+        fi
+        if [ -n "$client_version" ]
+        then
+          array_flag_list+=("--client-version=$client_version")
+          export CLIENT_VERSION=$client_version
+        else
+          unset CLIENT_VERSION
         fi
       fi
 
@@ -98768,6 +98833,20 @@ playground_run_parse_requirements() {
         ;;
 
       # :flag.case
+      --client-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--client-version']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--client-version requires an argument: --client-version CLIENT_VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --connector-tag)
         # :flag.conflicts
         if [[ -n "${args['--connector-zip']:-}" ]]; then
@@ -99178,6 +99257,15 @@ playground_run_parse_requirements() {
     validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--client-version'] ]]; then
+    validation_output="$(validate_client_version "${args['--client-version']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--client-version CLIENT_VERSION" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -146306,6 +146394,16 @@ playground_run_completion() {
         completion_blocked_flags["--control-center-tag"]=1
 
         ;;
+      --client-version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--client-version"]=1
+
+        ;;
       --connector-tag)
         shift
         if [[ $# -eq 0 ]]; then
@@ -146589,6 +146687,7 @@ playground_run_completion() {
     completion_flag_candidates --schema-registry-tag "$completion_current" --schema-registry-tag
     completion_flag_candidates --ksqldb-tag "$completion_current" --ksqldb-tag
     completion_flag_candidates --control-center-tag "$completion_current" --control-center-tag
+    completion_flag_candidates --client-version "$completion_current" --client-version
     completion_flag_candidates --connector-tag "$completion_current" --connector-tag
     completion_flag_candidates --connector-zip "$completion_current" --connector-zip
     completion_flag_candidates --connector-jar "$completion_current" --connector-jar

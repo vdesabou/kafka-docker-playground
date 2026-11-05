@@ -4786,6 +4786,12 @@ function menu_label () {
   printf '%s %s %*s %s' "$emoji" "$text" "$padding" ' ' "$flag"
 }
 
+# Does the example build a client whose version --client-version (CLIENT_VERSION) sets: a java application built with
+# the Apache Kafka clients (mvn -Dkafka.client.tag=$KAFKA_CLIENT_TAG), or a client example reading CLIENT_VERSION
+function example_uses_client_version () {
+  grep -q "kafka.client.tag\|CLIENT_VERSION" "$1" 2> /dev/null
+}
+
 # playground run: known-bad combinations of the current flags / variables, one
 # "error|<message>" or "warning|<message>" line each. Errors would make the run
 # fail after the environment is started, warnings are combinations that run but
@@ -4812,6 +4818,11 @@ function get_run_flag_combination_problems () {
   if [ -n "$(get_menu_flag_value --control-center-tag)" ] && [ -z "$ENABLE_CONTROL_CENTER" ] && [[ " ${array_flag_list[*]} " != *" --enable-legacy-control-center "* ]]
   then
     echo "warning|--control-center-tag has no effect without --enable-control-center"
+  fi
+
+  if [ -n "$(get_menu_flag_value --client-version)" ] && ! example_uses_client_version "$test_file"
+  then
+    echo "warning|--client-version has no effect: this example builds no client (no java application with the Apache Kafka clients, not a client example)"
   fi
 
   # the flag, not ENABLE_KRAFT: utils.sh exports ENABLE_KRAFT for every CP >= 8, so a run started from a shell that sourced

@@ -42,6 +42,7 @@ Set `CLIENT_VERSION` to build the image with another kafka-clients version than 
 
 ```bash
 CLIENT_VERSION=3.9.1 playground run -f start.sh
+playground run -f start.sh --client-version 3.9.1   # the same, also offered by the interactive menu
 ```
 
 Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`. An old version may not support everything the example uses (the Avro serializer API changed over time).

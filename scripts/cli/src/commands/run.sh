@@ -10,6 +10,7 @@ connect_tag="${args[--connect-tag]}"
 schema_registry_tag="${args[--schema-registry-tag]}"
 ksqldb_tag="${args[--ksqldb-tag]}"
 control_center_tag="${args[--control-center-tag]}"
+client_version="${args[--client-version]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
@@ -444,6 +445,13 @@ then
   export CP_CONTROL_CENTER_TAG=$control_center_tag
 fi
 
+if [[ -n "$client_version" ]]
+then
+  array_flag_list+=("--client-version=$client_version")
+  # read by the client examples, and by set_kafka_client_tag (utils_function.sh) for the java builds
+  export CLIENT_VERSION=$client_version
+fi
+
 if [[ -n "$environment" ]]
 then
   if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
@@ -791,6 +799,7 @@ then
   MENU_SCHEMA_REGISTRY_TAG="$(menu_label "🔰" "CP version (schema registry only)" "--schema-registry-tag")"
   MENU_KSQLDB_TAG="$(menu_label "🎏" "CP version (ksqlDB only)" "--ksqldb-tag")"
   MENU_CONTROL_CENTER_TAG="$(menu_label "💠" "Control Center version" "--control-center-tag")"
+  MENU_CLIENT_VERSION="$(menu_label "☕" "Client version (the client the example builds)" "--client-version")"
   MENU_CONNECTOR_TAG="$(menu_label "🔌" "Connector version" "--connector-tag")"
   MENU_CONNECTOR_ZIP="$(menu_label "🤐" "Connector zip" "--connector-zip")"
   MENU_CONNECTOR_JAR="$(menu_label "🤎" "Connector jar" "--connector-jar")"
@@ -1170,6 +1179,9 @@ then
       # same rule as the --environment flag, and only if the example lets you choose
       if [ "$connector_paths" != "" ] && [ -n "$supported_environments" ]; then group+=("$(menu_value_label "$MENU_ENVIRONMENT" "$(get_menu_flag_value --environment)")"); fi
     fi
+    # only for the examples that build a client: java with the Apache Kafka clients (mvn -Dkafka.client.tag), or the
+    # client examples (CLIENT_VERSION)
+    if example_uses_client_version "$test_file"; then group+=("$(menu_value_label "$MENU_CLIENT_VERSION" "$(get_menu_flag_value --client-version)")"); fi
     add_menu_group "$MENU_SEPARATOR" "${group[@]}"
 
     toggle_group=()
@@ -1500,6 +1512,26 @@ then
         export CP_CONTROL_CENTER_TAG=$control_center_tag
       else
         unset CP_CONTROL_CENTER_TAG
+      fi
+    fi
+
+    if [[ $res == *"$MENU_CLIENT_VERSION"* ]]
+    then
+      maybe_remove_flag "--client-version"
+      set +e
+      client_version=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="☕" --header="Enter the version of the client the example builds (java: the Apache Kafka version, for example 3.7.1; client examples: see their README), empty for the default" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
+      set -e
+      if [ -n "$client_version" ] && [ -n "$(validate_client_version "$client_version")" ]
+      then
+        logwarn "❌ --client-version $client_version ignored: $(validate_client_version "$client_version")"
+        client_version=""
+      fi
+      if [ -n "$client_version" ]
+      then
+        array_flag_list+=("--client-version=$client_version")
+        export CLIENT_VERSION=$client_version
+      else
+        unset CLIENT_VERSION
       fi
     fi
 

@@ -42,6 +42,7 @@ Set `CLIENT_VERSION` to build the image with another @confluentinc/kafka-javascr
 
 ```bash
 CLIENT_VERSION=1.6.0 playground run -f start.sh
+playground run -f start.sh --client-version 1.6.0   # the same, also offered by the interactive menu
 ```
 
 Empty or unset: the default version. The client prints its version when it starts, check it in the output. The image is the one of [other/client-javascript](../../other/client-javascript/), built with `docker build --build-arg CLIENT_VERSION`. An old version may not support everything the example uses (the Avro serializer API changed over time).

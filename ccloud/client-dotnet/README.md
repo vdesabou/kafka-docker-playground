@@ -79,6 +79,7 @@ Set `CLIENT_VERSION` to build the image with another Confluent.Kafka and Conflue
 
 ```bash
 CLIENT_VERSION=2.10.1 playground run -f start.sh
+playground run -f start.sh --client-version 2.10.1   # the same, also offered by the interactive menu
 ```
 
 Empty or unset: the default version. The client prints its version when it starts, check it in the output. The image is the one of [other/client-dotnet](../../other/client-dotnet/), built with `docker build --build-arg CLIENT_VERSION`. An old version may not support everything the example uses (the Avro serializer API changed over time).

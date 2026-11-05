@@ -113,10 +113,18 @@ function yq() {
 
 # Apache Kafka version of the java clients that some examples build (mvn -Dkafka.client.tag=$KAFKA_CLIENT_TAG): derived
 # from the CP version (CP 5.y = AK 2.y, 6.y = 2.(y+6), 7.y = 3.y, 8.y = 4.y…), so a new CP version needs no change here.
-# A new CP release can come before its AK release on Maven Central: then the newest published X.Y.0 below is used
+# A new CP release can come before its AK release on Maven Central: then the newest published X.Y.0 below is used.
+# CLIENT_VERSION (playground run --client-version) wins over all of this
 function set_kafka_client_tag()
 {
     local cp_major cp_minor ak_major ak_minor
+    # playground run --client-version (or CLIENT_VERSION exported): the exact version asked for (a patch version like
+    # 3.7.1, or a version that differs from the brokers), no derivation and no fallback
+    if [ -n "$CLIENT_VERSION" ]
+    then
+      export KAFKA_CLIENT_TAG="$CLIENT_VERSION"
+      return
+    fi
     cp_major=$(echo "$TAG_BASE" | cut -d '.' -f 1)
     cp_minor=$(echo "$TAG_BASE" | cut -d '.' -f 2)
     if ! [[ "$cp_major" =~ ^[0-9]+$ ]] || ! [[ "$cp_minor" =~ ^[0-9]+$ ]] || [ "$cp_major" -lt 5 ]
