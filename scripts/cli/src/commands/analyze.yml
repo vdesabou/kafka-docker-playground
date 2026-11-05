@@ -132,8 +132,8 @@ commands:
 
     ⏳ A large file (20 MB or more) shows a progress bar in the terminal
     (MB read, speed, ETA), and with 20 MB or more of input the report opens
-    in the browser right away as a progress page (step, MB read, elapsed
-    time) that becomes the report when the analysis ends. The last line
+    in the browser right away as a progress page (step, a bar for the file
+    being read and one for the whole input, elapsed time, speed, ETA of the file and of the whole input) that becomes the report when the analysis ends. The last line
     gives the size read and the time it took. An archive (.tar, .tar.gz,
     .tgz…) shows a bar while it is extracted.
 

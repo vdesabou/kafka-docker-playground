@@ -209,7 +209,9 @@ The same overview is the 🔭 **Overview** section of the HTML report and `.over
 ⏳ **Large inputs.** A file of 20 MB or more shows a bar in the terminal while it is converted and read
 (`⏳ <file> ▕████████████████░░░░░░░░░▏  66% 202.0 MB/308.4 MB 19.2 MB/s ETA 0:05`). With 20 MB or more of input in an
 interactive terminal, the report is opened in the browser right away (`🌐 Opening <report> in browser: it shows the
-progress, then the report`): a page with the step, the MB read and the time elapsed, reloaded every 2 s, which becomes
+progress, then the report`): a page with the step, a bar for the file being read (same as the terminal: %, MB, speed,
+ETA), a second one for the whole input (an archive counts for its content once extracted), tiles for the elapsed time, the speed, the
+ETA of the file and of the whole input (🏁 `~1:13`: the average rate since the start applied to what is left, an estimate) and the files done, with the look of the reports, reloaded every 2 s, which becomes
 the report at the end (written next to it then renamed, so the page never loads half a report). The last line says how
 much was read and how long it took: `📊 1 file(s) with findings out of 2 scanned, 2.4 GB read in 0 min 28 s`.
 An archive (`.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`) shows a bar while it is extracted, and the page shows each

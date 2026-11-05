@@ -4491,36 +4491,38 @@ subcommands:
       connector and client configs…) and the .properties\nand connector JSON files
       of the input.\n\n⏳ A large file (20 MB or more) shows a progress bar in the
       terminal\n(MB read, speed, ETA), and with 20 MB or more of input the report
-      opens\nin the browser right away as a progress page (step, MB read, elapsed\ntime)
-      that becomes the report when the analysis ends. The last line\ngives the size
-      read and the time it took. An archive (.tar, .tar.gz,\n.tgz…) shows a bar while
-      it is extracted.\n\n\U0001F5C2️ One tab in the browser: with CFK support bundles
-      in the input, their\nreports and their comparison are written but not opened
-      one by one, the\nlog report links them in a ☸️ CFK support bundles section.
-      With only CFK\nbundles, the report of the bundle (or the comparison of several)
-      is the\none opened. Several CFK bundles are analyzed in parallel, 4 at a time\n(PLAYGROUND_CFK_PARALLELISM
-      to change it), their output printed in order.\n\n☸️ A Confluent for Kubernetes
-      (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk
-      generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
-      and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log
-      or the YAML of a platform.confluent.io custom resource at its top), alone or
-      inside a folder or an archive, is detected and analyzed as a whole, in a Docker
-      image built on first use: Warning events, pods (phase, waiting reasons, restarts,
-      OOMKilled), every platform.confluent.io custom resource (phase/state, ready
-      replicas, False conditions, failed connector tasks), the environment checked
-      against the CFK support matrix (Kubernetes, CFK operator, CP and init container
-      versions), the recent changes (who edited which CR and when, StatefulSet rollouts,
-      pod restarts), the configuration (kafka.properties, zookeeper.properties, schemaregistry.properties,
-      connect.properties and controlcenter.properties rendered by CFK, configOverrides,
-      config logged at startup, connector configs from the Connector CRs and the config
-      dumps of the logs), a JVM default truststore set without its password, and the
-      ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS,
-      auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation
-      steps. \U0001F4D5 The log messages and events of known CFK problems (CFK triage
-      table of Confluent support: roll blocked by the pre-roll checks, expired certificate,
-      INCONSISTENT_CLUSTER_ID, ZooKeeper to KRaft migration, authorizer timeout, license
-      secret…) are listed first, with what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE
-      adds the internal runbook links of Confluent support (\U0001F512 in the terminal,
+      opens\nin the browser right away as a progress page (step, a bar for the file\nbeing
+      read and one for the whole input, elapsed time, speed, ETA of the file and of
+      the whole input) that becomes the report when the analysis ends. The last line\ngives
+      the size read and the time it took. An archive (.tar, .tar.gz,\n.tgz…) shows
+      a bar while it is extracted.\n\n\U0001F5C2️ One tab in the browser: with CFK
+      support bundles in the input, their\nreports and their comparison are written
+      but not opened one by one, the\nlog report links them in a ☸️ CFK support bundles
+      section. With only CFK\nbundles, the report of the bundle (or the comparison
+      of several) is the\none opened. Several CFK bundles are analyzed in parallel,
+      4 at a time\n(PLAYGROUND_CFK_PARALLELISM to change it), their output printed
+      in order.\n\n☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent
+      support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt,
+      or with cluster-resources/ and operator/; or a flat collection of kubectl outputs
+      with a confluent-operator-*.log or the YAML of a platform.confluent.io custom
+      resource at its top), alone or inside a folder or an archive, is detected and
+      analyzed as a whole, in a Docker image built on first use: Warning events, pods
+      (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom
+      resource (phase/state, ready replicas, False conditions, failed connector tasks),
+      the environment checked against the CFK support matrix (Kubernetes, CFK operator,
+      CP and init container versions), the recent changes (who edited which CR and
+      when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
+      zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties
+      rendered by CFK, configOverrides, config logged at startup, connector configs
+      from the Connector CRs and the config dumps of the logs), a JVM default truststore
+      set without its password, and the ERROR/FATAL records of its logs, sorted into
+      ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,
+      storage, scheduling…) with remediation steps. \U0001F4D5 The log messages and
+      events of known CFK problems (CFK triage table of Confluent support: roll blocked
+      by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper
+      to KRaft migration, authorizer timeout, license secret…) are listed first, with
+      what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds
+      the internal runbook links of Confluent support (\U0001F512 in the terminal,
       the HTML report and --json). \U0001F504 A CR whose image is not what its StatefulSet
       or pods run (operator did not apply it, roll not complete) is one finding, the
       exceeded quota events become one finding per ResourceQuota, each Warning event

@@ -23,8 +23,9 @@ of a multi-line message are indented, except exception lines and `Caused by:`.
 ## Progress of large inputs
 
 `progress.py` shows the progress of a large input: `cat` copies stdin to the digest with a bar on stderr (terminal
-only, 20 MB or more), `page` writes the 🔄 progress page opened in the browser at the path of the report (reloaded
-every 2 s; `log_report.py` writes the report next to it then renames it), `size` and `human` give the size of the
+only, 20 MB or more), `page` writes the 🔄 progress page opened in the browser at the path of the report (the stylesheet and header of
+`report_html.py`: a bar for the file being read, as in the terminal, one for the whole input, where an archive counts for its
+content once extracted, and tiles; reloaded every 2 s; `log_report.py` writes the report next to it then renames it), `size` and `human` give the size of the
 input. The page and the overall progress come from `PG_PROGRESS_*` variables exported by `analyze logs`; the
 `Progress` class is also used by `json_log_export.py` while it converts a large file.
 
