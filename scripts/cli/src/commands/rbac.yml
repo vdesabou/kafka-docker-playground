@@ -2,15 +2,17 @@ name: rbac
 expose: always
 group: RBAC
 help: |-
-  🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)
+  🛡️ RBAC commands (rbac-sasl-plain, rbac-oauth and cfk-rbac environments, plus Confluent Cloud ACLs)
 
-  Change permissions of the running rbac-sasl-plain or cfk-rbac environment
-  without opening a shell in a container: the commands call the MDS REST API
-  (http://localhost:8091, a port-forward to the kafka service on cfk-rbac) as
-  superUser.
+  Change permissions of the running rbac-sasl-plain, rbac-oauth or cfk-rbac
+  environment without opening a shell in a container: the commands call the
+  MDS REST API (http://localhost:8091, a port-forward to the kafka service on
+  cfk-rbac) as superUser, or with a bearer token of the Keycloak client
+  superuser on rbac-oauth.
 
     role-binding   create, delete and list role bindings
-    user           add, delete and list LDAP users and their groups
+    user           add, delete and list LDAP users and their groups (Keycloak
+                   clients and groups on rbac-oauth)
     acl            create, delete and list ACLs (MDS centralized ACLs, or
                    regular Kafka ACLs with --kafka-acls). On a Confluent
                    Cloud run, ACLs of the Confluent Cloud cluster
@@ -91,7 +93,8 @@ commands:
           help: |-
             📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]
 
-            See environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format.
+            See environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format
+            (environment/rbac-oauth/role-bindings.txt on rbac-oauth).
         - import: src/flags/verbose.yml
         examples:
         - playground rbac role-binding create --principal User:alice --role DeveloperRead --resource Topic:orders
@@ -166,22 +169,28 @@ commands:
     filters:
     - rbac_environment
     help: |-
-      🧑 LDAP user commands
+      🧑 LDAP user commands (Keycloak clients on rbac-oauth)
 
       Users live in the openldap container. They authenticate on the broker
       with SASL/PLAIN (their LDAP password) and log in to MDS, Control
       Center, Schema Registry and Connect REST API with basic auth.
       Changes apply to the running environment, without restart.
+
+      On rbac-oauth, users are the clients of the Keycloak realm kafka
+      (client_credentials grant): --user is the client id, --password its
+      secret, --group a Keycloak group (groups claim of the token, principal
+      Group:<group>).
     commands:
 
       - name: add
         group: RBAC
         help: |-
-          ➕ Add an LDAP user
+          ➕ Add an LDAP user (a Keycloak client on rbac-oauth)
 
           The user can connect right away. MDS picks up new group
           memberships (for Group:<name> role bindings) within its LDAP
-          refresh interval (60 seconds by default).
+          refresh interval (60 seconds by default). On rbac-oauth, the
+          groups are in the next token of the client.
         flags:
         - &rbac-user
           long: --user
@@ -209,11 +218,12 @@ commands:
         examples:
         - playground rbac user add --user bob
         - playground rbac user add --user bob --password bob-pwd --group KafkaDevelopers
+        - playground rbac user add --user carol --group kafka-developers   # rbac-oauth: Keycloak client carol, secret carol-secret
 
       - name: delete
         group: RBAC
         help: |-
-          🗑️ Delete an LDAP user, and remove it from its groups
+          🗑️ Delete an LDAP user, and remove it from its groups (the Keycloak client on rbac-oauth)
 
           Its role bindings and ACLs are not deleted.
         flags:
@@ -225,7 +235,7 @@ commands:
       - name: list
         group: RBAC
         help: |-
-          📋 List LDAP users and their groups
+          📋 List LDAP users and their groups (Keycloak clients, secrets and groups on rbac-oauth)
         flags:
         - import: src/flags/verbose.yml
         examples:

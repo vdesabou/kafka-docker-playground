@@ -850,7 +850,7 @@
             "--environment"
           ],
           "argument": "ENVIRONMENT",
-          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- cfk\n- cfk-rbac\n- 2way-ssl\n- kerberos\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-oauthbearer\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is PLAYGROUND_ENVIRONMENT when it is exported in your shell (it is then\nadded to the flags of the run), plaintext otherwise. Not available with\nccloud examples (they run against Confluent Cloud).\nThis is only supported when example is a connector example\n\nAllowed values: ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, sasl-oauthbearer"
+          "description": "🔐 The environment to start when running a connector example \n\n- plaintext\n- ccloud\n- cfk\n- cfk-rbac\n- 2way-ssl\n- kerberos\n- ldap-authorizer-sasl-plain\n- ldap-sasl-plain\n- rbac-sasl-plain\n- rbac-oauth\n- sasl-oauthbearer\n- sasl-plain\n- sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is PLAYGROUND_ENVIRONMENT when it is exported in your shell (it is then\nadded to the flags of the run), plaintext otherwise. Not available with\nccloud examples (they run against Confluent Cloud).\nThis is only supported when example is a connector example\n\nAllowed values: ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain, rbac-oauth, sasl-oauthbearer"
         },
         {
           "names": [
@@ -9112,7 +9112,7 @@
     },
     {
       "name": "rbac",
-      "description": "🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)\n\nChange permissions of the running rbac-sasl-plain or cfk-rbac environment\nwithout opening a shell in a container: the commands call the MDS REST API\n(http://localhost:8091, a port-forward to the kafka service on cfk-rbac) as\nsuperUser.\n\n  role-binding   create, delete and list role bindings\n  user           add, delete and list LDAP users and their groups\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls). On a Confluent\n                 Cloud run, ACLs of the Confluent Cloud cluster\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac",
+      "description": "🛡️ RBAC commands (rbac-sasl-plain, rbac-oauth and cfk-rbac environments, plus Confluent Cloud ACLs)\n\nChange permissions of the running rbac-sasl-plain, rbac-oauth or cfk-rbac\nenvironment without opening a shell in a container: the commands call the\nMDS REST API (http://localhost:8091, a port-forward to the kafka service on\ncfk-rbac) as superUser, or with a bearer token of the Keycloak client\nsuperuser on rbac-oauth.\n\n  role-binding   create, delete and list role bindings\n  user           add, delete and list LDAP users and their groups (Keycloak\n                 clients and groups on rbac-oauth)\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls). On a Confluent\n                 Cloud run, ACLs of the Confluent Cloud cluster\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac",
       "usage": "playground rbac COMMAND",
       "options": [],
       "subcommands": [
@@ -9169,7 +9169,7 @@
                     "--file"
                   ],
                   "argument": "FILE",
-                  "description": "📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]\n\nSee environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format."
+                  "description": "📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]\n\nSee environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format\n(environment/rbac-oauth/role-bindings.txt on rbac-oauth)."
                 },
                 {
                   "names": [
@@ -9267,13 +9267,13 @@
         },
         {
           "name": "user",
-          "description": "🧑 LDAP user commands\n\nUsers live in the openldap container. They authenticate on the broker\nwith SASL/PLAIN (their LDAP password) and log in to MDS, Control\nCenter, Schema Registry and Connect REST API with basic auth.\nChanges apply to the running environment, without restart.",
+          "description": "🧑 LDAP user commands (Keycloak clients on rbac-oauth)\n\nUsers live in the openldap container. They authenticate on the broker\nwith SASL/PLAIN (their LDAP password) and log in to MDS, Control\nCenter, Schema Registry and Connect REST API with basic auth.\nChanges apply to the running environment, without restart.\n\nOn rbac-oauth, users are the clients of the Keycloak realm kafka\n(client_credentials grant): --user is the client id, --password its\nsecret, --group a Keycloak group (groups claim of the token, principal\nGroup:<group>).",
           "usage": "playground rbac user COMMAND",
           "options": [],
           "subcommands": [
             {
               "name": "add",
-              "description": "➕ Add an LDAP user\n\nThe user can connect right away. MDS picks up new group\nmemberships (for Group:<name> role bindings) within its LDAP\nrefresh interval (60 seconds by default).",
+              "description": "➕ Add an LDAP user (a Keycloak client on rbac-oauth)\n\nThe user can connect right away. MDS picks up new group\nmemberships (for Group:<name> role bindings) within its LDAP\nrefresh interval (60 seconds by default). On rbac-oauth, the\ngroups are in the next token of the client.",
               "usage": "playground rbac user add [OPTIONS]",
               "options": [
                 {
@@ -9311,7 +9311,7 @@
             },
             {
               "name": "delete",
-              "description": "🗑️ Delete an LDAP user, and remove it from its groups\n\nIts role bindings and ACLs are not deleted.",
+              "description": "🗑️ Delete an LDAP user, and remove it from its groups (the Keycloak client on rbac-oauth)\n\nIts role bindings and ACLs are not deleted.",
               "usage": "playground rbac user delete [OPTIONS]",
               "options": [
                 {
@@ -9334,7 +9334,7 @@
             },
             {
               "name": "list",
-              "description": "📋 List LDAP users and their groups",
+              "description": "📋 List LDAP users and their groups (Keycloak clients, secrets and groups on rbac-oauth)",
               "usage": "playground rbac user list [OPTIONS]",
               "options": [
                 {

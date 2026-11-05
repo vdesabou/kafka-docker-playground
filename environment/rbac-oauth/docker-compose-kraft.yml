@@ -1,0 +1,38 @@
+---
+# KRaft controllers of the rbac-oauth environment: Confluent Server Authorizer, MDS reads the role bindings
+# from the brokers with SASL/PLAIN (static user admin). The CONTROLLER listener is PLAINTEXT: the brokers
+# connect as User:ANONYMOUS
+x-controller-environment: &controller-environment
+    KAFKA_METRIC_REPORTERS: ""
+    KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+    KAFKA_SUPER_USERS: User:admin;User:superuser;User:ANONYMOUS
+    KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT,KRAFT_ACL
+    KAFKA_CONFLUENT_METADATA_SERVER_KRAFT_CONTROLLER_ENABLED: "true"
+    KAFKA_CONFLUENT_METADATA_BOOTSTRAP_SERVERS: broker:9092
+    KAFKA_CONFLUENT_METADATA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+    KAFKA_CONFLUENT_METADATA_SASL_MECHANISM: PLAIN
+    KAFKA_CONFLUENT_METADATA_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret";
+
+services:
+
+  controller:
+    environment: *controller-environment
+
+  controller2:
+    environment: *controller-environment
+
+  controller3:
+    environment: *controller-environment
+
+  broker:
+    environment:
+      # org.apache.kafka.common.KafkaException: Class io.confluent.metrics.reporter.ConfluentMetricsReporter cannot be found
+      KAFKA_METRIC_REPORTERS: ""
+
+  broker2:
+    environment:
+      KAFKA_METRIC_REPORTERS: ""
+
+  broker3:
+    environment:
+      KAFKA_METRIC_REPORTERS: ""

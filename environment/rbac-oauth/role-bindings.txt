@@ -1,0 +1,74 @@
+# Default role bindings of the rbac-oauth environment, created by start.sh with:
+#   playground rbac role-binding create --file role-bindings.txt
+#
+# One role binding per line: <principal> <role> <resource> [prefix] [scope=<scope>]
+#   resource  <ResourceType>:<name>, or - for a role bound on the whole cluster
+#   prefix    the resource name is a prefix (PREFIXED pattern)
+#   scope     kafka, schema-registry, connect or ksqldb. If not set, it is deduced from the resource type:
+#             Subject is schema-registry, Connector is connect, KsqlCluster is ksqldb, anything else is kafka
+#
+# Principals are Keycloak clients (User:<client id>, from the azp claim) and Keycloak groups (Group:<group>, from
+# the groups claim). Cluster names: kafka-cluster (Kafka), schema-registry, connect-cluster, ksql-cluster
+
+# super user: playground CLI (MDS, Connect and Schema Registry REST APIs, kafka-* tools)
+User:superuser                      SystemAdmin     -
+User:superuser                      SystemAdmin     -                                   scope=schema-registry
+User:superuser                      SystemAdmin     -                                   scope=connect
+User:superuser                      SystemAdmin     -                                   scope=ksqldb
+
+# schema registry
+User:schemaregistry                 SecurityAdmin   -                                   scope=schema-registry
+User:schemaregistry                 ResourceOwner   Topic:_schemas
+User:schemaregistry                 ResourceOwner   Group:schema-registry
+User:schemaregistry                 DeveloperRead   Topic:_confluent-license
+User:schemaregistry                 DeveloperWrite  Topic:_confluent-license
+User:schemaregistry                 ResourceOwner   Topic:_confluent-command
+User:schemaregistry                 ResourceOwner   Topic:_exporter_configs
+User:schemaregistry                 ResourceOwner   Topic:_exporter_states
+
+# connect workers
+User:connect                        SecurityAdmin   -                                   scope=connect
+User:connect                        ResourceOwner   Topic:connect-configs
+User:connect                        ResourceOwner   Topic:connect-offsets
+User:connect                        ResourceOwner   Topic:connect-status
+User:connect                        ResourceOwner   Group:connect-cluster
+User:connect                        ResourceOwner   Topic:_confluent-monitoring
+User:connect                        ResourceOwner   Topic:_confluent-command
+# exactly-once source connectors (KIP-618)
+User:connect                        ResourceOwner   TransactionalId:connect-cluster-connect-cluster
+# enable.idempotence=true requires IdempotentWrite
+User:connect                        DeveloperWrite  Cluster:kafka-cluster
+
+# connectors run as the Keycloak client connector ('playground connector create-or-update' adds
+# producer.override / consumer.override / admin.override.sasl.jaas.config and the converters' bearer.auth.* keys)
+User:connector                      ResourceOwner   Topic:*
+User:connector                      ResourceOwner   Group:*
+User:connector                      ResourceOwner   Subject:*
+User:connector                      ResourceOwner   TransactionalId:*
+User:connector                      DeveloperWrite  Cluster:kafka-cluster
+
+# ksqlDB server
+User:ksqldb                         ResourceOwner   KsqlCluster:ksql-cluster
+User:ksqldb                         ResourceOwner   Group:_confluent-ksql-ksql-cluster  prefix
+User:ksqldb                         ResourceOwner   Topic:_confluent-ksql-ksql-cluster  prefix
+User:ksqldb                         ResourceOwner   Subject:_confluent-ksql-ksql-cluster prefix
+User:ksqldb                         ResourceOwner   Topic:_confluent-monitoring
+User:ksqldb                         ResourceOwner   Topic:ksql-clusterksql_processing_log
+User:ksqldb                         ResourceOwner   TransactionalId:ksql-cluster
+User:ksqldb                         DeveloperWrite  Cluster:kafka-cluster
+# DescribeConfigs on the cluster, required by CREATE STREAM/TABLE
+User:ksqldb                         DeveloperManage Cluster:kafka-cluster
+# queries run with the ksqlDB server principal: it needs every topic and subject used by the users
+User:ksqldb                         ResourceOwner   Topic:*
+User:ksqldb                         ResourceOwner   Subject:*
+
+# Schema Registry access of 'playground topic produce|consume' (the Kafka side uses superuser, client.properties)
+User:client                         ResourceOwner   Subject:*
+
+# group-based role bindings: alice and bob are in the Keycloak group kafka-developers (groups claim)
+Group:kafka-developers              DeveloperRead   Topic:app                           prefix
+Group:kafka-developers              DeveloperWrite  Topic:app                           prefix
+Group:kafka-developers              DeveloperRead   Group:app                           prefix
+# alice can also manage every topic
+User:alice                          ResourceOwner   Topic:*
+# badapp has no role binding

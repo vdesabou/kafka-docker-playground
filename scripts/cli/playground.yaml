@@ -969,14 +969,14 @@ subcommands:
     argument: ENVIRONMENT
     description: "\U0001F510 The environment to start when running a connector example
       \n\n- plaintext\n- ccloud\n- cfk\n- cfk-rbac\n- 2way-ssl\n- kerberos\n- ldap-authorizer-sasl-plain\n-
-      ldap-sasl-plain\n- rbac-sasl-plain\n- sasl-oauthbearer\n- sasl-plain\n- sasl-scram\n-
-      sasl-ssl\n- ssl_kerberos\n\nDefault is PLAYGROUND_ENVIRONMENT when it is exported
-      in your shell (it is then\nadded to the flags of the run), plaintext otherwise.
-      Not available with\nccloud examples (they run against Confluent Cloud).\nThis
-      is only supported when example is a connector example\n\nAllowed values: ccloud,
-      cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos,
-      ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain,
-      sasl-oauthbearer"
+      ldap-sasl-plain\n- rbac-sasl-plain\n- rbac-oauth\n- sasl-oauthbearer\n- sasl-plain\n-
+      sasl-scram\n- sasl-ssl\n- ssl_kerberos\n\nDefault is PLAYGROUND_ENVIRONMENT
+      when it is exported in your shell (it is then\nadded to the flags of the run),
+      plaintext otherwise. Not available with\nccloud examples (they run against Confluent
+      Cloud).\nThis is only supported when example is a connector example\n\nAllowed
+      values: ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram,
+      kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain,
+      rbac-oauth, sasl-oauthbearer"
   - names:
     - "--file"
     - "-f"
@@ -9035,12 +9035,14 @@ subcommands:
       argument: ''
       description: "\U0001F41E Show command being ran."
 - name: rbac
-  description: "\U0001F6E1️ RBAC commands (rbac-sasl-plain and cfk-rbac environments,
-    plus Confluent Cloud ACLs)\n\nChange permissions of the running rbac-sasl-plain
-    or cfk-rbac environment\nwithout opening a shell in a container: the commands
-    call the MDS REST API\n(http://localhost:8091, a port-forward to the kafka service
-    on cfk-rbac) as\nsuperUser.\n\n  role-binding   create, delete and list role bindings\n
-    \ user           add, delete and list LDAP users and their groups\n  acl            create,
+  description: "\U0001F6E1️ RBAC commands (rbac-sasl-plain, rbac-oauth and cfk-rbac
+    environments, plus Confluent Cloud ACLs)\n\nChange permissions of the running
+    rbac-sasl-plain, rbac-oauth or cfk-rbac\nenvironment without opening a shell in
+    a container: the commands call the\nMDS REST API (http://localhost:8091, a port-forward
+    to the kafka service on\ncfk-rbac) as superUser, or with a bearer token of the
+    Keycloak client\nsuperuser on rbac-oauth.\n\n  role-binding   create, delete and
+    list role bindings\n  user           add, delete and list LDAP users and their
+    groups (Keycloak\n                 clients and groups on rbac-oauth)\n  acl            create,
     delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka
     ACLs with --kafka-acls). On a Confluent\n                 Cloud run, ACLs of the
     Confluent Cloud cluster\n\n\U0001F393 Tip: principals are User:<name> or Group:<name>,
@@ -9098,7 +9100,8 @@ subcommands:
         argument: FILE
         description: "\U0001F4C4 Create all the role bindings of a file, one per line:
           <principal> <role> <resource or -> [prefix] [scope=<scope>]\n\nSee environment/rbac-sasl-plain/role-bindings.txt
-          (the default role bindings) for the format."
+          (the default role bindings) for the format\n(environment/rbac-oauth/role-bindings.txt
+          on rbac-oauth)."
       - names:
         - "--verbose"
         - "-v"
@@ -9168,20 +9171,24 @@ subcommands:
         argument: ''
         description: "\U0001F41E Show command being ran."
   - name: user
-    description: "\U0001F9D1 LDAP user commands\n\nUsers live in the openldap container.
-      They authenticate on the broker\nwith SASL/PLAIN (their LDAP password) and log
-      in to MDS, Control\nCenter, Schema Registry and Connect REST API with basic
-      auth.\nChanges apply to the running environment, without restart."
+    description: "\U0001F9D1 LDAP user commands (Keycloak clients on rbac-oauth)\n\nUsers
+      live in the openldap container. They authenticate on the broker\nwith SASL/PLAIN
+      (their LDAP password) and log in to MDS, Control\nCenter, Schema Registry and
+      Connect REST API with basic auth.\nChanges apply to the running environment,
+      without restart.\n\nOn rbac-oauth, users are the clients of the Keycloak realm
+      kafka\n(client_credentials grant): --user is the client id, --password its\nsecret,
+      --group a Keycloak group (groups claim of the token, principal\nGroup:<group>)."
     usage: playground rbac user COMMAND
     options: []
     subcommands:
     - name: add
       description: |-
-        ➕ Add an LDAP user
+        ➕ Add an LDAP user (a Keycloak client on rbac-oauth)
 
         The user can connect right away. MDS picks up new group
         memberships (for Group:<name> role bindings) within its LDAP
-        refresh interval (60 seconds by default).
+        refresh interval (60 seconds by default). On rbac-oauth, the
+        groups are in the next token of the client.
       usage: playground rbac user add [OPTIONS]
       options:
       - names:
@@ -9207,8 +9214,9 @@ subcommands:
         argument: ''
         description: "\U0001F41E Show command being ran."
     - name: delete
-      description: "\U0001F5D1️ Delete an LDAP user, and remove it from its groups\n\nIts
-        role bindings and ACLs are not deleted."
+      description: "\U0001F5D1️ Delete an LDAP user, and remove it from its groups
+        (the Keycloak client on rbac-oauth)\n\nIts role bindings and ACLs are not
+        deleted."
       usage: playground rbac user delete [OPTIONS]
       options:
       - names:
@@ -9223,7 +9231,8 @@ subcommands:
         argument: ''
         description: "\U0001F41E Show command being ran."
     - name: list
-      description: "\U0001F4CB List LDAP users and their groups"
+      description: "\U0001F4CB List LDAP users and their groups (Keycloak clients,
+        secrets and groups on rbac-oauth)"
       usage: playground rbac user list [OPTIONS]
       options:
       - names:

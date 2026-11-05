@@ -9,7 +9,7 @@ the CLI then talks to the secured cluster for you.
 
 ```bash
 # the same example, under the customer's security: sasl-plain, sasl-scram, sasl-ssl, 2way-ssl, sasl-oauthbearer,
-# kerberos, ssl_kerberos, ldap-sasl-plain, ldap-authorizer-sasl-plain, rbac-sasl-plain, cfk, cfk-rbac…
+# kerberos, ssl_kerberos, ldap-sasl-plain, ldap-authorizer-sasl-plain, rbac-sasl-plain, rbac-oauth, cfk, cfk-rbac…
 playground run -f "$PWD/connect/connect-filestream-sink/filestream-sink.sh" --environment rbac-sasl-plain
 
 playground container get-properties -c broker                  # what the component really loaded (listeners, JAAS, authorizer)
@@ -41,6 +41,7 @@ Every security example: `playground find-example --category security --limit 50`
 | `TopicAuthorizationException` with RBAC | `--environment rbac-sasl-plain`, `rbac role-binding delete --principal User:connectorSA …` to reproduce it on purpose, `--rbac-role-bindings-file` to start with the customer's bindings |
 | ACLs: centralized (MDS) or Kafka ACLs, DENY vs role binding | `playground rbac acl create\|list\|delete` (`--kafka-acls` for Kafka ACLs), example [other/rbac-centralized-acls](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-centralized-acls) |
 | OAuth / OIDC: `invalid_token`, key rotation, issuer or audience mismatch | `--environment sasl-oauthbearer` (Keycloak), recipes in [environment/sasl-oauthbearer](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-oauthbearer) |
+| RBAC with OAuth / OIDC (MDS with an external identity provider, no LDAP): `Group:` role binding from the `groups` claim, REST API `401`, connector principal | `--environment rbac-oauth` (Keycloak), `playground rbac user add --user <client> --group <group>` adds a Keycloak client, recipes in [environment/rbac-oauth](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-oauth) |
 | Kerberos principal or ticket errors | `--environment kerberos` (or `ssl_kerberos`) |
 | Users and groups in LDAP | `--environment ldap-sasl-plain`, `ldap-authorizer-sasl-plain`, examples [other/ldap-authorizer-with-ldap-failover](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/ldap-authorizer-with-ldap-failover), [other/rbac-with-azure-ad](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-azure-ad) |
 | `PKIX path building failed`, expired certificate, hostname mismatch | `playground tools cert inspect --file <certificate or keystore> --truststore <truststore> --hostname <host>` (or `--server <host:port>`) |
