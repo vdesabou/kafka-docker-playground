@@ -64,12 +64,71 @@ fi
 export PG_LOG_DIGEST_CONNECTORS="${connector_array[*]}"
 export PG_LOG_DIGEST_WITH_WORKER="$with_worker"
 
+# bytes of a file (0 when it cannot be read)
+function file_size () {
+    wc -c < "$1" 2>/dev/null | tr -d ' ' || echo 0
+}
+
+function file_size_human () {
+    python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$(file_size "$1")" 2>/dev/null
+}
+
+# a step of the 🔄 progress page open in the browser (none without it)
+function progress_step () {
+    if [ -n "${PG_PROGRESS_HTML:-}" ]
+    then
+        python3 -I "$root_folder/tools/log-analyzer/progress.py" page --step "$1" 2>/dev/null || true
+    fi
+}
+
+analyze_started=$SECONDS
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+
+# 🔄 large inputs (20 MB or more), in an interactive terminal: the report is opened in the browser right away, as a
+# progress page (step, bytes read, elapsed time) that reloads every 2 s until the report replaces it at the same path
+# (tools/log-analyzer/progress.py). Ended by an EXIT trap when there is no log report (only CFK bundles, failure)
+progress_page=""
+function finish_progress_page () {
+    if [ -n "$progress_page" ] && [ -f "$progress_page" ] && grep -q "Log Analysis in progress" "$progress_page" 2>/dev/null
+    then
+        printf '%s\n' '<!DOCTYPE html><html><head><meta charset="utf-8"><title>playground analyze logs</title></head>' \
+            '<body style="font-family: sans-serif; margin: 4rem auto; max-width: 46rem">' \
+            '<h1>🔥 Log Analysis ended without a log report</h1>' \
+            '<p>A CFK support bundle has its own report, or the analysis stopped: see the terminal.</p></body></html>' > "$progress_page"
+    fi
+}
 if [ -z "$PG_VERBOSE_MODE" ]
 then
-    trap 'rm -rf $tmp_dir' EXIT
+    trap 'finish_progress_page; rm -rf $tmp_dir' EXIT
 else
+    trap 'finish_progress_page' EXIT
     log "🐛📂 not deleting tmp dir $tmp_dir"
+fi
+if [[ -z "$json_out" ]] && { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] \
+    && command -v python3 > /dev/null 2>&1 && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+then
+    read -r input_total_bytes input_total_files input_has_archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "${file_array[@]}" 2>/dev/null || echo "0 0 1")
+    if [ "${input_total_bytes:-0}" -ge $((20 * 1024 * 1024)) ]
+    then
+        mkdir -p "$output_dir"
+        report_stem=$(basename "${file_array[0]%/}")
+        report_stem="${report_stem%%.*}"
+        progress_page="$(cd "$output_dir" && pwd)/${report_stem}-log-report.html"
+        export PG_PROGRESS_HTML="$progress_page" PG_PROGRESS_TITLE="playground analyze logs ${file_array[*]}" PG_PROGRESS_STARTED="$(date +%s)"
+        # the bar and the file count of the page are exact only without archives (extracted on the way)
+        if [ "${input_has_archive:-1}" == "0" ]
+        then
+            export PG_PROGRESS_TOTAL="$input_total_files" PG_PROGRESS_TOTAL_BYTES="$input_total_bytes"
+        fi
+        progress_step "🔎 starting: $(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$input_total_bytes") to analyze"
+        log "🌐 Opening $progress_page in browser: it shows the progress, then the report"
+        if command -v open > /dev/null 2>&1
+        then
+            open "$progress_page"
+        else
+            xdg-open "$progress_page" > /dev/null 2>&1 || true
+        fi
+    fi
 fi
 
 # every distinct record, for the HTML report and --json (see summarize_log_errors)
@@ -84,6 +143,7 @@ sources_file="$tmp_dir/sources"
 exports_file="$tmp_dir/exports"
 : > "$exports_file"
 nb_files=0
+nb_bytes=0
 nb_files_with_findings=0
 nb_skipped=0
 nb_duplicates=0
@@ -198,13 +258,54 @@ function is_cfk_bundle () {
     return 1
 }
 
+# a JSON or CSV export of log events (CloudWatch Logs Insights, Elasticsearch / OpenSearch, Kibana Discover CSV,
+# structured JSON logs, JSON lines of fluentd / Kubernetes / logstash): converted back to log lines, oldest first
+# (tools/log-analyzer/json_log_export.py, JSON lines streamed), so that the records, their stack traces and the line
+# numbers of the HTML report are those of a log file. Returns 1 when it is not an export of log events: the caller
+# reads the file as it is. $1: path, $2: label, $3: format shown (JSON, CSV, JSON lines)
+function analyze_logs_export () {
+    local path="$1"
+    local label="$2"
+    local export_format="$3"
+    local converted nb_events
+    nb_extracted=$((nb_extracted+1))
+    converted=$(basename "$path")
+    converted="$tmp_dir/$nb_extracted/${converted%%.*}.log"
+    mkdir -p "$(dirname "$converted")"
+    # stderr kept: the progress bar of a large file
+    if nb_events=$(PG_PROGRESS_STEP="🔄 converting $label ($export_format export)" python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted")
+    then
+        log "🔄 $label: $export_format export of $nb_events log events ($(file_size_human "$path")), analyzed as log lines (oldest first)"
+        printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
+        analyze_logs_digest "$label" "$converted" "$path" < "$converted"
+        return 0
+    fi
+    rm -f "$converted"
+    return 1
+}
+
 # prints the digest of one log, read on stdin, when it has findings
-# $1: label to display, $2: path of the file
+# $1: label to display, $2: path of the file read, $3: the file it comes from (a JSON / CSV export converted), for its size
 function analyze_logs_digest () {
     label="$1"
     printf '%s\t%s\t%s\n' "$label" "$2" "$([[ "$2" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
-    output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+    local input_bytes
+    input_bytes=$(file_size "${3:-$2}")
+    # a progress bar in the terminal for a large file (and the progress page), stdin read through progress.py cat
+    if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+    then
+        local size_args=()
+        if [[ "$2" != *.gz ]] && [ -f "$2" ]
+        then
+            size_args=(--size "$(file_size "$2")")
+        fi
+        output=$(PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+    else
+        output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+    fi
     nb_files=$((nb_files+1))
+    nb_bytes=$((nb_bytes+${input_bytes:-0}))
+    export PG_PROGRESS_DONE=$nb_files PG_PROGRESS_BYTES=$nb_bytes
     if [[ "$output" == "✅"* ]]
     then
         return
@@ -383,20 +484,13 @@ function analyze_logs_path () {
             then
                 return
             fi
-            local converted
-            nb_extracted=$((nb_extracted+1))
-            converted=$(basename "$path")
-            converted="$tmp_dir/$nb_extracted/${converted%%.*}.log"
-            mkdir -p "$(dirname "$converted")"
-            local nb_events export_format=JSON
+            local export_format=JSON
             case "$path" in
                 *.csv|*.csv.gz) export_format=CSV ;;
             esac
-            if nb_events=$(python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted" 2>/dev/null)
+            if analyze_logs_export "$path" "$label" "$export_format"
             then
-                log "🔄 $label: $export_format export of $nb_events log events, analyzed as log lines (oldest first)"
-                printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
-                analyze_logs_digest "$label" "$converted" < "$converted"
+                :
             elif [[ "$path" == *.gz ]]
             then
                 analyze_logs_digest "$label" "$path" < <(gzip -dc "$path" 2>/dev/null)
@@ -416,6 +510,12 @@ function analyze_logs_path () {
             then
                 if ! is_duplicate_file "$path" "$label"
                 then
+                    # JSON lines whatever the extension (a fluentd / Kubernetes / logstash dump saved as .log): converted
+                    # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON
+                    if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
+                    then
+                        return
+                    fi
                     analyze_logs_digest "$label" "$path" < "$path"
                     append_config_file "$path" "$label"
                 fi
@@ -520,11 +620,12 @@ if [[ -n "$include_warnings" ]]
 then
     levels="ERROR/FATAL/WARN"
 fi
+read_msg="$(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$nb_bytes" 2>/dev/null || echo "$nb_bytes bytes") read in $(( (SECONDS-analyze_started) / 60 )) min $(( (SECONDS-analyze_started) % 60 )) s"
 if [ $nb_files_with_findings -eq 0 ]
 then
-    log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped${duplicates_msg})"
+    log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
 else
-    log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped${duplicates_msg})"
+    log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned, $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
 fi
 
 if ! command -v python3 &>/dev/null
@@ -541,9 +642,10 @@ overview_text_file="$tmp_dir/overview.txt"
 if [ $nb_files_with_findings -eq 0 ] && [ $nb_files -gt 0 ]
 then
     overview_args=(--records "$records_file" --sources "$sources_file" --exports "$exports_file" --levels "$levels")
-    if python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" > "$overview_text_file" 2>/dev/null
+    progress_step "🔭 overview of the logs (no $levels record)"
+    if python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" --json-out "$tmp_dir/overview.json" > "$overview_text_file" 2>/dev/null
     then
-        overview_json=$(python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" --json 2>/dev/null || echo null)
+        overview_json=$(cat "$tmp_dir/overview.json" 2>/dev/null || echo null)
         if [[ -n "$sanitize" ]]
         then
             python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$overview_text_file" > "$overview_text_file.sanitized" && mv "$overview_text_file.sanitized" "$overview_text_file"
@@ -573,9 +675,11 @@ do
 done < "$sources_file"
 if [ -s "$streams_sources_file" ]
 then
-    if python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --sources "$streams_sources_file" > "$streams_text_file" 2>/dev/null
+    progress_step "🌊 Kafka Streams applications of the logs"
+    # one pass for the text and the JSON (a large log is read once)
+    if python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --sources "$streams_sources_file" --json-out "$tmp_dir/kafka-streams-raw.json" > "$streams_text_file" 2>/dev/null
     then
-        streams_json=$(python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --json --sources "$streams_sources_file" 2>/dev/null || echo null)
+        streams_json=$(cat "$tmp_dir/kafka-streams-raw.json" 2>/dev/null || echo null)
         if [[ -n "$sanitize" ]]
         then
             python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$streams_text_file" > "$streams_text_file.sanitized" && mv "$streams_text_file.sanitized" "$streams_text_file"
@@ -680,5 +784,12 @@ then
 fi
 report_args+=(--sources "$sources_file")
 export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
-write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
+progress_step "📝 writing the HTML report"
+# the progress page already open in the browser becomes the report (same path): not opened a second time
+report_no_open=""
+if [ -n "$progress_page" ] && [ "$progress_page" == "$output_dir/${stem}-log-report.html" ]
+then
+    report_no_open=1
+fi
+write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
 exit $cfk_exit

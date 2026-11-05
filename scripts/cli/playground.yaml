@@ -4480,16 +4480,23 @@ subcommands:
       and a CSV export of log events\n(.csv, also gzipped: Kibana / OpenSearch Dashboards
       Discover, Splunk,\nDatadog, Grafana: one event per row, a cell holding the JSON
       log line of\nthe container is parsed) are converted back to log lines, oldest
-      first,\nand analyzed as a log file. Only files with findings are\nshown. \U0001F52D
-      When no file has findings, an overview says what the logs\ncontain (period covered,
-      records by level, top messages and loggers) and\nwhat to ask for next (a longer
-      window, the logs of the component that\nfails, a new export of a log console).
-      The HTML report also has\nthe configuration: the configs logged at startup (KafkaConfig
-      values:,\nDistributedConfig, connector and client configs…) and the .properties\nand
-      connector JSON files of the input.\n\n☸️ A Confluent for Kubernetes (CFK) support
-      bundle (kubectl confluent support-bundle or playground debug cfk generate-bundle:
-      a folder with cluster-details.txt, or with cluster-resources/ and operator/;
-      or a flat collection of kubectl outputs with a confluent-operator-*.log or the
+      first,\nand analyzed as a log file. So are JSON lines whatever the extension
+      (a\nfluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\nseveral
+      GB is converted in seconds and the digest reads its messages,\nnot the metadata).
+      Only files with findings are\nshown. \U0001F52D When no file has findings, an
+      overview says what the logs\ncontain (period covered, records by level, top
+      messages and loggers) and\nwhat to ask for next (a longer window, the logs of
+      the component that\nfails, a new export of a log console). The HTML report also
+      has\nthe configuration: the configs logged at startup (KafkaConfig values:,\nDistributedConfig,
+      connector and client configs…) and the .properties\nand connector JSON files
+      of the input.\n\n⏳ A large file (20 MB or more) shows a progress bar in the
+      terminal\n(MB read, speed, ETA), and with 20 MB or more of input the report
+      opens\nin the browser right away as a progress page (step, MB read, elapsed\ntime)
+      that becomes the report when the analysis ends. The last line\ngives the size
+      read and the time it took.\n\n☸️ A Confluent for Kubernetes (CFK) support bundle
+      (kubectl confluent support-bundle or playground debug cfk generate-bundle: a
+      folder with cluster-details.txt, or with cluster-resources/ and operator/; or
+      a flat collection of kubectl outputs with a confluent-operator-*.log or the
       YAML of a platform.confluent.io custom resource at its top), alone or inside
       a folder or an archive, is detected and analyzed as a whole, in a Docker image
       built on first use: Warning events, pods (phase, waiting reasons, restarts,

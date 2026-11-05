@@ -563,6 +563,8 @@ def main():
     ap.add_argument("--sources", help="file of label<TAB>path lines")
     ap.add_argument("--application-id")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--json-out", help="also write the JSON there (playground analyze logs: one pass for the text and "
+                                       "the JSON of a large log)")
     ap.add_argument("--html-out", help="write a standalone HTML page (playground streams status --html)")
     ap.add_argument("--html-fragment", help="write the HTML section of the log report (playground analyze logs)")
     ap.add_argument("--from-json", help="render a report already written with --json (with the consumer group of "
@@ -608,6 +610,9 @@ def main():
                     a["findings"].insert(0, f"🛑 {i['instance']}: the container is {statuses[i['instance']]}, "
                                             f"its last logged state ({i['state']}) is stale")
     write_html(rep, args)
+    if args.json_out:
+        with open(args.json_out, "w", encoding="utf-8") as fh:
+            json.dump(rep, fh, indent=2)
     if args.json:
         print(json.dumps(rep, indent=2))
     elif rep["applications"]:

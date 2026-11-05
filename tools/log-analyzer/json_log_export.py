@@ -14,7 +14,8 @@ Exports recognized (a JSON array, JSON lines, or one object wrapping the events;
     Logs Insights: one event per row, the columns are its fields; a cell holding a JSON object (a "log" or "message"
     column with the structured JSON log line of the container) is parsed and its fields win
 
-Events are written oldest first (exports of the console are newest first), a multi-line message stays multi-line.
+JSON lines are streamed one event at a time (a dump of several GB), whatever the extension of the file (.log, .txt):
+analyze logs sends the files whose first line is a JSON object here. Events are written oldest first (exports of the console are newest first), a multi-line message stays multi-line.
 
 usage: json_log_export.py <input> <output>
 exit 0: converted (output written), 2: not an export of log events, 1: error
@@ -22,9 +23,10 @@ exit 0: converted (output written), 2: not an export of log events, 1: error
 import csv
 import gzip
 import json
+import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, List, Optional, Tuple
 
 MESSAGE_KEYS = ("@message", "message", "log", "msg", "line", "textPayload", "_raw")
@@ -153,10 +155,35 @@ def events_of(data: Any) -> Optional[List[dict]]:
     return None
 
 
+# a timestamp at the start of a message that carries its own (log4j, logback, GC logs with uptime only do not)
+# ("2026-10-14 19:02:34,492 INFO", "[2026-10-14T19:02:34Z] INFO", "[INFO] 2026-10-14 19:02:34", "INFO 2026-10-14…"), not a
+# date inside the data ("key CRIMS.123.2026-10-14T00:00:00Z")
+TS_NEAR_START = re.compile(r"^\[?(?:[A-Za-z]+\]?\s+\[?)?\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}")
+
+
+def iso_ts(ts: Any) -> Any:
+    """epoch seconds / milliseconds / nanoseconds of the CloudWatch and Loki exports as ISO 8601 UTC, anything else as it is"""
+    if isinstance(ts, str) and ts.isdigit():
+        ts = int(ts)
+    if isinstance(ts, (int, float)) and not isinstance(ts, bool):
+        seconds = float(ts)
+        while seconds > 1e11:
+            seconds /= 1000
+        try:
+            return datetime.fromtimestamp(seconds, timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        except (OverflowError, OSError, ValueError):
+            return ts
+    return ts
+
+
+# the first line of an exception: org.apache.kafka.common.errors.TimeoutException: …
+EXCEPTION_LINE = re.compile(r"^[A-Za-z0-9_$]+(\.[A-Za-z0-9_$]+)+(Exception|Error|Throwable)(:|$)")
+
+
 def looks_like_log_line(message: str) -> bool:
     """a message that already carries its timestamp and level (log4j layout of Kafka, Connect, CP)"""
     head = message[:60]
-    return any(f" {lvl} " in head or head.startswith(f"{lvl} ") for lvl in
+    return any(f" {lvl} " in head or head.startswith((f"{lvl} ", f"[{lvl}]")) for lvl in
                ("ERROR", "WARN", "INFO", "DEBUG", "TRACE", "FATAL", "WARNING", "SEVERE"))
 
 
@@ -168,8 +195,21 @@ def to_lines(event: dict) -> Tuple[Any, List[str]]:
     if not isinstance(message, str):
         message = json.dumps(message)
     message = message.rstrip("\n")
+    # the next lines of a multi-line message, indented: they continue its record in the digest (a line with a
+    # date of the data must not start a record or count as a timestamp of the log). Exception lines and
+    # "Caused by:" are left as they are, for the cause chain
+    if "\n" in message:
+        head, *rest = message.split("\n")
+        message = "\n".join([head] + [r if not r or r[0] in " \t" or r.startswith("Caused by:") or EXCEPTION_LINE.match(r)
+                                       else "    " + r for r in rest])
     level = get(event, LEVEL_KEYS)
-    if isinstance(level, str) and not looks_like_log_line(message):
+    ts = iso_ts(ts)
+    if not (isinstance(level, str) and not looks_like_log_line(message)) and ts is not None \
+            and not TS_NEAR_START.match(message):
+        # a message without its time (the second part of a line split by docker at 16 KB, a GC log line with the JVM
+        # uptime, a plain message): the time of the event in front, for the period and the order of the digest
+        message = f"[{ts}] {message}"
+    elif isinstance(level, str) and not looks_like_log_line(message):
         level = level.upper()
         level = {"WARNING": "WARN", "CRITICAL": "FATAL", "SEVERE": "ERROR"}.get(level, level)
         logger = get(event, LOGGER_KEYS)
@@ -191,11 +231,99 @@ def sortable(ts: Any) -> Any:
     return str(ts) if ts is not None else None
 
 
+def first_object(path: str) -> Optional[dict]:
+    """the first line of a JSON lines file, when it is a JSON object (None: anything else, a pretty-printed JSON…)"""
+    opener = gzip.open if path.endswith(".gz") else open
+    with opener(path, "rb") as fh:
+        for raw in fh:
+            line = raw.strip().lstrip(b"\xef\xbb\xbf")
+            if not line:
+                continue
+            if not line.startswith(b"{"):
+                return None
+            try:
+                obj = json.loads(line)
+            except ValueError:
+                return None
+            return obj if isinstance(obj, dict) else None
+    return None
+
+
+def stream_json_lines(path: str, out_path: str) -> int:
+    """JSON lines (a fluentd / Kubernetes / logstash dump of several GB), converted one event at a time instead of
+    loaded in memory. Returns the number of events written, 0 when it is not a log export"""
+    try:
+        # no __pycache__ next to the tools of the repository
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from progress import Progress
+    except ImportError:
+        Progress = None
+    size = None if path.endswith(".gz") else os.path.getsize(path)
+    progress = Progress(path, size, f"🔄 converting the JSON lines of {path}") if Progress else None
+    opener = gzip.open if path.endswith(".gz") else open
+    nb_events = nb_with_message = 0
+    first_ts = last_ts = None
+    offsets: List[int] = []
+    with opener(path, "rb") as fh, open(out_path, "w", encoding="utf-8") as out:
+        try:
+            for raw in fh:
+                if progress:
+                    progress.update(len(raw))
+                line = raw.strip()
+                if not line:
+                    continue
+                nb_events += 1
+                try:
+                    event = json.loads(line)
+                except ValueError:
+                    event = None
+                if isinstance(event, dict):
+                    ts, lines = to_lines(event)
+                else:
+                    # a plain line in the dump: kept as it is
+                    ts, lines = None, [line.decode("utf-8", "replace")]
+                if not lines:
+                    continue
+                nb_with_message += 1
+                if ts is not None:
+                    if first_ts is None:
+                        first_ts = sortable(ts)
+                    last_ts = sortable(ts)
+                offsets.append(out.tell())
+                out.write("\n".join(lines) + "\n")
+        finally:
+            if progress:
+                progress.close()
+    if nb_with_message < max(1, nb_events // 2):
+        os.remove(out_path)
+        return 0
+    # newest first (console exports): the events written again in the other order
+    if first_ts is not None and last_ts is not None and type(first_ts) is type(last_ts) and first_ts > last_ts:
+        reversed_path = out_path + ".reversed"
+        with open(out_path, "rb") as src, open(reversed_path, "wb") as dst:
+            end = os.path.getsize(out_path)
+            for start in reversed(offsets):
+                src.seek(start)
+                dst.write(src.read(end - start))
+                end = start
+        os.replace(reversed_path, out_path)
+    return nb_with_message
+
+
 def main() -> int:
     if len(sys.argv) != 3:
         print(__doc__, file=sys.stderr)
         return 1
     try:
+        first = None if sys.argv[1].lower().endswith((".csv", ".csv.gz")) else first_object(sys.argv[1])
+        # JSON lines whose first event is a log event: streamed (a dump can be several GB)
+        if first is not None and to_lines(first)[1]:
+            nb = stream_json_lines(sys.argv[1], sys.argv[2])
+            if not nb:
+                return 2
+            print(nb)
+            return 0
         if sys.argv[1].lower().endswith((".csv", ".csv.gz")):
             data = load_csv(sys.argv[1])
         else:

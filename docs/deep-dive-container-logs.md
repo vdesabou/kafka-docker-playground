@@ -178,6 +178,7 @@ What it does with what you give it:
 | `.gz` | decompressed on the fly |
 | a JSON export of log events (`.json`, `.jsonl`, `.ndjson`, also gzipped): AWS CloudWatch Logs Insights (`[{"@timestamp": …, "@message": …}]`, console or `get-query-results`), CloudWatch `filter-log-events` / `get-log-events` (`{"events": [{"timestamp", "message"}]}`), Elasticsearch / OpenSearch hits (`_source.message`), structured JSON logs (`level`, `logger_name`, `message`, `stack_trace`) | converted back to log lines, **oldest first** (console exports are newest first), one event per line and its stack trace below it, then analyzed as a log file: `🔄 <file>: JSON export of <n> log events, analyzed as log lines (oldest first)`. The line numbers of the digest and of the HTML report are those of the converted file. Any other JSON is read as it is |
 | a CSV export of log events (`.csv`, also gzipped) with a header row: Kibana / OpenSearch Dashboards Discover (`"Oct 14, 2026 @ 19:13:28.977"` timestamps, `-` for an empty cell), Splunk, Datadog, Grafana / Loki | one event per row, the columns are its fields; a cell holding a JSON object (the `log` column with the ECS / logback JSON line of the container) is parsed and its `level`, `logger`, `message`, `error.stack_trace` win. Then converted like a JSON export: `🔄 <file>: CSV export of <n> log events, analyzed as log lines (oldest first)`. A CSV without a message-like column (`message`, `log`, `@message`, `line`, `_source`…) is read as it is |
+| JSON lines whatever the extension (`.log`, `.txt`: a fluentd / Kubernetes / logstash dump, `{"log":"[ERROR] 2026-10-14 …","kubernetes":{…}}` per line) | detected by their first character `{` and converted like a JSON export, **streamed** (a dump of 2.4 GB in about 10 s): `🔄 <file>: JSON lines export of <n> log events (2.2 GB), analyzed as log lines (oldest first)`. The digest then reads the messages instead of the metadata (7× less in a Kubernetes dump), and sees the level of `"log":"[ERROR] …"`, which it misses in the raw JSON. A message without its own time (the second part of a line split by Docker at 16 KB, a GC log line) gets the time of the event in front; the next lines of a multi-line message are indented, so a date in them is not taken as the time of the log |
 | a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`; or a flat collection of `kubectl` outputs with a `confluent-operator-*.log` or the YAML of a `platform.confluent.io` custom resource at its top), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, in its own HTML report. `--problem "<component, symptom, since when>"` matches it against the problem of the customer (🎯 verdict, issues that explain it first), and a 📥 Data to request section says what to ask the customer for next. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
 | logs with Kafka Streams lines (`stream-client [`, `stream-thread [`) | the digest as for any log, plus a 🌊 **Kafka Streams** section (see below) |
 | a `.properties` file, a JSON file with connector configs | analyzed like a text file, and shown in the ⚙️ configuration section of the HTML report |
@@ -205,6 +206,13 @@ ask for next:
 The same overview is the 🔭 **Overview** section of the HTML report and `.overview` of `--json` (`files`,
 `top_messages`, `top_loggers`, `hints`).
 
+⏳ **Large inputs.** A file of 20 MB or more shows a bar in the terminal while it is converted and read
+(`⏳ <file> ▕████████████████░░░░░░░░░▏  66% 202.0 MB/308.4 MB 19.2 MB/s ETA 0:05`). With 20 MB or more of input in an
+interactive terminal, the report is opened in the browser right away (`🌐 Opening <report> in browser: it shows the
+progress, then the report`): a page with the step, the MB read and the time elapsed, reloaded every 2 s, which becomes
+the report at the end (written next to it then renamed, so the page never loads half a report). The last line says how
+much was read and how long it took: `📊 1 file(s) with findings out of 2 scanned, 2.4 GB read in 0 min 28 s`.
+
 🔒 The digest, the HTML report and the JSON are **not sanitized by default**: `--sanitize` redacts them, before sharing
 them outside Confluent. Off by default because it can hide evidence (a dump of bytes taken for a secret, the IP of the
 broker you need to correlate) and doubles the time on a large bundle. With `--sanitize`:
@@ -229,7 +237,7 @@ The output names each file with its path inside the archive, and only shows file
 …
 ✂️ 9 more distinct record(s) not shown, increase --max-findings
 
-📊 2 file(s) with findings out of 2 scanned (binary files skipped: 0)
+📊 2 file(s) with findings out of 2 scanned, 1.4 MB read in 0 min 3 s (binary files skipped: 0)
 ✅ HTML report saved: /home/me/log-analysis-output/support_bundle-log-report.html
 ```
 

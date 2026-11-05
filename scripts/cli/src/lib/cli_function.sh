@@ -6986,8 +6986,10 @@ function summarize_log_errors() {
         prev1 = cur
         cur = $0
         # period the file itself covers (first and last timestamped line, whatever its level): the reports say how
-        # long the logs span, not only the records. Only for the reports (one more match per line)
-        if (records_file != "") {
+        # long the logs span, not only the records. Only for the reports (one more match per line). An indented line
+        # continues a record (a stack frame, the next line of a multi-line message): a date in it is data, not the time
+        # of the line
+        if (records_file != "" && substr($0, 1, 1) != " " && substr($0, 1, 1) != "\t") {
             line_ts = timestamp_of($0)
             if (line_ts != "") {
                 if (log_first_ts == "" || line_ts < log_first_ts) log_first_ts = line_ts
