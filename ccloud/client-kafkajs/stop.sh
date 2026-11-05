@@ -5,4 +5,4 @@ source ${DIR}/../../scripts/utils.sh
 
 maybe_delete_ccloud_environment
 
-docker rm -f kafkajs-ccloud-consumer kafkajs-ccloud-producer
+docker rm -f kafkajs-ccloud-consumer kafkajs-ccloud-producer > /dev/null 2>&1

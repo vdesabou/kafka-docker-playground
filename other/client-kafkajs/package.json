@@ -1,0 +1,11 @@
+{
+  "name": "client-kafkajs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KafkaJS (producer/consumer, string and Avro with @kafkajs/confluent-schema-registry) for kafka-docker-playground",
+  "main": "client.js",
+  "dependencies": {
+    "@kafkajs/confluent-schema-registry": "4.1.0",
+    "kafkajs": "2.2.4"
+  }
+}
