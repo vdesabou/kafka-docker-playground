@@ -330,7 +330,7 @@ Test Self-Managed connector mugration to Fully Managed using [playground connect
 ### 🚀 And much more...
 
   - 🌨 Using [Confluent for Kubernetes](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/confluent-for-kubernetes/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-  - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+  - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer), the [Confluent .NET client](https://docs.confluent.io/kafka-clients/dotnet/current/overview.html) with string and Avro (Schema Registry) records :ccloud/client-dotnet:
   - 🗯 [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🐍 [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
@@ -463,7 +463,7 @@ All the examples below run their statements with `playground ksqldb sql`, and wa
 - 🩺 [Broker health, failures, rolling restart and transactions](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/broker-health-and-transactions) with `playground broker health`, `stop`, `start`, `rolling-restart`, `metrics` and `transactions`, on 3 brokers :other/broker-health-and-transactions:
 - 📬 [How to process DLQ records with a sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector), or replay them with `playground topic dlq replay` :other/reprocess-dlq-messages-with-sink-connector:
 - 🍪 [Deep dive labs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/deep-dive-labs): the hands-on labs of the [Deep dives](https://kafka-docker-playground.io/#/deep-dives), with assertions on the outputs the pages quote :other/deep-dive-labs:
-- 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) client (producer/consumer), the [Confluent .NET client](https://docs.confluent.io/kafka-clients/dotnet/current/overview.html) with string and Avro (Schema Registry) records :other/client-dotnet:
 - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-kafkajs) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🐶 [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 👻 Testing [KIP-108](https://cwiki.apache.org/confluence/display/KAFKA/KIP-108%3A+Create+Topic+Policy) [Create Topic Policy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/create-topic-policy) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)

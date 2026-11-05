@@ -4,32 +4,31 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CORE_DOT_VERSION=${1:-3.1}
-
-if [[ "$CORE_DOT_VERSION" = "3.1" ]]
-then
-     log "Using .NET Core version 3.1"
-     export CORE_RUNTIME_TAG="3.1.2-bionic"
-     export CORE_SDK_TAG="3.1.102-bionic"
-     export CSPROJ_FILE="DotNet3.1.csproj"
-else
-     log "Using .NET Core version 2.2"
-     export CORE_RUNTIME_TAG="2.2-stretch-slim"
-     export CORE_SDK_TAG="2.2-stretch"
-     export CSPROJ_FILE="DotNet2.2.csproj"
-fi
-
-# make sure control-center is not disabled
-export ENABLE_CONTROL_CENTER=true
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --wait-for-control-center
+# only the client-dotnet container and what it depends on (broker, schema-registry): no connect, nothing to wait for
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --service client-dotnet
 
-log "Starting producer"
-docker exec -i client-dotnet bash -c "dotnet DotNet.dll produce test1"
+NB_MESSAGES=10
 
-log "Starting consumer. Logs are in /tmp/result.log"
-docker exec -i client-dotnet bash -c "dotnet DotNet.dll consume test1" > /tmp/result.log 2>&1 &
-sleep 5
-cat /tmp/result.log
-grep "alice" /tmp/result.log
+log "Creating topics dotnet-string and dotnet-avro"
+playground topic create --topic dotnet-string --nb-partitions 3
+playground topic create --topic dotnet-avro --nb-partitions 3
+
+log "Producing $NB_MESSAGES string records with the .NET producer"
+playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll produce dotnet-string /tmp/client.properties $NB_MESSAGES"
+
+log "Consuming them with the .NET consumer, it fails if fewer than $NB_MESSAGES records arrive within 60 seconds"
+playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll consume dotnet-string /tmp/client.properties $NB_MESSAGES"
+
+log "Producing $NB_MESSAGES Avro records with the .NET producer (AvroSerializer, schema registered under subject dotnet-avro-value)"
+playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll produce-avro dotnet-avro /tmp/client.properties $NB_MESSAGES"
+
+log "Consuming them with the .NET consumer (AvroDeserializer)"
+playground container exec -c client-dotnet --command "dotnet ClientDotnet.dll consume-avro dotnet-avro /tmp/client.properties $NB_MESSAGES"
+
+log "Checking the schema registered by the .NET AvroSerializer under subject dotnet-avro-value"
+playground schema get --subject dotnet-avro-value
+
+log "Checking the consumer groups of the .NET consumer committed the offsets"
+playground consumer-group describe --group dotnet-string-group
+playground consumer-group describe --group dotnet-avro-group
