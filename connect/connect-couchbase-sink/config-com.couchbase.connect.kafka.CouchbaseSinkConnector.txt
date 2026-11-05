@@ -12,17 +12,6 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bucket
-
-Name of the Couchbase bucket to use.
-
-This property is required unless using the experimental AnalyticsSinkHandler.
-
-	 - Type: STRING
-	 - Default: 
-	 - Importance: HIGH
-	 - Required: false
-
 🔘 couchbase.username
 
 Name of the Couchbase user to authenticate as.
@@ -32,13 +21,15 @@ Name of the Couchbase user to authenticate as.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bootstrap.timeout
+🔘 couchbase.bucket
 
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+Name of the Couchbase bucket to use.
+
+This property is required unless using the experimental AnalyticsSinkHandler.
 
 	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
+	 - Default: 
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 couchbase.seed.nodes
@@ -65,20 +56,18 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-Security
-==========================
-🔘 couchbase.trust.store.password
+🔘 couchbase.bootstrap.timeout
 
-Password for accessing the trust store.
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
 
-May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
+	 - Type: STRING
+	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
+==========================
+Security
+==========================
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -151,6 +140,17 @@ Note that this config is considered advanced, please only customize the cipher l
 
 	 - Type: LIST
 	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -413,6 +413,21 @@ This property is specific to `N1qlSinkHandler`.
 ==========================
 Analytics Sink Handler
 ==========================
+🔘 couchbase.analytics.query.timeout
+
+This property determines the time period after which client cancels the Query request for Analytics.
+
+This property is specific to `AnalyticsSinkHandler`.
+
+UNCOMMITTED; this feature may change in a patch release without notice.
+
+* Since: 4.2.0
+
+	 - Type: STRING
+	 - Default: 5m
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.analytics.max.records.in.batch
 
 Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property determines the maximum number of records in the UPSERT or DELETE statement in the batch. Users can configure this parameter based on the capacity of their analytics cluster.
@@ -431,21 +446,6 @@ UNCOMMITTED; this feature may change in a patch release without notice.
 🔘 couchbase.analytics.max.size.in.batch
 
 Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property defines the max size of all docs in bytes in an UPSERT statement in a batch. Users can configure this parameter based on the capacity of their analytics cluster.
-
-This property is specific to `AnalyticsSinkHandler`.
-
-UNCOMMITTED; this feature may change in a patch release without notice.
-
-* Since: 4.2.0
-
-	 - Type: STRING
-	 - Default: 5m
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.analytics.query.timeout
-
-This property determines the time period after which client cancels the Query request for Analytics.
 
 This property is specific to `AnalyticsSinkHandler`.
 
