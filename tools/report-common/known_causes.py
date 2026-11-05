@@ -52,6 +52,18 @@ KNOWN_CAUSES = [
                 r"|certificate (?:has )?expired",
      "title": "🔐 TLS handshake failure",
      "advice": "the truststore does not trust the server certificate, the hostname does not match it, or it expired"},
+    # an AWS SDK error ("(Service: S3, Status Code: 403, Request ID: …"): the credentials or the IAM permissions of the
+    # connector on the cloud service, not a Kafka ACL. Before rbac_error, which skips these 403
+    {"name": "cloud_credentials", "severity": "high", "category": "Authentication Issues",
+     "pattern": r"SignatureDoesNotMatch|request signature we calculated does not match|InvalidAccessKeyId"
+                r"|security token included in the request is (?:invalid|expired)|ExpiredToken"
+                r"|\(Service: [\w .-]{1,40}, Status Code: 40[13]\b",
+     "title": "☁️ Cloud credentials or permission refused",
+     "advice": "the cloud service (AWS S3, Kinesis, Lambda…) refused the request of the connector: a wrong secret key "
+               "(SignatureDoesNotMatch), an access key or session token deleted, rotated or expired, a clock skew of "
+               "the worker, or an IAM / bucket policy that denies the action (403 AccessDenied): check the credentials "
+               "of the connector (aws.access.key.id / aws.secret.access.key, or its credentials provider) and the IAM "
+               "policy"},
     {"name": "authentication_failed", "severity": "high", "category": "Authentication Issues",
      "pattern": r"SaslAuthenticationException|AuthenticationException|authentication failed|failed authentication"
                 r"|invalid credentials|ORA-01017|Access denied for user|Login failed for user|\b401 unauthorized\b"
@@ -66,7 +78,8 @@ KNOWN_CAUSES = [
                "token keypair and the credentials of the principal"},
     {"name": "rbac_error", "severity": "high", "category": "RBAC Issues",
      "pattern": r"forbidden: User .{0,80} cannot|is forbidden|(?:Topic|Group|Cluster|TransactionalId)?AuthorizationException"
-                r"|not authorized to access|\b403 forbidden\b|http (?:status|code|error)[ :=]*403|Status code\s*:?\s*403",
+                r"|not authorized to access|\b403 forbidden\b|http (?:status|code|error)[ :=]*403"
+                r"|(?<!, )Status code\s*:?\s*403",
      "title": "🚫 Authorization failure",
      "advice": "an ACL or an RBAC role binding is missing for the principal of the client"},
     {"name": "replication_error", "severity": "high", "category": "Replication Issues",
@@ -199,7 +212,7 @@ _SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 # declaration order
 HINT_ORDER = [
     "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧩 Plugin not found", "📦 Class loading error",
-    "🔑 Authentication failure", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
+    "🔑 Authentication failure", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
     "🔀 Serialization or conversion error", "🔌 Connection failure", "⏱️ Timeouts", "📏 Record too large",
     "❓ Unknown topic or partition", "⏮️ Offset out of range",

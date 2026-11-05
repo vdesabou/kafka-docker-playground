@@ -28717,9 +28717,11 @@ function install_confluent_plugin() {
 # file for the HTML reports (tools/log-analyzer/log_report.py), labelled with PG_LOG_DIGEST_LABEL:
 #   @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences<tab>first timestamp of the file<tab>last one
 #   @@PGREC@@<tab>level<tab>count<tab>first line<tab>last line<tab>first timestamp<tab>last timestamp
-#   <the record as printed in the digest, on one or more lines>
+#   <the record as printed in the digest, on one or more lines (2000 characters per line at most instead of 300), a stack
+#   trace flattened on one line split back into lines>
 #   @@PGTS@@<tab>timestamps of the occurrences, space separated (1000 per record at most)
 #   @@PGCTX@@<tab>raw lines around the first occurrence (2 before, the record (30 lines at most), 2 after), one per line
+#              (2000 characters at most)
 # then the "<Class>Config values:" dumps of the log (KafkaConfig, DistributedConfig, the config of a connector with its
 # [connector|task-0] context, ProducerConfig of a client…), the last one of each class / context / client.id, 50 at most:
 #   @@PGCFG@@<tab>config class<tab>[connector|task-0] context<tab>line<tab>timestamp<tab>client.id or name
@@ -28769,6 +28771,50 @@ function summarize_log_errors() {
     function short(s) {
         return length(s) > 300 ? substr(s, 1, 300) "..." : s
     }
+    # the records file of the HTML reports keeps longer lines: the error is often at the end of a long message
+    # ("Task is being killed and will not recover until manually restarted. Error: <the cause>")
+    function long(s) {
+        return length(s) > 2000 ? substr(s, 1, 2000) "..." : s
+    }
+    # a stack trace flattened on one line by a log export or a log shipper: "msg org.x.FooException: m\n\tat a.b(C.java:1)
+    # \nCaused by: …" with a literal \n, or with its backslash lost ("Source)n\tat a.b", "Source)nCaused by:"). Split back
+    # into lines in r[] (message, exception, frames, Caused by), returns their number; a normal record is copied as is
+    # ids of letters and digits in a key whose digits are already #: an AWS Request ID 5PPC305GEXB1A0R9 (#PPC#GEXB#A#R#),
+    # an Extended Request ID, a token… one # each (8 characters or more, with letters and two # at least)
+    function mask_ids(s,    out, t) {
+        out = ""
+        while (match(s, /[A-Za-z#+\/]*#[A-Za-z#+\/]*/)) {
+            t = substr(s, RSTART, RLENGTH)
+            out = out substr(s, 1, RSTART - 1) ((RLENGTH >= 8 && t ~ /[A-Za-z]/ && t ~ /#.*#/) ? "#" : t)
+            s = substr(s, RSTART + RLENGTH)
+        }
+        return out s
+    }
+    function unflatten(    i, n, line, parts, np, j, cut) {
+        n = 0
+        for (i = 1; i <= nlines; i++) {
+            line = rec[i]
+            if (line ~ /(\\n|n)\t(at |\.\.\. [0-9])/ || line ~ /\\nCaused by: /) {
+                gsub(/\\n/, "\n", line)
+                gsub(/n\tat /, "\n\tat ", line)
+                gsub(/n\t\.\.\. /, "\n\t... ", line)
+                gsub(/\)nCaused by: /, ")\nCaused by: ", line)
+                np = split(line, parts, "\n")
+                # Connect logs "<message> <exception>": the exception thrown on its own line, as in a normal trace
+                if (i == 1 && match(parts[1], / ([a-z][A-Za-z0-9_$]*\.)+[A-Z][A-Za-z0-9_$]*(Exception|Error|Throwable)(: |$)/)) {
+                    cut = RSTART
+                    r[++n] = substr(parts[1], 1, cut - 1)
+                    r[++n] = substr(parts[1], cut + 1)
+                } else {
+                    r[++n] = parts[1]
+                }
+                for (j = 2; j <= np; j++) r[++n] = parts[j]
+            } else {
+                r[++n] = line
+            }
+        }
+        return n
+    }
     # "2026-10-13 10:00:05" or "2026-10-13T10:00:05" at the start of the record, as 2026-10-13T10:00:05
     function timestamp_of(head,    h, t) {
         h = substr(head, 1, 80)
@@ -28781,7 +28827,7 @@ function summarize_log_errors() {
     function ctx_line(n, s, mark) {
         gsub(/\033\[[0-9;]*m/, "", s)
         sub(/\r$/, "", s)
-        return sprintf("%6d %s %s\n", n, mark, short(s))
+        return sprintf("%6d %s %s\n", n, mark, long(s))
     }
     function capture_after() {
         ctx[ctx_key] = ctx[ctx_key] ctx_line(NR, $0, " ")
@@ -28854,7 +28900,7 @@ function summarize_log_errors() {
         cfg_text[key] = cfg_buf
         cfg_head[key] = cfg_cls "\t" cfg_ctx "\t" cfg_ln "\t" cfg_ts "\t" cfg_id
     }
-    function flush(    lvl, key, i, chain, frames, nframes, line, cause, nrec) {
+    function flush(    lvl, key, i, chain, long_chain, frames, nframes, line, cause, nrec, nr) {
         if (nlines == 0) return
         # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
         if (rec[1] ~ /^[^ ]+ (FATAL|ERROR|WARN) x[0-9]+ \(first seen line [0-9]+, last seen line [0-9]+\)$/) { nlines = 0; return }
@@ -28862,11 +28908,14 @@ function summarize_log_errors() {
         if (lvl == "" || (lvl == "WARN" && include_warnings == "")) { nlines = 0; return }
 
         # exception chain: first exception line plus every "Caused by:", then frames of the deepest cause
+        split("", r)
+        nr = unflatten()
         chain = ""
+        long_chain = ""
         cause = ""
         nframes = 0
-        for (i = 2; i <= nlines; i++) {
-            line = rec[i]
+        for (i = 2; i <= nr; i++) {
+            line = r[i]
             if (line ~ /^[ \t]*at /) {
                 if (nframes < 3) { sub(/^[ \t]*/, "", line); frames = frames "\n        " short(line); nframes++ }
                 continue
@@ -28874,20 +28923,24 @@ function summarize_log_errors() {
             if (line ~ /^[ \t]*\.\.\. [0-9]+ (more|common frames omitted)/) continue
             if (line ~ /^Caused by:/ || (chain == "" && line ~ /(Exception|Error|Throwable)(:|[ \t]*$)/)) {
                 chain = chain "\n    " short(line)
+                long_chain = long_chain "\n    " long(line)
                 cause = line
                 frames = ""
                 nframes = 0
             }
         }
-        if (chain == "" && rec[1] !~ /(Exception|Error|Throwable)(:|[ \t]|$)/) frames = ""
+        if (chain == "" && r[1] !~ /(Exception|Error|Throwable)(:|[ \t]|$)/) frames = ""
 
         # same message and same deepest cause = same finding, whatever the timestamps and ids
-        key = rec[1]
+        key = r[1]
         sub(/^\[?[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9:,.]*\]?[ \t]*/, "", key)
         key = lvl ":" substr(key, 1, 200) "|" substr(cause, 1, 200)
         # Java identity hash of Object.toString() (KafkaConsumerReadTask@9c3da5a): a new one per object
         gsub(/@[0-9a-f]+/, "@#", key)
+        # an AWS Request ID of letters only (VZPWGRBNDARQCDHD): another one per request
+        gsub(/[Rr]equest I[Dd]: [^ ,)]+/, "Request ID: #", key)
         gsub(/[0-9]+/, "#", key)
+        key = mask_ids(key)
 
         total_occurrences++
         nrec = nlines
@@ -28907,8 +28960,9 @@ function summarize_log_errors() {
         last_ts[key] = ts
         level[key] = lvl
         order[++nkeys] = key
-        text[key] = short(rec[1]) chain frames
+        text[key] = short(r[1]) chain frames
         if (records_file != "") {
+            long_text[key] = long(r[1]) long_chain frames
             ctx[key] = rec_before
             for (i = 1; i <= nrec && i <= 30; i++) ctx[key] = ctx[key] ctx_line(rec_line + i - 1, rec[i], (i == 1 ? "▶" : " "))
             if (nrec > 30) ctx[key] = ctx[key] sprintf("%6s   … %d more line(s)\n", "", nrec - 30)
@@ -28972,7 +29026,7 @@ function summarize_log_errors() {
             printf "@@PGFILE@@\t%s\t%d\t%d\t%d\t%s\t%s\n", label, NR, nkeys, total_occurrences, log_first_ts, log_last_ts >> records_file
             for (i = 1; i <= nkeys; i++) {
                 k = order[i]
-                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], text[k], substr(timestamps[k], 2) >> records_file
+                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], long_text[k], substr(timestamps[k], 2) >> records_file
                 n = split(ctx[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCTX@@\t%s\n", cl[j] >> records_file
             }
