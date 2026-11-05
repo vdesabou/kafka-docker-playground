@@ -15,6 +15,19 @@ line of the container) is parsed and its fields win over the columns, `-` is an 
 `Oct 14, 2026 @ 19:13:28.977` becomes ISO 8601. Exit `2` when the file is not an export of log events: `analyze logs`
 then reads it as it is.
 
+JSON lines are streamed (one event at a time, the order fixed afterwards from the offsets of the events), whatever
+the extension: `analyze logs` sends a `.log` / `.txt` whose first character is `{` here. A message without its own
+time at its start gets the time of the event (`iso_ts()`: epoch seconds / ms / ns become ISO 8601), and the next lines
+of a multi-line message are indented, except exception lines and `Caused by:`.
+
+## Progress of large inputs
+
+`progress.py` shows the progress of a large input: `cat` copies stdin to the digest with a bar on stderr (terminal
+only, 20 MB or more), `page` writes the 🔄 progress page opened in the browser at the path of the report (reloaded
+every 2 s; `log_report.py` writes the report next to it then renames it), `size` and `human` give the size of the
+input. The page and the overall progress come from `PG_PROGRESS_*` variables exported by `analyze logs`; the
+`Progress` class is also used by `json_log_export.py` while it converts a large file.
+
 ## Overview of logs without findings
 
 `log_overview.py --records <records> --sources <sources> [--exports <exports>] [--json]` runs when no file has a

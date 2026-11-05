@@ -1292,7 +1292,10 @@ def main() -> int:
     if args.show_config:
         print(show_config(res, args.show_config))
     if args.html_out:
-        with open(args.html_out, "w", encoding="utf-8") as fh:
+        # written next to it then renamed: the 🔄 progress page of analyze logs, open in the browser at the same path,
+        # reloads every 2 s and must never load a half written report (it has no refresh, the tab would stay on it)
+        tmp_out = args.html_out + ".partial"
+        with open(tmp_out, "w", encoding="utf-8") as fh:
             sections = []
             for title, path in args.section:
                 with open(path, encoding="utf-8", errors="replace") as sf:
@@ -1304,6 +1307,7 @@ def main() -> int:
             viewers = write_viewers(args.html_out, files, res, args.sources) if args.sources else {}
             fh.write(html_report(res, args.title, args.levels, args.skipped, args.heading, args.command, args.unit,
                                  [tuple(l) for l in args.link], sections, viewers, html_sections))
+        os.replace(tmp_out, args.html_out)
     return 0
 
 

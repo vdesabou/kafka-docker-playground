@@ -9992,7 +9992,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 --sanitize\n  replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best\n  effort: review before sharing). --logs-only gives the plain log digest\n  instead. 🎯 --problem \"<component, symptom, since when>\" matches the bundle\n  against what the customer reports: the issues that explain it first, a verdict\n  (explained, not explained, not covered by the logs), the changes before the\n  date. 📥 A Data to request section says what to ask the customer for next, with\n  why and the command: from the gaps of the bundle (logs that start too late,\n  previous logs of restarted containers, no events, no operator log), from its\n  findings (OOMKilled, Pending pods, TLS, failed connectors) and from the\n  symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record. Everything below the filter bar is one\n  view of the same records: the level chips, the connector picker and the period\n  selected by dragging over the occurrences chart all recount the two charts,\n  the root causes, the files with findings and the record cards (double-click\n  the chart, or ⤺ whole period, to go back). The findings keep the figures of\n  the whole report and only say how much of each of them is in the selection.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. So are JSON lines whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, MB read, elapsed\n  time) that becomes the report when the analysis ends. The last line\n  gives the size read and the time it took.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 --sanitize\n  replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best\n  effort: review before sharing). --logs-only gives the plain log digest\n  instead. 🎯 --problem \"<component, symptom, since when>\" matches the bundle\n  against what the customer reports: the issues that explain it first, a verdict\n  (explained, not explained, not covered by the logs), the changes before the\n  date. 📥 A Data to request section says what to ask the customer for next, with\n  why and the command: from the gaps of the bundle (logs that start too late,\n  previous logs of restarted containers, no events, no operator log), from its\n  findings (OOMKilled, Pending pods, TLS, failed connectors) and from the\n  symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record. Everything below the filter bar is one\n  view of the same records: the level chips, the connector picker and the period\n  selected by dragging over the occurrences chart all recount the two charts,\n  the root causes, the files with findings and the record cards (double-click\n  the chart, or ⤺ whole period, to go back). The findings keep the figures of\n  the whole report and only say how much of each of them is in the selection.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -29696,8 +29696,10 @@ function summarize_log_errors() {
         prev1 = cur
         cur = $0
         # period the file itself covers (first and last timestamped line, whatever its level): the reports say how
-        # long the logs span, not only the records. Only for the reports (one more match per line)
-        if (records_file != "") {
+        # long the logs span, not only the records. Only for the reports (one more match per line). An indented line
+        # continues a record (a stack frame, the next line of a multi-line message): a date in it is data, not the time
+        # of the line
+        if (records_file != "" && substr($0, 1, 1) != " " && substr($0, 1, 1) != "\t") {
             line_ts = timestamp_of($0)
             if (line_ts != "") {
                 if (log_first_ts == "" || line_ts < log_first_ts) log_first_ts = line_ts
@@ -61500,12 +61502,71 @@ playground_analyze_logs_command() {
   export PG_LOG_DIGEST_CONNECTORS="${connector_array[*]}"
   export PG_LOG_DIGEST_WITH_WORKER="$with_worker"
 
+  # bytes of a file (0 when it cannot be read)
+  function file_size () {
+      wc -c < "$1" 2>/dev/null | tr -d ' ' || echo 0
+  }
+
+  function file_size_human () {
+      python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$(file_size "$1")" 2>/dev/null
+  }
+
+  # a step of the 🔄 progress page open in the browser (none without it)
+  function progress_step () {
+      if [ -n "${PG_PROGRESS_HTML:-}" ]
+      then
+          python3 -I "$root_folder/tools/log-analyzer/progress.py" page --step "$1" 2>/dev/null || true
+      fi
+  }
+
+  analyze_started=$SECONDS
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+
+  # 🔄 large inputs (20 MB or more), in an interactive terminal: the report is opened in the browser right away, as a
+  # progress page (step, bytes read, elapsed time) that reloads every 2 s until the report replaces it at the same path
+  # (tools/log-analyzer/progress.py). Ended by an EXIT trap when there is no log report (only CFK bundles, failure)
+  progress_page=""
+  function finish_progress_page () {
+      if [ -n "$progress_page" ] && [ -f "$progress_page" ] && grep -q "Log Analysis in progress" "$progress_page" 2>/dev/null
+      then
+          printf '%s\n' '<!DOCTYPE html><html><head><meta charset="utf-8"><title>playground analyze logs</title></head>' \
+              '<body style="font-family: sans-serif; margin: 4rem auto; max-width: 46rem">' \
+              '<h1>🔥 Log Analysis ended without a log report</h1>' \
+              '<p>A CFK support bundle has its own report, or the analysis stopped: see the terminal.</p></body></html>' > "$progress_page"
+      fi
+  }
   if [ -z "$PG_VERBOSE_MODE" ]
   then
-      trap 'rm -rf $tmp_dir' EXIT
+      trap 'finish_progress_page; rm -rf $tmp_dir' EXIT
   else
+      trap 'finish_progress_page' EXIT
       log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+  if [[ -z "$json_out" ]] && { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] \
+      && command -v python3 > /dev/null 2>&1 && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+  then
+      read -r input_total_bytes input_total_files input_has_archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "${file_array[@]}" 2>/dev/null || echo "0 0 1")
+      if [ "${input_total_bytes:-0}" -ge $((20 * 1024 * 1024)) ]
+      then
+          mkdir -p "$output_dir"
+          report_stem=$(basename "${file_array[0]%/}")
+          report_stem="${report_stem%%.*}"
+          progress_page="$(cd "$output_dir" && pwd)/${report_stem}-log-report.html"
+          export PG_PROGRESS_HTML="$progress_page" PG_PROGRESS_TITLE="playground analyze logs ${file_array[*]}" PG_PROGRESS_STARTED="$(date +%s)"
+          # the bar and the file count of the page are exact only without archives (extracted on the way)
+          if [ "${input_has_archive:-1}" == "0" ]
+          then
+              export PG_PROGRESS_TOTAL="$input_total_files" PG_PROGRESS_TOTAL_BYTES="$input_total_bytes"
+          fi
+          progress_step "🔎 starting: $(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$input_total_bytes") to analyze"
+          log "🌐 Opening $progress_page in browser: it shows the progress, then the report"
+          if command -v open > /dev/null 2>&1
+          then
+              open "$progress_page"
+          else
+              xdg-open "$progress_page" > /dev/null 2>&1 || true
+          fi
+      fi
   fi
 
   # every distinct record, for the HTML report and --json (see summarize_log_errors)
@@ -61520,6 +61581,7 @@ playground_analyze_logs_command() {
   exports_file="$tmp_dir/exports"
   : > "$exports_file"
   nb_files=0
+  nb_bytes=0
   nb_files_with_findings=0
   nb_skipped=0
   nb_duplicates=0
@@ -61634,13 +61696,54 @@ playground_analyze_logs_command() {
       return 1
   }
 
+  # a JSON or CSV export of log events (CloudWatch Logs Insights, Elasticsearch / OpenSearch, Kibana Discover CSV,
+  # structured JSON logs, JSON lines of fluentd / Kubernetes / logstash): converted back to log lines, oldest first
+  # (tools/log-analyzer/json_log_export.py, JSON lines streamed), so that the records, their stack traces and the line
+  # numbers of the HTML report are those of a log file. Returns 1 when it is not an export of log events: the caller
+  # reads the file as it is. $1: path, $2: label, $3: format shown (JSON, CSV, JSON lines)
+  function analyze_logs_export () {
+      local path="$1"
+      local label="$2"
+      local export_format="$3"
+      local converted nb_events
+      nb_extracted=$((nb_extracted+1))
+      converted=$(basename "$path")
+      converted="$tmp_dir/$nb_extracted/${converted%%.*}.log"
+      mkdir -p "$(dirname "$converted")"
+      # stderr kept: the progress bar of a large file
+      if nb_events=$(PG_PROGRESS_STEP="🔄 converting $label ($export_format export)" python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted")
+      then
+          log "🔄 $label: $export_format export of $nb_events log events ($(file_size_human "$path")), analyzed as log lines (oldest first)"
+          printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
+          analyze_logs_digest "$label" "$converted" "$path" < "$converted"
+          return 0
+      fi
+      rm -f "$converted"
+      return 1
+  }
+
   # prints the digest of one log, read on stdin, when it has findings
-  # $1: label to display, $2: path of the file
+  # $1: label to display, $2: path of the file read, $3: the file it comes from (a JSON / CSV export converted), for its size
   function analyze_logs_digest () {
       label="$1"
       printf '%s\t%s\t%s\n' "$label" "$2" "$([[ "$2" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
-      output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+      local input_bytes
+      input_bytes=$(file_size "${3:-$2}")
+      # a progress bar in the terminal for a large file (and the progress page), stdin read through progress.py cat
+      if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+      then
+          local size_args=()
+          if [[ "$2" != *.gz ]] && [ -f "$2" ]
+          then
+              size_args=(--size "$(file_size "$2")")
+          fi
+          output=$(PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+      else
+          output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+      fi
       nb_files=$((nb_files+1))
+      nb_bytes=$((nb_bytes+${input_bytes:-0}))
+      export PG_PROGRESS_DONE=$nb_files PG_PROGRESS_BYTES=$nb_bytes
       if [[ "$output" == "✅"* ]]
       then
           return
@@ -61819,20 +61922,13 @@ playground_analyze_logs_command() {
               then
                   return
               fi
-              local converted
-              nb_extracted=$((nb_extracted+1))
-              converted=$(basename "$path")
-              converted="$tmp_dir/$nb_extracted/${converted%%.*}.log"
-              mkdir -p "$(dirname "$converted")"
-              local nb_events export_format=JSON
+              local export_format=JSON
               case "$path" in
                   *.csv|*.csv.gz) export_format=CSV ;;
               esac
-              if nb_events=$(python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted" 2>/dev/null)
+              if analyze_logs_export "$path" "$label" "$export_format"
               then
-                  log "🔄 $label: $export_format export of $nb_events log events, analyzed as log lines (oldest first)"
-                  printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
-                  analyze_logs_digest "$label" "$converted" < "$converted"
+                  :
               elif [[ "$path" == *.gz ]]
               then
                   analyze_logs_digest "$label" "$path" < <(gzip -dc "$path" 2>/dev/null)
@@ -61852,6 +61948,12 @@ playground_analyze_logs_command() {
               then
                   if ! is_duplicate_file "$path" "$label"
                   then
+                      # JSON lines whatever the extension (a fluentd / Kubernetes / logstash dump saved as .log): converted
+                      # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON
+                      if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
+                      then
+                          return
+                      fi
                       analyze_logs_digest "$label" "$path" < "$path"
                       append_config_file "$path" "$label"
                   fi
@@ -61956,11 +62058,12 @@ playground_analyze_logs_command() {
   then
       levels="ERROR/FATAL/WARN"
   fi
+  read_msg="$(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$nb_bytes" 2>/dev/null || echo "$nb_bytes bytes") read in $(( (SECONDS-analyze_started) / 60 )) min $(( (SECONDS-analyze_started) % 60 )) s"
   if [ $nb_files_with_findings -eq 0 ]
   then
-      log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped${duplicates_msg})"
+      log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
   else
-      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped${duplicates_msg})"
+      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned, $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
   fi
 
   if ! command -v python3 &>/dev/null
@@ -61977,9 +62080,10 @@ playground_analyze_logs_command() {
   if [ $nb_files_with_findings -eq 0 ] && [ $nb_files -gt 0 ]
   then
       overview_args=(--records "$records_file" --sources "$sources_file" --exports "$exports_file" --levels "$levels")
-      if python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" > "$overview_text_file" 2>/dev/null
+      progress_step "🔭 overview of the logs (no $levels record)"
+      if python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" --json-out "$tmp_dir/overview.json" > "$overview_text_file" 2>/dev/null
       then
-          overview_json=$(python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" --json 2>/dev/null || echo null)
+          overview_json=$(cat "$tmp_dir/overview.json" 2>/dev/null || echo null)
           if [[ -n "$sanitize" ]]
           then
               python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$overview_text_file" > "$overview_text_file.sanitized" && mv "$overview_text_file.sanitized" "$overview_text_file"
@@ -62009,9 +62113,11 @@ playground_analyze_logs_command() {
   done < "$sources_file"
   if [ -s "$streams_sources_file" ]
   then
-      if python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --sources "$streams_sources_file" > "$streams_text_file" 2>/dev/null
+      progress_step "🌊 Kafka Streams applications of the logs"
+      # one pass for the text and the JSON (a large log is read once)
+      if python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --sources "$streams_sources_file" --json-out "$tmp_dir/kafka-streams-raw.json" > "$streams_text_file" 2>/dev/null
       then
-          streams_json=$(python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --json --sources "$streams_sources_file" 2>/dev/null || echo null)
+          streams_json=$(cat "$tmp_dir/kafka-streams-raw.json" 2>/dev/null || echo null)
           if [[ -n "$sanitize" ]]
           then
               python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$streams_text_file" > "$streams_text_file.sanitized" && mv "$streams_text_file.sanitized" "$streams_text_file"
@@ -62116,7 +62222,14 @@ playground_analyze_logs_command() {
   fi
   report_args+=(--sources "$sources_file")
   export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
-  write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
+  progress_step "📝 writing the HTML report"
+  # the progress page already open in the browser becomes the report (same path): not opened a second time
+  report_no_open=""
+  if [ -n "$progress_page" ] && [ "$progress_page" == "$output_dir/${stem}-log-report.html" ]
+  then
+      report_no_open=1
+  fi
+  write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
   exit $cfk_exit
 
 }
@@ -63604,12 +63717,71 @@ playground_debug_analyze_logs_command() {
   export PG_LOG_DIGEST_CONNECTORS="${connector_array[*]}"
   export PG_LOG_DIGEST_WITH_WORKER="$with_worker"
 
+  # bytes of a file (0 when it cannot be read)
+  function file_size () {
+      wc -c < "$1" 2>/dev/null | tr -d ' ' || echo 0
+  }
+
+  function file_size_human () {
+      python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$(file_size "$1")" 2>/dev/null
+  }
+
+  # a step of the 🔄 progress page open in the browser (none without it)
+  function progress_step () {
+      if [ -n "${PG_PROGRESS_HTML:-}" ]
+      then
+          python3 -I "$root_folder/tools/log-analyzer/progress.py" page --step "$1" 2>/dev/null || true
+      fi
+  }
+
+  analyze_started=$SECONDS
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+
+  # 🔄 large inputs (20 MB or more), in an interactive terminal: the report is opened in the browser right away, as a
+  # progress page (step, bytes read, elapsed time) that reloads every 2 s until the report replaces it at the same path
+  # (tools/log-analyzer/progress.py). Ended by an EXIT trap when there is no log report (only CFK bundles, failure)
+  progress_page=""
+  function finish_progress_page () {
+      if [ -n "$progress_page" ] && [ -f "$progress_page" ] && grep -q "Log Analysis in progress" "$progress_page" 2>/dev/null
+      then
+          printf '%s\n' '<!DOCTYPE html><html><head><meta charset="utf-8"><title>playground analyze logs</title></head>' \
+              '<body style="font-family: sans-serif; margin: 4rem auto; max-width: 46rem">' \
+              '<h1>🔥 Log Analysis ended without a log report</h1>' \
+              '<p>A CFK support bundle has its own report, or the analysis stopped: see the terminal.</p></body></html>' > "$progress_page"
+      fi
+  }
   if [ -z "$PG_VERBOSE_MODE" ]
   then
-      trap 'rm -rf $tmp_dir' EXIT
+      trap 'finish_progress_page; rm -rf $tmp_dir' EXIT
   else
+      trap 'finish_progress_page' EXIT
       log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+  if [[ -z "$json_out" ]] && { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] \
+      && command -v python3 > /dev/null 2>&1 && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+  then
+      read -r input_total_bytes input_total_files input_has_archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "${file_array[@]}" 2>/dev/null || echo "0 0 1")
+      if [ "${input_total_bytes:-0}" -ge $((20 * 1024 * 1024)) ]
+      then
+          mkdir -p "$output_dir"
+          report_stem=$(basename "${file_array[0]%/}")
+          report_stem="${report_stem%%.*}"
+          progress_page="$(cd "$output_dir" && pwd)/${report_stem}-log-report.html"
+          export PG_PROGRESS_HTML="$progress_page" PG_PROGRESS_TITLE="playground analyze logs ${file_array[*]}" PG_PROGRESS_STARTED="$(date +%s)"
+          # the bar and the file count of the page are exact only without archives (extracted on the way)
+          if [ "${input_has_archive:-1}" == "0" ]
+          then
+              export PG_PROGRESS_TOTAL="$input_total_files" PG_PROGRESS_TOTAL_BYTES="$input_total_bytes"
+          fi
+          progress_step "🔎 starting: $(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$input_total_bytes") to analyze"
+          log "🌐 Opening $progress_page in browser: it shows the progress, then the report"
+          if command -v open > /dev/null 2>&1
+          then
+              open "$progress_page"
+          else
+              xdg-open "$progress_page" > /dev/null 2>&1 || true
+          fi
+      fi
   fi
 
   # every distinct record, for the HTML report and --json (see summarize_log_errors)
@@ -63624,6 +63796,7 @@ playground_debug_analyze_logs_command() {
   exports_file="$tmp_dir/exports"
   : > "$exports_file"
   nb_files=0
+  nb_bytes=0
   nb_files_with_findings=0
   nb_skipped=0
   nb_duplicates=0
@@ -63738,13 +63911,54 @@ playground_debug_analyze_logs_command() {
       return 1
   }
 
+  # a JSON or CSV export of log events (CloudWatch Logs Insights, Elasticsearch / OpenSearch, Kibana Discover CSV,
+  # structured JSON logs, JSON lines of fluentd / Kubernetes / logstash): converted back to log lines, oldest first
+  # (tools/log-analyzer/json_log_export.py, JSON lines streamed), so that the records, their stack traces and the line
+  # numbers of the HTML report are those of a log file. Returns 1 when it is not an export of log events: the caller
+  # reads the file as it is. $1: path, $2: label, $3: format shown (JSON, CSV, JSON lines)
+  function analyze_logs_export () {
+      local path="$1"
+      local label="$2"
+      local export_format="$3"
+      local converted nb_events
+      nb_extracted=$((nb_extracted+1))
+      converted=$(basename "$path")
+      converted="$tmp_dir/$nb_extracted/${converted%%.*}.log"
+      mkdir -p "$(dirname "$converted")"
+      # stderr kept: the progress bar of a large file
+      if nb_events=$(PG_PROGRESS_STEP="🔄 converting $label ($export_format export)" python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted")
+      then
+          log "🔄 $label: $export_format export of $nb_events log events ($(file_size_human "$path")), analyzed as log lines (oldest first)"
+          printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
+          analyze_logs_digest "$label" "$converted" "$path" < "$converted"
+          return 0
+      fi
+      rm -f "$converted"
+      return 1
+  }
+
   # prints the digest of one log, read on stdin, when it has findings
-  # $1: label to display, $2: path of the file
+  # $1: label to display, $2: path of the file read, $3: the file it comes from (a JSON / CSV export converted), for its size
   function analyze_logs_digest () {
       label="$1"
       printf '%s\t%s\t%s\n' "$label" "$2" "$([[ "$2" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
-      output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+      local input_bytes
+      input_bytes=$(file_size "${3:-$2}")
+      # a progress bar in the terminal for a large file (and the progress page), stdin read through progress.py cat
+      if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+      then
+          local size_args=()
+          if [[ "$2" != *.gz ]] && [ -f "$2" ]
+          then
+              size_args=(--size "$(file_size "$2")")
+          fi
+          output=$(PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+      else
+          output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+      fi
       nb_files=$((nb_files+1))
+      nb_bytes=$((nb_bytes+${input_bytes:-0}))
+      export PG_PROGRESS_DONE=$nb_files PG_PROGRESS_BYTES=$nb_bytes
       if [[ "$output" == "✅"* ]]
       then
           return
@@ -63923,20 +64137,13 @@ playground_debug_analyze_logs_command() {
               then
                   return
               fi
-              local converted
-              nb_extracted=$((nb_extracted+1))
-              converted=$(basename "$path")
-              converted="$tmp_dir/$nb_extracted/${converted%%.*}.log"
-              mkdir -p "$(dirname "$converted")"
-              local nb_events export_format=JSON
+              local export_format=JSON
               case "$path" in
                   *.csv|*.csv.gz) export_format=CSV ;;
               esac
-              if nb_events=$(python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted" 2>/dev/null)
+              if analyze_logs_export "$path" "$label" "$export_format"
               then
-                  log "🔄 $label: $export_format export of $nb_events log events, analyzed as log lines (oldest first)"
-                  printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
-                  analyze_logs_digest "$label" "$converted" < "$converted"
+                  :
               elif [[ "$path" == *.gz ]]
               then
                   analyze_logs_digest "$label" "$path" < <(gzip -dc "$path" 2>/dev/null)
@@ -63956,6 +64163,12 @@ playground_debug_analyze_logs_command() {
               then
                   if ! is_duplicate_file "$path" "$label"
                   then
+                      # JSON lines whatever the extension (a fluentd / Kubernetes / logstash dump saved as .log): converted
+                      # back to log lines, the level of {"log":"[ERROR] …"} is not seen in the raw JSON
+                      if [[ "$(head -c 4096 "$path" 2>/dev/null | LC_ALL=C tr -d ' \t\r\n' | head -c 1)" == "{" ]] && analyze_logs_export "$path" "$label" "JSON lines"
+                      then
+                          return
+                      fi
                       analyze_logs_digest "$label" "$path" < "$path"
                       append_config_file "$path" "$label"
                   fi
@@ -64060,11 +64273,12 @@ playground_debug_analyze_logs_command() {
   then
       levels="ERROR/FATAL/WARN"
   fi
+  read_msg="$(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$nb_bytes" 2>/dev/null || echo "$nb_bytes bytes") read in $(( (SECONDS-analyze_started) / 60 )) min $(( (SECONDS-analyze_started) % 60 )) s"
   if [ $nb_files_with_findings -eq 0 ]
   then
-      log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped${duplicates_msg})"
+      log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
   else
-      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped${duplicates_msg})"
+      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned, $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
   fi
 
   if ! command -v python3 &>/dev/null
@@ -64081,9 +64295,10 @@ playground_debug_analyze_logs_command() {
   if [ $nb_files_with_findings -eq 0 ] && [ $nb_files -gt 0 ]
   then
       overview_args=(--records "$records_file" --sources "$sources_file" --exports "$exports_file" --levels "$levels")
-      if python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" > "$overview_text_file" 2>/dev/null
+      progress_step "🔭 overview of the logs (no $levels record)"
+      if python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" --json-out "$tmp_dir/overview.json" > "$overview_text_file" 2>/dev/null
       then
-          overview_json=$(python3 -I "$root_folder/tools/log-analyzer/log_overview.py" "${overview_args[@]}" --json 2>/dev/null || echo null)
+          overview_json=$(cat "$tmp_dir/overview.json" 2>/dev/null || echo null)
           if [[ -n "$sanitize" ]]
           then
               python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$overview_text_file" > "$overview_text_file.sanitized" && mv "$overview_text_file.sanitized" "$overview_text_file"
@@ -64113,9 +64328,11 @@ playground_debug_analyze_logs_command() {
   done < "$sources_file"
   if [ -s "$streams_sources_file" ]
   then
-      if python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --sources "$streams_sources_file" > "$streams_text_file" 2>/dev/null
+      progress_step "🌊 Kafka Streams applications of the logs"
+      # one pass for the text and the JSON (a large log is read once)
+      if python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --sources "$streams_sources_file" --json-out "$tmp_dir/kafka-streams-raw.json" > "$streams_text_file" 2>/dev/null
       then
-          streams_json=$(python3 -I "$root_folder/tools/streams-analyzer/streams_report.py" --json --sources "$streams_sources_file" 2>/dev/null || echo null)
+          streams_json=$(cat "$tmp_dir/kafka-streams-raw.json" 2>/dev/null || echo null)
           if [[ -n "$sanitize" ]]
           then
               python3 -I "$sanitizer" --state "$sanitize_state" --no-count < "$streams_text_file" > "$streams_text_file.sanitized" && mv "$streams_text_file.sanitized" "$streams_text_file"
@@ -64220,7 +64437,14 @@ playground_debug_analyze_logs_command() {
   fi
   report_args+=(--sources "$sources_file")
   export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
-  write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
+  progress_step "📝 writing the HTML report"
+  # the progress page already open in the browser becomes the report (same path): not opened a second time
+  report_no_open=""
+  if [ -n "$progress_page" ] && [ "$progress_page" == "$output_dir/${stem}-log-report.html" ]
+  then
+      report_no_open=1
+  fi
+  write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
   exit $cfk_exit
 
 }

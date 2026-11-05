@@ -19,6 +19,8 @@ import sys
 from collections import Counter, OrderedDict
 from typing import Dict, List, Optional
 
+# no __pycache__ next to the tools of the repository
+sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import log_report as lr  # noqa: E402
 
@@ -28,7 +30,8 @@ LEVEL_ALIASES = {"WARNING": "WARN", "SEVERE": "ERROR", "CRITICAL": "FATAL", "FIN
 # the level token of a log line, in its first 80 characters: log4j / logback / the JSON exports converted back
 LEVEL_RE = re.compile(r"(?:^|[\s\[|])(FATAL|ERROR|WARN|WARNING|INFO|DEBUG|TRACE|SEVERE|CRITICAL)(?=[\s\]|:])")
 # JVM unified logging (GC logs): [57686.021s][info][gc,heap     ] GC(13392) …
-JVM_RE = re.compile(r"^\[[^\]]*\](?:\[[^\]]*\])*?\[(error|warning|info|debug|trace)\s*\]\[([a-z0-9_, ]+?)\s*\]\s*(.*)$")
+# (after the time of the event, put in front by json_log_export.py: "[2026-10-14T19:13:28.410] [57686.021s][info]…")
+JVM_RE = re.compile(r"^(?:\[[^\]]*\] )?\[[^\]]*\](?:\[[^\]]*\])*?\[(error|warning|info|debug|trace)\s*\]\[([a-z0-9_, ]+?)\s*\]\s*(.*)$")
 # the logger at the end of a line: "(org.apache.kafka.connect.runtime.WorkerTask:123)" or " (com.example.Foo)"
 LOGGER_RE = re.compile(r"\s\(([A-Za-z_$][\w$]*(?:\.[\w$]+)+)(?::\d+)?\)$")
 # the logger after the level / thread of logback / log4j: "INFO  c.e.Foo - message", "INFO [thread] o.a.k.Foo: message"
@@ -210,8 +213,12 @@ def main() -> int:
     ap.add_argument("--levels", default="ERROR/FATAL", help="levels of the digest, for the title")
     ap.add_argument("--top", type=int, default=10, help="number of messages")
     ap.add_argument("--json", action="store_true", help="print the overview as JSON")
+    ap.add_argument("--json-out", metavar="FILE", help="also write the JSON there (one pass for the text and the JSON)")
     args = ap.parse_args()
     res = overview(args.records, args.sources, args.exports, args.top)
+    if args.json_out:
+        with open(args.json_out, "w", encoding="utf-8") as fh:
+            json.dump(res, fh, indent=2, ensure_ascii=False)
     if args.json:
         print(json.dumps(res, indent=2, ensure_ascii=False))
     else:
