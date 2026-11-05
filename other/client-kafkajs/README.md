@@ -30,6 +30,8 @@ playground run -f start.sh
 4. Same with Avro records: schema `io.confluent.playground.Payment` registered under subject `kafkajs-avro-value`, `registry.encode` / `registry.decode` of `@kafkajs/confluent-schema-registry`.
 5. Shows the schema with `playground schema get --subject kafkajs-avro-value`, and the committed offsets of both groups with `playground consumer-group describe`.
 
+The image sets `NODE_OPTIONS=--disable-warning=TimeoutNegativeWarning`: kafkajs passes a negative delay to `setTimeout`, which Node.js 23+ reports on every client run (`TimeoutNegativeWarning: … is a negative number.`).
+
 To try your own client code or configuration, edit `client.js` (rebuild with `playground container recreate`) or `client.properties` (read at each run, no rebuild needed).
 
 ## Use another client version
