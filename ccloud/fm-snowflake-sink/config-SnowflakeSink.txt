@@ -136,6 +136,8 @@ Authentication method
 🔘 authentication.method
 
 Select how you want to authenticate with Snowflake. Supported options are `Password` and `OAuth 2.0`. 
+`Password` (default): Uses private key authentication. 
+`OAuth 2.0` (Bring your own app): Uses Snowflake OAuth authentication.
 
 	 - Type: STRING
 	 - Default: Password
@@ -466,6 +468,7 @@ Token endpoint - {snowflake.url.name}/oauth/token-request
 🔘 snowflake.streaming.iceberg.enabled
 
 Interested in integrating with Iceberg? Take a look at Tableflow — a solution designed to simplify and streamline your Iceberg workflows, refer https://www.confluent.io/product/tableflow/.
+This property specifies whether the connector ingests data into an Iceberg table. The connector fails if this property doesn't match the actual table type, refer https://docs.snowflake.com/en/user-guide/kafka-connector-iceberg.
 
 	 - Type: STRING
 	 - Default: false
@@ -493,6 +496,8 @@ If set to true, the connector task will fail whenever it encounters an authoriza
 🔘 enable.dynamic.flush
 
 If set to true, each connector task can consume from up to 2x topic partitions depending on the buffer size.
+This option is useful for workloads with many topic partitions but low throughput per partition.
+Note: Enabling this configuration may degrade performance. Because each task handles more partitions, flush operations may be triggered more frequently with smaller batches of data, based on the connector's buffer footprint.
 
 	 - Type: STRING
 	 - Default: false
@@ -607,6 +612,9 @@ Additional Configs
 🔘 behavior.on.null.values
 
 Specify how the connector should handle tombstone records. A tombstone record is defined as a record where the entire value field is null.
+This property supports the following values:
+- DEFAULT: When the Kafka connector encounters a tombstone record, it inserts an empty JSON string in the content column.
+- IGNORE (default): The Kafka connector skips tombstone records and does not insert rows for these records.
 
 	 - Type: STRING
 	 - Default: IGNORE
@@ -751,6 +759,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -951,4 +961,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

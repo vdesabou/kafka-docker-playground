@@ -194,6 +194,7 @@ A format string for the destination table name, which may contain ${topic} as a 
 
 A comma separated list of Kafka Record key field names that specifies the order of Kafka key fields to be concatenated to form the row key.
 For example the list: 'username, post_id, time_stamp' when applied to a Kafka key: {'username': 'bob','post_id': '213', 'time_stamp': '123123'} and with delimiter # gives the row key 'bob#213#123123'. You can also access terms nested in the key by using . as a delimiter. If this configuration is empty or unspecified and the Kafka Message Key is a: STRUCT: all the fields in the struct are used to construct the row key. BYTE ARRAY: the row key is set to the byte array as is. PRIMITIVE: the row key is set to the primitive stringified.
+If prefixes, more complicated delimiters, and string constants are required in your Row Key, consider configuring an SMT to add relevant fields to the Kafka Record key.
 
 	 - Type: LIST
 	 - Default: 
@@ -266,6 +267,8 @@ Additional Configs
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -628,4 +631,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

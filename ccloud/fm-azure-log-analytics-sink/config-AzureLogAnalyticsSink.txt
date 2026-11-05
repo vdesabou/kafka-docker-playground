@@ -158,6 +158,7 @@ Azure Log Analytics Details
 
 Map of topics to tables (optional).  Format: comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,...  Note that topic name should not be modified using regex SMT while using this option. Lastly, if the topic2table map doesn't contain the topic for a record, a table  with the same name as the topic name would be created. A valid table name can't exceed 100 characters.
  It should contain only letters, numbers and (_)underscore  character.
+ It must start with letters.
 
 	 - Type: STRING
 	 - Default: 
@@ -260,6 +261,8 @@ Additional Configs
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -568,4 +571,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

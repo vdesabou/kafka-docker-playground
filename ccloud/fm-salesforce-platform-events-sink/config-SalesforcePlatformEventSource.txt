@@ -61,6 +61,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -247,6 +249,9 @@ Connection details
 🔘 salesforce.initial.start
 
 Specify the initial starting point for the connector. Allowed values are
+latest: only read events that arrive after the connector has started.
+all: read all events including past events from the beginning of the Event Bus.
+The default value is latest.
 
 	 - Type: STRING
 	 - Default: latest
@@ -427,6 +432,8 @@ Flag to determine if the associated topic should be converted to lowercase
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -598,6 +605,7 @@ Whether to scrub invalid names by replacing invalid characters with valid charac
 🔘 invalid.replay.id.behaviour
 
 Determine if the connector should fallback to fetching all or latest events if invalid or expired replayId is provided.
+ NOTE: Salesforce only retains events for 24 hours (standard-volume) or 72 hours (high-volume/CDC), and events outside this window are unrecoverable regardless of fallback mode.
 
 	 - Type: STRING
 	 - Default: all
@@ -627,4 +635,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 
