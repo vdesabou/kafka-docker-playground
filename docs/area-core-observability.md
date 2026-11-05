@@ -16,6 +16,8 @@ playground broker transactions describe-producers --topic payments   # ⚠️ on
 playground topic dump-log -t payments --partition 0        # what is really in the segment: batches, producers, transaction markers
 ```
 
+Every broker and replication example: `playground find-example --category broker --limit 50`; clients: `--category client`.
+
 ## ❓ Your question, the answer
 
 | Question | Command or example |

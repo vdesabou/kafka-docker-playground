@@ -18,6 +18,8 @@ playground tools cert inspect --server broker:9092              # chain, SANs, e
 playground analyze logs --sample cfk_bundle --output-dir /tmp/cfk-bundle   # a CFK support bundle digest, no environment needed
 ```
 
+Every security example: `playground find-example --category security --limit 50`; CFK: `--category cfk`.
+
 ## ❓ Your question, the answer
 
 ### ☸️ Confluent for Kubernetes

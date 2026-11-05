@@ -15,6 +15,8 @@ playground schema history --subject orders-value                                
 playground schema describe --id 3                                               # the schema behind an id seen in a record
 ```
 
+Every client example: `playground find-example --category client --limit 50`; schema examples: `playground find-example schema --category other`.
+
 ## ❓ Your question, the answer
 
 | Question | Command or example |
