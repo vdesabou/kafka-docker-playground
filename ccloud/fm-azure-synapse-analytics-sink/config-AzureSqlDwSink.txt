@@ -149,6 +149,8 @@ Data Mapping
 
 A format string for the destination table name, which may contain ‘${topic}’ as a placeholder for the originating topic name.
 
+For example, ``kafka_${topic}`` for the topic ‘orders’ will map to the table name ‘kafka_orders’.
+
 	 - Type: STRING
 	 - Default: ${topic}
 	 - Importance: MEDIUM
@@ -265,6 +267,8 @@ Additional Configs
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -552,4 +556,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

@@ -663,12 +663,11 @@ Controls the number of digits used for zero-padding Kafka offset numbers in S3 o
 
 🔘 format.bytearray.separator
 
-The line separator string that is inserted between individual records when using the ByteArrayFormat. Supports escape sequences like 
-, 
-, 	.
+The line separator string that is inserted between individual records when using the ByteArrayFormat. Supports escape sequences like \n, \r\n, \t.
 
 	 - Type: STRING
 	 - Default: 
+
 	 - Importance: LOW
 	 - Required: false
 
@@ -864,6 +863,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -1082,4 +1083,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

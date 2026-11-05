@@ -1,4 +1,16 @@
 ==========================
+Mode
+==========================
+🔘 mode
+
+Sets the connector's operating mode. GENERIC (default) writes each record's value in the selected output message format. BACKUP_FULL_RECORD wraps the full Kafka record (key, value, headers, timestamp, offset, partition, Schema Registry metadata) in a lossless envelope on disk, so the GCS Source connector can restore the topic exactly, including tombstones and header types.
+
+	 - Type: STRING
+	 - Default: GENERIC
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
 Which topics do you want to get data from?
 ==========================
 🔘 topics.regex
@@ -51,6 +63,15 @@ Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTO
 	 - Default: JSON
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 input.key.format
+
+Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSON_SR, PROTOBUF, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF. Choose BYTES when Mode is BACKUP_FULL_RECORD for a lossless round-trip on the GCS Source side.
+
+	 - Type: STRING
+	 - Default: BYTES
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 How should we connect to your data?
@@ -182,6 +203,15 @@ Set the output message format for values. Valid entries are AVRO, JSON, PARQUET 
 	 - Type: STRING
 	 - Default: ${input.data.format}
 	 - Importance: HIGH
+	 - Required: false
+
+🔘 format.json.schema.enable
+
+When true, writes JSON messages to GCS with an embedded ``{schema, payload}`` envelope. Only applicable when Output Message Format is JSON. Recommended true when Mode is BACKUP_FULL_RECORD so the GCS Source connector can restore schema-bearing records.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 parquet.codec
@@ -358,6 +388,15 @@ Maximum number of tasks for the connector.
 ==========================
 Additional Configs
 ==========================
+🔘 key.converter.use.optional.for.nonrequired
+
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -367,12 +406,30 @@ Whether to replace fields that have a default value and that are null to the def
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.enhanced.protobuf.schema.support
+
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.value.schema.id.deserializer
 
 The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
 
 	 - Type: STRING
 	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.enhanced.avro.schema.support
+
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -457,9 +514,27 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.wrapper.for.raw.primitives
+
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.ignore.default.for.nullables
 
 When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.optional.for.nullables
+
+Treats proto3 explicit-optional fields as nullable so default values are preserved across backup/restore. Must be set symmetrically on sink and source. Applicable for PROTOBUF Converters.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -493,6 +568,15 @@ Whether to generate an index suffix for unions. Applicable for Protobuf Converte
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.preserve.additional.properties
+
+Preserve additional-property VALUES across backup/restore for JSON Schema fields using additionalProperties. Must be set symmetrically on sink and source. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.wrapper.for.raw.primitives
 
 Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
@@ -505,6 +589,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -556,12 +642,30 @@ Verify latest subject version is backward compatible when `use.latest.version` i
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.object.additional.properties
+
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.use.schema.guid
 
 The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 
 	 - Type: STRING
 	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized keys. Input message keys must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -598,6 +702,24 @@ Use latest version of schema in subject for serialization when auto.register.sch
 
 	 - Type: BOOLEAN
 	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.preserve.additional.properties
+
+Preserve additional-property VALUES across backup/restore for JSON Schema fields using additionalProperties. Must be set symmetrically on sink and source. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -655,6 +777,15 @@ Enable enhanced schema support to preserve package information. Applicable for P
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.wrapper.for.nullables
+
+Wraps nullable fields in Protobuf wrapper types (StringValue, Int32Value, etc.). Leave at the default (false) for backup/restore. Applicable for PROTOBUF Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.scrub.invalid.names
 
 Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
@@ -705,4 +836,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

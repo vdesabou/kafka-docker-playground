@@ -18,7 +18,7 @@
     "filename.offset.zero.pad.width": "10",
     "flush.size": "1000",
     "format.bytearray.extension": ".bin",
-    "format.bytearray.separator": "",
+    "format.bytearray.separator": "
     "header.converter": "",
     "input.data.format": "JSON",
     "input.key.format": "BYTES",
@@ -113,3 +113,4 @@
     "value.converter.value.subject.name.strategy": "TopicNameStrategy",
     "value.converter.wrapper.for.nullables": "",
     "value.converter.wrapper.for.raw.primitives": "",
+",

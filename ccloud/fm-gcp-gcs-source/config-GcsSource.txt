@@ -24,12 +24,12 @@ Which topic(s) do you want to send data to?
 ==========================
 🔘 topic.regex.list
 
-A list of topics along with a regex expression of the files which are to be sent to that topic.  For example: "my-topic:.*" will send all files to "my-topic", while a list containing only the expression "special-topic:.*\.json" will send only files starting with ".json" to "special-topic", and all other files not matching any patterns will be ignored and not sourced. Files that match multiple mappings will be sent to the first topic in the list that maps the file. The ``topic.regex.list`` property matches the full GCS path (for example, ``folder/file.txt``), not just the filename.
+A list of topics along with a regex expression of the files which are to be sent to that topic.  For example: "my-topic:.*" will send all files to "my-topic", while a list containing only the expression "special-topic:.*\.json" will send only files starting with ".json" to "special-topic", and all other files not matching any patterns will be ignored and not sourced. Files that match multiple mappings will be sent to the first topic in the list that maps the file. The ``topic.regex.list`` property matches the full GCS path (for example, ``folder/file.txt``), not just the filename. Not used when Mode is RESTORE_BACKUP_FULL_RECORD.
 
 	 - Type: LIST
 	 - Default: 
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
 
 ==========================
 Schema Config
@@ -85,6 +85,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -193,6 +195,54 @@ Set the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTO
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 output.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, STRING, or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based key format like AVRO, JSON_SR, and PROTOBUF. BYTES is only allowed when Mode is RESTORE_BACKUP_FULL_RECORD. Note: Output Message Format sets the value converter; this config sets the key converter.
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 format.json.schema.enable
+
+When true, expects JSON files with an embedded ``{schema, payload}`` envelope. Only applicable when Input Message Format is JSON. Set true when restoring backups written by the GCS Sink connector with Mode BACKUP_FULL_RECORD in JSON format.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Mode
+==========================
+🔘 mode
+
+Sets the connector's operating mode. GENERIC (default) reads records from GCS and produces them to Kafka using the selected input message format. RESTORE_BACKUP_FULL_RECORD reads envelope files written by the GCS Sink connector in BACKUP_FULL_RECORD mode and restores the original Kafka records (key, value, headers, timestamp, partition, Schema Registry metadata), including tombstones.
+
+	 - Type: STRING
+	 - Default: GENERIC
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 restore.topic.prefix
+
+Prefix prepended to the original topic name on restore. For example, prefix "restored-" restores a backup of topic "orders" to "restored-orders". Leave empty to restore to the original topic name. Applies only when Mode is RESTORE_BACKUP_FULL_RECORD.
+
+	 - Type: STRING
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 restore.preserve.timestamps
+
+When true, restored records carry the original Kafka producer timestamp captured at backup time. When false (default), restored records use the current wall-clock time. Applies only when Mode is RESTORE_BACKUP_FULL_RECORD. Warning: on topics with time-based retention, restored records whose original timestamp is older than retention.ms may be purged by log retention.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Storage
 ==========================
@@ -225,12 +275,11 @@ Should the task halt when it encounters an error or continue to the next file.
 
 🔘 format.bytearray.separator
 
-String inserted between records for ByteArrayFormat. Defaults to `
-` and may contain escape sequences like `
-`.  An input record that contains the line separator looks like multiple records in the storage object input.
+String inserted between records for ByteArrayFormat. Defaults to `\n` and may contain escape sequences like `\n`.  An input record that contains the line separator looks like multiple records in the storage object input.
 
 	 - Type: STRING
 	 - Default: 
+
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -300,12 +349,39 @@ When enabled, each produced Kafka record carries headers describing the source f
 ==========================
 Additional Configs
 ==========================
+🔘 key.converter.use.optional.for.nonrequired
+
+Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
 
 	 - Type: BOOLEAN
 	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.enhanced.protobuf.schema.support
+
+Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.enhanced.avro.schema.support
+
+Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -372,9 +448,27 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.wrapper.for.raw.primitives
+
+Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.ignore.default.for.nullables
 
 When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.optional.for.nullables
+
+Treats proto3 explicit-optional fields as nullable so default values are preserved across backup/restore. Must be set symmetrically on sink and source. Applicable for PROTOBUF Converters.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -408,6 +502,15 @@ Whether to generate an index suffix for unions. Applicable for Protobuf Converte
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.preserve.additional.properties
+
+Preserve additional-property VALUES across backup/restore for JSON Schema fields using additionalProperties. Must be set symmetrically on sink and source. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.wrapper.for.raw.primitives
 
 Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
@@ -420,6 +523,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -480,6 +585,24 @@ Verify latest subject version is backward compatible when `use.latest.version` i
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.object.additional.properties
+
+Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized keys. Input message keys must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.optional.for.nullables
 
 Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
@@ -513,6 +636,24 @@ Use latest version of schema in subject for serialization when auto.register.sch
 
 	 - Type: BOOLEAN
 	 - Default: 
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.preserve.additional.properties
+
+Preserve additional-property VALUES across backup/restore for JSON Schema fields using additionalProperties. Must be set symmetrically on sink and source. Applicable for JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -579,6 +720,15 @@ Enable enhanced schema support to preserve package information. Applicable for P
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.wrapper.for.nullables
+
+Wraps nullable fields in Protobuf wrapper types (StringValue, Int32Value, etc.). Leave at the default (false) for backup/restore. Applicable for PROTOBUF Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.scrub.invalid.names
 
 Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
@@ -611,4 +761,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 
