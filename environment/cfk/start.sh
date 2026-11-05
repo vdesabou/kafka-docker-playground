@@ -3436,6 +3436,35 @@ then
   fi
 fi
 
+# The k3d node is reused between examples and its kubelet image GC is disabled (K3D_KUBELET_ARGS above, #9364), so the
+# images of the previous examples pile up in it (on top of their copy in the host docker): on a small CI runner kubelet
+# then evicts every pod for ephemeral-storage and taints the node, and every following example fails (#10077).
+# When the node disk is filling up, remove the images no running container uses, before the imports below: the extra
+# pods of the previous example are gone (stop_all), the CP images of the pods still running are kept, and the imports
+# bring back a CP image that was removed
+K3D_IMAGE_PRUNE_THRESHOLD=${K3D_IMAGE_PRUNE_THRESHOLD:-70}
+k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
+k3d_node_disk_usage() {
+  # prints "<used %> <available GB>" of the filesystem holding the node images
+  docker exec "$k3d_server_node" df -Pk /var/lib/rancher/k3s 2>/dev/null | awk 'NR==2 {gsub("%","",$5); printf "%s %.1f\n", $5, $4/1048576}'
+}
+read -r k3d_disk_used k3d_disk_avail < <(k3d_node_disk_usage) || true
+if [[ "$k3d_disk_used" =~ ^[0-9]+$ ]]
+then
+  log "💾 k3d node disk: ${k3d_disk_used}% used, ${k3d_disk_avail}G available (unused images are pruned from ${K3D_IMAGE_PRUNE_THRESHOLD}%, configure with K3D_IMAGE_PRUNE_THRESHOLD env var)"
+  if [[ "$k3d_disk_used" -ge "$K3D_IMAGE_PRUNE_THRESHOLD" ]]
+  then
+    log "🧹 Removing the images no running pod uses from k3d node $k3d_server_node"
+    if docker exec "$k3d_server_node" crictl rmi --prune >/dev/null 2>&1
+    then
+      read -r k3d_disk_used k3d_disk_avail < <(k3d_node_disk_usage) || true
+      log "💾 k3d node disk after pruning: ${k3d_disk_used}% used, ${k3d_disk_avail}G available"
+    else
+      logwarn "⚠️ Could not prune the unused images of k3d node $k3d_server_node"
+    fi
+  fi
+fi
+
 log "Build/patch CP images in host docker daemon"
 # Build/patch CP images locally, then import them into k3d.
 maybe_create_image
