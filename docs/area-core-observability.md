@@ -27,6 +27,7 @@ Every broker and replication example: `playground find-example --category broker
 | `NotEnoughReplicasException` with `acks=all` | `topic create … --replication-factor 3 --config min.insync.replicas=3`, `broker stop --broker 3`, produce with `--producer-property acks=all` |
 | The lag of a `read_committed` consumer never drains, an LSO is stuck | `broker transactions list\|describe\|describe-producers\|find-hanging\|abort`; create the situation with `topic produce --transactional-id <id> --transaction open` |
 | What is in the log segment? | `playground topic dump-log` (batches, producers, transactions, open transactions) |
+| A Java producer / consumer (`kafka-clients`, Avro with `KafkaAvroSerializer`) to start from | [other/client-java](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-java), on Confluent Cloud [ccloud/client-java](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-java); the other languages: `playground find-example --category client` |
 | An old client fails with `UnsupportedVersionException` | `playground broker describe --api-versions --broker 1` |
 | Is the broker the bottleneck? | `playground broker metrics` (`--topic <t>`): request handler and network processor idle, request queue, produce p99 |
 | Broker configs, dynamic configs, quotas | `playground broker config`, `playground quota` |

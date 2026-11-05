@@ -9,7 +9,7 @@ deep dives to read, and a support case reproduced in 3 commands.
 | --- | --- | --- |
 | 🔗 Connect | self-managed and fully managed connectors, Kafka Connect | [👾 Content](/content.md), the [🧩 Connectors deep dives](/deep-dives?id=🧩-connectors) |
 | 🖥️ Brokers, clients and observability | Kafka brokers, KRaft, replication, transactions, Java clients, Control Center, metrics | [🖥️ Brokers, clients and observability](/area-core-observability.md) |
-| 🌊 Streams, schemas and non-Java clients | Schema Registry, data contracts, ksqlDB, Flink, Kafka Streams, .NET / JavaScript / Python / Go clients | [🌊 Streams, schemas and non-Java clients](/area-streams-schema-registry.md) |
+| 🌊 Streams, schemas and non-Java clients | Schema Registry, data contracts, ksqlDB, Flink, Kafka Streams, .NET / JavaScript / Python / Go / Rust / C clients | [🌊 Streams, schemas and non-Java clients](/area-streams-schema-registry.md) |
 | 🛡️ Platform, security and Cloud infra | CFK, SASL / SSL / Kerberos / LDAP / RBAC / OAuth, certificates, connectivity to Confluent Cloud | [🛡️ Platform, security and Cloud infra](/area-platform-security.md) |
 
 > [!TIP]

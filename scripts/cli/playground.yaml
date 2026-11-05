@@ -1436,8 +1436,8 @@ subcommands:
       2, Replicator), examples using\nplayground broker\n\n- cfk: Confluent for Kubernetes,
       examples defaulting to the cfk or\ncfk-rbac environment (every connect/ example
       also runs with\n--environment cfk)\n\n- client: producer / consumer and client
-      examples (Java, .NET,\nJavaScript, Python, Go, JMS, kcat)\n\nAllowed values:
-      connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center,
+      examples (Java, .NET,\nJavaScript, Python, Go, Rust, C/librdkafka, JMS, kcat)\n\nAllowed
+      values: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center,
       other, operator, academy, environment, reproduction-models, security, broker,
       cfk, client"
   - names:
