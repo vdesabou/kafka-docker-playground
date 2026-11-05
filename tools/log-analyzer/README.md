@@ -5,6 +5,16 @@ digest itself is plain bash (`scripts/cli/src/commands/analyze/logs.sh`, `summar
 `scripts/cli/src/lib/cli_function.sh`): it de-duplicates records with an occurrence count and collapses stack traces
 to their `Caused by:` chain.
 
+## JSON and CSV exports of log events
+
+`json_log_export.py <input> <output>` turns an export of log events back into plain log lines, oldest first, before
+the digest reads them: JSON (CloudWatch Logs Insights, CloudWatch events, Elasticsearch / OpenSearch hits, structured
+JSON logs) and CSV with a header row (`.csv`, `.csv.gz`: Kibana / OpenSearch Dashboards Discover, Splunk, Datadog,
+Grafana). In a CSV, each row is an event; a cell holding a JSON object (the `log` column with the ECS / logback JSON
+line of the container) is parsed and its fields win over the columns, `-` is an empty cell, and the Kibana time
+`Oct 14, 2026 @ 19:13:28.977` becomes ISO 8601. Exit `2` when the file is not an export of log events: `analyze logs`
+then reads it as it is.
+
 ## HTML report and JSON
 
 With `--sources <label<tab>path<tab>1 when the file stays on disk>` (written by `analyze logs`) and `--html-out`,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turn a JSON export of log events back into plain log lines, for playground analyze logs.
+"""Turn a JSON or CSV export of log events back into plain log lines, for playground analyze logs.
 
 Exports recognized (a JSON array, JSON lines, or one object wrapping the events; .gz accepted):
   - AWS CloudWatch Logs Insights console export: [{"@timestamp": ..., "@message": ...}]
@@ -9,15 +9,22 @@ Exports recognized (a JSON array, JSON lines, or one object wrapping the events;
   - Kubernetes / fluentd / Loki style events: {"log": ...}, {"msg": ...}, {"line": ...}
   - structured JSON logs (logback / log4j2 JSON layout, ECS): {"@timestamp", "level", "logger_name", "message",
     "stack_trace"} become "[<ts>] <LEVEL> <message> (<logger>)" followed by the stack trace
+  - CSV exports (.csv, .csv.gz) with a header row: Kibana / OpenSearch Dashboards Discover ("Share > CSV report",
+    "Oct 14, 2026 @ 19:13:28.977" timestamps, "-" for an empty cell), Splunk, Datadog, Grafana / Loki, CloudWatch
+    Logs Insights: one event per row, the columns are its fields; a cell holding a JSON object (a "log" or "message"
+    column with the structured JSON log line of the container) is parsed and its fields win
 
 Events are written oldest first (exports of the console are newest first), a multi-line message stays multi-line.
 
 usage: json_log_export.py <input> <output>
-exit 0: converted (output written), 2: not a JSON export of log events, 1: error
+exit 0: converted (output written), 2: not an export of log events, 1: error
 """
+import csv
 import gzip
 import json
+import re
 import sys
+from datetime import datetime
 from typing import Any, List, Optional, Tuple
 
 MESSAGE_KEYS = ("@message", "message", "log", "msg", "line", "textPayload", "_raw")
@@ -46,6 +53,63 @@ def load(path: str) -> Any:
             events.append(json.loads(line))
         except ValueError:
             return None
+    return events or None
+
+
+# Kibana / OpenSearch Dashboards Discover: "Oct 14, 2026 @ 19:13:28.977"
+KIBANA_TIME = re.compile(r"^([A-Z][a-z]{2} \d{1,2}, \d{4}) @ (\d{2}:\d{2}:\d{2})(\.\d+)?$")
+
+
+def csv_time(value: str) -> str:
+    """the Kibana time of a cell as ISO 8601 (sortable, read by the digest), any other value unchanged"""
+    m = KIBANA_TIME.match(value)
+    if not m:
+        return value
+    try:
+        day = datetime.strptime(m.group(1), "%b %d, %Y").strftime("%Y-%m-%d")
+    except ValueError:
+        return value
+    return f"{day}T{m.group(2)}{m.group(3) or ''}"
+
+
+def load_csv(path: str) -> Any:
+    opener = gzip.open if path.endswith(".gz") else open
+    csv.field_size_limit(sys.maxsize)
+    with opener(path, "rt", encoding="utf-8", errors="replace", newline="") as fh:
+        text = fh.read().lstrip("\ufeff")
+    try:
+        dialect = csv.Sniffer().sniff(text[:65536], delimiters=",;\t")
+    except csv.Error:
+        dialect = csv.excel
+    reader = csv.DictReader(text.splitlines(keepends=True), dialect=dialect)
+    if not reader.fieldnames or not any(f in MESSAGE_KEYS or f in ("Message", "Line", "_source")
+                                        for f in reader.fieldnames):
+        return None
+    events = []
+    for row in reader:
+        event: dict = {}
+        inner: dict = {}
+        for key, value in row.items():
+            if key is None or value is None:
+                continue
+            value = value.strip("\r\n")
+            if value in ("", "-"):
+                continue
+            # Datadog, Splunk and Grafana CSV columns: Date, Message, Line, Level…
+            if key in ("Message", "Line", "Date", "Time", "Timestamp", "Level", "Severity", "Logger"):
+                key = key.lower()
+            if value.startswith("{") and value.endswith("}"):
+                try:
+                    parsed = json.loads(value)
+                except ValueError:
+                    parsed = None
+                if isinstance(parsed, dict):
+                    inner.update(parsed)
+                    continue
+            event[key] = csv_time(value) if key in TIME_KEYS else value
+        # the structured JSON log line wins over the columns of the export
+        event.update(inner)
+        events.append(event)
     return events or None
 
 
@@ -132,7 +196,10 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 1
     try:
-        data = load(sys.argv[1])
+        if sys.argv[1].lower().endswith((".csv", ".csv.gz")):
+            data = load_csv(sys.argv[1])
+        else:
+            data = load(sys.argv[1])
     except (OSError, EOFError, UnicodeError) as e:
         print(f"cannot read {sys.argv[1]}: {e}", file=sys.stderr)
         return 1
