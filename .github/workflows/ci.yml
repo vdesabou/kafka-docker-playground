@@ -116,7 +116,8 @@ jobs:
           fetch-depth: 0
 
       - name: "Free up disk space"
-        if: contains(matrix.test_list, 'oracle') && env.SKIP_JOB != 'true'
+        # cfk: the images live twice (host docker + k3d node), and some runners have a 72 GB disk (#10077)
+        if: (contains(matrix.test_list, 'oracle') || startsWith(matrix.playground_environment, 'cfk')) && env.SKIP_JOB != 'true'
         run: |
           df -h
           # runners have ~85 GB free nowadays: the cleanup below takes 2 to 5 minutes, only do it when needed
@@ -438,7 +439,8 @@ jobs:
           fetch-depth: 0
 
       - name: "Free up disk space"
-        if: contains(matrix.test_list, 'oracle') && env.SKIP_JOB != 'true'
+        # cfk: the images live twice (host docker + k3d node), and some runners have a 72 GB disk (#10077)
+        if: (contains(matrix.test_list, 'oracle') || startsWith(matrix.playground_environment, 'cfk')) && env.SKIP_JOB != 'true'
         run: |
           df -h
           # runners have ~85 GB free nowadays: the cleanup below takes 2 to 5 minutes, only do it when needed
