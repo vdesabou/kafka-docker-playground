@@ -18,7 +18,7 @@ playground run -f start.sh
 
 ## What the script does
 
-1. Starts the environment with the `client-rust` container, built from the `Dockerfile` (Rust 1.95, `cargo build --release` of [`src/producer.rs`](src/producer.rs) and [`src/consumer.rs`](src/consumer.rs)). The first build takes a few minutes.
+1. Starts the environment with the `client-rust` container, built from the `Dockerfile` (Rust 1.95, `cargo build --release` of [`src/producer.rs`](src/producer.rs) and [`src/consumer.rs`](src/consumer.rs), with the shared configuration in [`src/common.rs`](src/common.rs)). The first build takes a few minutes.
 2. Creates topic `client-rust` with 3 partitions.
 3. Produces 100 records (key `key-<i>`, so they spread over the 3 partitions, value `{"count":<i>}`) with `acks=all`, and waits for every acknowledgement:
 
@@ -33,5 +33,7 @@ playground run -f start.sh
    ```
 
 5. Checks the records with `playground topic consume --min-expected-messages 100`, and shows the committed offsets of the group with `playground consumer-group describe --group client-rust-group`.
+
+With the `SASL_USERNAME` and `SASL_PASSWORD` environment variables set, both binaries connect with `SASL_SSL` / `PLAIN`: [ccloud/client-rust](../../ccloud/client-rust/) uses the same image against Confluent Cloud.
 
 To try your own client code, edit `src/producer.rs` or `src/consumer.rs`, then rebuild the container with `playground container recreate`.
