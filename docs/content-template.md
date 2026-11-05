@@ -295,6 +295,7 @@ Onprem (self-managed) connector examples support both Docker Compose and CFK (Co
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/snowflake.png" width="15"> [Snowflake Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-snowflake-sink) :ccloud/fm-snowflake-sink:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/snowflake.png" width="15"> [Snowflake Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-snowflake-source) :ccloud/fm-snowflake-source:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/stripe.png" width="15"> [Stripe Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-stripe-source) :ccloud/fm-stripe-source:
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/http.png" width="15"> [Webhook Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-webhook-source) :ccloud/fm-webhook-source:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/zendesk.png" width="15"> [Zendesk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-zendesk-source) :ccloud/fm-zendesk-source:
 
 🚨 Unavailable examples are:
