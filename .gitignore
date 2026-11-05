@@ -43,7 +43,10 @@ connect/connect-vertica-sink/vertica-stream-writer/
 *.cast
 *.tgz
 ccloud/client-dotnet/librdkafka.config
-ccloud/client-go/librdkafka.config
+ccloud/client-c/client.properties
+ccloud/client-go/client.properties
+ccloud/client-java/client.properties
+ccloud/client-javascript/client.properties
 ccloud/replicator/env.source
 connect/connect-snowflake-sink/snowflake_key.p8
 connect/connect-snowflake-sink/snowflake_key.pub

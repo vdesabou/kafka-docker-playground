@@ -72,3 +72,13 @@ Build the Docker image within Minikube as above (`Dockerfile-Minikube`), then cr
 kubectl create namespace dotnet-ccloud-example-docker
 kubectl apply -f pod_initContainers.yml --namespace=dotnet-ccloud-example-docker
 ```
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another Confluent.Kafka and Confluent.SchemaRegistry.Serdes.Avro version than the default, the version of `ClientDotnet.csproj`:
+
+```bash
+CLIENT_VERSION=2.10.1 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. The image is the one of [other/client-dotnet](../../other/client-dotnet/), built with `docker build --build-arg CLIENT_VERSION`. An old version may not support everything the example uses (the Avro serializer API changed over time).

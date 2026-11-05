@@ -42,7 +42,11 @@ playground topic create --topic $STRING_TOPIC
 playground topic create --topic $AVRO_TOPIC
 
 log "Building the .NET client image (.NET 10, Confluent.Kafka 2.16.0)"
-docker build -q -t vdesabou/dotnet-ccloud-example-docker ${DIR} > /dev/null
+if [ -n "$CLIENT_VERSION" ]
+then
+     log "📦 CLIENT_VERSION is set: building the image with client version $CLIENT_VERSION"
+fi
+docker build -q --build-arg CLIENT_VERSION="${CLIENT_VERSION:-}" -t vdesabou/dotnet-ccloud-example-docker ${DIR} > /dev/null
 
 # the client containers run with shorter TCP keepalives than the Linux default (2 hours), below the idle timeout of the
 # Confluent Cloud load balancers

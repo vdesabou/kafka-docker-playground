@@ -62,7 +62,7 @@ flags:
     --environment cfk)
 
     - client: producer / consumer and client examples (Java, .NET,
-    JavaScript, Python, Go, JMS, kcat)
+    JavaScript, Python, Go, Rust, C/librdkafka, JMS, kcat)
 - long: --limit
   arg: limit
   required: false

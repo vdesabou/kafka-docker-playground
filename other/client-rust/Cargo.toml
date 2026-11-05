@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.95"
 
 [dependencies]
-confluent-kafka = "1"
+confluent-kafka = "=1.0.0"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 # not under src/bin/: the repository .gitignore ignores **/bin/

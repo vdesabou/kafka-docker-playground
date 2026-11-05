@@ -37,3 +37,13 @@ playground run -f start.sh
 With the `SASL_USERNAME` and `SASL_PASSWORD` environment variables set, both binaries connect with `SASL_SSL` / `PLAIN`: [ccloud/client-rust](../../ccloud/client-rust/) uses the same image against Confluent Cloud.
 
 To try your own client code, edit `src/producer.rs` or `src/consumer.rs`, then rebuild the container with `playground container recreate`.
+
+## Use another client version
+
+Set `CLIENT_VERSION` to build the image with another confluent-kafka crate version than the default, the version pinned in `Cargo.toml`:
+
+```bash
+CLIENT_VERSION=1.0.0-rc.2 playground run -f start.sh
+```
+
+Empty or unset: the default version. The client prints its version when it starts, check it in the output. It is passed as a build argument by `docker-compose.plaintext.yml`. An old version may not support everything the example uses (the Avro serializer API changed over time).

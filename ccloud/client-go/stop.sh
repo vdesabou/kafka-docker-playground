@@ -5,4 +5,4 @@ source ${DIR}/../../scripts/utils.sh
 
 maybe_delete_ccloud_environment
 
-docker rm -f go-ccloud-consumer go-ccloud-producer
+docker rm -f go-ccloud-consumer go-ccloud-producer > /dev/null 2>&1

@@ -1,0 +1,16 @@
+---
+services:
+
+  client-go:
+    build:
+      context: ../../other/client-go/
+      args:
+        # optional: another client version, see README.md
+        CLIENT_VERSION: ${CLIENT_VERSION:-}
+    hostname: client-go
+    container_name: client-go
+    volumes:
+      - ../../other/client-go/client.properties:/tmp/client.properties:ro
+    depends_on:
+      - broker
+      - schema-registry

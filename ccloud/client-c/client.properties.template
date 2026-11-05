@@ -1,0 +1,8 @@
+# librdkafka properties of the C producer and consumer for Confluent Cloud: start.sh generates client.properties
+# (gitignored, it has the API key) from this file
+bootstrap.servers=:BOOTSTRAP_SERVERS:
+security.protocol=SASL_SSL
+sasl.mechanisms=PLAIN
+sasl.username=:CLOUD_KEY:
+sasl.password=:CLOUD_SECRET:
+socket.keepalive.enable=true

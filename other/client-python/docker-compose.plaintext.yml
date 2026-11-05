@@ -1,0 +1,16 @@
+---
+services:
+
+  client-python:
+    build:
+      context: ../../other/client-python/
+      args:
+        # optional: another client version, see README.md
+        CLIENT_VERSION: ${CLIENT_VERSION:-}
+    hostname: client-python
+    container_name: client-python
+    volumes:
+      - ../../other/client-python/client.properties:/tmp/client.properties:ro
+    depends_on:
+      - broker
+      - schema-registry

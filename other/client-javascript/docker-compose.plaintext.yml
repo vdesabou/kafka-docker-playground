@@ -1,0 +1,16 @@
+---
+services:
+
+  client-javascript:
+    build:
+      context: ../../other/client-javascript/
+      args:
+        # optional: another client version, see README.md
+        CLIENT_VERSION: ${CLIENT_VERSION:-}
+    hostname: client-javascript
+    container_name: client-javascript
+    volumes:
+      - ../../other/client-javascript/client.properties:/tmp/client.properties:ro
+    depends_on:
+      - broker
+      - schema-registry
