@@ -9979,8 +9979,8 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, kafka_streams, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
     echo
 
     # :flag.usage
@@ -11107,8 +11107,8 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
+    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, kafka_streams, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
     echo
 
     # :flag.usage
@@ -17080,7 +17080,7 @@ playground_streams_usage() {
 playground_streams_status_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground streams status\n\n"
-    printf "  🌊 Show the state of the Kafka Streams instances\n  \n  For each application (application.id) and each instance (container):\n  the state of the KafkaStreams client and since when, the number of\n  rebalances and the time spent in REBALANCING, the stream threads with\n  their active and standby tasks, the active tasks not restored yet, the\n  changelog partitions being restored, the records restored, and the\n  known Kafka Streams errors of the logs (task migrated, fenced producer,\n  deserialization or production handler, missing source topic, topics\n  not co-partitioned, state directory locked, uncaught exception...) with\n  their advice. Then the consumer group of each application: its state,\n  members and lag.\n  \n  Everything comes from the lines that the Kafka Streams library logs at\n  INFO (State transition from ... to ..., Handle new assignment with:,\n  Restored and ready to run, Finished restoring changelog...), so it works\n  with any application and any Kafka Streams version since 3.0, as long\n  as its logs are at INFO. The logs of a restarted container hold its\n  previous runs too: only the current run is shown, the restarts are\n  counted (and drawn in the timeline of --html).\n  \n  --html also writes an HTML report (timeline of the states, task\n  assignment, errors). The same view of a customer's log files is the\n  🌊 Kafka Streams section of 'playground analyze logs'.\n  \n  Exits with 1 when an instance is not RUNNING (or its container is\n  stopped), so that an example can check it.\n\n"
+    printf "  🌊 Show the state of the Kafka Streams instances\n  \n  For each application (application.id) and each instance (container):\n  the state of the KafkaStreams client and since when, the number of\n  rebalances and the time spent in REBALANCING, the stream threads with\n  their active and standby tasks, the active tasks not restored yet, the\n  changelog partitions being restored, the records restored, and the\n  known Kafka Streams errors of the logs (task migrated, fenced producer,\n  deserialization or production handler, missing source topic, topics\n  not co-partitioned, state directory locked, uncaught exception...) with\n  their advice. Then the consumer group of each application: its state,\n  members and lag.\n  \n  Everything comes from the lines that the Kafka Streams library logs at\n  INFO (State transition from ... to ..., Handle new assignment with:,\n  Restored and ready to run, Finished restoring changelog...), so it works\n  with any application and any Kafka Streams version since 3.0, as long\n  as its logs are at INFO. The logs of a restarted container hold its\n  previous runs too: only the current run is shown, the restarts are\n  counted (and drawn in the timeline of --html).\n  \n  --html also writes an HTML report (timeline of the states, task\n  assignment, errors). The same view of a customer's log files is the\n  🌊 Kafka Streams section of 'playground analyze logs'.\n  \n  --sample kafka_streams shows it on the logs shipped in\n  tools/log-analyzer/samples/kafka-streams (no running example needed).\n  \n  Exits with 1 when an instance is not RUNNING (or its container is\n  stopped), so that an example can check it.\n\n"
   else
     printf "playground streams status - 🌊 Show the state of the Kafka Streams instances\n\n"
   fi
@@ -17099,6 +17099,14 @@ playground_streams_status_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER (repeatable)")"
     printf "    🐳 Container of a Kafka Streams instance, can be set several times\n    \n    ℹ️ If not set, the containers named streams, streams2, streams3...\n    (other/kafka-streams)\n"
+    printf "    %s\n" "Conflicts: --sample"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sample, -s SAMPLE")"
+    printf "    🧪 Read the logs of a sample instead of the running containers (no consumer\n    group)\n    \n      kafka_streams   the 3 instances of other/kafka-streams (serde-errors.sh):\n    an application in ERROR\n                      after a poison pill, its dead stream thread,\n    deserialization and production\n                      handler errors (tools/log-analyzer/samples/kafka-streams)\n"
+    printf "    %s\n" "Allowed: kafka_streams"
+    printf "    %s\n" "Conflicts: --container"
     echo
 
     # :flag.usage
@@ -17113,7 +17121,7 @@ playground_streams_status_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--html")"
-    printf "    📊 Also write an HTML report: the same view with a timeline of the state of\n    each instance\n    (restarts and the time without logs), the task assignment (task × instance)\n    and the\n    known errors with their advice, opened in the browser\n"
+    printf "    📊 Also write an HTML report: the same view with a timeline of the state of\n    each instance\n    (restarts, the time without logs, a marker on each error), the Kafka Streams\n    errors and\n    the rebalances over time, the task assignment (task × instance) and the\n    known errors\n    with their advice, opened in the browser\n"
     echo
 
     # :flag.usage
@@ -17142,6 +17150,7 @@ playground_streams_status_usage() {
     printf "  playground streams status\n"
     printf "  playground streams status --container streams2\n"
     printf "  playground streams status --html\n"
+    printf "  playground streams status --sample kafka_streams --html\n"
     printf "  playground streams status --application-id streams-count --json | jq\n  '.applications[0].instances[] | {instance, state, rebalances}'\n"
     echo
 
@@ -60956,6 +60965,7 @@ playground_analyze_logs_command() {
       case "$sample" in
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
+          kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
           cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
           cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
@@ -63024,6 +63034,7 @@ playground_debug_analyze_logs_command() {
       case "$sample" in
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
+          kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
           cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
           cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
@@ -74997,6 +75008,7 @@ playground_streams_status_command() {
 
   # src/commands/streams/status.sh
   eval "containers=(${args[--container]})"
+  sample="${args[--sample]}"
   application_id="${args[--application-id]}"
   json="${args[--json]}"
   verbose="${args[--verbose]}"
@@ -75004,7 +75016,20 @@ playground_streams_status_command() {
   output_dir="${args[--output-dir]:-/tmp/playground-streams}"
   no_open="${args[--no-open]}"
 
-  if [ ${#containers[@]} -eq 0 ]
+  sample_dir=""
+  if [[ -n "$sample" ]]
+  then
+      case "$sample" in
+          kafka_streams) sample_dir="$root_folder/tools/log-analyzer/samples/kafka-streams" ;;
+      esac
+      log "🧪 sample $sample: the logs of $sample_dir, not the running containers (no consumer group)"
+  elif ! docker info > /dev/null 2>&1
+  then
+      logerror "❌ container engine must be running - run 'playground doctor' (or try --sample kafka_streams)"
+      exit 1
+  fi
+
+  if [ -z "$sample_dir" ] && [ ${#containers[@]} -eq 0 ]
   then
       # the instances of other/kafka-streams
       while IFS= read -r name
@@ -75012,7 +75037,7 @@ playground_streams_status_command() {
           [ -n "$name" ] && containers+=("$name")
       done < <(docker ps -a --format '{{.Names}}' | grep -E '^streams[0-9]*$' | sort)
   fi
-  if [ ${#containers[@]} -eq 0 ]
+  if [ -z "$sample_dir" ] && [ ${#containers[@]} -eq 0 ]
   then
       logerror "❌ no Kafka Streams container found (streams, streams2, streams3...): pass the containers of the instances with --container"
       exit 1
@@ -75033,6 +75058,13 @@ playground_streams_status_command() {
   fi
 
   report_args=()
+  if [ -n "$sample_dir" ]
+  then
+      for file in "$sample_dir"/*.log
+      do
+          report_args+=("$(basename "$file" .log)=$file")
+      done
+  fi
   for container in "${containers[@]}"
   do
       status=$(docker inspect -f '{{.State.Status}}' "$container" 2>/dev/null)
@@ -75059,7 +75091,7 @@ playground_streams_status_command() {
   set -e
   if [ $rc -eq 2 ] || [ "$(jq '.applications | length' "$tmp_dir/report.json" 2>/dev/null)" == "0" ]
   then
-      logerror "❌ no Kafka Streams line found in the logs of ${containers[*]}${application_id:+ for application.id $application_id}: the Kafka Streams library logs at INFO (org.apache.kafka.streams)"
+      logerror "❌ no Kafka Streams line found in the logs of ${containers[*]}${sample_dir}${application_id:+ for application.id $application_id}: the Kafka Streams library logs at INFO (org.apache.kafka.streams)"
       exit 1
   elif [ $rc -ne 0 ]
   then
@@ -75067,8 +75099,9 @@ playground_streams_status_command() {
       exit 1
   fi
 
-  # the consumer group of each application (group id = application.id): state, members, lag
+  # the consumer group of each application (group id = application.id): state, members, lag. Not for a sample
   groups_json="{}"
+  [ -n "$sample_dir" ] && apps_for_groups="" || apps_for_groups=$(jq -r '.applications[] | select(.instances | length > 0) | .application_id' "$tmp_dir/report.json")
   while IFS= read -r app
   do
       [ -z "$app" ] && continue
@@ -75083,7 +75116,7 @@ playground_streams_status_command() {
       group_lag=$(echo "$offsets_output" | awk -v g="$app" '$1 == g && $6 ~ /^[0-9]+$/ {sum += $6; found = 1} END {if (found) print sum}')
       groups_json=$(jq --arg app "$app" --arg state "$group_state" --arg members "$group_members" --arg lag "$group_lag" \
           '. + {($app): {state: (if $state == "" then null else $state end), members: (if $members == "" then null else ($members | tonumber? // $members) end), lag: (if $lag == "" then null else ($lag | tonumber) end)}}' <<< "$groups_json")
-  done < <(jq -r '.applications[] | select(.instances | length > 0) | .application_id' "$tmp_dir/report.json")
+  done <<< "$apps_for_groups"
 
   jq --argjson groups "$groups_json" '.applications |= map(. + {consumer_group: ($groups[.application_id] // null)})' "$tmp_dir/report.json" > "$tmp_dir/report-groups.json"
 
@@ -113322,8 +113355,8 @@ playground_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|kafka_streams|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, kafka_streams, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
       exit 1
     fi
   done
@@ -116141,8 +116174,8 @@ playground_debug_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
+    if [[ ! $i =~ ^(connect_task_failure|support_bundle|kafka_streams|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, kafka_streams, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
       exit 1
     fi
   done
@@ -130573,6 +130606,11 @@ playground_streams_status_parse_requirements() {
     case "$key" in
       # :flag.case
       --container | -c)
+        # :flag.conflicts
+        if [[ -n "${args['--sample']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--sample" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -130586,6 +130624,25 @@ playground_streams_status_parse_requirements() {
           shift
         else
           printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --sample | -s)
+        # :flag.conflicts
+        if [[ -n "${args['--container']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--container" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--sample']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--sample requires an argument: --sample, -s SAMPLE" >&2
           exit 1
         fi
         ;;
@@ -130682,10 +130739,9 @@ playground_streams_status_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-streams"
 
-  # :command.user_filter
-  filter_error=$(filter_docker_running)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
+  # :command.whitelist_filter
+  if [[ ${args['--sample']:-} ]] && [[ ! ${args['--sample']:-} =~ ^(kafka_streams)$ ]]; then
+    printf "%s\n" "--sample must be one of: kafka_streams" >&2
     exit 1
   fi
 
@@ -154736,6 +154792,7 @@ playground_analyze_logs_completion() {
           local -a completion_values=(
             "connect_task_failure"
             "support_bundle"
+            "kafka_streams"
             "cfk_bundle"
             "cfk_kraft_migration"
             "cfk_rollout"
@@ -156210,6 +156267,7 @@ playground_debug_analyze_logs_completion() {
           local -a completion_values=(
             "connect_task_failure"
             "support_bundle"
+            "kafka_streams"
             "cfk_bundle"
             "cfk_kraft_migration"
             "cfk_rollout"
@@ -163989,6 +164047,22 @@ playground_streams_status_completion() {
           return
         fi
         shift
+        completion_blocked_flags["--sample"]=1
+
+        ;;
+      --sample | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "kafka_streams"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--sample"]=1
+        completion_blocked_flags["--container"]=1
 
         ;;
       --application-id | -a)
@@ -164040,6 +164114,7 @@ playground_streams_status_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --application-id "$completion_current" --application-id -a
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --html "$completion_current" --html

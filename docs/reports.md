@@ -39,6 +39,15 @@ report and click around: this is what you get on your own data.
     </div>
   </div>
   <div class="report-card">
+    <a href="reports/kafka-streams.html" target="_blank" rel="noopener"><img src="images/reports/kafka-streams.png" alt="🌊 Kafka Streams report" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="#/playground%20streams%20status">🌊 Kafka Streams</a></h3>
+      <p>What is this Kafka Streams application doing? State of each instance over time (rebalances, restarts, ERROR, a marker on each error), the Kafka Streams errors and the rebalances over time, active and standby tasks per instance, tasks not restored yet, and the known Kafka Streams errors with what to do. The same view is in the log analysis of a customer's Streams logs.</p>
+      <p><code>playground streams status --html</code></p>
+      <p>Try it: <code>playground streams status --sample kafka_streams --html</code> (or <code>playground analyze logs --sample kafka_streams</code>)</p>
+    </div>
+  </div>
+  <div class="report-card">
     <a href="reports/dlq.html" target="_blank" rel="noopener"><img src="images/reports/dlq.png" alt="☠️ Dead letter queue report" loading="lazy"></a>
     <div class="report-body">
       <h3><a href="#/playground%20topic%20dlq%20inspect">☠️ Dead letter queue</a></h3>

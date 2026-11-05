@@ -160,6 +160,7 @@ playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
 # try it on the shipped samples
 playground analyze logs --sample connect_task_failure     # a Connect worker log (Oracle XStream task failure)
 playground analyze logs --sample support_bundle           # a .zip with that log and a gzipped broker log
+playground analyze logs --sample kafka_streams            # the logs of 3 Kafka Streams instances (see 🌊 below)
 playground analyze logs --sample cfk_bundle               # a CFK support bundle (see below)
 playground analyze logs --sample cfk_kraft_migration      # a CFK support bundle with a stuck ZooKeeper to KRaft migration
 playground analyze logs --sample cfk_rollout              # a CFK support bundle with a half-done CP upgrade
@@ -175,6 +176,7 @@ What it does with what you give it:
 | `.gz` | decompressed on the fly |
 | a JSON export of log events (`.json`, `.jsonl`, `.ndjson`, also gzipped): AWS CloudWatch Logs Insights (`[{"@timestamp": …, "@message": …}]`, console or `get-query-results`), CloudWatch `filter-log-events` / `get-log-events` (`{"events": [{"timestamp", "message"}]}`), Elasticsearch / OpenSearch hits (`_source.message`), structured JSON logs (`level`, `logger_name`, `message`, `stack_trace`) | converted back to log lines, **oldest first** (console exports are newest first), one event per line and its stack trace below it, then analyzed as a log file: `🔄 <file>: JSON export of <n> log events, analyzed as log lines (oldest first)`. The line numbers of the digest and of the HTML report are those of the converted file. Any other JSON is read as it is |
 | a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`; or a flat collection of `kubectl` outputs with a `confluent-operator-*.log` or the YAML of a `platform.confluent.io` custom resource at its top), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, in its own HTML report. `--problem "<component, symptom, since when>"` matches it against the problem of the customer (🎯 verdict, issues that explain it first), and a 📥 Data to request section says what to ask the customer for next. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
+| logs with Kafka Streams lines (`stream-client [`, `stream-thread [`) | the digest as for any log, plus a 🌊 **Kafka Streams** section (see below) |
 | a `.properties` file, a JSON file with connector configs | analyzed like a text file, and shown in the ⚙️ configuration section of the HTML report |
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
 | a copy of a file or of a CFK support bundle already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …` / `⏭️ … same CFK support bundle as …`, only one report), counted in the last line |
@@ -205,6 +207,35 @@ The output names each file with its path inside the archive, and only shows file
 
 📊 2 file(s) with findings out of 2 scanned (binary files skipped: 0)
 ✅ HTML report saved: /home/me/log-analysis-output/support_bundle-log-report.html
+```
+
+### 🌊 Kafka Streams logs
+
+When files contain the lines the Kafka Streams library logs at INFO, `analyze logs` adds a 🌊 Kafka Streams section,
+after the digest, in the HTML report and in `--json` (`kafka_streams`): for each application (`application.id`) and
+each file (an instance), the state of the client and since when, the rebalances and the time spent in REBALANCING,
+the restarts, the threads with their active and standby tasks, the tasks not restored yet, the records restored, and
+the known Kafka Streams errors with their advice (task migrated, fenced producer, deserialization or production
+handler, missing source topic, topics not co-partitioned, state directory locked, uncaught exception). The HTML report
+draws the state of each instance over time (with a marker where each Kafka Streams error was logged), the Kafka
+Streams errors and the rebalances over time (zoomable, as 📈 Occurrences over time), and the task assignment
+(task × instance). The Kafka Streams errors are
+also known causes of the 🧭 summary. It reads the logs of any application, Kafka Streams 3.0+, as long as they are at
+INFO; `playground streams status` is the same view on the running instances of an example.
+
+```bash
+playground analyze logs --sample kafka_streams     # other/kafka-streams/serde-errors.sh: a demo application in ERROR
+```
+
+```text
+🌊 application streams-serde-errors-fail-on-poison-pill (Kafka Streams 4.4.0): 3 instance(s)
+  INSTANCE      STATE    SINCE     REBALANCES  THREADS    ACTIVE TASKS  STANDBY TASKS  NOT RESTORED
+  streams.log   ERROR    15:19:21  3 (0.5s)    1 DEAD     0_0           -              -
+  streams2.log  RUNNING  15:19:05  3 (0.5s)    1 RUNNING  0_1           -              -
+  streams3.log  RUNNING  15:19:06  2 (2.7s)    1 RUNNING  0_2           -              -
+  ❌ streams.log: the client is ERROR since 2026-11-05 15:19:21
+  🧪 Deserialization error x2 (streams.log, streams3.log, first 2026-11-05 15:19:20, last 2026-11-05 15:19:20)
+     👉 a record could not be deserialized with the configured serdes (poison pill, wrong format, schema not found): …
 ```
 
 ### 🧭 The summary, `--connector`, `--show-config`
@@ -455,6 +486,7 @@ playground stop
 | Situation | Command |
 | --- | --- |
 | a customer support bundle (`.zip`, `.tar.gz`, folders of rotated logs) | `playground analyze logs -f <bundle> --max-findings 15`, then `--include-warnings` if no ERROR explains it |
+| the logs of a Kafka Streams application that rebalances in a loop, restores forever or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section (state of each instance over time, rebalances, tasks, Streams errors). On a running example: `playground streams status --html` |
 | a CI artifact or a log pasted in a ticket | save it to a file, `playground analyze logs -f <file>` |
 | "the connector failed during the night" (still running env) | `container logs -c connect --errors`: look at `xN` and *last seen line*, then `--grep "<connector name>" --no-follow` around it |
 | "is it the connector or the broker?" | `container logs -c connect -c broker --errors --since 30m` |

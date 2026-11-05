@@ -128,6 +128,17 @@ lab_expect_equals "$(grep -o 'A connector task was killed' "$errors_report" | he
 lab_run playground container display-error-all --html --max-findings 1
 lab_expect_exit 0
 lab_expect_contains "✅ HTML report saved: /tmp/playground-log-reports/all-containers-errors-"
+# 🌊 Kafka Streams logs: the sample of other/kafka-streams/serde-errors.sh, the same view as playground streams status
+lab_run playground analyze logs --sample kafka_streams --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "🌊 application streams-serde-errors-fail-on-poison-pill (Kafka Streams 4.4.0): 3 instance(s)"
+lab_expect_contains "❌ streams.log: the client is ERROR since 2026-11-05 15:19:21"
+lab_expect_contains "🧪 Deserialization error x2 (streams.log, streams3.log, first 2026-11-05 15:19:20, last 2026-11-05 15:19:20)"
+lab_expect_contains "🧪 Kafka Streams: deserialization error"
+lab_expect_equals "$(grep -o '🕐 State of the instances over time' "$report_dir/kafka_streams-log-report.html" | head -1)" "🕐 State of the instances over time" "Kafka Streams timeline in the HTML report"
+lab_run playground streams status --sample kafka_streams
+lab_expect_exit 1
+lab_expect_contains "1 instance(s) not RUNNING"
 playground connector delete --connector bad-sink
 
 log "✅ all the outputs of the page are as expected"

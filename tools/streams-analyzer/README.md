@@ -8,7 +8,10 @@ Kafka Streams version since 3.0, no JMX and no code in the application.
 | `playground streams status` | the `docker logs` of the Streams containers (`streams`, `streams2`, `streams3` of `other/kafka-streams`, or `--container`), plus the consumer group of each application (state, members, lag) |
 | `playground analyze logs` | the files of a bundle that contain `stream-client [` or `stream-thread [`: a 🌊 Kafka Streams section in the terminal, the HTML report (`log_report.py --html-section`) and `--json` (`kafka_streams`) |
 
-`streams_report.py` parses, `streams_html.py` renders (shared look of `tools/report-common/report_html.py`).
+`streams_report.py` parses, `streams_html.py` renders (shared look of `tools/report-common/report_html.py`): KPI tiles,
+findings, the state of each instance over time (restarts and time without logs, a marker on each Kafka Streams error),
+📈 the Kafka Streams errors and the rebalances over time (zoomable chart of `time_chart`), the instances, the task
+assignment (task × instance). Each error keeps its occurrences (time, instance; 1000 at most) in the JSON.
 
 ## What is read
 
@@ -32,3 +35,14 @@ python3 -I tools/streams-analyzer/streams_report.py --html-out /tmp/streams.html
 ```
 
 Exit code 2 when no Kafka Streams line was found.
+
+## Sample
+
+`tools/log-analyzer/samples/kafka-streams/`: the logs of the 3 instances of `other/kafka-streams/serde-errors.sh`
+(Kafka Streams 4.4.0): the main application and a demo application in ERROR after a poison pill, with its dead
+stream thread, deserialization and production handler errors.
+
+```bash
+playground streams status --sample kafka_streams --html     # the page of the reports gallery (🌊 Kafka Streams)
+playground analyze logs --sample kafka_streams              # the 🌊 Kafka Streams section of the log report
+```

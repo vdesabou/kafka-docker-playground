@@ -1,0 +1,166 @@
+[2026-11-05 15:18:55,994] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/192.168.96.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:18:56,076] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/192.168.96.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:18:56,277] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/192.168.96.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:18:56,478] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/192.168.96.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:18:56,880] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/192.168.96.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:18:57,787] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/192.168.96.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:18:58,795] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/192.168.96.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:19:00,009] INFO 📝 Topic payments already exists (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:00,014] INFO ⚙️ StreamsConfig: application.id=streams-serde-errors, auto.offset.reset=earliest, bootstrap.servers=broker:9092, commit.interval.ms=1000, default.deserialization.exception.handler=org.apache.kafka.streams.errors.LogAndContinueExceptionHandler, default.production.exception.handler=io.confluent.playground.streams.ContinueOnRecordTooLargeHandler, num.stream.threads=1, processing.guarantee=at_least_once, producer.max.request.size=4096, replication.factor=1 (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:00,015] INFO 🎛️ Scenario serde-errors settings (app.*): {schema.registry.url=http://schema-registry:8081} (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:00,231] INFO 🧩 Topology of streams-serde-errors:
+Topologies:
+   Sub-topology: 0
+    Source: KSTREAM-SOURCE-0000000000 (topics: [payments])
+      --> KSTREAM-MAPVALUES-0000000001
+    Processor: KSTREAM-MAPVALUES-0000000001 (stores: [])
+      --> KSTREAM-SINK-0000000002
+      <-- KSTREAM-SOURCE-0000000000
+    Sink: KSTREAM-SINK-0000000002 (topic: payments-processed)
+      <-- KSTREAM-MAPVALUES-0000000001
+
+ (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:00,241] WARN Processing exception handler is not enabled for the GlobalThread. It's recommended to set `processing.exception.handler.global.enabled` to true to enable it. Enabling the processing exception handler for global state/KTable processing now, ensures future backward compatibility. The processing exception handler will get enabled by default with Apache Kafka 5.0 release. (org.apache.kafka.streams.StreamsConfig)
+[2026-11-05 15:19:00,245] INFO stream-client [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c] Kafka Streams version: 4.4.0 (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,245] INFO stream-client [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c] Kafka Streams commit ID: 1156b2752aaa28ea (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,283] INFO Creating restore consumer client for thread streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1 (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,354] INFO Creating consumer client for thread streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1 (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,367] WARN Processing exception handler is not enabled for the GlobalThread. It's recommended to set `processing.exception.handler.global.enabled` to true to enable it. Enabling the processing exception handler for global state/KTable processing now, ensures future backward compatibility. The processing exception handler will get enabled by default with Apache Kafka 5.0 release. (org.apache.kafka.streams.StreamsConfig)
+[2026-11-05 15:19:00,386] INFO stream-client [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c] State transition from CREATED to REBALANCING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,386] INFO 🔀 Application state transition from CREATED to REBALANCING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:00,389] INFO stream-client [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c] Started 1 stream threads (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,389] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] Starting (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,389] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] State transition from CREATED to STARTING (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,394] INFO 🧩 Topology of streams-serde-errors-fail-on-poison-pill:
+Topologies:
+   Sub-topology: 0
+    Source: KSTREAM-SOURCE-0000000000 (topics: [payments])
+      --> KSTREAM-MAPVALUES-0000000001
+    Processor: KSTREAM-MAPVALUES-0000000001 (stores: [])
+      --> KSTREAM-SINK-0000000002
+      <-- KSTREAM-SOURCE-0000000000
+    Sink: KSTREAM-SINK-0000000002 (topic: payments-processed-fail-demo)
+      <-- KSTREAM-MAPVALUES-0000000001
+
+ (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:00,394] WARN Processing exception handler is not enabled for the GlobalThread. It's recommended to set `processing.exception.handler.global.enabled` to true to enable it. Enabling the processing exception handler for global state/KTable processing now, ensures future backward compatibility. The processing exception handler will get enabled by default with Apache Kafka 5.0 release. (org.apache.kafka.streams.StreamsConfig)
+[2026-11-05 15:19:00,395] INFO state-updater [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StateUpdater-1] State updater thread started (org.apache.kafka.streams.processor.internals.DefaultStateUpdater)
+[2026-11-05 15:19:00,395] INFO stream-client [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68] Kafka Streams version: 4.4.0 (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,395] INFO stream-client [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68] Kafka Streams commit ID: 1156b2752aaa28ea (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,399] INFO Creating restore consumer client for thread streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1 (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,410] INFO Creating consumer client for thread streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1 (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,414] WARN Processing exception handler is not enabled for the GlobalThread. It's recommended to set `processing.exception.handler.global.enabled` to true to enable it. Enabling the processing exception handler for global state/KTable processing now, ensures future backward compatibility. The processing exception handler will get enabled by default with Apache Kafka 5.0 release. (org.apache.kafka.streams.StreamsConfig)
+[2026-11-05 15:19:00,428] INFO stream-client [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68] State transition from CREATED to REBALANCING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,428] INFO 🔀 Demo application streams-serde-errors-fail-on-poison-pill state transition from CREATED to REBALANCING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:00,429] INFO stream-client [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68] Started 1 stream threads (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:00,429] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] Starting (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,429] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] State transition from CREATED to STARTING (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,430] INFO state-updater [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StateUpdater-1] State updater thread started (org.apache.kafka.streams.processor.internals.DefaultStateUpdater)
+[2026-11-05 15:19:00,500] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] Processed 0 total records, ran 0 punctuators, polled 1 times and committed 0 total tasks since the last update 1793891940501ms ago (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:00,531] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] Processed 0 total records, ran 0 punctuators, polled 1 times and committed 0 total tasks since the last update 1793891940532ms ago (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:02,960] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1-consumer] Requested to schedule immediate rebalance for new tasks to be safely revoked from current owner. (org.apache.kafka.streams.processor.internals.StreamsPartitionAssignor)
+[2026-11-05 15:19:02,961] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] Handle new assignment with:
+	New active tasks: []
+	New standby tasks: []
+	Existing active tasks: []
+	Existing standby tasks: [] (org.apache.kafka.streams.processor.internals.TaskManager)
+[2026-11-05 15:19:02,961] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1-consumer] Requested to schedule immediate rebalance for new tasks to be safely revoked from current owner. (org.apache.kafka.streams.processor.internals.StreamsPartitionAssignor)
+[2026-11-05 15:19:02,961] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] Handle new assignment with:
+	New active tasks: []
+	New standby tasks: []
+	Existing active tasks: []
+	Existing standby tasks: [] (org.apache.kafka.streams.processor.internals.TaskManager)
+[2026-11-05 15:19:02,964] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] State transition from STARTING to PARTITIONS_ASSIGNED (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:02,964] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] State transition from STARTING to PARTITIONS_ASSIGNED (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:03,028] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] State transition from PARTITIONS_ASSIGNED to RUNNING (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:03,029] INFO stream-client [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c] State transition from REBALANCING to RUNNING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:03,029] INFO 🔀 Application state transition from REBALANCING to RUNNING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:03,030] INFO 📋 Assignment of streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1: active tasks [], standby tasks [] (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:03,033] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] Triggering the followup rebalance scheduled for 1970-01-01 00:00:00,000 Z. (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:03,053] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1-consumer] No followup rebalance was requested, resetting the rebalance schedule. (org.apache.kafka.streams.processor.internals.StreamsPartitionAssignor)
+[2026-11-05 15:19:03,054] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] Handle new assignment with:
+	New active tasks: [0_0]
+	New standby tasks: []
+	Existing active tasks: []
+	Existing standby tasks: [] (org.apache.kafka.streams.processor.internals.TaskManager)
+[2026-11-05 15:19:03,063] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] State transition from PARTITIONS_ASSIGNED to RUNNING (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:03,064] INFO stream-client [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68] State transition from REBALANCING to RUNNING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:03,064] INFO 🔀 Demo application streams-serde-errors-fail-on-poison-pill state transition from REBALANCING to RUNNING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:03,064] INFO 📋 Assignment of streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1: active tasks [], standby tasks [] (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:03,065] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] Triggering the followup rebalance scheduled for 1970-01-01 00:00:00,000 Z. (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:03,068] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] State transition from RUNNING to PARTITIONS_ASSIGNED (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:03,068] INFO stream-client [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c] State transition from RUNNING to REBALANCING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:03,068] INFO 🔀 Application state transition from RUNNING to REBALANCING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:03,143] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] task [0_0] Initialized (org.apache.kafka.streams.processor.internals.StreamTask)
+[2026-11-05 15:19:03,145] INFO state-updater [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StateUpdater-1] Stateless active task 0_0 was added to the restored tasks of the state updater (org.apache.kafka.streams.processor.internals.DefaultStateUpdater)
+[2026-11-05 15:19:03,250] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] task [0_0] Restored and ready to run (org.apache.kafka.streams.processor.internals.StreamTask)
+[2026-11-05 15:19:03,250] INFO stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] State transition from PARTITIONS_ASSIGNED to RUNNING (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:03,251] INFO stream-client [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c] State transition from REBALANCING to RUNNING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:03,251] INFO 🔀 Application state transition from REBALANCING to RUNNING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:03,251] INFO 📋 Assignment of streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1: active tasks [0_0], standby tasks [] (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:05,955] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1-consumer] No followup rebalance was requested, resetting the rebalance schedule. (org.apache.kafka.streams.processor.internals.StreamsPartitionAssignor)
+[2026-11-05 15:19:05,956] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] Handle new assignment with:
+	New active tasks: [0_2]
+	New standby tasks: []
+	Existing active tasks: []
+	Existing standby tasks: [] (org.apache.kafka.streams.processor.internals.TaskManager)
+[2026-11-05 15:19:05,957] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] State transition from RUNNING to PARTITIONS_ASSIGNED (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:05,957] INFO stream-client [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68] State transition from RUNNING to REBALANCING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:05,957] INFO 🔀 Demo application streams-serde-errors-fail-on-poison-pill state transition from RUNNING to REBALANCING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:06,019] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] task [0_2] Initialized (org.apache.kafka.streams.processor.internals.StreamTask)
+[2026-11-05 15:19:06,019] INFO state-updater [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StateUpdater-1] Stateless active task 0_2 was added to the restored tasks of the state updater (org.apache.kafka.streams.processor.internals.DefaultStateUpdater)
+[2026-11-05 15:19:06,021] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] task [0_2] Restored and ready to run (org.apache.kafka.streams.processor.internals.StreamTask)
+[2026-11-05 15:19:06,021] INFO stream-thread [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1] State transition from PARTITIONS_ASSIGNED to RUNNING (org.apache.kafka.streams.processor.internals.StreamThread)
+[2026-11-05 15:19:06,022] INFO stream-client [streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68] State transition from REBALANCING to RUNNING (org.apache.kafka.streams.KafkaStreams)
+[2026-11-05 15:19:06,022] INFO 🔀 Demo application streams-serde-errors-fail-on-poison-pill state transition from REBALANCING to RUNNING (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:06,022] INFO 📋 Assignment of streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1: active tasks [0_2], standby tasks [] (io.confluent.playground.streams.StreamsApp)
+[2026-11-05 15:19:12,960] WARN [Producer clientId=streams-serde-errors-fail-on-poison-pill-1f19286c-90b4-4d45-b558-f90835636d68-StreamThread-1-producer] The metadata response from the cluster reported a recoverable issue with correlation id 5 : {payments-processed-fail-demo=UNKNOWN_TOPIC_OR_PARTITION} (org.apache.kafka.clients.NetworkClient)
+[2026-11-05 15:19:20,795] WARN Exception caught during Deserialization, taskId: 0_0, topic: payments, partition: 0, offset: 0 (org.apache.kafka.streams.errors.LogAndContinueExceptionHandler)
+org.apache.kafka.common.errors.SerializationException: Error deserializing schema ID
+	at io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer.deserialize(DualSchemaIdDeserializer.java:49)
+	at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.<init>(AbstractKafkaAvroDeserializer.java:492)
+	at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.<init>(AbstractKafkaAvroDeserializer.java:479)
+	at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:181)
+	at io.confluent.kafka.serializers.KafkaAvroDeserializer.deserialize(KafkaAvroDeserializer.java:108)
+	at io.confluent.kafka.streams.serdes.avro.GenericAvroDeserializer.deserialize(GenericAvroDeserializer.java:67)
+	at io.confluent.kafka.streams.serdes.avro.GenericAvroDeserializer.deserialize(GenericAvroDeserializer.java:39)
+	at org.apache.kafka.streams.processor.internals.SourceNode.deserializeValue(SourceNode.java:60)
+	at org.apache.kafka.streams.processor.internals.RecordDeserializer.deserialize(RecordDeserializer.java:70)
+	at org.apache.kafka.streams.processor.internals.RecordQueue.updateHead(RecordQueue.java:216)
+	at org.apache.kafka.streams.processor.internals.RecordQueue.addRawRecords(RecordQueue.java:129)
+	at org.apache.kafka.streams.processor.internals.PartitionGroup.addRawRecords(PartitionGroup.java:293)
+	at org.apache.kafka.streams.processor.internals.StreamTask.addRecords(StreamTask.java:1156)
+	at org.apache.kafka.streams.processor.internals.TaskManager.addRecordsToTasks(TaskManager.java:1891)
+	at org.apache.kafka.streams.processor.internals.StreamThread.pollPhase(StreamThread.java:1534)
+	at org.apache.kafka.streams.processor.internals.StreamThread.runOnceWithoutProcessingThreads(StreamThread.java:1244)
+	at org.apache.kafka.streams.processor.internals.StreamThread.runLoop(StreamThread.java:1001)
+	at org.apache.kafka.streams.processor.internals.StreamThread.run(StreamThread.java:955)
+Caused by: java.lang.IllegalArgumentException: Unknown magic byte!
+	at io.confluent.kafka.serializers.schema.id.SchemaId.fromBytes(SchemaId.java:70)
+	at io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer.deserialize(DualSchemaIdDeserializer.java:47)
+	... 17 more
+[2026-11-05 15:19:20,798] WARN stream-thread [streams-serde-errors-b36cfa21-a2cf-44b4-91dc-07b6e29d6f0c-StreamThread-1] task [0_0] Skipping record due to deserialization error. topic=[payments] partition=[0] offset=[0] (org.apache.kafka.streams.processor.internals.RecordDeserializer)
+org.apache.kafka.common.errors.SerializationException: Error deserializing schema ID
+	at io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer.deserialize(DualSchemaIdDeserializer.java:49)
+	at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.<init>(AbstractKafkaAvroDeserializer.java:492)
+	at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.<init>(AbstractKafkaAvroDeserializer.java:479)
+	at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:181)
+	at io.confluent.kafka.serializers.KafkaAvroDeserializer.deserialize(KafkaAvroDeserializer.java:108)
+	at io.confluent.kafka.streams.serdes.avro.GenericAvroDeserializer.deserialize(GenericAvroDeserializer.java:67)
+	at io.confluent.kafka.streams.serdes.avro.GenericAvroDeserializer.deserialize(GenericAvroDeserializer.java:39)
+	at org.apache.kafka.streams.processor.internals.SourceNode.deserializeValue(SourceNode.java:60)
+	at org.apache.kafka.streams.processor.internals.RecordDeserializer.deserialize(RecordDeserializer.java:70)
+	at org.apache.kafka.streams.processor.internals.RecordQueue.updateHead(RecordQueue.java:216)
+	at org.apache.kafka.streams.processor.internals.RecordQueue.addRawRecords(RecordQueue.java:129)
+	at org.apache.kafka.streams.processor.internals.PartitionGroup.addRawRecords(PartitionGroup.java:293)
+	at org.apache.kafka.streams.processor.internals.StreamTask.addRecords(StreamTask.java:1156)
+	at org.apache.kafka.streams.processor.internals.TaskManager.addRecordsToTasks(TaskManager.java:1891)
+	at org.apache.kafka.streams.processor.internals.StreamThread.pollPhase(StreamThread.java:1534)
+	at org.apache.kafka.streams.processor.internals.StreamThread.runOnceWithoutProcessingThreads(StreamThread.java:1244)
+	at org.apache.kafka.streams.processor.internals.StreamThread.runLoop(StreamThread.java:1001)
+	at org.apache.kafka.streams.processor.internals.StreamThread.run(StreamThread.java:955)
+Caused by: java.lang.IllegalArgumentException: Unknown magic byte!
+	at io.confluent.kafka.serializers.schema.id.SchemaId.fromBytes(SchemaId.java:70)
+	at io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer.deserialize(DualSchemaIdDeserializer.java:47)
+	... 17 more
+[2026-11-05 15:19:25,436] INFO 🗑️ dropped-records-total of application #0: 1 (io.confluent.playground.streams.StreamsApp)

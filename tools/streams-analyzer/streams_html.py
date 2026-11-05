@@ -18,7 +18,7 @@ from datetime import datetime
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
-from report_html import badge, card, e, findings_html, kpi, kpis_html, page, table  # noqa: E402
+from report_html import badge, card, charts_grid, e, findings_html, kpi, kpis_html, page, table, time_chart  # noqa: E402
 
 STATE_COLORS = {
     "RUNNING": "#16a34a", "REBALANCING": "#f59e0b", "PARTITIONS_ASSIGNED": "#f59e0b", "PARTITIONS_REVOKED": "#f59e0b",
@@ -26,6 +26,8 @@ STATE_COLORS = {
     "PENDING_ERROR": "#dc2626", "ERROR": "#b91c1c", "DEAD": "#b91c1c",
 }
 NO_LOGS_COLOR = "#e5e7eb"
+REBALANCE_COLOR = "#f59e0b"
+ERROR_COLORS = ["#dc2626", "#7c3aed", "#db2777", "#0891b2", "#65a30d", "#ea580c", "#4f46e5", "#be123c"]
 CSS = """<style>
 .st-timeline{width:100%;overflow-x:auto}.st-timeline svg{display:block;width:100%;height:auto;min-width:700px}
 .st-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin:6px 0 2px}
@@ -95,9 +97,11 @@ def segments(instance):
     return [(a, b, st) for a, b, st in out if a and b]
 
 
-def timeline_svg(instances):
+def timeline_svg(instances, errors=()):
     rows = [(i["instance"], segments(i)) for i in instances]
-    times = [seconds(x) for _, segs in rows for a, b, _ in segs for x in (a, b)]
+    marks = [(at, lab, err["title"], ERROR_COLORS[k % len(ERROR_COLORS)])
+             for k, err in enumerate(errors) for at, lab in err.get("occurrences", [])]
+    times = [seconds(x) for _, segs in rows for a, b, _ in segs for x in (a, b)] + [seconds(at) for at, _, _, _ in marks]
     times = [t for t in times if t is not None]
     if not times:
         return ""
@@ -132,9 +136,19 @@ def timeline_svg(instances):
             parts.append(f"<rect x='{xa:.1f}' y='{y + 3}' width='{w:.1f}' height='{row_h - 8}' rx='2' fill='{color}'"
                          + (" stroke='#94a3b8' stroke-dasharray='3,2'" if state is None else "")
                          + f"><title>{e(tip)}</title></rect>")
+        # the Kafka Streams errors this instance logged: a marker above its bar, at the time of each occurrence
+        for at, lab, title, color in marks:
+            if lab != name or seconds(at) is None:
+                continue
+            mx = x(at)
+            parts.append(f"<path d='M{mx - 4:.1f},{y + 1} L{mx + 4:.1f},{y + 1} L{mx:.1f},{y + 8}' fill='{color}' stroke='#fff' "
+                         f"stroke-width='0.6'><title>{e(title)}: {e(short(at))}</title></path>")
     parts.append("</svg>")
     used = sorted({st for _, segs in rows for _, _, st in segs if st}, key=lambda s: list(STATE_COLORS).index(s) if s in STATE_COLORS else 99)
     legend = "".join(f"<span><i style='background:{STATE_COLORS.get(s, '#94a3b8')}'></i>{e(s)}</span>" for s in used)
+    for k, err in enumerate(errors):
+        if err.get("occurrences"):
+            legend += f"<span><i style='background:{ERROR_COLORS[k % len(ERROR_COLORS)]};clip-path:polygon(0 0,100% 0,50% 100%)'></i>{e(err['title'])}</span>"
     if any(st is None for _, segs in rows for _, _, st in segs):
         legend += f"<span><i style='background:{NO_LOGS_COLOR};outline:1px dashed #94a3b8'></i>no log (stopped or killed)</span>"
     return f"<div class='st-legend'>{legend}</div><div class='st-timeline'>{''.join(parts)}</div>"
@@ -144,6 +158,21 @@ def thread_name(name):
     """StreamThread-1 instead of <application.id>-<process UUID>-StreamThread-1"""
     m = re.search(r"(?:Global)?StreamThread-\d+$", name)
     return m.group(0) if m else name
+
+
+def errors_chart(app):
+    """📈 the Kafka Streams errors and the rebalances over time, zoomable (the shared chart of the playground reports)"""
+    points, series = [], []
+    for k, err in enumerate(app["errors"]):
+        key = f"e{k}"
+        series.append((key, err["title"], ERROR_COLORS[k % len(ERROR_COLORS)]))
+        points += [(datetime.fromisoformat(at), key) for at, _ in err.get("occurrences", []) if seconds(at) is not None]
+    rebalances = [(datetime.fromisoformat(t["at"]), "rebalances") for i in app["instances"] for client in i.get("timeline", [])
+                  for t in client["transitions"] if t.get("to") == "REBALANCING" and t.get("from") != "REBALANCING" and seconds(t.get("at")) is not None]
+    if not points:
+        return ""
+    series.append(("rebalances", "🔀 Rebalances (all instances)", REBALANCE_COLOR))
+    return time_chart(points + rebalances, series, ms=True)
 
 
 def task_matrix(app):
@@ -217,9 +246,12 @@ def app_html(app):
                      f"{i['restored_records']} / {i['restored_changelogs']}"])
     title = f"🌊 {e(app['application_id'])}" + (f" · Kafka Streams {e(', '.join(versions))}" if versions else "")
     body = [kpis_html(tiles), findings_html(finding_items(app))]
-    timeline = timeline_svg(inst)
+    timeline = timeline_svg(inst, app["errors"])
     if timeline:
         body.append(card("🕐 State of the instances over time", timeline))
+    chart = errors_chart(app)
+    if chart:
+        body.append(charts_grid([("📈 Kafka Streams errors and rebalances over time", chart)]))
     body.append(card("🧩 Instances", table(["Instance", "State", "Since", "Rebalances", "Restarts", "Threads", "Active tasks",
                                            "Standby tasks", "Not restored / restoring", "Restored records / changelogs"], rows, num=(3, 4, 9))))
     matrix = task_matrix(app)
