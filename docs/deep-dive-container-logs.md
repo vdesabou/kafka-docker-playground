@@ -265,7 +265,9 @@ of the terminal, and in `.summary.log_first_timestamp` / `.log_last_timestamp` /
 When the findings span less than that, the tile says so (`ERROR/FATAL over 1 h of it`). **Under 10 minutes the tile
 turns orange** (`⚠️ short window`): a bundle that short rarely contains what led to the incident, and the answer is
 usually to ask for an export that starts well before it rather than to read it. `unknown` means no line of the files
-starts with a date (a log without timestamps, `docker logs` without `--timestamps`).
+starts with a date (a log without timestamps, `docker logs` without `--timestamps`). A `journalctl` export is read
+as well: the `Nov 03 18:29:20 host connect-distributed[1080]: ` prefix of each line is skipped to find the log4j
+timestamp, and the `-- Logs begin at … --` banner is not counted as a logged line.
 
 🎚️ **Everything below the sticky filter bar is one view of the same records**: the two charts, the root causes, the
 files with findings and the record cards are all counted again whenever you change a filter. The verdict and the tiles
