@@ -1,0 +1,10 @@
+---
+services:
+
+  client-rust:
+    build:
+      context: ../../other/client-rust/
+    hostname: client-rust
+    container_name: client-rust
+    depends_on:
+      - broker
