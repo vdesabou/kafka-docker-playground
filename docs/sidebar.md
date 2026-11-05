@@ -8,6 +8,7 @@
 - [🎬 Bite size sessions](/sessions.md)
 - [🧭 Which command do I need?](/which-command.md)
 - [🗺️ Start from your area](/areas.md)
+  - [🔗 Connect](/area-connect.md)
   - [🖥️ Brokers, clients and observability](/area-core-observability.md)
   - [🌊 Streams, schemas and non-Java clients](/area-streams-schema-registry.md)
   - [🛡️ Platform, security and Cloud infra](/area-platform-security.md)

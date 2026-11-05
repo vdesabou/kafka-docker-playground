@@ -19,7 +19,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 
 - 🔗 170+ onprem (or self-managed) connectors [examples](https://kafka-docker-playground.io/#/content?id=🔗-connectors)
 - 🌤️ 100+ fully-managed connectors [examples](https://kafka-docker-playground.io/#/content?id=%f0%9f%a4%96-fully-managed-connectors)
-- 🗺️ Not only connectors: start from your area, [brokers, clients and observability](https://kafka-docker-playground.io/#/area-core-observability), [streams, schemas and non-Java clients](https://kafka-docker-playground.io/#/area-streams-schema-registry), [platform, security and Cloud infra](https://kafka-docker-playground.io/#/area-platform-security)
+- 🗺️ Start from your area: [Connect](https://kafka-docker-playground.io/#/area-connect), and not only connectors: [brokers, clients and observability](https://kafka-docker-playground.io/#/area-core-observability), [streams, schemas and non-Java clients](https://kafka-docker-playground.io/#/area-streams-schema-registry), [platform, security and Cloud infra](https://kafka-docker-playground.io/#/area-platform-security)
 - 🔐 10+ secured [environments](https://kafka-docker-playground.io/#/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
 - ☁️ Confluent Cloud [examples](https://kafka-docker-playground.io/#/content?id=☁%EF%B8%8F-confluent-cloud)
 - 💸 Confluent commercial [features](https://kafka-docker-playground.io/#/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
