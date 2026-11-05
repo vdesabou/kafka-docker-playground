@@ -1,0 +1,18 @@
+[package]
+name = "client-rust"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+
+[dependencies]
+confluent-kafka = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+# not under src/bin/: the repository .gitignore ignores **/bin/
+[[bin]]
+name = "producer"
+path = "src/producer.rs"
+
+[[bin]]
+name = "consumer"
+path = "src/consumer.rs"
