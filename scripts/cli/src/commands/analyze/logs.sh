@@ -138,11 +138,9 @@ then
         report_stem="${report_stem%%.*}"
         progress_page="$(cd "$output_dir" && pwd)/${report_stem}-log-report.html"
         export PG_PROGRESS_HTML="$progress_page" PG_PROGRESS_TITLE="playground analyze logs ${file_array[*]}" PG_PROGRESS_STARTED="$(date +%s)"
-        # the bar and the file count of the page are exact only without archives (extracted on the way)
-        if [ "${input_has_archive:-1}" == "0" ]
-        then
-            export PG_PROGRESS_TOTAL="$input_total_files" PG_PROGRESS_TOTAL_BYTES="$input_total_bytes"
-        fi
+        # the whole input: an archive counts for its size until it is extracted, then for the size of its content
+        # (progress_add_extracted), so the bar is exact once the archives are extracted
+        export PG_PROGRESS_TOTAL="$input_total_files" PG_PROGRESS_TOTAL_BYTES="$input_total_bytes" PG_PROGRESS_DONE=0 PG_PROGRESS_BYTES=0
         progress_step "🔎 starting: $(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$input_total_bytes") to analyze"
         log "🌐 Opening $progress_page in browser: it shows the progress, then the report"
         if command -v open > /dev/null 2>&1
@@ -322,13 +320,19 @@ function analyze_logs_digest () {
         then
             size_args=(--size "$(file_size "$2")")
         fi
-        output=$(PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+        # a converted export: the conversion moved the whole input bar (it reads the original), the digest of the
+        # converted file only moves the bar of the file
+        local counts=1
+        if [ -n "${3:-}" ] && [ "$3" != "$2" ]
+        then
+            counts=0
+        fi
+        output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
     else
         output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
     fi
     nb_files=$((nb_files+1))
     nb_bytes=$((nb_bytes+${input_bytes:-0}))
-    export PG_PROGRESS_DONE=$nb_files PG_PROGRESS_BYTES=$nb_bytes
     if [[ "$output" == "✅"* ]]
     then
         return
@@ -376,7 +380,50 @@ function append_config_file () {
 
 # analyzes a file, a folder or an archive, recursively
 # $1: path, $2: label to display
+# the 🔄 progress page: a file of the input handled (digested, converted, skipped as binary or as a copy) counts as done
+# with its size on disk
 function analyze_logs_path () {
+    analyze_logs_path_entry "$@"
+    if [ -n "${PG_PROGRESS_HTML:-}" ] && [ -f "$1" ] && ! is_archive_path "$1"
+    then
+        progress_add_done "$(file_size "$1")" 1
+    fi
+}
+
+function is_archive_path () {
+    case "$1" in
+        *.zip|*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz|*.7z) return 0 ;;
+    esac
+    return 1
+}
+
+# $1: bytes, $2: files, now done (progress page)
+function progress_add_done () {
+    export PG_PROGRESS_BYTES=$(( ${PG_PROGRESS_BYTES:-0} + ${1:-0} )) PG_PROGRESS_DONE=$(( ${PG_PROGRESS_DONE:-0} + ${2:-0} ))
+}
+
+# a folder already counted elsewhere (a CFK support bundle, analyzed on its own, or a copy of one): its files are done
+function progress_add_done_folder () {
+    if [ -n "${PG_PROGRESS_HTML:-}" ]
+    then
+        local bytes files archive
+        read -r bytes files archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "$1" 2>/dev/null || echo "0 0 0")
+        progress_add_done "$bytes" "$files"
+    fi
+}
+
+# an archive extracted: it counts for its content instead of its size in the whole input. $1: archive, $2: folder
+function progress_add_extracted () {
+    if [ -n "${PG_PROGRESS_HTML:-}" ]
+    then
+        local bytes files archive
+        read -r bytes files archive < <(python3 -I "$root_folder/tools/log-analyzer/progress.py" size "$2" 2>/dev/null || echo "0 0 0")
+        export PG_PROGRESS_TOTAL_BYTES=$(( ${PG_PROGRESS_TOTAL_BYTES:-0} - $(file_size "$1") + bytes )) \
+               PG_PROGRESS_TOTAL=$(( ${PG_PROGRESS_TOTAL:-0} - 1 + files ))
+    fi
+}
+
+function analyze_logs_path_entry () {
     local path="$1"
     local label="$2"
     local extract_dir
@@ -390,6 +437,8 @@ function analyze_logs_path () {
             then
                 cfk_bundles+=("$path")
                 cfk_labels+=("${label%:}")
+            else
+                progress_add_done_folder "$path"
             fi
             return
         fi
@@ -481,6 +530,7 @@ function analyze_logs_path () {
             then
                 logwarn "⚠️ could not fully extract $label"
             fi
+            progress_add_extracted "$path" "$extract_dir"
             analyze_logs_path "$extract_dir" "$label:"
             ;;
         *.zip|*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz)
@@ -515,6 +565,7 @@ function analyze_logs_path () {
             then
                 logwarn "⚠️ could not fully extract $label"
             fi
+            progress_add_extracted "$path" "$extract_dir"
             analyze_logs_path "$extract_dir" "$label:"
             ;;
         *.json|*.jsonl|*.ndjson|*.json.gz|*.jsonl.gz|*.ndjson.gz|*.csv|*.csv.gz)
@@ -612,7 +663,10 @@ if [ ${#cfk_bundles[@]} -gt 1 ]
 then
     log "☸️ Analyzing ${#cfk_bundles[@]} CFK support bundles, $cfk_parallelism at a time (PLAYGROUND_CFK_PARALLELISM)"
 fi
-progress_step "☸️ analyzing ${#cfk_bundles[@]} CFK support bundle(s)"
+if [ ${#cfk_bundles[@]} -gt 0 ]
+then
+    progress_step "☸️ analyzing ${#cfk_bundles[@]} CFK support bundle(s)"
+fi
 # bundles of the same name (two "bundle" folders): their reports get a -<n> suffix, written in the same second
 declare -A cfk_name_count=()
 for i in "${!cfk_bundles[@]}"
@@ -653,6 +707,7 @@ function flush_cfk_bundles () {
         then
             cfk_exit=$rc
         fi
+        progress_add_done_folder "${cfk_bundles[$cfk_next]}"
         cfk_next=$((cfk_next+1))
     done
 }
@@ -859,6 +914,7 @@ fi
 # changes), on stderr with --json; then the configs asked with --show-config
 if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
 then
+    progress_step "🧭 summary: known causes, root causes, configuration"
     echo ""
     python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --text-summary
     echo ""

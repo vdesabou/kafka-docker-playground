@@ -32,7 +32,7 @@ from typing import Dict, List, Optional, Tuple
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
-                         kpi, kpis_html, page, svg_hbars, time_chart, verdict_html)
+                         kpi, kpis_html, page, svg_hbars, time_chart, verdict_html, dark)
 import known_causes  # noqa: E402
 import log_viewer  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
@@ -184,14 +184,22 @@ def mask_ids(text: str) -> str:
     return re.sub(r"[0-9]+", "#", text)
 
 
+def chain_key_text(text: str) -> str:
+    text = re.sub(r"(?m)^\[(?:Producer|Consumer|AdminClient|Worker|Admin)[^\]]*\]\s*", "", text)
+    text = re.sub(r"\([^()\s]+:\d+\)", "(…)", text)
+    return re.sub(r"clientId=[^,\]\s]+", "clientId=…", text)
+
+
 def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
     """Records of killed tasks grouped by exception chain (exception thrown + deepest cause), in order of first occurrence"""
     groups: Dict[str, dict] = {}
     for idx, f, r in matches:
         thrown = r["chain"][0] if r["chain"] else short_message(r["message"])
         cause = r["chain"][-1] if len(r["chain"]) > 1 else ""
-        # same chain on another table, topic or partition: {ORACDC.REDO.DB1-0=OffsetAndMetadata{offset=1}} and digits ignored
-        key = mask_ids(re.sub(r"\{.*\}", "{…}", f"{thrown}\n{cause}"))
+        # same chain on another table, topic or partition: {ORACDC.REDO.DB1-0=OffsetAndMetadata{offset=1}} and digits ignored;
+        # a message without exception is the same for every client and broker: "[Producer clientId=connector-producer-X-0]"
+        # and "(broker-1.example.com/10.0.0.1:9092)" ignored (the connectors are listed with the chain)
+        key = mask_ids(re.sub(r"\{.*\}", "{…}", chain_key_text(f"{thrown}\n{cause}")))
         g = groups.setdefault(key, {"exception": short_exception(thrown), "caused_by": short_exception(cause) if cause else "",
                                     "occurrences": 0, "connectors": OrderedDict(), "matches": []})
         g["occurrences"] += r["count"]
@@ -222,11 +230,15 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
                  else f"in {first_f['label']} (first at {first})")
         hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
                 "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}",
+                "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
                 # the records it matched (index set by analyze()): how much of it is in the current selection
                 "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
+        # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed
+        # tasks have them there, as before)
+        hint["_chains"] = killed_task_chains(matches)
         if title == KILLED_TASK_TITLE:
             # the exception that killed the tasks is what to fix: one line per distinct chain
-            chains = killed_task_chains(matches)
+            chains = hint["_chains"]
             hint["chains"] = chains
             hint["text"] = (f"{title}: {occurrences} occurrence(s) {where}, {len(chains)} distinct exception chain(s) "
                             f"(below, in order of first occurrence): {advice}")
@@ -327,9 +339,23 @@ def root_causes(files: List[dict]) -> List[dict]:
     return out
 
 
+def root_cause_chains(c: dict, by_index: Dict[int, Tuple[dict, dict]]) -> dict:
+    """the exception chains and the first occurrence of a root cause, as for a known cause"""
+    matches = [(m[4], *by_index[m[4]]) for m in c["records_meta"] if m[4] in by_index]
+    if not matches:
+        return {}
+    _, f, r = earliest(matches)
+    return {"_chains": killed_task_chains(matches),
+            "first": {"file": f["label"], "line": r["first_line"], "timestamp": r["first_ts"]}}
+
+
 def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int = 5, unit: str = "file") -> List[dict]:
     """Known causes first, then the most frequent root causes no known cause explains."""
-    res = [{k: h[k] for k in ("severity", "text", "details", "records") if k in h} for h in hints]
+    # _view: what the HTML report renders (count, first occurrence linked, exception chains), not in --json
+    res = [dict({k: h[k] for k in ("severity", "text", "details", "records") if k in h}, _view=dict(h, kind="known"))
+           for h in hints]
+    # record index -> (file, record): the exception chains and the first occurrence of a root cause
+    by_index = {r["index"]: (f, r) for f in files for r in f["records"] if r.get("index") is not None}
     explained = [re.compile(p) for p, _, _, _ in HINTS]
     added = 0
     for c in causes:
@@ -341,7 +367,10 @@ def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int 
         where = f"{len(c['files'])} {unit}s" if len(c["files"]) > 1 else c["files"][0]
         what = f"{c['root_cause']}: {c['example']}" if c["root_cause"] else c["example"]
         res.append({"severity": sev, "text": f"{c['level']} ×{c['occurrences']} in {where}: {what[:300]}",
-                    "records": [m[4] for m in c["records_meta"] if m[4] >= 0]})
+                    "records": [m[4] for m in c["records_meta"] if m[4] >= 0],
+                    "_view": dict({"kind": "root", "level": c["level"], "occurrences": c["occurrences"], "files": c["files"],
+                                   "root_cause": c["root_cause"], "example": c["example"]},
+                                  **root_cause_chains(c, by_index))})
         added += 1
     res.sort(key=lambda x: SEVERITY_ORDER.index(x["severity"]))
     return res
@@ -1106,6 +1135,132 @@ def first_names(names: List[str], top: int = 3) -> str:
     return ", ".join(names[:top]) + (f" (+{len(names) - top} more)" if len(names) > top else "")
 
 
+# the findings of the log report: count chips, exception names in color, the first occurrence as a 📄 / ✏️ link to the
+# line instead of the path of the file, the exception chains of the killed tasks most frequent first
+FINDINGS_CSS = """<style>
+.fi-title{font-weight:600}
+.fi-count{display:inline-block;font-size:.78rem;font-weight:700;padding:1px 8px;border-radius:12px;margin:0 4px;font-variant-numeric:tabular-nums;background:#e2e8f0;color:#334155}
+.fi-count.critical{background:#fee2e2;color:#b91c1c}.fi-count.high{background:#ffedd5;color:#c2410c}.fi-count.medium{background:#fef3c7;color:#b45309}
+.fi-count.low{background:#dcfce7;color:#15803d}.fi-count.info{background:#dbeafe;color:#1d4ed8}
+.fi-meta{font-size:.8rem;color:#64748b}
+.fi-advice{font-size:.84rem;color:#475569;margin-top:4px}
+.rec-details li.fi-chain{font-family:inherit;font-size:.84rem;margin:8px 0;list-style:none;margin-left:-18px;padding:8px 10px;border-radius:8px;background:#f8fafc}
+.fi-exc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#c2410c}
+.fi-exc.error{color:#dc2626}
+.fi-msg{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;color:#334155;word-break:break-word}
+.fi-cause{margin:3px 0 0 14px}
+.fi-conns{margin-top:4px}
+.fi-conn{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;padding:0 6px;margin:2px 3px 0 0;border-radius:4px;background:#e2e8f0;color:#334155}
+.fi-conns details{display:inline}.fi-conns summary{display:inline;cursor:pointer;font-size:.75rem;color:#2563eb;font-weight:500}
+.fi-lvl{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:12px;margin-right:4px}
+.fi-lvl.fatal{background:#fee2e2;color:#b91c1c}.fi-lvl.error{background:#ffedd5;color:#c2410c}.fi-lvl.warn{background:#fef3c7;color:#b45309}
+""" + dark("""
+.fi-count{background:#334155;color:#e2e8f0}
+.fi-count.critical{background:#450a0a;color:#fca5a5}.fi-count.high{background:#431407;color:#fdba74}.fi-count.medium{background:#422006;color:#fcd34d}
+.fi-count.low{background:#052e16;color:#86efac}.fi-count.info{background:#172554;color:#93c5fd}
+.fi-meta,.fi-advice{color:#94a3b8}
+.rec-details li.fi-chain{background:#0f172a}
+.fi-exc{color:#fdba74}.fi-exc.error{color:#fca5a5}
+.fi-msg{color:#cbd5e1}
+.fi-conn{background:#334155;color:#cbd5e1}
+.fi-conns summary{color:#93c5fd}
+.fi-lvl.fatal{background:#450a0a;color:#fca5a5}.fi-lvl.error{background:#431407;color:#fdba74}.fi-lvl.warn{background:#422006;color:#fcd34d}
+""") + "</style>"
+
+
+def exception_html(text: str) -> str:
+    """"SaslAuthenticationException: {..}" -> the class in color (an Error in red), then the message"""
+    m = re.match(r"^([A-Za-z_$][\w$.]*(?:Exception|Error|Throwable|Fault|Failure))(?::\s*(.*))?$", text or "", re.S)
+    if not m:
+        return f"<span class='fi-msg'>{e(text)}</span>"
+    cls = "fi-exc error" if m.group(1).endswith("Error") else "fi-exc"
+    return f"<span class='{cls}'>{e(m.group(1))}</span>" + (f"<span class='fi-msg'>: {e(m.group(2))}</span>" if m.group(2) else "")
+
+
+def first_html(viewers: Dict[str, str], label: str, line, timestamp) -> str:
+    """"first 2026-11-02 20:17:50 📄 ✏️": the time, then the page of the file at the line and the editor (the path on hover)"""
+    when = e(timestamp.replace("T", " ")) if timestamp else f"line {line}"
+    link = log_viewer.link(viewers, label, "📄", line) if line else ""
+    if not link or link == "📄":
+        link = f"<span title='{e(label)} line {line}'>📄</span>"
+    return f"<span class='fi-meta' title='{e(label)}, line {line}'>first {when} {link}</span>"
+
+
+def connectors_html(names: List[str]) -> str:
+    if not names:
+        return ""
+    chips = "".join(f"<span class='fi-conn'>{e(n)}</span>" for n in names[:5])
+    more = ""
+    if len(names) > 5:
+        more = (f" <details><summary>+{len(names) - 5} more</summary>"
+                + "".join(f"<span class='fi-conn'>{e(n)}</span>" for n in names[5:200]) + "</details>")
+    return f"<div class='fi-conns'><span class='fi-meta'>🔌 {len(names)} connector(s): </span>{chips}{more}</div>"
+
+
+# exception chains shown under a known cause (the killed tasks: all of them) or a root cause, most frequent first
+CHAINS_SHOWN = 5
+
+
+def chains_note(chains: List[dict], limit: int) -> str:
+    if not chains:
+        return ""
+    more = f", the {limit} most frequent below" if len(chains) > limit else ", most frequent first"
+    return f"<span class='fi-meta'> · {len(chains)} distinct exception chain(s){more}</span>"
+
+
+def chain_rows(chains: List[dict], limit: int, sev: str, viewers: Dict[str, str]) -> List[str]:
+    """one card per exception chain: count, exception (class in color, then the message), Caused by, connectors, first
+    occurrence linked"""
+    rows = []
+    ordered = sorted(chains, key=lambda c: -c["occurrences"])
+    for c in ordered[:limit]:
+        rows.append(f"<span class='fi-count {sev}'>{c['occurrences']:,}×</span>" + exception_html(c["exception"][:400])
+                    + (f"<div class='fi-cause'><span class='fi-meta'>⬅️ Caused by </span>{exception_html(c['caused_by'][:400])}</div>" if c["caused_by"] else "")
+                    + connectors_html(c["connectors"])
+                    + f"<div>{first_html(viewers, c['first_file'], c['first_line'], c['first_timestamp'])}</div>")
+    if len(ordered) > limit:
+        rest = sum(c["occurrences"] for c in ordered[limit:])
+        rows.append(f"<span class='fi-meta'>+{len(ordered) - limit} more chain(s), {rest:,} occurrence(s): see the 📄 cards of the files below</span>")
+    return rows
+
+
+def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
+    """the finding with html / html_details for findings_html: the same facts as its text, easier to read"""
+    v = f.get("_view")
+    if not v:
+        return f
+    sev = f["severity"].lower()
+    files = v.get("files") or []
+    where = f"in {len(files)} {unit}s" if len(files) > 1 else (f"in {e(os.path.basename(files[0]))}" if files else "")
+    if v["kind"] == "known":
+        first = v.get("first") or {}
+        head = (f"<span class='fi-title'>{e(v['title'])}</span><span class='fi-count {sev}'>{v['occurrences']:,}×</span>"
+                f"<span class='fi-meta'>{where} · </span>" + first_html(viewers, first.get("file", ""), first.get("line"), first.get("timestamp")))
+        # the killed tasks list all their chains (what to fix), the other known causes the most frequent ones
+        chains = v.get("chains") or v.get("_chains") or []
+        limit = len(chains) if v.get("chains") else CHAINS_SHOWN
+        head += chains_note(chains, limit) + f"<div class='fi-advice'>👉 {e(v['advice'])}</div>"
+        return dict(f, html=head, html_details=chain_rows(chains, limit, sev, viewers) or None)
+    # a root cause no known cause explains: its exception as the title, the same rows as a known cause
+    chains = v.get("_chains") or []
+    first = v.get("first") or {}
+    if v["root_cause"]:
+        title = short_exception(v["root_cause"]).split(":")[0]
+    else:
+        # no exception: the start of the message
+        words = (v["example"] or "").split()
+        title = " ".join(words[:8]) + ("…" if len(words) > 8 else "") or "Unrecognized error"
+    head = (f"<span class='fi-lvl {v['level'].lower()}'>{e(v['level'])}</span><span class='fi-title'>🌳 {e(title)}</span>"
+            f"<span class='fi-count {sev}'>{v['occurrences']:,}×</span><span class='fi-meta'>{where}</span>"
+            + (f"<span class='fi-meta'> · </span>{first_html(viewers, first['file'], first['line'], first['timestamp'])}" if first else "")
+            + chains_note(chains, CHAINS_SHOWN)
+            + "<div class='fi-advice'>👉 no known cause matches it: read its exception chain and its context (📄)</div>")
+    rows = chain_rows(chains, CHAINS_SHOWN, sev, viewers)
+    if not rows:
+        rows = [f"<span class='fi-count {sev}'>{v['occurrences']:,}×</span>{exception_html(v['example'][:400])}"]
+    return dict(f, html=head, html_details=rows)
+
+
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
                 sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
@@ -1144,7 +1299,12 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         kpi("🟠 WARN", s["by_level"]["WARN"], "occurrences" if "WARN" in levels else "not included (--include-warnings)",
             "warn" if s["by_level"]["WARN"] else ""),
     ])
-    body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), findings_html(res["findings"])]
+    # the most frequent first within a severity (the text summary and --json keep the order of the known causes)
+    findings_view = sorted((finding_view(f, viewers, unit) for f in res["findings"]),
+                           key=lambda f: (SEVERITY_ORDER.index(f["severity"]), -(f.get("_view") or {}).get("occurrences", 0)))
+    # an exception chain of a killed task is a card of its own inside the finding
+    body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), FINDINGS_CSS,
+            findings_html(findings_view).replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count")]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -1278,8 +1438,8 @@ def main() -> int:
         compact = dict(res, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
                                    for f in res["files"]],
                        root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
-                       known_causes=[{k: v for k, v in h.items() if k != "records"} for h in res["known_causes"]],
-                       findings=[{k: v for k, v in f.items() if k != "records"} for f in res["findings"]])
+                       known_causes=[{k: v for k, v in h.items() if k not in ("records", "_chains")} for h in res["known_causes"]],
+                       findings=[{k: v for k, v in f.items() if k not in ("records", "_view")} for f in res["findings"]])
         if args.json_sections:
             sections = [x.strip() for x in args.json_sections.split(",") if x.strip()]
             compact = {k: v for k, v in compact.items() if k in sections}

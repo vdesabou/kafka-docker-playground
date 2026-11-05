@@ -297,7 +297,8 @@ if (!window.pgFindingsFilter) {
 
 
 def findings_html(items: List[dict]) -> str:
-    """items: {severity, text}, plus an optional details list shown as bullets under the text; with 2 severities or more,
+    """items: {severity, text}, plus an optional details list shown as bullets under the text (html / html_details: the same
+    as trusted HTML written by the report, its log text escaped, used instead of text / details); with 2 severities or more,
     chips above the cards filter them by severity. An item with "records" (indexes of the records it was built from)
     carries them as data-recs and gets a .rec-scope span: a page that filters the records (the log report) writes in it
     how much of the finding is in the current selection. The text of a finding is never rewritten: it stays the figures
@@ -318,8 +319,9 @@ def findings_html(items: List[dict]) -> str:
             + "".join(f'<div class="rec-card {f["severity"].lower()}" data-sev="{e(f["severity"])}"'
                       + (f' data-recs="{" ".join(str(i) for i in f["records"])}"' if f.get("records") else "")
                       + f'><span class="rec-badge {f["severity"].lower()}">'
-                      f'{SEVERITY_ICONS.get(f["severity"], "")} {e(f["severity"])}</span><span class="rec-text">{e(f["text"])}'
-                      + ("<ul class='rec-details'>" + "".join(f"<li>{e(d)}</li>" for d in f["details"]) + "</ul>" if f.get("details") else "")
+                      f'{SEVERITY_ICONS.get(f["severity"], "")} {e(f["severity"])}</span><span class="rec-text">{f["html"] if f.get("html") else e(f["text"])}'
+                      + ("<ul class='rec-details'>" + "".join(f"<li>{d}</li>" for d in f["html_details"]) + "</ul>" if f.get("html_details")
+                         else "<ul class='rec-details'>" + "".join(f"<li>{e(d)}</li>" for d in f["details"]) + "</ul>" if f.get("details") else "")
                       + ("<span class='rec-scope'></span>" if f.get("records") else "")
                       + "</span></div>"
                       for f in items)
