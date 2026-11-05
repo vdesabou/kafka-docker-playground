@@ -58,5 +58,5 @@ playground run -f gcp-bigquery-sink.sh
 2. Drops (if present) and creates a dataset named after the user, run number and CP version.
 3. Creates the `gcp-bigquery-sink` connector (`autoCreateTables=true`, `sanitizeTopics=true`) for topic `products`.
 4. Produces 3 Avro records to topic `products` with `playground topic produce` (one of them with `name=notebooks`).
-5. Waits 125 seconds, then queries `SELECT * FROM <dataset>.products` with `bq` and checks that `notebooks` is present.
+5. Queries `SELECT * FROM <dataset>.products` with `bq` every 15 seconds (up to 300 seconds) until `notebooks` is present.
 6. On exit, drops the dataset.
