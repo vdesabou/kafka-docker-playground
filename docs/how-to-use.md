@@ -426,7 +426,7 @@ Docker images tags being used can be overridden by exporting following environme
 * ksqlDb (`CP_KSQL_TAG`) and ksqlDB CLI (`CP_KSQL_CLI_TAG`): `--ksqldb-tag` sets both
 * rest-proxy (`CP_REST_PROXY_TAG`)
 
-The java applications that some examples build (Kafka Streams, producers, consumers) use the Apache Kafka clients matching the CP version (`KAFKA_CLIENT_TAG`, CP 8.2 → 4.2.0). `--client-version 3.7.1` (`CLIENT_VERSION`) pins another version, a patch version included, for example the customer's Kafka Streams version. For the client examples (`other/client-*`, `ccloud/client-*`), it is the version of their client (librdkafka, confluent-kafka-python…).
+The java applications that some examples build (Kafka Streams, producers, consumers) use the Apache Kafka clients matching the CP version (`KAFKA_CLIENT_TAG`, CP 8.2 → 4.2.0). `--client-version 3.7.1` (`CLIENT_VERSION`) pins another version, a patch version included, for example the customer's Kafka Streams version. For the client examples (`other/client-*`, `ccloud/client-*`), it is the version of their client (librdkafka, confluent-kafka-python…). Press <kbd>TAB</kbd> after `--client-version` (with `-f` typed before it, otherwise the last example run is used) to pick one of the published versions of that client in fzf, releases first; the interactive menu offers the same list.
 
 *Example:* schema registry 7.9.1 with everything else on 8.3.2:
 

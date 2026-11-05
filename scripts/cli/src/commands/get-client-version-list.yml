@@ -1,0 +1,10 @@
+name: get-client-version-list
+help: Return some completion for --client-version, the versions of the client that the example builds
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur
+catch_all:
+  label: words
+  help: the words of the command line being completed (the example is the value of -f / --file, else the last run)

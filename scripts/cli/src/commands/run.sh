@@ -447,6 +447,8 @@ fi
 
 if [[ -n "$client_version" ]]
 then
+  # the <tab> completion prints <cur>@<version>
+  client_version=${client_version#*@}
   array_flag_list+=("--client-version=$client_version")
   # read by the client examples, and by set_kafka_client_tag (utils_function.sh) for the java builds
   export CLIENT_VERSION=$client_version
@@ -1519,7 +1521,8 @@ then
     then
       maybe_remove_flag "--client-version"
       set +e
-      client_version=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="☕" --header="Enter the version of the client the example builds (java: the Apache Kafka version, for example 3.7.1; client examples: see their README), empty for the default" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
+      # the published versions of the client that the example builds, newest first (a version can also be typed)
+      client_version=$(get_client_version_with_fzf "" "$test_file")
       set -e
       if [ -n "$client_version" ] && [ -n "$(validate_client_version "$client_version")" ]
       then
