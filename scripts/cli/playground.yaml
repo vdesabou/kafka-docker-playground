@@ -4480,8 +4480,11 @@ subcommands:
       and a CSV export of log events\n(.csv, also gzipped: Kibana / OpenSearch Dashboards
       Discover, Splunk,\nDatadog, Grafana: one event per row, a cell holding the JSON
       log line of\nthe container is parsed) are converted back to log lines, oldest
-      first,\nand analyzed as a log file. Only files with findings are\nshown. The
-      HTML report also has\nthe configuration: the configs logged at startup (KafkaConfig
+      first,\nand analyzed as a log file. Only files with findings are\nshown. \U0001F52D
+      When no file has findings, an overview says what the logs\ncontain (period covered,
+      records by level, top messages and loggers) and\nwhat to ask for next (a longer
+      window, the logs of the component that\nfails, a new export of a log console).
+      The HTML report also has\nthe configuration: the configs logged at startup (KafkaConfig
       values:,\nDistributedConfig, connector and client configs…) and the .properties\nand
       connector JSON files of the input.\n\n☸️ A Confluent for Kubernetes (CFK) support
       bundle (kubectl confluent support-bundle or playground debug cfk generate-bundle:

@@ -119,7 +119,10 @@ commands:
     Datadog, Grafana: one event per row, a cell holding the JSON log line of
     the container is parsed) are converted back to log lines, oldest first,
     and analyzed as a log file. Only files with findings are
-    shown. The HTML report also has
+    shown. 🔭 When no file has findings, an overview says what the logs
+    contain (period covered, records by level, top messages and loggers) and
+    what to ask for next (a longer window, the logs of the component that
+    fails, a new export of a log console). The HTML report also has
     the configuration: the configs logged at startup (KafkaConfig values:,
     DistributedConfig, connector and client configs…) and the .properties
     and connector JSON files of the input.
