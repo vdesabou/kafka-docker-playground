@@ -21,7 +21,8 @@ shorter than `SHORT_PERIOD_SECONDS` (10 min) turns the tile orange (`⚠️ shor
 summary: the bundle may not even contain the incident. A records file written before that (no field 5 and 6) falls
 back to the span of the records.
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
-(task killed, with one line per distinct exception chain of the killed tasks, authentication, TLS, unknown magic byte,
+(task killed, with one line per distinct exception chain of the killed tasks, authentication, cloud credentials (an AWS
+`SignatureDoesNotMatch` or `(Service: S3, Status Code: 403`), TLS, unknown magic byte,
 `OutOfMemoryError`…, each pointing at its earliest occurrence; the list is shared with the CFK analyzer, in
 `tools/report-common/known_causes.py`), occurrences over time, root causes
 (deepest exception of each record) and every record (with a 📋 Show context block: the raw lines around its first

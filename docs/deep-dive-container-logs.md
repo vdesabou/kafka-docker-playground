@@ -132,8 +132,14 @@ How to read it:
 
 Gotchas:
 
-- A message whose varying part is not a number (a topic name, a file name) gives one finding per variant.
-- A record longer than 400 lines is cut into several records; each line is shortened to 300 characters in the digest.
+- A message whose varying part is not a number (a topic name, a file name) gives one finding per variant. Ids made of
+  letters and digits (an AWS `Request ID: 5PPC305GEXB1A0R9`, an `Extended Request ID`) count as numbers.
+- A record longer than 400 lines is cut into several records; each line is shortened to 300 characters in the digest
+  (2000 in the HTML report and the JSON, where the error is often at the end of a long message: `Task is being killed
+  and will not recover until manually restarted. Error: <the cause>`).
+- A stack trace flattened on one line by a log export or a log shipper (`…)\n\tat io.confluent…`, or with the
+  backslash lost: `…Source)n\tat io.confluent…`, `…)nCaused by: …`) is split back into lines: its exception chain and
+  its `Caused by:` are found as in a normal trace. The line numbers stay those of the file.
 - `--errors` conflicts with `--grep` and `--wait-for-log`, and needs nothing else: it never follows.
 - A digest printed in a log (a CI log containing `container logs --errors` output) is not counted twice: its headers
   are recognized and skipped.
@@ -244,7 +250,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | Section | What it shows |
 | --- | --- |
 | verdict and tiles | 🕐 **period covered**, files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
-| 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings) |
+| 🔎 findings | well-known causes first (task killed, authentication, cloud credentials (AWS `SignatureDoesNotMatch`, `Status Code: 403`), authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings) |
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records. **Drag over it to zoom on a range** (◀ ▶ to move the window, double-click or **All** to zoom out): the buckets are counted again for the window, so zooming on a burst shows it per minute, then per second |
 | 🔝 root causes (occurrences) | the 10 most frequent root causes of what is kept, as horizontal bars |
 | 🌳 root causes | records grouped by their deepest exception (or by message when they have none), with occurrences, files and connectors |
@@ -308,8 +314,8 @@ playground analyze logs -f support-bundle.zip --json 2>/dev/null | jq '.findings
 ```
 
 > [!NOTE]
-> The report and the JSON use the same parser as the terminal digest (`summarize_log_errors`): records are cut to 300
-> characters per line and to 3 frames of the deepest cause there too.
+> The report and the JSON use the same parser as the terminal digest (`summarize_log_errors`): records are cut to 3
+> frames of the deepest cause there too, and their lines to 2000 characters (300 in the terminal).
 
 Gotchas:
 

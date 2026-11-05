@@ -170,6 +170,14 @@ def short_exception(line: str) -> str:
     return m.group(1).split(".")[-1] + (f": {m.group(2)}" if m.group(2) else "")
 
 
+def mask_ids(text: str) -> str:
+    """digits as #, and ids of letters and digits (AWS Request ID 5PPC305GEXB1A0R9, Extended Request ID, tokens) as one #:
+    the same error with another request id, table or partition is the same chain"""
+    text = re.sub(r"(?i)(request id: )[^\s,)]+", r"\1#", text)
+    text = re.sub(r"(?=[A-Za-z0-9+/]*[0-9])(?=[A-Za-z0-9+/]*[A-Za-z])[A-Za-z0-9+/]{8,}", "#", text)
+    return re.sub(r"[0-9]+", "#", text)
+
+
 def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
     """Records of killed tasks grouped by exception chain (exception thrown + deepest cause), in order of first occurrence"""
     groups: Dict[str, dict] = {}
@@ -177,7 +185,7 @@ def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
         thrown = r["chain"][0] if r["chain"] else short_message(r["message"])
         cause = r["chain"][-1] if len(r["chain"]) > 1 else ""
         # same chain on another table, topic or partition: {ORACDC.REDO.DB1-0=OffsetAndMetadata{offset=1}} and digits ignored
-        key = re.sub(r"[0-9]+", "#", re.sub(r"\{.*\}", "{…}", f"{thrown}\n{cause}"))
+        key = mask_ids(re.sub(r"\{.*\}", "{…}", f"{thrown}\n{cause}"))
         g = groups.setdefault(key, {"exception": short_exception(thrown), "caused_by": short_exception(cause) if cause else "",
                                     "occurrences": 0, "connectors": OrderedDict(), "matches": []})
         g["occurrences"] += r["count"]
@@ -274,7 +282,7 @@ def root_causes(files: List[dict]) -> List[dict]:
     causes: Dict[str, dict] = {}
     for f, r in all_records(files):
         # same exception with another message is another cause (ConnectException wraps everything)
-        key = (f"{r['root_cause']}: {re.sub(r'[0-9]+', '#', r['root_cause_message'])[:100]}" if r["root_cause"]
+        key = (f"{r['root_cause']}: {mask_ids(r['root_cause_message'])[:100]}" if r["root_cause"]
                else short_message(r["message"])[:160])
         c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": key, "occurrences": 0, "records": 0, "files": OrderedDict(),
                                     "connectors": OrderedDict(), "example": r["root_cause_message"] or short_message(r["message"]), "level": r["level"],
