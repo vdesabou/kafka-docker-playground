@@ -15,7 +15,7 @@
     "errors.tolerance": "none",
     "file.discovery.starting.timestamp": "0",
     "file.metadata.headers.enable": "false",
-    "format.bytearray.separator": "",
+    "format.bytearray.separator": "
     "header.converter": "",
     "input.data.format": "",
     "kafka.api.key": "",
@@ -62,3 +62,4 @@
     "value.converter.value.subject.name.strategy": "TopicNameStrategy",
     "value.converter.wrapper.for.nullables": "",
     "value.converter.wrapper.for.raw.primitives": "",
+",

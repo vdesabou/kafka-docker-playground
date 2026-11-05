@@ -61,6 +61,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -175,6 +177,8 @@ The number of salesforce objects to process.
 🔘 poll.interval.ms
 
 How often to query Salesforce for new records.
+Note: If the connector is restarted (for example, due to a cluster re-roll or manual restart), any elapsed time in the current polling interval is lost, and the interval timer is reset. As a result, the actual wait time between polls may be longer than the configured value if a restart occurs mid-interval.
+For example: If poll.interval.ms is set to 3 hours and the connector restarts 1 hours into the interval, after the restart it will wait the full 3 hours again before polling, resulting in a total wait of 4 hours for that poll cycle.
 
 	 - Type: INT
 	 - Default: 30000
@@ -289,6 +293,7 @@ CreatedDate after which the records should be pulled for SObject1. Note that the
 🔘 salesforce.object1.include.deleted.records
 
 If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+Note: By default, deleted records in Salesforce remain in the Recycle Bin for 15 days (or longer, if specified by your organization's settings). After this retention period, records are permanently deleted and cannot be restored. This configuration will only retrieve records that are still present in the Recycle Bin and have not yet been permanently deleted.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -373,6 +378,7 @@ CreatedDate after which the records should be pulled for SObject2. Note that the
 🔘 salesforce.object2.include.deleted.records
 
 If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+Note: By default, deleted records in Salesforce remain in the Recycle Bin for 15 days (or longer, if specified by your organization's settings). After this retention period, records are permanently deleted and cannot be restored. This configuration will only retrieve records that are still present in the Recycle Bin and have not yet been permanently deleted.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -457,6 +463,7 @@ CreatedDate after which the records should be pulled for SObject3. Note that the
 🔘 salesforce.object3.include.deleted.records
 
 If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+Note: By default, deleted records in Salesforce remain in the Recycle Bin for 15 days (or longer, if specified by your organization's settings). After this retention period, records are permanently deleted and cannot be restored. This configuration will only retrieve records that are still present in the Recycle Bin and have not yet been permanently deleted.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -541,6 +548,7 @@ CreatedDate after which the records should be pulled for SObject4. Note that the
 🔘 salesforce.object4.include.deleted.records
 
 If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+Note: By default, deleted records in Salesforce remain in the Recycle Bin for 15 days (or longer, if specified by your organization's settings). After this retention period, records are permanently deleted and cannot be restored. This configuration will only retrieve records that are still present in the Recycle Bin and have not yet been permanently deleted.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -625,6 +633,7 @@ CreatedDate after which the records should be pulled for SObject5. Note that the
 🔘 salesforce.object5.include.deleted.records
 
 If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+Note: By default, deleted records in Salesforce remain in the Recycle Bin for 15 days (or longer, if specified by your organization's settings). After this retention period, records are permanently deleted and cannot be restored. This configuration will only retrieve records that are still present in the Recycle Bin and have not yet been permanently deleted.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -799,6 +808,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -990,4 +1001,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

@@ -85,6 +85,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -234,12 +236,11 @@ Should the task halt when it encounters an error or continue to the next file.
 
 🔘 format.bytearray.separator
 
-String inserted between records for ByteArrayFormat. Defaults to `
-` and may contain escape sequences like `
-`.  An input record that contains the line separator looks like multiple records in the storage object input.
+String inserted between records for ByteArrayFormat. Defaults to `\n` and may contain escape sequences like `\n`.  An input record that contains the line separator looks like multiple records in the storage object input.
 
 	 - Type: STRING
 	 - Default: 
+
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -429,6 +430,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -620,4 +623,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 
