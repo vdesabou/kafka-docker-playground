@@ -372,8 +372,8 @@ function analyze_logs_path () {
             fi
             analyze_logs_path "$extract_dir" "$label:"
             ;;
-        *.json|*.jsonl|*.ndjson|*.json.gz|*.jsonl.gz|*.ndjson.gz)
-            # a JSON export of log events (CloudWatch Logs Insights, Elasticsearch / OpenSearch, structured JSON logs):
+        *.json|*.jsonl|*.ndjson|*.json.gz|*.jsonl.gz|*.ndjson.gz|*.csv|*.csv.gz)
+            # a JSON or CSV export of log events (CloudWatch Logs Insights, Elasticsearch / OpenSearch, Kibana Discover CSV, structured JSON logs):
             # converted back to log lines, oldest first, so that the records, their stack traces and the line numbers
             # of the HTML report are those of a log file; any other JSON (connector configs…) is read as it is
             if is_duplicate_file "$path" "$label"
@@ -385,10 +385,13 @@ function analyze_logs_path () {
             converted=$(basename "$path")
             converted="$tmp_dir/$nb_extracted/${converted%%.*}.log"
             mkdir -p "$(dirname "$converted")"
-            local nb_events
+            local nb_events export_format=JSON
+            case "$path" in
+                *.csv|*.csv.gz) export_format=CSV ;;
+            esac
             if nb_events=$(python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$path" "$converted" 2>/dev/null)
             then
-                log "🔄 $label: JSON export of $nb_events log events, analyzed as log lines (oldest first)"
+                log "🔄 $label: $export_format export of $nb_events log events, analyzed as log lines (oldest first)"
                 analyze_logs_digest "$label" "$converted" < "$converted"
             elif [[ "$path" == *.gz ]]
             then
