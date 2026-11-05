@@ -37,3 +37,6 @@ log "📤 Producing 1000 more records with the 3 instances back"
 playground topic produce --topic streams-input --nb-messages 1000 --value "record-%g" --value-format raw
 
 wait_for_total_count streams-output 3000
+
+log "🌊 State of the instances: rebalances, tasks per instance, restores, restart of streams2 (playground streams status)"
+wait_for_streams_running streams-count

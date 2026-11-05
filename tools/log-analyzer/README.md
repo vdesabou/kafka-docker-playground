@@ -48,6 +48,11 @@ errors section of the `playground connector diagnose` report. `get-ci-result --l
 and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last
 lines of a failed CI script, `--link` for the issue and the job).
 
+`--html-section <title> <file>` embeds an HTML fragment written by another playground tool after the findings: the 🌊
+Kafka Streams view of `tools/streams-analyzer` (state of each instance, timeline, task assignment, Kafka Streams
+errors), which `analyze logs` adds when files of the bundle contain Kafka Streams lines (and to `--json` as
+`kafka_streams`).
+
 For the terminal of `analyze logs`: `--text-summary` prints the bounded 🧭 summary (time range, period covered, per-connector counts,
 known causes with their advice, root causes no known cause explains, configuration inventory and changes),
 `--show-config <name>` the configs of a connector / config class / client id, `--connector <name>` (repeatable,

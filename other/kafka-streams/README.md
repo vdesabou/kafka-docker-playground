@@ -72,6 +72,20 @@ supported for now (`exit 111` on the others).
    ```
 
    1000 more records: 3000
+5. `playground streams status` (retried until every instance is RUNNING, it exits 1 otherwise): the state of each
+   instance, its rebalances and the time spent in REBALANCING, its tasks, the records restored, the restart of
+   `streams2`, and the consumer group (`--html` adds a timeline of the states and the task assignment):
+
+   ```text
+   🌊 application streams-count (Kafka Streams 4.4.0): 3 instance(s)
+     INSTANCE  STATE    SINCE     REBALANCES  THREADS    ACTIVE TASKS        STANDBY TASKS  NOT RESTORED
+     streams   RUNNING  15:25:39  4 (3.6s)    1 RUNNING  0_2, 0_5, 1_2, 1_5  -              -
+     streams2  RUNNING  15:25:39  3 (6.3s)    1 RUNNING  0_0, 0_3, 1_0, 1_3  -              -
+     streams3  RUNNING  15:25:39  4 (3.3s)    1 RUNNING  0_1, 0_4, 1_1, 1_4  -              -
+     ♻️ restored: streams 7 record(s) from 5 changelog partition(s), streams2 6 record(s) from 4 changelog partition(s), streams3 3 record(s) from 5 changelog partition(s)
+     🔁 streams2: restarted 1 time(s) in these logs
+   👥 consumer group streams-count: Stable, 3 member(s), lag 0 🏁
+   ```
 
 The restore checks only count the log lines written after the kill and after the restart (`playground container logs
 --since`): container logs survive a restart.
@@ -154,7 +168,10 @@ on the poison pill (`state transition from PENDING_ERROR to ERROR`).
 ## Use it in a repro
 
 ```bash
-# what each instance is doing
+# what each instance is doing: state, rebalances, active / standby tasks, restoration, known errors, consumer group
+# (exits 1 when an instance is not RUNNING; --html adds a timeline of the states and the task assignment)
+playground streams status
+playground streams status --application-id streams-serde-errors-fail-on-poison-pill --html
 playground container logs --container streams2 --grep "state transition\|Assignment of\|Restore\|Uncaught\|dropped-records"
 
 # replace the StreamsConfig of a scenario (config/<scenario>.properties), then restart the instances

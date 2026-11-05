@@ -128,6 +128,26 @@ function wait_for_log_since () {
     done
 }
 
+# Waits until every instance of application.id $1 is RUNNING (playground streams status exits 1 otherwise: an instance
+# REBALANCING, in ERROR or with its container stopped), then prints the status: state, rebalances, tasks, restores
+function wait_for_streams_running () {
+    local application_id="$1"
+    MAX_WAIT=120
+    CUR_WAIT=0
+    while ! playground streams status --application-id "$application_id" > /tmp/streams-status.log 2>&1
+    do
+        sleep 5
+        CUR_WAIT=$(( CUR_WAIT+5 ))
+        if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+        then
+            cat /tmp/streams-status.log
+            logerror "❌ the instances of $application_id are not all RUNNING after $MAX_WAIT seconds"
+            exit 1
+        fi
+    done
+    cat /tmp/streams-status.log
+}
+
 function now () {
     date +%Y-%m-%dT%H:%M:%S
 }
