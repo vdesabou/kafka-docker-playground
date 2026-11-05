@@ -1,0 +1,17 @@
+2026-11-05 16:30:01,123 INFO client: starting
+2026-11-05 16:30:02,456 ERROR client: produce failed
+Traceback (most recent call last):
+  File "/app/app.py", line 10, in send
+    producer.produce(topic, value)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+BufferError: Local: Queue full
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/app.py", line 20, in main
+    send()
+  File "/app/app.py", line 12, in send
+    raise RuntimeError("cannot send") from e
+RuntimeError: cannot send
+2026-11-05 16:30:03,000 INFO client: done

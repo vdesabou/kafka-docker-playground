@@ -1,0 +1,9 @@
+2026/11/05 16:30:01 producing to orders
+panic: kafka: Local: Fatal error
+
+goroutine 1 [running]:
+main.produce(0xc000010000)
+	/app/main.go:42 +0x1d
+main.main()
+	/app/main.go:12 +0x25
+exit status 2

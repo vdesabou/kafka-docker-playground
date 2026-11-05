@@ -136,6 +136,17 @@ lab_expect_contains "❌ streams.log: the client is ERROR since 2026-11-05 15:19
 lab_expect_contains "🧪 Deserialization error x2 (streams.log, streams3.log, first 2026-11-05 15:19:20, last 2026-11-05 15:19:20)"
 lab_expect_contains "🧪 Kafka Streams: deserialization error"
 lab_expect_equals "$(grep -o '🕐 State of the instances over time' "$report_dir/kafka_streams-log-report.html" | head -1)" "🕐 State of the instances over time" "Kafka Streams timeline in the HTML report"
+# 🧰 the other Kafka clients: real logs of other/client-* (librdkafka, KafkaJS, Rust) and the crashes of each language
+lab_run playground analyze logs --sample kafka_clients --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "🧭 Summary: 207 occurrence(s) of 22 distinct record(s) in 12 file(s), 2026-11-05 16:28:22 → 2026-11-05 16:33:40"
+lab_expect_contains "[HIGH] 🔌 Connection failure ×195 in 7 files (first at python-producer.log line 1, 2026-11-05 16:28:22)"
+lab_expect_contains "[HIGH] ⚙️ Invalid client configuration ×1 in python-producer.log (first at line 34)"
+lab_expect_contains "[HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)"
+lab_expect_contains "[HIGH] 🗺️ Topic not found in the metadata ×2 in 2 files (first at rust-producer.log line 1)"
+lab_expect_contains "    cimpl.KafkaException: KafkaError{code=_INVALID_ARG,val=-186,str=\"No such configuration property: \"bogus.property\"\"}"
+lab_expect_contains "    ---> Confluent.Kafka.KafkaException: Local: Broker transport failure"
+lab_expect_contains "🔴 FATAL x1 (first seen line 2, last seen line 2)"
 lab_run playground streams status --sample kafka_streams
 lab_expect_exit 1
 lab_expect_contains "1 instance(s) not RUNNING"

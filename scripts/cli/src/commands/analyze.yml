@@ -95,6 +95,18 @@ commands:
     uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and
     level-less lines that merely contain "error" or "failed", never are.
 
+    🧰 The logs of every Kafka client of Confluent are read, not only Java:
+    the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript
+    clients ("%3|1793896102.923|FAIL|rdkafka#producer-1| …", by their
+    syslog level, timestamp included, also the Node.js objects of the
+    JavaScript client logger), the .NET console logger ("fail:", "crit:")
+    and inner exceptions (" ---> "), Python tracebacks (chained ones as one
+    record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,
+    uncaught Node.js errors (KafkaJS, "[cause]:"), the tracing lines of the
+    Rust client. The known causes include the client ones (records not
+    delivered in time, producer buffer full, max.poll.interval.ms exceeded,
+    wrong security.protocol, idle connection closed by the broker).
+
     📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files
     are extracted in a temporary folder, .gz files are decompressed on the
     fly, binary files are skipped, and so are the copies of a file or of a

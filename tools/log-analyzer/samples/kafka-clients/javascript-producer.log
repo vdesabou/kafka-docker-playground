@@ -1,0 +1,135 @@
+@confluentinc/kafka-javascript 1.11.0, librdkafka 2.16.0
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130218,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130270,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130322,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130373,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130425,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130480,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130537,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130590,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130647,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130703,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130760,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130814,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130870,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130926,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896130979,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896131030,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896131082,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896131134,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896131187,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896131238,
+  name: 'rdkafka#producer-1'
+}
+{
+  message: 'Connection attempt 1 failed, retrying in 344ms: broker transport failure',
+  name: '',
+  fac: 'BINDING',
+  timestamp: 1793896161225
+}
+{
+  message: '[thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)',
+  fac: 'FAIL',
+  timestamp: 1793896161576,
+  name: 'rdkafka#producer-2'
+}
+@confluentinc/kafka-javascript 1.11.0, librdkafka 2.16.0
+No such configuration property: "bogus.property"

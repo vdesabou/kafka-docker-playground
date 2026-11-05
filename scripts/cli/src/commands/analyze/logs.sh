@@ -38,6 +38,7 @@ do
         connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
         support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
         kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
+        kafka_clients) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-clients") ;;
         cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
         cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
         cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
