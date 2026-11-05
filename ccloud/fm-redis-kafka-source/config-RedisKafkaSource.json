@@ -26,7 +26,7 @@
     "redis.key.cert": "",
     "redis.key.file": "",
     "redis.key.password": "",
-    "redis.keys.pattern": "README.md",
+    "redis.keys.pattern": "*",
     "redis.keys.timeout": "0",
     "redis.password": "",
     "redis.pool": "8",

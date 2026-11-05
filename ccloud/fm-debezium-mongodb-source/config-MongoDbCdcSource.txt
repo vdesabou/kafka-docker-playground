@@ -4,6 +4,8 @@ Authentication method
 🔘 authentication.method
 
 Select the authentication mechanism for the MongoDB database. 
+``Password`` uses standard username and password credentials. 
+``IAM Roles`` uses AWS IAM authentication for MongoDB Atlas.
 
 	 - Type: STRING
 	 - Default: Password
@@ -121,6 +123,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -143,6 +147,7 @@ Enter the MongoDB connection string in the format ``mongodb://host:port`` or ``m
 
 Enter a MongoDB username with ``readAnyDatabase`` role and ``changeStream`` privileges. 
 For sharded clusters, the user also requires ``read`` access to the ``config`` and ``local`` databases. 
+If enabling incremental snapshots, ensure the user has write access to the signal data collection.
 
 	 - Type: STRING
 	 - Default: 
@@ -188,6 +193,9 @@ Enter the password required to access the SSL truststore.
 🔘 mongodb.ssl.invalid.hostname.allowed
 
 Determines whether to disable SSL hostname verification. 
+Set to ``true`` for development or testing only. 
+Set to ``false`` (default) in production to ensure secure hostname validation. 
+Setting this to ``true`` is not secure in production environments and may violate your organization's security policies. Confluent Cloud connectors use TLS by default with strict hostname verification.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -227,6 +235,8 @@ Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOB
 🔘 after.state.only
 
 Determines whether to emit only the document state after a change. 
+When ``true``, emits only the document state after the change. 
+When ``false`` (default), emits the full Debezium envelope with operation metadata.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -236,6 +246,8 @@ Determines whether to emit only the document state after a change.
 🔘 tombstones.on.delete
 
 Determines if the connector emits a tombstone event after a delete event. 
+If set to ``true`` (Default), the connector emits both the delete event and a tombstone for log compaction. 
+If set to ``false``, the connector emits only the delete event.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -324,6 +336,8 @@ Database config
 
 Provide a comma-separated list of databases to monitor. 
 Supports regular expressions when ``filters.match.mode`` is ``regex``. 
+If empty, includes all databases in the ``capture.scope``. 
+Do not use this with ``database.exclude.list``.
 
 	 - Type: LIST
 	 - Default: 
@@ -334,6 +348,7 @@ Supports regular expressions when ``filters.match.mode`` is ``regex``.
 
 Provide a comma-separated list of database names to exclude. 
 Supports regular expressions when ``filters.match.mode`` is ``regex``. 
+Do not use this with ``database.include.list``.
 
 	 - Type: LIST
 	 - Default: 
@@ -344,6 +359,7 @@ Supports regular expressions when ``filters.match.mode`` is ``regex``.
 
 Provide a comma-separated list of fully-qualified collections (``database.collection``) to capture. 
 Supports regular expressions through ``filters.match.mode``. 
+Do not use this with ``collection.exclude.list``.
 
 	 - Type: LIST
 	 - Default: 
@@ -380,6 +396,8 @@ Provide a comma-separated list of field rename mappings in the format ``database
 🔘 filters.match.mode
 
 Determines the matching logic for include and exclude filters.
+``regex`` enables regular expression matching.
+``literal`` enables exact string matching.
 
 	 - Type: STRING
 	 - Default: regex
@@ -392,6 +410,10 @@ Snapshot Configs
 🔘 snapshot.mode
 
 Set the behaviour for initial data capture. 
+``initial`` performs a snapshot only on the first start.
+``no_data`` skips snapshot.
+``when_needed`` performs a snapshot only if offsets are missing or invalid.
+``initial_only`` performs a snapshot and then stops the connector.
 
 	 - Type: STRING
 	 - Default: initial
@@ -436,6 +458,8 @@ Signal Configs
 
 Provide a list of signalling channels to enable:
 ``source`` (default): Reads from the database collection.
+``kafka``: Consumes from a Kafka topic.
+Note: ``source`` is required when using ``kafka``.
 
 	 - Type: LIST
 	 - Default: 
@@ -475,6 +499,8 @@ Set the maximum number of documents fetched per incremental snapshot chunk. Tune
 🔘 incremental.snapshot.watermarking.strategy
 
 Set the strategy for watermarking during incremental snapshots.
+``INSERT_INSERT`` (Default) writes both open and close signals.
+``INSERT_DELETE`` writes the open signal and deletes it upon closing.
 
 	 - Type: STRING
 	 - Default: INSERT_INSERT
@@ -487,6 +513,10 @@ Connector config
 🔘 capture.mode
 
 Determines the mechanism for capturing document changes. 
+``change_streams`` captures only modified fields.
+``change_streams_update_full`` captures the full document state (recommended).
+``change_streams_with_pre_image`` includes the ``before`` state (requires MongoDB 6.0 or later versions).
+``change_streams_update_full_with_pre_image`` combines full updates and pre-images.
 
 	 - Type: STRING
 	 - Default: change_streams_update_full
@@ -496,6 +526,10 @@ Determines the mechanism for capturing document changes.
 🔘 skipped.operations
 
 Comma-separated list of operations to skip. Supported options are:
+``c`` (insert)
+``u`` (update)
+``d`` (delete)
+``none`` (no operations skipped).
 
 	 - Type: LIST
 	 - Default: none
@@ -505,6 +539,9 @@ Comma-separated list of operations to skip. Supported options are:
 🔘 capture.scope
 
 Defines the boundary for data capture.
+``deployment`` captures from the entire cluster or replica set.
+``database`` limits capture to the database in ``capture.target``.
+``collection`` limits capture to the collection in ``capture.target``.
 
 	 - Type: STRING
 	 - Default: deployment
@@ -515,6 +552,7 @@ Defines the boundary for data capture.
 
 Specifies the target name when ``capture.scope`` is ``database`` or ``collection``. 
 Use the database name for ``scope=database`` or ``database.collection`` for ``scope=collection``. 
+The connector ignores this setting if the scope is ``deployment``.
 
 	 - Type: STRING
 	 - Default: 
@@ -533,6 +571,9 @@ Set the method for obtaining the full document for updates. ``lookup`` performs 
 🔘 field.name.adjustment.mode
 
 Specifies how to adjust field names for converter compatibility. 
+``none`` applies no adjustment.
+``avro`` replaces invalid characters with underscores.
+``avro_unicode`` replaces invalid characters with unicode sequences.
 
 	 - Type: STRING
 	 - Default: none
@@ -542,6 +583,10 @@ Specifies how to adjust field names for converter compatibility.
 🔘 schema.name.adjustment.mode
 
 Specifies how to adjust schema names for converter compatibility.
+``none``: Applies no adjustment.
+``avro``: Replaces invalid characters with underscores.
+``avro_unicode``: Replaces invalid characters with unicode sequences.
+Note that _ is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -581,6 +626,7 @@ Add a schema context name. A schema context represents an independent scope in S
 🔘 key.converter.reference.subject.name.strategy
 
 Set the subject reference name strategy for the key. Supported options are ``DefaultReferenceSubjectNameStrategy`` (Default), and ``QualifiedReferenceSubjectNameStrategy``. 
+These options are selectable only for the ``PROTOBUF`` format.
 
 	 - Type: STRING
 	 - Default: DefaultReferenceSubjectNameStrategy
@@ -722,6 +768,8 @@ Whether a wrapper message should be interpreted as a raw primitive at root level
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -911,6 +959,8 @@ Set the topic name for transaction metadata. The final name follows the pattern 
 🔘 topic.heartbeat.prefix
 
 Specifies the prefix for the heartbeat topic where the connector sends periodic heartbeat messages. 
+Pattern: <topic.heartbeat.prefix>.<topic.prefix>. 
+Defaults to __debezium-heartbeat-{{.logicalClusterId}}. By default the heartbeat topic does not start with your topic prefix, so it is created with a single partition. If you change this prefix so that the heartbeat topic name starts with your topic prefix followed by a period, it instead uses the same partition, retention, and cleanup settings as your other topics with that prefix. Keep the default unless you have a specific reason to change it.
 
 	 - Type: STRING
 	 - Default: __debezium-heartbeat-{{.logicalClusterId}}
@@ -929,6 +979,9 @@ Define a MongoDB aggregation pipeline as a JSON array to filter change stream ev
 🔘 cursor.pipeline.order
 
 Set the execution order for pipeline stages. 
+``internal_first`` runs connector stages before user stages. 
+``user_first`` runs user stages before connector stages. 
+``user_only`` runs only user stages and bypasses connector stages.
 
 	 - Type: STRING
 	 - Default: internal_first
@@ -938,6 +991,9 @@ Set the execution order for pipeline stages.
 🔘 cursor.oversize.handling.mode
 
 Determines the strategy for handling BSON documents that exceed size limits. 
+``fail`` stops the connector. 
+``skip`` ignores the document. 
+``split`` fragments large events (requires MongoDB 6.0.9 or later versions).
 
 	 - Type: STRING
 	 - Default: fail
@@ -1012,4 +1068,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 
