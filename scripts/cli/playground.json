@@ -5497,7 +5497,7 @@
     },
     {
       "name": "get-jmx-metrics",
-      "description": "🔢 Get JMX metrics from a container\n\nDumps every attribute of the MBeans of a container (all domains, or the\nones of --domain), with jmxterm run inside the container: no local Java\nneeded. Works with any container that exposes JMX (broker, broker2,\nconnect, schema-registry, ksqldb-server, broker-us in mdc-*\nenvironments...) and with the pods of cfk.\n\n🎓 Tip: for a digest instead of raw MBeans, use 'playground broker\nmetrics' or 'playground connector metrics'.\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics",
+      "description": "🔢 Get JMX metrics from a container\n\nDumps every attribute of the MBeans of a container (all domains, or the\nones of --domain), with jmxterm run inside the container: no local Java\nneeded. Works with any container that exposes JMX (broker, broker2,\nconnect, schema-registry, ksqldb-server, broker-us in mdc-*\nenvironments...) and with the pods of cfk.\n\n🎓 Tip: for a digest instead of raw MBeans, use 'playground broker\nmetrics' or 'playground connector metrics'.\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability",
       "usage": "playground get-jmx-metrics [OPTIONS]",
       "options": [
         {

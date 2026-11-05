@@ -1,5 +1,4 @@
 ---
-startDelaySeconds: 120
 lowercaseOutputName: true
 lowercaseOutputLabelNames: true
 blacklistObjectNames:
