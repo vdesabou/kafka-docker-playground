@@ -309,8 +309,7 @@ Output file extension for ByteArrayFormat. Defaults to ``.bin``.
 
 🔘 format.bytearray.separator
 
-String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``
-``. An input record that contains the line separator will look like multiple records in the output S3 object.
+String inserted between records for ByteArrayFormat. Defaults to ``System.lineSeparator()`` and may contain escape sequences like ``\n``. An input record that contains the line separator will look like multiple records in the output S3 object.
 
 	 - Type: STRING
 	 - Default: null
@@ -658,4 +657,5 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
+
 
