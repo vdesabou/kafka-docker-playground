@@ -1,0 +1,13 @@
+info: Program[0]
+      Producing to orders
+fail: Program[0]
+      Delivery failed: Local: Message timed out
+crit: Microsoft.Hosting.Lifetime[0]
+      Host terminated unexpectedly
+Unhandled exception. Confluent.Kafka.ProduceException`2[System.String,System.String]: Local: Message timed out
+ ---> Confluent.Kafka.KafkaException: Local: Broker transport failure
+   at Confluent.Kafka.Producer`2.ProduceAsync(TopicPartition topicPartition, Message`2 message, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Confluent.Kafka.Producer`2.ProduceAsync(TopicPartition topicPartition, Message`2 message, CancellationToken cancellationToken)
+   at Program.<Main>$(String[] args) in /app/Program.cs:line 42
+   at Program.<Main>(String[] args)

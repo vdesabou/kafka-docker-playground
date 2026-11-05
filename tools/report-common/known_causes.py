@@ -79,7 +79,8 @@ KNOWN_CAUSES = [
     {"name": "rbac_error", "severity": "high", "category": "RBAC Issues",
      "pattern": r"forbidden: User .{0,80} cannot|is forbidden|(?:Topic|Group|Cluster|TransactionalId)?AuthorizationException"
                 r"|not authorized to access|\b403 forbidden\b|http (?:status|code|error)[ :=]*403"
-                r"|(?<!, )Status code\s*:?\s*403",
+                r"|(?<!, )Status code\s*:?\s*403"
+                r"|(?:Topic|Group|Cluster|Transactional Id) authorization failed",
      "title": "🚫 Authorization failure",
      "advice": "an ACL or an RBAC role binding is missing for the principal of the client"},
     {"name": "replication_error", "severity": "high", "category": "Replication Issues",
@@ -163,16 +164,16 @@ KNOWN_CAUSES = [
      "advice": "the converter does not match the format of the records, or a record does not match the schema; "
                "errors.tolerance=all + a dead letter queue keeps the task running (playground topic dlq inspect)"},
     {"name": "record_too_large", "severity": "medium", "category": "Kafka Issues",
-     "pattern": r"RecordTooLargeException|MESSAGE_TOO_LARGE|message\.max\.bytes",
+     "pattern": r"RecordTooLargeException|MESSAGE_TOO_LARGE|MSG_SIZE_TOO_LARGE|Message size too large|message\.max\.bytes",
      "title": "📏 Record too large",
      "advice": "raise max.request.size of the producer (producer.override.max.request.size for a source connector) and "
                "message.max.bytes / max.message.bytes on the broker or topic"},
     {"name": "unknown_topic", "severity": "medium", "category": "Kafka Issues",
-     "pattern": r"UnknownTopicOrPartitionException|UNKNOWN_TOPIC_OR_PARTITION",
+     "pattern": r"UnknownTopicOrPartitionException|UNKNOWN_TOPIC_OR_PARTITION|Unknown topic or partition",
      "title": "❓ Unknown topic or partition",
      "advice": "the topic does not exist and is not auto-created: create it, or check its name"},
     {"name": "offset_out_of_range", "severity": "medium", "category": "Kafka Issues",
-     "pattern": r"OffsetOutOfRangeException|OFFSET_OUT_OF_RANGE",
+     "pattern": r"OffsetOutOfRangeException|OFFSET_OUT_OF_RANGE|Offset out of range",
      "title": "⏮️ Offset out of range",
      "advice": "the committed offset was deleted by retention: the consumer restarts from auto.offset.reset"},
     {"name": "task_killed", "severity": "high", "category": "Connect Issues",
@@ -181,12 +182,77 @@ KNOWN_CAUSES = [
      "advice": "it stays FAILED until it is restarted: fix the cause (the exception chain of the record), then "
                "playground connector restart --connector <connector>"},
     {"name": "dns_error", "severity": "high", "category": "Network Issues",
-     "pattern": r"no such host|DNS resolution failed|dial tcp: lookup|UnknownHostException|Couldn't resolve server",
+     "pattern": r"no such host|DNS resolution failed|dial tcp: lookup|UnknownHostException|Couldn't resolve server"
+                r"|Failed to resolve '|Name or service not known|getaddrinfo (?:ENOTFOUND|EAI_AGAIN)",
      "title": "🔌 Connection failure",
      "advice": "the host is down, unreachable or the name does not resolve: check the host, port and network "
                "(playground debug tcp-dump shows what goes over the wire)"},
+    # librdkafka (C/C++, Python, Go, .NET, JavaScript clients) logs a FAIL when the broker closes an idle connection
+    # (connections.max.idle.ms): "Disconnected (after 600013ms in state UP)". Before connection_refused
+    {"name": "client_idle_disconnect", "severity": "low", "category": "Network Issues",
+     "pattern": r"Disconnected \(after \d{5,}ms in state UP",
+     "title": "💤 Idle connection closed by the broker",
+     "advice": "usually harmless: the broker closes a connection idle for connections.max.idle.ms (10 minutes by "
+               "default) and librdkafka reconnects when it needs it; log.connection.close=false silences it. A "
+               "disconnection a few ms after connecting is not this one: look at security.protocol and the TLS / SASL "
+               "settings"},
+    # librdkafka: "Disconnected while requesting ApiVersion: might be caused by incorrect security.protocol configuration
+    # (connecting to a SSL listener?)", "Disconnected: verify that security.protocol is correctly configured, broker
+    # might require SASL authentication"
+    {"name": "client_security_protocol", "severity": "high", "category": "Network Issues",
+     "pattern": r"incorrect security\.protocol|verify that security\.protocol|broker might require SASL authentication"
+                r"|connecting to a SSL listener|Unexpected handshake request with client mechanism",
+     "title": "🔀 Wrong security.protocol or SASL mechanism",
+     "advice": "the client does not speak the protocol of the listener: PLAINTEXT on an SSL or SASL listener, or another "
+               "SASL mechanism: check security.protocol, sasl.mechanism(s) and the port against the listeners of the "
+               "brokers (playground debug tcp-dump shows the handshake)"},
+    # a producer record not acknowledged in time: librdkafka "Local: Message timed out" (message.timeout.ms), Java
+    # "Expiring 3 record(s) for orders-0: 120001 ms has passed since batch creation" (delivery.timeout.ms). Before timeout
+    {"name": "client_message_timed_out", "severity": "high", "category": "Kafka Issues",
+     "pattern": r"Message timed out|MSG_TIMED_OUT|Expiring \d+ record\(s\) for",
+     "title": "⌛ Records not delivered in time",
+     "advice": "the producer gave up on records not acknowledged within message.timeout.ms (librdkafka) / "
+               "delivery.timeout.ms (Java): records are lost unless the application retries them. The cause comes "
+               "before it: brokers unreachable (connection errors), no leader for the partition, authorization, or a "
+               "cluster too slow for the load"},
+    # Java producer "Topic orders not present in metadata after 60000 ms." (max.block.ms), the same words in the Rust client
+    {"name": "client_topic_not_in_metadata", "severity": "high", "category": "Kafka Issues",
+     "pattern": r"not present in metadata after",
+     "title": "🗺️ Topic not found in the metadata",
+     "advice": "the producer did not get the partitions of the topic within max.block.ms: the topic does not exist and "
+               "is not auto-created, the principal cannot describe it (ACL), or the brokers are unreachable or "
+               "bootstrap.servers points at another cluster. Look at the connection errors before it, then playground "
+               "topic describe --topic <topic>"},
+    # an unknown or invalid client property: librdkafka "No such configuration property: \"bogus.property\"", "Invalid value
+    # \"x\" for configuration property \"acks\"", Java ConfigException
+    {"name": "client_invalid_config", "severity": "high", "category": "Kafka Issues",
+     "pattern": r"No such configuration property|Invalid value .{0,200} for configuration property"
+                r"|ConfigException: (?:Invalid value|Missing required configuration)",
+     "title": "⚙️ Invalid client configuration",
+     "advice": "a property is unknown to this client, misspelled, or has an invalid value: librdkafka clients (C/C++, "
+               "Python, Go, .NET, JavaScript) do not take the Java-only properties, and a client too old does not know "
+               "the newer ones: check the key and its values in the CONFIGURATION.md of the librdkafka version of the "
+               "client (https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md)"},
+    # librdkafka "Local: Queue full" / BufferError (queue.buffering.max.messages / .kbytes), Java BufferExhaustedException
+    {"name": "client_queue_full", "severity": "medium", "category": "Kafka Issues",
+     "pattern": r"Local: Queue full|QUEUE_FULL|BufferExhaustedException|Failed to allocate memory within the configured max"
+                r" blocking time",
+     "title": "📥 Producer buffer full",
+     "advice": "the application produces faster than the records are delivered: brokers slow or unreachable, or "
+               "delivery reports not served (librdkafka: call poll() / flush() regularly). Look at the errors before it, "
+               "then queue.buffering.max.messages / queue.buffering.max.kbytes (librdkafka) or buffer.memory / "
+               "max.block.ms (Java)"},
+    # librdkafka "Application maximum poll interval (300000ms) exceeded by 123ms" (MAX_POLL_EXCEEDED), Java "consumer poll
+    # timeout has expired", CommitFailedException ("…longer than the configured max.poll.interval.ms…")
+    {"name": "client_max_poll_exceeded", "severity": "high", "category": "Kafka Issues",
+     "pattern": r"maximum poll interval|MAX_POLL_EXCEEDED|poll timeout has expired|max\.poll\.interval\.ms",
+     "title": "🐢 Consumer left its group: max.poll.interval.ms exceeded",
+     "advice": "the application took longer than max.poll.interval.ms between two polls (slow processing, a blocking "
+               "call, a GC pause): the consumer leaves the group, its partitions are reassigned and its commits fail. "
+               "Process faster or in smaller batches (max.poll.records in Java), or raise max.poll.interval.ms"},
     {"name": "connection_refused", "severity": "high", "category": "Network Issues",
      "pattern": r"connection refused|Connection reset by peer|NoRouteToHostException|No route to host|Broken pipe"
+                r"|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|\d+/\d+ brokers are down|ALL_BROKERS_DOWN"
                 r"|connect timed out|Connection to node -?\d+ .{0,200} could not be established|Communications link failure",
      "title": "🔌 Connection failure",
      "advice": "the host is down, unreachable or the name does not resolve: check the host, port and network "
@@ -257,7 +323,9 @@ HINT_ORDER = [
     "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧩 Plugin not found", "📦 Class loading error",
     "🔑 Authentication failure", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
-    "🔀 Serialization or conversion error", "🔌 Connection failure", "⏱️ Timeouts", "📏 Record too large",
+    "🔀 Serialization or conversion error", "🔀 Wrong security.protocol or SASL mechanism", "🔌 Connection failure",
+    "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "📥 Producer buffer full",
+    "⏱️ Timeouts", "📏 Record too large",
     "❓ Unknown topic or partition", "⏮️ Offset out of range",
 ]
 

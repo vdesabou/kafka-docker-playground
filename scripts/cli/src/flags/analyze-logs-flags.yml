@@ -12,7 +12,7 @@
   required: false
   repeatable: true
   arg: sample
-  allowed: [connect_task_failure, support_bundle, kafka_streams, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after]
+  allowed: [connect_task_failure, support_bundle, kafka_streams, kafka_clients, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after]
   help: |-
     🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples
 
@@ -22,6 +22,10 @@
       kafka_streams          logs of the 3 instances of other/kafka-streams (serde-errors.sh): an application in
                              ERROR after a poison pill, its dead stream thread, deserialization and production
                              handler errors, the 🌊 Kafka Streams section (state, rebalances, tasks, timeline)
+      kafka_clients          logs of the non-Java clients (C/C++, Python, Go, .NET, JavaScript, KafkaJS, Rust) of
+                             other/client-*: a broker that refuses connections or does not resolve, records
+                             timed out, an unknown property, and crashes (Python traceback, .NET unhandled
+                             exception, Go and Rust panics, uncaught Node.js error)
       cfk_bundle             CFK support bundle: kafka-2 crash-looping on an expired certificate, pending volume,
                              OOMKilled Connect pod, failed connector task, Schema Registry authentication
                              failure, operator reconcile errors

@@ -1,0 +1,43 @@
+%3|1793896102.923|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 1ms in state CONNECT)
+%3|1793896102.975|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896103.026|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896103.204|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896103.563|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896103.927|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896103.983|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896104.448|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896104.932|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896104.987|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896105.451|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896105.932|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896105.988|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896106.455|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896106.936|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896106.993|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896107.458|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896107.942|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896107.998|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896108.464|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896108.948|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896109.005|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896109.470|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896109.949|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896110.000|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+%3|1793896110.475|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+Failed to deliver record: KafkaError{code=_MSG_TIMED_OUT,val=-192,str="Local: Message timed out"}
+Failed to deliver record: KafkaError{code=_MSG_TIMED_OUT,val=-192,str="Local: Message timed out"}
+Failed to deliver record: KafkaError{code=_MSG_TIMED_OUT,val=-192,str="Local: Message timed out"}
+Only 0 records out of 3 were delivered (3 failed, 0 still in queue)
+confluent-kafka 2.16.1, librdkafka 2.16.0
+%3|1793896110.953|FAIL|rdkafka#producer-1| [thrd:broker:9092/bootstrap]: broker:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Connection refused (after 0ms in state CONNECT)
+confluent-kafka 2.16.1, librdkafka 2.16.0
+Traceback (most recent call last):
+  File "/app/client.py", line 155, in <module>
+    main()
+    ~~~~^^
+  File "/app/client.py", line 137, in main
+    produce(topic, client_conf, nb_messages)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/client.py", line 57, in produce
+    producer = Producer({**client_conf, "acks": "all"})
+cimpl.KafkaException: KafkaError{code=_INVALID_ARG,val=-186,str="No such configuration property: "bogus.property""}

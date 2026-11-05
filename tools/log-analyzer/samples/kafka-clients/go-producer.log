@@ -1,0 +1,27 @@
+confluent-kafka-go v2.16.1 with librdkafka 2.16.0
+%3|1793896129.681|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 312ms in state CONNECT)
+%3|1793896130.120|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896130.372|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896130.425|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896130.902|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896131.373|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896131.428|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 3ms in state CONNECT)
+%3|1793896131.905|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896132.373|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896132.430|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896132.911|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896133.374|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896133.430|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 2ms in state CONNECT)
+%3|1793896133.916|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 5ms in state CONNECT)
+%3|1793896134.382|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 4ms in state CONNECT)
+%3|1793896134.437|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 5ms in state CONNECT)
+%3|1793896134.921|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 4ms in state CONNECT)
+%3|1793896135.385|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 4ms in state CONNECT)
+%3|1793896135.442|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 5ms in state CONNECT)
+%3|1793896135.922|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 4ms in state CONNECT)
+%3|1793896136.391|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 4ms in state CONNECT)
+%3|1793896136.447|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 6ms in state CONNECT)
+%3|1793896136.928|FAIL|rdkafka#producer-1| [thrd:nonexistent-broker:9092/bootstrap]: nonexistent-broker:9092/bootstrap: Failed to resolve 'nonexistent-broker:9092': Name or service not known (after 4ms in state CONNECT)
+delivery failed: Local: Message timed out
+confluent-kafka-go v2.16.1 with librdkafka 2.16.0
+cannot create the producer: No such configuration property: "bogus.property"

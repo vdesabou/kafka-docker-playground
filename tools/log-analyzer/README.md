@@ -74,7 +74,22 @@ Real logs of `connect/connect-cdc-xstream-oracle19-source`, CP 8.3.2, Oracle XSt
 | `support_bundle` | `samples/support-bundle.zip` | that log and the broker log of the same period (gzipped), as a customer would attach them: shows the archive extraction and that only files with findings are listed |
 | `kafka_streams` | `samples/kafka-streams/` | the logs of the 3 instances of `other/kafka-streams/serde-errors.sh` (Kafka Streams 4.4.0): a demo application in ERROR after a poison pill, its dead stream thread, deserialization and production handler errors: the 🌊 Kafka Streams section of the report, and the Kafka Streams known causes (also `playground streams status --sample kafka_streams`) |
 
+| `kafka_clients` | `samples/kafka-clients/` | real logs of the non-Java clients of `other/client-*` (2026-11-05, librdkafka 2.16.0, confluent-kafka-python 2.16.1, confluent-kafka-go 2.16.1, Confluent.Kafka 2.16.0, @confluentinc/kafka-javascript 1.11.0, kafkajs 2.2.4, Rust confluent-kafka): each client image run alone (`docker run --add-host broker:127.0.0.1`) against a port that refuses connections, a broker name that does not resolve (Go), with `message.timeout.ms=8000`, then with an unknown property (`bogus.property=1`). `synthetic-crashes/` are hand-written in the documented formats of the crashes the clients did not produce: .NET console logger and unhandled exception with an inner exception, Go panic, Rust panic, uncaught Node.js error with `[cause]`, chained Python tracebacks after a `logging.exception()` |
+
 Passwords are masked by Connect (`password=********`).
+
+### Logs of the other clients
+
+`summarize_log_errors` reads the levels and crashes of every Confluent client, not only Java: the librdkafka lines
+(`%3|<epoch>|FAC|name| …`, syslog level 0-2 FATAL, 3 ERROR, 4 WARN, timestamp converted from the epoch, UTC, by
+`epoch_iso()`), the Node.js objects of the JavaScript client logger (`js_rdkafka()`: `fac: 'FAIL'` / `'ERROR'`, written
+back as the librdkafka line), the .NET console logger (`fail:` / `crit:`, message joined by `join_second()`) and inner
+exceptions (` ---> `, a `Caused by:`), Python tracebacks (`mode == "py"`: the chained ones in one record, the chain
+outermost first, the 3 last frames of the deepest cause), Go panics (`mode == "go"`: the functions of the first
+goroutine), Rust panics (message joined) and the uncaught `XxxError: …` lines of Node.js / Python / .NET. The record key
+is masked (digits, ids) **before** it is cut to 200 characters. `log_report.py` takes the .NET (`` `2[…] `` generic
+types), Python and Node.js exception names as root causes, and labels a librdkafka record `FAIL [rdkafka#producer-1]
+<message>` and a JSON log line by its `message`.
 
 ```bash
 playground analyze logs --sample connect_task_failure

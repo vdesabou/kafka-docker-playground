@@ -1,0 +1,14 @@
+/app/node_modules/kafkajs/src/producer/index.js:120
+      throw new KafkaJSNonRetriableError(e)
+      ^
+
+KafkaJSNonRetriableError: Connection error: connect ECONNREFUSED 127.0.0.1:9092
+    at /app/node_modules/kafkajs/src/retry/index.js:55:18
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  name: 'KafkaJSNonRetriableError',
+  retriable: false,
+  [cause]: KafkaJSConnectionError: Connection error: connect ECONNREFUSED 127.0.0.1:9092
+      at Socket.onError (/app/node_modules/kafkajs/src/network/connection.js:210:23)
+}
+
+Node.js v22.11.0

@@ -40,8 +40,9 @@ Takes about 15 minutes to read and run.
 2. **The digest only trusts explicit levels, and groups records by message and root cause.** A record counts when its
    first line carries an explicit level: an uppercase token (` ERROR `, `[ERROR]`, `"ERROR"`), a logfmt / JSON field
    (`level=error`, `"level":"error"`) or a klog prefix (`E1012 …`), plus uncaught Java exceptions on level-less lines
-   (`Exception in thread …`, `java.lang.IllegalStateException: …`). INFO/DEBUG/TRACE records that mention "error",
-   and level-less lines with "failed", never count. Then:
+   (`Exception in thread …`, `java.lang.IllegalStateException: …`), and the levels and crashes of the other Kafka
+   clients (librdkafka `%3|…`, .NET `fail:`, Python tracebacks, Go and Rust panics… see 🧰 below). INFO/DEBUG/TRACE
+   records that mention "error", and level-less lines with "failed", never count. Then:
    - the stack trace is collapsed to its **chain** (first exception line + every `Caused by:`) and **3 frames of the
      deepest cause**;
    - records with the same message and the same deepest cause are **one finding**, whatever their timestamps and ids
@@ -161,6 +162,7 @@ playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
 playground analyze logs --sample connect_task_failure     # a Connect worker log (Oracle XStream task failure)
 playground analyze logs --sample support_bundle           # a .zip with that log and a gzipped broker log
 playground analyze logs --sample kafka_streams            # the logs of 3 Kafka Streams instances (see 🌊 below)
+playground analyze logs --sample kafka_clients            # C/C++, Python, Go, .NET, JavaScript, KafkaJS, Rust clients (see 🧰 below)
 playground analyze logs --sample cfk_bundle               # a CFK support bundle (see below)
 playground analyze logs --sample cfk_kraft_migration      # a CFK support bundle with a stuck ZooKeeper to KRaft migration
 playground analyze logs --sample cfk_rollout              # a CFK support bundle with a half-done CP upgrade
@@ -236,6 +238,43 @@ playground analyze logs --sample kafka_streams     # other/kafka-streams/serde-e
   ❌ streams.log: the client is ERROR since 2026-11-05 15:19:21
   🧪 Deserialization error x2 (streams.log, streams3.log, first 2026-11-05 15:19:20, last 2026-11-05 15:19:20)
      👉 a record could not be deserialized with the configured serdes (poison pill, wrong format, schema not found): …
+```
+
+### 🧰 Logs of the other Kafka clients (C/C++, Python, Go, .NET, JavaScript, Rust)
+
+The digest reads the logs of every client of [the Confluent client list](https://docs.confluent.io/kafka-clients/overview.html),
+not only Java, the same way in `analyze logs`, `container logs --errors` (the `client-*` containers of
+`other/client-*`) and the other commands that write the digest:
+
+| Client | What is read |
+| --- | --- |
+| librdkafka: C/C++, and the Python, Go, .NET and JavaScript clients built on it | `%3\|1793896102.923\|FAIL\|rdkafka#producer-1\| [thrd:…]: …`: the level is the syslog level (0-2 FATAL, 3 ERROR, 4 WARN, 5-7 ignored), the timestamp the epoch seconds (UTC), wherever the line comes from (stderr of the client, a log framework that kept it). The same error of several clients is one record |
+| JavaScript (`@confluentinc/kafka-javascript`) | its default logger prints the librdkafka logs as Node.js objects without level (`{ message: '…', fac: 'FAIL', timestamp: 1793896130218, name: 'rdkafka#producer-1' }`): the `FAIL` and `ERROR` facilities are errors, written back as the librdkafka line |
+| Python | a `Traceback (most recent call last):`, alone or after a `logging.exception()` record, is one record with its chained tracebacks (`The above exception was the direct cause…`): the chain lists the outermost exception first and the **deepest cause last**, with the 3 last frames (`File "/app/client.py", line 57, in produce`) of the deepest cause; `KafkaError{code=…}` printed by the application counts as an error |
+| .NET | the console logger (`fail: Program[0]` / `crit:` / `warn:` and its indented message, joined), `` Unhandled exception. Confluent.Kafka.ProduceException`2[…]: … `` (FATAL), the inner exceptions (` ---> `) as `Caused by:`, the frames of the deepest one |
+| Go | `panic: …` and `fatal error: …` (FATAL) with the functions of the first goroutine, `2026/11/05 10:00:05` timestamps of the `log` package |
+| Rust (`confluent-kafka`, native) | the `tracing` lines (`2026-11-05T16:30:02.123456Z ERROR confluent_kafka::producer: …`), `thread 'main' panicked at src/producer.rs:45:10:` (FATAL) joined to its message, the `Error: …` of a `main` that returns an error |
+| Node.js (KafkaJS and the JavaScript client) | the JSON logs of KafkaJS (`"level":"ERROR"`), an uncaught error (`KafkaJSNonRetriableError: …`, `Error [ERR_X]: …`) with its `[cause]:` |
+
+The known causes include what these clients log: `Local: Message timed out` / `Expiring 3 record(s)` (⌛ records not
+delivered in time), `Local: Queue full` (📥 producer buffer full), `Application maximum poll interval` (🐢
+max.poll.interval.ms exceeded), `No such configuration property` (⚙️ invalid client configuration), `not present in
+metadata after` (🗺️ topic not found in the metadata), `might be caused by incorrect security.protocol` (🔀 wrong
+security.protocol), `N/N brokers are down`, `Failed to resolve`, `ECONNREFUSED` (🔌 connection failure), and
+`Disconnected (after 600013ms in state UP)` (💤 idle connection closed by the broker: low, usually harmless). A line an
+application prints without level (`delivery failed: Local: Message timed out`) is not a record, as for any log.
+
+```bash
+playground analyze logs --sample kafka_clients     # real logs of other/client-* against a broker that refuses connections
+```
+
+```text
+🧭 Summary: 207 occurrence(s) of 22 distinct record(s) in 12 file(s), 2026-11-05 16:28:22 → 2026-11-05 16:33:40
+🧠 Known causes
+   [HIGH] 🔌 Connection failure ×195 in 7 files (first at python-producer.log line 1, 2026-11-05 16:28:22)
+   [HIGH] ⚙️ Invalid client configuration ×1 in python-producer.log (first at line 34)
+   [HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)
+   [HIGH] 🗺️ Topic not found in the metadata ×2 in 2 files (first at rust-producer.log line 1)
 ```
 
 ### 🧭 The summary, `--connector`, `--show-config`
@@ -487,6 +526,7 @@ playground stop
 | --- | --- |
 | a customer support bundle (`.zip`, `.tar.gz`, folders of rotated logs) | `playground analyze logs -f <bundle> --max-findings 15`, then `--include-warnings` if no ERROR explains it |
 | the logs of a Kafka Streams application that rebalances in a loop, restores forever or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section (state of each instance over time, rebalances, tasks, Streams errors). On a running example: `playground streams status --html` |
+| the logs of a Python, Go, .NET, JavaScript, C/C++ or Rust client application | `playground analyze logs -f <the logs>`: librdkafka lines, tracebacks, panics and unhandled exceptions are read (🧰). To reproduce, `other/client-<language>` runs that client against the playground |
 | a CI artifact or a log pasted in a ticket | save it to a file, `playground analyze logs -f <file>` |
 | "the connector failed during the night" (still running env) | `container logs -c connect --errors`: look at `xN` and *last seen line*, then `--grep "<connector name>" --no-follow` around it |
 | "is it the connector or the broker?" | `container logs -c connect -c broker --errors --since 30m` |

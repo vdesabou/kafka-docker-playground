@@ -1,0 +1,5 @@
+2026-11-05T16:30:01.123456Z  INFO producer: starting
+2026-11-05T16:30:02.123456Z ERROR confluent_kafka::producer: metadata request failed error=Timeout
+thread 'main' panicked at src/producer.rs:45:10:
+called `Result::unwrap()` on an `Err` value: Timeout(TimeoutError { message: "Topic t not present in metadata after 60000 ms.", source: None })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

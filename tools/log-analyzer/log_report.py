@@ -43,7 +43,11 @@ LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
 # (tools/report-common/known_causes.py)
 HINTS = known_causes.hints()
 
-EXCEPTION_RE = re.compile(r"^(?:Caused by:\s*)?((?:[a-zA-Z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error|Throwable))(?::\s*(.*))?$")
+# an exception line of the chain: Java (org.x.FooException, after "Caused by:"), .NET (Confluent.Kafka.ProduceException`2[…],
+# after " ---> " for an inner exception), Python (ValueError, cimpl.KafkaException), Node.js (KafkaJSConnectionError, after
+# "[cause]:")
+EXCEPTION_RE = re.compile(r"^(?:(?:Caused by:|--->|\[cause\]:)\s*)?((?:[a-zA-Z_$][\w$]*\.)*[A-Z][\w$]*(?:Exception|Error|Throwable)"
+                          r"(?:`\d+\[[^\]]*\])?)(?::\s*(.*))?$")
 # connector of a record: the [connector|task-0] / [connector|worker] MDC context of Connect, with an optional scope
 # ([connector|task-0|offsets], Oracle CDC [connector|task-0|redoLog]), or the id of the task
 CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
@@ -124,9 +128,10 @@ def finish_record(rec: dict) -> None:
             rec["root_cause"], rec["root_cause_message"] = m.group(1), (m.group(2) or "")
             break
     if rec["root_cause"] is None:
-        m = re.search(r"((?:[a-z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error|Throwable))", rec["message"])
+        m = re.search(r"((?:[a-z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error|Throwable))"
+                      r"|^Unhandled exception\. ((?:[A-Z][\w]*\.)+[A-Z]\w*Exception)", rec["message"])
         if m:
-            rec["root_cause"] = m.group(1)
+            rec["root_cause"] = m.group(1) or m.group(2)
 
 
 def config_connector(c: dict) -> Optional[str]:
@@ -167,7 +172,8 @@ def short_exception(line: str) -> str:
     m = EXCEPTION_RE.match(line)
     if not m:
         return line
-    return m.group(1).split(".")[-1] + (f": {m.group(2)}" if m.group(2) else "")
+    # (a .NET generic type: ProduceException`2[System.String,System.String] -> ProduceException)
+    return re.sub(r"`\d+\[.*$", "", m.group(1)).split(".")[-1] + (f": {m.group(2)}" if m.group(2) else "")
 
 
 def mask_ids(text: str) -> str:
@@ -242,8 +248,18 @@ def short_message(message: str) -> str:
     """The message of a record without its timestamp, level, [connector|task] context and (logger:line)."""
     # journalctl prefix: "Oct 06 07:35:50 host connect-distributed[1080]: "
     m = re.sub(r"^[A-Z][a-z]{2} [ \d]\d \d\d:\d\d:\d\d \S+ [^\s:]+: ", "", message)
-    m = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[ T][\d:,.]*\]?\s*", "", m)
+    # a structured JSON log line (KafkaJS: {"level":"ERROR","timestamp":…,"logger":"kafkajs","message":"[Connection] …"}): its
+    # message (the record may be cut, no json.loads)
+    j = re.match(r'^\{.*?"(?:message|msg)"\s*:\s*"((?:[^"\\]|\\.)*)"', m)
+    if j:
+        m = j.group(1).replace('\\"', '"')
+    # (UTC timestamps end with Z: "2026-11-05T16:30:02.123456Z ERROR …" of the tracing logs of the Rust client)
+    m = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[ T][\d:,.]*(?:Z|[+-]\d\d:?\d\d)?\]?\s*", "", m)
     m = re.sub(r"^(\[[^]]*\]\s*)?(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)\b:?\s*", "", m)
+    # librdkafka (C/C++, Python, Go, .NET, JavaScript clients): "%3|1793896102.923|FAIL|rdkafka#producer-1| [thrd:…]: msg"
+    # -> "FAIL [rdkafka#producer-1] msg"; .NET console logger: "fail: Program[0] msg" -> "msg"
+    m = re.sub(r"^%\d\|[\d.]+\|([^|]*)\|([^|]*)\|\s*(?:\[thrd:[^\]]*\]:\s*)?", r"\1 [\2] ", m)
+    m = re.sub(r"^(?:crit|fail|warn): \S+\[\d+\]\s*", "", m)
     m = re.sub(r"^\[[^]]*\|[^]]*\]\s*", "", m)
     return re.sub(r"\s*\([\w$.]+:\d+\)\s*$", "", m)
 
@@ -282,9 +298,11 @@ def root_causes(files: List[dict]) -> List[dict]:
     causes: Dict[str, dict] = {}
     for f, r in all_records(files):
         # same exception with another message is another cause (ConnectException wraps everything)
-        key = (f"{r['root_cause']}: {mask_ids(r['root_cause_message'])[:100]}" if r["root_cause"]
-               else short_message(r["message"])[:160])
-        c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": key, "occurrences": 0, "records": 0, "files": OrderedDict(),
+        label = (f"{r['root_cause']}: {mask_ids(r['root_cause_message'])[:100]}" if r["root_cause"]
+                 else short_message(r["message"])[:160])
+        # the same message with other numbers is the same cause ("(after 1ms in state CONNECT)" of librdkafka, in two files)
+        key = label if r["root_cause"] else mask_ids(label)
+        c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": label, "occurrences": 0, "records": 0, "files": OrderedDict(),
                                     "connectors": OrderedDict(), "example": r["root_cause_message"] or short_message(r["message"]), "level": r["level"],
                                     "records_meta": []})
         c["occurrences"] += r["count"]
