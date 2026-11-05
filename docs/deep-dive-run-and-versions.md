@@ -20,7 +20,7 @@ version where a behaviour changed. Takes about 15 minutes to read and run.
 | the customer's Confluent Platform version | `--tag 7.9.1` (every component), `--connect-tag 7.9.1` (connect only) |
 | the customer's connector version | `--connector-tag 10.8.4` (from Confluent Hub; `a,b` for an example with two connectors) |
 | a connector build from engineering | `--connector-zip /path/to/connector.zip`, or `--connector-jar /path/to/one.jar` |
-| the customer's client version (Kafka Streams, java clients, librdkafka-based clients…) | `--client-version 3.7.1` (examples that build a client: `other/kafka-streams-count`, `other/client-*`…) |
+| the customer's client version (Kafka Streams, java clients, librdkafka-based clients…) | `--client-version 3.7.1` (examples that build a client: `other/kafka-streams`, `other/client-*`…) |
 | the same example on SASL, SSL, Kerberos, RBAC, CFK, Confluent Cloud | `--environment sasl-ssl` (connector examples only) |
 | Control Center, ksqlDB, Grafana, kcat… next to it | `--enable-control-center`, `--enable-ksqldb`, `--enable-jmx-grafana`, `--enable-kcat`… |
 | DEBUG / TRACE before the connector is created | `--connect-log-level "io.confluent.connect.jdbc=TRACE"` |
@@ -310,7 +310,7 @@ playground stop
 | --- | --- |
 | "we run CP 7.9.1 and connector 10.8.4" | `playground run -f <example> --tag 7.9.1 --connector-tag 10.8.4` |
 | "our Connect cluster is older than our brokers" | `--connect-tag <their connect version>` (and `--tag` for the brokers) |
-| "our Kafka Streams app runs 3.7.1 against CP 8.2" | `playground run -f "$PWD/other/kafka-streams-count/kafka-streams-count.sh" --tag 8.2.0 --client-version 3.7.1`: the client version is not tied to the brokers, patch versions included |
+| "our Kafka Streams app runs 3.7.1 against CP 8.2" | `playground run -f "$PWD/other/kafka-streams/count.sh" --tag 8.2.0 --client-version 3.7.1`: the client version is not tied to the brokers, patch versions included |
 | "is it fixed in the latest connector?" | run with their version, reproduce, then `playground update-version --connector-tag <newer>` and check again |
 | "is this Schema Registry / ksqlDB / Kafka bug fixed after our CP version? which patch bumped Netty?" | `playground cp-changelog --from <their version> --component schema-registry --grep <symptom>` (or `--security`), then `update-version --tag <the version with the fix>` to check. The feeds only cover the community components (no Confluent Server, Control Center) and list commit titles, without CVE ids |
 | "which version broke it?" | keep the example running, `update-version --connector-tag` (or `--tag`) on each candidate: a bisect without re-running the scenario |

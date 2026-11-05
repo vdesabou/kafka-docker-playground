@@ -1,0 +1,29 @@
+---
+# 3 instances of the Kafka Streams application: TOPOLOGY (exported by each script: count, windowed, join, eos,
+# serde-errors) selects the scenario and its StreamsConfig, config/<TOPOLOGY>.properties
+services:
+
+  streams: &streams
+    image: eclipse-temurin:17-jre
+    hostname: streams
+    container_name: streams
+    depends_on:
+      - broker
+    environment:
+      STREAMS_BOOTSTRAP_SERVERS: broker:9092
+      KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+      TOPOLOGY: ${TOPOLOGY:-count}
+    volumes:
+      - ../../other/kafka-streams/streams/target:/app
+      - ../../other/kafka-streams/config/${TOPOLOGY:-count}.properties:/etc/kafka-streams/streams.properties
+    command: ["bash", "-c", "exec java -Xmx256m -jar /app/kafka-streams-app-$${KAFKA_CLIENT_TAG}-jar-with-dependencies.jar"]
+
+  streams2:
+    <<: *streams
+    hostname: streams2
+    container_name: streams2
+
+  streams3:
+    <<: *streams
+    hostname: streams3
+    container_name: streams3
