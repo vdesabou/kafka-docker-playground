@@ -124,10 +124,17 @@ playground topic produce -t products --nb-messages 1 --forced-value '{"name": "n
 }
 EOF
 
-log "Sleeping 125 seconds"
-sleep 125
-
-log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.products;" > /tmp/result.log  2>&1
+# the last record can land in BigQuery well after the first ones (#10050): poll instead of a fixed sleep
+log "Verify data is in GCP BigQuery (up to 300 seconds):"
+for i in $(seq 1 20)
+do
+  docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.products;" > /tmp/result.log  2>&1 || true
+  if grep -q "notebooks" /tmp/result.log
+  then
+    break
+  fi
+  log "notebooks is not in table $DATASET.products yet, retrying in 15 seconds ($i/20)"
+  sleep 15
+done
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
