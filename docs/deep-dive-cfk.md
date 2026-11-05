@@ -161,7 +161,7 @@ Gotchas:
 | `CFK_VERSION` | `3.3.0` | the CFK operator (Helm chart) and the init container image; versions 2.9.5 to 3.3.0 are mapped in `start.sh` |
 | `K3D_MEMORY` | `24g` | memory of the k3d server node, at creation only |
 | `K3D_CLUSTER_NAME` | `playground-cfk` | the k3d cluster |
-| `K3D_IMAGE_PRUNE_THRESHOLD` | `70` | disk usage (%) of the k3d node from which a run first removes the images no running pod uses (kubelet image GC is disabled, so the images of previous examples pile up until pods are evicted for `ephemeral-storage`); the run logs `💾 k3d node disk: …` either way |
+| `K3D_IMAGE_PRUNE_THRESHOLD` | `70` | disk usage (%) of the k3d node from which a run, once the namespace is emptied, removes the images that no running pod uses and that it did not import itself (`🧹 Removed N image(s) …`). Kubelet image GC is disabled, so the images of previous examples pile up until pods are evicted for `ephemeral-storage`. The run logs `💾 k3d node disk: …` either way |
 | `CFK_NAMESPACE_RESET_MODE` | `keep-operator` | how the namespace is emptied before a run: `namespace` force-deletes the namespace, operator included (also the fallback when the namespace can't be emptied in 90 seconds) |
 | `CFK_CONNECTOR_ARCHIVE_HOST` | detected | the host the cluster uses to download a local plugin archive (`host.docker.internal` on macOS, the gateway of the k3d network on Linux) |
 | `CP_*_IMAGE` / `CP_*_TAG` | from `--tag` | the images of the CRs, as with Docker |

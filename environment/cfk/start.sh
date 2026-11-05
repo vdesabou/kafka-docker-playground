@@ -283,6 +283,8 @@ function import_image_into_k3d() {
   fi
 
   normalized_image="$(normalize_image_ref_for_k8s "$image_to_import")"
+  # kept by prune_unused_k3d_images, which runs after the namespace reset
+  K3D_IMAGES_OF_THIS_RUN+=("$normalized_image")
 
   if ! docker image inspect "$image_to_import" >/dev/null 2>&1
   then
@@ -3439,31 +3441,55 @@ fi
 # The k3d node is reused between examples and its kubelet image GC is disabled (K3D_KUBELET_ARGS above, #9364), so the
 # images of the previous examples pile up in it (on top of their copy in the host docker): on a small CI runner kubelet
 # then evicts every pod for ephemeral-storage and taints the node, and every following example fails (#10077).
-# When the node disk is filling up, remove the images no running container uses, before the imports below: the extra
-# pods of the previous example are gone (stop_all), the CP images of the pods still running are kept, and the imports
-# bring back a CP image that was removed
+# prune_unused_k3d_images runs after the namespace reset, when the pods of the previous example are gone: it removes
+# the images that no running container uses and that this run did not import (K3D_IMAGES_OF_THIS_RUN). Not
+# crictl rmi --prune: it would also remove the CP images just imported (no pod uses them yet), and right after a
+# force delete the containers of the previous pods still exist, so their images count as used. The k3s images
+# (docker.io/rancher/: pause, local-path helper...) are always kept, crictl ps does not list the pod sandboxes
 K3D_IMAGE_PRUNE_THRESHOLD=${K3D_IMAGE_PRUNE_THRESHOLD:-70}
+K3D_IMAGES_OF_THIS_RUN=()
 k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
 k3d_node_disk_usage() {
   # prints "<used %> <available GB>" of the filesystem holding the node images
   docker exec "$k3d_server_node" df -Pk /var/lib/rancher/k3s 2>/dev/null | awk 'NR==2 {gsub("%","",$5); printf "%s %.1f\n", $5, $4/1048576}'
 }
-read -r k3d_disk_used k3d_disk_avail < <(k3d_node_disk_usage) || true
-if [[ "$k3d_disk_used" =~ ^[0-9]+$ ]]
-then
-  log "💾 k3d node disk: ${k3d_disk_used}% used, ${k3d_disk_avail}G available (unused images are pruned from ${K3D_IMAGE_PRUNE_THRESHOLD}%, configure with K3D_IMAGE_PRUNE_THRESHOLD env var)"
-  if [[ "$k3d_disk_used" -ge "$K3D_IMAGE_PRUNE_THRESHOLD" ]]
+prune_unused_k3d_images() {
+  local disk_used="" disk_avail="" containers_json="" images_json="" image_id="" removed=0
+  local keep_json
+  read -r disk_used disk_avail < <(k3d_node_disk_usage) || true
+  if [[ ! "$disk_used" =~ ^[0-9]+$ ]]
   then
-    log "🧹 Removing the images no running pod uses from k3d node $k3d_server_node"
-    if docker exec "$k3d_server_node" crictl rmi --prune >/dev/null 2>&1
-    then
-      read -r k3d_disk_used k3d_disk_avail < <(k3d_node_disk_usage) || true
-      log "💾 k3d node disk after pruning: ${k3d_disk_used}% used, ${k3d_disk_avail}G available"
-    else
-      logwarn "⚠️ Could not prune the unused images of k3d node $k3d_server_node"
-    fi
+    return 0
   fi
-fi
+  log "💾 k3d node disk: ${disk_used}% used, ${disk_avail}G available (unused images are removed from ${K3D_IMAGE_PRUNE_THRESHOLD}%, configure with K3D_IMAGE_PRUNE_THRESHOLD env var)"
+  if [[ "$disk_used" -lt "$K3D_IMAGE_PRUNE_THRESHOLD" ]]
+  then
+    return 0
+  fi
+  if ! containers_json=$(docker exec "$k3d_server_node" crictl ps --state running -o json 2>/dev/null) \
+    || ! images_json=$(docker exec "$k3d_server_node" crictl images -o json 2>/dev/null)
+  then
+    logwarn "⚠️ Could not list the containers and images of k3d node $k3d_server_node, not removing any image"
+    return 0
+  fi
+  keep_json=$(printf '%s\n' "${K3D_IMAGES_OF_THIS_RUN[@]}" | jq -R . | jq -s .)
+  while read -r image_id
+  do
+    [[ -z "$image_id" ]] && continue
+    if docker exec "$k3d_server_node" crictl rmi "$image_id" >/dev/null 2>&1
+    then
+      removed=$((removed+1))
+    fi
+  done < <(jq -r --argjson containers "$containers_json" --argjson keep "$keep_json" '
+      ([$containers.containers[]? | .imageRef, .image.image] | unique) as $used
+      | .images[]
+      | select((.id as $id | $used | index($id)) | not)
+      | select(([.repoTags[]?] | any(. as $t | $keep | index($t))) | not)
+      | select(([.repoTags[]?] | any(startswith("docker.io/rancher/"))) | not)
+      | .id' <<< "$images_json")
+  read -r disk_used disk_avail < <(k3d_node_disk_usage) || true
+  log "🧹 Removed ${removed} image(s) no running pod uses from k3d node ${k3d_server_node}: ${disk_used}% used, ${disk_avail}G available"
+}
 
 log "Build/patch CP images in host docker daemon"
 # Build/patch CP images locally, then import them into k3d.
@@ -3576,6 +3602,7 @@ fi
 if [[ -z "$NO_STOP" ]]
 then
   reset_cfk_namespace_state
+  prune_unused_k3d_images
 fi
 
 CFK_HELM_CHART_VERSION=$(get_cfk_helm_chart_version "$CFK_VERSION")
