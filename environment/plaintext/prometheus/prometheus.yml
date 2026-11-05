@@ -75,6 +75,23 @@ scrape_configs:
         replacement: '${1}'
 
 
+  # KRaft controllers (CP 8+, or ENABLE_KRAFT): they run the same JMX exporter agent as the brokers (GRAFANA_AGENT_BROKER),
+  # and the KafkaController metrics (active controller, offline partitions) are theirs in KRaft
+  - job_name: "kafka-controller"
+    static_configs:
+      - targets:
+          - "controller:1234"
+          - "controller2:1234"
+          - "controller3:1234"
+        labels:
+          env: "dev"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: hostname
+        regex: '([^:]+)(:[0-9]+)?'
+        replacement: '${1}'
+
+
   - job_name: "schema-registry"
     static_configs:
       - targets:

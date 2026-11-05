@@ -12036,7 +12036,7 @@ playground_debug_cfk_sourcecode_usage() {
 playground_get_jmx_metrics_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-jmx-metrics\n\n"
-    printf "  🔢 Get JMX metrics from a container\n  \n  Dumps every attribute of the MBeans of a container (all domains, or the\n  ones of --domain), with jmxterm run inside the container: no local Java\n  needed. Works with any container that exposes JMX (broker, broker2,\n  connect, schema-registry, ksqldb-server, broker-us in mdc-*\n  environments...) and with the pods of cfk.\n  \n  🎓 Tip: for a digest instead of raw MBeans, use 'playground broker\n  metrics' or 'playground connector metrics'.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n\n"
+    printf "  🔢 Get JMX metrics from a container\n  \n  Dumps every attribute of the MBeans of a container (all domains, or the\n  ones of --domain), with jmxterm run inside the container: no local Java\n  needed. Works with any container that exposes JMX (broker, broker2,\n  connect, schema-registry, ksqldb-server, broker-us in mdc-*\n  environments...) and with the pods of cfk.\n  \n  🎓 Tip: for a digest instead of raw MBeans, use 'playground broker\n  metrics' or 'playground connector metrics'.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%94%%a2-jmx-metrics\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability\n\n"
   else
     printf "playground get-jmx-metrics - 🔢 Get JMX metrics from a container\n\n"
   fi

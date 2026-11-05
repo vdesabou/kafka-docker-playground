@@ -90,6 +90,11 @@ CLI change that makes a page wrong shows up as a failing test.
 - 📖 [Read the deep dive](/deep-dive-broker.md)
 - 🧠 Commands: `broker health`, `describe`, `stop`, `start`, `rolling-restart`, `transactions`, `metrics`, `topic produce --transactional-id`
 
+### 📊 Observability: Control Center, Grafana, Prometheus, which metric answers which case
+
+- 📖 [Read the deep dive](/deep-dive-observability.md)
+- 🧠 Commands: `broker metrics`, `connector metrics`, `get-jmx-metrics`, `--enable-jmx-grafana`, `--enable-control-center`
+
 ### 🔰 Schema Registry: subjects, ids, compatibility, deletion
 
 - 📖 [Read the deep dive](/deep-dive-schema.md)

@@ -5722,7 +5722,8 @@ subcommands:
     exposes JMX (broker, broker2,\nconnect, schema-registry, ksqldb-server, broker-us
     in mdc-*\nenvironments...) and with the pods of cfk.\n\n\U0001F393 Tip: for a
     digest instead of raw MBeans, use 'playground broker\nmetrics' or 'playground
-    connector metrics'.\n\n\U0001F449 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics"
+    connector metrics'.\n\n\U0001F449 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability"
   usage: playground get-jmx-metrics [OPTIONS]
   options:
   - names:

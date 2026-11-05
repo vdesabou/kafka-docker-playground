@@ -105,7 +105,7 @@
       "pluginVersion": "8.1.3",
       "targets": [
         {
-          "expr": "kafka_controller_kafkacontroller_activecontrollercount{job=\"kafka-broker\",env=\"$env\",instance=~\"$instance\"} > 0",
+          "expr": "kafka_controller_kafkacontroller_activecontrollercount{job=~\"kafka-broker|kafka-controller\",env=\"$env\"} > 0",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -349,7 +349,7 @@
       "pluginVersion": "8.1.3",
       "targets": [
         {
-          "expr": "sum(kafka_controller_kafkacontroller_preferredreplicaimbalancecount{job=\"kafka-broker\",env=\"$env\",instance=~\"$instance\"})",
+          "expr": "sum(kafka_controller_kafkacontroller_preferredreplicaimbalancecount{job=~\"kafka-broker|kafka-controller\",env=\"$env\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -791,7 +791,7 @@
       "pluginVersion": "8.1.3",
       "targets": [
         {
-          "expr": "sum(kafka_controller_kafkacontroller_offlinepartitionscount{job=\"kafka-broker\",env=\"$env\",instance=~\"$instance\"})",
+          "expr": "sum(kafka_controller_kafkacontroller_offlinepartitionscount{job=~\"kafka-broker|kafka-controller\",env=\"$env\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -871,7 +871,7 @@
       "pluginVersion": "8.1.3",
       "targets": [
         {
-          "expr": "sum(kafka_controller_controllerstats_uncleanleaderelectionspersec{job=\"kafka-broker\",env=\"$env\",instance=~\"$instance\"})",
+          "expr": "sum(kafka_controller_controllerstats_uncleanleaderelectionspersec{job=~\"kafka-broker|kafka-controller\",env=\"$env\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",

@@ -29,7 +29,7 @@ Every broker and replication example: `playground find-example --category broker
 | What is in the log segment? | `playground topic dump-log` (batches, producers, transactions, open transactions) |
 | A Java producer / consumer (`kafka-clients`, Avro with `KafkaAvroSerializer`) to start from | [other/client-java](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-java), on Confluent Cloud [ccloud/client-java](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-java); the customer's `kafka-clients` version: `playground run -f …/start.sh --client-version <version>` (or `CLIENT_VERSION=<version>`); the other languages: `playground find-example --category client` |
 | An old client fails with `UnsupportedVersionException` | `playground broker describe --api-versions --broker 1` |
-| Is the broker the bottleneck? | `playground broker metrics` (`--topic <t>`): request handler and network processor idle, request queue, produce p99 |
+| Is the broker the bottleneck? | `playground broker metrics` (`--topic <t>`): request handler and network processor idle, request queue, produce p99; see the [📊 Observability deep dive](/deep-dive-observability.md) |
 | Broker configs, dynamic configs, quotas | `playground broker config`, `playground quota` |
 | Reassignment, preferred leader election | `playground topic reassign`, `topic elect-leader`, example [other/topic-reassign-and-leader-election](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/topic-reassign-and-leader-election) |
 | A producer gets `RecordTooLargeException`, a consumer skips records | `playground topic create\|alter\|describe` with the customer's configs, `topic produce` / `topic consume` with their client properties |
@@ -39,14 +39,15 @@ Every broker and replication example: `playground find-example --category broker
 | A broker JVM is slow, leaks, pauses | `playground debug thread-dump\|heap-dump\|flight-recorder -c broker`, `analyze thread-dump\|gc-logs\|heap-dump\|flight-recorder` (also on the customer's files) |
 | Customer log bundle | `playground analyze logs -f <bundle>` |
 | Replication between clusters | [multi-data-center/](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center) (Cluster Linking, Replicator, MirrorMaker 2), `mdc-*` environments |
-| Control Center | `--enable-control-center` (Next Gen, http://127.0.0.1:9021), `--enable-legacy-control-center` for CP < 8, `--control-center-tag`, examples [other/control-center-ldap-auth](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-ldap-auth), [other/control-center-readonly-mode](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-readonly-mode) |
-| Metrics and dashboards | `--enable-jmx-grafana`: Prometheus and Grafana (Kafka cluster, topics, quotas, clients… dashboards), see [Enabling JMX Grafana](/how-to-use?id=📊-enabling-jmx-grafana); example [other/monitoring-demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-demo) |
+| Control Center | `--enable-control-center` (Next Gen, http://127.0.0.1:9021), `--enable-legacy-control-center` for CP < 8, `--control-center-tag`, examples [other/control-center-ldap-auth](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-ldap-auth), [other/control-center-readonly-mode](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-readonly-mode); see the [📊 Observability deep dive](/deep-dive-observability.md) |
+| Metrics and dashboards | `--enable-jmx-grafana`: Prometheus and Grafana (Kafka cluster, topics, quotas, clients… dashboards), see [Enabling JMX Grafana](/how-to-use?id=📊-enabling-jmx-grafana); example [other/monitoring-demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-demo); see the [📊 Observability deep dive](/deep-dive-observability.md) |
 | Which CP version changed this? | `--tag` on any run, `playground update-version --tag` on the running environment, `playground cp-changelog --from <version> --grep <symptom>` |
 | Run a patched image from engineering | the `CP_KAFKA_IMAGE` / `CP_KAFKA_TAG` variables, see [Overriding Confluent Platform Docker images and tags](/how-to-use?id=🐳-overriding-confluent-platform-docker-images-and-tags) |
 
 ## 🍪 Deep dives
 
 - [🖥️ Brokers and transactions](/deep-dive-broker.md): health, failures, rolling restarts, stuck `read_committed` consumers
+- [📊 Observability](/deep-dive-observability.md): Control Center, Grafana and Prometheus, `broker metrics`, which metric answers which case
 - [🗂️ Topic administration](/deep-dive-topic-administration.md), [📨 Produce test data](/deep-dive-topic-produce.md), [📥 Read a topic](/deep-dive-topic-consume.md)
 - [🌍 Replication between clusters](/deep-dive-replication.md)
 - [🐌 A slow or broken network](/deep-dive-network-traffic.md), [🏚 Break one TCP connection](/deep-dive-tcp-proxy.md)
