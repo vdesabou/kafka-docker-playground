@@ -61,6 +61,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -178,6 +180,11 @@ Password for the MySQL database user that has the required authorization
 🔘 database.ssl.mode
 
 Whether to use an encrypted connection to the MySQL server. Possible settings are: `disabled`, `preferred`, `required`, `verify_ca`, and `verify_identity`. 
+`disabled` specifies the use of an unencrypted connection. 
+`preferred` establishes an encrypted connection if the server supports secure connections. If the server does not support secure connections, falls back to an unencrypted connection. 
+`required` establishes an encrypted connection or fails if one cannot be made for any reason. 
+`verify_ca` The connector behaves as when you set the `required` option, but it also verifies the server TLS certificate against the configured Certificate Authority (CA) certificates. If the server TLS certificate does not match any valid CA certificates, the connector fails. 
+`verify_identity` The connector behaves as when you set the `verify_ca` option, but it also verifies that the server certificate matches the host of the remote connection.
 
 	 - Type: STRING
 	 - Default: preferred
@@ -247,6 +254,7 @@ Output messages
 🔘 output.data.format
 
 Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, or BYTES. You need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF. 
+BYTES passes the record value through unchanged using ``io.debezium.converters.BinaryDataConverter`` and requires ``output.delegate.format`` to serialize structured records that are not raw byte payloads, such as heartbeats, transaction-metadata markers, and schema-change events (where the connector publishes them). Use the converter only with outbox table setups.
 
 	 - Type: STRING
 	 - Default: JSON
@@ -283,6 +291,9 @@ Controls whether the generated Kafka record should contain only the state of the
 🔘 tombstones.on.delete
 
 Controls whether a delete event is followed by a tombstone event. The following values are possible: 
+``true``: For each delete operation, the connector emits a delete event and a subsequent tombstone event. 
+``false``: For each delete operation, the connector emits only a delete event. 
+After a source record is deleted, a tombstone event (the default behavior) enables Kafka to completely delete all events that share the key of the deleted row in topics that have log compaction enabled.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -379,6 +390,14 @@ Connector config
 🔘 snapshot.mode
 
 Specifies the criteria for running a snapshot when the connector starts. Possible settings are: `initial`, `initial_only`, `when_needed`, `never`, `schema_only`(deprecated), `no_data`, `schema_only_recovery`(deprecated), `recovery`. 
+`initial` - the connector runs a snapshot only when no offsets have been recorded for the logical server name. 
+`initial_only` - the connector runs a snapshot only when no offsets have been recorded for the logical server name and then stops; i.e. it will not read change events from the binlog. 
+`when_needed` - the connector runs a snapshot upon startup whenever it deems it necessary. That is, when no offsets are available, or when a previously recorded offset specifies a binlog location or GTID that is not available in the server. 
+`never` - the connector never uses snapshots. Upon first startup with a logical server name, the connector reads from the beginning of the binlog. Configure this behavior with care. It is valid only when the binlog is guaranteed to contain the entire history of the database. 
+`schema_only` - Deprecated, use no_data instead. 
+`no_data` - the connector runs a snapshot of the schemas and not the data. This setting is useful when you do not need the topics to contain a consistent snapshot of the data but need them to have only the changes since the connector was started. 
+`schema_only_recovery` - Deprecated, use recovery instead. 
+`recovery` - recovery setting for a connector that has already been capturing changes. When you restart the connector, this setting enables recovery of a corrupted or lost database schema history topic. You might set it periodically to "clean up" a database schema history topic that has been growing unexpectedly. Database schema history topics require infinite retention.
 
 	 - Type: STRING
 	 - Default: initial
@@ -388,6 +407,10 @@ Specifies the criteria for running a snapshot when the connector starts. Possibl
 🔘 snapshot.locking.mode
 
 Controls whether and how long the connector holds the global MySQL read lock, which prevents any updates to the database, while the connector is performing a snapshot. Possible settings are: `minimal`, `minimal_percona`, `extended`, and `none`. 
+`minimal` - the connector holds the global read lock for just the initial portion of the snapshot, while the database schemas and other metadata are being read. The remaining work in a snapshot involves selecting all rows from each table. This is accomplished using a REPEATABLE READ transaction, even when the lock is no longer held and other MySQL clients are updating the database. 
+`minimal_percona` - similar to `minimal` mode except the connector uses a (Percona-specific) backup lock. This mode does not flush tables to disk, is not blocked by long-running reads, and is available only in Percona Server. 
+`extended` - blocks all writes for the duration of the snapshot. Use this setting if there are clients that are submitting operations that MySQL excludes from REPEATABLE READ semantics. 
+`none` - prevents the connector from acquiring any table locks during the snapshot. While this setting is allowed with all snapshot modes, it is safe to use if and only if no schema changes are happening while the snapshot is running. For tables defined with MyISAM engine, the tables would still be locked despite this property being set as MyISAM acquires a table lock. This behavior is unlike InnoDB engine, which acquires row level locks.
 
 	 - Type: STRING
 	 - Default: minimal
@@ -417,6 +440,7 @@ A comma-separated list of regular expressions that match the names of databases 
 
 An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you want to capture. When this property is set, the connector captures changes only from the specified tables. Each identifier is of the form `database.tableName`. By default, the connector captures changes in every non-system table in each schema whose changes are being captured. 
 To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
+If you include this property in the configuration, do not also set the ``table.exclude.list`` property.
 
 	 - Type: LIST
 	 - Default: 
@@ -427,6 +451,7 @@ To match the name of a table, Debezium applies the regular expression that you s
 
 An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you do not want to capture. Each identifier is of the form `database.tableName`. When this property is set, the connector captures changes from every table that you do not specify. 
 To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
+If you include this property in the configuration, do not set the ``table.include.list`` property.
 
 	 - Type: LIST
 	 - Default: 
@@ -436,6 +461,9 @@ To match the name of a table, Debezium applies the regular expression that you s
 🔘 event.processing.failure.handling.mode
 
 Specifies how the connector should react to exceptions during processing of events. Possible settings are ``fail``, ``skip``, and ``warn``. 
+``fail``: Propagates the exception, indicates the offset of the problematic event, and causes the connector to stop. 
+``warn``: Logs the offset of the problematic event, skips that event, and continues processing. 
+``skip``: Skips the problematic event and continues processing.
 
 	 - Type: STRING
 	 - Default: fail
@@ -445,6 +473,9 @@ Specifies how the connector should react to exceptions during processing of even
 🔘 schema.name.adjustment.mode
 
 Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. The following values are possible:
+``none``: Does not apply any adjustment. 
+``avro``: Replaces the characters that cannot be used in the Avro type name with underscore. 
+``avro_unicode``: Replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode such as, ``_uxxxx``. Note that ``_`` is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -464,6 +495,9 @@ To match the name of a column, Debezium applies the regular expression that you 
 🔘 field.name.adjustment.mode
 
 Specifies how field names should be adjusted for compatibility with the message converter used by the connector. The following values are possible: 
+``none``: Does not apply any adjustment. 
+``avro``: Replaces the characters that cannot be used in the Avro type name with underscore. 
+``avro_unicode``: Replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode such as, ``_uxxxx``. Note that ``_`` is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -473,6 +507,8 @@ Specifies how field names should be adjusted for compatibility with the message 
 🔘 heartbeat.interval.ms
 
 Controls how frequently the connector sends heartbeat messages to a Kafka topic. The behavior of default value 0 is that the connector does not send heartbeat messages. Heartbeat messages are useful for monitoring whether the connector is receiving change events from the database. Heartbeat messages might help decrease the number of change events that need to be re-sent when a connector restarts. To send heartbeat messages, set this property to a positive integer, which indicates the number of milliseconds between heartbeat messages. 
+If the database has transactional activity, you can set ``heartbeat.interval.ms`` to prevent unbounded WAL growth. This works even if none of that activity affects captured tables. This won't help if the captured database is idle and the write activity is happening in a different database on the same Postgres instance. In this case, configure ``heartbeat.action.query``. Each heartbeat triggers an offset commit that flushes the latest LSN to the database, regardless of whether captured tables have any real activity. 
+If you need lag metrics to stay accurate during quiet periods, such as ``MilliSecondsBehindSource``, use ``heartbeat.action.query``.
 
 	 - Type: INT
 	 - Default: 0
@@ -482,7 +518,7 @@ Controls how frequently the connector sends heartbeat messages to a Kafka topic.
 🔘 snapshot.select.statement.overrides.data.map
 
 A JSON object that maps fully-qualified table identifiers (``schemaName.tableName`` or ``databaseName.tableName``) to custom SELECT statements. The connector uses these statements during snapshots instead of the default SELECT * query. Use this property for large append-only tables to resume a snapshot from a specific point if a previous attempt was interrupted. These values are sensitive and are masked in the configuration. 
-Note that you must escape double quotes (``"``) in table or schema names. Use a single backslash (``\"``) in the UI and three backslashes (``\\"``) in the CLI.
+Note that you must escape double quotes (``"``) in table or schema names. Use a single backslash (``\"``) in the UI and three backslashes (``\\\"``) in the CLI.
 
 	 - Type: PASSWORD
 	 - Default: 
@@ -492,6 +528,9 @@ Note that you must escape double quotes (``"``) in table or schema names. Use a 
 🔘 inconsistent.schema.handling.mode
 
 Specifies how the connector should react to binlog events that belong to a table missing from internal schema representation. Possible settings are: `fail`, `skip`, and `warn`. 
+`fail` - throws an exception that indicates the problematic event and its binlog offset, and causes the connector to stop. 
+`skip` - passes over the problematic event and does not log anything. 
+`warn` - logs the problematic event and its binlog offset and skips the event.
 
 	 - Type: STRING
 	 - Default: fail
@@ -510,6 +549,8 @@ A Boolean value that specifies whether the connector should ignore malformed or 
 🔘 schema.history.internal.store.only.captured.tables.ddl
 
 A Boolean value that specifies whether the connector records schema structures from all tables in a schema or database, or only from tables that are designated for capture. Defaults to `false`. 
+`false` - During a database snapshot, the connector records the schema data for all non-system tables in the database, including tables that are not designated for capture. It’s best to retain the default setting. If you later decide to capture changes from tables that you did not originally designate for capture, the connector can easily begin to capture data from those tables, because their schema structure is already stored in the schema history topic. 
+`true` - During a database snapshot, the connector records the table schemas only for the tables from which Debezium captures change events. If you change the default value, and you later configure the connector to capture data from other tables in the database, the connector lacks the schema information that it requires to capture change events from the tables.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -552,6 +593,9 @@ How should we handle data types?
 🔘 decimal.handling.mode
 
 Specifies how the connector should handle DECIMAL and NUMERIC columns. You can set one of the following options: 
+``precise``: Represents values by using ``java.math.BigDecimal`` to represent values in binary form in change events. 
+``double``: Represents values by using double values, which might result in a loss of precision but which is easier to use. 
+``string``: encodes values as formatted strings, which are easy to consume but semantic information about the real type is lost.
 
 	 - Type: STRING
 	 - Default: precise
@@ -561,6 +605,8 @@ Specifies how the connector should handle DECIMAL and NUMERIC columns. You can s
 🔘 time.precision.mode
 
 Time, date, and timestamps can be represented with different kinds of precisions: 
+`adaptive_time_microseconds` captures the date, datetime and timestamp values exactly as in the database using either millisecond, microsecond, or nanosecond precision values based on the database column’s type. An exception is `TIME` type fields, which are always captured as microseconds. 
+`connect` always represents time and timestamp values by using Kafka Connect’s built-in representations for `Time`, `Date`, and `Timestamp`, which use millisecond precision regardless of the database columns' precision.
 
 	 - Type: STRING
 	 - Default: adaptive_time_microseconds
@@ -595,6 +641,7 @@ A semicolon-separated list of expressions that match fully-qualified tables and 
 
 A comma-separated list of channel names that are enabled for the connector. If not set, the connector enables only the ``source`` channel by default. Supported values are: 
 ``source`` (default): Signals are read from a signaling table in the source database. 
+``kafka``: Signals are consumed from a Kafka topic.
 
 	 - Type: LIST
 	 - Default: 
@@ -946,6 +993,8 @@ A delay period after the snapshot is completed and the streaming begins, given i
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -1245,4 +1294,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 

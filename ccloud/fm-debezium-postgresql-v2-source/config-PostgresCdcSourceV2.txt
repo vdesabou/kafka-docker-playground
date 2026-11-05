@@ -61,6 +61,8 @@ Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_K
 🔘 datapreview.schemas.enable
 
 This config key only applies to data preview requests and governs whether the data preview output has record schema with it.
+The visibility condition is set such that it can never be true.
+So this key does not show in create connector UI.
 
 	 - Type: STRING
 	 - Default: false
@@ -187,6 +189,11 @@ The name of the PostgreSQL database from which to stream the changes.
 🔘 database.sslmode
 
 Whether to use an encrypted connection to the PostgreSQL server. Possible settings are: ``disable``, ``prefer``, ``require``, ``verify-ca``, and ``verify-full``. 
+``disable``: Uses an unencrypted connection. 
+``prefer``: Attempts to use a secure (encrypted) connection first, and if failed, an unencrypted connection. 
+``require``: Uses a secure (encrypted) connection, and fails if one cannot be established. 
+``verify-ca``: Uses a secure (encrypted) connection and verifies the server certificate against the CA. 
+``verify-full``: Uses a secure (encrypted) connection and verifies the server certificate and hostname.
 
 	 - Type: STRING
 	 - Default: prefer
@@ -277,6 +284,7 @@ Output messages
 🔘 output.data.format
 
 Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, or BYTES. You need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF. 
+BYTES passes the record value through unchanged using ``io.debezium.converters.BinaryDataConverter`` and requires ``output.delegate.format`` to serialize structured records that are not raw byte payloads, such as heartbeats, transaction-metadata markers, and schema-change events (where the connector publishes them). Use the converter only with outbox table setups.
 
 	 - Type: STRING
 	 - Default: JSON
@@ -313,6 +321,9 @@ Controls whether the generated Kafka record should contain only the state of the
 🔘 tombstones.on.delete
 
 Controls whether a delete event is followed by a tombstone event. The following values are possible: 
+``true``: For each delete operation, the connector emits a delete event and a subsequent tombstone event. 
+``false``: For each delete operation, the connector emits only a delete event. 
+After a source record is deleted, a tombstone event (the default behavior) enables Kafka to completely delete all events that share the key of the deleted row in topics that have log compaction enabled.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -406,6 +417,12 @@ The name of the PostgreSQL publication created for streaming changes when using 
 🔘 publication.autocreate.mode
 
 Applies only when streaming changes by using the pgoutput plug-in. Possible settings are ``all_tables``, ``disabled``, and ``filtered``. 
+``all_tables``: If a publication exists, the connector uses it. If a publication does not exist, the connector creates a publication for all tables in the database for which the connector is capturing changes. For the connector to create a publication it must access the database through a database user account that has permission to create publications and perform replications. You can create the publication using following SQL command: `CREATE PUBLICATION <publication_name> FOR ALL TABLES;`. 
+``disabled``: The connector does not attempt to create a publication. A database administrator or the user configured to perform replications must have created the publication before running the connector. If the connector cannot find the publication, the connector throws an exception and stops. 
+``filtered``: If a publication exists, the connector uses it. If no publication exists, the connector creates a new publication for tables that match the current filter configuration as specified by the ``table.include.list``, and ``table.exclude.list`` connector configuration properties. For example, ``CREATE PUBLICATION <publication_name> FOR TABLE <tbl1, tbl2, tbl3>``. If the publication exists, the connector updates the publication for tables that match the current filter configuration. For example, ``ALTER PUBLICATION <publication_name> SET TABLE <tbl1, tbl2, tbl3>``. For the connector to alter a publication it must access the database through a database user account that has ownership of the publication and the tables it is capturing.
+Note the following:
+If the existing regex patterns in ``table.include.list``, and ``table.exclude.list`` match the fully-qualified name of a newly created table, the connector will miss events from this new table until the publication is manually altered to include it. To avoid missing events, it is recommended to alter the publication before adding data to newly created tables.
+When configuring multiple connectors to capture different sets of tables from the database using a filtered configuration, do not use the same publication for all connectors. If multiple connectors use the same publication, the latest connector may alter the publication based on its capture list, potentially causing an incorrect publication configuration for the older connectors.
 
 	 - Type: STRING
 	 - Default: all_tables
@@ -415,6 +432,11 @@ Applies only when streaming changes by using the pgoutput plug-in. Possible sett
 🔘 publish.via.partition.root
 
 This configuration is applicable only when the connector is responsible for creating the publication in the source database. It determines how change events from partitioned tables are captured and emitted.
+``true``: The connector includes the ``publish_via_partition_root = true`` parameter in the publication creation statement, instructing the source database to publish change events using the root table name. As a result, changes from all partitions are emitted under the root table in the change stream.
+``false`` (the default): The ``publish_via_partition_root`` parameter is omitted, and change events are published using the individual partition names, reflecting the exact partition where each change occurred. 
+Note the following: 
+The connector applies this configuration only during the initial creation of the publication. The connector ignores the changes made to this setting after the publication has been created. 
+The ``publish_via_partition_root`` property applies only to streaming changes captured from partitioned tables. If you want snapshot records from partitioned tables to be emitted under the root table topic only, ensure that your capture set includes only the root table and not its partitions. If partitions are also included in the capture configuration, snapshot records will be emitted into the individual partition topics in addition to the root table topic.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -445,6 +467,11 @@ Connector config
 🔘 snapshot.mode
 
 Specifies the criteria for running a snapshot upon startup of the connector. Possible settings are ``initial``, ``never``(deprecated), ``no_data``, ``initial_only``, and ``when_needed``. 
+``initial``: The connector performs a snapshot only when no offsets have been recorded for the logical server name. 
+``never``: Deprecated, use ``no_data`` instead. 
+``no_data``: The connector never performs snapshots. When a connector is configured this way, its behavior when it starts is as follows. If there is a previously stored LSN in the Kafka offsets topic, the connector continues streaming changes from that position. If no LSN has been stored, the connector starts streaming changes from the starting position available in the replication slot. The ``no_data`` snapshot mode is useful only when you know all data of interest is still reflected in the WAL. 
+``initial_only``: The connector performs an initial snapshot and then stops, without processing any subsequent changes. In this mode, the connector does not create a replication slot. Because no slot exists, PostgreSQL does not retain the WAL files required to start streaming later. If you want to transition to streaming changes eventually, use ``initial`` mode instead of this mode. 
+``when_needed``: The connector runs a snapshot upon startup whenever it deems it necessary. That is, when no offsets are available, or when a previously recorded offset specifies an LSN that is not available with the replication slot.
 
 	 - Type: STRING
 	 - Default: initial
@@ -455,6 +482,7 @@ Specifies the criteria for running a snapshot upon startup of the connector. Pos
 
 An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you want to capture. When this property is set, the connector captures changes only from the specified tables. Each identifier is of the form `schemaName.tableName`. By default, the connector captures changes in every non-system table in each schema whose changes are being captured. 
 To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
+If you include this property in the configuration, do not also set the ``table.exclude.list`` property.
 
 	 - Type: LIST
 	 - Default: 
@@ -465,6 +493,7 @@ To match the name of a table, Debezium applies the regular expression that you s
 
 An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you do not want to capture. Each identifier is of the form `schemaName.tableName`. When this property is set, the connector captures changes from every table that you do not specify. 
 To match the name of a table, Debezium applies the regular expression that you specify as an anchored regular expression. That is, the specified expression is matched against the entire identifier for the table; it does not match substrings that might be present in a table name. 
+If you include this property in the configuration, do not set the ``table.include.list`` property.
 
 	 - Type: LIST
 	 - Default: 
@@ -474,6 +503,9 @@ To match the name of a table, Debezium applies the regular expression that you s
 🔘 event.processing.failure.handling.mode
 
 Specifies how the connector should react to exceptions during processing of events. Possible settings are ``fail``, ``skip``, and ``warn``. 
+``fail``: Propagates the exception, indicates the offset of the problematic event, and causes the connector to stop. 
+``warn``: Logs the offset of the problematic event, skips that event, and continues processing. 
+``skip``: Skips the problematic event and continues processing.
 
 	 - Type: STRING
 	 - Default: fail
@@ -493,6 +525,9 @@ To match the name of a column, Debezium applies the regular expression that you 
 🔘 schema.name.adjustment.mode
 
 Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. The following values are possible:
+``none``: Does not apply any adjustment. 
+``avro``: Replaces the characters that cannot be used in the Avro type name with underscore. 
+``avro_unicode``: Replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode such as, ``_uxxxx``. Note that ``_`` is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -502,6 +537,9 @@ Specifies how schema names should be adjusted for compatibility with the message
 🔘 field.name.adjustment.mode
 
 Specifies how field names should be adjusted for compatibility with the message converter used by the connector. The following values are possible: 
+``none``: Does not apply any adjustment. 
+``avro``: Replaces the characters that cannot be used in the Avro type name with underscore. 
+``avro_unicode``: Replaces the underscore or characters that cannot be used in the Avro type name with corresponding unicode such as, ``_uxxxx``. Note that ``_`` is an escape sequence like backslash in Java.
 
 	 - Type: STRING
 	 - Default: none
@@ -511,6 +549,8 @@ Specifies how field names should be adjusted for compatibility with the message 
 🔘 heartbeat.interval.ms
 
 Controls how frequently the connector sends heartbeat messages to a Kafka topic. The behavior of default value 0 is that the connector does not send heartbeat messages. Heartbeat messages are useful for monitoring whether the connector is receiving change events from the database. Heartbeat messages might help decrease the number of change events that need to be re-sent when a connector restarts. To send heartbeat messages, set this property to a positive integer, which indicates the number of milliseconds between heartbeat messages. 
+If the database has transactional activity, you can set ``heartbeat.interval.ms`` to prevent unbounded WAL growth. This works even if none of that activity affects captured tables. This won't help if the captured database is idle and the write activity is happening in a different database on the same Postgres instance. In this case, configure ``heartbeat.action.query``. Each heartbeat triggers an offset commit that flushes the latest LSN to the database, regardless of whether captured tables have any real activity. 
+If you need lag metrics to stay accurate during quiet periods, such as ``MilliSecondsBehindSource``, use ``heartbeat.action.query``.
 
 	 - Type: INT
 	 - Default: 0
@@ -520,7 +560,7 @@ Controls how frequently the connector sends heartbeat messages to a Kafka topic.
 🔘 snapshot.select.statement.overrides.data.map
 
 A JSON object that maps fully-qualified table identifiers (``schemaName.tableName`` or ``databaseName.tableName``) to custom SELECT statements. The connector uses these statements during snapshots instead of the default SELECT * query. Use this property for large append-only tables to resume a snapshot from a specific point if a previous attempt was interrupted. These values are sensitive and are masked in the configuration. 
-Note that you must escape double quotes (``"``) in table or schema names. Use a single backslash (``\"``) in the UI and three backslashes (``\\"``) in the CLI.
+Note that you must escape double quotes (``"``) in table or schema names. Use a single backslash (``\"``) in the UI and three backslashes (``\\\"``) in the CLI.
 
 	 - Type: PASSWORD
 	 - Default: 
@@ -531,6 +571,10 @@ Note that you must escape double quotes (``"``) in table or schema names. Use a 
 
 If specified, the connector executes this query on every heartbeat against the source database. The query must be a valid SQL DML statement, typically an ``INSERT`` or ``UPDATE``, that targets a dedicated heartbeat table. 
 This configuration helps address situations where capturing changes from a low-traffic database on the same host as a high-traffic one prevents Debezium from processing WAL records and acknowledging WAL positions with the database. To address this, create a heartbeat table in the low-traffic database, and set this property to a DML statement that periodically updates the table by either inserting a new row or repeatedly updating the same row. This allows the connector to receive changes from the low-traffic database and acknowledge their LSNs, preventing unbounded WAL growth on the database host. The heartbeat query executes at regular intervals, as specified by the ``heartbeat.interval.ms`` configuration property. 
+For the common case where non-captured tables in the same database receive activity, ``heartbeat.interval.ms`` alone prevents unbounded WAL growth, and ``heartbeat.action.query`` is needed only to keep lag metrics accurate during quiet periods. However, in the multi-database scenario described above (where the captured database itself is idle while a different database on the same host is active), ``heartbeat.action.query`` is still required to prevent WAL growth, because ``heartbeat.interval.ms`` alone has no activity to flush in that case. 
+Note the following: 
+To enable the connector to detect and process events from the heartbeat table, ensure the table is part of the PostgreSQL publication specified by the ``publication.name`` configuration property. In addition, if you are using a filtered publication, include the table in the connector's capture set using the schema or table include configuration properties. 
+To uphold the principle of least privilege, grant the connector user write permissions exclusively to essential tables, such as those used for heartbeats. In line with data minimization, ensure the connector configuration is free of PII or sensitive data, as this information is not needed for system-level functions like heartbeat queries.
 
 	 - Type: STRING
 	 - Default: 
@@ -564,6 +608,9 @@ How should we handle data types?
 🔘 decimal.handling.mode
 
 Specifies how the connector should handle DECIMAL and NUMERIC columns. You can set one of the following options: 
+``precise``: Represents values by using ``java.math.BigDecimal`` to represent values in binary form in change events. 
+``double``: Represents values by using double values, which might result in a loss of precision but which is easier to use. 
+``string``: encodes values as formatted strings, which are easy to consume but semantic information about the real type is lost.
 
 	 - Type: STRING
 	 - Default: precise
@@ -573,6 +620,9 @@ Specifies how the connector should handle DECIMAL and NUMERIC columns. You can s
 🔘 time.precision.mode
 
 Specifies how the connector should handle time, date, and timestamp columns. You can set one of the following options: 
+``adaptive``: Captures the time and timestamp values exactly as in the database using either millisecond, microsecond, or nanosecond precision values based on the database column’s type. 
+``adaptive_time_microseconds``: Captures the date, datetime and timestamp values exactly as in the database using either millisecond, microsecond, or nanosecond precision values based on the database column’s type. An exception is TIME type fields, which are always captured as microseconds. 
+``connect``: Always represents time and timestamp values by using Kafka Connect’s built-in representations for Time, Date, and Timestamp, which use millisecond precision regardless of the database columns' precision.
 
 	 - Type: STRING
 	 - Default: adaptive
@@ -607,6 +657,7 @@ A semicolon-separated list of expressions that match fully-qualified tables and 
 
 A comma-separated list of channel names that are enabled for the connector. If not set, the connector enables only the ``source`` channel by default. Supported values are: 
 ``source`` (default): Signals are read from a signaling table in the source database. 
+``kafka``: Signals are consumed from a Kafka topic.
 
 	 - Type: LIST
 	 - Default: 
@@ -913,6 +964,8 @@ A comma-separated list of regular expressions that match names of schemas for wh
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+BASE64 to serialize DECIMAL logical types as base64 encoded binary data and
+NUMERIC to serialize Connect DECIMAL logical type values in JSON/JSON_SR as a number representing the decimal value.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -1284,4 +1337,5 @@ List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted
 	 - Default: 
 	 - Importance: HIGH
 	 - Required: false
+
 
