@@ -1,26 +1,14 @@
 broker="${args[--broker]}"
 topic="${args[--topic]}"
 json="${args[--json]}"
+controller_only="${args[--controller]}"
 verbose="${args[--verbose]}"
-
-if [[ -n "$broker" ]]
-then
-    get_broker_container_of_id "$broker" || exit 1
-    targets="$broker $broker_id_container"
-else
-    targets=$(get_broker_containers)
-    if [[ -z "$targets" ]]
-    then
-        logerror "❌ no broker container found, is an environment running? (playground status)"
-        exit 1
-    fi
-fi
 
 topic_suffix=""
 [[ -n "$topic" ]] && topic_suffix=",topic=$topic"
 
-# label|object name|attribute|format|warning
-metrics_spec="Partitions|kafka.server:type=ReplicaManager,name=PartitionCount|Value|int|
+# label|object name|attribute|format|warning (see jmx_digest_read)
+broker_spec="Partitions|kafka.server:type=ReplicaManager,name=PartitionCount|Value|int|
 Leaders|kafka.server:type=ReplicaManager,name=LeaderCount|Value|int|
 Under-replicated partitions|kafka.server:type=ReplicaManager,name=UnderReplicatedPartitions|Value|int|gt0
 Under min ISR partitions|kafka.server:type=ReplicaManager,name=UnderMinIsrPartitionCount|Value|int|gt0
@@ -38,55 +26,76 @@ ISR expands (since start)|kafka.server:type=ReplicaManager,name=IsrExpandsPerSec
 Failed produce requests (since start)|kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec$topic_suffix|Count|int|
 Failed fetch requests (since start)|kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec$topic_suffix|Count|int|"
 
-# the generated CLI indents the lines of this string
-metrics_spec=$(echo "$metrics_spec" | sed 's/^[[:space:]]*//')
+# KRaft: MBeans of the controllers; ZooKeeper: of the broker that is the active controller
+controller_spec="Active controller|kafka.controller:type=KafkaController,name=ActiveControllerCount|Value|bool|
+Offline partitions|kafka.controller:type=KafkaController,name=OfflinePartitionsCount|Value|int|gt0
+Partitions (cluster)|kafka.controller:type=KafkaController,name=GlobalPartitionCount|Value|int|
+Topics (cluster)|kafka.controller:type=KafkaController,name=GlobalTopicCount|Value|int|
+Preferred replica imbalance|kafka.controller:type=KafkaController,name=PreferredReplicaImbalanceCount|Value|int|gt0
+Last applied record lag|kafka.controller:type=KafkaController,name=LastAppliedRecordLagMs|Value|ms|
+Unclean leader elections (since start)|kafka.controller:type=ControllerStats,name=UncleanLeaderElectionsPerSec|Count|int|gt0"
 
-object_args=()
-while IFS='|' read -r label object attribute format warning
-do
-    object_args+=(--object-name "$object")
-done <<< "$metrics_spec"
+# the generated CLI indents the lines of these strings
+broker_spec=$(echo "$broker_spec" | sed 's/^[[:space:]]*//')
+controller_spec=$(echo "$controller_spec" | sed 's/^[[:space:]]*//')
 
-# "<broker id>|<label>|<raw value>" for every metric of every running broker
-values=""
-ids=""
-while read -r id container
-do
-    [[ -z "$id" ]] && continue
-    if ! is_container_running "$container"
+# the controller section: KRaft controllers, or the brokers with ZooKeeper
+function display_controller_metrics () {
+    local controller_targets header="CONTROLLER"
+    controller_targets=$(get_controller_containers)
+    if [[ -z "$controller_targets" ]]
     then
-        logwarn "⚠️ broker $id (container $container) is not running, skipped"
-        continue
+        controller_targets=$(get_broker_containers)
+        header="BROKER"
     fi
-    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" | grep -E "^KAFKA_JMX_PORT=" | cut -d= -f2 || true)
-    if [[ -z "$port" ]]
+    jmx_digest_collect "$controller_spec" "$controller_targets"
+    if [[ -z "$JMX_DIGEST_IDS" ]]
     then
-        logwarn "⚠️ JMX is not enabled on broker $id (no KAFKA_JMX_PORT), skipped"
-        continue
+        logerror "❌ no controller metrics could be read"
+        return 1
     fi
-    jmx_tool="kafka-jmx"
-    if ! docker exec "$container" bash -c "command -v kafka-jmx" > /dev/null 2>&1
+    if [[ -n "$json" ]]
     then
-        # before Kafka 3.5
-        jmx_tool="kafka-run-class kafka.tools.JmxTool"
+        jmx_digest_json "$(echo "$header" | tr '[:upper:]' '[:lower:]')"
+        return 0
     fi
-    [[ -n "$verbose" ]] && log "🐞 $jmx_tool --jmx-url service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi ${object_args[*]} --one-time true --report-format tsv (in $container)"
-    output=$(docker exec "$container" $jmx_tool --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv 2>&1) || true
-    if ! echo "$output" | grep -q -E "^kafka\."
-    then
-        logwarn "⚠️ could not read the JMX metrics of broker $id:"
-        echo "$output" | grep -v -E "^[[:space:]]+at " | tail -3
-        continue
-    fi
-    ids+="$id "
-    while IFS='|' read -r label object attribute format warning
+    log "🗳️ Controller metrics ($([[ "$header" == "CONTROLLER" ]] && echo "KRaft controllers" || echo "ZooKeeper mode: the active controller is a broker"))"
+    jmx_digest_table "$header" "$controller_spec"
+    local active=0 id
+    for id in $JMX_DIGEST_IDS
     do
-        value=$(echo "$output" | awk -F'\t' -v key="$object:$attribute" '$1 == key { print $2 ; exit }')
-        values+="$id|$label|$value"$'\n'
-    done <<< "$metrics_spec"
-done <<< "$targets"
+        case "$(jmx_digest_value "$id" "Active controller")" in
+            1|1.0|true) active=$((active + 1)) ;;
+        esac
+    done
+    if [[ "$active" != "1" ]]
+    then
+        logwarn "⚠️ $active active controller(s), there must be exactly 1"
+    fi
+}
 
-if [[ -z "$ids" ]]
+if [[ -n "$controller_only" ]]
+then
+    display_controller_metrics
+    exit $?
+fi
+
+if [[ -n "$broker" ]]
+then
+    get_broker_container_of_id "$broker" || exit 1
+    targets="$broker $broker_id_container"
+else
+    targets=$(get_broker_containers)
+    if [[ -z "$targets" ]]
+    then
+        logerror "❌ no broker container found, is an environment running? (playground status)"
+        exit 1
+    fi
+fi
+
+[[ -n "$verbose" ]] && log "🐞 reading the MBeans of $(echo "$targets" | awk '{print $2}' | paste -sd, -) with kafka-jmx"
+jmx_digest_collect "$broker_spec" "$targets"
+if [[ -z "$JMX_DIGEST_IDS" ]]
 then
     logerror "❌ no broker metrics could be read"
     exit 1
@@ -94,48 +103,22 @@ fi
 
 if [[ -n "$json" ]]
 then
-    echo -n "$values" | jq -R -s 'split("\n") | map(select(length > 0) | split("|"))
-        | group_by(.[0]) | map({ broker: (.[0][0] | tonumber), metrics: (map({ (.[1]): (.[2] | tonumber? // null) }) | add) })'
+    jmx_digest_json broker
     exit 0
 fi
 
 log "📈 Broker metrics$([[ -n "$topic" ]] && echo " (rates and failed requests of topic $topic)")"
-if [[ -n "$topic" ]] && ! echo -n "$values" | awk -F'|' '$2 == "Messages in/s (1m)" && $3 != ""' | grep -q .
+if [[ -n "$topic" ]] && ! echo -n "$JMX_DIGEST_VALUES" | awk -F'|' '$2 == "Messages in/s (1m)" && $3 != ""' | grep -q .
 then
     logwarn "⚠️ no metric for topic $topic: it does not exist, or no broker received or served records of it since it started"
 fi
-{
-    printf 'METRIC'
-    for id in $ids
-    do
-        printf '\tBROKER %s' "$id"
-    done
-    printf '\n'
-    while IFS='|' read -r label object attribute format warning
-    do
-        printf '%s' "$label"
-        for id in $ids
-        do
-            value=$(echo -n "$values" | awk -F'|' -v id="$id" -v label="$label" '$1 == id && $2 == label { print $3 ; exit }')
-            printf '\t%s' "$(echo "$value" | awk -v format="$format" -v warning="$warning" '
-                $0 == "" { print "-" ; exit }
-                {
-                    v = $0 + 0
-                    if (format == "pct") out = sprintf("%.0f%%", v * 100)
-                    else if (format == "ms") out = sprintf("%.0f ms", v)
-                    else if (format == "rate") out = sprintf("%.1f", v)
-                    else if (format == "bytes") {
-                        if (v >= 1048576) out = sprintf("%.1f MB", v / 1048576)
-                        else if (v >= 1024) out = sprintf("%.1f KB", v / 1024)
-                        else out = sprintf("%.0f B", v)
-                    }
-                    else out = sprintf("%.0f", v)
-                    if ((warning == "gt0" && v > 0) || (warning == "lt30" && v < 0.3)) out = out " ⚠️"
-                    print out
-                }')"
-        done
-        printf '\n'
-    done <<< "$metrics_spec"
-} | column -t -s $'\t'
+jmx_digest_table "BROKER" "$broker_spec"
 log "🎓 idle below 30% means the broker threads are saturated (num.io.threads, num.network.threads)"
 log "   fetch p99 includes the time a fetch waits for data (fetch.max.wait.ms, replica.fetch.wait.max.ms: 500 ms by default)"
+
+# the controller section, unless one broker was asked for
+if [[ -z "$broker" ]]
+then
+    echo ""
+    display_controller_metrics || true
+fi

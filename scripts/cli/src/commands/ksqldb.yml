@@ -14,6 +14,7 @@ help: |-
     list       streams, tables and persistent queries with their state
     describe   fields, queries, statistics, errors and lag of a stream or table
     wait       wait until the persistent queries are RUNNING and have no lag
+    metrics    query states (running, ERROR, rebalancing) and messages per second, over JMX
 
   🎓 Tip: the REST API of ksqldb-server is published on http://localhost:8088.
   The records that fail a query are in the KSQL_PROCESSING_LOG stream.
@@ -209,3 +210,36 @@ commands:
     - playground ksqldb wait
     - playground ksqldb wait --source currentLocation --source ridersNearMountainView
     - playground ksqldb wait --source ORDERS_ENRICHED --max-wait 3600
+
+  - name: metrics
+    group: ksqlDB
+    filters:
+    - not_cfk_environment
+    help: |-
+      📈 Display the key JMX metrics of the ksqlDB server
+
+      The engine statistics of ksqldb-server: persistent queries, and how many
+      are running, in ERROR, not running, rebalancing or pending shutdown,
+      active and idle queries, messages consumed and produced per second, and
+      the liveness indicator. ⚠️ marks the values to look at.
+
+      Answers "is a query in ERROR or stuck rebalancing?" and "does ksqlDB
+      consume anything?", next to 'playground ksqldb list' (the state of each
+      query) and 'playground ksqldb describe' (its errors and lag).
+
+      Read over JMX in the ksqldb-server container, with jmxterm (no restart,
+      nothing to install).
+
+      🎓 Tip: every metric of the container: playground get-jmx-metrics -c
+      ksqldb-server --domain io.confluent.ksql.metrics
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability
+    flags:
+    - long: --json
+      required: false
+      help: |-
+        📗 Print the raw values as JSON, and nothing else
+    - import: src/flags/verbose.yml
+    examples:
+    - playground ksqldb metrics
+    - playground ksqldb metrics --json

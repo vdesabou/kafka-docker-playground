@@ -29,7 +29,7 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `fully-managed.sh` | [Fully managed connectors (Confluent Cloud)](https://kafka-docker-playground.io/#/deep-dive-fully-managed) — skipped without Confluent Cloud credentials |
 | `topic-administration.sh` | [Topic administration](https://kafka-docker-playground.io/#/deep-dive-topic-administration) |
 | `broker.sh` | [Brokers and transactions](https://kafka-docker-playground.io/#/deep-dive-broker) (3 brokers: a crash, a rolling restart, an open transaction) |
-| `observability.sh` | [Observability](https://kafka-docker-playground.io/#/deep-dive-observability) (starts plaintext with `ENABLE_JMX_GRAFANA` and `ENABLE_CONTROL_CENTER`: digests, MBeans, Prometheus targets and names, Grafana, Pyroscope, Control Center's Prometheus) |
+| `observability.sh` | [Observability](https://kafka-docker-playground.io/#/deep-dive-observability) (starts plaintext with `ENABLE_JMX_GRAFANA`, `ENABLE_CONTROL_CENTER` and `ENABLE_KSQLDB`: the metrics digests of the brokers, controller, workers, Schema Registry and ksqlDB, MBeans, Prometheus targets and names, Grafana, Pyroscope, Control Center's Prometheus) |
 | `connector-benchmark.sh` | [`connector benchmark`](https://kafka-docker-playground.io/#/deep-dive-connector-benchmark) |
 | `oracle-cdc.sh` | [Oracle CDC: LogMiner and XStream](https://kafka-docker-playground.io/#/deep-dive-oracle-cdc) (runs the Oracle XStream example itself, about 10 minutes; the LogMiner connector is not replayed) |
 | `flink.sh` | [Flink SQL](https://kafka-docker-playground.io/#/deep-dive-flink) (starts plaintext with `ENABLE_FLINK` and the Kafka SQL connector jar) |

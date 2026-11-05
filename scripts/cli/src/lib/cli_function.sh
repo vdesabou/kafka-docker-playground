@@ -9475,6 +9475,23 @@ function get_broker_containers () {
   done | sort -n
 }
 
+# running docker containers of the KRaft controllers, one "<node id> <container>" per line, sorted by id (empty with
+# ZooKeeper, where the active controller is a broker)
+function get_controller_containers () {
+  local c id candidates="controller controller2 controller3"
+  if is_mdc_environment
+  then
+    get_mdc_cluster
+    candidates="controller-$mdc_cluster"
+  fi
+  for c in $candidates
+  do
+    is_container_running "$c" || continue
+    id=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$c" 2>/dev/null | grep -E "^KAFKA_NODE_ID=" | head -1 | cut -d= -f2)
+    [[ -n "$id" ]] && echo "$id $c"
+  done | sort -n
+}
+
 # docker container of broker $1: returns 1 (with an error) when there is none
 function get_broker_container_of_id () {
   local id="$1" containers
@@ -10216,4 +10233,207 @@ function resolve_connector_plugin () {
   fi
   log "☁️ $input is taken as the fully managed connector confluentinc/$input" >&2
   echo "confluentinc/$input"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# JMX digests: broker metrics (and its controller section), schema metrics, ksqldb metrics, connector metrics --worker
+#
+# A spec is one metric per line: label|object name|attribute|format|warning
+#   object name  an MBean name; a * is allowed in a value: io.confluent.ksql.metrics:type=*ksql-engine-query-stats
+#   format       int, pct (a ratio, shown in %), ms, rate, bytes, bool (true/false or 1/0, shown yes/no), str (as it is)
+#   warning      gt0 (⚠️ above 0), lt30 (⚠️ below 30%), yes (⚠️ when true), empty for none
+# The MBeans are read in the container: with kafka-jmx when the image has it (brokers, controllers, connect: no download),
+# otherwise with jmxterm (schema-registry, ksqldb-server), like get-jmx-metrics.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# the awk functions shared by the reader: MBean names are compared once normalized (keys sorted: kafka-jmx and jmxterm
+# don't print them in the same order), and a spec object name is a glob
+JMX_DIGEST_AWK_FUNCTIONS='
+function jmx_norm(n,    i, d, rest, cnt, arr, j, t, out) {
+    i = index(n, ":"); d = substr(n, 1, i - 1); rest = substr(n, i + 1)
+    cnt = split(rest, arr, ",")
+    for (i = 1; i <= cnt; i++) for (j = i + 1; j <= cnt; j++) if (arr[j] < arr[i]) { t = arr[i]; arr[i] = arr[j]; arr[j] = t }
+    out = d ":"
+    for (i = 1; i <= cnt; i++) out = out (i > 1 ? "," : "") arr[i]
+    return out
+}
+function jmx_glob_re(g,    r, i, c) {
+    r = "^"
+    for (i = 1; i <= length(g); i++) {
+        c = substr(g, i, 1)
+        if (c == "*") r = r ".*"
+        else if (index("\\.[](){}+?^$|", c) > 0) r = r "\\" c
+        else r = r c
+    }
+    return r "$"
+}
+'
+
+# jmx_digest_read <container> <spec>: prints "<label>|<raw value>" for each metric of the spec (empty value when the MBean
+# or the attribute doesn't exist). Returns 1 when the JMX metrics of the container can't be read.
+function jmx_digest_read () {
+    local container="$1" spec="$2" port raw="" jar beans work_dir
+    port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2>/dev/null | grep -E "^[A-Z_]*JMX_PORT=" | head -1 | cut -d= -f2)
+    if [[ -z "$port" ]]
+    then
+        logwarn "⚠️ JMX is not enabled on container $container (no *_JMX_PORT environment variable), skipped"
+        return 1
+    fi
+    work_dir=$(mktemp -d -t playground-jmx-digest.XXXXXX)
+    echo "$spec" > "$work_dir/spec"
+
+    local jmx_tool=""
+    if docker exec "$container" bash -c "command -v kafka-jmx" > /dev/null 2>&1
+    then
+        jmx_tool="kafka-jmx"
+    elif docker exec "$container" bash -c "command -v kafka-run-class" > /dev/null 2>&1
+    then
+        # before Kafka 3.5
+        jmx_tool="kafka-run-class kafka.tools.JmxTool"
+    fi
+
+    if [[ -n "$jmx_tool" ]]
+    then
+        local object_args=()
+        while read -r object
+        do
+            [[ -n "$object" ]] && object_args+=(--object-name "$object")
+        done < <(cut -d'|' -f2 "$work_dir/spec" | sort -u)
+        # "<object name>:<attribute>\t<value>" per line
+        docker exec "$container" $jmx_tool --jmx-url "service:jmx:rmi:///jndi/rmi://localhost:$port/jmxrmi" "${object_args[@]}" --one-time true --report-format tsv > "$work_dir/raw" 2>&1 || true
+        # kafka-jmx gives up on the whole query when one MBean of it can't be read (no attribute, for example): jmxterm then
+        grep -q $'\t' "$work_dir/raw" || jmx_tool=""
+    fi
+    if [[ -z "$jmx_tool" ]]
+    then
+        jar=$(get_jmxterm_jar) || { rm -rf "$work_dir"; return 1; }
+        docker cp "$jar" "$container:$jar" > /dev/null 2>&1 || { logwarn "⚠️ could not copy jmxterm to container $container, skipped"; rm -rf "$work_dir"; return 1; }
+        printf 'beans\nexit\n' | docker exec -i "$container" java -jar "$jar" -l "localhost:$port" -n -v silent > "$work_dir/beans" 2>/dev/null || true
+        # the attributes of the spec, per MBean that exists: "get -b <bean> <attribute>..." prints the "#mbean = <name>:"
+        # header, then one line per attribute found (not "get *": one attribute that can't be read, like "schemas" of the
+        # jersey-metrics of Schema Registry, would hide the others)
+        awk -F'|' "$JMX_DIGEST_AWK_FUNCTIONS"'
+            NR == FNR { if ($0 != "") beans[++nb] = $0; next }
+            $2 != "" {
+                re = jmx_glob_re(jmx_norm($2))
+                for (i = 1; i <= nb; i++) if (jmx_norm(beans[i]) ~ re && index(" " wanted[beans[i]] " ", " " $3 " ") == 0) wanted[beans[i]] = wanted[beans[i]] " " $3
+            }
+            END { for (b in wanted) print "get -b " b wanted[b] }' "$work_dir/beans" "$work_dir/spec" > "$work_dir/commands"
+        echo "exit" >> "$work_dir/commands"
+        # "#mbean = <name>:" then "<attribute> = <value>;" lines, turned into the kafka-jmx format
+        # (jmxterm prints the values of "get" on stderr)
+        docker exec -i "$container" java -jar "$jar" -l "localhost:$port" -n < "$work_dir/commands" 2>&1 | awk '
+            /^#mbean = / { bean = substr($0, 10); sub(/:$/, "", bean); next }
+            / = / && bean != "" {
+                i = index($0, " = "); attr = substr($0, 1, i - 1); value = substr($0, i + 3)
+                sub(/;$/, "", value); gsub(/"/, "", value); gsub(/^[ \t]+/, "", attr)
+                print bean ":" attr "\t" value
+            }' > "$work_dir/raw"
+    fi
+
+    if ! grep -q $'\t' "$work_dir/raw"
+    then
+        logwarn "⚠️ could not read the JMX metrics of container $container:"
+        grep -v -E "^[[:space:]]+at " "$work_dir/raw" | tail -3
+        rm -rf "$work_dir"
+        return 1
+    fi
+
+    awk -F'\t' "$JMX_DIGEST_AWK_FUNCTIONS"'
+        NR == FNR {
+            # the attribute is after the last ":" of the key (a value of the MBean name may contain ":")
+            key = $1; last = 0
+            for (i = 1; i <= length(key); i++) if (substr(key, i, 1) == ":") last = i
+            if (last == 0) next
+            n++; names[n] = jmx_norm(substr(key, 1, last - 1)); attrs[n] = substr(key, last + 1); values[n] = $2
+            next
+        }
+        {
+            split($0, f, "|")
+            re = jmx_glob_re(jmx_norm(f[2])); value = ""
+            for (i = 1; i <= n; i++) if (attrs[i] == f[3] && names[i] ~ re) { value = values[i]; break }
+            print f[1] "|" value
+        }' "$work_dir/raw" "$work_dir/spec"
+    rm -rf "$work_dir"
+}
+
+# jmx_digest_collect <spec> <targets: "<column id> <container>" per line>: reads every target, sets JMX_DIGEST_IDS (the
+# columns that could be read) and JMX_DIGEST_VALUES ("<column id>|<label>|<raw value>" per line)
+function jmx_digest_collect () {
+    local spec="$1" targets="$2" id container output
+    JMX_DIGEST_IDS=""
+    JMX_DIGEST_VALUES=""
+    while read -r id container
+    do
+        [[ -z "$id" ]] && continue
+        if ! is_container_running "$container"
+        then
+            logwarn "⚠️ container $container is not running, skipped"
+            continue
+        fi
+        output=$(jmx_digest_read "$container" "$spec") || continue
+        JMX_DIGEST_IDS+="$id "
+        JMX_DIGEST_VALUES+=$(echo "$output" | sed "s/^/$id|/")$'\n'
+    done <<< "$targets"
+}
+
+# jmx_digest_table <column header> <spec>: prints JMX_DIGEST_VALUES as a table, one column per JMX_DIGEST_IDS
+function jmx_digest_table () {
+    local header="$1" spec="$2" id label object attribute format warning value
+    {
+        printf 'METRIC'
+        for id in $JMX_DIGEST_IDS
+        do
+            printf '\t%s %s' "$header" "$id"
+        done
+        printf '\n'
+        while IFS='|' read -r label object attribute format warning
+        do
+            [[ -z "$label" ]] && continue
+            printf '%s' "$label"
+            for id in $JMX_DIGEST_IDS
+            do
+                value=$(echo -n "$JMX_DIGEST_VALUES" | awk -F'|' -v id="$id" -v label="$label" '$1 == id && $2 == label { print $3 ; exit }')
+                printf '\t%s' "$(echo "$value" | awk -v format="$format" -v warning="$warning" '
+                    $0 == "" || $0 == "NaN" { print "-" ; exit }
+                    format == "str" { print ; exit }
+                    format == "bool" {
+                        yes = ($0 == "true" || $0 == "1" || $0 == "1.0")
+                        out = yes ? "yes" : "no"
+                        if (warning == "yes" && yes) out = out " ⚠️"
+                        print out ; exit
+                    }
+                    {
+                        v = $0 + 0
+                        if (format == "pct") out = sprintf("%.0f%%", v * 100)
+                        else if (format == "ms") out = sprintf("%.0f ms", v)
+                        else if (format == "rate") out = sprintf("%.1f", v)
+                        else if (format == "bytes") {
+                            if (v >= 1048576) out = sprintf("%.1f MB", v / 1048576)
+                            else if (v >= 1024) out = sprintf("%.1f KB", v / 1024)
+                            else out = sprintf("%.0f B", v)
+                        }
+                        else out = sprintf("%.0f", v)
+                        if ((warning == "gt0" && v > 0) || (warning == "lt30" && v < 0.3)) out = out " ⚠️"
+                        print out
+                    }')"
+            done
+            printf '\n'
+        done <<< "$spec"
+    } | column -t -s $'\t'
+}
+
+# jmx_digest_json <id key>: prints JMX_DIGEST_VALUES as a JSON array, one object per column: {"<id key>": <id>,
+# "metrics": {"<label>": <value>}} (numbers when numeric, true/false, null when missing, strings otherwise)
+function jmx_digest_json () {
+    local id_key="$1"
+    echo -n "$JMX_DIGEST_VALUES" | jq -R -s --arg key "$id_key" 'split("\n") | map(select(length > 0) | split("|"))
+        | group_by(.[0]) | map({ ($key): (.[0][0] | tonumber? // .), metrics: (map({ (.[1]): (.[2] as $v
+            | if $v == "" or $v == "NaN" then null elif $v == "true" then true elif $v == "false" then false
+              else ($v | tonumber? // $v) end) }) | add) })'
+}
+
+# jmx_digest_value <id> <label>: the raw value of one metric of JMX_DIGEST_VALUES (for the findings of a command)
+function jmx_digest_value () {
+    echo -n "$JMX_DIGEST_VALUES" | awk -F'|' -v id="$1" -v label="$2" '$1 == id && $2 == label { print $3 ; exit }'
 }

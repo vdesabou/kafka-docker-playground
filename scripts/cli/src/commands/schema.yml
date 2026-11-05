@@ -15,6 +15,7 @@ help: |-
      get                  every version of a subject, or of all subjects
      get-compatibility    the compatibility rule in force (subject or global)
      get-mode / get-alias
+     metrics              the server: requests, errors, latency, schemas created and deleted
 
    ✍️ Write
      register             add a new version to a subject
@@ -1330,3 +1331,37 @@ commands:
   examples:
   - playground schema get-alias --alias legacy-orders-value
   - playground schema get-alias --alias legacy-orders-value --json
+
+- name: metrics
+  filters:
+  - not_ccloud_environment
+  - not_cfk_environment
+  help: |-
+    📈 Display the key JMX metrics of Schema Registry
+
+    Whether it is the leader, requests per second, client (4xx) and server
+    (5xx) errors, average and p99 request latency, active connections, registered
+    schemas, and the Avro / JSON / Protobuf schemas created and deleted
+    since it started. ⚠️ marks the values to look at.
+
+    Answers "is Schema Registry slow or failing requests?" and "how many
+    schemas were registered or deleted?", next to 'playground schema list'
+    for the subjects themselves.
+
+    Read over JMX in the schema-registry container, with jmxterm (no
+    restart, nothing to install).
+
+    🎓 Tip: every metric of the container: playground get-jmx-metrics -c
+    schema-registry --domain kafka.schema.registry
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-observability
+  flags:
+  - long: --json
+    required: false
+    help: |-
+      📗 Print the raw values as JSON, and nothing else
+  - import: src/flags/verbose.yml
+  - import: src/flags/cluster.yml
+  examples:
+  - playground schema metrics
+  - playground schema metrics --json

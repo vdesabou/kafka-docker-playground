@@ -1825,16 +1825,10 @@ function display_jmx_info() {
     log "    - ksqldb-server   : 10003"
   fi
 }
-# prints the JMX metrics of the domains $2 (space separated, all of them when empty) of container $1 (docker container,
-# or cfk pod or docker-style name), with jmxterm run inside the container: saved to a file and opened when $3 is set.
-# returns 1 when the container or its JMX port can't be found
-function get_jmx_metrics() {
-  local container="$1" domains="$2" open="$3"
+# downloads jmxterm once (cached in /tmp) and prints the path of the jar; returns 1 when the download fails
+function get_jmxterm_jar() {
   local JMXTERM_VERSION="1.0.2"
   local JMXTERM_UBER_JAR="/tmp/jmxterm-$JMXTERM_VERSION-uber.jar"
-  local jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
-  local target_container="$container" port="" work_dir output_file domain
-
   if [ ! -s "$JMXTERM_UBER_JAR" ]
   then
     # downloaded to a temporary file first: a failed download must not be cached as the jar
@@ -1846,6 +1840,21 @@ function get_jmx_metrics() {
     fi
     mv "$JMXTERM_UBER_JAR.tmp" "$JMXTERM_UBER_JAR"
   fi
+  echo "$JMXTERM_UBER_JAR"
+}
+
+# prints the JMX metrics of container $1 (docker container, or cfk pod or docker-style name), with jmxterm run inside
+# the container: the MBeans of the domains $2 (space separated), or the ones matching the patterns $4 (space separated,
+# * allowed in a value: "kafka.server:type=ReplicaManager,*"), or every MBean when $5 is set; with none of them, the list
+# of domains and the digest commands to try. Saved to a file and opened when $3 is set.
+# returns 1 when the container or its JMX port can't be found
+function get_jmx_metrics() {
+  local container="$1" domains="$2" open="$3" mbeans="$4" all="$5"
+  local JMXTERM_UBER_JAR
+  local jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
+  local target_container="$container" port="" work_dir output_file domain
+
+  JMXTERM_UBER_JAR=$(get_jmxterm_jar) || return 1
 
   get_environment_used
 
@@ -1880,11 +1889,6 @@ function get_jmx_metrics() {
     fi
   fi
 
-  if [ "$domains" = "" ]
-  then
-    logwarn "You did not specify a list of domains, all domains will be exported!"
-  fi
-
   work_dir=$(mktemp -d -t playground-jmx.XXXXXX)
   output_file="/tmp/jmx_metrics-$container.log"
   rm -f "$output_file"
@@ -1900,16 +1904,30 @@ function get_jmx_metrics() {
 
   playground container cp --source "$JMXTERM_UBER_JAR" --destination "$target_container:$JMXTERM_UBER_JAR"
 
-  if [ "$domains" = "" ]
+  if [ "$domains" = "" ] && [ "$mbeans" = "" ]
   then
-    log "This is the list of domains for container $container"
+    log "📚 JMX domains of container $container"
     if ! printf 'domains\nexit\n' | jmx_exec "-v silent"
     then
       logwarn "JMX endpoint is unavailable for $container. JMX may be disabled. $jmx_disabled_hint"
       rm -rf "$work_dir"
       return 0
     fi
+    if [ "$all" = "" ]
+    then
+      log "🎓 dump one domain with --domain <domain>, some MBeans with --mbean \"<domain>:type=<type>,*\", everything with --all"
+      log "   a digest instead of raw MBeans: playground broker metrics (brokers and controllers), playground connector metrics"
+      log "   (--worker for the workers), playground schema metrics, playground ksqldb metrics"
+      rm -rf "$work_dir"
+      return 0
+    fi
+    logwarn "--all: every MBean of every domain is exported"
     # one pass on the beans of every domain
+    domains="ALL"
+  fi
+  if [ "$mbeans" != "" ]
+  then
+    # one pass on the beans of every domain, filtered below
     domains="ALL"
   fi
 
@@ -1926,6 +1944,22 @@ function get_jmx_metrics() {
       logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
       rm -rf "$work_dir"
       return 0
+    fi
+    if [ "$mbeans" != "" ]
+    then
+      # the MBeans matching one of the patterns (keys compared in any order, * in a value)
+      tr ' ' '\n' <<< "$mbeans" > "$work_dir/patterns"
+      awk "$JMX_DIGEST_AWK_FUNCTIONS"'
+        NR == FNR { if ($0 != "") patterns[++np] = jmx_glob_re(jmx_norm($0)); next }
+        $0 != "" { for (i = 1; i <= np; i++) if (jmx_norm($0) ~ patterns[i]) { print; break } }' "$work_dir/patterns" "$work_dir/beans.log" > "$work_dir/beans.filtered"
+      if [ ! -s "$work_dir/beans.filtered" ]
+      then
+        logwarn "no MBean of container $container matches $mbeans (list the domains: playground get-jmx-metrics -c $container)"
+        rm -rf "$work_dir"
+        return 0
+      fi
+      mv "$work_dir/beans.filtered" "$work_dir/beans.log"
+      domain="$mbeans"
     fi
     while read -r line
     do

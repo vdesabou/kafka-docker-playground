@@ -211,7 +211,11 @@ playground broker metrics --topic orders
   `num.network.threads`), under-replicated or under min ISR partitions.
 - **Fetch p99 around 500 ms is normal**: a fetch waits up to `fetch.max.wait.ms` / `replica.fetch.wait.max.ms` (500
   ms) for data.
-- Every metric of a broker: `playground get-jmx-metrics -c broker`.
+- Then a **controller section**: active controller, offline partitions, partitions and topics of the cluster, preferred
+  replica imbalance, last applied record lag, unclean leader elections. In KRaft they come from the controller
+  containers, with ZooKeeper from the broker that is the active controller; `--controller` shows only this section.
+- Every metric of a broker: `playground get-jmx-metrics -c broker --domain kafka.server` (or `--mbean
+  "kafka.server:type=ReplicaManager,*"`); which metric answers which case: the [observability deep dive](/deep-dive-observability.md).
 
 ---
 
