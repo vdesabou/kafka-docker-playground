@@ -6925,18 +6925,27 @@ function write_log_records_report() {
 
 # Ranked search over every runnable example script (a .sh sourcing scripts/utils.sh).
 # Each query term must match somewhere; path and connector class matches weigh
-# more than the script body or README.
-# $1: query, $2: limit, $3: optional top-level category
+# more than the script body or README. An empty query matches every script of the category.
+# $1: query, $2: limit, $3: optional category: a top-level folder, or a topic
+# (security, broker, cfk, client) matched on the path, README title, default
+# environment and script body of the examples of every folder
 function find_examples() {
     local query="$1"
     local limit="${2:-10}"
     local category="$3"
     local categories="connect ccloud ksqldb flink schema-registry rest-proxy multi-data-center other operator academy environment reproduction-models"
+    local topic=""
 
-    if [[ -n "$category" ]]
-    then
-        categories="$category"
-    fi
+    case "$category" in
+        security|broker|cfk|client)
+            topic="$category"
+        ;;
+        "")
+        ;;
+        *)
+            categories="$category"
+        ;;
+    esac
 
     local dirs=()
     local c
@@ -6954,7 +6963,30 @@ function find_examples() {
 
     find "${dirs[@]}" -maxdepth 5 -type f -name "*.sh" ! -name "stop.sh" -print0 2>/dev/null \
         | xargs -0 grep -l "scripts/utils.sh" 2>/dev/null \
-        | awk -v query="$query" -v root="$root_folder/" '
+        | awk -v query="$query" -v root="$root_folder/" -v topic="$topic" '
+        # the example belongs to topic t. path: lowercase relative path and README title. A keyword in the path of a
+        # connector example (connect/, academy/, ccloud/fm-*) is about the external system (SSL to a database,
+        # Salesforce PushTopics, tools cert for the TLS of a database...), so those only count with their default
+        # environment, playground rbac or playground broker
+        function in_topic(t, path, env, body,    conn) {
+            conn = path ~ /^(connect\/|academy\/|ccloud\/fm-)/
+            if (t == "security")
+                return (!conn && path ~ /(rbac|ldap|kerberos|sasl|ssl|mtls|oauth|oidc|audit|secret|security|authentication|csfle|certificate|redactor)/) \
+                    || (!conn && path ~ /(^|[^a-z])(acls?|tls|krb5?)([^a-z]|$)/) \
+                    || env ~ /^(sasl|2way-ssl|kerberos|ssl_kerberos|ldap|rbac|cfk-rbac)/ \
+                    || body ~ /playground rbac / \
+                    || (!conn && body ~ /playground tools cert /)
+            if (t == "broker")
+                return path ~ /(cluster-linking|mirrormaker|replicator|offsets-migrator)/ \
+                    || path ~ /^multi-data-center\// \
+                    || (!conn && path !~ /^ksqldb\// && path ~ /(broker|topic-policy|transaction|kraft|zookeeper|tiered-storage|quota|reassign|leader-election|rebalancer|log-compaction)/) \
+                    || body ~ /playground broker /
+            if (t == "cfk")
+                return path ~ /(cfk|kubernetes|k8s|(^|[^a-z])operator)/ || env ~ /^cfk/
+            if (t == "client")
+                return path ~ /(client|producer|consumer|kafkajs|dotnet|librdkafka|kcat|golang|python)/
+            return 0
+        }
         function readme_title(dir,    file, line, title) {
             if (dir in titles) return titles[dir]
             title = ""
@@ -7005,6 +7037,7 @@ function find_examples() {
             lrel = tolower(rel)
             lclasses = tolower(classes)
             ltitle = tolower(title)
+            if (topic != "" && !in_topic(topic, lrel "\n" ltitle, env, body)) next
             haystack = lrel "\n" ltitle "\n" lclasses "\n" body readme[dir]
 
             score = 0
@@ -7017,7 +7050,7 @@ function find_examples() {
                 if (!in_path && !in_class && !in_title && !in_body) { score = -1; break }
                 score += in_path * 10 + in_class * 6 + in_title * 4 + in_body
             }
-            if (score < 0 || nterms == 0) next
+            if (score < 0) next
             # prefer the canonical variant of a family over its many derivatives
             score -= split(name, parts, "-") * 0.1
 

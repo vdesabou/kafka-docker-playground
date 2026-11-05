@@ -14,7 +14,8 @@ deep dives to read, and a support case reproduced in 3 commands.
 
 > [!TIP]
 > Don't know the command? Describe the symptom in your words: `playground find-command "<symptom>"` prints the 5 best
-> commands with their deep dive, and `playground find-example "<words>"` the examples to start from. The full catalog
+> commands with their deep dive, and `playground find-example "<words>"` the examples to start from. List the examples
+> of an area with `playground find-example --category security` (or `broker`, `cfk`, `client`). The full catalog
 > is in [🧭 Which command do I need?](/which-command.md).
 
 Every area uses the same workflow:

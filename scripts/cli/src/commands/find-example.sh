@@ -5,7 +5,13 @@ json="${args[--json]}"
 
 if [ ${#other_args[@]} -gt 0 ]
 then
-    query="$query ${other_args[*]}"
+    query="${query:+$query }${other_args[*]}"
+fi
+
+if [[ -z "$query" ]] && [[ -z "$category" ]]
+then
+    logerror "❌ give a query, or --category to list every example of a category"
+    exit 1
 fi
 
 hits=$(find_examples "$query" "$limit" "$category")
@@ -33,11 +39,21 @@ fi
 
 if [ -z "$hits" ]
 then
-    logwarn "❌ no example matches all the words of \"$query\"${category:+ in $category/}"
+    if [[ -z "$query" ]]
+    then
+        logwarn "❌ no example in category $category"
+    else
+        logwarn "❌ no example matches all the words of \"$query\"${category:+ in $category}"
+    fi
     exit 1
 fi
 
-log "🔎 examples matching \"$query\"${category:+ in $category/}, best first"
+if [[ -z "$query" ]]
+then
+    log "🔎 examples of category $category"
+else
+    log "🔎 examples matching \"$query\"${category:+ in $category}, best first"
+fi
 while IFS=$'\t' read -r score script title classes environment
 do
     details="$title"

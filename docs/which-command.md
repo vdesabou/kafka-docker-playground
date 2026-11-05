@@ -30,7 +30,8 @@ sight.
 
 | Question | Command | Instead of |
 | --- | --- | --- |
-| "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`, `--json`) | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
+| "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`, `--json`) |
+| "which examples are about security / brokers / CFK / clients?" | `playground find-example --category security` (or `broker`, `cfk`, `client`; add words to narrow: `find-example oauth --category security`) | browsing `other/` and `environment/` by name | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
 | "what did I run, with which flags, did it pass? replay it" | `playground history --list [<words>]` (result, date, duration, branch, number of runs; `--json`, `--last`, `--run`, `--stats`) | `tail playground-run-history` |
 | "what is running right now?" | `playground status` (lists containers, flags exited/restarting ones) | `docker ps`, reading `playground.ini` |
 | "what is the state of the connectors?" | `playground connector status` (`--json` for scripts and agents, `--fail-on-error` exits 1 when a connector or a task is FAILED or not found) | curl on the Connect REST API |
@@ -96,6 +97,11 @@ sight.
   ready-to-paste `playground run -f <script>` for each hit, best first. It is tuned for ranking, so
   when the ask is "show me *everything* about X" (an inventory, every file touching a config key),
   follow up with `grep -ril`.
+- `--category` takes a top-level folder (`connect`, `ccloud`, `other`…) or a topic across all folders:
+  `security`, `broker`, `cfk`, `client`. With a category the query is optional and every example of it is
+  listed. In connector examples (`connect/`, `ccloud/fm-*`), a `-ssl` / `-kerberos` variant is about the TLS or
+  Kerberos of the external system, so it is not in `security`: only those defaulting to a secured
+  environment or running `playground rbac` are.
 - `--errors` de-duplicates ERROR/FATAL records with an occurrence count and collapses stack traces to
   their `Caused by:` chain. Only explicit levels count (` ERROR `, `[ERROR]`, `level=error`, klog `E1012`)
   plus uncaught java exceptions; INFO/DEBUG/TRACE records and loose "error"/"failed" words never do.

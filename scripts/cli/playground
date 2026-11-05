@@ -4921,7 +4921,7 @@ playground_find_example_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]\n"
+  printf "  playground find-example [QUERY] [OPTIONS] [--] [MORE QUERY WORDS...]\n"
   printf "  playground find-example --help | -h\n"
   echo
 
@@ -4933,8 +4933,8 @@ playground_find_example_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--category CATEGORY")"
-    printf "    📂 Restrict the search to one top-level folder\n"
-    printf "    %s\n" "Allowed: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models"
+    printf "    📂 Restrict the search to one top-level folder, or to one topic across all\n    folders\n    \n    Topics, matched on the path, README title, default environment and\n    playground commands of the examples:\n    \n    - security: RBAC, LDAP, Kerberos, SASL, SSL / mTLS, OAuth, ACLs,\n    audit logs, secrets, CSFLE, examples defaulting to a secured environment\n    or using playground rbac / tools cert\n    \n    - broker: brokers, topics, transactions, KRaft, tiered storage, quotas,\n    reassignment, replication between clusters (multi-data-center/,\n    Cluster Linking, MirrorMaker 2, Replicator), examples using\n    playground broker\n    \n    - cfk: Confluent for Kubernetes, examples defaulting to the cfk or\n    cfk-rbac environment (every connect/ example also runs with\n    --environment cfk)\n    \n    - client: producer / consumer and client examples (Java, .NET,\n    JavaScript, Python, Go, JMS, kcat)\n"
+    printf "    %s\n" "Allowed: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models, security, broker, cfk, client"
     echo
 
     # :flag.usage
@@ -4958,7 +4958,7 @@ playground_find_example_usage() {
 
     # :argument.usage
     printf "  %s\n" "$(blue "QUERY")"
-    printf "    🔤 Free-text query, e.g. \"oracle cdc ssl\", \"fully managed s3 sink\" or \"jdbc\n    source proxy\"\n"
+    printf "    🔤 Free-text query, e.g. \"oracle cdc ssl\", \"fully managed s3 sink\" or \"jdbc\n    source proxy\"\n    \n    Optional with --category: every example of the category is listed.\n"
     echo
 
     echo "  MORE QUERY WORDS..."
@@ -4970,6 +4970,8 @@ playground_find_example_usage() {
     printf "  playground find-example \"s3 sink proxy\"\n"
     printf "  playground find-example debezium postgres fully managed\n"
     printf "  playground find-example \"oracle cdc ssl\" --category connect --limit 3\n"
+    printf "  playground find-example --category security --limit 50\n"
+    printf "  playground find-example oauth --category security\n"
     printf "  playground find-example \"http sink oauth\" --json --limit 3 | jq -r\n  '.[].script'\n"
     echo
 
@@ -29351,18 +29353,27 @@ function write_log_records_report() {
 
 # Ranked search over every runnable example script (a .sh sourcing scripts/utils.sh).
 # Each query term must match somewhere; path and connector class matches weigh
-# more than the script body or README.
-# $1: query, $2: limit, $3: optional top-level category
+# more than the script body or README. An empty query matches every script of the category.
+# $1: query, $2: limit, $3: optional category: a top-level folder, or a topic
+# (security, broker, cfk, client) matched on the path, README title, default
+# environment and script body of the examples of every folder
 function find_examples() {
     local query="$1"
     local limit="${2:-10}"
     local category="$3"
     local categories="connect ccloud ksqldb flink schema-registry rest-proxy multi-data-center other operator academy environment reproduction-models"
+    local topic=""
 
-    if [[ -n "$category" ]]
-    then
-        categories="$category"
-    fi
+    case "$category" in
+        security|broker|cfk|client)
+            topic="$category"
+        ;;
+        "")
+        ;;
+        *)
+            categories="$category"
+        ;;
+    esac
 
     local dirs=()
     local c
@@ -29380,7 +29391,30 @@ function find_examples() {
 
     find "${dirs[@]}" -maxdepth 5 -type f -name "*.sh" ! -name "stop.sh" -print0 2>/dev/null \
         | xargs -0 grep -l "scripts/utils.sh" 2>/dev/null \
-        | awk -v query="$query" -v root="$root_folder/" '
+        | awk -v query="$query" -v root="$root_folder/" -v topic="$topic" '
+        # the example belongs to topic t. path: lowercase relative path and README title. A keyword in the path of a
+        # connector example (connect/, academy/, ccloud/fm-*) is about the external system (SSL to a database,
+        # Salesforce PushTopics, tools cert for the TLS of a database...), so those only count with their default
+        # environment, playground rbac or playground broker
+        function in_topic(t, path, env, body,    conn) {
+            conn = path ~ /^(connect\/|academy\/|ccloud\/fm-)/
+            if (t == "security")
+                return (!conn && path ~ /(rbac|ldap|kerberos|sasl|ssl|mtls|oauth|oidc|audit|secret|security|authentication|csfle|certificate|redactor)/) \
+                    || (!conn && path ~ /(^|[^a-z])(acls?|tls|krb5?)([^a-z]|$)/) \
+                    || env ~ /^(sasl|2way-ssl|kerberos|ssl_kerberos|ldap|rbac|cfk-rbac)/ \
+                    || body ~ /playground rbac / \
+                    || (!conn && body ~ /playground tools cert /)
+            if (t == "broker")
+                return path ~ /(cluster-linking|mirrormaker|replicator|offsets-migrator)/ \
+                    || path ~ /^multi-data-center\// \
+                    || (!conn && path !~ /^ksqldb\// && path ~ /(broker|topic-policy|transaction|kraft|zookeeper|tiered-storage|quota|reassign|leader-election|rebalancer|log-compaction)/) \
+                    || body ~ /playground broker /
+            if (t == "cfk")
+                return path ~ /(cfk|kubernetes|k8s|(^|[^a-z])operator)/ || env ~ /^cfk/
+            if (t == "client")
+                return path ~ /(client|producer|consumer|kafkajs|dotnet|librdkafka|kcat|golang|python)/
+            return 0
+        }
         function readme_title(dir,    file, line, title) {
             if (dir in titles) return titles[dir]
             title = ""
@@ -29431,6 +29465,7 @@ function find_examples() {
             lrel = tolower(rel)
             lclasses = tolower(classes)
             ltitle = tolower(title)
+            if (topic != "" && !in_topic(topic, lrel "\n" ltitle, env, body)) next
             haystack = lrel "\n" ltitle "\n" lclasses "\n" body readme[dir]
 
             score = 0
@@ -29443,7 +29478,7 @@ function find_examples() {
                 if (!in_path && !in_class && !in_title && !in_body) { score = -1; break }
                 score += in_path * 10 + in_class * 6 + in_title * 4 + in_body
             }
-            if (score < 0 || nterms == 0) next
+            if (score < 0) next
             # prefer the canonical variant of a family over its many derivatives
             score -= split(name, parts, "-") * 0.1
 
@@ -50250,7 +50285,13 @@ playground_find_example_command() {
 
   if [ ${#other_args[@]} -gt 0 ]
   then
-      query="$query ${other_args[*]}"
+      query="${query:+$query }${other_args[*]}"
+  fi
+
+  if [[ -z "$query" ]] && [[ -z "$category" ]]
+  then
+      logerror "❌ give a query, or --category to list every example of a category"
+      exit 1
   fi
 
   hits=$(find_examples "$query" "$limit" "$category")
@@ -50278,11 +50319,21 @@ playground_find_example_command() {
 
   if [ -z "$hits" ]
   then
-      logwarn "❌ no example matches all the words of \"$query\"${category:+ in $category/}"
+      if [[ -z "$query" ]]
+      then
+          logwarn "❌ no example in category $category"
+      else
+          logwarn "❌ no example matches all the words of \"$query\"${category:+ in $category}"
+      fi
       exit 1
   fi
 
-  log "🔎 examples matching \"$query\"${category:+ in $category/}, best first"
+  if [[ -z "$query" ]]
+  then
+      log "🔎 examples of category $category"
+  else
+      log "🔎 examples matching \"$query\"${category:+ in $category}, best first"
+  fi
   while IFS=$'\t' read -r score script title classes environment
   do
       details="$title"
@@ -99706,19 +99757,6 @@ playground_find_example_parse_requirements() {
     esac
   done
 
-  # :command.required_args_filter
-  if [[ -z ${args['query']+x} ]]; then
-    printf "missing required argument: QUERY\nusage: playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]\n" >&2
-    # :command.examples_on_error
-    printf "examples:\n" >&2
-    printf "  playground find-example \"s3 sink proxy\"\n" >&2
-    printf "  playground find-example debezium postgres fully managed\n" >&2
-    printf "  playground find-example \"oracle cdc ssl\" --category connect --limit 3\n" >&2
-    printf "  playground find-example \"http sink oauth\" --json --limit 3 | jq -r\n  '.[].script'\n" >&2
-
-    exit 1
-  fi
-
   # :command.default_assignments
   [[ -n ${args['--limit']:-} ]] || args['--limit']="10"
 
@@ -99733,8 +99771,8 @@ playground_find_example_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ ${args['--category']:-} ]] && [[ ! ${args['--category']:-} =~ ^(connect|ccloud|ksqldb|flink|schema-registry|rest-proxy|multi-data-center|other|operator|academy|environment|reproduction-models)$ ]]; then
-    printf "%s\n" "--category must be one of: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models" >&2
+  if [[ ${args['--category']:-} ]] && [[ ! ${args['--category']:-} =~ ^(connect|ccloud|ksqldb|flink|schema-registry|rest-proxy|multi-data-center|other|operator|academy|environment|reproduction-models|security|broker|cfk|client)$ ]]; then
+    printf "%s\n" "--category must be one of: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models, security, broker, cfk, client" >&2
     exit 1
   fi
 
@@ -146768,6 +146806,10 @@ playground_find_example_completion() {
             "academy"
             "environment"
             "reproduction-models"
+            "security"
+            "broker"
+            "cfk"
+            "client"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 

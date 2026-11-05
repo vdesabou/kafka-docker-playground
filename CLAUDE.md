@@ -20,7 +20,7 @@ instead of 40k log lines, a verdict instead of a grep). **Before grepping the re
 
 ```bash
 playground find-command "<question or symptom, in your words>"    # best 5: command, usage, deep dive (--json, --limit)
-playground find-example "<words>"                                 # an example to run (--category, --json)
+playground find-example "<words>"                                 # an example to run (--category <folder>|security|broker|cfk|client, --json)
 playground <command> --help                                       # flags + example output
 ```
 

@@ -1421,14 +1421,25 @@ subcommands:
     class rank higher than matches in the body.\n\nPrints the ready-to-paste 'playground
     run -f' command for each hit, best\nfirst. Use 'playground run' instead to browse
     examples interactively.\nUse 'playground find-command' to find a command instead."
-  usage: playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]
+  usage: playground find-example [QUERY] [OPTIONS] [--] [MORE QUERY WORDS...]
   options:
   - names:
     - "--category"
     argument: CATEGORY
-    description: "\U0001F4C2 Restrict the search to one top-level folder\n\nAllowed
-      values: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center,
-      other, operator, academy, environment, reproduction-models"
+    description: "\U0001F4C2 Restrict the search to one top-level folder, or to one
+      topic across all folders\n\nTopics, matched on the path, README title, default
+      environment and\nplayground commands of the examples:\n\n- security: RBAC, LDAP,
+      Kerberos, SASL, SSL / mTLS, OAuth, ACLs,\naudit logs, secrets, CSFLE, examples
+      defaulting to a secured environment\nor using playground rbac / tools cert\n\n-
+      broker: brokers, topics, transactions, KRaft, tiered storage, quotas,\nreassignment,
+      replication between clusters (multi-data-center/,\nCluster Linking, MirrorMaker
+      2, Replicator), examples using\nplayground broker\n\n- cfk: Confluent for Kubernetes,
+      examples defaulting to the cfk or\ncfk-rbac environment (every connect/ example
+      also runs with\n--environment cfk)\n\n- client: producer / consumer and client
+      examples (Java, .NET,\nJavaScript, Python, Go, JMS, kcat)\n\nAllowed values:
+      connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center,
+      other, operator, academy, environment, reproduction-models, security, broker,
+      cfk, client"
   - names:
     - "--limit"
     argument: LIMIT

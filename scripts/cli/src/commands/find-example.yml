@@ -13,9 +13,11 @@ help: |-
   Use 'playground find-command' to find a command instead.
 args:
 - name: query
-  required: true
+  required: false
   help: |-
     🔤 Free-text query, e.g. "oracle cdc ssl", "fully managed s3 sink" or "jdbc source proxy"
+
+    Optional with --category: every example of the category is listed.
 catch_all:
   label: more query words
   help: extra words are appended to the query, so quoting it is optional
@@ -36,8 +38,31 @@ flags:
   - academy
   - environment
   - reproduction-models
+  - security
+  - broker
+  - cfk
+  - client
   help: |-
-    📂 Restrict the search to one top-level folder
+    📂 Restrict the search to one top-level folder, or to one topic across all folders
+
+    Topics, matched on the path, README title, default environment and
+    playground commands of the examples:
+
+    - security: RBAC, LDAP, Kerberos, SASL, SSL / mTLS, OAuth, ACLs,
+    audit logs, secrets, CSFLE, examples defaulting to a secured environment
+    or using playground rbac / tools cert
+
+    - broker: brokers, topics, transactions, KRaft, tiered storage, quotas,
+    reassignment, replication between clusters (multi-data-center/,
+    Cluster Linking, MirrorMaker 2, Replicator), examples using
+    playground broker
+
+    - cfk: Confluent for Kubernetes, examples defaulting to the cfk or
+    cfk-rbac environment (every connect/ example also runs with
+    --environment cfk)
+
+    - client: producer / consumer and client examples (Java, .NET,
+    JavaScript, Python, Go, JMS, kcat)
 - long: --limit
   arg: limit
   required: false
@@ -60,6 +85,8 @@ examples:
 - playground find-example "s3 sink proxy"
 - playground find-example debezium postgres fully managed
 - playground find-example "oracle cdc ssl" --category connect --limit 3
+- playground find-example --category security --limit 50
+- playground find-example oauth --category security
 - playground find-example "http sink oauth" --json --limit 3 | jq -r '.[].script'
 x_example_outputs:
 - command: 'playground find-example "oracle cdc ssl" --limit 2'
