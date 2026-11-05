@@ -1,0 +1,11 @@
+{
+  "name": "client-javascript",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Confluent JavaScript client for Apache Kafka (producer/consumer, string and Avro) for kafka-docker-playground",
+  "main": "client.js",
+  "dependencies": {
+    "@confluentinc/kafka-javascript": "1.11.0",
+    "@confluentinc/schemaregistry": "1.11.0"
+  }
+}

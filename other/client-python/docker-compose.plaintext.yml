@@ -1,0 +1,13 @@
+---
+services:
+
+  client-python:
+    build:
+      context: ../../other/client-python/
+    hostname: client-python
+    container_name: client-python
+    volumes:
+      - ../../other/client-python/client.properties:/tmp/client.properties:ro
+    depends_on:
+      - broker
+      - schema-registry

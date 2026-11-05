@@ -1,0 +1,13 @@
+---
+services:
+
+  client-java:
+    build:
+      context: ../../other/client-java/
+    hostname: client-java
+    container_name: client-java
+    volumes:
+      - ../../other/client-java/client.properties:/tmp/client.properties:ro
+    depends_on:
+      - broker
+      - schema-registry

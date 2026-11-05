@@ -1,0 +1,13 @@
+---
+services:
+
+  client-go:
+    build:
+      context: ../../other/client-go/
+    hostname: client-go
+    container_name: client-go
+    volumes:
+      - ../../other/client-go/client.properties:/tmp/client.properties:ro
+    depends_on:
+      - broker
+      - schema-registry

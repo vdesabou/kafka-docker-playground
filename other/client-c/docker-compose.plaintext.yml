@@ -1,0 +1,12 @@
+---
+services:
+
+  client-c:
+    build:
+      context: ../../other/client-c/
+    hostname: client-c
+    container_name: client-c
+    volumes:
+      - ../../other/client-c/client.properties:/tmp/client.properties:ro
+    depends_on:
+      - broker
