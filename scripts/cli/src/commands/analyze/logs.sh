@@ -995,6 +995,12 @@ fi
 report_args+=(--sources "$sources_file")
 export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
 progress_step "📝 writing the HTML report"
+# 📤 Share in the report: the .zip of the report and its file pages, written next to it (when zip is there)
+share_zip="${stem}-log-report.zip"
+if command -v zip > /dev/null 2>&1
+then
+    report_args+=(--share-zip "$share_zip")
+fi
 # the progress page already open in the browser becomes the report (same path): not opened a second time
 report_no_open=""
 if [ -n "$progress_page" ] && [ "$progress_page" == "$output_dir/${stem}-log-report.html" ]
@@ -1002,4 +1008,21 @@ then
     report_no_open=1
 fi
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
+# the .zip to send to a colleague (📤 Share of the report): only when the file pages are under 200 MB (a page holds a
+# whole log file: 1 GB of logs makes 1 GB of pages), else the command to make it
+if command -v zip > /dev/null 2>&1 && [ -f "$output_dir/${stem}-log-report.html" ]
+then
+    share_files="${stem}-log-report-files"
+    share_kb=$(du -sk "$output_dir/$share_files" 2>/dev/null | cut -f1)
+    rm -f "$output_dir/$share_zip"
+    if [ "${share_kb:-0}" -lt $((200 * 1024)) ]
+    then
+        if (cd "$output_dir" && zip -qr "$share_zip" "${stem}-log-report.html" $( [ -d "$share_files" ] && printf '%s' "$share_files" )) 2>/dev/null
+        then
+            log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"
+        fi
+    else
+        log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$output_dir\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
+    fi
+fi
 exit $cfk_exit

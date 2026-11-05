@@ -24,9 +24,9 @@ import json
 import os
 import re
 import sys
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 # no __pycache__ left in the repository
 sys.dont_write_bytecode = True
@@ -310,12 +310,14 @@ def root_causes(files: List[dict]) -> List[dict]:
     causes: Dict[str, dict] = {}
     for f, r in all_records(files):
         # same exception with another message is another cause (ConnectException wraps everything)
-        label = (f"{r['root_cause']}: {mask_ids(r['root_cause_message'])[:100]}" if r["root_cause"]
-                 else short_message(r["message"])[:160])
+        # a message without exception: the client context ([Producer clientId=…]) and (host/ip:port) left out, as for the
+        # exception chains of the findings: one root cause for all the clients, the connectors are listed with it
+        plain = chain_key_text(short_message(r["message"]))
+        label = (f"{r['root_cause']}: {mask_ids(r['root_cause_message'])[:100]}" if r["root_cause"] else plain[:160])
         # the same message with other numbers is the same cause ("(after 1ms in state CONNECT)" of librdkafka, in two files)
         key = label if r["root_cause"] else mask_ids(label)
         c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": label, "occurrences": 0, "records": 0, "files": OrderedDict(),
-                                    "connectors": OrderedDict(), "example": r["root_cause_message"] or short_message(r["message"]), "level": r["level"],
+                                    "connectors": OrderedDict(), "example": r["root_cause_message"] or plain, "level": r["level"],
                                     "records_meta": []})
         c["occurrences"] += r["count"]
         c["records"] += 1
@@ -356,19 +358,31 @@ def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int 
            for h in hints]
     # record index -> (file, record): the exception chains and the first occurrence of a root cause
     by_index = {r["index"]: (f, r) for f in files for r in f["records"] if r.get("index") is not None}
-    explained = [re.compile(p) for p, _, _, _ in HINTS]
-    added = 0
+    explained = [(re.compile(p), title) for p, _, title, _ in HINTS]
+    # the known causes of each root cause (also in --json: root_causes[].explained_by): the ones sharing its records,
+    # the most shared first, else the first whose pattern matches it; the 🌳 table of the HTML report links them to
+    # their cards
+    hint_records = [(h["title"], set(h.get("records") or [])) for h in hints]
     for c in causes:
+        mine = {m[4] for m in c["records_meta"] if m[4] >= 0}
+        shared = sorted(((len(recs & mine), t) for t, recs in hint_records if recs & mine), key=lambda x: -x[0])
+        c["explained_by"] = ([t for _, t in shared]
+                             or [t for rx, t in explained if rx.search(c["label"] + " " + c["example"])][:1])
+    added = 0
+    for i, c in enumerate(causes):
         if added >= top:
             break
-        if any(rx.search(c["label"] + " " + c["example"]) for rx in explained):
+        # explained by a known cause (records in common, or its pattern): already a card
+        if c["explained_by"]:
             continue
+        # shown as a finding (🌳 card): the table links to it
+        c["in_findings"] = True
         sev = "CRITICAL" if c["level"] == "FATAL" else "HIGH" if c["level"] == "ERROR" else "MEDIUM"
         where = f"{len(c['files'])} {unit}s" if len(c["files"]) > 1 else c["files"][0]
         what = f"{c['root_cause']}: {c['example']}" if c["root_cause"] else c["example"]
         res.append({"severity": sev, "text": f"{c['level']} ×{c['occurrences']} in {where}: {what[:300]}",
                     "records": [m[4] for m in c["records_meta"] if m[4] >= 0],
-                    "_view": dict({"kind": "root", "level": c["level"], "occurrences": c["occurrences"], "files": c["files"],
+                    "_view": dict({"kind": "root", "cause_index": i, "level": c["level"], "occurrences": c["occurrences"], "files": c["files"],
                                    "root_cause": c["root_cause"], "example": c["example"]},
                                   **root_cause_chains(c, by_index))})
         added += 1
@@ -588,8 +602,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             out.append(f"      → {h['advice']}")
             for d in h.get("details", [])[:5]:
                 out.append(f"      {d}")
-    explained = [re.compile(p) for p, _, _, _ in HINTS]
-    others = [c for c in res["root_causes"] if not any(rx.search(c["label"] + " " + c["example"]) for rx in explained)]
+    # same test as the 🌳 cards of the HTML report: not explained by a known cause (records in common, or its pattern)
+    others = [c for c in res["root_causes"] if not c.get("explained_by")]
     if others:
         out.append("🌳 Root causes not explained by a known cause" + (f" (top {top} of {len(others)})" if len(others) > top else ""))
         for c in others[:top]:
@@ -732,23 +746,156 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
     viewers = viewers or {}
     out = []
     for i, r in enumerate(records):
-        when = (log_viewer.link(viewers, label, f"line {r['first_line']}", r["first_line"])
-                + e(f" ({r['first_ts'].replace('T', ' ')})" if r["first_ts"] else ""))
+        # as the findings: count chip, connector chip, the client context dimmed, the exception class in color, the first
+        # and last occurrences as their time with 📄 / ✏️
+        when = first_html(viewers, label, r["first_line"], r["first_ts"])
         if r["count"] > 1:
-            when += (" → " + log_viewer.link(viewers, label, f"line {r['last_line']}", r["last_line"])
-                     + e(f" ({r['last_ts'].replace('T', ' ')})" if r["last_ts"] else ""))
+            when += " → " + first_html(viewers, label, r["last_line"], r["last_ts"]).replace(">first ", ">last ", 1)
         mine = " <span class='st mine'>this connector</span>" if highlight and highlight in r["text"] else ""
         msg = short_message(r["message"])
-        conn = f"<span class='legend mono'>[{e(r['connector'])}]</span> " if r.get("connector") else ""
-        out.append(f"<details data-level='{e(r['level'])}'{connectors_attr([r['connector']] if r.get('connector') else [])}"
+        ctx = re.match(r"^((?:\[[^\]]*\]\s*)+)(.*)$", msg, re.S)
+        context, msg = (ctx.group(1).strip(), ctx.group(2)) if ctx else ("", msg)
+        conn = f"<span class='fi-conn'>{e(r['connector'])}</span>" if r.get("connector") else ""
+        sev = {"FATAL": "critical", "ERROR": "high", "WARN": "medium"}.get(r["level"], "info")
+        out.append(f"<details class='rec' data-level='{e(r['level'])}'{connectors_attr([r['connector']] if r.get('connector') else [])}"
                    + (f" data-rec='{r['index']}'" if r.get("index") is not None else "")
-                   + f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} "
-                   f"<span class='rec-count'>×{r['count']}</span>{mine} "
-                   f"{conn}<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {when}</span></summary>"
+                   + f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])}"
+                   f"<span class='fi-count {sev} rec-count'>{r['count']:,}×</span>{conn}{mine} "
+                   + (f"<span class='fi-meta mono'>{e(context[:120])}</span> " if context else "")
+                   + f"{exception_html(msg[:240])}<div class='rec-when'>{when}</div></summary>"
                    f"<pre>{log_html(r['text'])}</pre>"
-                   + (f"<details><summary>📋 Show context</summary><pre>{log_html(r['context'])}</pre></details>" if r.get("context") else "")
+                   # the raw lines around it: only when the file has no page (📄 opens it at the line)
+                   + (f"<details><summary>📋 Show context</summary><pre>{log_html(r['context'])}</pre></details>"
+                      if r.get("context") and not viewers.get(label) else "")
                    + "</details>")
     return "".join(out)
+
+
+def share_html(summary: str, share_zip: str, sanitized: bool, title: str) -> str:
+    """📤 Share, in the header: the .zip of the report and its file pages (written next to it by analyze logs), the text
+    summary to paste in Slack or a ticket, the path, an email with the summary; the sanitization state first"""
+    safe = summary.replace("</", "<\\/")
+    state = ("<p class='share-ok'>🔒 Sanitized (--sanitize): secrets, IPs and hostnames are replaced by placeholders. Review it "
+             "before sending it outside Confluent.</p>" if sanitized else
+             "<p class='share-warn'>⚠️ Not sanitized: it can contain passwords, IPs and hostnames of the logs. For someone outside "
+             "Confluent, run the same command again with <span class='mono'>--sanitize</span>.</p>")
+    zip_item = (f"<li><a class='share-btn' href='{e(share_zip)}' download>📦 Download the report and its file pages (.zip)</a>"
+                "<span class='fi-meta'> send it: your colleague unzips it and opens the .html (📄 and the line links keep working)</span>"
+                "<div class='fi-meta' style='margin-top:4px'>No .zip next to the report? Its file pages are larger than 200 MB "
+                "(a page holds a whole log file): <button type='button' class='share-close' data-share='zipcmd'>📋 Copy the zip "
+                "command</button> and run it in a terminal (or send the .html alone: everything but 📄 works)</div></li>"
+                if share_zip else
+                "<li><span class='fi-meta'>📦 no .zip was written with this report: send the .html together with its "
+                "<span class='mono'>-files/</span> folder</span></li>")
+    return (SHARE_CSS + f"<script type='text/plain' id='pg-share-summary'>{safe}</script>"
+            f"<dialog class='share-dlg' data-title='{e(title)}'><h3>📤 Share this report</h3>{state}<ul>{zip_item}"
+            "<li><button type='button' class='share-btn' data-share='summary'>📋 Copy the summary</button>"
+            "<span class='fi-meta'> the verdict, the period, the known causes and the root causes, as text: paste it in Slack or a ticket</span></li>"
+            "<li><button type='button' class='share-btn' data-share='path'>🔗 Copy the path of the report</button></li>"
+            "<li><button type='button' class='share-btn' data-share='mail'>✉️ Email the summary</button>"
+            "<span class='fi-meta'> a new mail with the summary, attach the .zip</span></li></ul>"
+            "<p class='share-done fi-meta' aria-live='polite'></p><button type='button' class='share-close'>Close</button></dialog>"
+            + SHARE_SCRIPT)
+
+
+SHARE_CSS = """<style>
+.share-open{position:absolute;top:2px;right:120px;font:inherit;font-size:.72rem;line-height:1.4;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:1px 9px;cursor:pointer}
+.share-dlg{border:0;border-radius:12px;padding:20px 24px;max-width:640px;box-shadow:0 10px 40px rgba(0,0,0,.3);background:#fff;color:#1e293b}
+.share-dlg::backdrop{background:rgba(15,23,42,.55)}
+.share-dlg h3{font-size:1.05rem;margin-bottom:10px}.share-dlg ul{list-style:none;margin:12px 0}.share-dlg li{margin:10px 0}
+.share-btn{display:inline-block;font:inherit;font-size:.85rem;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid #2563eb;background:#2563eb;color:#fff;cursor:pointer;text-decoration:none}
+.share-btn:hover{background:#1d4ed8}
+.share-warn{background:#fef3c7;color:#92400e;border-radius:8px;padding:8px 12px;font-size:.84rem}
+.share-ok{background:#dcfce7;color:#166534;border-radius:8px;padding:8px 12px;font-size:.84rem}
+.share-close{font:inherit;font-size:.8rem;padding:3px 12px;border-radius:6px;border:1px solid #cbd5e1;background:transparent;color:inherit;cursor:pointer}
+html[data-theme=dark] .share-open{color:#cbd5e1;background:#1e293b;border-color:#334155}
+html[data-theme=dark] .share-dlg{background:#1e293b;color:#e2e8f0}
+html[data-theme=dark] .share-warn{background:#422006;color:#fcd34d}html[data-theme=dark] .share-ok{background:#052e16;color:#86efac}
+html[data-theme=dark] .share-close{border-color:#334155}
+</style>"""
+
+SHARE_SCRIPT = """<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const dlg = document.querySelector(".share-dlg");
+  if (!dlg) return;
+  const open = document.createElement("button");
+  open.type = "button"; open.className = "share-open"; open.textContent = "📤 Share";
+  open.title = "send this report to a colleague: .zip, summary to paste, email";
+  open.addEventListener("click", () => dlg.showModal());
+  document.body.appendChild(open);
+  const done = dlg.querySelector(".share-done");
+  const summary = document.getElementById("pg-share-summary").textContent.replace(/<\\\\\\//g, "</");
+  function copy(text, what) {
+    const ok = () => { done.textContent = "✅ " + what + " copied to the clipboard"; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, () => fallback(text, what));
+    } else fallback(text, what);
+  }
+  function fallback(text, what) {
+    const ta = document.createElement("textarea");
+    ta.value = text; dlg.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done.textContent = "✅ " + what + " copied to the clipboard"; }
+    catch (e) { done.textContent = "select the text below and copy it"; return; }
+    ta.remove();
+  }
+  dlg.addEventListener("click", function (ev) {
+    const b = ev.target.closest("[data-share]");
+    if (ev.target.closest(".share-close") || ev.target === dlg) { dlg.close(); return; }
+    if (!b) return;
+    const path = decodeURIComponent(location.pathname);
+    const dir = path.slice(0, path.lastIndexOf("/")), page = path.split("/").pop();
+    const q = x => "'" + x.replace(/'/g, "'\\''") + "'";
+    if (b.dataset.share === "zipcmd") {
+      const zip = dlg.querySelector("a[download]").getAttribute("href");
+      copy("cd " + q(dir) + " && zip -qr " + q(zip) + " " + q(page) + " " + q(page.replace(/\\.html$/, "-files")), "the zip command");
+    }
+    else if (b.dataset.share === "summary") copy(summary, "the summary");
+    else if (b.dataset.share === "path") copy(path, "the path");
+    else if (b.dataset.share === "mail") {
+      const body = "Log analysis report: " + path.split("/").pop() + " (attached .zip)\\n\\n" + summary;
+      location.href = "mailto:?subject=" + encodeURIComponent("🔥 Log analysis: " + dlg.dataset.title)
+        + "&body=" + encodeURIComponent(body.length > 1800 ? body.slice(0, 1800) + "\\n…" : body);
+    }
+  });
+});
+</script>"""
+
+
+# every section of the report folds by a click on its title (▾ / ▸): the findings, the root causes, the files, each
+# file card, the configuration, the sections of other tools; the buttons, links and pickers of a title keep working.
+# "Fold all" / "Unfold all" at the top of the findings
+SECTION_TOGGLE = """<style>
+.sec-toggle{cursor:pointer;user-select:none}.sec-caret{display:inline-block;width:1.1em;color:#64748b;font-size:.85em}
+.sec-collapsed>:not(h2):not(.section-title):not(style):not(script){display:none!important}
+.sec-collapsed{padding-bottom:6px}
+.sec-all{font-family:inherit;font-size:.72rem;margin-left:8px;padding:1px 8px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer;font-weight:400}
+html[data-theme=dark] .sec-all{background:#0f172a;color:#cbd5e1;border-color:#334155}
+</style><script>
+document.addEventListener("DOMContentLoaded", function () {
+  const heads = document.querySelectorAll(".table-card > h2, .chart-card > h2, .findings > .section-title");
+  function fold(h, collapsed) {
+    h.parentElement.classList.toggle("sec-collapsed", collapsed);
+    h.querySelector(".sec-caret").textContent = collapsed ? "▸" : "▾";
+  }
+  heads.forEach(function (h) {
+    h.classList.add("sec-toggle");
+    h.title = "click to fold / unfold this section";
+    h.insertAdjacentHTML("afterbegin", "<span class='sec-caret'>▾</span>");
+    h.addEventListener("click", function (ev) {
+      if (ev.target.closest("button, a, select, input, label")) return;
+      fold(h, !h.parentElement.classList.contains("sec-collapsed"));
+    });
+  });
+  const first = document.querySelector(".findings > .section-title") || heads[0];
+  if (first) {
+    first.insertAdjacentHTML("beforeend", "<button type='button' class='sec-all' data-fold='1'>Fold all</button>"
+                                         + "<button type='button' class='sec-all' data-fold='0'>Unfold all</button>");
+    first.querySelectorAll(".sec-all").forEach(b => b.addEventListener("click", function () {
+      heads.forEach(h => fold(h, b.dataset.fold === "1"));
+    }));
+  }
+});
+</script>"""
 
 
 # id of the 📈 Occurrences over time chart: the 🌳 Root causes table follows the period selected on it
@@ -756,11 +903,22 @@ TIME_CHART_ID = "occurrences-chart"
 
 # filter bar of the log report: hides the root causes and the records of the levels switched off, and of the
 # connectors not selected (the [connector|task-0] MDC context of the records)
+# the selects of the report (the Connector filter, the connector of the configuration): the look of the report
+SELECT_CSS = (".conn-filter,.cfg-conn-select{font-family:inherit;font-size:.8rem;max-width:460px;padding:4px 30px 4px 10px;"
+              "border-radius:8px;border:1px solid #cbd5e1;background-color:#fff;color:#1e293b;cursor:pointer;-webkit-appearance:none;"
+              "appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E"
+              "%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center}"
+              ".conn-filter:hover,.cfg-conn-select:hover{border-color:#2563eb}"
+              ".conn-filter:focus,.cfg-conn-select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.25)}"
+              "html[data-theme=dark] .conn-filter,html[data-theme=dark] .cfg-conn-select{background-color:#0f172a;color:#e2e8f0;"
+              "border-color:#334155}html[data-theme=dark] .conn-filter option,html[data-theme=dark] .cfg-conn-select option{background:#0f172a}")
+
+
 FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;"
               "padding:8px 12px;margin-bottom:14px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
               "font-size:.78rem;color:#475569}.lvl-chip{border:0;cursor:pointer;font-family:inherit;font-size:.75rem}"
               ".lvl-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}"
-              ".conn-filter{font-family:inherit;font-size:.75rem;max-width:420px;padding:2px 4px;border-radius:6px}"
+              + SELECT_CSS +
               ".lvl-filter .sep{margin-left:10px}"
               "html[data-theme=dark] .lvl-filter{background:#1e293b;color:#94a3b8}</style>")
 
@@ -910,7 +1068,7 @@ function pgRecordBlocks() {
     const span = el.querySelector(".rec-count");
     if (span) {
       if (span.dataset.all === undefined) span.dataset.all = span.textContent;
-      span.textContent = n === undefined ? span.dataset.all : "×" + n;
+      span.textContent = n === undefined ? span.dataset.all : n.toLocaleString("en-US") + "×";
       span.title = n === undefined || !pgWindow ? "" : "in this period · " + span.dataset.all + " in the whole report";
     }
   });
@@ -1014,10 +1172,46 @@ document.addEventListener("DOMContentLoaded", function () { pgRead(); pgApply();
 </script>""".replace("@@CHART@@", TIME_CHART_ID).replace("@@COLOR@@", SERIES_1)
 
 
-CONFIG_CSS = ("<style>.cfg-search{font-family:inherit;font-size:.8rem;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;"
+CONFIG_CSS = ("<style>" + SELECT_CSS + ".cfg-kind{font-size:.92rem;margin:18px 0 6px}.cfg-class>summary,.cfg>summary{padding:6px 0}"
+              ".cfg-class{border-top:1px solid #e2e8f0}.cfg-class>details,.cfg-class>p,.cfg-class>table{margin-left:18px}"
+              ".cfg-val{display:inline-block;margin:2px 10px 2px 0}tr.cfg-diff td{background:#fef3c7}tr.cfg-diff td:first-child{border-left:3px solid #d97706}"
+              "html[data-theme=dark] tr.cfg-diff td{background:#3a2a06}.cfg-compare[hidden]{display:none}"
+              ".cfg-changed li[hidden]{display:none}.cfg-classes[hidden],.cfg-conn-card[hidden]{display:none}"
+              ".cfg-conn-card h3{font-size:1rem;margin:14px 0 4px}.cfg-conn-card h4{font-size:.88rem;margin:14px 0 4px}"
+              "tr.cfg-group td{font-weight:600;font-size:.78rem;color:#475569;background:#f1f5f9;padding-top:9px}"
+              "html[data-theme=dark] tr.cfg-group td{background:#273449;color:#cbd5e1}.cfg-srcs{margin:0 0 6px}.cfg-pick{margin:18px 0 6px;padding:10px 14px;border-radius:8px;background:#eff6ff;font-size:.88rem}"
+              "html[data-theme=dark] .cfg-pick{background:#172554}.cfg-src{display:inline-block;font-size:.8rem;margin-right:14px}.cfg-dump[hidden],.cfg-class[hidden]{display:none}"
+              ".cfg-changed{background:#fffbeb;border-left:4px solid #d97706;border-radius:8px;padding:10px 14px;margin:8px 0}"
+              ".cfg-changed h3{font-size:.9rem;margin-bottom:4px}.cfg-changed li{font-size:.82rem;margin:3px 0 3px 16px}"
+              "html[data-theme=dark] .cfg-class{border-top-color:#334155}html[data-theme=dark] .cfg-changed{background:#2a1f06}"
+              ".cfg-search{font-family:inherit;font-size:.8rem;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;"
               "width:100%;max-width:420px;margin:4px 0 10px}table.cfg td:first-child{width:36%}table.cfg td{word-break:break-all}"
               "html[data-theme=dark] .cfg-search{background:#0f172a;color:#cbd5e1;border-color:#334155}</style>")
 CONFIG_SCRIPT = """<script>
+// the configuration of one connector (its card), or all of them compared by config class
+function cfgShow(v) {
+  document.querySelectorAll(".cfg-conn-card").forEach(c => { c.hidden = c.dataset.connector !== v; });
+  const classes = document.querySelector(".cfg-classes");
+  if (classes) classes.hidden = v !== "__all__";
+}
+document.addEventListener("change", function (ev) {
+  if (ev.target.closest(".cfg-conn-select")) cfgShow(ev.target.value);
+});
+// the Connector picker of the filter bar also keeps the configs of that connector
+document.addEventListener("change", function (ev) {
+  if (!ev.target.closest(".conn-filter")) return;
+  const v = ev.target.value;
+  document.querySelectorAll("[data-cfg-connectors]").forEach(el => {
+    el.hidden = v !== "" && !el.dataset.cfgConnectors.split(" ").includes(v);
+  });
+  // the Connector filter of the report picks the connector of the configuration too ("all": back to the first one)
+  const sel = document.querySelector(".cfg-conn-select");
+  if (sel) {
+    if (v !== "" && sel.querySelector("option[value='" + CSS.escape(v) + "']")) sel.value = v;
+    else if (v === "") sel.selectedIndex = 0;
+    cfgShow(sel.value);
+  }
+});
 document.querySelectorAll(".cfg-search").forEach(function (input) {
   input.addEventListener("input", function () {
     const q = input.value.toLowerCase().trim();
@@ -1047,35 +1241,289 @@ def config_group(c: dict) -> Tuple[int, str]:
     return 1, "🧱 Components"
 
 
-def config_html(configs: List[dict], viewers: Optional[Dict[str, str]] = None) -> str:
-    """⚙️ Configuration: one collapsible key / value table per config dump of the logs or config file of the input,
-    grouped by config files, components, connector and clients"""
+# keys that name the instance (they differ from one client or connector to the next): not a difference worth reading
+IDENTITY_KEYS = re.compile(r"^(client\.id|group\.instance\.id|transactional\.id|name|task\.id|metrics\.context\..*)$")
+
+
+def config_kind(c: dict) -> Tuple[int, str]:
+    """(order, title) of the kind of a config: config files, components, connectors, clients"""
+    m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
+    if c["source"] == "file":
+        return 0, "📄 Config files"
+    if c["title"] in CLIENT_CONFIGS:
+        return 3, "📡 Clients (producers, consumers and admin clients of the connectors and the worker)"
+    if m or c["title"].endswith("ConnectorConfig") or c["title"] == "connector config":
+        return 2, "🧩 Connectors"
+    return 1, "🧱 Components"
+
+
+def config_connector_of(c: dict) -> str:
+    m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
+    if m:
+        return m.group(1)
+    if c["title"].endswith("ConnectorConfig") or c["title"] == "connector config":
+        return c.get("id") or ""
+    # a client of a connector: connector-producer-<name>-<task>
+    cid = re.match(r"^connector-(?:producer|consumer|dlq-producer|admin)-(.+?)(?:-\d+)?$", c.get("id") or "")
+    return cid.group(1) if cid else ""
+
+
+def config_values(c: dict) -> "OrderedDict[str, str]":
+    out: "OrderedDict[str, str]" = OrderedDict()
+    for line in c["text"].splitlines():
+        key, _, value = line.partition("=")
+        out[key] = value
+    return out
+
+
+def config_html(configs: List[dict], viewers: Optional[Dict[str, str]] = None, ranked: Sequence[str] = ()) -> str:
+    """⚙️ Configuration: one block per config class (ProducerConfig, JdbcSourceConnectorConfig…) instead of one per dump:
+    how many dumps, the keys whose value differs between them (with their values), the keys that are the same in all of
+    them, then the dumps themselves; the keys changed between restarts first. The Connector picker of the report keeps the
+    configs of a connector; ranked: the connectors by occurrences, the first one with configs is shown first"""
     if not configs:
         return ""
-    groups: Dict[Tuple[int, str], List[dict]] = {}
+    classes: Dict[Tuple[int, str], "OrderedDict[str, List[dict]]"] = {}
     for c in configs:
-        groups.setdefault(config_group(c), []).append(c)
+        name = c["title"] + (f" {c['id']}" if c.get("id") in ("key", "value") else "")
+        classes.setdefault(config_kind(c), OrderedDict()).setdefault(name, []).append(c)
     blocks = []
-    for group in sorted(groups):
-        blocks.append(f"<h3 style='font-size:.9rem;margin:14px 0 4px'>{e(group[1])} ({len(groups[group])})</h3>")
-        # the connector configs first, then by line
-        for c in sorted(groups[group], key=lambda c: (not c["title"].endswith("ConnectorConfig"), c["file"], c.get("line") or 0)):
-            blocks.append(config_block_html(c, viewers))
-    return (f"{CONFIG_CSS}<div class='table-card'><h2>⚙️ Configuration ({len(configs)})</h2>"
+    changed = [c for c in configs if c.get("changes")]
+    if changed:
+        items = "".join(f"<li data-cfg-connectors='{e(config_connector_of(c) or '-')}'><strong>{e(c['title'])}</strong> <span class='mono'>{e(config_connector_of(c) or c.get('id') or '')}</span>: "
+                        + ", ".join(f"<span class='mono'>{e(ch['key'])}</span> {e(ch['previous'])} → <strong class='mono'>{e(ch['value'])}</strong>"
+                                    for ch in c["changes"][:6])
+                        + (f" <span class='fi-meta'>(+{len(c['changes']) - 6} more)</span>" if len(c["changes"]) > 6 else "") + "</li>"
+                        for c in changed[:40])
+        blocks.append(f"<div class='cfg-changed'><h3>🔁 Changed between restarts ({len(changed)})</h3><ul>{items}</ul></div>")
+    def kind_html(kind) -> str:
+        names = classes[kind]
+        return (f"<h3 class='cfg-kind'>{e(kind[1])} <span class='fi-meta'>· {len(names)} class(es), "
+                f"{sum(len(v) for v in names.values())} dump(s)</span></h3>"
+                + "".join(config_class_html(name, dumps, viewers) for name, dumps in sorted(names.items(), key=lambda kv: (-len(kv[1]), kv[0]))))
+    # config files and components (the worker, the broker…): always shown, they belong to no connector
+    blocks += [kind_html(k) for k in sorted(classes) if k[0] < 2]
+    cards, connectors = connector_config_cards(classes, viewers)
+    per_kind = [k for k in sorted(classes) if k[0] >= 2]
+    if connectors:
+        # the connectors: one at a time (its card), the one with the most occurrences first, or all of them compared by
+        # config class
+        first = next((c for c in ranked if c in connectors), connectors[0])
+        order = [first] + [c for c in ranked if c in connectors and c != first] + sorted(c for c in connectors if c not in ranked and c != first)
+        options = "".join(f"<option value='{e(c)}'{' selected' if c == first else ''}>{e(c)}</option>" for c in order)
+        blocks.append(f"<div class='cfg-pick'><strong>🧩 Connector configuration:</strong> <select class='cfg-conn-select'>{options}"
+                      f"<option value='__all__'>🔍 compare all the {len(connectors)} connector(s), by config class</option></select>"
+                      "<span class='fi-meta'> · the connector with the most occurrences first; the Connector filter of the report "
+                      "picks one here too</span></div>")
+        blocks.append(cards.replace(f"data-connector='{e(first)}' hidden>", f"data-connector='{e(first)}'>", 1))
+        blocks.append("<div class='cfg-classes' hidden><p class='legend'>Every connector and client config, one block per config "
+                      "class: the keys whose value differs between the dumps first, with each value and in how many dumps.</p>"
+                      + "".join(kind_html(k) for k in per_kind) + "</div>")
+    else:
+        blocks += [kind_html(k) for k in per_kind]
+    return (f"{CONFIG_CSS}<div class='table-card'><h2>⚙️ Configuration <span class='fi-meta'>· "
+            f"{sum(len(v) for v in classes.values())} config class(es), {len(configs)} dump(s)</span></h2>"
             "<p class='legend'>🪵 the configs the components log when they start (<span class='mono'>KafkaConfig values:</span>, "
-            "<span class='mono'>DistributedConfig</span>, the config of a connector with its <span class='mono'>[connector|task-0]</span> "
-            "context, <span class='mono'>ProducerConfig</span> of a client…, defaults included, the last one of each), "
-            "📄 the config files of the input (.properties, connector JSON)</p>"
+            "<span class='mono'>DistributedConfig</span>, a connector config, the <span class='mono'>ProducerConfig</span> of each "
+            "client…, defaults included, the last one of each), 📄 the config files of the input. The components first, then "
+            "the configuration of one connector at a time (pick it below), or all the connectors compared by config class.</p>"
             "<input class='cfg-search' type='search' placeholder='Filter keys and values…'>"
             f"{''.join(blocks)}</div>{CONFIG_SCRIPT}")
 
 
-def config_block_html(c: dict, viewers: Optional[Dict[str, str]] = None) -> str:
-    """one config: its key / value table, collapsed; viewers: label -> page of the file (log_viewer)"""
+# a value that says nothing: folded in the card of a connector
+UNSET_VALUES = ("", "null", "[]", "{}", "None")
+# the configs of the plugins around a connector (converters, serializers, tracer…): folded under its own config
+AUX_CONFIG = re.compile(r"Converter|Serializer|Deserializer|AvroData|ProtobufData|JsonSchemaData|Tracer|^TaskConfig|"
+                        r"Interceptor|Transformation|Predicate|HeaderConverter")
+
+
+def prefix_rows(items: List[tuple], render) -> str:
+    """rows grouped by the first part of their key (database.*, snapshot.*…) with a header row per group of 2 keys or more"""
+    groups: "OrderedDict[str, List[tuple]]" = OrderedDict()
+    for it in sorted(items, key=lambda x: x[0]):
+        head = it[0].split(".")[0] if "." in it[0] else ""
+        groups.setdefault(head, []).append(it)
+    out = []
+    singles = []
+    for head, its in groups.items():
+        if head and len(its) >= 2:
+            out.append(f"<tr class='cfg-group'><td colspan='2'>{e(head)}.* <span class='fi-meta'>{len(its)}</span></td></tr>")
+            out.append(render(its))
+        else:
+            singles.extend(its)
+    return (render(singles) if singles else "") + "".join(out)
+
+
+def latest_dump(dumps: List[dict]) -> dict:
+    return max(dumps, key=lambda c: (c.get("time") or "", c["file"], c.get("line") or 0))
+
+
+def class_modes(dumps: List[dict]) -> Dict[str, str]:
+    """key -> the value most dumps of a class have (several dumps only)"""
+    if len(dumps) < 2:
+        return {}
+    counts: Dict[str, Counter] = {}
+    for c in dumps:
+        for k, v in config_values(c).items():
+            counts.setdefault(k, Counter())[v] += 1
+    return {k: n.most_common(1)[0][0] for k, n in counts.items()}
+
+
+def connector_config_cards(classes: Dict[Tuple[int, str], "OrderedDict[str, List[dict]]"],
+                           viewers: Optional[Dict[str, str]]) -> Tuple[str, List[str]]:
+    """the configuration of each connector, shown when it is picked in the Connector filter: its connector config merged
+    from the latest dump of each connector class (each key once, the values other connectors do not have first, the
+    unset ones folded), then its clients with only the keys that differ from the other clients"""
+    modes = {name: class_modes(dumps) for kind in classes for name, dumps in classes[kind].items()}
+    nclasses = {name: len({config_connector_of(c) for c in dumps} - {""}) for kind in classes for name, dumps in classes[kind].items()}
+    per: Dict[str, List[Tuple[int, str, dict]]] = {}
+    for kind in classes:
+        for name, dumps in classes[kind].items():
+            for c in dumps:
+                conn = config_connector_of(c)
+                if conn:
+                    per.setdefault(conn, []).append((kind[0], name, c))
+    cards = []
+    for conn in sorted(per):
+        by_class: "OrderedDict[str, List[dict]]" = OrderedDict()
+        kinds: Dict[str, int] = {}
+        for kind, name, c in per[conn]:
+            by_class.setdefault(name, []).append(c)
+            kinds[name] = kind
+        # connector config: each key once, from the latest dump of each connector class
+        merged: "OrderedDict[str, Tuple[str, str, Optional[str]]]" = OrderedDict()
+        sources = []
+        aux = []
+        for name, dumps in by_class.items():
+            if kinds[name] != 2:
+                continue
+            if AUX_CONFIG.search(name):
+                aux.append((name, dumps))
+                continue
+            last = latest_dump(dumps)
+            same = len({c["text"] for c in dumps}) == 1
+            where = log_viewer.link(viewers or {}, last["file"], "📄", last.get("line"))
+            sources.append(f"<span class='cfg-src'>{e(name)} <span class='fi-meta'>{len(dumps)} dump(s)"
+                           f"{', identical' if same or len(dumps) == 1 else ', see 🔁'}</span> {where}</span>")
+            for k, v in config_values(last).items():
+                if k in merged:
+                    continue
+                mode = modes[name].get(k)
+                merged[k] = (v, name, mode if mode is not None and v != mode and nclasses[name] > 1 else None)
+        specific = [(k, v, n, m) for k, (v, n, m) in merged.items() if m is not None]
+        unset = [(k, v, n, m) for k, (v, n, m) in merged.items() if m is None and v in UNSET_VALUES]
+        rest = [(k, v, n, m) for k, (v, n, m) in merged.items() if m is None and v not in UNSET_VALUES]
+
+        def rows(items, cls=""):
+            return "".join(f"<tr class='cfg-row{cls}'" + (f" title='most connectors: {e(m[:200])}'" if m is not None else "")
+                           + f"><td class='mono'>{e(k)}</td><td class='mono'>{e(v)}</td></tr>" for k, v, n, m in items)
+        body = ""
+        if merged:
+            body += ("<h4>Connector config <span class='fi-meta'>· " + str(len(merged)) + " keys"
+                     + (f", {len(specific)} with a value most connectors do not have (highlighted, first)" if specific else "")
+                     + "</span></h4><div class='cfg-srcs'>" + " ".join(sources) + "</div>"
+                     + f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{rows(specific, ' cfg-diff')}{prefix_rows(rest, rows)}</table>"
+                     + (f"<details class='cfg'><summary>{len(unset)} key(s) unset (null, empty)</summary>"
+                        f"<table class='cfg'>{rows(unset)}</table></details>" if unset else ""))
+        if aux:
+            parts = []
+            for name, dumps in aux:
+                last = latest_dump(dumps)
+                vals = [(k, v, name, None) for k, v in config_values(last).items() if v not in UNSET_VALUES]
+                where = log_viewer.link(viewers or {}, last["file"], "📄", last.get("line"))
+                parts.append(f"<details class='cfg'><summary>{e(name)} <span class='fi-meta'>· {len(vals)} keys set · "
+                             f"{len(dumps)} dump(s)</span> {where}</summary><table class='cfg'>{rows(vals)}</table></details>")
+            body += (f"<details class='cfg'><summary><strong>🔧 Converters, serializers and other plugin configs</strong> "
+                     f"<span class='fi-meta'>· {len(aux)}: {', '.join(e(n) for n, _ in aux)}</span></summary>{''.join(parts)}</details>")
+        # clients: only what differs from the other clients of the class
+        for name, dumps in by_class.items():
+            if kinds[name] != 3:
+                continue
+            last = latest_dump(dumps)
+            values = config_values(last)
+            diff = [(k, v, name, modes[name].get(k)) for k, v in values.items()
+                    if modes[name].get(k) is not None and v != modes[name][k] and not IDENTITY_KEYS.match(k)]
+            where = log_viewer.link(viewers or {}, last["file"], "📄", last.get("line"))
+            others = nclasses[name] - 1
+            body += (f"<h4>{e(name)} <span class='fi-meta'>· {e(last.get('id') or '')} · {len(dumps)} dump(s) {where}</span></h4>"
+                     + (f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{rows(diff, ' cfg-diff')}</table>"
+                        f"<p class='legend'>the {len(values) - len(diff)} other keys: the same as most clients</p>" if diff
+                        else f"<p class='legend'>✅ the same as the other {others} client(s) of this class "
+                             f"(apart from {', '.join(sorted({k for k in values if IDENTITY_KEYS.match(k)})) or 'their name'})</p>"))
+        changes = [(name, ch) for name, dumps in by_class.items() for c in dumps for ch in c.get("changes", [])]
+        if changes:
+            body = ("<div class='cfg-changed'><h3>🔁 Changed between restarts</h3><ul>"
+                    + "".join(f"<li><strong>{e(n)}</strong> <span class='mono'>{e(ch['key'])}</span> {e(ch['previous'])} → "
+                              f"<strong class='mono'>{e(ch['value'])}</strong></li>" for n, ch in changes[:30])
+                    + "</ul></div>" + body)
+        others_kinds = [name for name in by_class if kinds[name] not in (2, 3)]
+        if others_kinds:
+            body += (f"<p class='legend'>Also logged for this connector: {', '.join(e(n) for n in others_kinds)} "
+                     "(pick “all” to see them in their class)</p>")
+        cards.append(f"<div class='cfg-conn-card' data-connector='{e(conn)}' hidden><h3>🧩 {e(conn)}</h3>{body}</div>")
+    return "".join(cards), sorted(per)
+
+
+def config_class_html(name: str, dumps: List[dict], viewers: Optional[Dict[str, str]]) -> str:
+    """one config class: its dumps compared"""
+    connectors = sorted({config_connector_of(c) for c in dumps} - {""})
+    attr = f" data-cfg-connectors='{e(' '.join(connectors + (['-'] if any(not config_connector_of(c) for c in dumps) else [])))}'"
+    icon = "📄" if dumps[0]["source"] == "file" else "🪵"
+    nchanged = sum(1 for c in dumps if c.get("changes"))
+    flag = f" <span class='st warn'>🔁 {nchanged} with keys changed between restarts</span>" if nchanged else ""
+    if len(dumps) == 1:
+        c = dumps[0]
+        return (f"<div class='cfg-dump'{attr}>" + config_block_html(c, viewers) + "</div>")
+    values = [config_values(c) for c in dumps]
+    keys = list(OrderedDict((k, True) for v in values for k in v))
+    differ, same, identity = [], [], []
+    for k in keys:
+        seen = Counter(v.get(k, "∅ (not set)") for v in values)
+        if len(seen) == 1:
+            same.append((k, next(iter(seen))))
+        elif IDENTITY_KEYS.match(k):
+            identity.append(k)
+        else:
+            differ.append((k, seen))
+    # the value most dumps have, for the keys that differ: a dump with another value has it highlighted
+    common = {k: seen.most_common(1)[0][0] for k, seen in differ}
+    rows = "".join(f"<tr class='cfg-row'><td class='mono'>{e(k)}</td><td>"
+                   + " ".join(f"<span class='cfg-val'><span class='mono'>{e(val[:120]) or '″″'}</span> <span class='fi-meta'>×{n}</span></span>"
+                              for val, n in seen.most_common(6))
+                   + (f" <span class='fi-meta'>+{len(seen) - 6} other value(s)</span>" if len(seen) > 6 else "") + "</td></tr>"
+                   for k, seen in differ)
+    same_rows = "".join(f"<tr class='cfg-row'><td class='mono'>{e(k)}</td><td class='mono'>{e(v)}</td></tr>" for k, v in same)
+    who = (f" · {len(connectors)} connector(s)" if connectors else "")
+    return (f"<details class='cfg cfg-class'{attr}><summary>{icon} <strong>{e(name)}</strong> "
+            f"<span class='fi-count info'>{len(dumps):,} dumps</span><span class='fi-meta cfg-all'>{who} · "
+            f"{len(differ)} key(s) differ · {len(same)} the same everywhere</span><span class='fi-meta cfg-sel'></span>{flag}</summary>"
+            # hidden when a connector is picked: the block then shows the dumps of that connector
+            + "<div class='cfg-compare'>"
+            + (f"<p class='legend'>Keys whose value differs between the dumps (the value, then in how many dumps)"
+               + (f"; not shown: {', '.join(identity)}, which name each instance" if identity else "") + ":</p>"
+               f"<table class='cfg'><tr><th>Key</th><th>Values</th></tr>{rows}</table>" if differ
+               else "<p class='legend'>✅ the same value in every dump" + (f" (except {', '.join(identity)}, which name each instance)" if identity else "") + "</p>")
+            + f"<details class='cfg'><summary>{len(same)} key(s) with the same value in every dump</summary>"
+              f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{same_rows}</table></details></div>"
+            + f"<details class='cfg cfg-dumps'><summary>The {len(dumps)} dumps, one by one "
+              "<span class='fi-meta'>(a value other than the one of most dumps is highlighted)</span></summary>"
+            + "".join(f"<div class='cfg-dump' data-cfg-connectors='{e(config_connector_of(c) or '-')}'>{config_block_html(c, viewers, common)}</div>"
+                      for c in sorted(dumps, key=lambda c: (config_connector_of(c), c["file"], c.get("line") or 0)))
+            + "</details></details>")
+
+
+def config_block_html(c: dict, viewers: Optional[Dict[str, str]] = None, common: Optional[Dict[str, str]] = None) -> str:
+    """one config: its key / value table, collapsed; viewers: label -> page of the file (log_viewer); common: key -> the
+    value most dumps of its class have, a different value is highlighted"""
     rows = []
     for line in c["text"].splitlines():
         key, _, value = line.partition("=")
-        rows.append(f"<tr class='cfg-row'><td class='mono'>{e(key)}</td><td class='mono'>{e(value)}</td></tr>")
+        if common and key in common and value != common[key]:
+            rows.append(f"<tr class='cfg-row cfg-diff' title='most dumps of this class: {e(common[key][:200])}'>"
+                        f"<td class='mono'>{e(key)}</td><td class='mono'>{e(value)}</td></tr>")
+        else:
+            rows.append(f"<tr class='cfg-row'><td class='mono'>{e(key)}</td><td class='mono'>{e(value)}</td></tr>")
     where = (log_viewer.link(viewers or {}, c["file"], e(c["file"] + (f":{c['line']}" if c.get("line") else "")), c.get("line"))
              + e(f" ({c['time'].replace('T', ' ')})" if c.get("time") else ""))
     what = " ".join(x for x in (c.get("context"), c.get("id")) if x)
@@ -1139,6 +1587,7 @@ def first_names(names: List[str], top: int = 3) -> str:
 # line instead of the path of the file, the exception chains of the killed tasks most frequent first
 FINDINGS_CSS = """<style>
 .fi-title{font-weight:600}
+details.rec>summary{padding:6px 0;line-height:1.7}.rec-when{margin:0 0 0 22px}
 .fi-count{display:inline-block;font-size:.78rem;font-weight:700;padding:1px 8px;border-radius:12px;margin:0 4px;font-variant-numeric:tabular-nums;background:#e2e8f0;color:#334155}
 .fi-count.critical{background:#fee2e2;color:#b91c1c}.fi-count.high{background:#ffedd5;color:#c2410c}.fi-count.medium{background:#fef3c7;color:#b45309}
 .fi-count.low{background:#dcfce7;color:#15803d}.fi-count.info{background:#dbeafe;color:#1d4ed8}
@@ -1224,11 +1673,17 @@ def chain_rows(chains: List[dict], limit: int, sev: str, viewers: Dict[str, str]
     return rows
 
 
+def finding_id(title: str) -> str:
+    """anchor of the card of a known cause: the 🌳 Root causes table links to it"""
+    return "finding-" + (re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or "x")
+
+
 def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
     """the finding with html / html_details for findings_html: the same facts as its text, easier to read"""
     v = f.get("_view")
     if not v:
         return f
+    f = dict(f, id=finding_id(v["title"]) if v["kind"] == "known" else f"finding-root-{v['cause_index']}")
     sev = f["severity"].lower()
     files = v.get("files") or []
     where = f"in {len(files)} {unit}s" if len(files) > 1 else (f"in {e(os.path.basename(files[0]))}" if files else "")
@@ -1254,7 +1709,8 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
             f"<span class='fi-count {sev}'>{v['occurrences']:,}×</span><span class='fi-meta'>{where}</span>"
             + (f"<span class='fi-meta'> · </span>{first_html(viewers, first['file'], first['line'], first['timestamp'])}" if first else "")
             + chains_note(chains, CHAINS_SHOWN)
-            + "<div class='fi-advice'>👉 no known cause matches it: read its exception chain and its context (📄)</div>")
+            + "<div class='fi-advice'>👉 no known cause matches it: read its exception chain and its context (📄)"
+            + f" · <a href='#root-cause-{v['cause_index']}' title='its row in the 🌳 All root causes table'>🌳 in the table</a></div>")
     rows = chain_rows(chains, CHAINS_SHOWN, sev, viewers)
     if not rows:
         rows = [f"<span class='fi-count {sev}'>{v['occurrences']:,}×</span>{exception_html(v['example'][:400])}"]
@@ -1264,7 +1720,7 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
                 sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
-                html_sections: List[Tuple[str, str]] = ()) -> str:
+                html_sections: List[Tuple[str, str]] = (), share_zip: str = "") -> str:
     """unit: what a label is (file, container, script); links: (label, url) in the header; sections: (title, text)
     shown as is after the findings (the last lines of a failed CI script...); viewers: label -> page of the file
     (log_viewer), the labels and line numbers link to it"""
@@ -1304,7 +1760,9 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                            key=lambda f: (SEVERITY_ORDER.index(f["severity"]), -(f.get("_view") or {}).get("occurrences", 0)))
     # an exception chain of a killed task is a card of its own inside the finding
     body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), FINDINGS_CSS,
-            findings_html(findings_view).replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count")]
+            findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
+                          "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
+            .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count")]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -1314,16 +1772,26 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body.append(charts_html(res["files"], res["root_causes"]))
     with_conn = bool(s["by_connector"])
     if res["root_causes"]:
-        rows = "".join(f"<tr class='rc-row' data-level='{e(c['level'])}' data-cause='{i}'><td>{level_badge(c['level'])}</td>"
+        def finding_cell(c: dict, i: int) -> str:
+            if c.get("explained_by"):
+                return "<br>".join(f"<a href='#{finding_id(t)}' title='the card of this known cause in 🔎 Findings'>{e(t)}</a>"
+                                   for t in c["explained_by"])
+            if c.get("in_findings"):
+                return f"<a href='#finding-root-{i}' title='its card in 🔎 Findings'>🌳 card in Findings</a>"
+            return "<span class='fi-meta' title='not a known cause, not among the most frequent: read its records below'>—</span>"
+        rows = "".join(f"<tr class='rc-row' id='root-cause-{i}' data-level='{e(c['level'])}' data-cause='{i}'><td>{level_badge(c['level'])}</td>"
                        f"<td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
                        f"<td class='mono'>{e(c['example'][:300])}</td><td class='num rc-occ'>{c['occurrences']}</td>"
                        f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x)) for x in c['files'][:5])}"
                        f"{e(' …' if len(c['files']) > 5 else '')}</td>"
                        + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
-                       + "</tr>" for i, c in enumerate(res["root_causes"]))
+                       + f"<td>{finding_cell(c, i)}</td></tr>" for i, c in enumerate(res["root_causes"]))
         untimed = sum(count - len(times) for c in res["root_causes"] for _, _, count, times, _, _ in c["records_meta"]
                       if count > len(times))
-        follows = ("<p class='legend'>⏱ Drag over 📈 Occurrences over time to select a period: this table, the charts and "
+        follows = ("<p class='legend'>Every distinct error of the logs, grouped by its deepest exception (or its message when "
+                   "it has none), most frequent first. 🔎 Findings above is the short list to start with; the Finding column "
+                   "says which card explains a row (a known cause, or a 🌳 card of the most frequent unexplained errors), "
+                   "— for the long tail.</p><p class='legend'>⏱ Drag over 📈 Occurrences over time to select a period: this table, the charts and "
                    "the records below then only show that period, with the occurrences counted in it (double-click the "
                    "chart, or ⤺ whole period, to go back). The Levels chips and the Connector picker filter the charts "
                    "too."
@@ -1331,11 +1799,11 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                       "occurrences kept per record): they are not counted in a period, and a root cause that has only "
                       "those stays shown." if untimed else "")
                    + "</p>")
-        body.append("<div class='table-card'><h2>🌳 Root causes (deepest exception of each record)"
+        body.append("<div class='table-card'><h2>🌳 All root causes (every distinct error, by deepest exception)"
                     "<span class='rc-range'></span><button type='button' class='rc-reset' hidden>⤺ whole period</button>"
                     f"</h2>{follows}<table><tr><th>Level</th>"
                     "<th>Root cause</th><th>Message</th><th class='num'>Occurrences</th><th class='num'>Records</th>"
-                    f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}</tr>"
+                    f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}<th>Finding</th></tr>"
                     f"{rows}</table></div>")
     if res["files"]:
         rows = "".join(f"<tr class='file-row' data-file='{i}'><td class='mono'>{log_viewer.link(viewers, f['label'], e(f['label']))}</td>"
@@ -1355,20 +1823,23 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             file_title = log_viewer.link(viewers, f["label"], e(f["label"]))
             body.append(f"<div class='table-card file-records'><h2>📄 {file_title}</h2>"
                         f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
-    body.append(config_html(res.get("configuration") or [], viewers))
+    body.append(config_html(res.get("configuration") or [], viewers, list(s["by_connector"])))
     # last: the index of the records the filters count again from, then the filters themselves
     body.append("<script type='application/json' id='pg-occurrences'>"
                 + occurrences_json(res["root_causes"]).replace("<", "\\u003c") + "</script>")
     body.append(FILTER_SCRIPT)
+    body.append(SECTION_TOGGLE)
+    sanitized = any(t.startswith("🔒") for t, _ in sections)
+    body.append(share_html(text_summary(res, []), share_zip, sanitized, title))
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
     if res.get("filter"):
         meta.append(f"🔌 --connector {e(' '.join(res['filter']['connectors']))}" + (" --with-worker" if res["filter"]["with_worker"] else ""))
     meta += [f"<a href='{e(url)}' style='color:#fff'>{e(label)}</a>" for label, url in links]
     return page(f"{heading[2:].strip()} report — {title}", e(heading), meta, "".join(body),
                 f"🛠️ Generated by {e(command)} (self-contained, no external resource). Records are cut to 300 "
-                "characters per line and to 3 frames of the deepest cause, like the terminal digest; 📋 Show context has the raw "
-                "lines around their first occurrence."
-                + (f" The file names and line numbers open the file in {e(next(iter(viewers.values())).split('/')[0])}/, "
+                "characters per line and to 3 frames of the deepest cause, like the terminal digest; "
+                + ("📄 opens the whole file at the line." if viewers else "📋 Show context has the raw lines around their first occurrence.")
+                + (f" The file names, line numbers and 📄 open the file in {e(next(iter(viewers.values())).split('/')[0])}/, "
                    f"✏️ in {e(log_viewer.editor()[0])} (playground config editor): keep that folder with the report." if viewers else ""))
 
 
@@ -1413,6 +1884,8 @@ def main() -> int:
     ap.add_argument("--html-section", nargs=2, action="append", default=[], metavar=("TITLE", "FILE"),
                     help="HTML fragment written by another playground tool (the 🌊 Kafka Streams view of "
                          "tools/streams-analyzer), shown after the findings and the text sections")
+    ap.add_argument("--share-zip", metavar="NAME", default="",
+                    help="name of the .zip of the report and its file pages, next to it: the 📤 Share panel links to it")
     ap.add_argument("--sources", metavar="FILE",
                     help="label<tab>path<tab>1 when the file stays on disk, of each file analyzed: with --html-out, a page "
                          "per file with findings next to the report (<report>-files/), linked from its locations")
@@ -1466,7 +1939,7 @@ def main() -> int:
                     html_sections.append((title, sf.read()))
             viewers = write_viewers(args.html_out, files, res, args.sources) if args.sources else {}
             fh.write(html_report(res, args.title, args.levels, args.skipped, args.heading, args.command, args.unit,
-                                 [tuple(l) for l in args.link], sections, viewers, html_sections))
+                                 [tuple(l) for l in args.link], sections, viewers, html_sections, args.share_zip))
         os.replace(tmp_out, args.html_out)
     return 0
 

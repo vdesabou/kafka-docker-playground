@@ -296,8 +296,9 @@ if (!window.pgFindingsFilter) {
 </script>"""
 
 
-def findings_html(items: List[dict]) -> str:
-    """items: {severity, text}, plus an optional details list shown as bullets under the text (html / html_details: the same
+def findings_html(items: List[dict], intro: str = "") -> str:
+    """intro: a line under the title (what the section is for); items: {severity, text}, an optional id (anchor of the
+    card), plus an optional details list shown as bullets under the text (html / html_details: the same
     as trusted HTML written by the report, its log text escaped, used instead of text / details); with 2 severities or more,
     chips above the cards filter them by severity. An item with "records" (indexes of the records it was built from)
     carries them as data-recs and gets a .rec-scope span: a page that filters the records (the log report) writes in it
@@ -315,8 +316,10 @@ def findings_html(items: List[dict]) -> str:
                  + f"</div>{FINDINGS_FILTER_SCRIPT}")
     scoped = any(f.get("records") for f in items)
     return ("<div class='findings'><div class='section-title'>🔎 Findings"
-            + ("<span class='fi-scope'></span>" if scoped else "") + "</div>" + chips + "<div class='recs-list'>"
+            + ("<span class='fi-scope'></span>" if scoped else "") + "</div>"
+            + (f"<p class='legend'>{e(intro)}</p>" if intro else "") + chips + "<div class='recs-list'>"
             + "".join(f'<div class="rec-card {f["severity"].lower()}" data-sev="{e(f["severity"])}"'
+                      + (f' id="{e(f["id"])}"' if f.get("id") else "")
                       + (f' data-recs="{" ".join(str(i) for i in f["records"])}"' if f.get("records") else "")
                       + f'><span class="rec-badge {f["severity"].lower()}">'
                       f'{SEVERITY_ICONS.get(f["severity"], "")} {e(f["severity"])}</span><span class="rec-text">{f["html"] if f.get("html") else e(f["text"])}'
