@@ -6393,7 +6393,13 @@ function summarize_log_errors() {
     }
     # "2026-10-13 10:00:05" or "2026-10-13T10:00:05" at the start of the record, as 2026-10-13T10:00:05
     function timestamp_of(head,    h, t) {
-        h = substr(head, 1, 80)
+        # journalctl export: "-- Logs begin at Tue 2026-11-03 01:59:29 PST, end at … --" is not a logged line, and the
+        # "Nov 03 18:29:20 host connect-distributed[217934]: " prefix of each line pushes the log4j timestamp past
+        # the first 80 characters
+        if (substr(head, 1, 3) == "-- ") return ""
+        h = head
+        sub(/^[A-Z][a-z][a-z] [ 0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [^ ]+ [^ :]+: /, "", h)
+        h = substr(h, 1, 80)
         if (!match(h, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) return ""
         t = substr(h, RSTART, RLENGTH)
         sub(/ /, "T", t)
