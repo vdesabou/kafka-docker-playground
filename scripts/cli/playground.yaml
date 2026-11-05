@@ -4493,13 +4493,19 @@ subcommands:
       terminal\n(MB read, speed, ETA), and with 20 MB or more of input the report
       opens\nin the browser right away as a progress page (step, MB read, elapsed\ntime)
       that becomes the report when the analysis ends. The last line\ngives the size
-      read and the time it took.\n\n☸️ A Confluent for Kubernetes (CFK) support bundle
-      (kubectl confluent support-bundle or playground debug cfk generate-bundle: a
-      folder with cluster-details.txt, or with cluster-resources/ and operator/; or
-      a flat collection of kubectl outputs with a confluent-operator-*.log or the
-      YAML of a platform.confluent.io custom resource at its top), alone or inside
-      a folder or an archive, is detected and analyzed as a whole, in a Docker image
-      built on first use: Warning events, pods (phase, waiting reasons, restarts,
+      read and the time it took. An archive (.tar, .tar.gz,\n.tgz…) shows a bar while
+      it is extracted.\n\n\U0001F5C2️ One tab in the browser: with CFK support bundles
+      in the input, their\nreports and their comparison are written but not opened
+      one by one, the\nlog report links them in a ☸️ CFK support bundles section.
+      With only CFK\nbundles, the report of the bundle (or the comparison of several)
+      is the\none opened. Several CFK bundles are analyzed in parallel, 4 at a time\n(PLAYGROUND_CFK_PARALLELISM
+      to change it), their output printed in order.\n\n☸️ A Confluent for Kubernetes
+      (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk
+      generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
+      and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log
+      or the YAML of a platform.confluent.io custom resource at its top), alone or
+      inside a folder or an archive, is detected and analyzed as a whole, in a Docker
+      image built on first use: Warning events, pods (phase, waiting reasons, restarts,
       OOMKilled), every platform.confluent.io custom resource (phase/state, ready
       replicas, False conditions, failed connector tasks), the environment checked
       against the CFK support matrix (Kubernetes, CFK operator, CP and init container
@@ -4574,8 +4580,9 @@ subcommands:
       - "-f"
       argument: FILE
       description: "\U0001F5D2️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or
-        .gz file to analyze\n\n\U0001F393 Tip: can be set several times\n\nRepeatable:
-        ✓ Yes"
+        .gz file to analyze\n\n\U0001F393 Tip: can be set several times. TAB lists
+        the log files, exports, archives and folders of Downloads, Desktop and the
+        current folder, newest first\n\nRepeatable: ✓ Yes"
     - names:
       - "--sample"
       - "-s"

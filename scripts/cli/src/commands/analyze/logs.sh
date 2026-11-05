@@ -46,6 +46,16 @@ do
     esac
 done
 
+# the TAB picker of --file (get-log-files-with-fzf) answers "<typed>@<path>": the path is what follows the first @, unless
+# the value is an existing path as it is
+for i in "${!file_array[@]}"
+do
+    if [[ ! -e "${file_array[$i]}" && "${file_array[$i]}" == *"@"* ]]
+    then
+        file_array[$i]="${file_array[$i]#*@}"
+    fi
+done
+
 for file in "${file_array[@]}"
 do
     if [ ! -e "$file" ]
@@ -71,6 +81,19 @@ function file_size () {
 
 function file_size_human () {
     python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$(file_size "$1")" 2>/dev/null
+}
+
+# opens a report written by another tool in the browser, once: the 🔄 progress page already open goes to it, else a new
+# tab in an interactive terminal (open_html_report), else its path
+function show_report () {
+    if [ -n "$progress_page" ] && [ -f "$progress_page" ] && grep -q "Log Analysis in progress" "$progress_page" 2>/dev/null
+    then
+        python3 -I -c 'import html, sys, urllib.parse; u = "file://" + urllib.parse.quote(sys.argv[1]); print(f"<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; url={html.escape(u)}\"></head><body><a href=\"{html.escape(u)}\">{html.escape(sys.argv[1])}</a></body></html>")' "$1" > "$progress_page.redirect" \
+            && mv "$progress_page.redirect" "$progress_page"
+        log "🌐 The page open in the browser shows $1"
+    else
+        open_html_report "$1"
+    fi
 }
 
 # a step of the 🔄 progress page open in the browser (none without it)
@@ -466,9 +489,27 @@ function analyze_logs_path () {
             extract_dir=$(basename "$path")
             extract_dir="$tmp_dir/$nb_extracted/${extract_dir%%.*}"
             mkdir -p "$extract_dir"
+            progress_step "📦 extracting $label ($(file_size_human "$path"))"
             case "$path" in
                 *.zip) unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1 ;;
-                *) tar -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
+                *)
+                    if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+                    then
+                        # read through progress.py cat: a bar in the terminal for a large archive. From a pipe, GNU tar
+                        # needs the compression flag
+                        local tar_z=""
+                        case "$path" in
+                            *.tar.gz|*.tgz) tar_z="z" ;;
+                            *.tar.bz2|*.tbz2) tar_z="j" ;;
+                            *.tar.xz|*.txz) tar_z="J" ;;
+                        esac
+                        PG_PROGRESS_STEP="📦 extracting $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" --size "$(file_size "$path")" < "$path" \
+                            | tar -x${tar_z}f - -C "$extract_dir" > /dev/null 2>&1
+                        test "${PIPESTATUS[1]}" -eq 0
+                    else
+                        tar -xf "$path" -C "$extract_dir" > /dev/null 2>&1
+                    fi
+                    ;;
             esac
             if [ $? -ne 0 ]
             then
@@ -549,46 +590,128 @@ cfk_exit=0
 cfk_json_files=()
 # JSON of the analysis of each bundle, written next to its HTML report: compared when there are several bundles
 cfk_compare_files=()
+# the reports of the bundles and of their comparison are not opened one by one (6 bundles: 8 tabs): the log report links
+# them, or the one entry point (the report of a single bundle, the comparison of several) is opened at the end
+CFK_ANALYSIS_NO_OPEN=1
+cfk_reports=()
+cfk_report_labels=()
+# the bundles are analyzed in parallel (a container each, PLAYGROUND_CFK_PARALLELISM at a time, 4 by default): the output of
+# each one goes to a file, printed in the order of the bundles as soon as it and the ones before it are done
+cfk_parallelism="${PLAYGROUND_CFK_PARALLELISM:-4}"
+[[ "$cfk_parallelism" =~ ^[1-9][0-9]*$ ]] || cfk_parallelism=4
+if [ ${#cfk_bundles[@]} -gt 0 ]
+then
+    # built once, not by each job
+    if ! cfk_analyzer_image > /dev/null
+    then
+        cfk_exit=1
+        cfk_bundles=()
+    fi
+fi
+if [ ${#cfk_bundles[@]} -gt 1 ]
+then
+    log "☸️ Analyzing ${#cfk_bundles[@]} CFK support bundles, $cfk_parallelism at a time (PLAYGROUND_CFK_PARALLELISM)"
+fi
+progress_step "☸️ analyzing ${#cfk_bundles[@]} CFK support bundle(s)"
+# bundles of the same name (two "bundle" folders): their reports get a -<n> suffix, written in the same second
+declare -A cfk_name_count=()
 for i in "${!cfk_bundles[@]}"
 do
-    CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
-    # extracted from an archive: deleted at the end, the report copies its files for the editor
-    CFK_ANALYSIS_TEMPORARY=""
-    if [[ "${cfk_bundles[$i]}" == "$tmp_dir/"* ]]
-    then
-        CFK_ANALYSIS_TEMPORARY=1
-    fi
-    CFK_ANALYSIS_JSON=""
-    if [[ -n "$json_out" ]]
-    then
-        log "📦 CFK support bundle detected: ${cfk_labels[$i]} (--logs-only for the plain log digest)"
-        cfk_json="$tmp_dir/cfk-$i.json"
-        analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$cfk_json"
-        rc=$?
-        if [ $rc -eq 0 ]
-        then
-            jq --arg label "${cfk_labels[$i]}" '. + {label: $label}' "$cfk_json" > "$cfk_json.labelled" && cfk_json_files+=("$cfk_json.labelled")
-        fi
-    else
-        log "📦 CFK support bundle detected: ${cfk_labels[$i]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
-        analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}"
-        rc=$?
-        if [ $rc -eq 0 ] && [ -f "$CFK_ANALYSIS_JSON" ]
-        then
-            cfk_compare_files+=("$CFK_ANALYSIS_JSON")
-        fi
-    fi
-    if [ $rc -ne 0 ]
-    then
-        cfk_exit=$rc
-    fi
+    cfk_name=$(basename "${cfk_bundles[$i]}")
+    cfk_name_count[$cfk_name]=$(( ${cfk_name_count[$cfk_name]:-0} + 1 ))
 done
+cfk_next=0
+cfk_done=0
+# prints the output and takes the result of the bundles done, in order
+function flush_cfk_bundles () {
+    local rc json html
+    while [ $cfk_next -lt ${#cfk_bundles[@]} ] && [ -f "$tmp_dir/cfk-$cfk_next.result" ]
+    do
+        IFS=$'\t' read -r rc json html < "$tmp_dir/cfk-$cfk_next.result"
+        if [[ -n "$json_out" ]]
+        then
+            log "📦 CFK support bundle detected: ${cfk_labels[$cfk_next]} (--logs-only for the plain log digest)"
+            cat "$tmp_dir/cfk-$cfk_next.out"
+            if [ "$rc" -eq 0 ]
+            then
+                jq --arg label "${cfk_labels[$cfk_next]}" '. + {label: $label}' "$tmp_dir/cfk-$cfk_next.json" > "$tmp_dir/cfk-$cfk_next.json.labelled" && cfk_json_files+=("$tmp_dir/cfk-$cfk_next.json.labelled")
+            fi
+        else
+            log "📦 CFK support bundle detected: ${cfk_labels[$cfk_next]}: pods, custom resources, events, versions, recent changes and logs (--logs-only for the plain log digest)"
+            cat "$tmp_dir/cfk-$cfk_next.out"
+            if [ "$rc" -eq 0 ] && [ -n "$json" ] && [ -f "$json" ]
+            then
+                cfk_compare_files+=("$json")
+            fi
+            if [ -n "$html" ]
+            then
+                cfk_reports+=("$html")
+                cfk_report_labels+=("${cfk_labels[$cfk_next]}")
+            fi
+        fi
+        if [ "$rc" -ne 0 ]
+        then
+            cfk_exit=$rc
+        fi
+        cfk_next=$((cfk_next+1))
+    done
+}
+for i in "${!cfk_bundles[@]}"
+do
+    # at most cfk_parallelism jobs: wait for one to end (the jobs always exit 0, their result is in a file)
+    while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$cfk_parallelism" ]
+    do
+        wait -n 2> /dev/null || true
+        flush_cfk_bundles
+    done
+    (
+        CFK_ANALYSIS_LABEL="${cfk_labels[$i]}"
+        # extracted from an archive: deleted at the end, the report copies its files for the editor
+        CFK_ANALYSIS_TEMPORARY=""
+        if [[ "${cfk_bundles[$i]}" == "$tmp_dir/"* ]]
+        then
+            CFK_ANALYSIS_TEMPORARY=1
+        fi
+        CFK_ANALYSIS_REPORT_SUFFIX=""
+        if [ "${cfk_name_count[$(basename "${cfk_bundles[$i]}")]}" -gt 1 ]
+        then
+            CFK_ANALYSIS_REPORT_SUFFIX="-$((i+1))"
+        fi
+        CFK_ANALYSIS_JSON=""
+        CFK_ANALYSIS_HTML=""
+        if [[ -n "$json_out" ]]
+        then
+            analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+        else
+            analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+        fi
+        rc=$?
+        printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
+        mv "$tmp_dir/cfk-$i.result.tmp" "$tmp_dir/cfk-$i.result"
+        exit 0
+    ) &
+done
+while [ $cfk_next -lt ${#cfk_bundles[@]} ]
+do
+    wait -n 2> /dev/null || sleep 0.2
+    # a job gone without its result (killed): the bundle counts as failed, instead of waiting for it forever
+    if [ -z "$(jobs -rp)" ] && [ ! -f "$tmp_dir/cfk-$cfk_next.result" ]
+    then
+        echo "❌ the analysis of this bundle ended without a result" >> "$tmp_dir/cfk-$cfk_next.out"
+        printf '1\t\t\n' > "$tmp_dir/cfk-$cfk_next.result"
+    fi
+    flush_cfk_bundles
+    progress_step "☸️ CFK support bundles: $cfk_next of ${#cfk_bundles[@]} analyzed"
+done
+
 # several CFK bundles: compared, each one with the previous one (by collection time)
 cfk_comparison="$tmp_dir/cfk-comparison.json"
 echo "[]" > "$cfk_comparison"
 if [ ${#cfk_compare_files[@]} -ge 2 ]
 then
     log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
+    progress_step "🔁 comparing the ${#cfk_compare_files[@]} CFK support bundles"
+    CFK_COMPARISON_HTML=""
     compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
 elif [ ${#cfk_json_files[@]} -ge 2 ]
 then
@@ -605,6 +728,18 @@ then
         else
             jq -s --slurpfile comparison "$cfk_comparison" '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0]}' \
                 "${cfk_json_files[@]}" >&3
+        fi
+    else
+        # one tab: the report of the bundle, or the comparison of several (it lists the bundles), the others are in the
+        # log lines above
+        entry_report="${CFK_COMPARISON_HTML:-}"
+        if [ -z "$entry_report" ] && [ ${#cfk_reports[@]} -gt 0 ]
+        then
+            entry_report="${cfk_reports[$((${#cfk_reports[@]}-1))]}"
+        fi
+        if [ -n "$entry_report" ]
+        then
+            show_report "$entry_report"
         fi
     fi
     exit $cfk_exit
@@ -773,6 +908,25 @@ fi
 if [ -f "$overview_text_file" ]
 then
     report_args+=(--section "🔭 Overview" "$overview_text_file")
+fi
+# the reports of the CFK support bundles of the input (not opened one by one): linked from the log report
+if [ ${#cfk_reports[@]} -gt 0 ]
+then
+    {
+        printf '%s\t%s\n' "${CFK_COMPARISON_HTML:+🔁 comparison of the ${#cfk_reports[@]} bundles}" "${CFK_COMPARISON_HTML:-}"
+        for i in "${!cfk_reports[@]}"
+        do
+            printf '%s\t%s\n' "${cfk_report_labels[$i]}" "${cfk_reports[$i]}"
+        done
+    } | python3 -I -c '
+import html, sys, urllib.parse
+rows = [l.rstrip("\n").split("\t", 1) for l in sys.stdin if l.strip()]
+print("<p>Each CFK support bundle of the input has its own report (pods, custom resources, events, versions, recent changes):</p><ul>")
+for label, path in rows:
+    if path:
+        href = html.escape("file://" + urllib.parse.quote(path))
+        print(f"<li><a href=\"{href}\" target=\"_blank\" rel=\"noopener\">{html.escape(label)}</a></li>")
+print("</ul>")' > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "☸️ CFK support bundles" "$tmp_dir/cfk-reports.html")
 fi
 # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
 if [ -f "$tmp_dir/kafka-streams.html" ]

@@ -1,0 +1,7 @@
+name: get-log-files-with-fzf
+help: Return some completion for the input of analyze logs (log files, exports, archives and folders of Downloads, Desktop and the current folder)
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

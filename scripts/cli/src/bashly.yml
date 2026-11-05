@@ -131,6 +131,7 @@ commands:
 - import: src/commands/get-playground-repro-export-with-fzf.yml
 
 - import: src/commands/get-connector-config-file-with-fzf.yml
+- import: src/commands/get-log-files-with-fzf.yml
 
 - import: src/commands/get-predefined-schemas.yml
 

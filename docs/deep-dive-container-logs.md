@@ -212,6 +212,19 @@ interactive terminal, the report is opened in the browser right away (`🌐 Open
 progress, then the report`): a page with the step, the MB read and the time elapsed, reloaded every 2 s, which becomes
 the report at the end (written next to it then renamed, so the page never loads half a report). The last line says how
 much was read and how long it took: `📊 1 file(s) with findings out of 2 scanned, 2.4 GB read in 0 min 28 s`.
+An archive (`.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`) shows a bar while it is extracted, and the page shows each
+CFK support bundle as it is analyzed (`☸️ CFK support bundle 2 of 6: …`).
+
+🗂️ **One tab.** A folder or an archive with several CFK support bundles used to open a tab per bundle, one for their
+comparison and one for the log report (8 for 6 bundles). Their reports are now written without being opened: the log
+report links them in a ☸️ **CFK support bundles** section (the comparison first), and their paths are in the terminal.
+With only CFK bundles and no other log, the one opened is the report of the bundle, or the comparison of several (the
+progress page goes to it).
+
+⚡ Several CFK support bundles are analyzed **in parallel**, a container each, 4 at a time (`PLAYGROUND_CFK_PARALLELISM=2`
+on a laptop short of memory, `8` on a large one): `☸️ Analyzing 6 CFK support bundles, 4 at a time`. The output of each
+bundle is printed in their order, as soon as it and the ones before it are done; 6 bundles of the same namespace take
+about 20 s instead of 55 s.
 
 🔒 The digest, the HTML report and the JSON are **not sanitized by default**: `--sanitize` redacts them, before sharing
 them outside Confluent. Off by default because it can hide evidence (a dump of bytes taken for a secret, the IP of the
