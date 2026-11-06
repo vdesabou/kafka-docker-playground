@@ -1,9 +1,0 @@
----
-services:
-
-  connect:
-    image: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
-      CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
-      CLASSPATH: "/usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-${TAG_BASE}.jar:/usr/share/java/monitoring-interceptors/*"
