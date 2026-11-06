@@ -8,7 +8,7 @@ Quickly test [MirrorMaker 2](https://cwiki.apache.org/confluence/display/KAFKA/K
 
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
-Requires CP 5.4 or later (the script exits with code `111` otherwise).
+Requires CP 7.4 or later (the script exits with code `111` otherwise): the local cluster `A` runs in KRaft mode.
 
 ## How to run
 
@@ -22,8 +22,8 @@ playground run -f mirrormaker2.sh
 
 ## What the script does
 
-1. Starts the `ccloud` environment with a local 3-broker cluster (`broker1`, `broker2`, `broker3`) and generates `connect-mirror-maker.properties` from `connect-mirror-maker-template.properties` with the Confluent Cloud credentials.
+1. Starts the `ccloud` environment with a local 3-node KRaft cluster (`broker1`, `broker2`, `broker3`, each a broker and a controller) and generates `connect-mirror-maker.properties` from `connect-mirror-maker-template.properties` with the Confluent Cloud credentials.
 2. (Re)creates the `sales_A` topic in Confluent Cloud and deletes the MirrorMaker 2 internal topics of previous runs (no replication policy separator/alias: topic names are kept identical).
-3. Starts `connect-mirror-maker` in the `connect` container (logs in `mirrormaker.log`), replicating `sales_A` with `sync.group.offsets.enabled = true`.
+3. Starts `connect-mirror-maker` in the `broker1` container (logs in `mirrormaker.log`), replicating `sales_A` with `sync.group.offsets.enabled = true`.
 4. Produces 20 messages to `sales_A` on the local cluster, then consumes 10 of them with consumer group `my-consumer-group`.
 5. Produces 20 more messages, waits for the offsets to be synced, then consumes `sales_A` in Confluent Cloud with `playground topic consume`: the group should resume from the previously committed offset.

@@ -1,59 +1,69 @@
 ---
 services:
 
-  zookeeper:
-    image: ${CP_ZOOKEEPER_IMAGE}:${CP_ZOOKEEPER_TAG}
-    hostname: zookeeper
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      # for 5.4.x:
-      KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
-
+  # source "A" (OnPrem) cluster: 3 KRaft nodes, broker and controller (combined mode)
   broker1:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker1
     container_name: broker1
     environment:
-      KAFKA_BROKER_ID: 1
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29093,2@broker2:29093,3@broker3:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker1:9092,CONTROLLER://broker1:29093'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      # same base64 UUID on the 3 nodes, see "kafka-storage random-uuid"
+      CLUSTER_ID: 'T25QcmVtTWlycm9yTWtyMg'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092
-      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
       KAFKA_MESSAGE_MAX_BYTES: 10048588
-
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   broker2:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker2
     container_name: broker2
     environment:
-      KAFKA_BROKER_ID: 2
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29093,2@broker2:29093,3@broker3:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker2:9092,CONTROLLER://broker2:29093'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      # same base64 UUID on the 3 nodes, see "kafka-storage random-uuid"
+      CLUSTER_ID: 'T25QcmVtTWlycm9yTWtyMg'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9092
-      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
       KAFKA_MESSAGE_MAX_BYTES: 10048588
-
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   broker3:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: broker3
     container_name: broker3
     environment:
-      KAFKA_BROKER_ID: 3
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29093,2@broker2:29093,3@broker3:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker3:9092,CONTROLLER://broker3:29093'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      # same base64 UUID on the 3 nodes, see "kafka-storage random-uuid"
+      CLUSTER_ID: 'T25QcmVtTWlycm9yTWtyMg'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_MIN_INSYNC_REPLICAS: 2
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9092
-      KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
       KAFKA_MESSAGE_MAX_BYTES: 10048588
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   schema-registry:
     image: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
@@ -64,12 +74,4 @@ services:
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
-
-  # connect is used to launch mirrormaker 2 executable
-  connect:
-    entrypoint: ["sh", "-c", "sleep 2073600"]
-    volumes:
-        - ../../ccloud/mirrormaker2/connect-log4j.properties:/tmp/connect-log4j.properties
-    environment:
-      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/tmp/connect-log4j.properties"
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092

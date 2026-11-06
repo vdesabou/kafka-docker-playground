@@ -377,8 +377,8 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
 With Confluent Cloud:
 
-- ♻️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-- 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/mirrormaker2) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- ♻️ Confluent Replicator [OnPrem to Confluent Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator) (strings, Avro, Schema Registry with basic auth) :ccloud/replicator:
+- 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/mirrormaker2) :ccloud/mirrormaker2:
 
 Monitoring: 📊 `--enable-jmx-grafana` works with the `mdc-plaintext` examples above: Kafka cluster, Kafka Connect cluster (Replicator, MirrorMaker 2 connectors), Cluster Linking and Kafka Lag Exporter dashboards, for each cluster
 

@@ -4,8 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if version_gt $TAG_BASE "7.9.99"; then
-    logerror "This can only be run with image or version lower than 8.0.0"
+if ! version_gt $TAG_BASE "7.3.99"; then
+    logwarn "The source (OnPrem) cluster of this example runs in KRaft mode: CP 7.4 or later is required"
     exit 111
 fi
 
