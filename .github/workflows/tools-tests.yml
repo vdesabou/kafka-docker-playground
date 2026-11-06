@@ -1,0 +1,38 @@
+name: Tools tests
+
+# the unit tests of the Python helpers of the reports (sanitizer, known causes, exports of log events, overview): plain
+# asserts, no dependency, a few seconds. On the pull requests and pushes that change them
+on:
+  pull_request:
+    paths:
+      - "tools/report-common/**"
+      - "tools/log-analyzer/**"
+      - ".github/workflows/tools-tests.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - "tools/report-common/**"
+      - "tools/log-analyzer/**"
+      - ".github/workflows/tools-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  tools-tests:
+    name: Tools tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Sanitizer and known causes (leaks, over-redaction, speed on adversarial lines)
+        run: python3 -I tools/report-common/test_sanitizer.py
+
+      - name: Exports of log events, overview, progress
+        run: python3 -I tools/log-analyzer/test_log_analyzer.py
