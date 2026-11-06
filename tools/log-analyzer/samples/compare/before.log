@@ -1,0 +1,15 @@
+[2026-11-05 10:00:00,000] ERROR [jdbc-src|task-0] WorkerSourceTask{id=jdbc-src-0} Failed to flush, timed out while waiting for producer to flush outstanding 1534 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+[2026-11-05 10:01:00,000] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
+org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+	at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:230)
+Caused by: org.apache.kafka.connect.errors.DataException: Failed to deserialize data for topic orders to Avro:
+Caused by: org.apache.kafka.common.errors.SerializationException: Unknown magic byte!
+[2026-11-05 10:02:00,000] WARN [s3-sink|task-0] com.amazonaws.services.s3.model.AmazonS3Exception: Please reduce your request rate. (Service: Amazon S3; Status Code: 503; Error Code: SlowDown; Request ID: X) (io.confluent.connect.s3.S3SinkTask)
+[2026-11-05 10:03:00,000] ERROR [s3-sink|task-0] com.amazonaws.services.s3.model.AmazonS3Exception: Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: Y) (io.confluent.connect.s3.S3SinkTask)
+[2026-11-05 10:04:00,000] ERROR [eos-src|task-0] org.apache.kafka.common.errors.ProducerFencedException: There is a newer producer with the same transactionalId which fences the current one. (org.apache.kafka.connect.runtime.ExactlyOnceWorkerSourceTask)
+[2026-11-05 10:05:00,000] ERROR [Worker clientId=connect-1, groupId=connect-cluster] Graceful stop of task s3-sink-0 failed. (org.apache.kafka.connect.runtime.Worker)
+[2026-11-05 10:06:00,000] WARN [s3-sink|task-0] [Consumer clientId=connector-consumer-s3-sink-0, groupId=connect-s3-sink] Offset commit failed: org.apache.kafka.common.errors.RebalanceInProgressException: Offset commit cannot be completed since the consumer is undergoing a rebalance (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator)
+[2026-11-05 10:07:00,000] ERROR [jdbc-src|task-0] org.apache.kafka.common.errors.PolicyViolationException: Topic replication factor must be 3 (org.apache.kafka.connect.util.TopicAdmin)
+[2026-11-05 10:08:00,000] WARN [Producer clientId=connector-producer-jdbc-src-0] Got error produce response with correlation id 5 on topic-partition orders-0, retrying (2147483646 attempts left). Error: NOT_LEADER_OR_FOLLOWER (org.apache.kafka.clients.producer.internals.Sender)
+[2026-11-05 10:09:00,000] WARN [SocketServer listenerType=BROKER, nodeId=1] Unexpected error from /10.0.0.5 (channelId=x); closing connection (org.apache.kafka.common.network.Selector)
+org.apache.kafka.common.network.InvalidReceiveException: Invalid receive (size = 369296128 larger than 104857600)

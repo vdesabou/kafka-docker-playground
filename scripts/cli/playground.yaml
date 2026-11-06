@@ -4587,7 +4587,7 @@ subcommands:
       the two charts, the root causes, the files with findings and the record cards
       (double-click the chart, or ⤺ whole period, to go back). The findings keep the
       figures of the whole report and only say how much of each of them is in the
-      selection.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
+      selection.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle"
     usage: playground analyze logs [OPTIONS]
     options:
@@ -4621,10 +4621,12 @@ subcommands:
         3 instances of other/kafka-streams (serde-errors.sh): an application in\n
         \                        ERROR after a poison pill, its dead stream thread,
         deserialization and production\n                         handler errors, the
-        \U0001F30A Kafka Streams section (state, rebalances, tasks, timeline)\n  kafka_clients
-        \         logs of the non-Java clients (C/C++, Python, Go, .NET, JavaScript,
-        KafkaJS, Rust) of\n                         other/client-*: a broker that
-        refuses connections or does not resolve, records\n                         timed
+        \U0001F30A Kafka Streams section (state, rebalances, tasks, timeline)\n  compare_fix
+        \           the log of a Connect worker the day after a fix, compared with
+        the day before\n                         (--compare): errors gone, a new one,
+        rebalances growing\n  kafka_clients          logs of the non-Java clients
+        (C/C++, Python, Go, .NET, JavaScript, KafkaJS, Rust) of\n                         other/client-*:
+        a broker that refuses connections or does not resolve, records\n                         timed
         out, an unknown property, and crashes (Python traceback, .NET unhandled\n
         \                        exception, Go and Rust panics, uncaught Node.js error)\n
         \ cfk_bundle             CFK support bundle: kafka-2 crash-looping on an expired
@@ -4640,7 +4642,7 @@ subcommands:
         \     the same cluster the next day (quota raised, KRaftController unblocked,
         roll\n                         complete): --sample cfk_rollout --sample cfk_rollout_after
         compares the two\n\nRepeatable: ✓ Yes\nAllowed values: connect_task_failure,
-        support_bundle, kafka_streams, kafka_clients, cfk_bundle, cfk_kraft_migration,
+        support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration,
         cfk_rollout, cfk_rollout_after"
     - names:
       - "--errors-only"

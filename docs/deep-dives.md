@@ -103,10 +103,17 @@ CLI change that makes a page wrong shows up as a failing test.
 
 ## 🔍 Logs and JVM diagnostics
 
-### 📜 Read logs: live digest, waiting for a line, customer bundles
+### 🔥 Analyze the logs you were sent: bundles, exports, clients, did the fix work?
+
+- 📖 [Read the deep dive](/deep-dive-analyze-logs.md)
+- 🧠 Commands: `analyze logs` (`--connector`, `--show-config`, `--compare`, `--json`, `--sanitize`)
+- 📊 Example reports: [support bundle](reports/logs.html), [Connect worker](reports/logs-connect.html), [non-Java clients](reports/logs-clients.html), [before / after a fix](reports/logs-compare.html)
+- 🎬 Bite size session: [🕵️ A connector failed: read the logs](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle)
+
+### 📜 Read logs: live digest, waiting for a line
 
 - 📖 [Read the deep dive](/deep-dive-container-logs.md)
-- 🧠 Commands: `container logs`, `analyze logs`
+- 🧠 Commands: `container logs` (`analyze logs` has its own page, above)
 - 🎬 Bite size session: [🕵️ A connector failed: read the logs](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle)
 
 ### 🔊 Log levels: TRACE without a restart

@@ -49,6 +49,11 @@ do
         support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
         kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
         kafka_clients) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-clients") ;;
+        # the day after a fix, compared with the day before (unless --compare names another input)
+        compare_fix)
+            file_array+=("$root_folder/tools/log-analyzer/samples/compare/after.log")
+            [[ -z "$compare" ]] && compare="$root_folder/tools/log-analyzer/samples/compare/before.log"
+            ;;
         cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
         cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
         cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
@@ -995,7 +1000,8 @@ then
     fi
     if [[ -n "$compare_json" ]]
     then
-        report_args+=(--compare "$compare_json" --compare-label "$compare")
+        # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
+        report_args+=(--compare "$compare_json" --compare-label "${compare#"$root_folder"/}")
     fi
 fi
 for connector in "${connector_array[@]}"
