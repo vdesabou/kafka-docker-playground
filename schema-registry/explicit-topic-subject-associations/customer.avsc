@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "Customer",
+  "namespace": "com.example.avro",
+  "fields": [
+    { "name": "customerId", "type": "string" },
+    { "name": "email", "type": "string" }
+  ]
+}
