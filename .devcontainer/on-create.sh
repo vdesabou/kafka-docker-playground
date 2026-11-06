@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs once when a GitHub Codespace (or a VS Code dev container) is created from .devcontainer/devcontainer.json:
+# Runs once when a GitHub Codespace (or a VS Code dev container, or a Codespaces prebuild) is created from .devcontainer/devcontainer.json:
 # installs fzf and puts playground and its completion in the PATH, like https://kafka-docker-playground.io/install.sh
 # does on a laptop. The block uses the same markers as install.sh, so 'install.sh --uninstall' removes it too.
 set -e

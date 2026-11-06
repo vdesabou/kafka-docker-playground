@@ -19,8 +19,14 @@
     "memory": "16gb",
     "storage": "32gb"
   },
-  // installs fzf and puts playground (and its completion) in the PATH of bash and zsh
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // installs fzf and puts playground (and its completion) in the PATH of bash and zsh.
+  // onCreateCommand and updateContentCommand also run in a Codespaces prebuild, whose snapshot keeps their result
+  "onCreateCommand": "bash .devcontainer/on-create.sh",
+  // pulls the images of a default run (cp-server, cp-server-connect, cp-schema-registry at the default TAG), so
+  // that the first 'playground run' does not wait for them: already done in a prebuild, in the background otherwise
+  "updateContentCommand": "bash .devcontainer/pull-images.sh",
+  // the codespace opens once onCreateCommand is done, without waiting for the images
+  "waitFor": "onCreateCommand",
   // checks that the container engine is ready, each time the codespace starts
   "postStartCommand": "bash scripts/cli/playground doctor || true",
   "portsAttributes": {
