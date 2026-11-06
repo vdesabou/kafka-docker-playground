@@ -403,7 +403,9 @@ above the bar stay the figures of the whole report. There are three filters, and
 
 | Filter | Where | What it keeps |
 | --- | --- | --- |
-| **Levels** | FATAL / ERROR / WARN chips of the bar, with several levels (WARN is reported by default, `--errors-only` leaves it out) | the records of the levels still pressed |
+| **Levels** | `📋 All` / `💀 FATAL` / `🔴 ERROR` / `🟠 WARN` pills of the bar with their occurrences, as in the CFK report: one level at a time (a click on the selected one goes back to All); with several levels (WARN is reported by default, `--errors-only` leaves it out) | the records of that level |
+| **Component** | (also a chip on each finding card and a Component column in 🌳 All root causes: the components of the files where it occurs) chips of the bar (`🧩 All components`, `🔌 Connect`, `🗄️ Kafka`, `📜 Schema Registry`, `🧮 ksqlDB`, `🦓 ZooKeeper`, `🛰️ Control Center`, `🌐 REST Proxy`, `🌊 Kafka Streams`, `📡 Clients`, `☸️ Operator`, `📄 Other`) with their distinct records, when the files belong to 2 components or more: guessed from the path and name of each file (`cluster-resources/kafka/…`, `connect.log.2026-11-02-20`, `python-producer.log`) | the records of the files of that component |
+| **Search** | box of the bar | among what the other filters keep: the records, the root causes, the findings and the file cards whose text contains it (the charts keep the counts of the other filters) |
 | **Connector** | picker of the bar, when the records carry the connector context of the Connect log line (`ERROR [my-connector\|task-0] …`, `[my-connector\|task-0\|offsets]`, `[my-connector\|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent first, with "no connector context" for the worker records | the records of that connector |
 | **Period** | drag over the 📈 chart | the occurrences between the two times |
 
