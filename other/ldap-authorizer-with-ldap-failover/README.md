@@ -41,7 +41,7 @@ $ just use <playground run> command and search for start-ldaps.sh in this folder
     - ldap3
     networks:
       testing_net:
-        ipv4_address: 172.28.1.1
+        ipv4_address: 10.28.1.1
 ```
 
 The BIND9 config [file](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/bind/confluent.io-ldap) looks like:
@@ -59,10 +59,10 @@ $TTL    604800
      IN      NS      bind.confluent.io.
 
 ; name servers - A records
-bind.confluent.io.          IN      A      172.28.1.1
-ldap.confluent.io.          IN      A      172.28.1.2
-ldap2.confluent.io.         IN      A      172.28.1.3
-ldap3.confluent.io.         IN      A      172.28.1.4
+bind.confluent.io.          IN      A      10.28.1.1
+ldap.confluent.io.          IN      A      10.28.1.2
+ldap2.confluent.io.         IN      A      10.28.1.3
+ldap3.confluent.io.         IN      A      10.28.1.4
 
 _ldap._tcp.confluent.io. IN SRV 10 50 389 ldap.confluent.io.
 _ldap._tcp.confluent.io. IN SRV 10 50 389 ldap2.confluent.io.
@@ -75,11 +75,11 @@ The broker is configured to talk to the BIND9 DNS server using `/etc/resolv.conf
 
 ```properties
 nameserver 127.0.0.11
-nameserver 172.28.1.1
+nameserver 10.28.1.1
 options ndots:0
 ```
 
-Where `127.0.0.11` is the generic docker DNS and `172.28.1.1` is BIND9 container.
+Where `127.0.0.11` is the generic docker DNS and `10.28.1.1` is BIND9 container.
 
 The broker is then configured with:
 

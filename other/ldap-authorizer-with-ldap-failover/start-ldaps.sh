@@ -5,7 +5,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 
-playground tools cert create --output-folder "${PWD}/../../other/ldap-authorizer-with-ldap-failover/security"
+# certificates of the broker and of the 3 LDAP servers, signed by the same CA: the broker reaches the LDAP servers with the names
+# of the DNS SRV records (ldap.confluent.io...), which must be in the SAN of their certificates (the "container" name is the SAN)
+playground tools cert create --output-folder "${PWD}/../../other/ldap-authorizer-with-ldap-failover/security" --container broker --container ldap.confluent.io --container ldap2.confluent.io --container ldap3.confluent.io
 
 playground start-environment --environment ldap-authorizer-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.ldap-authorizer-sasl-plain.ldaps.yml"
 
@@ -116,10 +118,10 @@ playground start-environment --environment ldap-authorizer-sasl-plain --docker-c
 # confluent.io.           604800  IN      NS      bind.confluent.io.
 
 # ;; ADDITIONAL SECTION:
-# ldap.confluent.io.      604800  IN      A       172.28.1.2
-# ldap2.confluent.io.     604800  IN      A       172.28.1.3
-# ldap3.confluent.io.     604800  IN      A       172.28.1.4
-# bind.confluent.io.      604800  IN      A       172.28.1.1
+# ldap.confluent.io.      604800  IN      A       10.28.1.2
+# ldap2.confluent.io.     604800  IN      A       10.28.1.3
+# ldap3.confluent.io.     604800  IN      A       10.28.1.4
+# bind.confluent.io.      604800  IN      A       10.28.1.1
 
 # ;; Query time: 0 msec
 # ;; SERVER: 127.0.0.11#53(127.0.0.11)

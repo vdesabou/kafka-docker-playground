@@ -10,10 +10,10 @@ $TTL    604800
      IN      NS      bind.confluent.io.
 
 ; name servers - A records
-bind.confluent.io.          IN      A      172.28.1.1
-ldap.confluent.io.          IN      A      172.28.1.2
-ldap2.confluent.io.         IN      A      172.28.1.3
-ldap3.confluent.io.         IN      A      172.28.1.4
+bind.confluent.io.          IN      A      10.28.1.1
+ldap.confluent.io.          IN      A      10.28.1.2
+ldap2.confluent.io.         IN      A      10.28.1.3
+ldap3.confluent.io.         IN      A      10.28.1.4
 
 _ldap._tcp.confluent.io. IN SRV 10 50 636 ldap.confluent.io.
 _ldap._tcp.confluent.io. IN SRV 10 50 636 ldap2.confluent.io.
