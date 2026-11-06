@@ -272,7 +272,10 @@ HTML_CSS = style(NEWER_REPORTS_CSS)
 
 
 def e(s) -> str:
-    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;"))
+    """text and attribute values, double or single quoted (a ' in a connector name or a file name of the logs must not
+    close a class='…' / title='…' attribute and add an event handler)"""
+    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+            .replace("'", "&#39;"))
 
 
 def kpi(label, val, unit, cls="", title="") -> str:

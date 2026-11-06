@@ -27,6 +27,7 @@ import sys
 from collections import Counter, OrderedDict
 from datetime import datetime
 from typing import Dict, List, Optional, Sequence, Tuple
+from urllib.parse import quote
 
 # no __pycache__ left in the repository
 sys.dont_write_bytecode = True
@@ -869,12 +870,14 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
 def share_html(summary: str, share_zip: str, sanitized: bool, title: str) -> str:
     """📤 Share, in the header: the .zip of the report and its file pages (written next to it by analyze logs), the text
     summary to paste in Slack or a ticket, the path, an email with the summary; the sanitization state first"""
-    safe = summary.replace("</", "<\\/")
+    # every < encoded, not only </: a log line with <!--<script> would put the parser in the double escaped state of a
+    # script element, and the rest of the page (the dialog, its script, the footer) would become text of this one
+    safe = summary.replace("<", "\\u003c")
     state = ("<p class='share-ok'>🔒 Sanitized (--sanitize): secrets, IPs and hostnames are replaced by placeholders. Review it "
              "before sending it outside Confluent.</p>" if sanitized else
              "<p class='share-warn'>⚠️ Not sanitized: it can contain passwords, IPs and hostnames of the logs. For someone outside "
              "Confluent, run the same command again with <span class='mono'>--sanitize</span>.</p>")
-    zip_item = (f"<li><a class='share-btn' href='{e(share_zip)}' download>📦 Download the report and its file pages (.zip)</a>"
+    zip_item = (f"<li><a class='share-btn' href='{e(quote(share_zip))}' download>📦 Download the report and its file pages (.zip)</a>"
                 "<span class='fi-meta'> send it: your colleague unzips it and opens the .html (📄 and the line links keep working)</span>"
                 "<div class='fi-meta' style='margin-top:4px'>No .zip next to the report? Its file pages are larger than 200 MB "
                 "(a page holds a whole log file): <button type='button' class='share-close' data-share='zipcmd'>📋 Copy the zip "
@@ -919,7 +922,7 @@ document.addEventListener("DOMContentLoaded", function () {
   open.addEventListener("click", () => dlg.showModal());
   document.body.appendChild(open);
   const done = dlg.querySelector(".share-done");
-  const summary = document.getElementById("pg-share-summary").textContent.replace(/<\\\\\\//g, "</");
+  const summary = document.getElementById("pg-share-summary").textContent.replace(/\\\\u003c/g, "<");
   function copy(text, what) {
     const ok = () => { done.textContent = "✅ " + what + " copied to the clipboard"; };
     if (navigator.clipboard && navigator.clipboard.writeText) {
