@@ -7,14 +7,16 @@
 # What it does, asking before each change:
 #   1. checks git, bash 4+, fzf, docker + compose v2 (or podman), free disk space, and changes nothing
 #   2. installs what is missing with brew (macOS) or the package manager (Linux): bash, fzf, git, and the
-#      Confluent CLI (used by the Confluent Cloud examples). It never installs Docker or Podman: it gives you the link instead.
+#      Confluent CLI (used by the Confluent Cloud examples)
 #   3. clones the repository (--depth 1), or updates an existing clone
-#   4. adds ONE block, between markers, to ~/.zshrc / ~/.bashrc / ~/.bash_profile, with a backup of the file:
+#   4. when no container engine is installed at all, offers to install one: Podman or Docker Desktop on macOS,
+#      Docker Engine on Linux. Never with --yes alone (pass --engine), never next to an engine already installed.
+#   5. adds ONE block, between markers, to ~/.zshrc / ~/.bashrc / ~/.bash_profile, with a backup of the file:
 #        # >>> kafka-docker-playground >>>
 #        export PATH="<dir>/scripts/cli:$PATH"
 #        source "<dir>/scripts/cli/completions.zsh"
 #        # <<< kafka-docker-playground <<<
-#   5. runs 'playground doctor'
+#   6. runs 'playground doctor'
 #
 # Options:
 #   --dir <path>   where to clone (default: the clone 'playground' already comes from, else ~/kafka-docker-playground)
@@ -23,6 +25,8 @@
 #   --dry-run      show what would be done, change nothing
 #   --no-rc        do not touch any shell startup file
 #   --no-confluent-cli  do not install the Confluent CLI (only needed by the Confluent Cloud examples)
+#   --engine <e>   container engine to install when none is found, without asking: podman | docker-desktop (macOS),
+#                  docker (Linux), none. Without it, the installer asks (and --yes installs none)
 #   --uninstall    remove the block from the shell startup files, then offer to delete the clone
 #   --help, -h     this help
 #
@@ -42,6 +46,7 @@ opt_yes=0
 opt_dry_run=0
 opt_no_rc=0
 opt_no_confluent_cli=0
+opt_engine=""
 opt_uninstall=0
 
 nb_errors=0
@@ -122,11 +127,17 @@ parse_args() {
       --dry-run) opt_dry_run=1; shift ;;
       --no-rc) opt_no_rc=1; shift ;;
       --no-confluent-cli) opt_no_confluent_cli=1; shift ;;
+      --engine) [ $# -ge 2 ] || die "--engine needs podman, docker-desktop, docker or none"; opt_engine="$2"; shift 2 ;;
+      --engine=*) opt_engine="${1#--engine=}"; shift ;;
       --uninstall) opt_uninstall=1; shift ;;
       -h|--help) usage; exit 0 ;;
       *) die "unknown option: $1 (see --help)" ;;
     esac
   done
+  case "$opt_engine" in
+    ""|podman|docker-desktop|docker|none) ;;
+    *) die "--engine must be podman, docker-desktop, docker or none" ;;
+  esac
   # a literal ~ given in quotes (--dir "~/kdp")
   # shellcheck disable=SC2088
   case "$opt_dir" in
@@ -140,6 +151,9 @@ parse_args() {
 # ---------------------------------------------------------------------------------------------------------------------
 
 os=""; arch=""; brew_bin=""; pkg_manager=""; bash4=""; user_shell=""
+# set when Homebrew is installed but not set up in the shell (its bin folder is not in the PATH): the shell block
+# then adds 'eval "$(<brew> shellenv)"', and the installer puts that folder in its own PATH
+brew_shellenv_needed=0
 
 detect_os() {
   arch="$(uname -m)"
@@ -157,6 +171,12 @@ detect_os() {
     if command -v brew > /dev/null 2>&1; then brew_bin="$(command -v brew)"
     elif [ -x /opt/homebrew/bin/brew ]; then brew_bin=/opt/homebrew/bin/brew
     elif [ -x /usr/local/bin/brew ]; then brew_bin=/usr/local/bin/brew
+    fi
+    if [ -n "$brew_bin" ] && ! path_has_dir "$(dirname "$brew_bin")"
+    then
+      brew_shellenv_needed=1
+      PATH="$(dirname "$brew_bin"):$PATH"
+      export PATH
     fi
   else
     for pm in apt-get dnf yum zypper pacman apk
@@ -249,7 +269,7 @@ check_confluent_cli() {
 }
 
 check_prerequisites() {
-  title "🔎 1/5 Checking your machine (nothing is changed)"
+  title "🔎 1/6 Checking your machine (nothing is changed)"
   log "system: $os ($arch), shell: $user_shell"
 
   if command -v git > /dev/null 2>&1
@@ -285,7 +305,7 @@ check_prerequisites() {
 
   if ! command -v docker > /dev/null 2>&1
   then
-    logwarn "the 'docker' CLI is missing: install Docker Desktop (https://docs.docker.com/get-docker/) or Podman 5+ with podman-docker (${KDP_DOCS_URL}/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker)"
+    logwarn "the 'docker' CLI is missing: no container engine (step 4 offers to install one)"
   else
     if docker compose version > /dev/null 2>&1
     then
@@ -353,7 +373,7 @@ sudo_cmd() {
 }
 
 install_missing() {
-  title "📦 2/5 Missing tools"
+  title "📦 2/6 Missing tools"
   missing_packages="$(echo "$missing_packages" | xargs)"
   if [ -z "$missing_packages" ]
   then
@@ -434,7 +454,7 @@ choose_dir() {
 }
 
 clone_or_update() {
-  title "🔽 3/5 Repository in $install_dir"
+  title "🔽 3/6 Repository in $install_dir"
   if is_kdp_clone "$install_dir"
   then
     log_ok "already cloned"
@@ -467,21 +487,354 @@ clone_or_update() {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# 4. shell startup file
+# 4. container engine
+# ---------------------------------------------------------------------------------------------------------------------
+
+# engine_state: running | stopped (installed but not reachable) | none
+engine_state="none"
+engine_hint=""
+# set when the user was just added to the docker group: this session is not in it yet, doctor runs through 'sg docker'
+docker_group_pending=0
+# set when 'playground switch-podman' ran: it already ends with 'playground doctor'
+doctor_done=0
+
+detect_engine() {
+  engine_state="none"
+  engine_hint=""
+  # tests only: behave as on a machine without any engine (combine with --dry-run)
+  if [ "${KDP_INSTALL_TEST_NO_ENGINE:-}" = "1" ] && [ "$opt_dry_run" = "1" ]
+  then
+    return 0
+  fi
+  if command -v docker > /dev/null 2>&1 && docker info > /dev/null 2>&1
+  then
+    engine_state="running"
+    return 0
+  fi
+  if [ "$os" = "macos" ]
+  then
+    if [ -d "/Applications/Docker.app" ]; then engine_state="stopped"; engine_hint="start Docker Desktop: open -a Docker"; return 0; fi
+    if [ -d "/Applications/OrbStack.app" ]; then engine_state="stopped"; engine_hint="start OrbStack: open -a OrbStack"; return 0; fi
+    if [ -d "/Applications/Rancher Desktop.app" ]; then engine_state="stopped"; engine_hint="start Rancher Desktop: open -a 'Rancher Desktop'"; return 0; fi
+    if command -v colima > /dev/null 2>&1; then engine_state="stopped"; engine_hint="start Colima: colima start --cpu 4 --memory 12"; return 0; fi
+  fi
+  if command -v podman > /dev/null 2>&1
+  then
+    engine_state="stopped"
+    if [ "$os" = "macos" ]
+    then
+      engine_hint="start the podman machine and point docker at it: playground switch-podman (create the machine first if needed: podman machine init --rootful --cpus 4 --memory 12288 --disk-size 100)"
+    else
+      engine_hint="set up the rootful podman socket: ${KDP_DOCS_URL}/#/how-to-use?id=%f0%9f%90%a7-setup-on-linux"
+    fi
+    return 0
+  fi
+  if command -v docker > /dev/null 2>&1
+  then
+    engine_state="stopped"
+    if [ "$os" = "macos" ]
+    then
+      engine_hint="the docker CLI is installed but no engine answers: start Docker Desktop, OrbStack, Colima or the podman machine"
+    elif [ -S /var/run/docker.sock ] && ! id -nG 2> /dev/null | grep -qw docker && [ "$(id -u)" != "0" ]
+    then
+      if getent group docker 2> /dev/null | cut -d: -f4 | tr ',' '\n' | grep -qx "${USER:-}"
+      then
+        engine_hint="you were added to the docker group: log out and back in (or run: newgrp docker)"
+      else
+        engine_hint="you are not in the docker group: sudo usermod -aG docker \$USER, then log out and back in"
+      fi
+    else
+      engine_hint="start the docker daemon: sudo systemctl enable --now docker"
+    fi
+  fi
+}
+
+# the engines this installer can install on this machine, first one is the default
+engine_choices() {
+  case "$os" in
+    macos) echo "podman docker-desktop" ;;
+    linux) echo "docker" ;;
+    wsl) if [ -d /run/systemd/system ]; then echo "docker"; fi ;;
+  esac
+}
+
+engine_label() {
+  case "$1" in
+    podman) echo "Podman: free, installed and started for you (brew, then a podman machine)" ;;
+    docker-desktop) echo "Docker Desktop: needs a paid subscription in companies with more than 250 employees or \$10M revenue" ;;
+    docker) echo "Docker Engine: free, from Docker's official repository (needs sudo)" ;;
+  esac
+}
+
+# asks which engine to install; prints it, or nothing to skip
+choose_engine() {
+  local choices="$1" i=1 c answer
+  if [ "$opt_dry_run" = "1" ]
+  then
+    printf '%s\n' "   ${C_YELLOW}[dry-run] would ask which engine to install, choices: ${choices} (default first), or skip${C_RESET}" >&2
+    echo "${choices%% *}"
+    return 0
+  fi
+  if ! { : < /dev/tty; } 2> /dev/null
+  then
+    return 0
+  fi
+  {
+    echo "No container engine found: the playground needs one. Install:"
+    for c in $choices
+    do
+      if [ "$i" = "1" ]; then echo "  $i) $(engine_label "$c")   ← default"; else echo "  $i) $(engine_label "$c")"; fi
+      i=$((i+1))
+    done
+    echo "  s) skip, I will install one myself"
+  } > /dev/tty
+  while true
+  do
+    printf '%s' "❓ your choice [1]: " > /dev/tty
+    IFS= read -r answer < /dev/tty || answer="s"
+    [ -z "$answer" ] && answer=1
+    case "$answer" in
+      s|S|skip) return 0 ;;
+    esac
+    i=1
+    for c in $choices
+    do
+      if [ "$answer" = "$i" ]; then echo "$c"; return 0; fi
+      i=$((i+1))
+    done
+  done
+}
+
+install_engine_docker_linux() {
+  local sudo id_like="" tmp
+  sudo="$(sudo_cmd)"
+  if [ -r /etc/os-release ]
+  then
+    id_like="$(. /etc/os-release; echo "${ID:-} ${ID_LIKE:-}")"
+  fi
+  case " $id_like " in
+    *" ubuntu "*|*" debian "*|*" fedora "*|*" centos "*|*" rhel "*|*" raspbian "*) ;;
+    *)
+      logwarn "Docker's installer does not support this distribution ($id_like): install Docker Engine yourself, https://docs.docker.com/engine/install/"
+      return 1
+      ;;
+  esac
+  if ! command -v curl > /dev/null 2>&1
+  then
+    logwarn "curl is needed to install Docker Engine"
+    return 1
+  fi
+  tmp="$(mktemp)"
+  run curl -fsSL https://get.docker.com -o "$tmp" || { rm -f "$tmp"; logwarn "could not download https://get.docker.com"; return 1; }
+  # the script uses sudo by itself when not run as root
+  run sh "$tmp" || { rm -f "$tmp"; logwarn "the Docker Engine install failed: https://docs.docker.com/engine/install/"; return 1; }
+  rm -f "$tmp"
+  if [ -d /run/systemd/system ]
+  then
+    run $sudo systemctl enable --now docker
+  else
+    run $sudo service docker start || true
+  fi
+  if [ "$opt_dry_run" = "0" ]
+  then
+    local i=0
+    while [ "$i" -lt 15 ] && ! $sudo docker info > /dev/null 2>&1
+    do
+      sleep 2
+      i=$((i+1))
+    done
+    if $sudo docker info > /dev/null 2>&1
+    then
+      log_ok "Docker Engine is running"
+    else
+      logwarn "Docker Engine does not answer: sudo systemctl status docker"
+    fi
+  fi
+  if [ "$(id -u)" != "0" ] && ! id -nG 2> /dev/null | grep -qw docker
+  then
+    run $sudo usermod -aG docker "$USER"
+    docker_group_pending=1
+    log "you are now in the docker group: it applies to new logins, log out and back in (or run: newgrp docker)"
+  fi
+}
+
+install_engine_podman_macos() {
+  local mem_gb cpus machine_mb prefix
+  mem_gb=$(( $(sysctl -n hw.memsize 2> /dev/null || echo 0) / 1024 / 1024 / 1024 ))
+  cpus="$(sysctl -n hw.ncpu 2> /dev/null || echo 4)"
+  [ "$cpus" -gt 4 ] && cpus=4
+  # 12GB for the machine, but leave at least 4GB to macOS
+  machine_mb=12288
+  if [ "$mem_gb" -gt 0 ] && [ $(( (mem_gb - 4) * 1024 )) -lt "$machine_mb" ]
+  then
+    machine_mb=$(( (mem_gb - 4) * 1024 ))
+  fi
+  if [ "$machine_mb" -lt 8192 ]
+  then
+    logwarn "this Mac has ${mem_gb}GB of memory: the podman machine gets ${machine_mb}MB, and the playground needs 8GB for most examples"
+    [ "$machine_mb" -lt 4096 ] && machine_mb=4096
+  fi
+
+  run "$brew_bin" install podman docker docker-compose || { logwarn "brew install failed"; return 1; }
+  # the docker CLI from brew only finds the compose plugin from ~/.docker/cli-plugins
+  prefix="$("$brew_bin" --prefix)"
+  run mkdir -p "$HOME/.docker/cli-plugins"
+  run ln -sfn "$prefix/lib/docker/cli-plugins/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
+  hash -r 2> /dev/null || true
+
+  if [ "$opt_dry_run" = "1" ] || ! podman machine inspect podman-machine-default > /dev/null 2>&1
+  then
+    log "creating the podman machine: ${cpus} CPUs, ${machine_mb}MB of memory, 100GB of disk (downloads about 1GB)"
+    run podman machine init --rootful --cpus "$cpus" --memory "$machine_mb" --disk-size 100 \
+      || { logwarn "podman machine init failed"; return 1; }
+  fi
+  # 'playground switch-podman' starts the machine, creates a 'podman' docker context and ends with 'playground doctor'
+  if [ "$opt_dry_run" = "1" ]
+  then
+    run playground switch-podman
+    return 0
+  fi
+  if PATH="$(dirname "$bash4"):$install_dir/scripts/cli:$PATH" "$bash4" "$install_dir/scripts/cli/playground" switch-podman
+  then
+    doctor_done=1
+  else
+    logwarn "playground switch-podman failed: fix what it says above, then run it again"
+  fi
+}
+
+install_engine_docker_desktop_macos() {
+  local i
+  logwarn "Docker Desktop needs a paid subscription in companies with more than 250 employees or \$10M revenue: check that your company has one"
+  confirm "install Docker Desktop ($brew_bin install --cask docker-desktop)?" n || { log "skipped"; return 0; }
+  run "$brew_bin" install --cask docker-desktop || { logwarn "brew install --cask docker-desktop failed: https://docs.docker.com/desktop/setup/install/mac-install/"; return 1; }
+  run open -a Docker
+  [ "$opt_dry_run" = "1" ] && return 0
+  log "⏳ accept the Docker Subscription Service Agreement in the Docker Desktop window, waiting for the engine (5 minutes max)"
+  hash -r 2> /dev/null || true
+  i=0
+  while [ "$i" -lt 60 ]
+  do
+    if command -v docker > /dev/null 2>&1 && docker info > /dev/null 2>&1
+    then
+      log_ok "Docker Desktop is running"
+      log "give it at least 8GB of memory: Docker Desktop > Settings > Resources (playground doctor checks it)"
+      return 0
+    fi
+    sleep 5
+    i=$((i+1))
+  done
+  logwarn "Docker Desktop did not answer within 5 minutes: finish its setup, then run: playground doctor"
+}
+
+setup_engine() {
+  title "🐳 4/6 Container engine"
+  detect_engine
+  case "$engine_state" in
+    running)
+      log_ok "a container engine is running: nothing to install"
+      return 0
+      ;;
+    stopped)
+      logwarn "a container engine is installed but not reachable, not installing another one: $engine_hint"
+      return 0
+      ;;
+  esac
+
+  local choices engine=""
+  choices="$(engine_choices)"
+  if [ "$os" = "macos" ] && [ -z "$brew_bin" ]
+  then
+    choices=""
+  fi
+  if [ -z "$choices" ]
+  then
+    case "$os" in
+      wsl) logwarn "no container engine: install Docker Desktop for Windows with the WSL 2 integration, https://docs.docker.com/desktop/features/wsl/ (or enable systemd in /etc/wsl.conf and run this installer again for Docker Engine)" ;;
+      macos) logwarn "no container engine, and Homebrew is not installed: install Docker Desktop (https://docs.docker.com/get-docker/) or Podman (https://podman.io)" ;;
+      *) logwarn "no container engine: https://docs.docker.com/engine/install/" ;;
+    esac
+    return 0
+  fi
+
+  case "$opt_engine" in
+    none)
+      log "--engine none: not installing a container engine"
+      return 0
+      ;;
+    "")
+      if [ "$opt_yes" = "1" ]
+      then
+        logwarn "no container engine: --yes does not install one, pass --engine $(echo "$choices" | tr ' ' '|') to do it"
+        return 0
+      fi
+      engine="$(choose_engine "$choices")"
+      ;;
+    *)
+      case " $choices " in
+        *" $opt_engine "*) engine="$opt_engine" ;;
+        *) logerror "--engine $opt_engine cannot be installed here, choices: $choices none"; return 0 ;;
+      esac
+      ;;
+  esac
+  if [ -z "$engine" ]
+  then
+    if [ "$os" = "macos" ]
+    then
+      logwarn "skipped: install Docker Desktop or Podman yourself, https://docs.docker.com/get-docker/"
+    else
+      logwarn "skipped: install Docker Engine yourself, https://docs.docker.com/engine/install/"
+    fi
+    return 0
+  fi
+
+  case "$engine" in
+    docker) install_engine_docker_linux ;;
+    podman) install_engine_podman_macos ;;
+    docker-desktop) install_engine_docker_desktop_macos ;;
+  esac
+  return 0
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# 5. shell startup file
 # ---------------------------------------------------------------------------------------------------------------------
 
 # prints the content of the block for a shell (zsh|bash)
+# a line of the block already in the shell startup file, found by its trailing comment
+previous_block_line() {
+  local rc
+  rc="$(rc_files_for_shell)"
+  [ -n "$rc" ] && [ -f "$rc" ] || return 1
+  awk -v b="$MARKER_BEGIN" -v e="$MARKER_END" '$0 == b { in_block = 1; next } $0 == e { in_block = 0 } in_block' "$rc" \
+    | grep -F -- "$1" | head -1 | grep .
+}
+
 rc_block() {
-  local shell_name="$1"
+  local shell_name="$1" line
   echo "$MARKER_BEGIN"
   echo "# added by ${KDP_DOCS_URL}/install.sh, remove with: curl -fsSL ${KDP_DOCS_URL}/install.sh | bash -s -- --uninstall"
+  # the PATH lines are computed from the PATH of this run, which already includes what the block added in a
+  # previous run: keep the lines of the previous block, otherwise a second run from a new terminal removes them
+  if [ "$brew_shellenv_needed" = "1" ]
+  then
+    echo "eval \"\$($brew_bin shellenv)\"   # Homebrew: bash 4+, fzf, Confluent CLI"
+  elif line="$(previous_block_line "# Homebrew")"
+  then
+    echo "$line"
+  fi
   if ! path_bash_is_4 && [ -n "$bash4" ]
   then
     echo "export PATH=\"$(dirname "$bash4"):\$PATH\"   # bash 4+, needed by playground"
+  elif line="$(previous_block_line "# bash 4+")"
+  then
+    echo "$line"
   fi
   if [ -n "$confluent_bin_dir" ]
   then
     echo "export PATH=\"$confluent_bin_dir:\$PATH\"   # Confluent CLI"
+  elif line="$(previous_block_line "# Confluent CLI")"
+  then
+    echo "$line"
   fi
   echo "export PATH=\"$install_dir/scripts/cli:\$PATH\""
   echo "source \"$install_dir/scripts/cli/completions.$shell_name\""
@@ -508,7 +861,7 @@ write_in_place() {
 }
 
 setup_rc() {
-  title "🦶 4/5 Shell setup (PATH and completion)"
+  title "🦶 5/6 Shell setup (PATH and completion)"
   if [ "$opt_no_rc" = "1" ]
   then
     log "--no-rc: not touching any shell startup file. Add this yourself:"
@@ -571,11 +924,11 @@ setup_rc() {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# 5. doctor
+# 6. doctor
 # ---------------------------------------------------------------------------------------------------------------------
 
 run_doctor() {
-  title "🩺 5/5 playground doctor"
+  title "🩺 6/6 playground doctor"
   if [ "$opt_dry_run" = "1" ]
   then
     printf '%s\n' "   ${C_YELLOW}[dry-run] would run:${C_RESET} playground doctor"
@@ -586,12 +939,25 @@ run_doctor() {
     logwarn "skipped: bash 4+ or the repository is missing"
     return 0
   fi
+  if [ "$doctor_done" = "1" ]
+  then
+    log_ok "already run by playground switch-podman above"
+    return 0
+  fi
+  hash -r 2> /dev/null || true
   if ! command -v docker > /dev/null 2>&1
   then
     logwarn "skipped: install Docker Desktop or Podman first, then run: playground doctor"
     return 0
   fi
-  if PATH="$(dirname "$bash4"):$install_dir/scripts/cli:$PATH" "$bash4" "$install_dir/scripts/cli/playground" doctor
+  local doctor_cmd
+  doctor_cmd="PATH=\"$(dirname "$bash4"):$install_dir/scripts/cli:\$PATH\" \"$bash4\" \"$install_dir/scripts/cli/playground\" doctor"
+  if [ "$docker_group_pending" = "1" ] && command -v sg > /dev/null 2>&1
+  then
+    # this session is not in the docker group yet
+    doctor_cmd="sg docker -c '$doctor_cmd'"
+  fi
+  if sh -c "$doctor_cmd"
   then
     log_ok "the container engine is ready"
   else
@@ -660,7 +1026,7 @@ uninstall() {
     fi
     opt_yes="$saved_yes"
   fi
-  log "the Confluent CLI, bash, fzf and git stay installed: remove them with brew or your package manager (or rm ~/.local/bin/confluent) if you no longer need them"
+  log "Docker / Podman, the Confluent CLI, bash, fzf and git stay installed: remove them with brew or your package manager (or rm ~/.local/bin/confluent) if you no longer need them"
   log "Docker images stay on your machine: free the space with 'docker system prune -a' if you no longer need them"
   log "open a new terminal to finish"
 }
@@ -684,6 +1050,7 @@ main() {
   install_confluent_cli
   choose_dir
   clone_or_update
+  setup_engine
   setup_rc
   run_doctor
 
