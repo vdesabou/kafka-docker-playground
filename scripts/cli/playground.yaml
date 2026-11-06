@@ -4581,11 +4581,12 @@ subcommands:
       time, root causes (deepest exception of each record), files with findings, and
       every distinct record. Everything below the filter bar is one view of the same
       records: the level chips, the component chips, the connector picker, the search
-      box and the period selected by dragging over the occurrences chart all recount
-      the two charts, the root causes, the files with findings and the record cards
-      (double-click the chart, or ⤺ whole period, to go back). The findings keep the
-      figures of the whole report and only say how much of each of them is in the
-      selection.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
+      box and the period selected by dragging over the occurrences chart (all kept
+      in the URL: \U0001F517 Link to this view opens the report on the same view)
+      all recount the two charts, the root causes, the files with findings and the
+      record cards (double-click the chart, or ⤺ whole period, to go back). The findings
+      keep the figures of the whole report and only say how much of each of them is
+      in the selection.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle"
     usage: playground analyze logs [OPTIONS]
     options:
