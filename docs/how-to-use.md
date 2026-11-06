@@ -1,7 +1,26 @@
 
 # 🚀 How to use
 
-## 2️⃣ Ways to run
+## 3️⃣ Ways to run
+
+### 🌐 In your browser: GitHub Codespaces
+
+Nothing to install: click the button, log in to GitHub, and after about 2 minutes VS Code opens in your browser with a terminal where `playground run` works.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1)
+
+The codespace is an Ubuntu machine (x86_64, 4 cores, 16 GB) set up by [.devcontainer/devcontainer.json](https://github.com/vdesabou/kafka-docker-playground/blob/master/.devcontainer/devcontainer.json): Docker with compose v2, bash 5, fzf, and `playground` with its completion in the `PATH`. [playground doctor](/playground%20doctor) runs each time it starts. Control Center (port 9021) and Grafana (port 3000) are forwarded to your browser when an example starts them.
+
+| Good to know | |
+| --- | --- |
+| 💸 Cost | Personal GitHub accounts get a [free monthly quota](https://docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-codespaces/about-billing-for-github-codespaces) of core hours and storage: on this 4-core machine, the 120 core hours of a Free account make about 30 hours a month, and the pulled images count in the storage. Great to try the playground, less to run it all day. **Stop** the codespace when you are done (it stops by itself after 30 minutes idle) and delete it when you no longer need it. |
+| 🐢 First run | The first example pulls the Confluent Platform images, so it is slower than the next ones. |
+| 🖥️ ARM64 | The machine is x86_64, so examples marked ![arm64](https://img.shields.io/badge/arm64-not%20working-red) on Apple Silicon work there. |
+| 🔐 Credentials | Cloud examples (AWS, GCP, Azure, Confluent Cloud…) need credentials: store them as [Codespaces secrets](https://docs.github.com/en/codespaces/managing-your-codespace/managing-secrets-for-your-codespaces) (they become environment variables), never in a committed file. Do not put customer data in a personal codespace. |
+| 🏢 Company policy | Some companies block Codespaces or Docker-in-Docker. Use the [one command install](/how-to-use?id=%e2%9a%a1-install-in-one-command) or [playground ec2](/playground%20ec2) instead. |
+
+> [!TIP]
+> `?quickstart=1` in the link reopens your existing codespace instead of creating a new one each time. The same `.devcontainer` also works locally with the VS Code [Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers) extension.
 
 ### 💻️ Locally
 
@@ -88,7 +107,7 @@ Example:
 The badges are:
 
 * ![arm64](https://img.shields.io/badge/arm64-native%20support-green): example works natively.
-* ![arm64](https://img.shields.io/badge/arm64-not%20working-red): example **cannot work at all**. You will need to run it using AWS EC2 instance, see [playground ec2](/playground%20ec2) CLI command
+* ![arm64](https://img.shields.io/badge/arm64-not%20working-red): example **cannot work at all**. You will need to run it using AWS EC2 instance, see [playground ec2](/playground%20ec2) CLI command, or in your browser with [GitHub Codespaces](/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces) (x86_64)
 * ![arm64](https://img.shields.io/badge/arm64-emulation%20required-orange): example is working but emulation is required. 
 
 Docker Desktop now provides **Rosetta 2** virtualization feature, see detailed steps [here](https://levelup.gitconnected.com/docker-on-apple-silicon-mac-how-to-run-x86-containers-with-rosetta-2-4a679913a0d5) on how to enable it, basically, you need to enable this:

@@ -5430,6 +5430,7 @@ function check_arm64_support() {
     then
         logerror "🖥️ This example is not working with ARM64 !"
         log "It is highly recommended to use 'playground ec2 command' (https://kafka-docker-playground.io/#/playground%20ec2) to run the example on ubuntu ec2 instance"
+        log "You can also run it in your browser with GitHub Codespaces (x86_64): https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1"
         log "Do you want to start the example anyway ?"
         check_if_continue
         return
