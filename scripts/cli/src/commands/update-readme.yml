@@ -13,3 +13,7 @@ flags:
       💯 list of tags
   - long: --generate-for-kb
     required: false
+  - long: --skip-gh-issues
+    required: false
+    help: |-
+      🔥 read the open GitHub issues (the badges of a failing test link to its 🔥 issue), but never create, comment, edit or close one: only the nightly CI manages them (used by the Update Docs workflow)

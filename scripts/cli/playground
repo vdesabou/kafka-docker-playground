@@ -1562,6 +1562,11 @@ playground_update_readme_usage() {
     printf "\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-gh-issues")"
+    printf "    🔥 read the open GitHub issues (the badges of a failing test link to its 🔥\n    issue), but never create, comment, edit or close one: only the nightly CI\n    manages them (used by the Update Docs workflow)\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -44104,6 +44109,7 @@ playground_update_readme_command() {
   # src/commands/update-readme.sh
   tags="${args[--tags]}"
   generate_for_kb="${args[--generate-for-kb]}"
+  skip_gh_issues="${args[--skip-gh-issues]}"
 
   set +e
   tmp_dir="/tmp/update-readme"
@@ -44176,7 +44182,7 @@ playground_update_readme_command() {
   nb_total_success=0
 
   # podman results (container_engine=podman in CI) are stored with a -podman suffix
-  if ls "${ci_folder}"/*-podman > /dev/null 2>&1
+  if [ -z "$skip_gh_issues" ] && ls "${ci_folder}"/*-podman > /dev/null 2>&1
   then
     gh label create "podman" --description "fails when run with podman" --color "892CA0" > /dev/null 2>&1 || true
   fi
@@ -44483,7 +44489,11 @@ playground_update_readme_command() {
         log "Number of successful tests: $nb_success/${nb_tests}"
         if [ ${nb_fail} -gt 0 ] && [ -n "$gh_issues_available" ]
         then
-          if [ -z "$issue_number" ]
+          if [ -n "$skip_gh_issues" ]
+          then
+            # read-only: the badge links to the open issue, the nightly CI creates or comments it
+            log "⏭️ --skip-gh-issues: GH issue with title $title not created nor commented"
+          elif [ -z "$issue_number" ]
           then
             echo -e "🆕💥 New issue !\n" >> ${gh_msg_file_intro}
             cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
@@ -44509,7 +44519,7 @@ playground_update_readme_command() {
           fi
           gh_issue_number="$issue_number"
         fi
-        if [ ${nb_tests} -gt 0 ] && [ ${nb_success} -eq ${nb_tests} ] && [ -n "$gh_issues_available" ]
+        if [ ${nb_tests} -gt 0 ] && [ ${nb_success} -eq ${nb_tests} ] && [ -n "$gh_issues_available" ] && [ -z "$skip_gh_issues" ]
         then
           # if all scripts in tests are now successful, close the issue
           issue_number=$(get_open_issue_number "$title")
@@ -94841,6 +94851,14 @@ playground_update_readme_parse_requirements() {
 
         # :flag.case_no_arg
         args['--generate-for-kb']=1
+        shift
+        ;;
+
+      # :flag.case
+      --skip-gh-issues)
+
+        # :flag.case_no_arg
+        args['--skip-gh-issues']=1
         shift
         ;;
 
@@ -146759,6 +146777,11 @@ playground_update_readme_completion() {
 
         shift
         ;;
+      --skip-gh-issues)
+        completion_blocked_flags["--skip-gh-issues"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -146769,6 +146792,7 @@ playground_update_readme_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --tags "$completion_current" --tags
     completion_flag_candidates --generate-for-kb "$completion_current" --generate-for-kb
+    completion_flag_candidates --skip-gh-issues "$completion_current" --skip-gh-issues
   fi
 
 }
