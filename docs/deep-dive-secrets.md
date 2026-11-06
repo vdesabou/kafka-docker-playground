@@ -460,6 +460,7 @@ same for any command, `playground run` included. With 1Password, items of a prof
 | an example's variables in the current shell, to paste parts of its script | `source <(playground secrets env -f <example>)` (`--all` for the whole profile) | refuses to print to a terminal (`❌ stdout is a terminal, every value would be printed in clear on screen`), values single quoted so nothing is interpreted, only the example's variables |
 | a properties file for another tool | `playground secrets export --file ~/x.properties --yes-i-want-plaintext` (`--only plain\|secret`) | refused inside the repository, mode `0600`; prefer `env` |
 | an ec2 playground instance | `playground ec2 push-secrets` | values sent over ssh to `~/.playground-secrets.properties` (`umask 077`), read from the store, not from your shell |
+| a GitHub Codespace of the playground | `playground codespace push-secrets` | read from the store, piped over `gh codespace ssh` into the codespace's own store (`file` backend, credentials and plain variables kept apart), so `playground run` there loads them per example |
 | GitHub Actions secrets of a repository you maintain | `playground secrets push-github` (private) | credentials become secrets, plain variables become variables, values piped to `gh` on stdin; `--dry-run` first |
 
 `secrets env` prints the exports on stdout and everything else on stderr, which is what makes sourcing it safe:

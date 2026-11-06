@@ -789,6 +789,148 @@ function secret_shell_assignment () {
   printf "%s='%s'\n" "$name" "${value//\'/\'\\\'\'}"
 }
 
+################################################################################
+# push to a remote machine (playground ec2 push-secrets, playground codespace push-secrets)
+################################################################################
+
+#
+# Build the payload sent to a remote machine, one line per variable of a profile.
+#
+#   $1  profile
+#   $2  all | secret | plain: every variable, or only the credentials, or only
+#       the plain variables (where secret_store_location files them)
+#   $3  shell | import:
+#       shell   <name>='<value>' (secret_shell_assignment), for a file that a
+#               shell sources (playground ec2 push-secrets)
+#       import  <name>="<value>", for 'playground secrets import' on the remote
+#               side (playground codespace push-secrets). import strips the outer
+#               double quotes and interprets nothing inside, so any value comes
+#               back exactly (a value cannot hold a newline), whatever the
+#               version of the playground CLI over there: the '\'' escape of the
+#               shell format is only understood by a recent one
+#
+# It reads the store and not the environment, like 'playground secrets
+# push-github': the remote side must get what the store holds, not what the
+# shell launching the command still has exported.
+#
+# Values are resolved in parallel (secret_prefetch): one 'op read' after the
+# other made a 100 variable profile take minutes. Everything is built in memory
+# before contacting anything, so a locked 1Password fails before a half written
+# file lands on the remote side.
+#
+# Sets SECRET_PAYLOAD, SECRET_PAYLOAD_NB (resolved) and SECRET_PAYLOAD_NB_FAILED,
+# globals and not stdout: the prefetch cache lives in this shell, a $(...)
+# subshell would lose it.
+#
+function secret_build_payload () {
+  local profile="$1"
+  local which="${2:-all}"
+  local format="${3:-shell}"
+  local name value location
+  local names=()
+
+  SECRET_PAYLOAD=""
+  SECRET_PAYLOAD_NB=0
+  SECRET_PAYLOAD_NB_FAILED=0
+
+  for name in $(secret_store_names "$profile")
+  do
+    if [ "$which" != "all" ]
+    then
+      location=$(secret_store_location "$name" "$profile" || true)
+      [ "$location" == "$which" ] || continue
+    fi
+    names+=("$name")
+  done
+  [ ${#names[@]} -gt 0 ] || return 0
+
+  secret_prefetch "$profile" "${names[@]}"
+  for name in "${names[@]}"
+  do
+    if value=$(secret_get_from_store "$name" "$profile")
+    then
+      if [ "$format" == "import" ]
+      then
+        SECRET_PAYLOAD="${SECRET_PAYLOAD}${name}=\"${value}\""$'\n'
+      else
+        SECRET_PAYLOAD="${SECRET_PAYLOAD}$(secret_shell_assignment "$name" "$value")"$'\n'
+      fi
+      SECRET_PAYLOAD_NB=$((SECRET_PAYLOAD_NB+1))
+    else
+      logwarn "⚠️ $name could not be resolved, skipped"
+      SECRET_PAYLOAD_NB_FAILED=$((SECRET_PAYLOAD_NB_FAILED+1))
+    fi
+  done
+}
+
+#
+# Credentials that cannot live in the secrets store, because they are multi
+# line files and not name=value pairs. They used to travel inside secrets.tar,
+# which the cloud formation bootstrap decrypted on the instance; sending them
+# over ssh instead is what makes that tarball removable.
+#
+# Each entry is <local file at repo root>:<remote path under $HOME>:<mode>.
+#
+# The two aws ones are bind mounted into the connect container by the
+# *-with-assuming-iam-role examples, hence the world readable mode: the uid
+# inside the container is not the uid of the remote user.
+#
+SECRET_PUSH_FILES=(
+  "aws_credentials_with_assuming_iam_role:.aws/credentials-with-assuming-iam-role:644"
+  "aws_credentials_aws_account_with_assume_role:.aws/credentials_aws_account_with_assume_role:644"
+  "github_ssh_key_file:.ssh/id_rsa:600"
+)
+
+# The entries of SECRET_PUSH_FILES whose local file exists, into SECRET_PUSH_AVAILABLE_FILES
+function secret_push_available_files () {
+  local entry local_file
+  SECRET_PUSH_AVAILABLE_FILES=()
+  for entry in "${SECRET_PUSH_FILES[@]}"
+  do
+    local_file="$root_folder/${entry%%:*}"
+    if [ -f "$local_file" ]
+    then
+      SECRET_PUSH_AVAILABLE_FILES+=("$entry")
+    else
+      logwarn "⚠️ $local_file does not exist, it will not be sent"
+    fi
+  done
+}
+
+#
+# The remote shell script that writes stdin into ~/<remote path> with <mode>.
+#
+# umask first so the file is never readable by anyone else while it is being
+# written, then the final mode once it is complete.
+#
+# ~/.ssh is created by root in the cloud formation user data, and only its
+# content is given back to the user, so a plain `cat > ~/.ssh/id_rsa` fails with
+# "Permission denied" on every ec2 instance created before that was fixed. Take
+# ownership of the directory with sudo (passwordless on the playground ec2
+# instances and in a codespace) when it is not writable.
+#
+# The content lands in a temporary file next to its destination and is renamed
+# once complete: never a half written credential file, and the rename also
+# replaces a destination owned by root.
+#
+# A missing final newline is added: ssh-keygen (and therefore git over ssh)
+# rejects a private key whose last line is not terminated with "Load key:
+# invalid format", and so do most credential parsers.
+#
+function secret_push_file_remote_script () {
+  local remote_path="$1"
+  local mode="$2"
+  printf 'umask 077
+dir="$HOME/%s"
+mkdir -p "$dir" 2>/dev/null || sudo mkdir -p "$dir"
+[ -w "$dir" ] || sudo chown -R "$(id -u):$(id -g)" "$dir"
+tmp=$(mktemp "$dir/.playground-push.XXXXXX") || exit 1
+cat > "$tmp" || { rm -f "$tmp"; exit 1; }
+[ -n "$(tail -c1 "$tmp")" ] && echo >> "$tmp"
+chmod %s "$tmp" && mv -f "$tmp" "$HOME/%s" || { rm -f "$tmp"; exit 1; }' \
+    "$(dirname "$remote_path")" "$mode" "$remote_path"
+}
+
 function secret_sha256 () {
   if command -v shasum > /dev/null 2>&1
   then

@@ -17,6 +17,8 @@ help: |-
     create              create a codespace and open it
     open                open it in VS Code (or the browser with --web)
     ssh                 a shell, or one command, in it
+    push-secrets        send your credentials to its secrets store
+    sync-repro-folder   keep reproduction-models in step, both directions
     list / start / stop / delete
 
   A thin layer over 'gh codespace': it needs the GitHub CLI with the
@@ -28,7 +30,8 @@ help: |-
      'playground codespace delete' when you are done (a stopped codespace
      still uses storage).
 
-  🔐 The private reproduction-models submodule is not cloned in a codespace.
+  🔐 The private reproduction-models submodule is not cloned in a codespace:
+     'playground codespace sync-repro-folder local-to-codespace' copies yours.
 environment_variables:
   - name: PLAYGROUND_CODESPACE_REPO
     help: 🐙 Repository the codespaces are created from, as OWNER/REPO (default vdesabou/kafka-docker-playground, set it to use your fork)
@@ -85,10 +88,17 @@ commands:
   - long: --no-open
     required: false
     help: 🙈 do not open the codespace in VS Code once it is created
+  - long: --push-secrets
+    required: false
+    help: 🔐 once it is available, send your secrets store to it (playground codespace push-secrets)
+  - long: --sync-repro-folder
+    required: false
+    help: 👉 once it is available, copy your reproduction-models folder to it (playground codespace sync-repro-folder local-to-codespace)
   examples:
   - playground codespace create
   - playground codespace create --suffix 123456 --machine 8-core
   - playground codespace create --branch my-feature --no-open
+  - playground codespace create --suffix 123456 --push-secrets --sync-repro-folder
 
 - name: list
   help: |-
@@ -137,7 +147,8 @@ commands:
     started on the way.
 
     It needs the SSH server of .devcontainer/: a codespace created before it
-    was added needs a 'Codespaces: Rebuild Container' first.
+    was added, or from a prebuild older than that, needs a rebuild first
+    (gh codespace rebuild -c <name>).
 
     Without --codespace, the most recently used codespace is used.
   catch_all:
@@ -188,3 +199,88 @@ commands:
     confirm first.
   flags:
   - *codespace
+
+- name: push-secrets
+  help: |-
+    🔐 Send the secrets store to a codespace
+
+    Resolves every variable of the profile on your laptop (1Password, macOS
+    Keychain…), then imports them into the secrets store of the codespace
+    (backend file, ~/.config/kafka-docker-playground): credentials as
+    credentials, plain variables as plain variables. 'playground run' in the
+    codespace then loads what each example declares, as on your laptop, and
+    'playground secrets list' or 'check' work there. Nothing to install in the
+    codespace, no 1Password token to give it.
+
+    The values are piped over 'gh codespace ssh', so no clear text copy is
+    ever written locally and they never appear in 'ps'. In the codespace they
+    are stored in clear text in secrets.ini (mode 0600), like any file backend.
+
+    The credentials that cannot be stored as name=value pairs are sent too,
+    when they exist at the root of the repository (same as 'playground ec2
+    push-secrets'):
+
+      aws_credentials_with_assuming_iam_role       -> ~/.aws/credentials-with-assuming-iam-role
+      aws_credentials_aws_account_with_assume_role -> ~/.aws/credentials_aws_account_with_assume_role
+      github_ssh_key_file                          -> ~/.ssh/id_rsa
+
+    ⚠️ 'Codespaces: Rebuild Container' empties the home directory: run it
+    again after a rebuild.
+
+    Without --codespace, the most recently used codespace is used.
+  flags:
+  - *codespace
+  - long: --profile
+    arg: profile
+    required: false
+    help: 🗂️ Secrets profile to send (default is the active one), imported into the profile of the same name
+    completions:
+      dynamic:
+      - playground get-secret-profile-list
+  - long: --dry-run
+    required: false
+    help: 🔍 List what would be sent, change nothing
+  examples:
+  - playground codespace push-secrets --dry-run
+  - playground codespace push-secrets
+  - playground codespace push-secrets --profile case-123456
+
+- name: sync-repro-folder
+  dependencies:
+    rsync: rsync needs to be installed
+  help: |-
+    ↔️ Synchronize reproduction-models folder between local and a codespace
+
+    reproduction-models is a private submodule: a codespace cannot clone it,
+    and the models you write there are lost with the codespace. These two
+    commands copy that folder in one direction or the other with rsync, over
+    the ssh tunnel of 'gh codespace ssh' (only newer files, .git and what
+    .gitignore lists are left out, nothing is deleted on the other side).
+
+      local-to-codespace   push what you wrote locally, before running it there
+      codespace-to-local   pull back what you wrote there, before deleting it
+
+    'playground codespace create --sync-repro-folder' runs local-to-codespace
+    for you.
+
+    ⚠️ Get into the habit of running codespace-to-local before
+    'playground codespace delete', nothing else brings those files back.
+  commands:
+  - name: local-to-codespace
+    help: |-
+      👉 Sync local reproduction-models folder to a codespace
+
+      Without --codespace, the most recently used codespace is used.
+    flags:
+    - *codespace
+
+  - name: codespace-to-local
+    help: |-
+      👈 Sync a codespace reproduction-models folder to local
+
+      Brings back the models you wrote in the codespace. Run it before
+      'playground codespace delete', otherwise they go with the codespace.
+
+      Without --codespace, the most recently used codespace is used.
+    flags:
+    - *codespace

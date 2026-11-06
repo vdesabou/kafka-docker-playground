@@ -4304,6 +4304,61 @@ function codespace_wait_state() {
   return 1
 }
 
+#
+# Waits until ssh into a codespace works (default timeout 300 seconds).
+#
+# A codespace is Available as soon as its machine runs, but its container (and
+# the SSH server in it) is still being built for a minute or two: an ssh then
+# fails with "failed to invoke SSH RPC: ... context deadline exceeded".
+#
+function codespace_wait_ssh() {
+  local codespace="$1" timeout="${2:-300}" start=$SECONDS logged=""
+  while [ $((SECONDS-start)) -lt "$timeout" ]
+  do
+    if gh codespace ssh -c "$codespace" -- true > /dev/null 2>&1
+    then
+      return 0
+    fi
+    if [ -z "$logged" ]
+    then
+      log "⏳ waiting for the SSH server of codespace $codespace (its container may still be starting)"
+      logged=1
+    fi
+    sleep 10
+  done
+  logerror "❌ could not ssh into codespace $codespace after $timeout seconds"
+  logerror "👉 a codespace created before the SSH server was added to .devcontainer/, or from an older prebuild, has none: rebuild it with 'gh codespace rebuild -c $codespace' (/workspaces is kept, the home directory is emptied)"
+  return 1
+}
+
+# folder of the repository in a codespace
+function codespace_remote_root() {
+  echo "/workspaces/$(basename "$(codespace_repo)")"
+}
+
+#
+# OpenSSH config of a codespace, for the tools that need a plain ssh (rsync -e):
+# 'gh codespace ssh --config' prints a Host entry whose ProxyCommand goes through
+# gh's own authenticated tunnel. Writes it to a temporary file and prints
+# "<config file> <host>"; the caller removes the file.
+#
+function codespace_ssh_config() {
+  local codespace="$1" cfg host
+  cfg=$(mktemp)
+  if ! gh codespace ssh --config -c "$codespace" > "$cfg" 2> /dev/null
+  then
+    rm -f "$cfg"
+    return 1
+  fi
+  host=$(awk '/^Host /{print $2; exit}' "$cfg")
+  if [ -z "$host" ]
+  then
+    rm -f "$cfg"
+    return 1
+  fi
+  echo "$cfg $host"
+}
+
 # the codespace to act on: the one given, else the most recently used one
 function codespace_pick() {
   local codespace="$1"
