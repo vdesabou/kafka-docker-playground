@@ -125,7 +125,12 @@ commands:
     and analyzed as a log file. So are JSON lines whatever the extension (a
     fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of
     several GB is converted in seconds and the digest reads its messages,
-    not the metadata). Only files with findings are
+    not the metadata). ⚠️ An input not fully read (a truncated or
+    corrupt .gz, an archive that does not fully extract) is listed at the
+    end, in the HTML report and in --json (.summary.incomplete_inputs):
+    never a silent ✅, and exit code 1 when nothing could be read at all.
+    Bytes that are not UTF-8 (a Latin-1 character) are read as they are.
+    Only files with findings are
     shown. 🔭 When no file has findings, an overview says what the logs
     contain (period covered, records by level, top messages and loggers) and
     what to ask for next (a longer window, the logs of the component that

@@ -6822,8 +6822,10 @@ function summarize_log_errors() {
     local include_warnings="${2:-}"
 
     PG_LOG_DIGEST_RECORDS_FILE="${PG_LOG_DIGEST_RECORDS_FILE:-}" PG_LOG_DIGEST_LABEL="${PG_LOG_DIGEST_LABEL:-}" \
+    # LC_ALL=C: the digest reads bytes. In a UTF-8 locale, the awk of macOS aborts on the first invalid byte (a Latin-1
+    # character in a customer log: "awk: towc: multibyte conversion failure") and every record of the file is lost
     PG_LOG_DIGEST_CONNECTORS="${PG_LOG_DIGEST_CONNECTORS:-}" PG_LOG_DIGEST_WITH_WORKER="${PG_LOG_DIGEST_WITH_WORKER:-}" \
-    awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
+    LC_ALL=C awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
     # anything that does not look like the continuation of a stack trace or of a
     # multi-line message (indented line, "Caused by:", exception line) starts a record
     # (a .NET exception has a generic type: Confluent.Kafka.ProduceException`2[System.String,System.String]: …)
@@ -6889,13 +6891,24 @@ function summarize_log_errors() {
             h ~ /^([A-Z][A-Za-z0-9_]*\.)+[A-Z][A-Za-z0-9_]*Exception(`[0-9]+\[[^]]*\])?: / || index(h, "KafkaError{code=")) return "ERROR"
         return ""
     }
+    # the first n bytes of s (LC_ALL=C: length and substr count bytes), without the incomplete UTF-8 character a cut can
+    # leave at the end (a lead byte 0xC0-0xF7 followed by fewer continuation bytes 0x80-0xBF than it announces)
+    function cut(s, n,    k, c, need) {
+        s = substr(s, 1, n)
+        k = 0
+        while (k < 3 && k < length(s) && (c = substr(s, length(s) - k, 1)) >= "\200" && c < "\300") k++
+        if (k >= length(s)) return s
+        c = substr(s, length(s) - k, 1)
+        need = c >= "\360" ? 4 : c >= "\340" ? 3 : c >= "\300" ? 2 : 1
+        return need > k + 1 ? substr(s, 1, length(s) - k - 1) : s
+    }
     function short(s) {
-        return length(s) > 300 ? substr(s, 1, 300) "..." : s
+        return length(s) > 300 ? cut(s, 300) "..." : s
     }
     # the records file of the HTML reports keeps longer lines: the error is often at the end of a long message
     # ("Task is being killed and will not recover until manually restarted. Error: <the cause>")
     function long(s) {
-        return length(s) > 2000 ? substr(s, 1, 2000) "..." : s
+        return length(s) > 2000 ? cut(s, 2000) "..." : s
     }
     # a stack trace flattened on one line by a log export or a log shipper: "msg org.x.FooException: m\n\tat a.b(C.java:1)
     # \nCaused by: …" with a literal \n, or with its backslash lost ("Source)n\tat a.b", "Source)nCaused by:"). Split back

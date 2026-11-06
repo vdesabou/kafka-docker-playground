@@ -1776,6 +1776,10 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
     s = res["summary"]
+    incomplete = s.get("incomplete_inputs") or []
+    if not s["files_with_findings"] and incomplete:
+        return "warn", (f"⚠️ No {levels} record in the {s['files_scanned']} {unit}(s) read ({s['lines']} lines), but "
+                        f"{len(incomplete)} input(s) were not fully read: the missing part may hold errors (⚠️ Not fully read below).")
     if not s["files_with_findings"]:
         return "ok", f"✅ No {levels} record in the {s['files_scanned']} {unit}(s) scanned ({s['lines']} lines)."
     errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
@@ -1791,6 +1795,29 @@ def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
         return "danger", (f"🚨 {errors} ERROR/FATAL occurrence(s), {s['distinct']} distinct record(s) in "
                           f"{s['files_with_findings']} {unit}(s){start}.")
     return "warn", f"⚠️ {s['by_level']['WARN']} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL."
+
+
+def read_incomplete(path: Optional[str]) -> List[dict]:
+    """label<tab>reason lines written by analyze logs: the inputs not fully read (digest failed, truncated gzip, archive
+    not fully extracted)"""
+    if not path or not os.path.exists(path):
+        return []
+    out = []
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            label, _, reason = line.rstrip("\n").partition("\t")
+            if label:
+                out.append({"file": label, "reason": reason})
+    return out
+
+
+def incomplete_html(items: List[dict]) -> str:
+    """the inputs not fully read, right below the verdict: what the report says is only true of what could be read"""
+    if not items:
+        return ""
+    rows = "".join(f"<li><code>{e(i['file'])}</code>: {e(i['reason'])}</li>" for i in items)
+    return (f"<div class='verdict warn'>⚠️ Not fully read: {len(items)} input(s). The findings below only cover what "
+            f"could be read; ask for a complete copy.<ul style='margin:6px 0 0 18px;font-weight:400'>{rows}</ul></div>")
 
 
 def first_names(names: List[str], top: int = 3) -> str:
@@ -2056,7 +2083,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # an exception chain of a killed task is a card of its own inside the finding
     # the filter bar above the findings: a component picked (🔌 Connect) keeps its findings right below
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
-    body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]),
+    body = [verdict_html(*verdict(res, levels, unit)), incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
@@ -2185,6 +2212,7 @@ def main() -> int:
     ap.add_argument("--title", default="logs", help="what was analyzed, for the report header")
     ap.add_argument("--levels", default="ERROR/FATAL", help="levels reported, for the report")
     ap.add_argument("--skipped", type=int, default=0, help="number of binary files skipped")
+    ap.add_argument("--incomplete", metavar="FILE", help="label<tab>reason of each input not fully read")
     ap.add_argument("--json", action="store_true", help="print the analysis as JSON")
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
     ap.add_argument("--heading", default="🔥 Log Analysis", help="title of the report")
@@ -2217,6 +2245,7 @@ def main() -> int:
     if args.connector:
         res["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
     res["summary"]["binary_files_skipped"] = args.skipped
+    res["summary"]["incomplete_inputs"] = read_incomplete(args.incomplete)
     res["summary"]["levels"] = args.levels
     if args.json:
         # the timestamps of every occurrence are only for the timeline and the time filter of the HTML report
