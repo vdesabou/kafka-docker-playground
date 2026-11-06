@@ -15,5 +15,15 @@ fi
 for c in $codespaces
 do
   log "🔴 stopping codespace $c"
-  gh codespace stop -c "$c"
+  if ! gh codespace stop -c "$c"
+  then
+    logerror "❌ could not stop codespace $c"
+    continue
+  fi
+  if state=$(codespace_wait_state "$c" "Shutdown" 120)
+  then
+    log "✅ codespace $c is stopped: its disk is kept, 'playground codespace start --codespace $c' to resume"
+  else
+    logwarn "⚠️ codespace $c is still $state after 2 minutes"
+  fi
 done

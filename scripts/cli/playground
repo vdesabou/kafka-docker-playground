@@ -27378,6 +27378,29 @@ function codespace_names() {
   codespace_list_json | jq -r '.[].name' 2> /dev/null
 }
 
+# state of a codespace: Available, Shutdown, ShuttingDown, Starting, Queued, Provisioning…
+function codespace_state() {
+  gh api "user/codespaces/$1" --jq .state 2> /dev/null
+}
+
+# waits until a codespace reaches a state (default timeout 300 seconds); prints the last state seen
+function codespace_wait_state() {
+  local codespace="$1" target="$2" timeout="${3:-300}" state="" waited=0
+  while [ $waited -lt "$timeout" ]
+  do
+    state=$(codespace_state "$codespace")
+    if [ "$state" == "$target" ]
+    then
+      echo "$state"
+      return 0
+    fi
+    sleep 5
+    waited=$((waited+5))
+  done
+  echo "$state"
+  return 1
+}
+
 # the codespace to act on: the one given, else the most recently used one
 function codespace_pick() {
   local codespace="$1"
@@ -91961,7 +91984,17 @@ playground_codespace_stop_command() {
   for c in $codespaces
   do
     log "🔴 stopping codespace $c"
-    gh codespace stop -c "$c"
+    if ! gh codespace stop -c "$c"
+    then
+      logerror "❌ could not stop codespace $c"
+      continue
+    fi
+    if state=$(codespace_wait_state "$c" "Shutdown" 120)
+    then
+      log "✅ codespace $c is stopped: its disk is kept, 'playground codespace start --codespace $c' to resume"
+    else
+      logwarn "⚠️ codespace $c is still $state after 2 minutes"
+    fi
   done
 
 }
@@ -91972,33 +92005,42 @@ playground_codespace_start_command() {
   # src/commands/codespace/start.sh
   codespace=$(codespace_pick "${args[--codespace]}") || exit 1
 
-  state=$(gh api "user/codespaces/$codespace" --jq .state)
-  if [ "$state" == "Available" ]
-  then
-    log "🟢 codespace $codespace is already running"
-    exit 0
-  fi
+  state=$(codespace_state "$codespace")
+  case "$state" in
+    Available)
+      log "🟢 codespace $codespace is already running"
+      exit 0
+    ;;
+    ShuttingDown)
+      # a start request now is refused with "already running" (HTTP 409)
+      log "⏳ codespace $codespace is shutting down, waiting for it to stop first"
+      codespace_wait_state "$codespace" "Shutdown" > /dev/null
+    ;;
+  esac
 
-  log "🟢 starting codespace $codespace"
-  if ! gh api -X POST "user/codespaces/$codespace/start" --silent
-  then
-    logerror "❌ could not start codespace $codespace"
-    exit 1
-  fi
+  state=$(codespace_state "$codespace")
+  case "$state" in
+    Starting|Queued|Provisioning|Rebuilding|Updating)
+      log "⏳ codespace $codespace is already $state"
+    ;;
+    *)
+      log "🟢 starting codespace $codespace"
+      if ! gh api -X POST "user/codespaces/$codespace/start" --silent
+      then
+        logerror "❌ could not start codespace $codespace (state $state)"
+        exit 1
+      fi
+    ;;
+  esac
 
   # usually about a minute
-  for i in $(seq 1 60)
-  do
-    state=$(gh api "user/codespaces/$codespace" --jq .state 2> /dev/null)
-    if [ "$state" == "Available" ]
-    then
-      log "✅ codespace $codespace is available: playground codespace open --codespace $codespace"
-      exit 0
-    fi
-    sleep 5
-  done
-  logerror "❌ codespace $codespace is still $state after 5 minutes"
-  exit 1
+  if state=$(codespace_wait_state "$codespace" "Available")
+  then
+    log "✅ codespace $codespace is available: playground codespace open --codespace $codespace"
+  else
+    logerror "❌ codespace $codespace is still $state after 5 minutes"
+    exit 1
+  fi
 
 }
 

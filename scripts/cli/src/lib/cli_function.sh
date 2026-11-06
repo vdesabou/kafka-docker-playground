@@ -4281,6 +4281,29 @@ function codespace_names() {
   codespace_list_json | jq -r '.[].name' 2> /dev/null
 }
 
+# state of a codespace: Available, Shutdown, ShuttingDown, Starting, Queued, Provisioning…
+function codespace_state() {
+  gh api "user/codespaces/$1" --jq .state 2> /dev/null
+}
+
+# waits until a codespace reaches a state (default timeout 300 seconds); prints the last state seen
+function codespace_wait_state() {
+  local codespace="$1" target="$2" timeout="${3:-300}" state="" waited=0
+  while [ $waited -lt "$timeout" ]
+  do
+    state=$(codespace_state "$codespace")
+    if [ "$state" == "$target" ]
+    then
+      echo "$state"
+      return 0
+    fi
+    sleep 5
+    waited=$((waited+5))
+  done
+  echo "$state"
+  return 1
+}
+
 # the codespace to act on: the one given, else the most recently used one
 function codespace_pick() {
   local codespace="$1"
