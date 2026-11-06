@@ -29784,6 +29784,10 @@ function summarize_log_errors() {
             if (line ~ /^[ \t]*\.\.\. [0-9]+ (more|common frames omitted)/) continue
             # the inner exception of .NET (" ---> X: …") and the cause of a Node.js error ("  [cause]: X: …") are its "Caused by:"
             if (line ~ /^[ \t]*(---> |\[cause\]: )/) sub(/^[ \t]*/, "", line)
+            # JDBC: "Caused by: java.sql.SQLException: Exception chain:" is only a preface, the exceptions it chains follow on
+            # their own lines (java.sql.BatchUpdateException: Batch entry 0 … was aborted: ERROR: null value in column …):
+            # they are its causes, the deepest one is what to fix
+            if (cause ~ /[Ee]xception chain:[ \t]*$/ && line ~ /^[A-Za-z_$][A-Za-z0-9_$.]*(Exception|Error)(:|[ \t]*$)/) line = "Caused by: " line
             if (line ~ /^(Caused by:|---> |\[cause\]: )/ || (chain == "" && line ~ /(Exception|Error|Throwable)(:|[ \t]*$)/)) {
                 chain = chain "\n    " short(line)
                 long_chain = long_chain "\n    " long(line)

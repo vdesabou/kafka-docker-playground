@@ -744,6 +744,11 @@ class CFKBundleAnalyzer:
         for line_num, line in enumerate(lines, 1):
             if record is not None:
                 cb = _CAUSED_BY_RE.match(line)
+                # JDBC: "Caused by: java.sql.SQLException: Exception chain:" is only a preface, the exceptions it chains
+                # follow on their own lines (java.sql.BatchUpdateException: … violates not-null constraint): its causes
+                if (not cb and record[3] and re.search(r'[Ee]xception chain:\s*$', record[3][-1])
+                        and _EXCEPTION_HEAD_RE.match(line) and not _RECORD_START_RE.match(line)):
+                    cb = _CAUSED_BY_RE.match("Caused by: " + line.strip())
                 if cb:
                     if len(record[3]) < 5:
                         record[3].append(cb.group(1).strip()[:300])
