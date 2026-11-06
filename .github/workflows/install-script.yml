@@ -44,12 +44,12 @@ jobs:
         run: |
           /bin/bash -s -- --yes --dir "$KDP_DIR" < docs/install.sh
 
-      - name: playground is in the PATH of a new shell
+      - name: playground and the Confluent CLI are in the PATH of a new shell
         run: |
           case "$(uname -s)" in Darwin) rc=~/.bash_profile ;; *) rc=~/.bashrc ;; esac
           grep -F "# >>> kafka-docker-playground >>>" "$rc"
           # interactive, like a terminal: the default ~/.bashrc of Ubuntu returns early in non-interactive shells
-          bash -ic "source $rc; command -v playground; playground --version"
+          bash -ic "source $rc; command -v playground; playground --version; confluent version"
 
       - name: Running it again changes nothing
         run: |
