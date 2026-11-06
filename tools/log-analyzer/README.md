@@ -60,6 +60,14 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Connectors
+
+`connector_health()` (in `analyze()`, `.connectors` of `--json`) builds one card per connector of the logs (the
+`[connector|task-0]` context of the lines), most errors first: its occurrences by level, first and last time, the task
+kills (records of the 🧨 known cause), the known causes of its records, its configuration dumps, the clients it owns
+(`connector-producer-<name>-0`…) and the keys changed between restarts. The HTML report shows them in 🔌 **Connectors**
+(▶ only this connector sets the connector filter), the terminal summary one line per connector.
+
 ## Size of the report
 
 The 🌳 root cause rows link each file to its page without the ✏️ of the editor (the page has it), the style of the ✏️

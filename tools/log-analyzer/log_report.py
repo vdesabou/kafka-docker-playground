@@ -668,6 +668,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
            "coverage": coverage(files),
            "configuration": configuration}
     res["timeline"] = incident_timeline(res, files)
+    res["connectors"] = connector_health(res, files)
     return res
 
 
@@ -745,6 +746,108 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
                 f"⚙️ {c['title']}: {ch['key']} {ch['previous'] or '∅'} → {ch['value'] or '∅'}"[:200], config_connector(c))
     out = sorted(events.values(), key=lambda ev: (ev["time"], ev["file"] or "", ev["line"] or 0))
     return out[:TIMELINE_LIMIT]
+
+
+def connector_health(res: dict, files: List[dict]) -> List[dict]:
+    """one card per connector of the logs: its errors and warnings (by level, first and last time), whether a task was
+    killed, the known causes of its records, its configuration logged (dumps, keys changed between restarts) and the
+    clients it owns (connector-producer-<name>-0…), most errors first"""
+    titles_of: Dict[int, List[str]] = {}
+    for h in res["known_causes"]:
+        for i in h.get("records") or []:
+            titles_of.setdefault(i, []).append(h["title"])
+    cards: "OrderedDict[str, dict]" = OrderedDict()
+
+    def card(name):
+        return cards.setdefault(name, {"connector": name, "by_level": {"FATAL": 0, "ERROR": 0, "WARN": 0}, "records": 0,
+                                       "first_timestamp": None, "last_timestamp": None, "task_killed": 0,
+                                       "known_causes": [], "config_dumps": 0, "config_changes": [], "clients": []})
+    for f in files:
+        for r in f["records"]:
+            name = r.get("connector")
+            if not name:
+                continue
+            c = card(name)
+            c["by_level"][r["level"]] = c["by_level"].get(r["level"], 0) + r["count"]
+            c["records"] += 1
+            if r.get("first_ts") and (not c["first_timestamp"] or r["first_ts"] < c["first_timestamp"]):
+                c["first_timestamp"] = r["first_ts"]
+            if r.get("last_ts") and (not c["last_timestamp"] or r["last_ts"] > c["last_timestamp"]):
+                c["last_timestamp"] = r["last_ts"]
+            titles = titles_of.get(r.get("index"), [])
+            if KILLED_TASK_TITLE in titles:
+                c["task_killed"] += r["count"]
+            for t in titles:
+                if t not in c["known_causes"]:
+                    c["known_causes"].append(t)
+    for cfg in res["configuration"]:
+        name = config_connector_of(cfg)
+        if not name or name not in cards:
+            continue
+        c = cards[name]
+        c["config_dumps"] += 1
+        client = cfg.get("id") or ""
+        if re.match(r"^connector-(?:producer|consumer|dlq-producer|admin)-", client) and client not in c["clients"]:
+            c["clients"].append(client)
+        for ch in cfg.get("changes") or []:
+            c["config_changes"].append({"time": ch.get("time"), "config": cfg["title"], "key": ch["key"],
+                                        "previous": ch["previous"], "value": ch["value"]})
+    out = list(cards.values())
+    out.sort(key=lambda c: (-(c["by_level"]["FATAL"] + c["by_level"]["ERROR"]), -c["by_level"]["WARN"], c["connector"]))
+    return out
+
+
+def connectors_health_html(cards: List[dict]) -> str:
+    """the 🔌 Connectors section: a card per connector, ▶ only this connector sets the connector filter"""
+    if not cards:
+        return ""
+    items = []
+    for c in cards:
+        errors = c["by_level"]["FATAL"] + c["by_level"]["ERROR"]
+        state = ("danger", "🧨 task killed") if c["task_killed"] else ("danger", "🔴 errors") if errors else \
+            ("warn", "🟠 warnings only") if c["by_level"]["WARN"] else ("ok", "✅")
+        counts = " · ".join(f"{icon} {c['by_level'][lvl]:,} {lvl}" for lvl, icon in LEVEL_PILLS if c["by_level"].get(lvl))
+        period = period_text(c["first_timestamp"], c["last_timestamp"]) if c["first_timestamp"] else "no timestamp"
+        changes = "".join(f"<li class='mono'>{e((ch['time'] or '').replace('T', ' '))} {e(ch['config'])}: {e(ch['key'])} "
+                          f"{e(ch['previous'] or '∅')} → {e(ch['value'] or '∅')}</li>" for ch in c["config_changes"][:8])
+        more = f"<li class='fi-meta'>+{len(c['config_changes']) - 8} more</li>" if len(c["config_changes"]) > 8 else ""
+        items.append(
+            f"<div class='conn-card {state[0]}'><div class='conn-head'><span class='fi-conn'>{e(c['connector'])}</span> "
+            f"<span class='conn-state'>{state[1]}</span><button type='button' class='pill conn-only' data-conn='{e(c['connector'])}' "
+            f"title='show only the records, root causes, timeline and chart of this connector'>▶ only this connector</button></div>"
+            f"<div class='fi-meta'>{counts} in {c['records']} distinct record(s) · {e(period)}"
+            + (f" · 🧨 {c['task_killed']} task kill(s)" if c["task_killed"] else "") + "</div>"
+            + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
+            + (f"<div class='fi-meta'>⚙️ {c['config_dumps']} configuration dump(s)"
+               + (f", clients: <span class='mono'>{e(', '.join(c['clients'][:6]))}</span>" if c["clients"] else "") + "</div>"
+               if c["config_dumps"] else "")
+            + (f"<details><summary>🔁 {len(c['config_changes'])} key(s) changed between restarts</summary><ul>{changes}{more}</ul></details>"
+               if c["config_changes"] else "")
+            + "</div>")
+    return ("<style>.conn-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px}"
+            ".conn-card{border:1px solid #e2e8f0;border-left:5px solid #94a3b8;border-radius:8px;padding:8px 12px;font-size:.84rem}"
+            ".conn-card.danger{border-left-color:#dc2626}.conn-card.warn{border-left-color:#d97706}.conn-card.ok{border-left-color:#16a34a}"
+            ".conn-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}.conn-only{margin-left:auto;font-size:.72rem}"
+            "html[data-theme=dark] .conn-card{border-color:#334155}</style>"
+            f"<div class='table-card'><h2>🔌 Connectors ({len(cards)})</h2><p class='legend'>One card per connector of the logs "
+            "(the [connector|task-0] context of the lines): its errors and warnings, the known causes of its records, a task "
+            "killed, its configuration and the keys changed between restarts. ▶ only this connector filters the report on it.</p>"
+            f"<div class='conn-cards'>{''.join(items)}</div></div>")
+
+
+def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
+    if not cards:
+        return []
+    out = [f"🔌 Connectors ({len(cards)}, most errors first)"]
+    for c in cards[:top]:
+        lv = c["by_level"]
+        bits = [f"{lv['FATAL'] + lv['ERROR']} ERROR/FATAL", f"{lv['WARN']} WARN"]
+        if c["task_killed"]:
+            bits.append(f"🧨 {c['task_killed']} task kill(s)")
+        if c["config_changes"]:
+            bits.append(f"🔁 {len(c['config_changes'])} config key(s) changed")
+        out.append(f"   {c['connector']}: {', '.join(bits)}" + (f" · {', '.join(c['known_causes'][:3])}" if c["known_causes"] else ""))
+    return out
 
 
 TIMELINE_ICONS = {"FATAL": "💀", "ERROR": "🔴", "WARN": "🟠", "CRITICAL": "🧠", "HIGH": "🧠", "MEDIUM": "🧠", "LOW": "🧠"}
@@ -902,6 +1005,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
     # what happened first, all files merged (🗓️ Incident timeline of the HTML report, .timeline of --json)
     out += timeline_text(res.get("timeline") or [])
+    # one line per connector (🔌 Connectors of the HTML report, .connectors of --json)
+    out += connectors_text(res.get("connectors") or [])
     configs = res.get("configuration") or []
     if configs:
         out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
@@ -1720,6 +1825,15 @@ document.addEventListener("click", function (ev) {
     pgApplyFilters();
     return;
   }
+  if (ev.target.closest(".conn-only")) {
+    const sel = document.querySelector(".conn-filter"), name = ev.target.closest(".conn-only").dataset.conn;
+    if (sel && [...sel.options].some(o => o.value === name)) {
+      sel.value = name;
+      pgApplyFilters();
+      sel.scrollIntoView({block: "nearest"});
+    }
+    return;
+  }
   if (ev.target.closest(".pg-copy-view")) {
     const btn = ev.target.closest(".pg-copy-view"), url = location.href, done = () => { const t = btn.textContent; btn.textContent = "✅ Link copied"; setTimeout(() => { btn.textContent = t; }, 1500); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => window.prompt("Link to this view:", url));
@@ -2504,7 +2618,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
-            timeline_html(res.get("timeline") or [], viewers)]
+            timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or [])]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -2652,7 +2766,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration,timeline (default: all)")
+                         "files_without_findings,coverage,configuration,timeline,connectors (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
