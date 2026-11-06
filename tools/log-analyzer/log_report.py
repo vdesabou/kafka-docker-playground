@@ -693,7 +693,7 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
     by_index = {r.get("index"): (f, r) for f in files for r in f["records"] if r.get("index") is not None}
     events: Dict[Tuple[str, int], dict] = {}
 
-    def add(time, file, line, kind, level, text, connector=None, count=None):
+    def add(time, file, line, kind, level, text, connector=None, count=None, record=None):
         if not time:
             return
         key = (file, line or 0)
@@ -705,7 +705,7 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
         if ev:
             return
         events[key] = {"time": time, "kind": kind, "level": level, "text": text, "file": file, "line": line,
-                       "connector": connector, "count": count}
+                       "connector": connector, "count": count, "record": record}
         if kind == "known_cause":
             events[key]["known_causes"] = [text]
 
@@ -718,7 +718,7 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
         if first:
             f, r = first
             add(r["first_ts"], f["label"], r["first_line"], "first_error", r["level"], record_label(r)[:200],
-                r.get("connector"), c["occurrences"])
+                r.get("connector"), c["occurrences"], r.get("index"))
     for h in res["known_causes"]:
         first = h.get("first") or {}
         add(first.get("timestamp"), first.get("file"), first.get("line"), "known_cause", h["severity"], h["title"])
@@ -763,7 +763,11 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
     def row(ev):
         where = log_viewer.link(viewers, ev["file"], e(f"{ev['file'].split('/')[-1]}:{ev['line']}"), ev["line"]) if ev.get("line") else e(ev["file"])
         cls = "tl-known" if ev.get("known_causes") else f"tl-{ev['kind']}"
-        return (f"<tr class='{cls}' data-component='{file_component(ev['file'])}'><td class='mono'>{e(ev['time'].replace('T', ' '))}</td>"
+        # what the filters of the report need: level, connector, time, record (the search reads the record block)
+        attrs = (f" data-level='{LEVEL_ORDER.get(ev['level'], '')}'" if ev["kind"] == "first_error" else "") \
+            + (f" data-conn='{e(ev['connector'])}'" if ev.get("connector") else "") \
+            + f" data-t='{epoch(ev['time'])}'" + (f" data-rec='{ev['record']}'" if ev.get("record") is not None else "")
+        return (f"<tr class='tl-row {cls}' data-component='{file_component(ev['file'])}'{attrs}><td class='mono'>{e(ev['time'].replace('T', ' '))}</td>"
                 f"<td>{component_chips([ev['file']])}</td><td>{e(timeline_what(ev))}"
                 + (f" <span class='fi-conn'>{e(ev['connector'])}</span>" if ev.get("connector") else "")
                 + (f" <span class='fi-meta'>×{ev['count']}</span>" if ev.get("count") else "")
@@ -780,8 +784,9 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "html[data-theme=dark] tr.tl-config_change td{background:#33300a}</style>"
             "<div class='table-card'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
             "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
-            "logged at startup), the connectors (re)configured and the config keys changed between restarts. It is the "
-            "whole report: the filters above do not change it.</p>"
+            "logged at startup), the connectors (re)configured and the config keys changed between restarts. It follows the "
+            "filters above (levels, component, connector, search, period): the rows of the other connectors are hidden, "
+            "the restarts and configurations without connector stay.</p><p class='legend tl-none' hidden>No event in this selection.</p>"
             f"<table>{head}{first}</table>{more}</div>")
 
 
@@ -1509,12 +1514,83 @@ function pgFindings() {
     scope.textContent = bits.length ? " · selection: " + bits.join(" · ") : "";
   }
 }
+// 🗓️ Incident timeline: its rows follow the filters (a row of another connector, level, component or period is hidden;
+// a first error out of the search too, the other rows by their text)
+function pgTimeline() {
+  const rows = document.querySelectorAll("tr.tl-row");
+  if (!rows.length) return;
+  let shown = 0;
+  rows.forEach(function (tr) {
+    const d = tr.dataset;
+    let keep = true;
+    if (pgComponent && d.component !== pgComponent) keep = false;
+    if (keep && pgLevelsOff && d.level !== undefined && d.level !== "" && pgLevelsOff.has(+d.level)) keep = false;
+    if (keep && pgConnector === "-" && d.conn) keep = false;
+    if (keep && pgConnector !== "" && pgConnector !== "-" && d.conn && d.conn !== pgConnector) keep = false;
+    if (keep && pgWindow && d.t && (+d.t < pgWindow[0] || +d.t >= pgWindow[1])) keep = false;
+    if (keep && pgQuery) keep = d.rec !== undefined ? (pgMatch && pgMatch.has(+d.rec)) : tr.textContent.toLowerCase().includes(pgQuery);
+    tr.hidden = !keep;
+    if (keep) shown++;
+  });
+  const none = document.querySelector(".tl-none");
+  if (none) none.hidden = shown > 0;
+}
+// the filters in the URL (#pg:lvl=1&comp=connect&conn=s3-sink&q=timeout&t=<from>-<to>): a link opens the report on the
+// same view (🔗 Link to this view); an anchor of the report (#finding-…) replaces it until the next change
+var pgRestoring = false;
+// false until the page has read the URL: the first draw of the chart fires a zoomchange before, which wrote an empty
+// state over the link being opened
+var pgReady = false;
+function pgStateWrite() {
+  if (pgRestoring || !pgReady) return;
+  const p = new URLSearchParams();
+  const only = document.querySelector(".lvl-chip.active");
+  if (only) p.set("lvl", only.dataset.levelCode);
+  if (pgComponent) p.set("comp", pgComponent);
+  if (pgConnector) p.set("conn", pgConnector);
+  if (pgQuery) p.set("q", pgQuery);
+  if (pgWindow) p.set("t", Math.floor(pgWindow[0]) + "-" + Math.ceil(pgWindow[1]));
+  const s = p.toString(), url = location.href.split("#")[0] + (s ? "#pg:" + s : "");
+  if (url === location.href || (!s && !location.hash.startsWith("#pg:"))) return;
+  try { history.replaceState(null, "", url); } catch (e) { if (s) location.replace("#pg:" + s); }
+}
+function pgStateRead() {
+  if (!location.hash.startsWith("#pg:")) return false;
+  const p = new URLSearchParams(location.hash.slice(4));
+  pgRestoring = true;
+  try {
+    if (p.has("lvl")) {
+      const chip = document.querySelector(".lvl-chip[data-level-code='" + p.get("lvl") + "']");
+      if (chip) {
+        document.querySelectorAll(".lvl-chip").forEach(c => { c.setAttribute("aria-pressed", c === chip ? "true" : "false"); c.classList.toggle("active", c === chip); });
+        const allBtn = document.querySelector(".lvl-all");
+        if (allBtn) allBtn.classList.remove("active");
+      }
+    }
+    if (p.has("comp")) {
+      const chip = document.querySelector(".comp-chip[data-component='" + CSS.escape(p.get("comp")) + "']");
+      if (chip) document.querySelectorAll(".comp-chip").forEach(c => c.classList.toggle("active", c === chip));
+    }
+    const sel = document.querySelector(".conn-filter");
+    if (sel && p.has("conn") && [...sel.options].some(o => o.value === p.get("conn"))) sel.value = p.get("conn");
+    const box = document.querySelector(".pg-search");
+    if (box && p.has("q")) box.value = p.get("q");
+    pgApplyFilters();
+    const t = (p.get("t") || "").split("-").map(Number), chart = document.getElementById("@@CHART@@");
+    if (t.length === 2 && t.every(Number.isFinite) && chart && chart.zoomTo) chart.zoomTo(t[0], t[1]);
+  } finally { pgRestoring = false; }
+  pgReady = true;
+  pgStateWrite();
+  return true;
+}
 function pgApply() {
   pgTopCauses(pgRootCauses());
   pgRecordBlocks();
   pgFilesTable();
   pgFindings();
   pgSearch();
+  pgTimeline();
+  pgStateWrite();
 }
 // the search box filters the records in pgKeeps() (chart, top causes, root causes, files, records follow); a card of the
 // findings whose text does not contain it is hidden too, with a class: the hidden attribute is the severity chips'
@@ -1555,6 +1631,12 @@ document.addEventListener("click", function (ev) {
     pgApplyFilters();
     return;
   }
+  if (ev.target.closest(".pg-copy-view")) {
+    const btn = ev.target.closest(".pg-copy-view"), url = location.href, done = () => { const t = btn.textContent; btn.textContent = "✅ Link copied"; setTimeout(() => { btn.textContent = t; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => window.prompt("Link to this view:", url));
+    else window.prompt("Link to this view:", url);
+    return;
+  }
   if (ev.target.closest(".fi-show-all")) {
     document.querySelectorAll(".rec-card.other-comp").forEach(c => c.classList.remove("other-comp"));
     const note = document.querySelector(".fi-others");
@@ -1581,6 +1663,9 @@ document.addEventListener("input", function (ev) {
 });
 document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
 document.addEventListener("DOMContentLoaded", function () {
+  // a link to a view (#pg:…) wins over the component remembered from the last report
+  if (pgStateRead()) return;
+  pgReady = true;
   // the component picked in a previous report (🔌 Connect for someone who works on Connect), when this one has it
   let saved = null;
   try { saved = localStorage.getItem("pg-log-report-component"); } catch (e) {}
@@ -1983,6 +2068,8 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
                   for lvl, icon in LEVEL_PILLS if by_level.get(lvl)]
     first.append("<input class='pg-search' type='search' placeholder='Search messages, files, connectors…' "
                  "title='the records, the root causes and the findings whose text contains it'>")
+    first.append("<button type='button' class='pill pg-copy-view' title='the filters are in the URL of the page: copy the link "
+                 "that opens this report on the same view'>🔗 Link to this view</button>")
     rows.append("<div class='fb-row'>" + "".join(first if len(present) >= 2 else first[1:]) + "</div>")
     second = []
     counts: "OrderedDict[str, int]" = OrderedDict()
