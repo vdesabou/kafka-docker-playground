@@ -9,8 +9,10 @@ Takes about 20 minutes to read and run. Everything below runs on samples shipped
 no Confluent Cloud, nothing to set up.
 
 > [!TIP]
-> 🎬 The video session [🕵️ A connector failed: read the logs, live or from a customer bundle](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle)
-> shows `analyze logs` on a customer bundle in 3 minutes. Live containers have their own page:
+> 🎬 The video session [🔁 Did the fix work? Analyze the logs before and after it](/sessions?id=🔁-did-the-fix-work-analyze-the-logs-before-and-after-it)
+> shows `--compare`, the summary, the timeline and a truncated download in 3 minutes, and
+> [🕵️ A connector failed: read the logs, live or from a customer bundle](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle)
+> `analyze logs` on a customer bundle. Live containers have their own page:
 > [`container logs`](deep-dive-container-logs.md) (`--errors` is the same digest on a running container).
 
 | You want | Command |

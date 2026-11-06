@@ -165,6 +165,7 @@ commands:
 
     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs
     🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle
+    🎬 Bite size session (--compare): https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%81-did-the-fix-work-analyze-the-logs-before-and-after-it
   environment_variables:
   - name: PLAYGROUND_CFK_PARALLELISM
     help: "⚡ CFK support bundles analyzed at the same time, a container each (default 4)"

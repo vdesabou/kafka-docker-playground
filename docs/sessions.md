@@ -22,6 +22,7 @@ link to a live report so you can click around it yourself.
 | 🔌 | [The sink fails right after it is deployed: validate, wait, update in place](/sessions?id=🔌-the-sink-fails-right-after-it-is-deployed) | a running example |
 | ⏪ | [The lag of a sink is stuck: follow it, then rewind the sink](/sessions?id=⏪-the-lag-of-a-sink-is-stuck) | a running example |
 | 🕵️ | [A connector failed: read the logs, live or from a customer bundle](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle) | a running example |
+| 🔁 | [Did the fix work? Analyze the logs before and after it](/sessions?id=🔁-did-the-fix-work-analyze-the-logs-before-and-after-it) | nothing (`--sample`) |
 | 🧬 | [TRACE on a running connector, without a restart](/sessions?id=🧬-trace-on-a-running-connector-without-a-restart) | a running example |
 | 🔀 | [What does this transform chain (SMT) do to a record?](/sessions?id=🔀-what-does-this-transform-chain-do-to-a-record) | a running example |
 | 🧑‍💻 | [The source code of a connector at the customer's version](/sessions?id=🧑💻-the-source-code-of-a-connector-at-the-customers-version) | nothing |
@@ -426,6 +427,39 @@ AvroConverter on JSON records.
 
 - 🍪 Deep dive: [`container logs` and `analyze logs`: under the hood, hands-on lab and repro recipes](/deep-dive-container-logs.md)
 - 🧠 CLI reference: [playground container logs](/playground%20container%20logs), [playground analyze logs](/playground%20analyze%20logs)
+
+
+## 🔁 Did the fix work? Analyze the logs before and after it
+
+The customer applied a fix and sent the logs of the worker, the day before and the day after. Reading two logs side by
+side is long and you miss what moved: `--compare` says which errors are gone, which are new, which grow, with the
+timeline of what came first and a card per connector. And a truncated download that holds no error is caught.
+
+<video src="videos/session-analyze-logs.mp4" poster="images/sessions/analyze-logs.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `analyze logs --compare <before>`: root causes, known causes and connectors ✅ gone, 🆕 new, 📈 growing or 📉 shrinking,
+  per hour when the periods differ
+- the 🧭 summary: known causes with what to do, the 🗓️ incident timeline of all the files, the 🔌 card of each connector
+- ⚠️ not fully read: a `.gz` cut by a download says so instead of a ✅ "no record found"
+- `--json` for a script or an agent (`.comparison`, `.timeline`, `.connectors`)
+- the HTML report of the comparison
+
+**Commands**
+
+```bash
+playground analyze logs -f <after> --compare <before>        # a file, a folder, an archive, or a JSON of --json
+playground analyze logs --sample compare_fix --output-dir /tmp/analyze-logs
+playground analyze logs -f /tmp/partial.log.gz
+playground analyze logs --sample compare_fix --json 2>/dev/null | jq -c '.comparison.counts'
+```
+
+**Links**
+
+- 🍪 Deep dive: [`playground analyze logs`](/deep-dive-analyze-logs.md)
+- 🌐 <a href="reports/logs-compare.html" target="_blank" rel="noopener">The HTML report shown in the session</a> (the real report: click around)
+- 🧠 CLI reference: [playground analyze logs](/playground%20analyze%20logs)
 
 ## 🧬 TRACE on a running connector, without a restart
 
