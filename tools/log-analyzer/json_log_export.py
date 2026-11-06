@@ -30,7 +30,8 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional, Tuple
 
 MESSAGE_KEYS = ("@message", "message", "log", "msg", "line", "textPayload", "_raw")
-TIME_KEYS = ("@timestamp", "timestamp", "time", "ts", "@t", "date", "eventTime")
+# _time: Splunk (its CSV exports are newest first: the time decides the order)
+TIME_KEYS = ("@timestamp", "timestamp", "time", "ts", "@t", "date", "eventTime", "_time")
 LEVEL_KEYS = ("level", "log.level", "severity", "loglevel", "@l")
 LOGGER_KEYS = ("logger_name", "logger", "loggerName", "log.logger", "class")
 STACK_KEYS = ("stack_trace", "exception", "error.stack_trace", "stacktrace", "throwable")
@@ -105,7 +106,9 @@ def load_csv(path: str) -> Any:
                     parsed = json.loads(value)
                 except ValueError:
                     parsed = None
-                if isinstance(parsed, dict):
+                # the JSON log line of the container (a message in it): its fields win; any other JSON (the value of a
+                # record in the message column) stays the value of its column, else the row lost its message
+                if isinstance(parsed, dict) and get(parsed, MESSAGE_KEYS) is not None:
                     inner.update(parsed)
                     continue
             event[key] = csv_time(value) if key in TIME_KEYS else value
@@ -144,8 +147,24 @@ def events_of(data: Any) -> Optional[List[dict]]:
         # Elasticsearch hits
         if all("_source" in e for e in objs[:50]):
             return [dict(e["_source"]) if isinstance(e["_source"], dict) else {} for e in objs]
+        # OpenSearch / Elasticsearch hits with "fields" (arrays of values) instead of _source
+        if all(isinstance(e.get("fields"), dict) for e in objs[:50]):
+            return [{k: (v[0] if isinstance(v, list) and len(v) == 1 else v) for k, v in e["fields"].items()} for e in objs]
         return objs
     if isinstance(data, dict):
+        # Loki query API: {"data": {"result": [{"stream": {labels}, "values": [["<epoch ns>", "<line>"], …]}]}}, all the
+        # streams merged in time order, the labels (level, container…) kept with each line
+        loki = data.get("data")
+        if isinstance(loki, dict) and isinstance(loki.get("result"), list) and \
+                all(isinstance(r, dict) and isinstance(r.get("values"), list) for r in loki["result"]):
+            rows = []
+            for r in loki["result"]:
+                labels = r.get("stream") if isinstance(r.get("stream"), dict) else {}
+                for v in r["values"]:
+                    if isinstance(v, list) and len(v) >= 2:
+                        rows.append(dict(labels, timestamp=v[0], message=v[1]))
+            rows.sort(key=lambda row: int(row["timestamp"]) if str(row["timestamp"]).isdigit() else 0)
+            return rows or None
         for key in ("results", "events", "logEvents", "records", "data", "logs", "entries"):
             if isinstance(data.get(key), list):
                 return events_of(data[key])
@@ -163,8 +182,8 @@ TS_NEAR_START = re.compile(r"^\[?(?:[A-Za-z]+\]?\s+\[?)?\d{4}-\d{2}-\d{2}[ T]\d{
 
 def iso_ts(ts: Any) -> Any:
     """epoch seconds / milliseconds / nanoseconds of the CloudWatch and Loki exports as ISO 8601 UTC, anything else as it is"""
-    if isinstance(ts, str) and ts.isdigit():
-        ts = int(ts)
+    if isinstance(ts, str) and re.fullmatch(r"\d+(?:\.\d+)?", ts):
+        ts = float(ts) if "." in ts else int(ts)
     if isinstance(ts, (int, float)) and not isinstance(ts, bool):
         seconds = float(ts)
         while seconds > 1e11:
@@ -180,11 +199,34 @@ def iso_ts(ts: Any) -> Any:
 EXCEPTION_LINE = re.compile(r"^[A-Za-z0-9_$]+(\.[A-Za-z0-9_$]+)+(Exception|Error|Throwable)(:|$)")
 
 
+# a time of day near the start of a message: 19:02:34
+TIME_NEAR_START = re.compile(r"\d{2}:\d{2}:\d{2}")
+
+
 def looks_like_log_line(message: str) -> bool:
-    """a message that already carries its timestamp and level (log4j layout of Kafka, Connect, CP)"""
+    """a message that already carries its timestamp and level (log4j layout of Kafka, Connect, CP). A level word alone
+    is not enough: "Task failed: WARN threshold reached" of a logback JSON event with "level":"ERROR" lost its level, its
+    logger and its stack trace"""
     head = message[:60]
-    return any(f" {lvl} " in head or head.startswith((f"{lvl} ", f"[{lvl}]")) for lvl in
-               ("ERROR", "WARN", "INFO", "DEBUG", "TRACE", "FATAL", "WARNING", "SEVERE"))
+    return bool(TIME_NEAR_START.search(head)) and any(
+        f" {lvl} " in head or head.startswith((f"{lvl} ", f"[{lvl}]")) for lvl in
+        ("ERROR", "WARN", "INFO", "DEBUG", "TRACE", "FATAL", "WARNING", "SEVERE"))
+
+
+# numeric levels: pino / bunyan (10 trace … 60 fatal), syslog / GELF (0 emergency … 7 debug)
+PINO_LEVELS = {10: "TRACE", 20: "DEBUG", 30: "INFO", 40: "WARN", 50: "ERROR", 60: "FATAL"}
+SYSLOG_LEVELS = {0: "FATAL", 1: "FATAL", 2: "FATAL", 3: "ERROR", 4: "WARN", 5: "INFO", 6: "INFO", 7: "DEBUG"}
+
+
+def level_name(level: Any) -> Any:
+    """a numeric level as its name ({"level":50} of pino is an ERROR), anything else as it is"""
+    if isinstance(level, str) and level.isdigit():
+        level = int(level)
+    if isinstance(level, int) and not isinstance(level, bool):
+        if level in SYSLOG_LEVELS:
+            return SYSLOG_LEVELS[level]
+        return PINO_LEVELS.get(min(PINO_LEVELS, key=lambda k: abs(k - level))) if level >= 10 else None
+    return level
 
 
 def to_lines(event: dict) -> Tuple[Any, List[str]]:
@@ -202,13 +244,19 @@ def to_lines(event: dict) -> Tuple[Any, List[str]]:
         head, *rest = message.split("\n")
         message = "\n".join([head] + [r if not r or r[0] in " \t" or r.startswith("Caused by:") or EXCEPTION_LINE.match(r)
                                        else "    " + r for r in rest])
-    level = get(event, LEVEL_KEYS)
+    level = level_name(get(event, LEVEL_KEYS))
     ts = iso_ts(ts)
+    stack = get(event, STACK_KEYS)
+    if isinstance(stack, dict):
+        stack = stack.get("stack_trace") or stack.get("message")
     if not (isinstance(level, str) and not looks_like_log_line(message)) and ts is not None \
             and not TS_NEAR_START.match(message):
         # a message without its time (the second part of a line split by docker at 16 KB, a GC log line with the JVM
         # uptime, a plain message): the time of the event in front, for the period and the order of the digest
         message = f"[{ts}] {message}"
+        # the stack trace of an event without level ({"message": "boom", "stack_trace": "java.lang.X…"})
+        if isinstance(stack, str) and stack.strip() and stack.strip() not in message:
+            message += "\n" + stack.rstrip("\n")
     elif isinstance(level, str) and not looks_like_log_line(message):
         level = level.upper()
         level = {"WARNING": "WARN", "CRITICAL": "FATAL", "SEVERE": "ERROR"}.get(level, level)
@@ -217,18 +265,25 @@ def to_lines(event: dict) -> Tuple[Any, List[str]]:
         if isinstance(logger, str):
             line += f" ({logger})"
         message = line
-        stack = get(event, STACK_KEYS)
-        if isinstance(stack, dict):
-            stack = stack.get("stack_trace") or stack.get("message")
         if isinstance(stack, str) and stack.strip():
             message += "\n" + stack.rstrip("\n")
     return ts, message.split("\n")
 
 
 def sortable(ts: Any) -> Any:
+    """a value to compare the first and last times of an export (newest first: reversed). A time with an offset is
+    compared in UTC (21:00:00+02:00 is before 19:30:00Z): as a string, the export was reversed"""
     if isinstance(ts, (int, float)):
         return float(ts)
-    return str(ts) if ts is not None else None
+    if ts is None:
+        return None
+    text = str(ts)
+    if re.search(r"(?:Z|[+-]\d\d:?\d\d)$", text):
+        try:
+            return datetime.fromisoformat(re.sub(r"Z$", "+00:00", text.replace(" ", "T", 1))).timestamp()
+        except ValueError:
+            pass
+    return text
 
 
 def first_object(path: str) -> Optional[dict]:

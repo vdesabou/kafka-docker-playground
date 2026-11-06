@@ -29,6 +29,16 @@ LEVEL_ALIASES = {"WARNING": "WARN", "SEVERE": "ERROR", "CRITICAL": "FATAL", "FIN
                  "FINEST": "TRACE", "CONFIG": "INFO"}
 # the level token of a log line, in its first 80 characters: log4j / logback / the JSON exports converted back
 LEVEL_RE = re.compile(r"(?:^|[\s\[|])(FATAL|ERROR|WARN|WARNING|INFO|DEBUG|TRACE|SEVERE|CRITICAL)(?=[\s\]|:])")
+# the lower case levels: logfmt level=error, JSON "level":"error", zap / logrus after the time (… 10:00:05 error …), the
+# .NET console logger (fail:), klog of Kubernetes and the CFK operator (E1014 10:00:05.123 …)
+LOWER_LEVEL_RE = re.compile(r"(?:^|[\s{,])\"?level\"?\s*[=:]\s*\"?(fatal|error|warn|warning|info|debug|trace)\b"
+                            r"|^\S*\d{2}:\d{2}:\d{2}\S*\s+\[?(fatal|error|warn|warning|info|debug|trace)\b"
+                            r"|^(crit|fail|warn|info|dbug|trce):", re.IGNORECASE)
+KLOG_RE = re.compile(r"^([IWEF])\d{4} \d{2}:\d{2}:\d{2}")
+KLOG_LEVELS = {"I": "INFO", "W": "WARN", "E": "ERROR", "F": "FATAL"}
+DOTNET_LEVELS = {"crit": "FATAL", "fail": "ERROR", "warn": "WARN", "info": "INFO", "dbug": "DEBUG", "trce": "TRACE"}
+# a line that starts with its own time: a new record even without a level, not the next line of a multi-line message
+STARTS_WITH_TIME_RE = re.compile(r"^\[?(?:\d{4}[-/]\d{2}[-/]\d{2}[ T]\d{2}:\d{2}|\d{2}:\d{2}:\d{2}|[A-Z][a-z]{2} [ \d]\d \d{2}:)")
 # JVM unified logging (GC logs): [57686.021s][info][gc,heap     ] GC(13392) …
 # (after the time of the event, put in front by json_log_export.py: "[2026-10-14T19:13:28.410] [57686.021s][info]…")
 JVM_RE = re.compile(r"^(?:\[[^\]]*\] )?\[[^\]]*\](?:\[[^\]]*\])*?\[(error|warning|info|debug|trace)\s*\]\[([a-z0-9_, ]+?)\s*\]\s*(.*)$")
@@ -51,6 +61,7 @@ def open_text(path: str):
 
 def mask(message: str) -> str:
     message = UUID_RE.sub("<uuid>", message)
+    message = re.sub(r"\b0x[0-9a-fA-F]+\b", "<hex>", message)
     message = HEX_RE.sub("<hex>", message)
     message = NUM_RE.sub("N", message)
     message = re.sub(r"\s+", " ", message).strip()
@@ -67,7 +78,15 @@ def parse_line(line: str):
         return level, "jvm " + m.group(2).replace(" ", ""), m.group(3)
     m = LEVEL_RE.search(line[:80])
     if not m:
-        return "", "", line
+        k = KLOG_RE.match(line)
+        if k:
+            return KLOG_LEVELS[k.group(1)], "", line[k.end():].lstrip(" .0123456789")
+        lm = LOWER_LEVEL_RE.search(line[:120])
+        if not lm:
+            return "", "", line
+        word = next(g for g in lm.groups() if g).lower()
+        level = DOTNET_LEVELS.get(word) or LEVEL_ALIASES.get(word.upper(), word.upper())
+        return level, "", line[lm.end():].lstrip(" ]|:\"")
     level = LEVEL_ALIASES.get(m.group(1), m.group(1))
     message = line[m.end():].lstrip(" ]|:")
     logger = ""
@@ -126,8 +145,9 @@ def overview(records: str, sources: str, exports: Optional[str], top: int) -> di
                         if parsed is None:
                             continue
                         level, logger, message = parsed
-                        # a line without level after a record with one: the next line of a multi-line message
-                        if not level and previous_level:
+                        # a line without level after a record with one: the next line of a multi-line message, unless
+                        # it starts with its own time (a new record without level: every later line was skipped)
+                        if not level and previous_level and not STARTS_WITH_TIME_RE.match(raw):
                             continue
                         previous_level = level
                         levels[level or "no level"] += 1

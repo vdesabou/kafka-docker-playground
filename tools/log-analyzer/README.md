@@ -20,6 +20,14 @@ the extension: `analyze logs` sends a `.log` / `.txt` whose first character is `
 time at its start gets the time of the event (`iso_ts()`: epoch seconds / ms / ns become ISO 8601), and the next lines
 of a multi-line message are indented, except exception lines and `Caused by:`.
 
+Also: the Loki query API (`data.result[].values`, streams merged in time order with their labels), Elasticsearch /
+OpenSearch hits with `fields` instead of `_source`, Splunk `_time` (its newest-first CSV is reversed), numeric levels
+(pino / bunyan `"level":50` is ERROR, syslog / GELF `3` is ERROR), epoch seconds written as a string (`"1697310809.5"`),
+and the `stack_trace` of an event without level. A message is taken as an already formatted log line only when it has
+a level word **and** a time near its start (`"Task failed: WARN threshold"` of an ERROR event keeps its level, logger
+and stack trace). A CSV cell holding JSON is merged only when it is a log line (it has a message), and times with an
+offset are compared in UTC to detect a newest-first export. Tests: `python3 -I tools/log-analyzer/test_log_analyzer.py`.
+
 ## Progress of large inputs
 
 `progress.py` shows the progress of a large input: `cat` copies stdin to the digest with a bar on stderr (terminal
@@ -36,6 +44,10 @@ finding: lines, period covered (the `@@PGFILE@@` timestamps of the digest) and r
 frequent messages (masked: numbers, hex ids, UUIDs) and loggers, and hints (period shorter than 10 min, only
 INFO/DEBUG records, an export of a log console cut at its size limit). `analyze logs` prints it, adds it to the HTML
 report (🔭 Overview section) and to `--json` (`.overview`).
+
+The levels of the overview also read logfmt `level=error`, JSON `"level":"error"`, zap / logrus after the time, the
+.NET console logger (`fail:`) and klog (`E1014 10:00:05`); a line without level that starts with its own time is a record
+of its own, not the next line of the previous one.
 
 ## Inputs not fully read
 
