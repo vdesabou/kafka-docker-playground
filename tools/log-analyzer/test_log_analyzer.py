@@ -129,6 +129,25 @@ def test_human():
     check("human MB", progress.human(5 * 1024 * 1024) == "5.0 MB", progress.human(5 * 1024 * 1024))
 
 
+def test_no_syntax_warning():
+    # an invalid escape in a Python string (the JavaScript of a report: "\/" instead of "\\/") is a SyntaxWarning
+    # today and an error in a future Python, and it can change what the browser gets
+    import ast
+    import warnings
+    here = os.path.dirname(os.path.abspath(__file__))
+    for folder in (here, os.path.join(os.path.dirname(here), "report-common")):
+        for name in sorted(os.listdir(folder)):
+            if name.endswith(".py"):
+                with open(os.path.join(folder, name), encoding="utf-8") as fh:
+                    source = fh.read()
+                with warnings.catch_warnings():
+                    warnings.simplefilter("error", SyntaxWarning)
+                    try:
+                        ast.parse(source, name)
+                    except SyntaxError as ex:
+                        raise AssertionError(f"{name}: {ex}")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

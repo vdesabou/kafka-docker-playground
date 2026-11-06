@@ -1204,19 +1204,30 @@ SECTION_TOGGLE = """<style>
 .sec-collapsed{padding-bottom:6px}
 .sec-all{font-family:inherit;font-size:.72rem;margin-left:8px;padding:1px 8px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer;font-weight:400}
 html[data-theme=dark] .sec-all{background:#0f172a;color:#cbd5e1;border-color:#334155}
+html[data-theme=dark] .sec-caret,html[data-theme=dark] .rc-range,html[data-theme=dark] .cov-when{color:#94a3b8}
 </style><script>
 document.addEventListener("DOMContentLoaded", function () {
   const heads = document.querySelectorAll(".table-card > h2, .chart-card > h2, .findings > .section-title");
   function fold(h, collapsed) {
     h.parentElement.classList.toggle("sec-collapsed", collapsed);
     h.querySelector(".sec-caret").textContent = collapsed ? "▸" : "▾";
+    h.setAttribute("aria-expanded", collapsed ? "false" : "true");
   }
   heads.forEach(function (h) {
     h.classList.add("sec-toggle");
     h.title = "click to fold / unfold this section";
-    h.insertAdjacentHTML("afterbegin", "<span class='sec-caret'>▾</span>");
+    h.insertAdjacentHTML("afterbegin", "<span class='sec-caret' aria-hidden='true'>▾</span>");
+    // a button for the keyboard and the screen readers too: Tab to it, Enter or Space folds it
+    h.setAttribute("role", "button");
+    h.setAttribute("tabindex", "0");
+    h.setAttribute("aria-expanded", "true");
     h.addEventListener("click", function (ev) {
       if (ev.target.closest("button, a, select, input, label")) return;
+      fold(h, !h.parentElement.classList.contains("sec-collapsed"));
+    });
+    h.addEventListener("keydown", function (ev) {
+      if (ev.target !== h || (ev.key !== "Enter" && ev.key !== " ")) return;
+      ev.preventDefault();
       fold(h, !h.parentElement.classList.contains("sec-collapsed"));
     });
   });
@@ -1437,7 +1448,8 @@ function pgTopCauses(byCause) {
   if (!top.length) { holder.innerHTML = "<p class='legend'>No root cause left with these filters.</p>"; return; }
   const W = 600, rowh = 22, L = 300, H = 10 + rowh * top.length, mx = top[0][1] || 1;
   const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const o = ['<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img">'];
+  const o = ['<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
+    esc("top root causes by occurrences: " + top.map(r => r[0].slice(0, 60) + " " + r[1]).join("; ")) + '">'];
   top.forEach(function (r, i) {
     const y = 5 + i * rowh, w = (W - L - 70) * r[1] / mx;
     o.push('<text x="' + (L - 6) + '" y="' + (y + 14) + '" font-size="10" fill="#334155" text-anchor="end">' + esc(r[0].slice(0, 52)) + "</text>" +
@@ -1662,7 +1674,12 @@ function pgApply() {
   pgSearch();
   pgTimeline();
   pgHighlight();
+  pgAria();
   pgStateWrite();
+}
+// the state of the chips for the screen readers: aria-pressed on the component chips and on 📋 All
+function pgAria() {
+  document.querySelectorAll(".comp-chip, .lvl-all").forEach(c => c.setAttribute("aria-pressed", c.classList.contains("active") ? "true" : "false"));
 }
 // the search box filters the records in pgKeeps() (chart, top causes, root causes, files, records follow); a card of the
 // findings whose text does not contain it is hidden too, with a class: the hidden attribute is the severity chips'

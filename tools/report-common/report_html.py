@@ -34,6 +34,7 @@ SERIES_2 = "#eb6834"
 
 # the look of analyze thread-dump, gc-logs, oracle-xstream-report and tcp-dump, which add their own rules with style()
 BASE_CSS = """
+:focus-visible{outline:2px solid #2a78d6;outline-offset:2px}
 .lv-edit{text-decoration:none;margin-left:5px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5}
@@ -149,13 +150,21 @@ THEME_TOGGLE_CSS = """
 THEME_SCRIPT = """<script>
 (function () {
   const root = document.documentElement;
+  // the theme picked with the button is remembered for the next reports, else the one of the system
+  let saved = null;
+  try { saved = localStorage.getItem("pg-report-theme"); } catch (e) {}
+  if (saved === "dark" || saved === "light") root.dataset.theme = saved;
   if (!root.dataset.theme) root.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   document.addEventListener("DOMContentLoaded", function () {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "theme-toggle";
     button.textContent = "Toggle theme";
-    button.addEventListener("click", function () { root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark"; });
+    button.setAttribute("aria-label", "switch between the light and the dark theme (remembered)");
+    button.addEventListener("click", function () {
+      root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+      try { localStorage.setItem("pg-report-theme", root.dataset.theme); } catch (e) {}
+    });
     document.body.appendChild(button);
   });
 })();
@@ -180,7 +189,7 @@ LOG_CSS = """
 .lh-info{color:#93c5fd}.lh-debug,.lh-trace{color:#94a3b8}
 .lh-exc,.lh-cause{color:#fca5a5}
 .lh-mdc{color:#c4b5fd}
-.lh-logger,.lh-frame{color:#64748b}
+.lh-logger,.lh-frame{color:#94a3b8}
 .lh-ph{color:#94a3b8}
 """)
 
@@ -449,7 +458,7 @@ def svg_time_columns(tl: dict, series: Sequence[Tuple[str, str, str]], note: str
     bw = max(1.0, (slot - 2) / len(series))
     one_day = bins[0]["start"].date() == bins[-1]["start"].date()
     fmt = "%H:%M:%S" if tl["bucket"] < 60 else "%H:%M" if one_day else "%m-%d %H:%M"
-    out = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img">']
+    out = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="occurrences over time">']
     for frac in (0, 0.5, 1):
         y = T + ph * (1 - frac)
         out.append(f'<line x1="{L}" x2="{W - 10}" y1="{y:.1f}" y2="{y:.1f}" stroke="#e2e8f0" stroke-width="1"/>'
@@ -523,7 +532,8 @@ def svg_hbars(rows: Sequence[Tuple[str, float, str]], fmt: Optional[Callable[[fl
     W, rowh, L = 600, 22, 300
     H = 10 + rowh * len(rows)
     mx = max(v for _, v, _ in rows) or 1
-    out = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img">']
+    out = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" '
+           f'aria-label="{e("bar chart: " + "; ".join(f"{r[0]} {r[1]}" for r in rows[:10]))}">']
     for i, (lab, v, tip) in enumerate(rows):
         y = 5 + i * rowh
         w = (W - L - 70) * v / mx
