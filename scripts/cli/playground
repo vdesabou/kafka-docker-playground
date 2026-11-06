@@ -10093,6 +10093,11 @@ playground_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--compare BEFORE")"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
     printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      kafka_clients          logs of the non-Java clients (C/C++, Python, Go,\n    .NET, JavaScript, KafkaJS, Rust) of\n                             other/client-*: a broker that refuses connections\n    or does not resolve, records\n                             timed out, an unknown property, and crashes (Python\n    traceback, .NET unhandled\n                             exception, Go and Rust panics, uncaught Node.js\n    error)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
     printf "    %s\n" "Allowed: connect_task_failure, support_bundle, kafka_streams, kafka_clients, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
@@ -10149,7 +10154,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors (default: all). For example\n    --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison (default: all). For example\n    --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -11233,6 +11238,11 @@ playground_debug_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--compare BEFORE")"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
     printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      kafka_clients          logs of the non-Java clients (C/C++, Python, Go,\n    .NET, JavaScript, KafkaJS, Rust) of\n                             other/client-*: a broker that refuses connections\n    or does not resolve, records\n                             timed out, an unknown property, and crashes (Python\n    traceback, .NET unhandled\n                             exception, Go and Rust panics, uncaught Node.js\n    error)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
     printf "    %s\n" "Allowed: connect_task_failure, support_bundle, kafka_streams, kafka_clients, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
@@ -11289,7 +11299,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors (default: all). For example\n    --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison (default: all). For example\n    --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -62504,6 +62514,7 @@ playground_analyze_logs_command() {
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
+  compare="${args[--compare]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -62705,7 +62716,8 @@ playground_analyze_logs_command() {
   # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
   # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
   sanitizer="$root_folder/tools/report-common/sanitizer.py"
-  sanitize_state="$tmp_dir/sanitize-state.json"
+  # PG_SANITIZE_STATE: the state of the run that started this one (--compare): the same placeholder for a value in both
+  sanitize_state="${PG_SANITIZE_STATE:-$tmp_dir/sanitize-state.json}"
   sanitize=""
   no_sanitize=1
   if [[ -n "$want_sanitize" ]]
@@ -63441,6 +63453,43 @@ playground_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
+  # --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
+  # same filters and the same sanitizer state), compared by log_report.py --compare
+  if [[ -n "$compare" ]]
+  then
+      compare_json="$tmp_dir/compare.json"
+      if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
+      then
+          cp "$compare" "$compare_json"
+      elif [ -e "$compare" ]
+      then
+          progress_step "🔁 analyzing $compare for the comparison"
+          log "🔁 Analyzing $compare for the comparison (same filters)"
+          compare_cmd=("$root_folder/scripts/cli/playground" analyze logs -f "$compare" --json --logs-only --max-findings "$max_findings")
+          [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
+          [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+          [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+          for connector in "${connector_array[@]}"
+          do
+              compare_cmd+=(--connector "$connector")
+          done
+          # no progress page of its own, the sanitizer state of this run
+          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
+              || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+          then
+              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+              tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
+              compare_json=""
+          fi
+      else
+          logwarn "⚠️ --compare: $compare does not exist, no comparison"
+          compare_json=""
+      fi
+      if [[ -n "$compare_json" ]]
+      then
+          report_args+=(--compare "$compare_json" --compare-label "$compare")
+      fi
+  fi
   for connector in "${connector_array[@]}"
   do
       report_args+=(--connector "$connector")
@@ -63451,7 +63500,7 @@ playground_analyze_logs_command() {
   fi
   # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
   # changes), on stderr with --json; then the configs asked with --show-config
-  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || [ -n "${compare_json:-}" ] || grep -q '^@@PGCFG@@' "$records_file"
   then
       progress_step "🧭 summary: known causes, root causes, configuration"
       echo ""
@@ -64963,6 +65012,7 @@ playground_debug_analyze_logs_command() {
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
+  compare="${args[--compare]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -65164,7 +65214,8 @@ playground_debug_analyze_logs_command() {
   # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
   # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
   sanitizer="$root_folder/tools/report-common/sanitizer.py"
-  sanitize_state="$tmp_dir/sanitize-state.json"
+  # PG_SANITIZE_STATE: the state of the run that started this one (--compare): the same placeholder for a value in both
+  sanitize_state="${PG_SANITIZE_STATE:-$tmp_dir/sanitize-state.json}"
   sanitize=""
   no_sanitize=1
   if [[ -n "$want_sanitize" ]]
@@ -65900,6 +65951,43 @@ playground_debug_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
+  # --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
+  # same filters and the same sanitizer state), compared by log_report.py --compare
+  if [[ -n "$compare" ]]
+  then
+      compare_json="$tmp_dir/compare.json"
+      if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
+      then
+          cp "$compare" "$compare_json"
+      elif [ -e "$compare" ]
+      then
+          progress_step "🔁 analyzing $compare for the comparison"
+          log "🔁 Analyzing $compare for the comparison (same filters)"
+          compare_cmd=("$root_folder/scripts/cli/playground" analyze logs -f "$compare" --json --logs-only --max-findings "$max_findings")
+          [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
+          [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+          [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+          for connector in "${connector_array[@]}"
+          do
+              compare_cmd+=(--connector "$connector")
+          done
+          # no progress page of its own, the sanitizer state of this run
+          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
+              || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+          then
+              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+              tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
+              compare_json=""
+          fi
+      else
+          logwarn "⚠️ --compare: $compare does not exist, no comparison"
+          compare_json=""
+      fi
+      if [[ -n "$compare_json" ]]
+      then
+          report_args+=(--compare "$compare_json" --compare-label "$compare")
+      fi
+  fi
   for connector in "${connector_array[@]}"
   do
       report_args+=(--connector "$connector")
@@ -65910,7 +65998,7 @@ playground_debug_analyze_logs_command() {
   fi
   # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
   # changes), on stderr with --json; then the configs asked with --show-config
-  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || [ -n "${compare_json:-}" ] || grep -q '^@@PGCFG@@' "$records_file"
   then
       progress_step "🧭 summary: known causes, root causes, configuration"
       echo ""
@@ -116286,6 +116374,20 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --compare)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compare']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compare requires an argument: --compare BEFORE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --sample | -s)
 
         # :flag.case_arg
@@ -119193,6 +119295,20 @@ playground_debug_analyze_logs_parse_requirements() {
           shift
         else
           printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --compare)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compare']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compare requires an argument: --compare BEFORE" >&2
           exit 1
         fi
         ;;
@@ -159354,6 +159470,19 @@ playground_analyze_logs_completion() {
         shift
 
         ;;
+      --compare)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-log-files-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compare"]=1
+
+        ;;
       --sample | -s)
         shift
         if [[ $# -eq 0 ]]; then
@@ -159513,6 +159642,7 @@ playground_analyze_logs_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
@@ -160841,6 +160971,19 @@ playground_debug_analyze_logs_completion() {
         shift
 
         ;;
+      --compare)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-log-files-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compare"]=1
+
+        ;;
       --sample | -s)
         shift
         if [[ $# -eq 0 ]]; then
@@ -161000,6 +161143,7 @@ playground_debug_analyze_logs_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings

@@ -60,6 +60,18 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Comparison with another input
+
+`--compare <before>` (the logs before a fix, another worker, the day before) runs `analyze logs` again on `<before>` with
+`--json --logs-only` and the same `--connector`, `--with-worker`, `--errors-only`, `--sanitize` (and the same sanitizer
+state, `PG_SANITIZE_STATE`: a value gets the same placeholder on both sides), or takes `<before>` as it is when it is a
+JSON of `--json`. `log_report.py --compare <json> --compare-label <before>` then compares (`compare_reports()`): the root
+causes (by label), the known causes (by title) and the connectors are new, gone, growing or shrinking (×`COMPARE_RATIO`
+= 1.5 and at least `COMPARE_MIN_DELTA` = 3 occurrences), per hour when the two periods differ by more than 10 % (the
+rates are shown), with the totals by level. In the 🔁 Comparison section of the HTML report (after the tiles, the root
+causes linked to their row), the terminal summary (also when the input has no finding left: everything gone) and
+`.comparison` of `--json`.
+
 ## Connectors
 
 `connector_health()` (in `analyze()`, `.connectors` of `--json`) builds one card per connector of the logs (the
