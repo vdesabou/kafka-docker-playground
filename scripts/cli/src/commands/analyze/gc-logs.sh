@@ -134,14 +134,8 @@ fi
 
 if [[ -n "$html_out" && -f "$html_out" ]]; then
     log ""
-    log "✅ HTML report saved: $html_out"
-    # only open a browser in an interactive terminal
-    if [[ -t 1 ]] && command -v open &>/dev/null; then
-        log "🌐 Opening report in browser..."
-        open "$html_out"
-    else
-        log "🔗 Open in browser: file://$html_out"
-    fi
+    # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+    open_html_report "$html_out"
 fi
 
 exit 0

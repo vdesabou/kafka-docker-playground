@@ -365,15 +365,15 @@
 			<key>config</key>
 			<dict>
 				<key>acceptsfiles</key>
-				<false/>
+				<true/>
 				<key>acceptsmulti</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>acceptstext</key>
 				<true/>
 				<key>acceptsurls</key>
 				<false/>
 				<key>name</key>
-				<string>kdp: config, stack trace, connector class, key, case…</string>
+				<string>kdp: config, stack trace, logs, connector class, key, case…</string>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.trigger.universalaction</string>
@@ -534,7 +534,7 @@
 	<key>readme</key>
 	<string># kafka-docker-playground (kdp)
 
-Keyword **kdp** (the first line says what is running: ↩ status, ⌘ re-run, ⌥ stop, ⇧ update versions; 🆕 when the clone has a newer workflow), or the Universal Action **kdp: config, stack trace, connector class, key, case…** on selected text: a connector config gets validate / convert / repro bootstrap, a stack trace `analyze logs`, a connector class its plugin and examples, a config key `kdp key`.
+Keyword **kdp** (the first line says what is running: ↩ status, ⌘ re-run, ⌥ stop, ⇧ update versions; 🆕 when the clone has a newer workflow), or the Universal Action **kdp: config, stack trace, logs, connector class, key, case…** on selected text: a connector config gets validate / convert / repro bootstrap, a stack trace `analyze logs`, a connector class its plugin and examples, a config key `kdp key`. On files and folders selected in Finder: the matching `playground analyze` command (logs, support bundles, thread dumps, GC logs, .hprof, .jfr, .pcap, orclcdc_diag reports), its HTML report opened right away.
 
 | Query | What |
 | --- | --- |
@@ -664,7 +664,7 @@ Installed by `playground tools install-alfred-workflow` (source in scripts/alfre
 		<key>CF0EFFE1-671A-4F0B-B42F-4E692AEC94A7</key>
 		<dict>
 			<key>note</key>
-			<string>Universal Action: selected text (a case number, a key, words)</string>
+			<string>Universal Action: selected text (a case number, a key, words) or files and folders (analyze)</string>
 			<key>xpos</key>
 			<real>30</real>
 			<key>ypos</key>
