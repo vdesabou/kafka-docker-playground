@@ -5,6 +5,10 @@ digest itself is plain bash (`scripts/cli/src/commands/analyze/logs.sh`, `summar
 `scripts/cli/src/lib/cli_function.sh`): it de-duplicates records with an occurrence count and collapses stack traces
 to their `Caused by:` chain.
 
+`tools/log-analyzer/test_digest_awk.sh gawk mawk "busybox awk"` runs the digest on the samples with each awk and fails
+when one of them errors or finds other records (the Tools tests workflow runs it): the digest must stay portable, mawk
+(the default awk of Debian / Ubuntu) refuses a function and a parameter of the same name, for example.
+
 ## JSON and CSV exports of log events
 
 `json_log_export.py <input> <output>` turns an export of log events back into plain log lines, oldest first, before
