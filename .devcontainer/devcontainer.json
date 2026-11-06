@@ -1,0 +1,45 @@
+{
+  // GitHub Codespaces (and VS Code Dev Containers) setup for kafka-docker-playground
+  // Open it in one click: https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1
+  // Docs: https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces
+  "name": "kafka-docker-playground",
+  // Ubuntu with bash 5 and git: no bash upgrade needed, unlike macOS
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    // a Docker engine with compose v2 inside the codespace
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true
+    }
+  },
+  // a broker, Connect and Schema Registry need 6 to 8 GB: Codespaces picks the 4-core / 16 GB machine or bigger
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+  // installs fzf and puts playground (and its completion) in the PATH of bash and zsh
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // checks that the container engine is ready, each time the codespace starts
+  "postStartCommand": "bash scripts/cli/playground doctor || true",
+  "portsAttributes": {
+    "9021": { "label": "Control Center", "onAutoForward": "notify" },
+    "3000": { "label": "Grafana", "onAutoForward": "notify" }
+  },
+  // the examples open many ports (brokers, Connect, JMX, databases…): forward them without a popup each time
+  "otherPortsAttributes": {
+    "onAutoForward": "silent"
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "README.md"
+      ]
+    },
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "timonwong.shellcheck"
+      ]
+    }
+  }
+}

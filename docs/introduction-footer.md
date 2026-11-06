@@ -16,6 +16,7 @@
 - 🤖 Use it with [Claude Code](https://kafka-docker-playground.io/#/claude-code): project guide, skills to add examples, review PRs, change the CLI or analyze Oracle XStream reports
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
 - 🧰 Build your own examples or reproduction models with the [reproduction toolkit](https://kafka-docker-playground.io/#/reusables)
+- 🌐 Try it in your browser, nothing to install, with [GitHub Codespaces](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces)
 - ✨ Work remotely with VS Code using [playground ec2](https://kafka-docker-playground.io/#/playground%20ec2) CLI command
 - 🦭 Run examples with [Podman](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) through its Docker-compatible API
 - 🤖 Automated testing using Github Actions [CI](https://kafka-docker-playground.io/#/how-it-works?id=🤖-how-ci-works)
