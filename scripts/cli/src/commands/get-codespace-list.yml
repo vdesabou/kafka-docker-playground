@@ -1,0 +1,7 @@
+name: get-codespace-list
+help: Return some completion for codespace list
+private: true
+args:
+- name: cur
+  required: false
+  help: correspond to completion $cur

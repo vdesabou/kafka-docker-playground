@@ -50,6 +50,7 @@ playground_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for connector list\n" "$(green "get-connector-list")                        "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for ec2 instance list\n" "$(green "get-ec2-instance-list")                     "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for ec2 cloudformation list\n" "$(green "get-ec2-cloudformation-list")               "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for codespace list\n" "$(green "get-codespace-list")                        "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for zazkia connections list\n" "$(green "get-zazkia-connection-list")                "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for secret names\n" "$(green "get-secret-list")                           "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for secret profiles\n" "$(green "get-secret-profile-list")                   "
@@ -408,6 +409,16 @@ playground_usage() {
   printf "  %s   ↔️ Synchronize reproduction-models folder between local and ec2 instance\n" "$(green "ec2 sync-repro-folder")                     "
   printf "  %s   🔐 Send the secrets store to an ec2 instance\n" "$(green "ec2 push-secrets")                          "
   echo
+  printf "%s\n" "$(bold "Codespace commands:")"
+  printf "  %s   ☁️ Create and manage GitHub Codespaces to run kafka-docker-playground\n" "$(green "codespace")                                 "
+  printf "  %s   👷 Create a GitHub Codespace of kafka-docker-playground, then open it\n" "$(green "codespace create")                          "
+  printf "  %s   🔘 List your kafka-docker-playground codespaces\n" "$(green "codespace list")                            "
+  printf "  %s   👨‍💻 Open a codespace in Visual Studio Code\n" "$(green "codespace open")                            "
+  printf "  %s   🐚 Open a shell in a codespace, or run one command in it\n" "$(green "codespace ssh")                             "
+  printf "  %s   🔴 Stop a codespace\n" "$(green "codespace stop")                            "
+  printf "  %s   🟢 Start a codespace\n" "$(green "codespace start")                           "
+  printf "  %s   ❌ Delete a codespace\n" "$(green "codespace delete")                          "
+  echo
 
   # :command.long_usage
   if [[ -n "$long_usage" ]]; then
@@ -649,6 +660,36 @@ playground_get_ec2_cloudformation_list_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-ec2-cloudformation-list [CUR]\n"
   printf "  playground get-ec2-cloudformation-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_codespace_list_usage() {
+  printf "playground get-codespace-list - Return some completion for codespace list\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-codespace-list [CUR]\n"
+  printf "  playground get-codespace-list --help | -h\n"
   echo
 
   # :command.long_usage
@@ -22655,6 +22696,332 @@ playground_ec2_push_secrets_usage() {
   fi
 }
 
+# :command.usage
+playground_codespace_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace\n\n"
+    printf "  ☁️ Create and manage GitHub Codespaces to run kafka-docker-playground\n  \n  🪄 Open them in Visual Studio Code (or the browser), or run a command in them\n  over ssh\n  \n  The same thing as the \"Open in GitHub Codespaces\" button, from the\n  terminal: an Ubuntu x86_64 machine set up by .devcontainer/ (Docker with\n  compose v2, fzf, playground in the PATH, the default images pulled), with\n  nothing to install on your laptop and no AWS account. It is also where the\n  examples that do not work on ARM64 run.\n  \n    create              create a codespace and open it\n    open                open it in VS Code (or the browser with --web)\n    ssh                 a shell, or one command, in it\n    list / start / stop / delete\n  \n  A thin layer over 'gh codespace': it needs the GitHub CLI with the\n  'codespace' scope (gh auth refresh -h github.com -s codespace).\n  \n  💰 A running codespace uses your Codespaces quota (30 hours a month on 4\n     cores with GitHub Free), then is billed. It stops by itself after 30\n     minutes idle; 'playground codespace stop' when you pause, and\n     'playground codespace delete' when you are done (a stopped codespace\n     still uses storage).\n  \n  🔐 The private reproduction-models submodule is not cloned in a codespace.\n\n"
+  else
+    printf "playground codespace - ☁️ Create and manage GitHub Codespaces to run kafka-docker-playground\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace COMMAND\n"
+  printf "  playground codespace [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   👷 Create a GitHub Codespace of kafka-docker-playground, then open it\n" "$(green "create")"
+  printf "  %s   🔘 List your kafka-docker-playground codespaces\n" "$(green "list")  "
+  printf "  %s   👨‍💻 Open a codespace in Visual Studio Code\n" "$(green "open")  "
+  printf "  %s   🐚 Open a shell in a codespace, or run one command in it\n" "$(green "ssh")   "
+  printf "  %s   🔴 Stop a codespace\n" "$(green "stop")  "
+  printf "  %s   🟢 Start a codespace\n" "$(green "start") "
+  printf "  %s   ❌ Delete a codespace\n" "$(green "delete")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "PLAYGROUND_CODESPACE_REPO")"
+    printf "    🐙 Repository the codespaces are created from, as OWNER/REPO (default\n    vdesabou/kafka-docker-playground, set it to use your fork)\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_create_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace create\n\n"
+    printf "  👷 Create a GitHub Codespace of kafka-docker-playground, then open it\n  \n  The codespace is created from the master branch (--branch to change it)\n  on a 4-core / 16 GB machine, the minimum for a broker, Connect and Schema\n  Registry. When a prebuild is configured for the repository, it starts\n  with the default images already pulled; otherwise they are pulled in the\n  background once it is open.\n  \n  It is named pg-<username>-<suffix>, like the ec2 instances, so that\n  'playground codespace list' tells them apart.\n\n"
+  else
+    printf "playground codespace create - 👷 Create a GitHub Codespace of kafka-docker-playground, then open it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace create [OPTIONS]\n"
+  printf "  playground codespace create --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--machine MACHINE")"
+    printf "    🧑‍💻 machine size: 4-core (16 GB), 8-core (32 GB) or 16-core (64 GB). default\n    is 4-core\n    \n    🎓 Tip: an 8-core machine uses your quota twice as fast as a 4-core one\n"
+    printf "    %s\n" "Allowed: 4-core, 8-core, 16-core"
+    printf "    %s\n" "Default: 4-core"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--branch, -b BRANCH")"
+    printf "    🌿 branch the codespace is created from. default is master\n"
+    printf "    %s\n" "Default: master"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--suffix SUFFIX")"
+    printf "    📮 suffix to add to the codespace display name, giving pg-<username>-<suffix>\n    \n    if not set, the name is pg-<username>-<6 random characters>\n    \n    🎓 Tip: set it to the case number you are working on\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--location LOCATION")"
+    printf "    🌍 region of the codespace (default is picked by GitHub, close to you)\n"
+    printf "    %s\n" "Allowed: EastUs, SouthEastAsia, WestEurope, WestUs2"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 do not open the codespace in VS Code once it is created\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground codespace create\n"
+    printf "  playground codespace create --suffix 123456 --machine 8-core\n"
+    printf "  playground codespace create --branch my-feature --no-open\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace list\n\n"
+    printf "  🔘 List your kafka-docker-playground codespaces\n  \n  Their name, branch and state. An Available one is running and uses your\n  quota.\n\n"
+  else
+    printf "playground codespace list - 🔘 List your kafka-docker-playground codespaces\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace list\n"
+  printf "  playground codespace list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_open_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace open\n\n"
+    printf "  👨‍💻 Open a codespace in Visual Studio Code\n  \n  Opens your local VS Code connected to the codespace (it needs the GitHub\n  Codespaces extension), or VS Code in the browser with --web. A stopped\n  codespace is started on the way.\n  \n  Without --codespace, the most recently used codespace is opened.\n\n"
+  else
+    printf "playground codespace open - 👨‍💻 Open a codespace in Visual Studio Code\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace open [OPTIONS]\n"
+  printf "  playground codespace open --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--web, -w")"
+    printf "    🌐 open VS Code in the browser instead of the local VS Code\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground codespace open\n"
+    printf "  playground codespace open --web\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_ssh_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace ssh\n\n"
+    printf "  🐚 Open a shell in a codespace, or run one command in it\n  \n  Everything after -- runs in the codespace, from the repository folder, in\n  a login shell (so playground is in the PATH). A stopped codespace is\n  started on the way.\n  \n  It needs the SSH server of .devcontainer/: a codespace created before it\n  was added needs a 'Codespaces: Rebuild Container' first.\n  \n  Without --codespace, the most recently used codespace is used.\n\n"
+  else
+    printf "playground codespace ssh - 🐚 Open a shell in a codespace, or run one command in it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace ssh [OPTIONS] [--] [COMMAND...]\n"
+  printf "  playground codespace ssh --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    echo "  COMMAND..."
+    printf "    command to run in the codespace, after --\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground codespace ssh\n"
+    printf "  playground codespace ssh -- playground status\n"
+    printf "  playground codespace ssh --codespace pg-jdoe-123456 -- docker images\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_stop_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace stop\n\n"
+    printf "  🔴 Stop a codespace\n  \n  Shuts the machine down while keeping its disk, so you stop using compute\n  and find your work again on 'playground codespace start'. A codespace\n  also stops by itself after 30 minutes idle.\n  \n  Without --codespace, all your running codespaces are stopped.\n\n"
+  else
+    printf "playground codespace stop - 🔴 Stop a codespace\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace stop [OPTIONS]\n"
+  printf "  playground codespace stop --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_start_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace start\n\n"
+    printf "  🟢 Start a codespace\n  \n  Starts a stopped codespace and waits until it is available. 'open' and\n  'ssh' start it too.\n  \n  Without --codespace, the most recently used codespace is started.\n\n"
+  else
+    printf "playground codespace start - 🟢 Start a codespace\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace start [OPTIONS]\n"
+  printf "  playground codespace start --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_delete_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace delete\n\n"
+    printf "  ❌ Delete a codespace\n  \n  This is what stops the storage billing for good, unlike stop. The branch\n  and the uncommitted / unpushed state of each codespace are shown before\n  you confirm.\n  \n  ⚠️ Everything in the codespace is lost, including the reproduction models\n  you wrote there.\n  \n  Without --codespace, it applies to all your codespaces, and asks you to\n  confirm first.\n\n"
+  else
+    printf "playground codespace delete - ❌ Delete a codespace\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace delete [OPTIONS]\n"
+  printf "  playground codespace delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
 # :command.normalize_input
 # :command.normalize_input_function
 normalize_input() {
@@ -26969,6 +27336,92 @@ function filter_aws_ec2_permissions() {
     logerror "please make sure to have AdministratorAccess in aws"
     cat /tmp/output_ec2_describe_instance.log
   fi
+}
+
+#
+# GitHub Codespaces (playground codespace): a thin layer over 'gh codespace'
+#
+
+# repository the codespaces are created from (PLAYGROUND_CODESPACE_REPO for a fork)
+function codespace_repo() {
+  echo "${PLAYGROUND_CODESPACE_REPO:-vdesabou/kafka-docker-playground}"
+}
+
+# bashly filter of 'playground codespace': gh installed, logged in, with the codespace scope
+function filter_gh_codespace() {
+  if ! command -v gh > /dev/null 2>&1
+  then
+    logerror "❌ the GitHub CLI (gh) is required: https://cli.github.com"
+    return
+  fi
+  local status
+  if ! status=$(gh auth status --active -h github.com 2>&1)
+  then
+    logerror "❌ gh is not logged in to github.com: run 'gh auth login'"
+    return
+  fi
+  # a token from GH_TOKEN / GITHUB_TOKEN shows no scopes: let gh itself report what is missing
+  if echo "$status" | grep -qi "token scopes" && ! echo "$status" | grep -i "token scopes" | grep -q "'codespace'"
+  then
+    logerror "❌ the gh token is missing the 'codespace' scope: run 'gh auth refresh -h github.com -s codespace'"
+  fi
+}
+
+# json of your codespaces of the repository, most recently used first
+function codespace_list_json() {
+  gh codespace list -R "$(codespace_repo)" --json name,displayName,state,machineName,lastUsedAt,gitStatus 2> /dev/null \
+    | jq 'sort_by(.lastUsedAt) | reverse'
+}
+
+# names of your codespaces of the repository, most recently used first
+function codespace_names() {
+  codespace_list_json | jq -r '.[].name' 2> /dev/null
+}
+
+# state of a codespace: Available, Shutdown, ShuttingDown, Starting, Queued, Provisioning…
+function codespace_state() {
+  gh api "user/codespaces/$1" --jq .state 2> /dev/null
+}
+
+# waits until a codespace reaches a state (default timeout 300 seconds); prints the last state seen
+function codespace_wait_state() {
+  local codespace="$1" target="$2" timeout="${3:-300}" state="" waited=0
+  while [ $waited -lt "$timeout" ]
+  do
+    state=$(codespace_state "$codespace")
+    if [ "$state" == "$target" ]
+    then
+      echo "$state"
+      return 0
+    fi
+    sleep 5
+    waited=$((waited+5))
+  done
+  echo "$state"
+  return 1
+}
+
+# the codespace to act on: the one given, else the most recently used one
+function codespace_pick() {
+  local codespace="$1"
+  if [ -n "$codespace" ]
+  then
+    echo "$codespace"
+    return 0
+  fi
+  local names
+  names=$(codespace_names)
+  if [ -z "$names" ]
+  then
+    logerror "💤 no codespace of $(codespace_repo) was found: create one with 'playground codespace create'" >&2
+    return 1
+  fi
+  codespace=$(echo "$names" | head -1)
+  if [ "$(echo "$names" | wc -l | tr -d ' ')" -gt 1 ]
+  then
+    logwarn "☁️ several codespaces, using the most recently used one: $codespace (--codespace to pick another)" >&2
+  fi
+  echo "$codespace"
 }
 
 function increment_cli_metric() {
@@ -43411,6 +43864,16 @@ playground_get_ec2_cloudformation_list_command() {
   cur="${args[cur]}"
 
   get_ec2_cloudformation_list_with_fzf "$cur"
+}
+
+# :command.function
+playground_get_codespace_list_command() {
+
+  # src/commands/get-codespace-list.sh
+  cur="${args[cur]}"
+
+  codespace_names | grep "^${cur}" || true
+
 }
 
 # :command.function
@@ -91362,6 +91825,260 @@ playground_ec2_push_secrets_command() {
 
 }
 
+# :command.function
+playground_codespace_create_command() {
+
+  # src/commands/codespace/create.sh
+  machine="${args[--machine]}"
+  branch="${args[--branch]}"
+  suffix="${args[--suffix]}"
+  location="${args[--location]}"
+  no_open="${args[--no-open]}"
+
+  repo=$(codespace_repo)
+
+  case "$machine" in
+    4-core) machine_name="standardLinux32gb" ;;
+    8-core) machine_name="premiumLinux" ;;
+    16-core) machine_name="largePremiumLinux" ;;
+  esac
+
+  # the machines depend on your account (a personal account may only get 4-core): check before creating
+  available=$(gh api "repos/$repo/codespaces/machines" --jq '.machines[] | "\(.name) \(.cpus) \(.memory_in_bytes / 1073741824 | floor)"' 2> /dev/null)
+  if [ -n "$available" ] && ! echo "$available" | grep -q "^$machine_name "
+  then
+    logerror "❌ $machine ($machine_name) is not available to your account for $repo. Available:"
+    echo "$available" | while read -r name cpus memory
+    do
+      logerror "   --machine ${cpus}-core   ($name, $memory GB)"
+    done
+    exit 1
+  fi
+
+  if [[ ! -n "$suffix" ]]
+  then
+    suffix=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | head -c 6)
+  fi
+  username=$(whoami | tr -d '.' | tr '[:upper:]' '[:lower:]')
+  # gh allows 48 characters for a display name
+  display_name=$(echo "pg-${username}-${suffix}" | cut -c1-48)
+
+  create_args=(-R "$repo" -b "$branch" -m "$machine_name" -d "$display_name" --default-permissions)
+  if [[ -n "$location" ]]
+  then
+    create_args+=(-l "$location")
+  fi
+
+  log "👷 creating codespace $display_name ($machine, branch $branch of $repo)"
+  if ! codespace=$(gh codespace create "${create_args[@]}")
+  then
+    logerror "❌ gh codespace create failed, see the error above"
+    exit 1
+  fi
+  codespace=$(echo "$codespace" | tail -1)
+  log "✅ codespace $codespace created"
+  log "📥 the default images are already there with a prebuild, otherwise they are pulled in the background (Codespaces: View Creation Log)"
+  log "💰 it uses your Codespaces quota while it runs: 'playground codespace stop' when you pause, 'playground codespace delete' when you are done"
+
+  if [[ -n "$no_open" ]]
+  then
+    log "👉 open it with: playground codespace open --codespace $codespace"
+    exit 0
+  fi
+
+  playground codespace open --codespace "$codespace"
+
+}
+
+# :command.function
+playground_codespace_list_command() {
+
+  # src/commands/codespace/list.sh
+  repo=$(codespace_repo)
+
+  log "🔘 listing your codespaces of $repo"
+  gh codespace list -R "$repo"
+
+}
+
+# :command.function
+playground_codespace_open_command() {
+
+  # src/commands/codespace/open.sh
+  web="${args[--web]}"
+
+  codespace=$(codespace_pick "${args[--codespace]}") || exit 1
+
+  code_args=(-c "$codespace")
+  if [[ -n "$web" ]]
+  then
+    code_args+=(--web)
+    log "🌐 opening codespace $codespace in VS Code in the browser"
+  else
+    log "👨‍💻 opening codespace $codespace in VS Code"
+  fi
+
+  if ! gh codespace code "${code_args[@]}"
+  then
+    logerror "❌ could not open codespace $codespace"
+    if [[ ! -n "$web" ]]
+    then
+      logerror "👉 the local VS Code needs the GitHub Codespaces extension, or use: playground codespace open --codespace $codespace --web"
+    fi
+    exit 1
+  fi
+
+}
+
+# :command.function
+playground_codespace_ssh_command() {
+
+  # src/commands/codespace/ssh.sh
+  codespace=$(codespace_pick "${args[--codespace]}") || exit 1
+
+  if [ ${#other_args[@]} -eq 0 ]
+  then
+    log "🐚 opening a shell in codespace $codespace"
+    gh codespace ssh -c "$codespace"
+    ret=$?
+  else
+    log "🐚 running in codespace $codespace: ${other_args[*]}"
+    # from the repository folder, with playground in the PATH (a non-interactive shell does not read the
+    # block that .devcontainer/on-create.sh adds to ~/.bashrc); each argument is quoted so that it reaches
+    # the remote shell as typed
+    remote_command="cd /workspaces/$(basename "$(codespace_repo)") && export PATH=\"\$PWD/scripts/cli:\$PATH\" &&"
+    for arg in "${other_args[@]}"
+    do
+      remote_command="$remote_command $(printf '%q' "$arg")"
+    done
+    gh codespace ssh -c "$codespace" -- "$remote_command"
+    ret=$?
+  fi
+
+  if [ $ret -ne 0 ] && [ $ret -ne 130 ]
+  then
+    logwarn "⚠️ ssh exited with code $ret. If it could not connect: a codespace created before the SSH server was added to .devcontainer/ needs 'Codespaces: Rebuild Container' first"
+  fi
+  exit $ret
+
+}
+
+# :command.function
+playground_codespace_stop_command() {
+
+  # src/commands/codespace/stop.sh
+  codespace="${args[--codespace]}"
+
+  if [[ -n "$codespace" ]]
+  then
+    codespaces="$codespace"
+  else
+    codespaces=$(codespace_list_json | jq -r '.[] | select(.state == "Available") | .name')
+    if [ -z "$codespaces" ]
+    then
+      log "💤 no running codespace of $(codespace_repo)"
+      exit 0
+    fi
+  fi
+
+  for c in $codespaces
+  do
+    log "🔴 stopping codespace $c"
+    if ! gh codespace stop -c "$c"
+    then
+      logerror "❌ could not stop codespace $c"
+      continue
+    fi
+    if state=$(codespace_wait_state "$c" "Shutdown" 120)
+    then
+      log "✅ codespace $c is stopped: its disk is kept, 'playground codespace start --codespace $c' to resume"
+    else
+      logwarn "⚠️ codespace $c is still $state after 2 minutes"
+    fi
+  done
+
+}
+
+# :command.function
+playground_codespace_start_command() {
+
+  # src/commands/codespace/start.sh
+  codespace=$(codespace_pick "${args[--codespace]}") || exit 1
+
+  state=$(codespace_state "$codespace")
+  case "$state" in
+    Available)
+      log "🟢 codespace $codespace is already running"
+      exit 0
+    ;;
+    ShuttingDown)
+      # a start request now is refused with "already running" (HTTP 409)
+      log "⏳ codespace $codespace is shutting down, waiting for it to stop first"
+      codespace_wait_state "$codespace" "Shutdown" > /dev/null
+    ;;
+  esac
+
+  state=$(codespace_state "$codespace")
+  case "$state" in
+    Starting|Queued|Provisioning|Rebuilding|Updating)
+      log "⏳ codespace $codespace is already $state"
+    ;;
+    *)
+      log "🟢 starting codespace $codespace"
+      if ! gh api -X POST "user/codespaces/$codespace/start" --silent
+      then
+        logerror "❌ could not start codespace $codespace (state $state)"
+        exit 1
+      fi
+    ;;
+  esac
+
+  # usually about a minute
+  if state=$(codespace_wait_state "$codespace" "Available")
+  then
+    log "✅ codespace $codespace is available: playground codespace open --codespace $codespace"
+  else
+    logerror "❌ codespace $codespace is still $state after 5 minutes"
+    exit 1
+  fi
+
+}
+
+# :command.function
+playground_codespace_delete_command() {
+
+  # src/commands/codespace/delete.sh
+  codespace="${args[--codespace]}"
+
+  json=$(codespace_list_json)
+  if [[ -n "$codespace" ]]
+  then
+    json=$(echo "$json" | jq --arg c "$codespace" '[.[] | select(.name == $c)]')
+  fi
+  if [ "$(echo "$json" | jq 'length')" == "0" ]
+  then
+    if [[ -n "$codespace" ]]
+    then
+      logerror "❌ codespace $codespace was not found in your codespaces of $(codespace_repo)"
+      exit 1
+    fi
+    log "💤 no codespace of $(codespace_repo)"
+    exit 0
+  fi
+
+  log "❌ these codespaces will be deleted, with everything in them:"
+  echo "$json" | jq -r '.[] | "   \(.name) (\(.displayName)) branch \(.gitStatus.ref // "?"), \(.state)" + (if .gitStatus.hasUncommittedChanges then ", ⚠️ uncommitted changes" else "" end) + (if .gitStatus.hasUnpushedChanges then ", ⚠️ unpushed commits" else "" end)'
+  logwarn "⚠️ the reproduction models written in a codespace are lost with it"
+  check_if_continue
+
+  for c in $(echo "$json" | jq -r '.[].name')
+  do
+    log "❌ deleting codespace $c"
+    gh codespace delete -c "$c" --force
+  done
+
+}
+
 # :command.parse_requirements
 parse_requirements() {
   local key
@@ -91489,6 +92206,13 @@ parse_requirements() {
       action="get-ec2-cloudformation-list"
       shift
       playground_get_ec2_cloudformation_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get-codespace-list)
+      action="get-codespace-list"
+      shift
+      playground_get_codespace_list_parse_requirements "$@"
       shift $#
       ;;
 
@@ -92080,6 +92804,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    codespace)
+      action="codespace"
+      shift
+      playground_codespace_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_usage >&2
@@ -92609,6 +93340,78 @@ playground_get_ec2_cloudformation_list_parse_requirements() {
 
   # :command.command_filter
   action="get-ec2-cloudformation-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['cur']+x} ]]; then
+            args['cur']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['cur']+x} ]]; then
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_codespace_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_codespace_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-codespace-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -145333,6 +146136,755 @@ playground_ec2_push_secrets_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+playground_codespace_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("PLAYGROUND_CODESPACE_REPO")
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    create)
+      action="create"
+      shift
+      playground_codespace_create_parse_requirements "$@"
+      shift $#
+      ;;
+
+    list)
+      action="list"
+      shift
+      playground_codespace_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    open)
+      action="open"
+      shift
+      playground_codespace_open_parse_requirements "$@"
+      shift $#
+      ;;
+
+    ssh)
+      action="ssh"
+      shift
+      playground_codespace_ssh_parse_requirements "$@"
+      shift $#
+      ;;
+
+    stop)
+      action="stop"
+      shift
+      playground_codespace_stop_parse_requirements "$@"
+      shift $#
+      ;;
+
+    start)
+      action="start"
+      shift
+      playground_codespace_start_parse_requirements "$@"
+      shift $#
+      ;;
+
+    delete)
+      action="delete"
+      shift
+      playground_codespace_delete_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_codespace_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_gh_codespace)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_create_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_create_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace create"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --machine)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--machine']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--machine requires an argument: --machine MACHINE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --branch | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--branch']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--branch requires an argument: --branch, -b BRANCH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --suffix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--suffix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--suffix requires an argument: --suffix SUFFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --location)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--location']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--location requires an argument: --location LOCATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--machine']:-} ]] || args['--machine']="4-core"
+  [[ -n ${args['--branch']:-} ]] || args['--branch']="master"
+
+  # :command.whitelist_filter
+  if [[ ${args['--machine']:-} ]] && [[ ! ${args['--machine']:-} =~ ^(4-core|8-core|16-core)$ ]]; then
+    printf "%s\n" "--machine must be one of: 4-core, 8-core, 16-core" >&2
+    exit 1
+  fi
+  if [[ ${args['--location']:-} ]] && [[ ! ${args['--location']:-} =~ ^(EastUs|SouthEastAsia|WestEurope|WestUs2)$ ]]; then
+    printf "%s\n" "--location must be one of: EastUs, SouthEastAsia, WestEurope, WestUs2" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_codespace_open_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_open_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace open"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --web | -w)
+
+        # :flag.case_no_arg
+        args['--web']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_ssh_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_ssh_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace ssh"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
+
+      -?*)
+        other_args+=("$1")
+        shift
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_catch_all
+        other_args+=("$1")
+        shift
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_stop_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_stop_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace stop"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_start_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_start_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace start"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_delete_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_delete_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
 # :command.completions
 completion_run() {
   local -a completion_words=("$@")
@@ -145783,6 +147335,11 @@ playground_completion() {
         playground_ec2_completion "$completion_current" "$@"
         return
         ;;
+      codespace)
+        shift
+        playground_codespace_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -145817,7 +147374,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker consumer-group flink ksqldb streams db rbac connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources run re-run get-ci-result history find-example find-command switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker consumer-group flink ksqldb streams db rbac connector-plugin connector ec2 codespace
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -146003,6 +147560,35 @@ playground_get_ec2_instance_list_completion() {
 
 # :command.completion_function
 playground_get_ec2_cloudformation_list_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_get_codespace_list_completion() {
   local completion_current="$1"
   local completion_arg_index=0
   shift
@@ -172848,6 +174434,365 @@ playground_ec2_push_secrets_completion() {
 
 }
 
+# :command.completion_function
+playground_codespace_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      create)
+        shift
+        playground_codespace_create_completion "$completion_current" "$@"
+        return
+        ;;
+      list)
+        shift
+        playground_codespace_list_completion "$completion_current" "$@"
+        return
+        ;;
+      open)
+        shift
+        playground_codespace_open_completion "$completion_current" "$@"
+        return
+        ;;
+      ssh)
+        shift
+        playground_codespace_ssh_completion "$completion_current" "$@"
+        return
+        ;;
+      stop)
+        shift
+        playground_codespace_stop_completion "$completion_current" "$@"
+        return
+        ;;
+      start)
+        shift
+        playground_codespace_start_completion "$completion_current" "$@"
+        return
+        ;;
+      delete)
+        shift
+        playground_codespace_delete_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" create list open ssh stop start delete
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_create_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --machine)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "4-core"
+            "8-core"
+            "16-core"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--machine"]=1
+
+        ;;
+      --branch | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--branch"]=1
+
+        ;;
+      --suffix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--suffix"]=1
+
+        ;;
+      --location)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "EastUs"
+            "SouthEastAsia"
+            "WestEurope"
+            "WestUs2"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--location"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --machine "$completion_current" --machine
+    completion_flag_candidates --branch "$completion_current" --branch -b
+    completion_flag_candidates --suffix "$completion_current" --suffix
+    completion_flag_candidates --location "$completion_current" --location
+    completion_flag_candidates --no-open "$completion_current" --no-open
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_list_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_open_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      --web | -w)
+        completion_blocked_flags["--web"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+    completion_flag_candidates --web "$completion_current" --web -w
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_ssh_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_stop_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_start_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_delete_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+  fi
+
+}
+
 # :command.user_hooks
 before_hook() {
   # src/before.sh
@@ -172940,6 +174885,7 @@ run() {
     "get-connector-list") playground_get_connector_list_command ;;
     "get-ec2-instance-list") playground_get_ec2_instance_list_command ;;
     "get-ec2-cloudformation-list") playground_get_ec2_cloudformation_list_command ;;
+    "get-codespace-list") playground_get_codespace_list_command ;;
     "get-zazkia-connection-list") playground_get_zazkia_connection_list_command ;;
     "get-secret-list") playground_get_secret_list_command ;;
     "get-secret-profile-list") playground_get_secret_profile_list_command ;;
@@ -173343,6 +175289,14 @@ run() {
     "ec2 sync-repro-folder local-to-ec2") playground_ec2_sync_repro_folder_local_to_ec2_command ;;
     "ec2 sync-repro-folder ec2-to-local") playground_ec2_sync_repro_folder_ec2_to_local_command ;;
     "ec2 push-secrets") playground_ec2_push_secrets_command ;;
+    "codespace") playground_codespace_command ;;
+    "codespace create") playground_codespace_create_command ;;
+    "codespace list") playground_codespace_list_command ;;
+    "codespace open") playground_codespace_open_command ;;
+    "codespace ssh") playground_codespace_ssh_command ;;
+    "codespace stop") playground_codespace_stop_command ;;
+    "codespace start") playground_codespace_start_command ;;
+    "codespace delete") playground_codespace_delete_command ;;
   esac
 }
 

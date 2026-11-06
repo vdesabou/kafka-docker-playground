@@ -11,7 +11,10 @@
     // a Docker engine with compose v2 inside the codespace
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "moby": true
-    }
+    },
+    // an SSH server, for 'playground codespace ssh' ('gh codespace ssh' and 'gh codespace cp' need one).
+    // gh tunnels it through its own authenticated connection: no port is opened to the internet
+    "ghcr.io/devcontainers/features/sshd:1": {}
   },
   // a broker, Connect and Schema Registry need 6 to 8 GB: Codespaces picks the 4-core / 16 GB machine or bigger
   "hostRequirements": {
