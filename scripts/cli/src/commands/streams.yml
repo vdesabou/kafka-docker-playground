@@ -16,6 +16,8 @@ help: |-
 commands:
 
   - name: status
+    dependencies:
+      python3: visit https://www.python.org/downloads/ to install
     group: Kafka Streams
     help: |-
       🌊 Show the state of the Kafka Streams instances

@@ -159,11 +159,6 @@ then
     fi
 fi
 
-if ! command -v python3 > /dev/null 2>&1
-then
-    logerror "❌ python3 is required by 'playground schema diff'"
-    exit 1
-fi
 json_args=()
 [[ -n "$json" ]] && json_args=(--json)
 python3 -I "$root_folder/tools/schema-tool/schema_diff.py" \

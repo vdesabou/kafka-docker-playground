@@ -8,11 +8,6 @@ subject_prefix="${args[--subject-prefix]}"
 dry_run="${args[--dry-run]}"
 verbose="${args[--verbose]}"
 
-if ! command -v python3 > /dev/null 2>&1
-then
-    logerror "❌ python3 is required by 'playground schema import'"
-    exit 1
-fi
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 import_mode_subjects=()

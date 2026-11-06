@@ -57810,11 +57810,6 @@ playground_schema_diff_command() {
       fi
   fi
 
-  if ! command -v python3 > /dev/null 2>&1
-  then
-      logerror "❌ python3 is required by 'playground schema diff'"
-      exit 1
-  fi
   json_args=()
   [[ -n "$json" ]] && json_args=(--json)
   python3 -I "$root_folder/tools/schema-tool/schema_diff.py" \
@@ -58048,12 +58043,6 @@ playground_schema_history_command() {
   cluster="${args[--cluster]}"
   verbose="${args[--verbose]}"
 
-  if ! command -v python3 > /dev/null 2>&1
-  then
-      logerror "❌ python3 is required by 'playground schema history'"
-      exit 1
-  fi
-
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   trap 'rm -rf $tmp_dir' EXIT
 
@@ -58223,12 +58212,6 @@ playground_schema_import_command() {
   subject_prefix="${args[--subject-prefix]}"
   dry_run="${args[--dry-run]}"
   verbose="${args[--verbose]}"
-
-  if ! command -v python3 > /dev/null 2>&1
-  then
-      logerror "❌ python3 is required by 'playground schema import'"
-      exit 1
-  fi
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   import_mode_subjects=()
@@ -61418,10 +61401,6 @@ playground_analyze_thread_dump_command() {
       logerror "❌ Thread dump analyzer not found at: $analyzer"
       exit 1
   fi
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
-      exit 1
-  fi
 
   mkdir -p "$output_dir"
   output_dir_abs=$(cd "$output_dir" && pwd)
@@ -62743,11 +62722,6 @@ playground_analyze_gc_logs_command() {
       exit 1
   fi
 
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
-      exit 1
-  fi
-
   # ── Container mode: find the GC log and copy it with its rotated files ─────
   if [[ -n "$container" ]]; then
       log "🐳 Looking for the GC log in container: $container"
@@ -62881,10 +62855,6 @@ playground_analyze_oracle_xstream_report_command() {
   analyzer="$analyzer_dir/xstream_report_analyzer.py"
   if [[ ! -f "$analyzer" ]]; then
       logerror "❌ Oracle XStream report analyzer not found at: $analyzer"
-      exit 1
-  fi
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
       exit 1
   fi
 
@@ -63050,10 +63020,6 @@ playground_analyze_flight_recorder_command() {
   fi
 
   analyzer="$root_folder/tools/jfr-analyzer/jfr_analyzer.py"
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
-      exit 1
-  fi
 
   # with --json, logs go to stderr and only the analysis to stdout
   if [[ -n "$json_out" ]]; then
@@ -63233,10 +63199,6 @@ playground_analyze_jscissors_command() {
       exit 1
   fi
 
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
-      exit 1
-  fi
   analyzer="$root_folder/tools/jscissors/jscissors_report.py"
 
   if [[ -n "$json_out" ]]; then
@@ -63331,10 +63293,6 @@ playground_analyze_tcp_dump_command() {
 
   analyzer="$root_folder/tools/tcp-dump/tcp_dump_analyzer.py"
   extractor="$root_folder/tools/tcp-dump/extract.sh"
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
-      exit 1
-  fi
   if ! docker image inspect $PLAYGROUND_NETSHOOT_IMAGE > /dev/null 2>&1; then
       log "📥 pulling $PLAYGROUND_NETSHOOT_IMAGE (tshark, only the first time)"
       docker pull $PLAYGROUND_NETSHOOT_IMAGE > /dev/null
@@ -63740,10 +63698,6 @@ playground_debug_thread_analyze_command() {
   analyzer="$root_folder/tools/thread-analyzer/thread_dump_analyzer.py"
   if [[ ! -f "$analyzer" ]]; then
       logerror "❌ Thread dump analyzer not found at: $analyzer"
-      exit 1
-  fi
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
       exit 1
   fi
 
@@ -65206,11 +65160,6 @@ playground_debug_gc_analyze_command() {
   analyzer="$root_folder/gc-analysis/gc_log_analyzer.py"
   if [[ ! -f "$analyzer" ]]; then
       logerror "❌ GC analyzer not found at: $analyzer"
-      exit 1
-  fi
-
-  if ! command -v python3 &>/dev/null; then
-      logerror "❌ python3 is required but not found on PATH"
       exit 1
   fi
 
@@ -70664,12 +70613,6 @@ playground_topic_check_format_command() {
   samples="${args[--samples]}"
   json="${args[--json]}"
   verbose="${args[--verbose]}"
-
-  if ! command -v python3 > /dev/null 2>&1
-  then
-      logerror "❌ python3 is required by playground topic check-format"
-      exit 1
-  fi
 
   sides="key,value"
   [[ -n "$key_only" ]] && sides="key"
@@ -76568,12 +76511,6 @@ playground_streams_status_command() {
   if [ -z "$sample_dir" ] && [ ${#containers[@]} -eq 0 ]
   then
       logerror "❌ no Kafka Streams container found (streams, streams2, streams3...): pass the containers of the instances with --container"
-      exit 1
-  fi
-
-  if ! command -v python3 &>/dev/null
-  then
-      logerror "❌ python3 is required for this command"
       exit 1
   fi
 
@@ -107150,6 +107087,21 @@ playground_schema_diff_parse_requirements() {
     esac
   done
 
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
   # :command.command_filter
   action="schema diff"
 
@@ -107473,6 +107425,21 @@ playground_schema_history_parse_requirements() {
     esac
   done
 
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
   # :command.command_filter
   action="schema history"
 
@@ -107770,6 +107737,21 @@ playground_schema_import_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
 
   # :command.command_filter
   action="schema import"
@@ -108197,6 +108179,21 @@ playground_schema_compare_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
 
   # :command.command_filter
   action="schema compare"
@@ -114429,6 +114426,21 @@ playground_analyze_thread_dump_parse_requirements() {
     esac
   done
 
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
   # :command.command_filter
   action="analyze thread-dump"
 
@@ -114858,6 +114870,21 @@ playground_analyze_logs_parse_requirements() {
   env_var_names+=("PLAYGROUND_CFK_PARALLELISM")
   env_var_names+=("PLAYGROUND_CFK_RUNBOOKS_FILE")
 
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
   # :command.command_filter
   action="analyze logs"
 
@@ -115179,6 +115206,21 @@ playground_analyze_gc_logs_parse_requirements() {
     esac
   done
 
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
   # :command.command_filter
   action="analyze gc-logs"
 
@@ -115393,6 +115435,21 @@ playground_analyze_oracle_xstream_report_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
 
   # :command.command_filter
   action="analyze oracle-xstream-report"
@@ -115820,6 +115877,21 @@ playground_analyze_flight_recorder_parse_requirements() {
     esac
   done
 
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
   # :command.command_filter
   action="analyze flight-recorder"
 
@@ -116080,6 +116152,21 @@ playground_analyze_jscissors_parse_requirements() {
     esac
   done
 
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
   # :command.command_filter
   action="analyze jscissors"
 
@@ -116222,6 +116309,21 @@ playground_analyze_tcp_dump_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
 
   # :command.command_filter
   action="analyze tcp-dump"
@@ -124304,6 +124406,21 @@ playground_topic_check_format_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
 
   # :command.command_filter
   action="topic check-format"
@@ -132397,6 +132514,21 @@ playground_streams_status_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf "missing dependency: python3\n" >&2
+    printf "%s\n\n" "visit https://www.python.org/downloads/ to install" >&2
+    missing_deps=1
+  else
+    deps['python3']="$(command -v python3 | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
 
   # :command.command_filter
   action="streams status"

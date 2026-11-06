@@ -9,11 +9,6 @@ json="${args[--json]}"
 cluster="${args[--cluster]}"
 verbose="${args[--verbose]}"
 
-if ! command -v python3 > /dev/null 2>&1
-then
-    logerror "❌ python3 is required by 'playground schema history'"
-    exit 1
-fi
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 trap 'rm -rf $tmp_dir' EXIT

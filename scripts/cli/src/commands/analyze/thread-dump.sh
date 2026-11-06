@@ -42,10 +42,6 @@ if [[ ! -f "$analyzer" ]]; then
     logerror "❌ Thread dump analyzer not found at: $analyzer"
     exit 1
 fi
-if ! command -v python3 &>/dev/null; then
-    logerror "❌ python3 is required but not found on PATH"
-    exit 1
-fi
 
 mkdir -p "$output_dir"
 output_dir_abs=$(cd "$output_dir" && pwd)

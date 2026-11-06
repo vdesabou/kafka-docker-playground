@@ -34,8 +34,8 @@ curl -fsSL https://kafka-docker-playground.io/install.sh | bash
 
 It asks before each change, and only does this:
 
-1. **checks** your machine and changes nothing: git, bash 4+, fzf, docker + compose v2 (or Podman), free disk space
-2. **installs what is missing** (bash, fzf, git) with Homebrew on macOS or the package manager on Linux, and the [Confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html) used by the Confluent Cloud examples (Homebrew on macOS, else the official installer into `~/.local/bin`)
+1. **checks** your machine and changes nothing: git, bash 4+, fzf, python3, docker + compose v2 (or Podman), free disk space
+2. **installs what is missing** (bash, fzf, git, python3 for the support commands like `playground analyze`, unzip) with Homebrew on macOS or the package manager on Linux, and the [Confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html) used by the Confluent Cloud examples (Homebrew on macOS, else the official installer into `~/.local/bin`)
 3. **clones** the repository into `~/kafka-docker-playground` (latest version only), or updates the clone you already have
 4. **offers to install a container engine**, only when none is installed at all (see below)
 5. **adds one block** to `~/.zshrc` (or `~/.bashrc`, `~/.bash_profile`), with a backup of the file, so that `playground` and its completion are in your `PATH`:
@@ -97,6 +97,8 @@ Prefer to do it by hand? Follow the sections below.
 * Install the [🧠 CLI](/cli) by following [Setup](/cli?id=%f0%9f%9a%9c-setup). [fzf](https://github.com/junegunn/fzf) is required when using CLI (see installation [instructions](https://github.com/junegunn/fzf#installation))
 
 * bash version 4 or higher is required. Mac users can upgrade bash with [brew](https://brew.sh/) by running `brew install bash` and then make sure it is in PATH (`export PATH=/opt/homebrew/bin:$PATH`)
+
+* python3 (3.9 or later, standard library only) is required by the support commands: `playground analyze`, `schema diff|history|import|compare`, `connector-plugin`, `connector diagnose`, `streams status`, `topic check-format`. macOS has it with the Xcode Command Line Tools (`xcode-select --install`), Linux distributions ship it. `unzip` is also needed (`sudo apt-get install -y unzip` on a minimal Linux)
 
 * You also need internet connectivity when running connect tests as connectors are downloaded from Confluent Hub on the fly.
 

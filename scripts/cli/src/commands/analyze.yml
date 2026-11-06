@@ -25,6 +25,8 @@ help: |-
   playground debug cfk generate-bundle.
 commands:
 - name: thread-dump
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   help: |-
     🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry threads
 
@@ -81,6 +83,8 @@ commands:
   - playground analyze heap-dump --sample leak_growth --json
 
 - name: logs
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   help: |-
     🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles
 
@@ -216,6 +220,8 @@ commands:
       17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html
 
 - name: gc-logs
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   help: |-
     📈 Analyze JVM Garbage Collection logs
 
@@ -248,6 +254,8 @@ commands:
   - playground analyze gc-logs -f kafkaServer-gc.log --run 1 --top-pauses 20
 
 - name: oracle-xstream-report
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   help: |-
     🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)
 
@@ -355,6 +363,8 @@ commands:
 <%= File.read('src/flags/analyze-cfk-bundle-flags.yml').gsub(/^(?=.)/, '    ') %>
 
 - name: flight-recorder
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   help: |-
     🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes
 
@@ -468,6 +478,8 @@ commands:
   - playground analyze flight-recorder -c connect --duration 60s --trace-method io.confluent.connect.jdbc.sink.JdbcDbWriter::write
 
 - name: jscissors
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   help: |-
     ✂️ Analyze a jscissors trace: what the traced methods did, call by call
 
@@ -525,6 +537,8 @@ commands:
   - playground analyze jscissors -f jscissors-connect-2026-10-25-10-12-00 --json
 
 - name: tcp-dump
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   help: |-
     🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times
 
