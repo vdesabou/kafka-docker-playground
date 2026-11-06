@@ -57,7 +57,7 @@ KNOWN_CAUSES = [
     {"name": "cloud_credentials", "severity": "high", "category": "Authentication Issues",
      "pattern": r"SignatureDoesNotMatch|request signature we calculated does not match|InvalidAccessKeyId"
                 r"|security token included in the request is (?:invalid|expired)|ExpiredToken"
-                r"|\(Service: [\w .-]{1,40}, Status Code: 40[13]\b",
+                r"|\(Service: [\w .-]{1,40}[,;] Status Code: 40[13]\b",
      "title": "☁️ Cloud credentials or permission refused",
      "advice": "the cloud service (AWS S3, Kinesis, Lambda…) refused the request of the connector: a wrong secret key "
                "(SignatureDoesNotMatch), an access key or session token deleted, rotated or expired, a clock skew of "
@@ -79,8 +79,9 @@ KNOWN_CAUSES = [
     {"name": "rbac_error", "severity": "high", "category": "RBAC Issues",
      "pattern": r"forbidden: User .{0,80} cannot|is forbidden|(?:Topic|Group|Cluster|TransactionalId)?AuthorizationException"
                 r"|not authorized to access|\b403 forbidden\b|http (?:status|code|error)[ :=]*403"
-                r"|(?<!, )Status code\s*:?\s*403"
-                r"|(?:Topic|Group|Cluster|Transactional Id) authorization failed",
+                r"|(?<![,;] )Status code\s*:?\s*403"
+                r"|(?:Topic|Group|Cluster|Transactional Id) authorization failed"
+                r"|error code:? ?40301|User is denied operation .{0,80} on (?:Subject|subject)",
      "title": "🚫 Authorization failure",
      "advice": "an ACL or an RBAC role binding is missing for the principal of the client"},
     {"name": "replication_error", "severity": "high", "category": "Replication Issues",
@@ -115,7 +116,7 @@ KNOWN_CAUSES = [
     # deserialization error is also a SerializationException
     {"name": "streams_copartition", "severity": "high", "category": "Kafka Streams Issues",
      "pattern": r"Topics not co-partitioned",
-     "title": "🧩 Kafka Streams: topics not co-partitioned",
+     "title": "🪢 Kafka Streams: topics not co-partitioned",
      "advice": "the source topics of a join do not have the same number of partitions: repartition one side or create "
                "them with the same partition count. Since Kafka Streams 3.2 two source topics joined directly are no "
                "longer refused and join results are silently missing for some keys (other/kafka-streams/join.sh)"},
@@ -132,7 +133,7 @@ KNOWN_CAUSES = [
                "(other/kafka-streams/eos.sh, playground streams status)"},
     {"name": "streams_task_migrated", "severity": "medium", "category": "Kafka Streams Issues",
      "pattern": r"TaskMigratedException",
-     "title": "🔀 Kafka Streams: task migrated",
+     "title": "🚚 Kafka Streams: task migrated",
      "advice": "a stream thread lost the ownership of its tasks (rebalance during processing, fenced producer, kicked out "
                "of the group) and rejoins: frequent occurrences point at slow processing between polls "
                "(max.poll.interval.ms), GC pauses or unstable members (playground streams status counts the rebalances)"},
@@ -158,6 +159,27 @@ KNOWN_CAUSES = [
      "title": "🧲 Unknown magic byte",
      "advice": "the records were not written with the Schema Registry serializer the converter expects: check "
                "key.converter / value.converter against the producer (playground topic consume shows the real format)"},
+    # the 3 most common Schema Registry errors, each with the playground schema command that explains it: before
+    # serialization_error, the first match wins in the CFK analyzer (DataException: … error code: 40403 is a deleted schema)
+    {"name": "schema_id_not_found", "severity": "high", "category": "Schema Registry Issues",
+     "pattern": r"Error retrieving (?:Avro|JSON|Protobuf) (?:unknown )?schema(?: version)? for id|Schema \d+ not found"
+                r"|error code:? ?40403",
+     "title": "🔍 Schema id not found",
+     "advice": "the schema id written in the records doesn't resolve any more: it was permanently deleted (a soft delete "
+               "keeps ids readable), or the consumer reads another registry. playground schema history shows when "
+               "and how it was deleted (💀), playground schema describe --id <id> who uses it"},
+    {"name": "schema_incompatible", "severity": "high", "category": "Schema Registry Issues",
+     "pattern": r"Schema being registered is incompatible with an earlier schema|error code:? ?409\b|error code:? ?40901",
+     "title": "🛡️ Incompatible schema refused",
+     "advice": "a producer (or source connector) registers a version the compatibility rule refuses: "
+               "playground schema check-compatibility and playground schema diff --subject <s> --to @<new schema> show "
+               "the field that breaks it and which rule would accept it"},
+    {"name": "subject_not_found", "severity": "medium", "category": "Schema Registry Issues",
+     "pattern": r"Subject .{0,80}not found|error code:? ?40401",
+     "title": "📛 Subject not found",
+     "advice": "the client looks up a subject that doesn't exist: the subject name strategy differs between producer "
+               "and consumer, or auto.register.schemas=false / use.latest.version with an unregistered schema. "
+               "playground schema list shows the real subject names"},
     {"name": "serialization_error", "severity": "medium", "category": "Serialization Issues",
      "pattern": r"Converting byte\[\] to Kafka Connect data failed|SerializationException|DataException",
      "title": "🔀 Serialization or conversion error",
@@ -201,8 +223,11 @@ KNOWN_CAUSES = [
     # might require SASL authentication"
     {"name": "client_security_protocol", "severity": "high", "category": "Network Issues",
      "pattern": r"incorrect security\.protocol|verify that security\.protocol|broker might require SASL authentication"
-                r"|connecting to a SSL listener|Unexpected handshake request with client mechanism",
-     "title": "🔀 Wrong security.protocol or SASL mechanism",
+                r"|connecting to a SSL listener|Unexpected handshake request with client mechanism"
+                # a TLS or HTTP client on a PLAINTEXT listener: the broker reads its first bytes as a size (369296128 is
+                # the start of a TLS record 0x16030100, 1195725856 "GET ")
+                r"|Invalid receive \(size = \d{7,}",
+     "title": "🛂 Wrong security.protocol or SASL mechanism",
      "advice": "the client does not speak the protocol of the listener: PLAINTEXT on an SSL or SASL listener, or another "
                "SASL mechanism: check security.protocol, sasl.mechanism(s) and the port against the listeners of the "
                "brokers (playground debug tcp-dump shows the handshake)"},
@@ -250,6 +275,75 @@ KNOWN_CAUSES = [
      "advice": "the application took longer than max.poll.interval.ms between two polls (slow processing, a blocking "
                "call, a GC pause): the consumer leaves the group, its partitions are reassigned and its commits fail. "
                "Process faster or in smaller batches (max.poll.records in Java), or raise max.poll.interval.ms"},
+    # errors.tolerance=none (the default): the first record that fails in a stage kills the task
+    {"name": "tolerance_exceeded", "severity": "high", "category": "Connect Issues",
+     "pattern": r"Tolerance exceeded in error handler",
+     "title": "🧯 errors.tolerance exceeded",
+     "advice": "a record failed in the stage named by the exception (Executing stage 'VALUE_CONVERTER', 'KEY_CONVERTER', "
+               "'TRANSFORMATION', 'TASK_PUT') and errors.tolerance=none (the default) stops the task: fix the cause in the "
+               "chain below it, or set errors.tolerance=all with a dead letter queue (errors.deadletterqueue.topic.name, "
+               "sink connectors) and read it with playground topic dlq inspect; playground connector smt test replays an "
+               "SMT on a record"},
+    # a transactional producer replaced by a newer one with the same transactional.id (Connect exactly-once source,
+    # a transactional application), or its transaction aborted by the broker
+    {"name": "producer_fenced", "severity": "high", "category": "Kafka Issues",
+     "pattern": r"ProducerFencedException|InvalidProducerEpochException|Producer attempted an operation with an old epoch"
+                r"|There is a newer producer with the same transactionalId",
+     "title": "🤺 Producer fenced (transactions, exactly-once)",
+     "advice": "another producer with the same transactional.id took over (the same task running on two workers after a "
+               "rebalance, a zombie instance), or the transaction outlived transaction.timeout.ms and the broker aborted "
+               "it: check that the task or application does not run twice, and the transaction timeout against the time "
+               "a transaction takes; playground broker transactions list and playground broker transactions find-hanging show the open and hanging ones"},
+    # a source task whose producer did not acknowledge its records within offset.flush.timeout.ms
+    {"name": "offset_flush_timeout", "severity": "medium", "category": "Connect Issues",
+     "pattern": r"Failed to flush, timed out while waiting for producer to flush outstanding"
+                r"|Failed to commit offsets.{0,120}timed out|Timed out while waiting for producer to flush",
+     "title": "⏳ Source offsets not committed in time",
+     "advice": "the producer of the source task had records not yet acknowledged when offset.flush.timeout.ms (5 s by "
+               "default) ended: brokers slow or unreachable, or bursts larger than the producer sends in that time. The "
+               "records are sent again after a restart (duplicates): look at the producer errors around it, then raise "
+               "offset.flush.timeout.ms or tune producer.override.batch.size / linger.ms"},
+    # group membership lost or moving: a member joined or left, a session timeout, the coordinator moved
+    {"name": "group_rebalance", "severity": "medium", "category": "Kafka Issues",
+     "pattern": r"RebalanceInProgressException|UnknownMemberIdException|REBALANCE_IN_PROGRESS|UNKNOWN_MEMBER_ID"
+                r"|Group coordinator .{0,120} is unavailable or invalid|Attempt to heartbeat failed since group is rebalancing"
+                r"|CommitFailedException",
+     "title": "🔁 Group rebalances or coordinator lost",
+     "advice": "the consumer group (or the group of the Connect workers) rebalanced while its members worked, or its "
+               "coordinator moved: each rebalance pauses the processing and can fail the commits. Count them "
+               "(playground connector history for Connect, playground streams status for Kafka Streams) and look at the "
+               "members that join and leave, session.timeout.ms, heartbeat.interval.ms and max.poll.interval.ms"},
+    # an external system or a cloud API over its rate limit
+    {"name": "throttled", "severity": "medium", "category": "Network Issues",
+     "pattern": r"ThrottlingException|Rate exceeded|429 Too Many Requests|TooManyRequests|http (?:status|code|error)[ :=]*429"
+                r"|Status code\s*:?\s*429|es_rejected_execution_exception|\bSlowDown\b|RequestLimitExceeded"
+                r"|REQUEST_LIMIT_EXCEEDED",
+     "title": "🚦 Throttled by the external system",
+     "advice": "the external system or the cloud API refused requests over its rate limit (HTTP 429, AWS "
+               "ThrottlingException / SlowDown, Elasticsearch es_rejected_execution, Salesforce REQUEST_LIMIT_EXCEEDED): "
+               "the connector retries. Lower tasks.max or the batch size, raise the retry backoff of the connector, or ask "
+               "for a higher quota"},
+    # a task or connector still running after task.shutdown.graceful.timeout.ms (rebalance, restart, config update)
+    {"name": "graceful_stop_failed", "severity": "medium", "category": "Connect Issues",
+     "pattern": r"Graceful stop of (?:task|connector) .{0,160} failed|Failed to stop (?:task|connector) .{0,120} in time",
+     "title": "🛑 Task or connector did not stop in time",
+     "advice": "a task or a connector did not stop within task.shutdown.graceful.timeout.ms (5 s by default): it may still "
+               "run in the background (a duplicate task, connections or locks held). A thread dump shows where it is "
+               "blocked: playground debug thread-dump, then playground analyze thread-dump"},
+    # CreateTopics / AlterConfigs refused by a policy of the cluster (create.topic.policy.class.name, Confluent Cloud limits)
+    {"name": "policy_violation", "severity": "medium", "category": "Kafka Issues",
+     "pattern": r"PolicyViolationException|POLICY_VIOLATION",
+     "title": "🚧 Request refused by a broker policy",
+     "advice": "a topic creation or a config change broke a policy of the cluster (partitions, retention, cleanup.policy, "
+               "replication factor, Confluent Cloud limits): the exception names the setting. Use an allowed value "
+               "(topic.creation.* of a source connector, the internal topics of Connect)"},
+    # requests sent to a broker that no longer leads the partition
+    {"name": "not_leader", "severity": "low", "category": "Kafka Issues",
+     "pattern": r"NotLeaderOrFollowerException|NOT_LEADER_OR_FOLLOWER|NotLeaderForPartitionException|NOT_LEADER_FOR_PARTITION",
+     "title": "👑 Partition leadership changed",
+     "advice": "the client sent a request to a broker that no longer leads the partition: expected during a broker "
+               "restart, a rolling upgrade or a reassignment, the client retries. Many of them over a long period point "
+               "at brokers restarting or leaders moving: playground broker health, playground topic describe"},
     {"name": "connection_refused", "severity": "high", "category": "Network Issues",
      "pattern": r"connection refused|Connection reset by peer|NoRouteToHostException|No route to host|Broken pipe"
                 r"|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|(?<!\d)\d{1,5}/\d{1,5} brokers are down|ALL_BROKERS_DOWN"
@@ -268,26 +362,6 @@ KNOWN_CAUSES = [
                "PersistentVolumeClaim"},
     {"name": "operator_error", "severity": "medium", "category": "Operator Issues",
      "pattern": r"reconcile error|Failed to reconcile|Reconciler error|operator error", "hint": False},
-    # the 3 most common Schema Registry errors first, each with the playground schema command that explains it
-    {"name": "schema_id_not_found", "severity": "high", "category": "Schema Registry Issues",
-     "pattern": r"Error retrieving (?:Avro|JSON|Protobuf) (?:unknown )?schema(?: version)? for id|Schema \d+ not found"
-                r"|error code:? ?40403",
-     "title": "🔍 Schema id not found",
-     "advice": "the schema id written in the records doesn't resolve any more: it was permanently deleted (a soft delete "
-               "keeps ids readable), or the consumer reads another registry. playground schema history shows when "
-               "and how it was deleted (💀), playground schema describe --id <id> who uses it"},
-    {"name": "schema_incompatible", "severity": "high", "category": "Schema Registry Issues",
-     "pattern": r"Schema being registered is incompatible with an earlier schema|error code:? ?409\b|error code:? ?40901",
-     "title": "🛡️ Incompatible schema refused",
-     "advice": "a producer (or source connector) registers a version the compatibility rule refuses: "
-               "playground schema check-compatibility and playground schema diff --subject <s> --to @<new schema> show "
-               "the field that breaks it and which rule would accept it"},
-    {"name": "subject_not_found", "severity": "medium", "category": "Schema Registry Issues",
-     "pattern": r"Subject .{0,80}not found|error code:? ?40401",
-     "title": "📛 Subject not found",
-     "advice": "the client looks up a subject that doesn't exist: the subject name strategy differs between producer "
-               "and consumer, or auto.register.schemas=false / use.latest.version with an unregistered schema. "
-               "playground schema list shows the real subject names"},
     {"name": "schema_registry_error", "severity": "medium", "category": "Schema Registry Issues",
      "pattern": r"SchemaRegistryException|RestClientException",
      "title": "📐 Schema Registry error",
@@ -320,13 +394,14 @@ _SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 # order of the known causes in the log report (its verdict and findings follow it), the other titles come after, in
 # declaration order
 HINT_ORDER = [
-    "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧩 Plugin not found", "📦 Class loading error",
+    "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧯 errors.tolerance exceeded", "🧩 Plugin not found", "📦 Class loading error",
     "🔑 Authentication failure", "☁️ Cloud credentials or permission refused", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔍 Schema id not found", "🛡️ Incompatible schema refused", "📛 Subject not found",
-    "🔀 Serialization or conversion error", "🔀 Wrong security.protocol or SASL mechanism", "🔌 Connection failure",
-    "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "📥 Producer buffer full",
-    "⏱️ Timeouts", "📏 Record too large",
-    "❓ Unknown topic or partition", "⏮️ Offset out of range",
+    "🔀 Serialization or conversion error", "🛂 Wrong security.protocol or SASL mechanism", "🔌 Connection failure",
+    "⚙️ Invalid client configuration", "⌛ Records not delivered in time", "🗺️ Topic not found in the metadata", "🐢 Consumer left its group: max.poll.interval.ms exceeded", "🔁 Group rebalances or coordinator lost", "📥 Producer buffer full",
+    "🤺 Producer fenced (transactions, exactly-once)", "⏳ Source offsets not committed in time", "🚦 Throttled by the external system",
+    "🛑 Task or connector did not stop in time", "⏱️ Timeouts", "📏 Record too large",
+    "❓ Unknown topic or partition", "⏮️ Offset out of range", "🚧 Request refused by a broker policy", "👑 Partition leadership changed",
 ]
 
 
