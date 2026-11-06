@@ -1488,10 +1488,13 @@ document.addEventListener("DOMContentLoaded", function () {
       fold(h, !h.parentElement.classList.contains("sec-collapsed"));
     });
   });
-  const first = document.querySelector(".findings > .section-title") || heads[0];
+  // they fold every section: in the filter bar (on the title of 🔎 Findings they looked like its own buttons), else on
+  // the first title of a report without one
+  const bar = document.querySelector(".lvl-filter .fb-row");
+  const first = bar || document.querySelector(".findings > .section-title") || heads[0];
   if (first) {
-    first.insertAdjacentHTML("beforeend", "<button type='button' class='sec-all' data-fold='1'>Fold all</button>"
-                                         + "<button type='button' class='sec-all' data-fold='0'>Unfold all</button>");
+    first.insertAdjacentHTML("beforeend", "<button type='button' class='sec-all' data-fold='1' title='fold every section of the report'>▸ Fold all sections</button>"
+                                         + "<button type='button' class='sec-all' data-fold='0' title='unfold every section of the report'>▾ Unfold all sections</button>");
     first.querySelectorAll(".sec-all").forEach(b => b.addEventListener("click", function () {
       heads.forEach(h => fold(h, b.dataset.fold === "1"));
     }));
