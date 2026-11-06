@@ -6893,7 +6893,9 @@ function summarize_log_errors() {
     }
     # the first n bytes of s (LC_ALL=C: length and substr count bytes), without the incomplete UTF-8 character a cut can
     # leave at the end (a lead byte 0xC0-0xF7 followed by fewer continuation bytes 0x80-0xBF than it announces)
-    function cut(s, n,    k, c, need) {
+    # (not "cut": unflatten() has a local of that name, and mawk refuses a function and a parameter of the same name:
+    # "cut is duplicated in argument list", the whole digest failed)
+    function cut_utf8(s, n,    k, c, need) {
         s = substr(s, 1, n)
         k = 0
         while (k < 3 && k < length(s) && (c = substr(s, length(s) - k, 1)) >= "\200" && c < "\300") k++
@@ -6903,12 +6905,12 @@ function summarize_log_errors() {
         return need > k + 1 ? substr(s, 1, length(s) - k - 1) : s
     }
     function short(s) {
-        return length(s) > 300 ? cut(s, 300) "..." : s
+        return length(s) > 300 ? cut_utf8(s, 300) "..." : s
     }
     # the records file of the HTML reports keeps longer lines: the error is often at the end of a long message
     # ("Task is being killed and will not recover until manually restarted. Error: <the cause>")
     function long(s) {
-        return length(s) > 2000 ? cut(s, 2000) "..." : s
+        return length(s) > 2000 ? cut_utf8(s, 2000) "..." : s
     }
     # a stack trace flattened on one line by a log export or a log shipper: "msg org.x.FooException: m\n\tat a.b(C.java:1)
     # \nCaused by: …" with a literal \n, or with its backslash lost ("Source)n\tat a.b", "Source)nCaused by:"). Split back
