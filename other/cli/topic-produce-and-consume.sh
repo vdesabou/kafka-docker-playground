@@ -458,7 +458,14 @@ playground topic produce --topic fleet --value predefined-schemas/datagen/fleet_
 }
 
 function consume () {
-    for topic in $(playground --output-level WARN topic list)
+    topics=$(playground --output-level WARN topic list)
+    if [ "$environment" == "ccloud" ]
+    then
+        # the Confluent Cloud cluster is shared with the other CI jobs, which create and delete their own topics
+        # (dlq-lcc-*, dbhistory.*…) while this script runs: only consume the topics produced above
+        topics=$(echo "$topics" | grep -E '^(a-topic|fleet|topic-.+)$' || true)
+    fi
+    for topic in $topics
     do
         log "📥 Consuming from topic ${topic}"
         playground topic consume --topic $topic
