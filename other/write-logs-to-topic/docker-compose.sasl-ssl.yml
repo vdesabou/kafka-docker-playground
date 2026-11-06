@@ -3,6 +3,6 @@ services:
 
   connect:
     volumes:
-      - ../../other/write-logs-to-topic/log4j-sasl-ssl.properties:/tmp/connect/log4j.properties
+      - ../../other/write-logs-to-topic/log4j2-sasl-ssl.yaml:/tmp/connect/log4j2.yaml
     environment:
-      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/tmp/connect/log4j.properties"
+      KAFKA_LOG4J_OPTS: "-Dlog4j2.configurationFile=file:/tmp/connect/log4j2.yaml"

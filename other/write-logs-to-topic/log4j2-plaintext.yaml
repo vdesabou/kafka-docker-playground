@@ -1,0 +1,48 @@
+Configuration:
+  name: write-logs-to-topic
+  status: warn
+
+  Appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+
+    # Send the logs to a Kafka topic with the Kafka appender of log4j-core
+    # (Kafka 4.0 / CP 8 removed org.apache.kafka.log4jappender.KafkaLog4jAppender)
+    Kafka:
+      name: KAFKA
+      topic: connect-logs
+      # record key: the worker host name, to tell the workers apart
+      key: "${hostName}"
+      # do not block the logging thread on each record
+      syncSend: false
+      PatternLayout:
+        Pattern: "[%d] %p %X{connector.context}%m (%c:%L)"
+      Property:
+        - name: bootstrap.servers
+          value: "broker:9092"
+        # fail fast instead of blocking the worker when the broker is unreachable
+        - name: max.block.ms
+          value: "5000"
+
+  Loggers:
+    Root:
+      level: INFO
+      AppenderRef:
+        - ref: STDOUT
+    Logger:
+      - name: org.reflections
+        level: ERROR
+      # Connect runtime and connectors logs (with their connector context) go to the topic too
+      - name: org.apache.kafka.connect
+        level: INFO
+        AppenderRef:
+          - ref: KAFKA
+      # never send the logs of the producer of the appender to the appender (recursive logging)
+      - name: org.apache.kafka.clients
+        level: WARN
+        additivity: false
+        AppenderRef:
+          - ref: STDOUT
