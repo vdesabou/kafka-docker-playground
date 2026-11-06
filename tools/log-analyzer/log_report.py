@@ -507,6 +507,62 @@ def drop_alternating_changes(config: dict, window: int = 60) -> None:
             del config["changes"]
 
 
+# a period of a folder that no log file covers, between two files of it: shown from this length
+COVERAGE_GAP_SECONDS = 10 * 60
+
+
+def ts_seconds(ts: Optional[str]) -> Optional[float]:
+    if not ts:
+        return None
+    try:
+        return datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S").timestamp()
+    except ValueError:
+        return None
+
+
+def coverage(files: List[dict]) -> dict:
+    """🕰️ Log coverage: the time range of each file (first and last timestamped line), grouped by folder (a folder of
+    rotated logs, one per worker or pod), and the periods of a folder that none of its files covers (a missing hour of
+    rotated logs): what happened then is not in the input. Also in --json: .coverage"""
+    out_files = []
+    for f in files:
+        first, last = f.get("log_first_ts"), f.get("log_last_ts")
+        a, b = ts_seconds(first), ts_seconds(last)
+        label = f["label"]
+        folder = label.rsplit("/", 1)[0] if "/" in label else ""
+        out_files.append({"label": label, "folder": folder, "first": first, "last": last,
+                          "seconds": int(b - a) if a is not None and b is not None else None, "lines": f["lines"],
+                          "occurrences": sum(r["count"] for r in f["records"])})
+    gaps = []
+    folders: "OrderedDict[str, List[dict]]" = OrderedDict()
+    for x in out_files:
+        folders.setdefault(x["folder"], []).append(x)
+    timed = [x for x in out_files if x["seconds"] is not None]
+    t0 = min((ts_seconds(x["first"]) for x in timed), default=None)
+    t1 = max((ts_seconds(x["last"]) for x in timed), default=None)
+
+    def gap(folder: str, a: float, b: float, where: str) -> dict:
+        return {"folder": folder, "from": datetime.fromtimestamp(a).strftime("%Y-%m-%dT%H:%M:%S"),
+                "to": datetime.fromtimestamp(b).strftime("%Y-%m-%dT%H:%M:%S"), "seconds": int(b - a), "where": where}
+    for folder, xs in folders.items():
+        spans = sorted((ts_seconds(x["first"]), ts_seconds(x["last"])) for x in xs if x["seconds"] is not None)
+        if not spans:
+            continue
+        # a folder (a worker, a pod) that starts after or ends before the other logs of the input: its first or last
+        # hours are missing (several folders only)
+        if len(folders) > 1 and spans[0][0] - t0 >= COVERAGE_GAP_SECONDS:
+            gaps.append(gap(folder, t0, spans[0][0], "start"))
+        end = spans[0][1]
+        for a, b in spans[1:]:
+            if a - end >= COVERAGE_GAP_SECONDS:
+                gaps.append(gap(folder, end, a, "between"))
+            end = max(end, b)
+        if len(folders) > 1 and t1 - end >= COVERAGE_GAP_SECONDS:
+            gaps.append(gap(folder, end, t1, "end"))
+    return {"first": min((x["first"] for x in timed), default=None), "last": max((x["last"] for x in timed), default=None),
+            "files": out_files, "gaps": gaps}
+
+
 def analyze(files: List[dict], unit: str = "file") -> dict:
     """unit: what a label is (file, container, script), for the texts of the findings"""
     shorten_labels(files)
@@ -529,6 +585,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     return {"summary": summary(files), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
             "root_causes": causes, "files": [f for f in files if f["records"]],
             "files_without_findings": [f["label"] for f in files if not f["records"]],
+            "coverage": coverage(files),
             "configuration": configuration}
 
 
@@ -590,6 +647,12 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         if s["log_duration_seconds"] < SHORT_PERIOD_SECONDS:
             covered += f" ⚠️ shorter than {human_duration(SHORT_PERIOD_SECONDS)}: the logs may not cover the incident"
         out.append(covered)
+    gaps = (res.get("coverage") or {}).get("gaps") or []
+    if gaps:
+        biggest = max(gaps, key=lambda g: g["seconds"])
+        out.append(f"   🕰️ {len(gaps)} period(s) without logs in a folder of rotated logs, the longest "
+                   f"{period_text(biggest['from'], biggest['to'])} ({human_duration(biggest['seconds'])}) in "
+                   f"{biggest['folder'] or 'the input'}: what happened then is not in the input (🕰️ Log coverage of the HTML report)")
     if s["by_connector"]:
         without = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
         names = list(s["by_connector"].items())
@@ -752,17 +815,15 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
         if r["count"] > 1:
             when += " → " + first_html(viewers, label, r["last_line"], r["last_ts"]).replace(">first ", ">last ", 1)
         mine = " <span class='st mine'>this connector</span>" if highlight and highlight in r["text"] else ""
-        msg = short_message(r["message"])
-        ctx = re.match(r"^((?:\[[^\]]*\]\s*)+)(.*)$", msg, re.S)
-        context, msg = (ctx.group(1).strip(), ctx.group(2)) if ctx else ("", msg)
         conn = f"<span class='fi-conn'>{e(r['connector'])}</span>" if r.get("connector") else ""
         sev = {"FATAL": "critical", "ERROR": "high", "WARN": "medium"}.get(r["level"], "info")
         out.append(f"<details class='rec' data-level='{e(r['level'])}'{connectors_attr([r['connector']] if r.get('connector') else [])}"
                    + (f" data-rec='{r['index']}'" if r.get("index") is not None else "")
                    + f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])}"
-                   f"<span class='fi-count {sev} rec-count'>{r['count']:,}×</span>{conn}{mine} "
-                   + (f"<span class='fi-meta mono'>{e(context[:120])}</span> " if context else "")
-                   + f"{exception_html(msg[:240])}<div class='rec-when'>{when}</div></summary>"
+                   f"<span class='fi-count {sev} rec-count'>{r['count']:,}×</span>{conn}{mine} <span class='rec-when'>{when}</span>"
+                   # folded: the first line of the record as in the log block (timestamp, level, context, logger in
+                   # color), on one line; open: only the log block below (not twice)
+                   + f"<div class='rec-line'>{log_html(r['text'].split(chr(10), 1)[0][:600])}</div></summary>"
                    f"<pre>{log_html(r['text'])}</pre>"
                    # the raw lines around it: only when the file has no page (📄 opens it at the line)
                    + (f"<details><summary>📋 Show context</summary><pre>{log_html(r['context'])}</pre></details>"
@@ -925,7 +986,9 @@ FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;f
 # always emitted: the level, connector and period filters. Everything below the filter bar is counted again from the
 # same index of records (occurrences_json): the 📈 occurrences chart, the 🔝 top causes chart, the 🌳 root causes
 # table and the records of each file. The verdict and the tiles above the bar stay the figures of the whole report.
-FILTER_SCRIPT = ("<style>[data-level][hidden]{display:none}.file-records[hidden]{display:none}tr.file-row[hidden]{display:none}"
+FILTER_SCRIPT = ("<style>[data-level][hidden]{display:none}.file-records[hidden]{display:none}tr.file-row[hidden],tr.file-folder[hidden]{display:none}"
+                 "tr.file-folder td{font-weight:600;font-size:.8rem;color:#334155;background:#f1f5f9;padding-top:9px}"
+                 "html[data-theme=dark] tr.file-folder td{background:#273449;color:#cbd5e1}.ff-dir{color:#94a3b8;font-weight:400}"
                  ".rc-range{font-weight:400;font-size:.75rem;color:#64748b;margin-left:8px}"
                  ".rc-reset{font-family:inherit;font-size:.72rem;margin-left:8px;padding:1px 7px;border-radius:6px;"
                  "border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer}"
@@ -1098,6 +1161,12 @@ function pgFilesTable() {
     tr.querySelector(".fr-fatal").textContent = n[0] || "";
     tr.querySelector(".fr-error").textContent = n[1] || "";
     tr.querySelector(".fr-warn").textContent = n[2] || "";
+  });
+  // a folder row whose files are all hidden by the filters
+  document.querySelectorAll("tr.file-folder").forEach(function (tr) {
+    let next = tr.nextElementSibling, any = false;
+    while (next && !next.classList.contains("file-folder")) { if (!next.hidden) any = true; next = next.nextElementSibling; }
+    tr.hidden = !any;
   });
 }
 // 🔎 Findings: their text stays the figures of the whole report (they are the diagnosis of the bundle, above the
@@ -1587,7 +1656,9 @@ def first_names(names: List[str], top: int = 3) -> str:
 # line instead of the path of the file, the exception chains of the killed tasks most frequent first
 FINDINGS_CSS = """<style>
 .fi-title{font-weight:600}
-details.rec>summary{padding:6px 0;line-height:1.7}.rec-when{margin:0 0 0 22px}
+details.rec>summary{padding:6px 0;line-height:1.7}.rec-when{margin-left:6px}
+.rec-line{display:block;margin:4px 0 0 18px;padding:5px 10px;border-radius:6px;background:#f8fafc;color:#1e293b;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.rec[open]>summary .rec-line{display:none}
 .fi-count{display:inline-block;font-size:.78rem;font-weight:700;padding:1px 8px;border-radius:12px;margin:0 4px;font-variant-numeric:tabular-nums;background:#e2e8f0;color:#334155}
 .fi-count.critical{background:#fee2e2;color:#b91c1c}.fi-count.high{background:#ffedd5;color:#c2410c}.fi-count.medium{background:#fef3c7;color:#b45309}
 .fi-count.low{background:#dcfce7;color:#15803d}.fi-count.info{background:#dbeafe;color:#1d4ed8}
@@ -1609,6 +1680,7 @@ details.rec>summary{padding:6px 0;line-height:1.7}.rec-when{margin:0 0 0 22px}
 .fi-count.low{background:#052e16;color:#86efac}.fi-count.info{background:#172554;color:#93c5fd}
 .fi-meta,.fi-advice{color:#94a3b8}
 .rec-details li.fi-chain{background:#0f172a}
+.rec-line{background:#0b1220;color:#e2e8f0}
 .fi-exc{color:#fdba74}.fi-exc.error{color:#fca5a5}
 .fi-msg{color:#cbd5e1}
 .fi-conn{background:#334155;color:#cbd5e1}
@@ -1717,6 +1789,80 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
     return dict(f, html=head, html_details=rows)
 
 
+COVERAGE_CSS = """<style>
+.cov-folder{font-size:.84rem;font-weight:600;color:#334155;margin:14px 0 4px}
+.cov-row{display:grid;grid-template-columns:minmax(160px,26%) 1fr 270px;gap:10px;align-items:center;font-size:.8rem;padding:3px 0}
+.cov-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cov-track{position:relative;height:12px;border-radius:6px;background:#e2e8f0}
+.cov-bar{position:absolute;top:0;height:100%;border-radius:6px;background:linear-gradient(90deg,#1e3a5f,#2563eb);min-width:3px}
+.cov-bar.hit{background:linear-gradient(90deg,#9a3412,#ea580c)}
+.cov-gap{position:absolute;top:0;height:100%;background:repeating-linear-gradient(45deg,#dc2626 0 4px,transparent 4px 8px);opacity:.7}
+.cov-when{color:#64748b;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cov-axis{display:grid;grid-template-columns:minmax(160px,26%) 1fr 270px;gap:10px;font-size:.72rem;color:#94a3b8}
+.cov-axis div:nth-child(2){display:flex;justify-content:space-between}
+.cov-gaps{margin:4px 0 8px;font-size:.8rem;color:#b91c1c}
+html[data-theme=dark] .cov-folder{color:#cbd5e1}html[data-theme=dark] .cov-track{background:#334155}
+html[data-theme=dark] .cov-gaps{color:#fca5a5}
+</style>"""
+
+
+def coverage_html(cov: dict, viewers: Optional[Dict[str, str]], unit: str = "file") -> str:
+    """🕰️ Log coverage: a bar per file on the same time axis, grouped by folder, the files with records in orange, the
+    periods a folder has no log hatched in red and listed"""
+    files = cov.get("files") or []
+    timed = [x for x in files if x["seconds"] is not None]
+    if len(timed) < 1 or unit != "file":
+        return ""
+    t0, t1 = ts_seconds(cov["first"]), ts_seconds(cov["last"])
+    span = max(t1 - t0, 1)
+
+    def pos(ts: str) -> float:
+        return 100.0 * (ts_seconds(ts) - t0) / span
+    gaps_by: Dict[str, List[dict]] = {}
+    for g in cov.get("gaps") or []:
+        gaps_by.setdefault(g["folder"], []).append(g)
+    folders: "OrderedDict[str, List[dict]]" = OrderedDict()
+    for x in sorted(files, key=lambda x: (x["folder"], x["first"] or "~", x["label"])):
+        folders.setdefault(x["folder"], []).append(x)
+    axis = (f"<div class='cov-axis'><div></div><div><span>{e(period_text(cov['first'], None))}</span>"
+            f"<span>{e(cov['last'].replace('T', ' '))}</span></div><div></div></div>")
+    parts = [axis]
+    for folder, xs in folders.items():
+        gaps = gaps_by.get(folder, [])
+        parts.append(f"<div class='cov-folder'>📁 {e(folder or '.')} <span class='fi-meta'>· {len(xs)} {unit}(s)</span></div>")
+        if gaps:
+            what = {"start": "starts {d} after the other logs", "end": "ends {d} before the other logs",
+                    "between": "no file between them"}
+            parts.append("<div class='cov-gaps'>⚠️ not covered by any file of this folder: "
+                         + ", ".join(f"{e(period_text(g['from'], g['to']))} ({e(what.get(g.get('where'), '{d}').format(d=human_duration(g['seconds'])))})"
+                                     for g in gaps[:8])
+                         + (f" (+{len(gaps) - 8} more)" if len(gaps) > 8 else "") + "</div>")
+        for x in xs:
+            name = x["label"].rsplit("/", 1)[-1]
+            link = log_viewer.link(viewers or {}, x["label"], e(name)) if viewers else e(name)
+            if x["seconds"] is None:
+                parts.append(f"<div class='cov-row'><div class='cov-name' title='{e(x['label'])}'>{link}</div>"
+                             f"<div class='fi-meta'>no timestamped line</div><div class='cov-when'>{x['lines']:,} lines</div></div>")
+                continue
+            left, right = pos(x["first"]), pos(x["last"])
+            gap_marks = "".join(f"<span class='cov-gap' style='left:{pos(g['from']):.2f}%;width:{max(pos(g['to']) - pos(g['from']), .3):.2f}%' "
+                                f"title='no log: {e(period_text(g['from'], g['to']))}'></span>" for g in gaps)
+            hit = " hit" if x["occurrences"] else ""
+            parts.append(f"<div class='cov-row'><div class='cov-name' title='{e(x['label'])}'>{link}</div>"
+                         f"<div class='cov-track'>{gap_marks}<span class='cov-bar{hit}' style='left:{left:.2f}%;width:{max(right - left, .3):.2f}%' "
+                         f"title='{e(period_text(x['first'], x['last']))} · {x['lines']:,} lines · {x['occurrences']:,} record occurrence(s)'></span></div>"
+                         f"<div class='cov-when'>{e(period_text(x['first'], x['last']))} · {e(human_duration(x['seconds']))}"
+                         f" · {x['lines']:,} lines" + (f" · <b>{x['occurrences']:,}</b> rec." if x["occurrences"] else "") + "</div></div>")
+    ngaps = len(cov.get("gaps") or [])
+    head = (f"{len(files)} {unit}(s), {period_text(cov['first'], cov['last'])}"
+            + (f", ⚠️ {ngaps} period(s) without logs" if ngaps else ""))
+    return (COVERAGE_CSS + f"<div class='table-card' id='log-coverage'><h2>🕰️ Log coverage <span class='fi-meta'>· {e(head)}</span></h2>"
+            "<p class='legend'>The time range of each file (first and last timestamped line) on the same axis, grouped by folder "
+            "(a folder of rotated logs, a worker, a pod): 🟧 a file with records, 🟦 without. What happened outside these "
+            "ranges, or in a period hatched in red (no file of the folder covers it), is not in the input.</p>"
+            + "".join(parts) + "</div>")
+
+
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
                 command: str = "playground analyze logs", unit: str = "file", links: List[Tuple[str, str]] = (),
                 sections: List[Tuple[str, str]] = (), viewers: Optional[Dict[str, str]] = None,
@@ -1805,13 +1951,25 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                     "<th>Root cause</th><th>Message</th><th class='num'>Occurrences</th><th class='num'>Records</th>"
                     f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}<th>Finding</th></tr>"
                     f"{rows}</table></div>")
+    body.append(coverage_html(res.get("coverage") or {}, viewers, unit))
     if res["files"]:
-        rows = "".join(f"<tr class='file-row' data-file='{i}'><td class='mono'>{log_viewer.link(viewers, f['label'], e(f['label']))}</td>"
-                       f"<td class='num'>{f['lines']}</td><td class='num fr-distinct'>{f['distinct']}</td>"
-                       f"<td class='num fr-occ'>{f['occurrences']}</td>"
-                       + "".join(f"<td class='num fr-{lvl.lower()}'>{sum(r['count'] for r in f['records'] if r['level'] == lvl) or ''}</td>"
-                                 for lvl in ("FATAL", "ERROR", "WARN"))
-                       + "</tr>" for i, f in enumerate(res["files"]))
+        # grouped by folder (a folder of rotated logs, a worker, a pod), as 🕰️ Log coverage: a 📁 row, then the file names
+        by_folder: "OrderedDict[str, List[Tuple[int, dict]]]" = OrderedDict()
+        for i, f in sorted(enumerate(res["files"]), key=lambda x: (x[1]["label"].rsplit("/", 1)[0] if "/" in x[1]["label"] else "", x[1]["label"])):
+            by_folder.setdefault(f["label"].rsplit("/", 1)[0] if "/" in f["label"] else "", []).append((i, f))
+        grouped = len(by_folder) > 1 or next(iter(by_folder)) != ""
+        rows = ""
+        for folder, items in by_folder.items():
+            if grouped:
+                rows += (f"<tr class='file-folder'><td colspan='7'>📁 {e(folder or '.')} <span class='fi-meta'>· "
+                         f"{len(items)} {unit}(s), {sum(f['occurrences'] for _, f in items):,} occurrence(s)</span></td></tr>")
+            rows += "".join(f"<tr class='file-row' data-file='{i}'><td class='mono' title='{e(f['label'])}'>"
+                            f"{log_viewer.link(viewers, f['label'], e(f['label'].rsplit('/', 1)[-1] if grouped else f['label']))}</td>"
+                            f"<td class='num'>{f['lines']}</td><td class='num fr-distinct'>{f['distinct']}</td>"
+                            f"<td class='num fr-occ'>{f['occurrences']}</td>"
+                            + "".join(f"<td class='num fr-{lvl.lower()}'>{sum(r['count'] for r in f['records'] if r['level'] == lvl) or ''}</td>"
+                                      for lvl in ("FATAL", "ERROR", "WARN"))
+                            + "</tr>" for i, f in items)
         body.append(f"<div class='table-card'><h2>🗂️ {Unit}s with findings</h2><table><tr><th>{Unit}</th><th class='num'>Lines</th>"
                     "<th class='num'>Distinct</th><th class='num'>Occurrences</th><th class='num'>FATAL</th><th class='num'>ERROR</th>"
                     f"<th class='num'>WARN</th></tr>{rows}</table>"
@@ -1820,7 +1978,9 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                     + "</div>")
         for f in res["files"]:
             # not "title": the title of the report, in its header
-            file_title = log_viewer.link(viewers, f["label"], e(f["label"]))
+            folder, _, name = f["label"].rpartition("/")
+            file_title = ((f"<span class='ff-dir'>📁 {e(folder)}/</span>" if folder else "")
+                          + log_viewer.link(viewers, f["label"], e(name)))
             body.append(f"<div class='table-card file-records'><h2>📄 {file_title}</h2>"
                         f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
     body.append(config_html(res.get("configuration") or [], viewers, list(s["by_connector"])))
@@ -1895,7 +2055,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,configuration (default: all)")
+                         "files_without_findings,coverage,configuration (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
