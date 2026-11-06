@@ -14,6 +14,7 @@ See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?i
 | --- | --- | --- |
 | `SERVICENOW_URL` | `servicenow-source.sh` | ServiceNow instance URL, ending with `/` (e.g. `https://dev12345.service-now.com/`) |
 | `SERVICENOW_PASSWORD` | `servicenow-source.sh` | Password of the ServiceNow `admin` user |
+| `SERVICENOW_DEVELOPER_USERNAME`, `SERVICENOW_DEVELOPER_PASSWORD` | `servicenow-source.sh` | Optional: your ServiceNow ID, to wake up a hibernating instance automatically |
 
 AWS credentials (`redshift.sh`): export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`.
 
