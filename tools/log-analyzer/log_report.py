@@ -1018,7 +1018,7 @@ FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;f
               "background:#fff;color:#374151;cursor:pointer;transition:all .15s}.pill:hover{border-color:#6b7280}"
               ".pill .n{opacity:.7;margin-left:3px;font-variant-numeric:tabular-nums}"
               ".pill.active,.lvl-chip.active{background:#111827;color:#fff;border-color:#111827}"
-              ".comp-chip.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}"
+              ".comp-chip.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}.rec-card.other-comp{display:none}.fi-others .pill{font-size:.72rem;padding:2px 10px;margin-left:6px}"
               ".pg-search{flex:1;min-width:220px;font-family:inherit;font-size:.8rem;padding:6px 12px;border-radius:8px;"
               "border:1px solid #d1d5db;background:#fff;color:#1e293b}.pg-search:focus{outline:2px solid #2563eb;outline-offset:-1px;border-color:transparent}"
               "html[data-theme=dark] .pill,html[data-theme=dark] .pg-search{background:#1e293b;border-color:#334155;color:#cbd5e1}"
@@ -1244,7 +1244,21 @@ function pgFindings() {
     }
     span.textContent = here ? "▸ " + here + " of " + all + " occurrence(s) here" : "▸ nothing in this selection";
     card.classList.toggle("out", here === 0);
+    // a component picked (🔌 Connect): the findings of the other components are hidden, not only dimmed
+    card.classList.toggle("other-comp", here === 0 && pgComponent !== "");
   });
+  const others = document.querySelectorAll(".rec-card.other-comp").length;
+  let note = document.querySelector(".fi-others");
+  if (!note) {
+    const list = document.querySelector(".findings .recs-list");
+    if (list) { note = document.createElement("p"); note.className = "fi-others legend"; list.parentNode.insertBefore(note, list); }
+  }
+  if (note) {
+    const comp = document.querySelector(".comp-chip.active");
+    note.hidden = !others;
+    note.innerHTML = others ? "🙈 " + others + " finding(s) of other components hidden (" + (comp ? comp.textContent.replace(/\\s*[\\d,]+$/, "") : "")
+      + " picked in the filter bar) <button type='button' class='pill fi-show-all'>show them</button>" : "";
+  }
   const scope = document.querySelector(".fi-scope");
   if (scope) {
     const bits = [];
@@ -1252,6 +1266,7 @@ function pgFindings() {
     if (pgConnector === "-") bits.push("no connector context");
     else if (pgConnector !== "") bits.push(pgConnector);
     if (pgLevelsOff) bits.push([...pgLevelsOff].map(l => PG_LEVELS[l]).join(" + ") + " off");
+    if (pgComponent !== "") bits.push(pgComponent);
     scope.textContent = bits.length ? " · selection: " + bits.join(" · ") : "";
   }
 }
@@ -1297,11 +1312,20 @@ document.addEventListener("click", function (ev) {
     if (all) all.click(); else { pgWindow = null; pgApplyFilters(); }
     return;
   }
-  // the Component chips: one at a time
+  // the Component chips: one at a time, remembered for the next reports (🧩 All components forgets it)
   const comp = ev.target.closest(".comp-chip");
   if (comp) {
     document.querySelectorAll(".comp-chip").forEach(c => c.classList.toggle("active", c === comp));
+    try { if (comp.dataset.component) localStorage.setItem("pg-log-report-component", comp.dataset.component); else localStorage.removeItem("pg-log-report-component"); } catch (e) {}
+    const hint = document.querySelector(".comp-remembered");
+    if (hint) hint.hidden = true;
     pgApplyFilters();
+    return;
+  }
+  if (ev.target.closest(".fi-show-all")) {
+    document.querySelectorAll(".rec-card.other-comp").forEach(c => c.classList.remove("other-comp"));
+    const note = document.querySelector(".fi-others");
+    if (note) note.hidden = true;
     return;
   }
   // the levels, as in the CFK report: 📋 All, or one level at a time (a click on the selected one goes back to All)
@@ -1323,7 +1347,20 @@ document.addEventListener("input", function (ev) {
   pgSearchTimer = setTimeout(pgApply, 150);
 });
 document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
-document.addEventListener("DOMContentLoaded", function () { pgRead(); pgApply(); });
+document.addEventListener("DOMContentLoaded", function () {
+  // the component picked in a previous report (🔌 Connect for someone who works on Connect), when this one has it
+  let saved = null;
+  try { saved = localStorage.getItem("pg-log-report-component"); } catch (e) {}
+  const chip = saved ? document.querySelector(".comp-chip[data-component='" + saved + "']") : null;
+  if (chip) {
+    document.querySelectorAll(".comp-chip").forEach(c => c.classList.toggle("active", c === chip));
+    const hint = document.createElement("span");
+    hint.className = "comp-remembered fb-label";
+    hint.textContent = "· remembered from your last report (🧩 All components to forget it)";
+    chip.after(hint);
+  }
+  pgRead(); pgApply();
+});
 </script>""".replace("@@CHART@@", TIME_CHART_ID).replace("@@COLOR@@", SERIES_1)
 
 
@@ -2017,7 +2054,10 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     findings_view = sorted((finding_view(f, viewers, unit) for f in res["findings"]),
                            key=lambda f: (SEVERITY_ORDER.index(f["severity"]), -(f.get("_view") or {}).get("occurrences", 0)))
     # an exception chain of a killed task is a card of its own inside the finding
-    body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), FINDINGS_CSS,
+    # the filter bar above the findings: a component picked (🔌 Connect) keeps its findings right below
+    without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
+    body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]),
+            filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count")]
@@ -2025,8 +2065,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
     # the filter bar first: everything under it (the charts, the root causes, the records) follows the filters
-    without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
-    body.append(filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]))
+
     body.append(charts_html(res["files"], res["root_causes"]))
     with_conn = bool(s["by_connector"])
     if res["root_causes"]:
