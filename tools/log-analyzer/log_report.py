@@ -757,7 +757,39 @@ def cause_label(c: dict) -> str:
     return f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"]
 
 
-def occurrences_json(causes: List[dict]) -> str:
+# the component a log file belongs to, from its path and name (the folders of a bundle, the name of a rotated log):
+# the Component chips of the filter bar. The first match wins: the specific ones before kafka
+FILE_COMPONENTS = [
+    ("operator", "☸️ Operator", r"confluent-operator|(^|[/_-])operator([/_.-]|$)"),
+    ("ksqldb", "🧮 ksqlDB", r"ksql"),
+    ("schemaregistry", "📜 Schema Registry", r"schema[-_]?registry|(^|[/_-])sr[-_]"),
+    ("controlcenter", "🛰️ Control Center", r"control[-_]?center|(^|[/_-])c3([/_.-]|$)"),
+    ("restproxy", "🌐 REST Proxy", r"rest[-_]?proxy|kafka[-_]rest"),
+    ("zookeeper", "🦓 ZooKeeper", r"zookeeper|(^|[/_-])zk([/_.-]|\d|$)"),
+    ("streams", "🌊 Kafka Streams", r"kafka[-_]?streams|(^|[/_.-])streams?\d*([/_.-]|$)"),
+    ("connect", "🔌 Connect", r"connect|(^|[/_-])cw\d|worker"),
+    ("clients", "📡 Clients", r"producer|consumer|client|librdkafka|kafkajs|confluent[-_]kafka|panic|uncaught|python|dotnet|golang|(^|[/_-])go[-_]|rust|node"),
+    ("kafka", "🗄️ Kafka", r"kafka|broker|server\.log|controller|state-change|kraft"),
+]
+
+
+def component_chips(labels: List[str]) -> str:
+    """the components of the files of a finding or a root cause, as chips (🔌 Connect, 📡 Clients…)"""
+    names = {code: name for code, name, _ in FILE_COMPONENTS}
+    names["other"] = "📄 Other"
+    codes = list(OrderedDict((file_component(x), True) for x in labels or []))
+    return "".join(f"<span class='fi-comp' data-component='{code}'>{e(names[code])}</span>" for code in codes)
+
+
+def file_component(label: str) -> str:
+    low = label.lower()
+    for code, _, pattern in FILE_COMPONENTS:
+        if re.search(pattern, low):
+            return code
+    return "other"
+
+
+def occurrences_json(causes: List[dict], files: Optional[List[dict]] = None) -> str:
     """Every record of the report as [root cause index, level, connector index, occurrences, epoch seconds, record
     index (data-rec of its block), file index (data-file of its row of the files table)]: what the
     📈 occurrences chart, the 🔝 top causes chart, the 🌳 root causes table and the records are all counted again from
@@ -772,7 +804,9 @@ def occurrences_json(causes: List[dict]) -> str:
                 names[connector] = len(names)
             records.append([i, LEVEL_ORDER.get(level, 9), names[connector] if connector else -1, count,
                             encode_times(times), index, file_index])
-    return json.dumps({"connectors": list(names), "records": records}, separators=(",", ":"))
+    # the component of each file with findings (file index -> code): the Component chips of the filter bar
+    components = [file_component(f["label"]) for f in files or []]
+    return json.dumps({"connectors": list(names), "records": records, "components": components}, separators=(",", ":"))
 
 
 def charts_html(files: List[dict], causes: List[dict]) -> str:
@@ -975,10 +1009,22 @@ SELECT_CSS = (".conn-filter,.cfg-conn-select{font-family:inherit;font-size:.8rem
               "border-color:#334155}html[data-theme=dark] .conn-filter option,html[data-theme=dark] .cfg-conn-select option{background:#0f172a}")
 
 
-FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;"
-              "padding:8px 12px;margin-bottom:14px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
-              "font-size:.78rem;color:#475569}.lvl-chip{border:0;cursor:pointer;font-family:inherit;font-size:.75rem}"
-              ".lvl-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}"
+FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:8px;"
+              "padding:10px 14px;margin-bottom:14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
+              "font-size:.8rem;color:#475569}.fb-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}"
+              ".fb-label{font-size:.75rem;color:#64748b;margin:0 2px 0 4px}"
+              # the pills of the CFK report: level (one at a time), component
+              ".pill{font-family:inherit;font-size:.8rem;padding:5px 13px;border-radius:999px;border:1px solid #d1d5db;"
+              "background:#fff;color:#374151;cursor:pointer;transition:all .15s}.pill:hover{border-color:#6b7280}"
+              ".pill .n{opacity:.7;margin-left:3px;font-variant-numeric:tabular-nums}"
+              ".pill.active,.lvl-chip.active{background:#111827;color:#fff;border-color:#111827}"
+              ".comp-chip.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}"
+              ".pg-search{flex:1;min-width:220px;font-family:inherit;font-size:.8rem;padding:6px 12px;border-radius:8px;"
+              "border:1px solid #d1d5db;background:#fff;color:#1e293b}.pg-search:focus{outline:2px solid #2563eb;outline-offset:-1px;border-color:transparent}"
+              "html[data-theme=dark] .pill,html[data-theme=dark] .pg-search{background:#1e293b;border-color:#334155;color:#cbd5e1}"
+              "html[data-theme=dark] .pill:hover{border-color:#94a3b8}"
+              "html[data-theme=dark] .pill.active,html[data-theme=dark] .lvl-chip.active{background:#e2e8f0;color:#0f172a;border-color:#e2e8f0}"
+              "html[data-theme=dark] .comp-chip.active{background:#2563eb;color:#fff;border-color:#2563eb}"
               + SELECT_CSS +
               ".lvl-filter .sep{margin-left:10px}"
               "html[data-theme=dark] .lvl-filter{background:#1e293b;color:#94a3b8}</style>")
@@ -1007,6 +1053,7 @@ var pgWindow = null;      // [from, to] epoch seconds, null for the whole report
 var pgRedrawing = false;  // the chart is being drawn again with other series, its "zoomchange" is not a new period
 var pgLevelsOff = null;   // Set of the level codes switched off
 var pgConnector = "";     // "" all, "-" the records without a connector context, else a connector name
+var pgComponent = "";     // "" all, else the component of the files kept (connect, kafka, clients…)
 var pgConnIdx = -1;       // index of pgConnector in pgOcc.connectors
 function pgTimes(rec) {
   if (rec.times === undefined) {
@@ -1017,6 +1064,8 @@ function pgTimes(rec) {
 }
 function pgKeeps(rec) {
   if (pgLevelsOff && pgLevelsOff.has(rec[1])) return false;
+  // the Component chips: the component of the file of the record (pgOcc.components, by file index)
+  if (pgComponent && (pgOcc.components || [])[rec[6]] !== pgComponent) return false;
   if (pgConnector === "") return true;
   return pgConnector === "-" ? rec[2] === -1 : rec[2] === pgConnIdx;
 }
@@ -1036,6 +1085,8 @@ function pgRead() {
   const sel = document.querySelector(".conn-filter");
   pgConnector = sel ? sel.value : "";
   pgConnIdx = pgOcc.connectors.indexOf(pgConnector);
+  const comp = document.querySelector(".comp-chip.active");
+  pgComponent = comp ? comp.dataset.component : "";
 }
 function pgStamp(t) {
   const d = new Date(Math.round(t * 1000)), p = n => String(n).padStart(2, "0");
@@ -1063,7 +1114,8 @@ function pgTopCauses(byCause) {
   document.querySelectorAll("tr.rc-row").forEach(function (tr) {
     const n = byCause[+tr.dataset.cause];
     if (tr.hidden || !n || !n[0]) return;
-    const cls = tr.cells[1].textContent, msg = tr.cells[2].textContent;
+    // cells: level, component, root cause, message
+    const cls = tr.cells[2].textContent, msg = tr.cells[3].textContent;
     rows.push([cls === "—" ? msg : cls + ": " + msg, n[0], n[2]]);
   });
   rows.sort((a, b) => a[2] - b[2] || b[1] - a[1]);
@@ -1175,7 +1227,7 @@ function pgFindings() {
   const cards = document.querySelectorAll(".rec-card[data-recs]");
   if (!cards.length) return;
   if (!pgByRecord) { pgByRecord = {}; for (const rec of pgOcc.records) if (rec[5] >= 0) pgByRecord[rec[5]] = rec; }
-  const filtered = pgWindow !== null || pgLevelsOff !== null || pgConnector !== "";
+  const filtered = pgWindow !== null || pgLevelsOff !== null || pgConnector !== "" || pgComponent !== "";
   cards.forEach(function (card) {
     const span = card.querySelector(".rec-scope");
     if (!span) return;
@@ -1208,6 +1260,20 @@ function pgApply() {
   pgRecordBlocks();
   pgFilesTable();
   pgFindings();
+  pgSearch();
+}
+// the search box: what the other filters keep and whose text contains it (records, root causes, findings, files)
+function pgSearch() {
+  const box = document.querySelector(".pg-search");
+  const q = box ? box.value.toLowerCase().trim() : "";
+  // the cards of the findings are only hidden by the search (the other filters dim them)
+  document.querySelectorAll(".rec-card[hidden]").forEach(c => { c.hidden = false; });
+  if (!q) return;
+  const has = el => el.textContent.toLowerCase().includes(q);
+  document.querySelectorAll("details[data-rec]:not([hidden])").forEach(el => { if (!has(el)) el.hidden = true; });
+  document.querySelectorAll("tr.rc-row:not([hidden])").forEach(el => { if (!has(el)) el.hidden = true; });
+  document.querySelectorAll(".rec-card:not([hidden])").forEach(el => { if (!has(el)) el.hidden = true; });
+  document.querySelectorAll(".file-records").forEach(card => { card.hidden = !card.querySelector("details[data-rec]:not([hidden])"); });
 }
 function pgApplyFilters() {
   pgRead();
@@ -1231,10 +1297,30 @@ document.addEventListener("click", function (ev) {
     if (all) all.click(); else { pgWindow = null; pgApplyFilters(); }
     return;
   }
-  const chip = ev.target.closest(".lvl-chip");
-  if (!chip) return;
-  chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "false" ? "true" : "false");
+  // the Component chips: one at a time
+  const comp = ev.target.closest(".comp-chip");
+  if (comp) {
+    document.querySelectorAll(".comp-chip").forEach(c => c.classList.toggle("active", c === comp));
+    pgApplyFilters();
+    return;
+  }
+  // the levels, as in the CFK report: 📋 All, or one level at a time (a click on the selected one goes back to All)
+  const all = ev.target.closest(".lvl-all"), chip = ev.target.closest(".lvl-chip");
+  if (!all && !chip) return;
+  const only = chip && !chip.classList.contains("active") ? chip : null;
+  document.querySelectorAll(".lvl-chip").forEach(c => {
+    c.setAttribute("aria-pressed", !only || c === only ? "true" : "false");
+    c.classList.toggle("active", c === only);
+  });
+  const allBtn = document.querySelector(".lvl-all");
+  if (allBtn) allBtn.classList.toggle("active", !only);
   pgApplyFilters();
+});
+let pgSearchTimer = null;
+document.addEventListener("input", function (ev) {
+  if (!ev.target.closest(".pg-search")) return;
+  clearTimeout(pgSearchTimer);
+  pgSearchTimer = setTimeout(pgApply, 150);
 });
 document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
 document.addEventListener("DOMContentLoaded", function () { pgRead(); pgApply(); });
@@ -1607,26 +1693,48 @@ def config_block_html(c: dict, viewers: Optional[Dict[str, str]] = None, common:
             + f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{''.join(rows)}</table></details>")
 
 
-def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_connector: int) -> str:
-    """Chips FATAL / ERROR / WARN with their occurrences when the report has 2 levels or more, and a connector picker
-    when records have a connector context. FILTER_SCRIPT, which applies them, is emitted by html_report()."""
-    present = [lvl for lvl in LEVEL_ORDER if by_level.get(lvl)]
-    parts = []
+LEVEL_PILLS = (("FATAL", "💀"), ("ERROR", "🔴"), ("WARN", "🟠"))
+
+
+def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_connector: int,
+                files: Optional[List[dict]] = None) -> str:
+    """The filter bar, in the look of the CFK report: 📋 All / 💀 FATAL / 🔴 ERROR / 🟠 WARN (one level at a time), a search
+    box, the Component chips (from the path of each file, with 2 components or more) and the connector picker (records
+    with a connector context). FILTER_SCRIPT, which applies them, is emitted by html_report()."""
+    present = [lvl for lvl, _ in LEVEL_PILLS if by_level.get(lvl)]
+    rows = []
+    first = ["<button type='button' class='pill lvl-all active' title='every level'>📋 All</button>"]
     if len(present) >= 2:
-        parts.append("Levels:" + "".join(f"<button type='button' class='st {lvl.lower()} lvl-chip' data-level='{lvl}' "
-                                         f"data-level-code='{LEVEL_ORDER[lvl]}' aria-pressed='true' "
-                                         f"title='show / hide the {lvl} records'>{lvl} ({by_level[lvl]})</button>" for lvl in present))
+        first += [f"<button type='button' class='pill lvl-chip' data-level='{lvl}' data-level-code='{LEVEL_ORDER[lvl]}' "
+                  f"aria-pressed='true' title='only the {lvl} records'>{icon} {lvl} <span class='n'>{by_level[lvl]:,}</span></button>"
+                  for lvl, icon in LEVEL_PILLS if by_level.get(lvl)]
+    first.append("<input class='pg-search' type='search' placeholder='Search messages, files, connectors…' "
+                 "title='the records, the root causes and the findings whose text contains it'>")
+    rows.append("<div class='fb-row'>" + "".join(first if len(present) >= 2 else first[1:]) + "</div>")
+    second = []
+    counts: "OrderedDict[str, int]" = OrderedDict()
+    for f in files or []:
+        code = file_component(f["label"])
+        counts[code] = counts.get(code, 0) + f["distinct"]
+    if len(counts) >= 2:
+        names = {code: name for code, name, _ in FILE_COMPONENTS}
+        names["other"] = "📄 Other"
+        second.append("<span class='fb-label'>Component</span><button type='button' class='pill comp-chip active' data-component=''>"
+                      f"🧩 All components <span class='n'>{sum(counts.values()):,}</span></button>")
+        second += [f"<button type='button' class='pill comp-chip' data-component='{code}' title='only the files of {e(names[code][2:].strip())}'>"
+                   f"{names[code]} <span class='n'>{n:,}</span></button>"
+                   for code, n in sorted(counts.items(), key=lambda kv: -kv[1])]
     if by_connector:
         options = [f"<option value=''>all ({len(by_connector)} connector(s){' + no connector' if without_connector else ''})</option>"]
         options += [f"<option value='{e(name)}'>{e(name)} ({n})</option>" for name, n in by_connector.items()]
         if without_connector:
             options.append(f"<option value='{NO_CONNECTOR}'>— no connector context — ({without_connector})</option>")
-        parts.append(f"<span class='{'sep' if parts else ''}'>Connector:</span><select class='conn-filter' "
-                     "title='only the root causes and the records of this connector ([connector|task-0] context of the log line)'>"
-                     + "".join(options) + "</select>")
-    if not parts:
-        return ""
-    return FILTER_CSS + "<div class='lvl-filter'>" + "".join(parts) + "</div>"
+        second.append("<span class='fb-label'>Connector</span><select class='conn-filter' "
+                      "title='only the root causes and the records of this connector ([connector|task-0] context of the log line)'>"
+                      + "".join(options) + "</select>")
+    if second:
+        rows.append("<div class='fb-row'>" + "".join(second) + "</div>")
+    return FILTER_CSS + "<div class='lvl-filter'>" + "".join(rows) + "</div>"
 
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
@@ -1672,6 +1780,7 @@ details.rec[open]>summary .rec-line{display:none}
 .fi-conns{margin-top:4px}
 .fi-conn{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;padding:0 6px;margin:2px 3px 0 0;border-radius:4px;background:#e2e8f0;color:#334155}
 .fi-conns details{display:inline}.fi-conns summary{display:inline;cursor:pointer;font-size:.75rem;color:#2563eb;font-weight:500}
+.fi-comp{display:inline-block;font-size:.72rem;font-weight:500;padding:1px 8px;margin:0 3px 0 0;border-radius:999px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;white-space:nowrap}
 .fi-lvl{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:12px;margin-right:4px}
 .fi-lvl.fatal{background:#fee2e2;color:#b91c1c}.fi-lvl.error{background:#ffedd5;color:#c2410c}.fi-lvl.warn{background:#fef3c7;color:#b45309}
 """ + dark("""
@@ -1684,6 +1793,7 @@ details.rec[open]>summary .rec-line{display:none}
 .fi-exc{color:#fdba74}.fi-exc.error{color:#fca5a5}
 .fi-msg{color:#cbd5e1}
 .fi-conn{background:#334155;color:#cbd5e1}
+.fi-comp{background:#1e1b4b;color:#c7d2fe;border-color:#3730a3}
 .fi-conns summary{color:#93c5fd}
 .fi-lvl.fatal{background:#450a0a;color:#fca5a5}.fi-lvl.error{background:#431407;color:#fdba74}.fi-lvl.warn{background:#422006;color:#fcd34d}
 """) + "</style>"
@@ -1763,7 +1873,8 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
     if v["kind"] == "known":
         first = v.get("first") or {}
         head = (f"<span class='fi-title'>{e(v['title'])}</span><span class='fi-count {sev}'>{v['occurrences']:,}×</span>"
-                f"<span class='fi-meta'>{where} · </span>" + first_html(viewers, first.get("file", ""), first.get("line"), first.get("timestamp")))
+                + component_chips(files)
+                + f"<span class='fi-meta'>{where} · </span>" + first_html(viewers, first.get("file", ""), first.get("line"), first.get("timestamp")))
         # the killed tasks list all their chains (what to fix), the other known causes the most frequent ones
         chains = v.get("chains") or v.get("_chains") or []
         limit = len(chains) if v.get("chains") else CHAINS_SHOWN
@@ -1779,7 +1890,7 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
         words = (v["example"] or "").split()
         title = " ".join(words[:8]) + ("…" if len(words) > 8 else "") or "Unrecognized error"
     head = (f"<span class='fi-lvl {v['level'].lower()}'>{e(v['level'])}</span><span class='fi-title'>🌳 {e(title)}</span>"
-            f"<span class='fi-count {sev}'>{v['occurrences']:,}×</span><span class='fi-meta'>{where}</span>"
+            f"<span class='fi-count {sev}'>{v['occurrences']:,}×</span>{component_chips(files)}<span class='fi-meta'>{where}</span>"
             + (f"<span class='fi-meta'> · </span>{first_html(viewers, first['file'], first['line'], first['timestamp'])}" if first else "")
             + chains_note(chains, CHAINS_SHOWN)
             + "<div class='fi-advice'>👉 no known cause matches it: read its exception chain and its context (📄)"
@@ -1915,7 +2026,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
     # the filter bar first: everything under it (the charts, the root causes, the records) follows the filters
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
-    body.append(filter_html(s["by_level"], s["by_connector"], without_connector))
+    body.append(filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]))
     body.append(charts_html(res["files"], res["root_causes"]))
     with_conn = bool(s["by_connector"])
     if res["root_causes"]:
@@ -1926,7 +2037,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             if c.get("in_findings"):
                 return f"<a href='#finding-root-{i}' title='its card in 🔎 Findings'>🌳 card in Findings</a>"
             return "<span class='fi-meta' title='not a known cause, not among the most frequent: read its records below'>—</span>"
-        rows = "".join(f"<tr class='rc-row' id='root-cause-{i}' data-level='{e(c['level'])}' data-cause='{i}'><td>{level_badge(c['level'])}</td>"
+        rows = "".join(f"<tr class='rc-row' data-level='{e(c['level'])}' data-cause='{i}' id='root-cause-{i}'><td>{level_badge(c['level'])}</td>"
+                       f"<td>{component_chips(c['files'])}</td>"
                        f"<td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
                        f"<td class='mono'>{e(c['example'][:300])}</td><td class='num rc-occ'>{c['occurrences']}</td>"
                        f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x)) for x in c['files'][:5])}"
@@ -1948,7 +2060,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                    + "</p>")
         body.append("<div class='table-card'><h2>🌳 All root causes (every distinct error, by deepest exception)"
                     "<span class='rc-range'></span><button type='button' class='rc-reset' hidden>⤺ whole period</button>"
-                    f"</h2>{follows}<table><tr><th>Level</th>"
+                    f"</h2>{follows}<table><tr><th>Level</th><th>Component</th>"
                     "<th>Root cause</th><th>Message</th><th class='num'>Occurrences</th><th class='num'>Records</th>"
                     f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}<th>Finding</th></tr>"
                     f"{rows}</table></div>")
@@ -1987,7 +2099,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body.append(config_html(res.get("configuration") or [], viewers, list(s["by_connector"])))
     # last: the index of the records the filters count again from, then the filters themselves
     body.append("<script type='application/json' id='pg-occurrences'>"
-                + occurrences_json(res["root_causes"]).replace("<", "\\u003c") + "</script>")
+                + occurrences_json(res["root_causes"], res["files"]).replace("<", "\\u003c") + "</script>")
     body.append(FILTER_SCRIPT)
     body.append(SECTION_TOGGLE)
     sanitized = any(t.startswith("🔒") for t, _ in sections)
