@@ -146,7 +146,7 @@ LDAP security principal used for authentication.
 
 LDAP security credentials used for authentication.
 
-	 - Type: STRING
+	 - Type: PASSWORD
 	 - Default: null
 	 - Importance: LOW
 	 - Required: false
