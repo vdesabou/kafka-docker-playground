@@ -91,6 +91,11 @@ def overview(records: str, sources: str, exports: Optional[str], top: int) -> di
                 parts = line.rstrip("\n").split("\t")
                 if len(parts) >= 7:
                     periods[parts[1]] = (int(parts[2] or 0), parts[5] or None, parts[6] or None)
+    # the offsets of the timestamps (2026-10-13T10:00:05+02:00): stripped, or converted to UTC when the files mix several,
+    # as in the log report (log_report.normalize_times)
+    stub = [{"label": k, "log_first_ts": v[1], "log_last_ts": v[2], "records": [], "configs": []} for k, v in periods.items()]
+    lr.normalize_times(stub)
+    periods = {f["label"]: (periods[f["label"]][0], f["log_first_ts"], f["log_last_ts"]) for f in stub}
     export_of: Dict[str, tuple] = {}
     if exports and os.path.isfile(exports):
         with open(exports, encoding="utf-8") as fh:
