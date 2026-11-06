@@ -110,6 +110,11 @@ sight.
   plus uncaught java exceptions; INFO/DEBUG/TRACE records and loose "error"/"failed" words never do.
 - **`playground container logs` follows the logs by default and never returns** — always pass
   `--errors`, `--no-follow` or `--wait-for-log` when running it non-interactively.
+- **`docker exec connect kafka-topics …` fails with `ERROR: transport error 202: bind failed: Address already in use`**:
+  remote debugging is on by default on the `connect` worker (`KAFKA_DEBUG`, JDWP port `5005`), and every
+  `kafka-run-class` tool started in that container tries to open the same port. Use
+  `playground container exec -c connect --command "…"` (it unsets `KAFKA_DEBUG`), or a `playground topic` command.
+  The `kafka-avro-console-*` / `-json-schema-` / `-protobuf-` tools are not affected.
 - **`playground connector logs` also follows by default** for a self managed connector: pass `--no-follow`,
   `--errors` or `--wait-for-log`. With `--connector` it keeps only the lines naming that connector.
 - The `playground connector` commands that take `--json` (`status`, `wait`, `diagnose`, `validate`, `tasks`,

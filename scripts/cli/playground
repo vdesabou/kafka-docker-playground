@@ -39321,7 +39321,7 @@ function maybe_delete_ccloud_environment () {
     #
     # CLUSTER_NAME is not set
     #
-    log "🧹❌ Confluent Cloud cluster will be deleted..."
+    log "🧹❌ CLUSTER_NAME is not set: deleting the Confluent Cloud cluster created by the playground (pg-<user>-cluster-sa-<id>), if it is the current one..."
     verify_installed "confluent"
     check_confluent_version 4.32.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
@@ -39336,6 +39336,13 @@ function maybe_delete_ccloud_environment () {
       export PRESERVE_ENVIRONMENT=false
     fi
     SERVICE_ACCOUNT_ID=$(ccloud:get_service_account_from_current_cluster_name)
+    if [ -z "$SERVICE_ACCOUNT_ID" ]
+    then
+      # not a cluster of the playground (pg-<user>-cluster-sa-xxx): never destroy it, nor its environment
+      logwarn "⚠️ the current Confluent Cloud cluster was not created by the playground (its name does not end with -sa-<id>): nothing is deleted"
+      logwarn "🎓 to keep using an existing cluster, set CLUSTER_NAME, ENVIRONMENT, CLUSTER_CLOUD, CLUSTER_REGION and CLUSTER_CREDS"
+      return 0
+    fi
     set +e
     ccloud::destroy_ccloud_stack $SERVICE_ACCOUNT_ID
     set -e
@@ -41259,7 +41266,9 @@ function ccloud::create_service_account() {
 }
 
 function ccloud:get_service_account_from_current_cluster_name() {
-  SERVICE_ACCOUNT_ID=$(confluent kafka cluster describe -o json | jq -r '.name' | awk -F'-' '{print $3 "-" $4;}')
+  # clusters created by the playground are named pg-<user>-cluster-<service account id> (ccloud::create_ccloud_stack), and <user>
+  # can contain dashes: take the trailing sa-xxx, empty for any other cluster (one created by hand, a shared one)
+  SERVICE_ACCOUNT_ID=$(confluent kafka cluster describe -o json | jq -r '.name' | sed -nE 's/.*-(sa-[a-z0-9]+)$/\1/p')
 
   echo $SERVICE_ACCOUNT_ID
 

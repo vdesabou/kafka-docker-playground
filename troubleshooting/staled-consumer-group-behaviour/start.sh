@@ -33,11 +33,19 @@ docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar
 sleep 5
 
 log "Check commit was done (there is no auto-commit, it is set to PER_MESSAGE)"
-timeout 30 docker container exec -i connect bash -c 'kafka-console-consumer \
+# the formatter moved to org.apache.kafka.tools.consumer with Kafka 4 (CP 8)
+OFFSETS_FORMATTER='kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter'
+if version_gt $TAG_BASE "7.9.99"
+then
+    OFFSETS_FORMATTER="org.apache.kafka.tools.consumer.OffsetsMessageFormatter"
+fi
+# playground container exec, not docker exec: it unsets KAFKA_DEBUG (the connect worker holds the JDWP port 5005)
+playground container exec -c connect --command 'kafka-console-consumer \
      --bootstrap-server broker:9092 \
+     --timeout-ms 15000 \
      --topic __consumer_offsets \
      --from-beginning \
-     --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter"' | grep testtopic-app
+     --formatter '"$OFFSETS_FORMATTER" | grep testtopic-app
 
 # [testtopic-app,testtopic,0]::OffsetAndMetadata(offset=1, leaderEpoch=Optional[0], metadata=, commitTimestamp=1643115099888, expireTimestamp=None)
 

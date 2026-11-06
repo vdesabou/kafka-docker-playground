@@ -7,4 +7,4 @@ source ${DIR}/../../scripts/utils.sh
 
 maybe_delete_ccloud_environment
 
-${DIR}/../../ccloud/environment/stop.sh "${PWD}/docker-compose.yml"
+${DIR}/../../ccloud/environment/stop.sh "${DIR}/docker-compose.yml"
