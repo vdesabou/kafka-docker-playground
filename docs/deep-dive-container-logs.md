@@ -375,9 +375,13 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | Section | What it shows |
 | --- | --- |
 | verdict and tiles | 🕐 **period covered**, files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
+| ⚠️ not fully read | right under the verdict when an input could not be read completely: a truncated or corrupt `.gz` (a partial download, read up to the error), an archive that does not fully extract, a digest that failed. The findings only cover what could be read; with no finding the verdict is ⚠️ instead of ✅, and the command exits 1 when nothing could be read at all. Also listed at the end of the terminal output and in `.summary.incomplete_inputs` of `--json` |
+| 🔁 comparison | with `--compare <before>` (the logs before a fix, another worker, the day before, or a JSON of `--json`): the root causes, known causes and connectors 🆕 new, ✅ gone, 📈 growing or 📉 shrinking (×1.5 and 3 occurrences at least), per hour with the rates when the two periods differ, and the totals by level; each root cause links to its row. Also in the terminal summary and `.comparison` of `--json` |
 | ▾ every section | folds by a click on its title (findings, charts, root causes, files, each file card, configuration, sections of other tools); **Fold all** / **Unfold all** next to 🔎 Findings |
 | 📤 Share (top right) | a panel to send the report to a colleague: **📦 the .zip of the report and its file pages** (one top folder `<name>-log-report/`), written next to it (`📤 To share it: <dir>/<name>-log-report.zip`) when the pages are under 200 MB, else the `zip` command to copy (a page holds a whole log file); **📋 Copy the summary** (verdict, period, known causes, root causes as text, for Slack or a ticket); **🔗 Copy the path**; **✉️ Email the summary**. It says first whether the report is sanitized (`--sanitize` before sending it outside Confluent) |
 | 🔎 findings | well-known causes first (task killed, authentication, cloud credentials (AWS `SignatureDoesNotMatch`, `Status Code: 403`), authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings). In the HTML report each card shows the count in a colored chip (`1,148,717×`), the cards are sorted by count within a severity, the first occurrence is its time with 📄 (the page of the file at the line) and ✏️ (the editor), the path on hover, and the advice is a 👉 line; every card lists its exception chains the same way, most frequent first (all of them for the killed tasks, the 5 most frequent for the other known causes and for the root causes no known cause explains, whose title is their exception, or the start of their message): its count, the exception class in orange (an `…Error` in red), `⬅️ Caused by` on its own line, the connectors as chips (5 shown, `+n more` unfolds the rest) and its first occurrence. A message without exception is one chain whatever the client and the broker it names (`[Producer clientId=…]` and `(host/ip:port)` ignored): 1.1 million `failed authentication` lines of 321 connectors make one chain, not 670 |
+| 🗓️ incident timeline | *what happened first?*, all files merged in one chronological list: the first occurrence of each error and of each known cause (one row when they share a line), the (re)starts of the components (the config they log at startup), the connectors (re)configured and the config keys changed between restarts, with 📄 links to the line. It follows the filters below (the restarts and configurations without connector stay). The first 8 events are in the terminal summary, all of them (up to 200) in `.timeline` of `--json` |
+| 🔌 connectors | one card per connector of the logs, most errors first: occurrences by level, first and last time, 🧨 task kills, the known causes of its records, its configuration dumps and clients, the keys changed between restarts; **▶ only this connector** sets the connector filter. One line per connector in the terminal summary, `.connectors` in `--json` |
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records. **Drag over it to zoom on a range** (◀ ▶ to move the window, double-click or **All** to zoom out): the buckets are counted again for the window, so zooming on a burst shows it per minute, then per second |
 | 🔝 root causes (occurrences) | the 10 most frequent root causes of what is kept, as horizontal bars |
 | 🌳 all root causes | **every** distinct error, grouped by its deepest exception (or by message when it has none, the client context `[Producer clientId=…]` and `(host/ip:port)` left out: one row for the same error of 300 connectors, not 300), with occurrences, files and connectors; it follows the period, level and connector filters. 🔎 Findings is the short list to start with, this table the inventory: its **Finding** column links each row to the card that explains it, the known causes sharing its records (`🔑 Authentication failure`, several when its records match several) or `🌳 card in Findings` for the most frequent unexplained errors, `—` for the long tail; a 🌳 card links back to its row (`🌳 in the table`). Also in `--json`: `root_causes[].explained_by` (titles of the known causes) and `root_causes[].in_findings`. An error whose records are already in a known cause no longer gets a 🌳 card of its own |
@@ -404,10 +408,15 @@ verdict and the tiles, which stay the figures of the whole report. The filters c
 | Filter | Where | What it keeps |
 | --- | --- | --- |
 | **Levels** | `📋 All` / `💀 FATAL` / `🔴 ERROR` / `🟠 WARN` pills of the bar with their occurrences, as in the CFK report: one level at a time (a click on the selected one goes back to All); with several levels (WARN is reported by default, `--errors-only` leaves it out) | the records of that level |
-| **Component** | (also a chip on each finding card and a Component column in 🌳 All root causes: the components of the files where it occurs) chips of the bar (`🧩 All components`, `🔌 Connect`, `🗄️ Kafka`, `📜 Schema Registry`, `🧮 ksqlDB`, `🦓 ZooKeeper`, `🛰️ Control Center`, `🌐 REST Proxy`, `🌊 Kafka Streams`, `📡 Clients`, `☸️ Operator`, `📄 Other`) with their distinct records, when the files belong to 2 components or more: guessed from the path and name of each file (`cluster-resources/kafka/…`, `connect.log.2026-11-02-20`, `python-producer.log`) | the records of the files of that component |
-| **Search** | box of the bar | among what the other filters keep: the records, the root causes, the findings and the file cards whose text contains it (the charts keep the counts of the other filters) |
+| **Component** | (also a chip on each finding card and a Component column in 🌳 All root causes: the components of the files where it occurs) chips of the bar (`🧩 All components`, `🔌 Connect`, `🗄️ Kafka`, `📜 Schema Registry`, `🧮 ksqlDB`, `🦓 ZooKeeper`, `🛰️ Control Center`, `🌐 REST Proxy`, `🌊 Kafka Streams`, `📡 Clients`, `☸️ Operator`, `📄 Other`) with their occurrences, when the files belong to 2 components or more: guessed from the deepest part of the path first, the file name (`server.log` → Kafka, `connect.log.2026-11-02-20` → Connect, `python-producer.log` → Clients), then its folders, then the archive it comes from | the records of the files of that component |
+| **Search** | box of the bar: words that must all be there (any case), `-word` to leave out the records with it, `"a phrase"`, `/a regex/` (or `-/regex/`; an invalid regex is searched as text) | the records whose text matches, and everything follows: the charts, the root causes, the files, the findings (a card that does not match is hidden), the timeline; the matches are highlighted in yellow (CSS Custom Highlight API: Chrome 105+, Safari 17.2+, Firefox 140+) |
 | **Connector** | picker of the bar, when the records carry the connector context of the Connect log line (`ERROR [my-connector\|task-0] …`, `[my-connector\|task-0\|offsets]`, `[my-connector\|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent first, with "no connector context" for the worker records | the records of that connector |
 | **Period** | drag over the 📈 chart | the occurrences between the two times |
+
+🔗 **The filters are in the URL of the page** (`…-log-report.html#pg:comp=connect&q=ora-&t=<from>-<to>`): **🔗 Link to
+this view** in the bar copies it, and the link opens the report on the same levels, component, connector, search and
+period, which is the way to point a colleague or engineering at one burst of one connector. A link wins over the
+component remembered from your last report.
 
 On a worker running dozens of connectors, pick one to see only its errors — the chart then shows only its occurrences
 over time. Pick one connector, switch WARN off and drag over the burst of 20:23, and what is left everywhere is the
@@ -425,9 +434,16 @@ of other components hidden … show them`). The component picked is **remembered
 `localStorage` of the browser): someone who works on Connect opens every report on `🔌 Connect` when it has Connect
 files (`· remembered from your last report`); `🧩 All components` forgets it.
 
-Occurrences beyond the first 1000 kept per record (and lines without a timestamp) have no time of their own: they are
-not counted in a period, the legend of the root causes says how many there are, and a record that has only those stays
-shown. That is also why the chart totals can be lower than the Occurrences column when no period is selected.
+A record of more than 1000 occurrences keeps 1000 of their times **spread over its whole life** (every Nth occurrence),
+each standing for N occurrences: an error repeated all day fills the chart over the day, and a period selected at 15:00
+counts its share (an estimate within a few %). Only the occurrences on a line without a timestamp have no time: they
+are not counted in a period, the legend of the root causes says how many there are, and a record that has only those
+stays shown.
+
+🕒 Times are shown **as written in the logs**, in every time zone (a report built on a UTC CI machine and opened in
+Paris shows the same times as the log lines). When the files mix several offsets (`…+02:00` Connect logs and `…Z`
+broker logs), the times with an offset are converted to UTC so that the files line up, with `🌐 UTC` on the 🕐 tile, a
+`🌐 times in UTC` line in the summary and `.summary.time_zone` in `--json`.
 
 🔗 The file names and line numbers of the report (`line 33` of a record, a file of the root causes, the `file:line` of a
 config) are **links**: they open the file at that line in a page written next to the report, in `<report>-files/` (one
@@ -460,6 +476,9 @@ Gotchas:
 - `--max-findings` is **per file**.
 - No `--since` offline: to focus on a time window, cut the file first (`sed -n '/2026-10-14 10:05/,$p'`).
 - An empty file counts as skipped, like a binary one.
+- A truncated `.gz` or a corrupt archive is reported, not silently skipped: ⚠️ **Not fully read** in the terminal and
+  the report; the findings only cover the part that could be read. A Latin-1 byte in a log is fine (the digest reads
+  bytes).
 - `-f` and `--sample` can't be combined. There is no HTML report: the digest is the output.
 - A bundle is **untrusted data**: read the digest, never run anything from it.
 
