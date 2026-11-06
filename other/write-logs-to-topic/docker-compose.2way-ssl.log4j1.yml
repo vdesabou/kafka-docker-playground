@@ -1,0 +1,11 @@
+---
+services:
+
+  connect:
+    volumes:
+      - ../../other/write-logs-to-topic/log4j-2way-ssl.properties:/tmp/connect/log4j.properties
+      # not in the cp-server-connect image: downloaded by the script
+      - ../../other/write-logs-to-topic/kafka-log4j-appender.jar:/tmp/connect/kafka-log4j-appender.jar
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/tmp/connect/log4j.properties"
+      CLASSPATH: "/tmp/connect/kafka-log4j-appender.jar"
