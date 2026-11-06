@@ -1,0 +1,17 @@
+---
+# confluent.topic.subject.association.enable=true on the brokers AND on the KRaft controllers (they validate the topic
+# configs on creation), and confluent.schema.registry.url on both, otherwise they do not start:
+# java.lang.IllegalArgumentException: Schema Registry URL not configured. Set 'confluent.schema.registry.url' in broker config for confluent-platform deployments.
+services:
+  broker:
+    volumes:
+      # association JSON files for kafka-topics / kafka-configs --confluent-value-association
+      - ../../schema-registry/explicit-topic-subject-associations:/data
+    environment:
+      KAFKA_CONFLUENT_TOPIC_SUBJECT_ASSOCIATION_ENABLE: "true"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  controller:
+    environment:
+      KAFKA_CONFLUENT_TOPIC_SUBJECT_ASSOCIATION_ENABLE: "true"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"

@@ -442,6 +442,7 @@ All the examples below run their statements with `playground ksqldb sql`, and wa
 - [Flink SQL on Confluent Cloud](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/flink-sql-kafka): a compute pool and Flink SQL statements on Confluent Cloud topics with `playground flink sql|list-jobs|cancel --environment ccloud` :ccloud/flink-sql-kafka:
 
 ## 🔰 Schema Registry
+- [Explicit Topic-Subject Associations](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/explicit-topic-subject-associations): native (STRONG) and shared (WEAK) schemas linked to topics with `confluent.value.association` (CP 8.4+) :schema-registry/explicit-topic-subject-associations:
 - [How to use Data Contracts](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/data-contracts) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [How to produce Avro records via kafka-avro-console-producer with Union](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/kafka-avro-console-producer-union) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - [Multiple Event Types in the Same Topic](https://github.com/vdesabou/kafka-docker-playground/tree/master/schema-registry/multiple-event-types-in-topic) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
