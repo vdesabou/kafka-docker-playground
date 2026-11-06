@@ -39,10 +39,16 @@
                              blocked" conditions, operator log that starts after the last change
       cfk_rollout_after      the same cluster the next day (quota raised, KRaftController unblocked, roll
                              complete): --sample cfk_rollout --sample cfk_rollout_after compares the two
+- long: --errors-only
+  required: false
+  conflicts: [--include-warnings]
+  help: |-
+    🔴 Only the ERROR/FATAL records: the WARN records are reported by default (the Kafka clients log some real problems at WARN: consumer poll timeout, records expiring in the producer, network errors), sorted after the errors
 - long: --include-warnings
   required: false
+  conflicts: [--errors-only]
   help: |-
-    🟠 Also report WARN records
+    🟠 Kept for compatibility: the WARN records are reported by default (--errors-only to leave them out). With a CFK support bundle, also the WARN log records that match no known category
 - long: --max-findings
   arg: max_findings
   required: false

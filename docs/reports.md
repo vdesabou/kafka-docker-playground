@@ -35,7 +35,7 @@ report and click around: this is what you get on your own data.
       <h3><a href="#/playground%20analyze%20logs">🔥 Log analysis</a></h3>
       <p>What is failing in this customer bundle? Known causes with what to do (task killed, authentication, TLS, unknown magic byte…), occurrences over time, root causes, and every distinct ERROR / FATAL / WARN record of each file.</p>
       <p><code>playground analyze logs -f support-bundle.zip</code></p>
-      <p>Try it: <code>playground analyze logs --sample support_bundle --include-warnings</code></p>
+      <p>Try it: <code>playground analyze logs --sample support_bundle</code></p>
     </div>
   </div>
   <div class="report-card">

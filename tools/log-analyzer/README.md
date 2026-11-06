@@ -125,7 +125,7 @@ types), Python and Node.js exception names as root causes, and labels a librdkaf
 
 ```bash
 playground analyze logs --sample connect_task_failure
-playground analyze logs --sample support_bundle --include-warnings
+playground analyze logs --sample support_bundle
 ```
 
 The repository ignores `*.log`: `.gitignore` keeps `samples/*.log`.

@@ -1,6 +1,15 @@
 eval "file_array=(${args[--file]})"
 eval "sample_array=(${args[--sample]})"
-include_warnings="${args[--include-warnings]}"
+# the WARN records are reported by default (--errors-only leaves them out): the Kafka clients log real problems at WARN
+# (consumer poll timeout, records expiring in the producer); --include-warnings is kept for compatibility, and for a CFK
+# bundle it still adds the WARN records that match no known category (cfk-analysis --include-warnings)
+errors_only="${args[--errors-only]}"
+cfk_include_warnings="${args[--include-warnings]}"
+include_warnings=1
+if [[ -n "$errors_only" ]]
+then
+    include_warnings=""
+fi
 max_findings="${args[--max-findings]}"
 output_dir="${args[--output-dir]}"
 json_out="${args[--json]}"
@@ -736,9 +745,9 @@ do
         CFK_ANALYSIS_HTML=""
         if [[ -n "$json_out" ]]
         then
-            analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+            analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
         else
-            analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+            analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
         fi
         rc=$?
         printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"

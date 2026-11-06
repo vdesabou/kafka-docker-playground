@@ -165,9 +165,9 @@ commands:
 <%= File.read('src/flags/analyze-logs-flags.yml').gsub(/^(?=.)/, '    ') %>
   examples:
   - playground analyze logs --sample connect_task_failure
-  - playground analyze logs --sample support_bundle --include-warnings
+  - playground analyze logs --sample support_bundle
   - playground analyze logs --file connect.log
-  - playground analyze logs --file connect-logs.zip --include-warnings
+  - playground analyze logs --file connect-logs.zip --errors-only
   - playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
   - playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports
   - playground analyze logs -f connect.log --json
