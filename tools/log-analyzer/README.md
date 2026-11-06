@@ -82,7 +82,7 @@ causes linked to their row), the terminal summary (also when the input has no fi
 `[connector|task-0]` context of the lines), most errors first: its occurrences by level, first and last time, the task
 kills (records of the 🧨 known cause), the known causes of its records, its configuration dumps, the clients it owns
 (`connector-producer-<name>-0`…) and the keys changed between restarts. The HTML report shows them in 🔌 **Connectors**
-(▶ only this connector sets the connector filter), the terminal summary one line per connector.
+(▶ only this connector sets the connector filter and keeps its card only, ⤺ goes back to all, the search filters the cards, the first `CONN_CARDS_SHOWN` = 30 then "show the other N connectors"), the terminal summary one line per connector.
 
 ## Size of the report
 
@@ -158,8 +158,8 @@ each change `FILTER_SCRIPT` counts them again and redraws the 📈 chart (`windo
 root causes rows (`tr.rc-row[data-cause]`), the 🗂️ files rows (`tr.file-row[data-file]`) and the record blocks
 (`details[data-rec]`, `.rec-count`). The period comes from the `zoomchange` event of the chart (id
 `occurrences-chart`). The 🔎 findings are the exception: their text is never rewritten (it is the diagnosis of the
-bundle), each card only gets `▸ N of M occurrence(s) here` in its `.rec-scope` span, or is dimmed (`.out`) when none
-of it is in the selection - from the `data-recs` indexes that `findings_html()` writes for an item with `records`. The times of a record of more than 1000 occurrences are sampled by `summarize_log_errors` over its whole life (every
+bundle), each card only gets `▸ N of M occurrence(s) here` in its `.rec-scope` span, or is hidden (`.other-comp`, with
+a `🙈 … show them` note) when none of it is in the selection - from the `data-recs` indexes that `findings_html()` writes for an item with `records`. The times of a record of more than 1000 occurrences are sampled by `summarize_log_errors` over its whole life (every
 stride-th one, the stride doubling each time 1000 are kept: `@@PGTS@@\tx<stride> t1 t2 …`), and each time kept stands for
 `stride` occurrences: the 8th field of a record in `pg-occurrences`, the weights of the chart (`times.weights`, prefix
 sums in `zoom_chart.js`) and the counts of a period (`pgInWindow()`). Before, the first 1000 were kept: an error of a

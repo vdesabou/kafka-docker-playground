@@ -797,6 +797,10 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
     return out
 
 
+# connector cards shown before "show the other N connectors" (a worker with 485 connectors: a wall of cards)
+CONN_CARDS_SHOWN = 30
+
+
 def connectors_health_html(cards: List[dict]) -> str:
     """the 🔌 Connectors section: a card per connector, ▶ only this connector sets the connector filter"""
     if not cards:
@@ -812,7 +816,7 @@ def connectors_health_html(cards: List[dict]) -> str:
                           f"{e(ch['previous'] or '∅')} → {e(ch['value'] or '∅')}</li>" for ch in c["config_changes"][:8])
         more = f"<li class='fi-meta'>+{len(c['config_changes']) - 8} more</li>" if len(c["config_changes"]) > 8 else ""
         items.append(
-            f"<div class='conn-card {state[0]}'><div class='conn-head'><span class='fi-conn'>{e(c['connector'])}</span> "
+            f"<div class='conn-card {state[0]}' data-conn='{e(c['connector'])}'><div class='conn-head'><span class='fi-conn'>{e(c['connector'])}</span> "
             f"<span class='conn-state'>{state[1]}</span><button type='button' class='pill conn-only' data-conn='{e(c['connector'])}' "
             f"title='show only the records, root causes, timeline and chart of this connector'>▶ only this connector</button></div>"
             f"<div class='fi-meta'>{counts} in {c['records']} distinct record(s) · {e(period)}"
@@ -828,11 +832,15 @@ def connectors_health_html(cards: List[dict]) -> str:
             ".conn-card{border:1px solid #e2e8f0;border-left:5px solid #94a3b8;border-radius:8px;padding:8px 12px;font-size:.84rem}"
             ".conn-card.danger{border-left-color:#dc2626}.conn-card.warn{border-left-color:#d97706}.conn-card.ok{border-left-color:#16a34a}"
             ".conn-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}.conn-only{margin-left:auto;font-size:.72rem}"
-            "html[data-theme=dark] .conn-card{border-color:#334155}</style>"
+            "html[data-theme=dark] .conn-card{border-color:#334155}.conn-card[hidden]{display:none}"
+            ".conn-note{font-weight:600}.conn-note[hidden],.conn-more[hidden]{display:none}.conn-more{margin-top:10px}</style>"
             f"<div class='table-card'><h2>🔌 Connectors ({len(cards)})</h2><p class='legend'>One card per connector of the logs "
             "(the [connector|task-0] context of the lines): its errors and warnings, the known causes of its records, a task "
-            "killed, its configuration and the keys changed between restarts. ▶ only this connector filters the report on it.</p>"
-            f"<div class='conn-cards'>{''.join(items)}</div></div>")
+            "killed, its configuration and the keys changed between restarts. ▶ only this connector filters the report on it (and "
+            f"hides the other cards), ⤺ goes back to all of them; the search box filters the cards too. The {CONN_CARDS_SHOWN} "
+            "with the most errors are shown first.</p><p class='legend conn-note' hidden></p>"
+            f"<div class='conn-cards'>{''.join(items)}</div>"
+            "<button type='button' class='pill conn-more' hidden></button></div>")
 
 
 def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
@@ -1806,7 +1814,7 @@ function pgFindings() {
   cards.forEach(function (card) {
     const span = card.querySelector(".rec-scope");
     if (!span) return;
-    if (!filtered) { span.textContent = ""; card.classList.remove("out"); return; }
+    if (!filtered) { span.textContent = ""; card.classList.remove("out", "other-comp"); return; }
     if (card._pgRecs === undefined) card._pgRecs = card.dataset.recs.split(" ").map(Number);
     let here = 0, all = 0;
     for (const i of card._pgRecs) {
@@ -1819,8 +1827,9 @@ function pgFindings() {
     }
     span.textContent = here ? "▸ " + here + " of " + all + " occurrence(s) here" : "▸ nothing in this selection";
     card.classList.toggle("out", here === 0);
-    // a component picked (🔌 Connect): the findings of the other components are hidden, not only dimmed
-    card.classList.toggle("other-comp", here === 0 && pgComponent !== "");
+    // nothing of it in the selection (another connector, component, level, period, search): hidden, not only dimmed (a
+    // worker with hundreds of connectors: the findings of the one picked first); "show them" brings them back, dimmed
+    card.classList.toggle("other-comp", here === 0);
   });
   const others = document.querySelectorAll(".rec-card.other-comp").length;
   let note = document.querySelector(".fi-others");
@@ -1829,10 +1838,9 @@ function pgFindings() {
     if (list) { note = document.createElement("p"); note.className = "fi-others legend"; list.parentNode.insertBefore(note, list); }
   }
   if (note) {
-    const comp = document.querySelector(".comp-chip.active");
     note.hidden = !others;
-    note.innerHTML = others ? "🙈 " + others + " finding(s) of other components hidden (" + (comp ? comp.textContent.replace(/\\s*[\\d,]+$/, "") : "")
-      + " picked in the filter bar) <button type='button' class='pill fi-show-all'>show them</button>" : "";
+    note.innerHTML = others ? "🙈 " + others + " finding(s) with nothing in this selection hidden "
+      + "<button type='button' class='pill fi-show-all'>show them</button>" : "";
   }
   const scope = document.querySelector(".fi-scope");
   if (scope) {
@@ -1844,6 +1852,41 @@ function pgFindings() {
     if (pgComponent !== "") bits.push(pgComponent);
     if (pgQuery) bits.push("🔎 " + JSON.stringify(pgQuery));
     scope.textContent = bits.length ? " · selection: " + bits.join(" · ") : "";
+  }
+}
+// 🔌 Connectors: a connector picked (▶ only this connector, or the picker) keeps its card only, the search keeps the cards
+// that match it; with neither, the first @@CONN_SHOWN@@ cards (most errors first) and "show the other N connectors"
+var pgConnAll = false;
+function pgConnCards() {
+  const cards = document.querySelectorAll(".conn-card");
+  if (!cards.length) return;
+  const picked = pgConnector !== "" && pgConnector !== "-" ? pgConnector : "";
+  const filtered = picked !== "" || pgConnector === "-" || !!pgTest;
+  let matching = 0, shown = 0;
+  cards.forEach(function (card) {
+    let keep = pgConnector !== "-" && (!picked || card.dataset.conn === picked);
+    if (keep && pgTest) keep = pgTest(card.textContent);
+    if (keep) matching++;
+    card.hidden = !keep || (!filtered && !pgConnAll && matching > @@CONN_SHOWN@@);
+    if (!card.hidden) shown++;
+    const btn = card.querySelector(".conn-only");
+    if (btn) {
+      const isPicked = picked !== "" && card.dataset.conn === picked;
+      btn.textContent = isPicked ? "⤺ all connectors" : "▶ only this connector";
+      btn.title = isPicked ? "back to all the connectors" : "show only the records, root causes, timeline, chart and card of this connector";
+    }
+  });
+  const note = document.querySelector(".conn-note");
+  if (note) {
+    note.hidden = !filtered;
+    note.textContent = !filtered ? "" : shown + " of " + cards.length + " connector(s)" +
+      (pgConnector === "-" ? ": the records without connector context are selected" : picked ? ": " + picked + " picked" : "") +
+      (pgTest ? " · 🔎 " + JSON.stringify(pgQuery) : "");
+  }
+  const more = document.querySelector(".conn-more");
+  if (more) {
+    more.hidden = filtered || pgConnAll || matching <= @@CONN_SHOWN@@;
+    more.textContent = "show the other " + (matching - @@CONN_SHOWN@@) + " connector(s)";
   }
 }
 // 🗓️ Incident timeline: its rows follow the filters (a row of another connector, level, component or period is hidden;
@@ -1922,6 +1965,7 @@ function pgApply() {
   pgFindings();
   pgSearch();
   pgTimeline();
+  pgConnCards();
   pgHighlight();
   pgAria();
   pgStateWrite();
@@ -1971,11 +2015,18 @@ document.addEventListener("click", function (ev) {
   }
   if (ev.target.closest(".conn-only")) {
     const sel = document.querySelector(".conn-filter"), name = ev.target.closest(".conn-only").dataset.conn;
+    const card = ev.target.closest(".conn-card");
     if (sel && [...sel.options].some(o => o.value === name)) {
-      sel.value = name;
+      // ⤺ on the card of the connector picked: back to all the connectors
+      sel.value = sel.value === name ? "" : name;
       pgApplyFilters();
-      sel.scrollIntoView({block: "nearest"});
+      if (card) card.scrollIntoView({block: "nearest"});
     }
+    return;
+  }
+  if (ev.target.closest(".conn-more")) {
+    pgConnAll = true;
+    pgConnCards();
     return;
   }
   if (ev.target.closest(".pg-copy-view")) {
@@ -2029,7 +2080,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   pgRead(); pgApply();
 });
-</script>""".replace("@@CHART@@", TIME_CHART_ID).replace("@@COLOR@@", SERIES_1)
+</script>""".replace("@@CHART@@", TIME_CHART_ID).replace("@@COLOR@@", SERIES_1).replace("@@CONN_SHOWN@@", str(CONN_CARDS_SHOWN))
 
 
 CONFIG_CSS = ("<style>" + SELECT_CSS + ".cfg-kind{font-size:.92rem;margin:18px 0 6px}.cfg-class>summary,.cfg>summary{padding:6px 0}"
