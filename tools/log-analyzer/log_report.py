@@ -1173,7 +1173,8 @@ document.addEventListener("DOMContentLoaded", function () {
     else if (b.dataset.share === "mail") {
       const body = "Log analysis report: " + path.split("/").pop() + " (attached .zip)\\n\\n" + summary;
       location.href = "mailto:?subject=" + encodeURIComponent("🔥 Log analysis: " + dlg.dataset.title)
-        + "&body=" + encodeURIComponent(body.length > 1800 ? body.slice(0, 1800) + "\\n…" : body);
+        // cut by code points: a cut in the middle of an emoji (a surrogate pair) made encodeURIComponent throw (URIError)
+        + "&body=" + encodeURIComponent(Array.from(body).length > 1800 ? Array.from(body).slice(0, 1800).join("") + "\\n…" : body);
     }
   });
 });
@@ -2346,7 +2347,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        f"<td>{component_chips(c['files'])}</td>"
                        f"<td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
                        f"<td class='mono'>{e(c['example'][:300])}</td><td class='num rc-occ'>{c['occurrences']}</td>"
-                       f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x)) for x in c['files'][:5])}"
+                       f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x), edit=False) for x in c['files'][:5])}"
                        f"{e(' …' if len(c['files']) > 5 else '')}</td>"
                        + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
                        + f"<td>{finding_cell(c, i)}</td></tr>" for i, c in enumerate(res["root_causes"]))

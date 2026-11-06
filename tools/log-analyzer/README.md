@@ -60,6 +60,14 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Size of the report
+
+The 🌳 root cause rows link each file to its page without the ✏️ of the editor (the page has it), the style of the ✏️
+links is in `BASE_CSS` (once), and the links have no `rel='noopener'` (implied by `target=_blank`): 6,000 distinct records
+make an 11.5 MB report instead of 12.9 MB. The page of a file over `MAX_FULL_BYTES` (2 MB) reads it as a stream and keeps
+only the windows around the findings (`log_viewer.read_windows`), and the copy of a `.gz` for the editor is
+decompressed as a stream: 101 MB of memory instead of 175 MB for a 44 MB log.
+
 ## Incident timeline
 
 `incident_timeline()` (in `analyze()`, `.timeline` of `--json`, at most `TIMELINE_LIMIT` = 200 events) merges all the

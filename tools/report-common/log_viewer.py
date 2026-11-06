@@ -114,6 +114,26 @@ def read_lines(path: str) -> Optional[List[str]]:
     return text.split("\n")[:-1] if text.endswith("\n") else text.split("\n")
 
 
+def read_windows(path: str, ranges: List[Tuple[int, int]]) -> Optional[Tuple[int, Dict[int, str]]]:
+    """(number of lines, {line number: text} of the lines in ranges), the file read as a stream; None when it cannot
+    be read"""
+    kept: Dict[int, str] = {}
+    n = 0
+    i = 0
+    try:
+        opener = (lambda: gzip.open(path, "rt", encoding="utf-8", errors="replace")) if path.endswith(".gz") else \
+            (lambda: open(path, encoding="utf-8", errors="replace"))
+        with opener() as fh:
+            for n, raw in enumerate(fh, start=1):
+                while i < len(ranges) and n > ranges[i][1]:
+                    i += 1
+                if i < len(ranges) and ranges[i][0] <= n:
+                    kept[n] = raw.rstrip("\n")
+    except (OSError, EOFError, gzip.BadGzipFile):
+        return None
+    return n, kept
+
+
 def file_size(path: str) -> int:
     """size of the text of a file: its decompressed size for a .gz (from its trailer, modulo 4 GB)"""
     try:
@@ -175,12 +195,24 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], report
     """writes the viewer page of one file; hits: line numbers of its findings (highlighted); report_name: file name of
     the report, for the link back; editor_path: path on the host the ✏️ button opens; copy: also write the whole file
     next to the page (out_path without .html), for the editor. False when the file cannot be read."""
-    lines = read_lines(path)
-    if lines is None:
-        return False
-    hits = sorted({h for h in hits if h and 0 < h <= len(lines)})[:MAX_HITS]
     whole = file_size(path) <= MAX_FULL_BYTES
-    ranges = kept_ranges(len(lines), hits, whole)
+    if whole:
+        all_lines = read_lines(path)
+        if all_lines is None:
+            return False
+        nb_lines, line_at = len(all_lines), (lambda n: all_lines[n - 1])
+        hits = sorted({h for h in hits if h and 0 < h <= nb_lines})[:MAX_HITS]
+    else:
+        # a big file: only the windows around the findings are kept in memory (a log of several GB was read whole to
+        # show ±WINDOW lines)
+        hits = sorted({h for h in hits if h and h > 0})[:MAX_HITS]
+        windows = read_windows(path, kept_ranges(1 << 62, hits, False))
+        if windows is None:
+            return False
+        nb_lines, kept = windows
+        line_at = kept.__getitem__
+        hits = [h for h in hits if h <= nb_lines]
+    ranges = kept_ranges(nb_lines, hits, whole)
     hit_set = set(hits)
     body: List[str] = []
     previous_end = 0
@@ -190,11 +222,11 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], report
             body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{lo - 1} not shown {e(gap)}</div>")
         for n in range(lo, hi + 1):
             body.append(f"<div class='l{' hit' if n in hit_set else ''}' id='L{n}'><a class='n' href='#L{n}'>{n}</a>"
-                        f"<span>{log_html(lines[n - 1])}</span></div>")
+                        f"<span>{log_html(line_at(n))}</span></div>")
         previous_end = hi
-    if previous_end < len(lines):
-        body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{len(lines)} not shown {e(gap)}</div>")
-    shown = "whole file" if whole else f"{sum(hi - lo + 1 for lo, hi in ranges)} of {len(lines)} lines shown"
+    if previous_end < nb_lines:
+        body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{nb_lines} not shown {e(gap)}</div>")
+    shown = "whole file" if whole else f"{sum(hi - lo + 1 for lo, hi in ranges)} of {nb_lines} lines shown"
     bar = (f"<div class='lv-bar'><a class='lv-btn' href='../{e(quote(report_name))}'>⬅️ Report</a>"
            f"<button type='button' id='lv-prev' title='previous finding (p)'>▲ Previous</button>"
            f"<button type='button' id='lv-next' title='next finding (n)'>▼ Next</button>"
@@ -202,7 +234,7 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], report
            + (f"<a class='lv-btn' id='lv-edit' href='#' data-url='{e(editor_url(editor_path))}' "
               f"title='open {e(editor_path)} at this line in {e(editor()[0])} (playground config editor)'>✏️ {e(editor()[0])}</a>"
               if editor_path else "")
-           + f"<span class='mono'>· {e(label)} · {len(lines)} lines · {shown}</span></div>")
+           + f"<span class='mono'>· {e(label)} · {nb_lines} lines · {shown}</span></div>")
     html = ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>{e(label.rsplit('/', 1)[-1])}</title>{style(VIEWER_CSS)}</head><body><div class='page'>"
             f"{bar}<div class='lv'>{''.join(body)}</div></div>{VIEWER_SCRIPT}</body></html>")
@@ -211,8 +243,9 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], report
         fh.write(html)
     if copy:
         if path.endswith(".gz"):
-            with open(out_path[:-len(".html")], "w", encoding="utf-8") as fh:
-                fh.write("\n".join(lines) + "\n")
+            # decompressed as a stream, not from the lines in memory
+            with gzip.open(path, "rb") as src, open(out_path[:-len(".html")], "wb") as dst:
+                shutil.copyfileobj(src, dst, 1 << 20)
         else:
             shutil.copyfile(path, out_path[:-len(".html")])
     return True
@@ -262,15 +295,17 @@ def edit_link(hrefs: Dict[str, str], label: str, line: Optional[int] = None) -> 
     url = edit_url(hrefs, label, line)
     if not url:
         return ""
-    return (f"<a class='lv-edit' style='text-decoration:none;margin-left:5px' href='{e(url)}' title='open {e(label)}{f' at line {line}' if line else ''} "
+    # the style of .lv-edit is in BASE_CSS of report_html (once, not on each of the thousands of links of a big report)
+    return (f"<a class='lv-edit' href='{e(url)}' title='open {e(label)}{f' at line {line}' if line else ''} "
             f"in {e(editor()[0])} (playground config editor)'>✏️</a>")
 
 
-def link(hrefs: Dict[str, str], label: str, text: str, line: Optional[int] = None) -> str:
-    """text (already escaped) as a link to the page of a file at a line, then a ✏️ link opening it in the editor;
-    unchanged when the file has no page"""
+def link(hrefs: Dict[str, str], label: str, text: str, line: Optional[int] = None, edit: bool = True) -> str:
+    """text (already escaped) as a link to the page of a file at a line, then a ✏️ link opening it in the editor (edit:
+    False in the rows of a long table, the page of the file has its ✏️ button); unchanged when the file has no page.
+    No rel='noopener': target=_blank implies it in the browsers"""
     href = hrefs.get(label)
     if not href:
         return text
-    return (f"<a class='lv-link' href='{e(href)}{f'#L{line}' if line else ''}' target='_blank' rel='noopener' "
-            f"title='open {e(label)}{f' at line {line}' if line else ''}'>{text}</a>{edit_link(hrefs, label, line)}")
+    return (f"<a class='lv-link' href='{e(href)}{f'#L{line}' if line else ''}' target='_blank' "
+            f"title='open {e(label)}{f' at line {line}' if line else ''}'>{text}</a>{edit_link(hrefs, label, line) if edit else ''}")
