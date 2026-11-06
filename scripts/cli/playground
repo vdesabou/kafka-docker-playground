@@ -418,6 +418,8 @@ playground_usage() {
   printf "  %s   🔴 Stop a codespace\n" "$(green "codespace stop")                            "
   printf "  %s   🟢 Start a codespace\n" "$(green "codespace start")                           "
   printf "  %s   ❌ Delete a codespace\n" "$(green "codespace delete")                          "
+  printf "  %s   🔐 Send the secrets store to a codespace\n" "$(green "codespace push-secrets")                    "
+  printf "  %s   ↔️ Synchronize reproduction-models folder between local and a codespace\n" "$(green "codespace sync-repro-folder")               "
   echo
 
   # :command.long_usage
@@ -22700,7 +22702,7 @@ playground_ec2_push_secrets_usage() {
 playground_codespace_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground codespace\n\n"
-    printf "  ☁️ Create and manage GitHub Codespaces to run kafka-docker-playground\n  \n  🪄 Open them in Visual Studio Code (or the browser), or run a command in them\n  over ssh\n  \n  The same thing as the \"Open in GitHub Codespaces\" button, from the\n  terminal: an Ubuntu x86_64 machine set up by .devcontainer/ (Docker with\n  compose v2, fzf, playground in the PATH, the default images pulled), with\n  nothing to install on your laptop and no AWS account. It is also where the\n  examples that do not work on ARM64 run.\n  \n    create              create a codespace and open it\n    open                open it in VS Code (or the browser with --web)\n    ssh                 a shell, or one command, in it\n    list / start / stop / delete\n  \n  A thin layer over 'gh codespace': it needs the GitHub CLI with the\n  'codespace' scope (gh auth refresh -h github.com -s codespace).\n  \n  💰 A running codespace uses your Codespaces quota (30 hours a month on 4\n     cores with GitHub Free), then is billed. It stops by itself after 30\n     minutes idle; 'playground codespace stop' when you pause, and\n     'playground codespace delete' when you are done (a stopped codespace\n     still uses storage).\n  \n  🔐 The private reproduction-models submodule is not cloned in a codespace.\n\n"
+    printf "  ☁️ Create and manage GitHub Codespaces to run kafka-docker-playground\n  \n  🪄 Open them in Visual Studio Code (or the browser), or run a command in them\n  over ssh\n  \n  The same thing as the \"Open in GitHub Codespaces\" button, from the\n  terminal: an Ubuntu x86_64 machine set up by .devcontainer/ (Docker with\n  compose v2, fzf, playground in the PATH, the default images pulled), with\n  nothing to install on your laptop and no AWS account. It is also where the\n  examples that do not work on ARM64 run.\n  \n    create              create a codespace and open it\n    open                open it in VS Code (or the browser with --web)\n    ssh                 a shell, or one command, in it\n    push-secrets        send your credentials to its secrets store\n    sync-repro-folder   keep reproduction-models in step, both directions\n    list / start / stop / delete\n  \n  A thin layer over 'gh codespace': it needs the GitHub CLI with the\n  'codespace' scope (gh auth refresh -h github.com -s codespace).\n  \n  💰 A running codespace uses your Codespaces quota (30 hours a month on 4\n     cores with GitHub Free), then is billed. It stops by itself after 30\n     minutes idle; 'playground codespace stop' when you pause, and\n     'playground codespace delete' when you are done (a stopped codespace\n     still uses storage).\n  \n  🔐 The private reproduction-models submodule is not cloned in a codespace:\n     'playground codespace sync-repro-folder local-to-codespace' copies yours.\n\n"
   else
     printf "playground codespace - ☁️ Create and manage GitHub Codespaces to run kafka-docker-playground\n\n"
   fi
@@ -22711,13 +22713,15 @@ playground_codespace_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   👷 Create a GitHub Codespace of kafka-docker-playground, then open it\n" "$(green "create")"
-  printf "  %s   🔘 List your kafka-docker-playground codespaces\n" "$(green "list")  "
-  printf "  %s   👨‍💻 Open a codespace in Visual Studio Code\n" "$(green "open")  "
-  printf "  %s   🐚 Open a shell in a codespace, or run one command in it\n" "$(green "ssh")   "
-  printf "  %s   🔴 Stop a codespace\n" "$(green "stop")  "
-  printf "  %s   🟢 Start a codespace\n" "$(green "start") "
-  printf "  %s   ❌ Delete a codespace\n" "$(green "delete")"
+  printf "  %s   👷 Create a GitHub Codespace of kafka-docker-playground, then open it\n" "$(green "create")           "
+  printf "  %s   🔘 List your kafka-docker-playground codespaces\n" "$(green "list")             "
+  printf "  %s   👨‍💻 Open a codespace in Visual Studio Code\n" "$(green "open")             "
+  printf "  %s   🐚 Open a shell in a codespace, or run one command in it\n" "$(green "ssh")              "
+  printf "  %s   🔴 Stop a codespace\n" "$(green "stop")             "
+  printf "  %s   🟢 Start a codespace\n" "$(green "start")            "
+  printf "  %s   ❌ Delete a codespace\n" "$(green "delete")           "
+  printf "  %s   🔐 Send the secrets store to a codespace\n" "$(green "push-secrets")     "
+  printf "  %s   ↔️ Synchronize reproduction-models folder between local and a codespace\n" "$(green "sync-repro-folder")"
   echo
 
   # :command.long_usage
@@ -22790,6 +22794,16 @@ playground_codespace_create_usage() {
     printf "    🙈 do not open the codespace in VS Code once it is created\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--push-secrets")"
+    printf "    🔐 once it is available, send your secrets store to it (playground codespace\n    push-secrets)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sync-repro-folder")"
+    printf "    👉 once it is available, copy your reproduction-models folder to it\n    (playground codespace sync-repro-folder local-to-codespace)\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -22800,6 +22814,7 @@ playground_codespace_create_usage() {
     printf "  playground codespace create\n"
     printf "  playground codespace create --suffix 123456 --machine 8-core\n"
     printf "  playground codespace create --branch my-feature --no-open\n"
+    printf "  playground codespace create --suffix 123456 --push-secrets --sync-repro-folder\n"
     echo
 
   fi
@@ -22880,7 +22895,7 @@ playground_codespace_open_usage() {
 playground_codespace_ssh_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground codespace ssh\n\n"
-    printf "  🐚 Open a shell in a codespace, or run one command in it\n  \n  Everything after -- runs in the codespace, from the repository folder, in\n  a login shell (so playground is in the PATH). A stopped codespace is\n  started on the way.\n  \n  It needs the SSH server of .devcontainer/: a codespace created before it\n  was added needs a 'Codespaces: Rebuild Container' first.\n  \n  Without --codespace, the most recently used codespace is used.\n\n"
+    printf "  🐚 Open a shell in a codespace, or run one command in it\n  \n  Everything after -- runs in the codespace, from the repository folder, in\n  a login shell (so playground is in the PATH). A stopped codespace is\n  started on the way.\n  \n  It needs the SSH server of .devcontainer/: a codespace created before it\n  was added, or from a prebuild older than that, needs a rebuild first\n  (gh codespace rebuild -c <name>).\n  \n  Without --codespace, the most recently used codespace is used.\n\n"
   else
     printf "playground codespace ssh - 🐚 Open a shell in a codespace, or run one command in it\n\n"
   fi
@@ -23001,6 +23016,154 @@ playground_codespace_delete_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground codespace delete [OPTIONS]\n"
   printf "  playground codespace delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_push_secrets_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace push-secrets\n\n"
+    printf "  🔐 Send the secrets store to a codespace\n  \n  Resolves every variable of the profile on your laptop (1Password, macOS\n  Keychain…), then imports them into the secrets store of the codespace\n  (backend file, ~/.config/kafka-docker-playground): credentials as\n  credentials, plain variables as plain variables. 'playground run' in the\n  codespace then loads what each example declares, as on your laptop, and\n  'playground secrets list' or 'check' work there. Nothing to install in the\n  codespace, no 1Password token to give it.\n  \n  The values are piped over 'gh codespace ssh', so no clear text copy is\n  ever written locally and they never appear in 'ps'. In the codespace they\n  are stored in clear text in secrets.ini (mode 0600), like any file backend.\n  \n  The credentials that cannot be stored as name=value pairs are sent too,\n  when they exist at the root of the repository (same as 'playground ec2\n  push-secrets'):\n  \n    aws_credentials_with_assuming_iam_role       ->\n  ~/.aws/credentials-with-assuming-iam-role\n    aws_credentials_aws_account_with_assume_role ->\n  ~/.aws/credentials_aws_account_with_assume_role\n    github_ssh_key_file                          -> ~/.ssh/id_rsa\n  \n  ⚠️ 'Codespaces: Rebuild Container' empties the home directory: run it\n  again after a rebuild.\n  \n  Without --codespace, the most recently used codespace is used.\n\n"
+  else
+    printf "playground codespace push-secrets - 🔐 Send the secrets store to a codespace\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace push-secrets [OPTIONS]\n"
+  printf "  playground codespace push-secrets --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to send (default is the active one), imported into the\n    profile of the same name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔍 List what would be sent, change nothing\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground codespace push-secrets --dry-run\n"
+    printf "  playground codespace push-secrets\n"
+    printf "  playground codespace push-secrets --profile case-123456\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_sync_repro_folder_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace sync-repro-folder\n\n"
+    printf "  ↔️ Synchronize reproduction-models folder between local and a codespace\n  \n  reproduction-models is a private submodule: a codespace cannot clone it,\n  and the models you write there are lost with the codespace. These two\n  commands copy that folder in one direction or the other with rsync, over\n  the ssh tunnel of 'gh codespace ssh' (only newer files, .git and what\n  .gitignore lists are left out, nothing is deleted on the other side).\n  \n    local-to-codespace   push what you wrote locally, before running it there\n    codespace-to-local   pull back what you wrote there, before deleting it\n  \n  'playground codespace create --sync-repro-folder' runs local-to-codespace\n  for you.\n  \n  ⚠️ Get into the habit of running codespace-to-local before\n  'playground codespace delete', nothing else brings those files back.\n\n"
+  else
+    printf "playground codespace sync-repro-folder - ↔️ Synchronize reproduction-models folder between local and a codespace\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace sync-repro-folder COMMAND\n"
+  printf "  playground codespace sync-repro-folder [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   👉 Sync local reproduction-models folder to a codespace\n" "$(green "local-to-codespace")"
+  printf "  %s   👈 Sync a codespace reproduction-models folder to local\n" "$(green "codespace-to-local")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_sync_repro_folder_local_to_codespace_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace sync-repro-folder local-to-codespace\n\n"
+    printf "  👉 Sync local reproduction-models folder to a codespace\n  \n  Without --codespace, the most recently used codespace is used.\n\n"
+  else
+    printf "playground codespace sync-repro-folder local-to-codespace - 👉 Sync local reproduction-models folder to a codespace\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace sync-repro-folder local-to-codespace [OPTIONS]\n"
+  printf "  playground codespace sync-repro-folder local-to-codespace --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--codespace, -c CODESPACE")"
+    printf "    ☁️ codespace name, as shown by 'playground codespace list' (use completion)\n    \n    🎓 Tip: if not specified, the most recently used codespace is used\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_codespace_sync_repro_folder_codespace_to_local_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground codespace sync-repro-folder codespace-to-local\n\n"
+    printf "  👈 Sync a codespace reproduction-models folder to local\n  \n  Brings back the models you wrote in the codespace. Run it before\n  'playground codespace delete', otherwise they go with the codespace.\n  \n  Without --codespace, the most recently used codespace is used.\n\n"
+  else
+    printf "playground codespace sync-repro-folder codespace-to-local - 👈 Sync a codespace reproduction-models folder to local\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground codespace sync-repro-folder codespace-to-local [OPTIONS]\n"
+  printf "  playground codespace sync-repro-folder codespace-to-local --help | -h\n"
   echo
 
   # :command.long_usage
@@ -27399,6 +27562,61 @@ function codespace_wait_state() {
   done
   echo "$state"
   return 1
+}
+
+#
+# Waits until ssh into a codespace works (default timeout 300 seconds).
+#
+# A codespace is Available as soon as its machine runs, but its container (and
+# the SSH server in it) is still being built for a minute or two: an ssh then
+# fails with "failed to invoke SSH RPC: ... context deadline exceeded".
+#
+function codespace_wait_ssh() {
+  local codespace="$1" timeout="${2:-300}" start=$SECONDS logged=""
+  while [ $((SECONDS-start)) -lt "$timeout" ]
+  do
+    if gh codespace ssh -c "$codespace" -- true > /dev/null 2>&1
+    then
+      return 0
+    fi
+    if [ -z "$logged" ]
+    then
+      log "⏳ waiting for the SSH server of codespace $codespace (its container may still be starting)"
+      logged=1
+    fi
+    sleep 10
+  done
+  logerror "❌ could not ssh into codespace $codespace after $timeout seconds"
+  logerror "👉 a codespace created before the SSH server was added to .devcontainer/, or from an older prebuild, has none: rebuild it with 'gh codespace rebuild -c $codespace' (/workspaces is kept, the home directory is emptied)"
+  return 1
+}
+
+# folder of the repository in a codespace
+function codespace_remote_root() {
+  echo "/workspaces/$(basename "$(codespace_repo)")"
+}
+
+#
+# OpenSSH config of a codespace, for the tools that need a plain ssh (rsync -e):
+# 'gh codespace ssh --config' prints a Host entry whose ProxyCommand goes through
+# gh's own authenticated tunnel. Writes it to a temporary file and prints
+# "<config file> <host>"; the caller removes the file.
+#
+function codespace_ssh_config() {
+  local codespace="$1" cfg host
+  cfg=$(mktemp)
+  if ! gh codespace ssh --config -c "$codespace" > "$cfg" 2> /dev/null
+  then
+    rm -f "$cfg"
+    return 1
+  fi
+  host=$(awk '/^Host /{print $2; exit}' "$cfg")
+  if [ -z "$host" ]
+  then
+    rm -f "$cfg"
+    return 1
+  fi
+  echo "$cfg $host"
 }
 
 # the codespace to act on: the one given, else the most recently used one
@@ -36190,6 +36408,146 @@ function secret_shell_assignment () {
   local value="$2"
 
   printf "%s='%s'\n" "$name" "${value//\'/\'\\\'\'}"
+}
+
+# push to a remote machine (playground ec2 push-secrets, playground codespace push-secrets)
+
+#
+# Build the payload sent to a remote machine, one line per variable of a profile.
+#
+#   $1  profile
+#   $2  all | secret | plain: every variable, or only the credentials, or only
+#       the plain variables (where secret_store_location files them)
+#   $3  shell | import:
+#       shell   <name>='<value>' (secret_shell_assignment), for a file that a
+#               shell sources (playground ec2 push-secrets)
+#       import  <name>="<value>", for 'playground secrets import' on the remote
+#               side (playground codespace push-secrets). import strips the outer
+#               double quotes and interprets nothing inside, so any value comes
+#               back exactly (a value cannot hold a newline), whatever the
+#               version of the playground CLI over there: the '\'' escape of the
+#               shell format is only understood by a recent one
+#
+# It reads the store and not the environment, like 'playground secrets
+# push-github': the remote side must get what the store holds, not what the
+# shell launching the command still has exported.
+#
+# Values are resolved in parallel (secret_prefetch): one 'op read' after the
+# other made a 100 variable profile take minutes. Everything is built in memory
+# before contacting anything, so a locked 1Password fails before a half written
+# file lands on the remote side.
+#
+# Sets SECRET_PAYLOAD, SECRET_PAYLOAD_NB (resolved) and SECRET_PAYLOAD_NB_FAILED,
+# globals and not stdout: the prefetch cache lives in this shell, a $(...)
+# subshell would lose it.
+#
+function secret_build_payload () {
+  local profile="$1"
+  local which="${2:-all}"
+  local format="${3:-shell}"
+  local name value location
+  local names=()
+
+  SECRET_PAYLOAD=""
+  SECRET_PAYLOAD_NB=0
+  SECRET_PAYLOAD_NB_FAILED=0
+
+  for name in $(secret_store_names "$profile")
+  do
+    if [ "$which" != "all" ]
+    then
+      location=$(secret_store_location "$name" "$profile" || true)
+      [ "$location" == "$which" ] || continue
+    fi
+    names+=("$name")
+  done
+  [ ${#names[@]} -gt 0 ] || return 0
+
+  secret_prefetch "$profile" "${names[@]}"
+  for name in "${names[@]}"
+  do
+    if value=$(secret_get_from_store "$name" "$profile")
+    then
+      if [ "$format" == "import" ]
+      then
+        SECRET_PAYLOAD="${SECRET_PAYLOAD}${name}=\"${value}\""$'\n'
+      else
+        SECRET_PAYLOAD="${SECRET_PAYLOAD}$(secret_shell_assignment "$name" "$value")"$'\n'
+      fi
+      SECRET_PAYLOAD_NB=$((SECRET_PAYLOAD_NB+1))
+    else
+      logwarn "⚠️ $name could not be resolved, skipped"
+      SECRET_PAYLOAD_NB_FAILED=$((SECRET_PAYLOAD_NB_FAILED+1))
+    fi
+  done
+}
+
+#
+# Credentials that cannot live in the secrets store, because they are multi
+# line files and not name=value pairs. They used to travel inside secrets.tar,
+# which the cloud formation bootstrap decrypted on the instance; sending them
+# over ssh instead is what makes that tarball removable.
+#
+# Each entry is <local file at repo root>:<remote path under $HOME>:<mode>.
+#
+# The two aws ones are bind mounted into the connect container by the
+# *-with-assuming-iam-role examples, hence the world readable mode: the uid
+# inside the container is not the uid of the remote user.
+#
+SECRET_PUSH_FILES=(
+  "aws_credentials_with_assuming_iam_role:.aws/credentials-with-assuming-iam-role:644"
+  "aws_credentials_aws_account_with_assume_role:.aws/credentials_aws_account_with_assume_role:644"
+  "github_ssh_key_file:.ssh/id_rsa:600"
+)
+
+# The entries of SECRET_PUSH_FILES whose local file exists, into SECRET_PUSH_AVAILABLE_FILES
+function secret_push_available_files () {
+  local entry local_file
+  SECRET_PUSH_AVAILABLE_FILES=()
+  for entry in "${SECRET_PUSH_FILES[@]}"
+  do
+    local_file="$root_folder/${entry%%:*}"
+    if [ -f "$local_file" ]
+    then
+      SECRET_PUSH_AVAILABLE_FILES+=("$entry")
+    else
+      logwarn "⚠️ $local_file does not exist, it will not be sent"
+    fi
+  done
+}
+
+#
+# The remote shell script that writes stdin into ~/<remote path> with <mode>.
+#
+# umask first so the file is never readable by anyone else while it is being
+# written, then the final mode once it is complete.
+#
+# ~/.ssh is created by root in the cloud formation user data, and only its
+# content is given back to the user, so a plain `cat > ~/.ssh/id_rsa` fails with
+# "Permission denied" on every ec2 instance created before that was fixed. Take
+# ownership of the directory with sudo (passwordless on the playground ec2
+# instances and in a codespace) when it is not writable.
+#
+# The content lands in a temporary file next to its destination and is renamed
+# once complete: never a half written credential file, and the rename also
+# replaces a destination owned by root.
+#
+# A missing final newline is added: ssh-keygen (and therefore git over ssh)
+# rejects a private key whose last line is not terminated with "Load key:
+# invalid format", and so do most credential parsers.
+#
+function secret_push_file_remote_script () {
+  local remote_path="$1"
+  local mode="$2"
+  printf 'umask 077
+dir="$HOME/%s"
+mkdir -p "$dir" 2>/dev/null || sudo mkdir -p "$dir"
+[ -w "$dir" ] || sudo chown -R "$(id -u):$(id -g)" "$dir"
+tmp=$(mktemp "$dir/.playground-push.XXXXXX") || exit 1
+cat > "$tmp" || { rm -f "$tmp"; exit 1; }
+[ -n "$(tail -c1 "$tmp")" ] && echo >> "$tmp"
+chmod %s "$tmp" && mv -f "$tmp" "$HOME/%s" || { rm -f "$tmp"; exit 1; }' \
+    "$(dirname "$remote_path")" "$mode" "$remote_path"
 }
 
 function secret_sha256 () {
@@ -46286,7 +46644,9 @@ playground_secrets_import_command() {
       # strip one level of surrounding quotes
       case "$value" in
           \"*\") value="${value#\"}"; value="${value%\"}" ;;
-          \'*\') value="${value#\'}"; value="${value%\'}" ;;
+          # inside single quotes, a quote is written '\'' (close, escaped quote, reopen): that is how
+          # secret_shell_assignment writes it, so that the payload of 'push-secrets' is read back exactly
+          \'*\') value="${value#\'}"; value="${value%\'}"; value="${value//\'\\\'\'/\'}" ;;
       esac
 
       if [ -z "$value" ]
@@ -91646,31 +92006,13 @@ playground_ec2_push_secrets_command() {
   secret_backend_ready || exit 1
 
   #
-  # Build the whole file in memory before contacting any instance: a locked
-  # 1Password then fails before a half written file lands on the remote side.
+  # Resolved from the store (not the environment), in parallel, and built in memory
+  # before contacting any instance: see secret_build_payload.
   #
-  # Like `playground secrets push-github`, this deliberately reads the store and
-  # not the environment. The instance must get what the store holds, not what the
-  # shell that happens to launch the command still has exported.
-  #
-  # The file is sourced by the playground .zshrc, so every value is single quoted
-  # (secret_shell_assignment): a bare name=value turns a password holding a space
-  # into a command, and one holding a brace into a parse error.
-  #
-  payload=""
-  nb=0
-  nb_failed=0
-  for name in $names
-  do
-      if value=$(secret_get_from_store "$name" "$profile")
-      then
-          payload="${payload}$(secret_shell_assignment "$name" "$value")"$'\n'
-          nb=$((nb+1))
-      else
-          logwarn "⚠️ $name could not be resolved, skipped"
-          nb_failed=$((nb_failed+1))
-      fi
-  done
+  secret_build_payload "$profile" all shell
+  payload="$SECRET_PAYLOAD"
+  nb=$SECRET_PAYLOAD_NB
+  nb_failed=$SECRET_PAYLOAD_NB_FAILED
 
   if [ $nb -eq 0 ]
   then
@@ -91678,35 +92020,9 @@ playground_ec2_push_secrets_command() {
       exit 1
   fi
 
-  #
-  # Credentials that cannot live in the secrets store, because they are multi
-  # line files and not name=value pairs. They used to travel inside secrets.tar,
-  # which the cloud formation bootstrap decrypted on the instance; sending them
-  # over ssh instead is what makes that tarball removable.
-  #
-  # Each entry is <local file at repo root>:<remote path>:<mode>.
-  #
-  # The two aws ones are bind mounted into the connect container by the
-  # *-with-assuming-iam-role examples, hence the world readable mode: the uid
-  # inside the container is not the uid of the ec2 user.
-  #
-  files_to_send=(
-      "aws_credentials_with_assuming_iam_role:.aws/credentials-with-assuming-iam-role:644"
-      "aws_credentials_aws_account_with_assume_role:.aws/credentials_aws_account_with_assume_role:644"
-      "github_ssh_key_file:.ssh/id_rsa:600"
-  )
-
-  available_files=()
-  for entry in "${files_to_send[@]}"
-  do
-      local_file="$root_folder/${entry%%:*}"
-      if [ -f "$local_file" ]
-      then
-          available_files+=("$entry")
-      else
-          logwarn "⚠️ $local_file does not exist, it will not be sent"
-      fi
-  done
+  # the credentials that are files, not name=value pairs (see SECRET_PUSH_FILES)
+  secret_push_available_files
+  available_files=("${SECRET_PUSH_AVAILABLE_FILES[@]}")
 
   if [[ -n "$dry_run" ]]
   then
@@ -91779,33 +92095,7 @@ playground_ec2_push_secrets_command() {
           mode="${rest##*:}"
 
           log "🔐 Sending $(basename "$local_file") to $name (~/$remote_path)"
-          #
-          # umask first so the file is never readable by anyone else while it is
-          # being written, then the final mode once it is complete.
-          #
-          # ~/.ssh is created by root in the cloud formation user data, and only
-          # its content is given back to the user, so a plain `cat > ~/.ssh/id_rsa`
-          # fails with "Permission denied" on every instance created before that
-          # was fixed. Take ownership of the directory with sudo (passwordless on
-          # the playground instances) when it is not writable.
-          #
-          # The content lands in a temporary file next to its destination and is
-          # renamed once complete: never a half written credential file, and the
-          # rename also replaces a destination owned by root.
-          #
-          # A missing final newline is added: ssh-keygen (and therefore git over
-          # ssh) rejects a private key whose last line is not terminated with
-          # "Load key: invalid format", and so do most credential parsers.
-          #
-          printf -v remote_script 'umask 077
-  dir="$HOME/%s"
-  mkdir -p "$dir" 2>/dev/null || sudo mkdir -p "$dir"
-  [ -w "$dir" ] || sudo chown -R "$(id -u):$(id -g)" "$dir"
-  tmp=$(mktemp "$dir/.playground-push.XXXXXX") || exit 1
-  cat > "$tmp" || { rm -f "$tmp"; exit 1; }
-  [ -n "$(tail -c1 "$tmp")" ] && echo >> "$tmp"
-  chmod %s "$tmp" && mv -f "$tmp" "$HOME/%s" || { rm -f "$tmp"; exit 1; }' \
-              "$(dirname "$remote_path")" "$mode" "$remote_path"
+          remote_script=$(secret_push_file_remote_script "$remote_path" "$mode")
 
           if ssh -i "$pem_file" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
               "$username@$ip" "$remote_script" < "$local_file"
@@ -91834,6 +92124,8 @@ playground_codespace_create_command() {
   suffix="${args[--suffix]}"
   location="${args[--location]}"
   no_open="${args[--no-open]}"
+  push_secrets="${args[--push-secrets]}"
+  sync_repro_folder="${args[--sync-repro-folder]}"
 
   repo=$(codespace_repo)
 
@@ -91879,6 +92171,24 @@ playground_codespace_create_command() {
   log "✅ codespace $codespace created"
   log "📥 the default images are already there with a prebuild, otherwise they are pulled in the background (Codespaces: View Creation Log)"
   log "💰 it uses your Codespaces quota while it runs: 'playground codespace stop' when you pause, 'playground codespace delete' when you are done"
+
+  if [[ -n "$push_secrets" ]] || [[ -n "$sync_repro_folder" ]]
+  then
+    log "⏳ waiting for codespace $codespace to be available"
+    if ! state=$(codespace_wait_state "$codespace" "Available")
+    then
+      logerror "❌ codespace $codespace is still $state after 5 minutes, run 'playground codespace push-secrets' / 'sync-repro-folder local-to-codespace' yourself later"
+      exit 1
+    fi
+    if [[ -n "$push_secrets" ]]
+    then
+      playground codespace push-secrets --codespace "$codespace" || logwarn "⚠️ push-secrets failed, run it again: playground codespace push-secrets --codespace $codespace"
+    fi
+    if [[ -n "$sync_repro_folder" ]]
+    then
+      playground codespace sync-repro-folder local-to-codespace --codespace "$codespace" || logwarn "⚠️ the sync failed, run it again: playground codespace sync-repro-folder local-to-codespace --codespace $codespace"
+    fi
+  fi
 
   if [[ -n "$no_open" ]]
   then
@@ -91957,7 +92267,7 @@ playground_codespace_ssh_command() {
 
   if [ $ret -ne 0 ] && [ $ret -ne 130 ]
   then
-    logwarn "⚠️ ssh exited with code $ret. If it could not connect: a codespace created before the SSH server was added to .devcontainer/ needs 'Codespaces: Rebuild Container' first"
+    logwarn "⚠️ ssh exited with code $ret. If it could not connect ('failed to start SSH server'): a codespace created before the SSH server was added to .devcontainer/, or from an older prebuild, has none: rebuild it with 'gh codespace rebuild -c $codespace'"
   fi
   exit $ret
 
@@ -92076,6 +92386,173 @@ playground_codespace_delete_command() {
     log "❌ deleting codespace $c"
     gh codespace delete -c "$c" --force
   done
+
+}
+
+# :command.function
+playground_codespace_push_secrets_command() {
+
+  # src/commands/codespace/push-secrets.sh
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+  dry_run="${args[--dry-run]}"
+
+  codespace=$(codespace_pick "${args[--codespace]}") || exit 1
+
+  names=$(secret_store_names "$profile")
+  if [ -z "$names" ]
+  then
+      logerror "❌ profile $profile is empty, there is nothing to send"
+      logerror "👉 playground secrets import --file <secret.properties>"
+      exit 1
+  fi
+
+  secret_backend_ready || exit 1
+
+  #
+  # Two payloads, so that the codespace files each variable where the laptop does
+  # (secrets.ini or env.ini), whatever its name: 'secrets import --secret' and
+  # '--plain' instead of guessing again from the name.
+  #
+  secret_build_payload "$profile" secret import
+  payload_secret="$SECRET_PAYLOAD"
+  nb_secret=$SECRET_PAYLOAD_NB
+  nb_failed=$SECRET_PAYLOAD_NB_FAILED
+  secret_build_payload "$profile" plain import
+  payload_plain="$SECRET_PAYLOAD"
+  nb_plain=$SECRET_PAYLOAD_NB
+  nb_failed=$((nb_failed+SECRET_PAYLOAD_NB_FAILED))
+  nb=$((nb_secret+nb_plain))
+
+  if [ $nb -eq 0 ]
+  then
+      logerror "❌ no value of profile $profile could be resolved, nothing to send"
+      exit 1
+  fi
+
+  # the credentials that are files, not name=value pairs (see SECRET_PUSH_FILES)
+  secret_push_available_files
+  available_files=("${SECRET_PUSH_AVAILABLE_FILES[@]}")
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔍 $nb variable(s) of profile $profile would be imported into the secrets store of codespace $codespace ($nb_secret credential(s), $nb_plain plain variable(s))"
+      for entry in "${available_files[@]}"
+      do
+          rest="${entry#*:}"
+          log "🔍 $root_folder/${entry%%:*} would be sent to ~/${rest%%:*} (mode ${rest##*:})"
+      done
+      exit 0
+  fi
+
+  codespace_wait_ssh "$codespace" || exit 1
+
+  remote_playground="$(codespace_remote_root)/scripts/cli/playground"
+
+  #
+  # The payload lands in a temporary file (umask 077: never readable by anyone
+  # else), is imported with the file backend (there is no keychain in a
+  # codespace), then shredded. The import prints one line per variable: only its
+  # summary is shown, unless it fails.
+  #
+  function import_into_codespace () {
+      local kind="$1" payload="$2" nb_kind="$3" remote_command output
+      [ "$nb_kind" -gt 0 ] || return 0
+      printf -v remote_command 'umask 077 && tmp=$(mktemp) && cat > "$tmp" && PLAYGROUND_SECRETS_BACKEND=file bash %q secrets import --file "$tmp" --%s --profile %q --shred 2>&1; rc=$?; rm -f "$tmp"; exit $rc' \
+          "$remote_playground" "$kind" "$profile"
+      if output=$(printf '%s' "$payload" | gh codespace ssh -c "$codespace" -- "$remote_command")
+      then
+          # the summary line of 'secrets import': ✅ Imported <n> secret(s) and <m> plain variable(s), <k> skipped
+          log "$(echo "$output" | sed -e 's/\x1b\[[0-9;]*m//g' | grep "Imported" | tail -1 | sed -e 's/^.*✅/✅/') (codespace $codespace)"
+      else
+          echo "$output"
+          logerror "❌ could not import the $kind variables into codespace $codespace"
+          exit 1
+      fi
+  }
+
+  log "🔐 Sending $nb variable(s) of profile $profile to codespace $codespace ($nb_secret credential(s), $nb_plain plain variable(s))"
+  import_into_codespace secret "$payload_secret" "$nb_secret"
+  import_into_codespace plain "$payload_plain" "$nb_plain"
+
+  for entry in "${available_files[@]}"
+  do
+      local_file="$root_folder/${entry%%:*}"
+      rest="${entry#*:}"
+      remote_path="${rest%%:*}"
+      mode="${rest##*:}"
+
+      log "🔐 Sending $(basename "$local_file") to codespace $codespace (~/$remote_path)"
+      remote_script=$(secret_push_file_remote_script "$remote_path" "$mode")
+      if gh codespace ssh -c "$codespace" -- "$remote_script" < "$local_file"
+      then
+          log "✅ ~/$remote_path written in codespace $codespace"
+      else
+          logerror "❌ could not write ~/$remote_path in codespace $codespace"
+          exit 1
+      fi
+  done
+
+  log "🎓 'playground run' in the codespace now loads what each example needs from its secrets store ('playground secrets list' there)"
+  if [ "$profile" != "default" ]
+  then
+      log "👉 profile $profile is not the active one in the codespace: playground codespace ssh --codespace $codespace -- playground secrets profile $profile"
+  fi
+  log "⚠️ 'Codespaces: Rebuild Container' empties the home directory: run 'playground codespace push-secrets' again after a rebuild"
+
+  if [ $nb_failed -gt 0 ]
+  then
+      logwarn "⚠️ $nb_failed variable(s) could not be resolved and were left out"
+  fi
+
+}
+
+# :command.function
+playground_codespace_sync_repro_folder_local_to_codespace_command() {
+
+  # src/commands/codespace/sync-repro-folder/local-to-codespace.sh
+  codespace=$(codespace_pick "${args[--codespace]}") || exit 1
+
+  if [ ! -d "$root_folder/reproduction-models" ]
+  then
+      logerror "❌ $root_folder/reproduction-models does not exist: git submodule update --init reproduction-models"
+      exit 1
+  fi
+
+  codespace_wait_ssh "$codespace" || exit 1
+  if ! ssh_config=$(codespace_ssh_config "$codespace")
+  then
+      logerror "❌ could not get the ssh configuration of codespace $codespace (gh codespace ssh --config)"
+      exit 1
+  fi
+  read -r cfg host <<< "$ssh_config"
+
+  log "👉 Sync local reproduction-models folder to codespace $codespace"
+  rsync -cauv --exclude '.git' --filter=':- .gitignore' -e "ssh -F $cfg" "$root_folder/reproduction-models" "$host:$(codespace_remote_root)"
+  ret=$?
+  rm -f "$cfg"
+  exit $ret
+
+}
+
+# :command.function
+playground_codespace_sync_repro_folder_codespace_to_local_command() {
+
+  # src/commands/codespace/sync-repro-folder/codespace-to-local.sh
+  codespace=$(codespace_pick "${args[--codespace]}") || exit 1
+
+  codespace_wait_ssh "$codespace" || exit 1
+  if ! ssh_config=$(codespace_ssh_config "$codespace")
+  then
+      logerror "❌ could not get the ssh configuration of codespace $codespace (gh codespace ssh --config)"
+      exit 1
+  fi
+  read -r cfg host <<< "$ssh_config"
+
+  log "👈 Sync codespace $codespace reproduction-models folder to local"
+  rsync -cauv --exclude '.git' --filter=':- .gitignore' -e "ssh -F $cfg" "$host:$(codespace_remote_root)/reproduction-models" "$root_folder"
+  ret=$?
+  rm -f "$cfg"
+  exit $ret
 
 }
 
@@ -146216,6 +146693,20 @@ playground_codespace_parse_requirements() {
       shift $#
       ;;
 
+    push-secrets)
+      action="push-secrets"
+      shift
+      playground_codespace_push_secrets_parse_requirements "$@"
+      shift $#
+      ;;
+
+    sync-repro-folder)
+      action="sync-repro-folder"
+      shift
+      playground_codespace_sync_repro_folder_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_codespace_usage >&2
@@ -146361,6 +146852,22 @@ playground_codespace_create_parse_requirements() {
 
         # :flag.case_no_arg
         args['--no-open']=1
+        shift
+        ;;
+
+      # :flag.case
+      --push-secrets)
+
+        # :flag.case_no_arg
+        args['--push-secrets']=1
+        shift
+        ;;
+
+      # :flag.case
+      --sync-repro-folder)
+
+        # :flag.case_no_arg
+        args['--sync-repro-folder']=1
         shift
         ;;
 
@@ -146825,6 +147332,382 @@ playground_codespace_delete_parse_requirements() {
 
   # :command.command_filter
   action="codespace delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_push_secrets_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_push_secrets_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace push-secrets"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_sync_repro_folder_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_sync_repro_folder_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v rsync >/dev/null 2>&1; then
+    printf "missing dependency: rsync\n" >&2
+    printf "%s\n\n" "rsync needs to be installed" >&2
+    missing_deps=1
+  else
+    deps['rsync']="$(command -v rsync | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    local-to-codespace)
+      action="local-to-codespace"
+      shift
+      playground_codespace_sync_repro_folder_local_to_codespace_parse_requirements "$@"
+      shift $#
+      ;;
+
+    codespace-to-local)
+      action="codespace-to-local"
+      shift
+      playground_codespace_sync_repro_folder_codespace_to_local_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_codespace_sync_repro_folder_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_codespace_sync_repro_folder_local_to_codespace_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_sync_repro_folder_local_to_codespace_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace sync-repro-folder local-to-codespace"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --codespace | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--codespace']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--codespace requires an argument: --codespace, -c CODESPACE" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--codespace'] ]]; then
+    validation_output="$(validate_not_empty "${args['--codespace']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--codespace, -c CODESPACE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_codespace_sync_repro_folder_codespace_to_local_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_codespace_sync_repro_folder_codespace_to_local_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="codespace sync-repro-folder codespace-to-local"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -174476,6 +175359,16 @@ playground_codespace_completion() {
         playground_codespace_delete_completion "$completion_current" "$@"
         return
         ;;
+      push-secrets)
+        shift
+        playground_codespace_push_secrets_completion "$completion_current" "$@"
+        return
+        ;;
+      sync-repro-folder)
+        shift
+        playground_codespace_sync_repro_folder_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -174485,7 +175378,7 @@ playground_codespace_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" create list open ssh stop start delete
+  completion_candidates "$completion_current" create list open ssh stop start delete push-secrets sync-repro-folder
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -174562,6 +175455,16 @@ playground_codespace_create_completion() {
 
         shift
         ;;
+      --push-secrets)
+        completion_blocked_flags["--push-secrets"]=1
+
+        shift
+        ;;
+      --sync-repro-folder)
+        completion_blocked_flags["--sync-repro-folder"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -174575,6 +175478,8 @@ playground_codespace_create_completion() {
     completion_flag_candidates --suffix "$completion_current" --suffix
     completion_flag_candidates --location "$completion_current" --location
     completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --push-secrets "$completion_current" --push-secrets
+    completion_flag_candidates --sync-repro-folder "$completion_current" --sync-repro-folder
   fi
 
 }
@@ -174758,6 +175663,171 @@ playground_codespace_start_completion() {
 
 # :command.completion_function
 playground_codespace_delete_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_push_secrets_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      --profile)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-secret-profile-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--profile"]=1
+
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+    completion_flag_candidates --profile "$completion_current" --profile
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_sync_repro_folder_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      local-to-codespace)
+        shift
+        playground_codespace_sync_repro_folder_local_to_codespace_completion "$completion_current" "$@"
+        return
+        ;;
+      codespace-to-local)
+        shift
+        playground_codespace_sync_repro_folder_codespace_to_local_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" local-to-codespace codespace-to-local
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_sync_repro_folder_local_to_codespace_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --codespace | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-codespace-list $completion_current; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--codespace"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --codespace "$completion_current" --codespace -c
+  fi
+
+}
+
+# :command.completion_function
+playground_codespace_sync_repro_folder_codespace_to_local_completion() {
   local completion_current="$1"
   shift
 
@@ -175297,6 +176367,10 @@ run() {
     "codespace stop") playground_codespace_stop_command ;;
     "codespace start") playground_codespace_start_command ;;
     "codespace delete") playground_codespace_delete_command ;;
+    "codespace push-secrets") playground_codespace_push_secrets_command ;;
+    "codespace sync-repro-folder") playground_codespace_sync_repro_folder_command ;;
+    "codespace sync-repro-folder local-to-codespace") playground_codespace_sync_repro_folder_local_to_codespace_command ;;
+    "codespace sync-repro-folder codespace-to-local") playground_codespace_sync_repro_folder_codespace_to_local_command ;;
   esac
 }
 

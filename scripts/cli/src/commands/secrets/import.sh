@@ -57,7 +57,9 @@ do
     # strip one level of surrounding quotes
     case "$value" in
         \"*\") value="${value#\"}"; value="${value%\"}" ;;
-        \'*\') value="${value#\'}"; value="${value%\'}" ;;
+        # inside single quotes, a quote is written '\'' (close, escaped quote, reopen): that is how
+        # secret_shell_assignment writes it, so that the payload of 'push-secrets' is read back exactly
+        \'*\') value="${value#\'}"; value="${value%\'}"; value="${value//\'\\\'\'/\'}" ;;
     esac
 
     if [ -z "$value" ]

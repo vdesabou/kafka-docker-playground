@@ -35,11 +35,15 @@ playground codespace create --suffix 123456        # 👷 pg-<you>-123456 on 4 c
 playground codespace list                          # 🔘 your codespaces and their state
 playground codespace ssh -- playground status      # 🐚 run one command in it (or a shell without --)
 playground codespace open --web                    # 🌐 VS Code in the browser
+playground codespace push-secrets                  # 🔐 your secrets store, imported into the codespace's own store
+playground codespace sync-repro-folder local-to-codespace   # 👉 your reproduction models (codespace-to-local to bring them back)
 playground codespace stop                          # 🔴 stop the running ones, 'start' to resume
 playground codespace delete                        # ❌ delete them (asks first, shows unpushed work)
 ```
 
 Without `--codespace`, a command acts on your most recently used codespace (`stop` and `delete` on all of them). Set `PLAYGROUND_CODESPACE_REPO` to create them from your fork.
+
+`playground codespace create --push-secrets --sync-repro-folder` does both once the codespace is available. `push-secrets` resolves your store on your laptop (1Password, macOS Keychain…) and imports it into the store of the codespace (`file` backend), credentials as credentials and plain variables as plain variables: `playground run` there then loads what each example needs, with nothing to install and no 1Password token in the codespace. The values are stored in clear text in the codespace (`secrets.ini`, mode 0600), and **Rebuild Container** empties the home directory: run `push-secrets` again after a rebuild. `reproduction-models` is a private submodule that a codespace cannot clone: run `sync-repro-folder codespace-to-local` before `delete`, nothing else brings back the models written there.
 
 ### 💻️ Locally
 

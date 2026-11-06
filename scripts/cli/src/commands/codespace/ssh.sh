@@ -21,6 +21,6 @@ fi
 
 if [ $ret -ne 0 ] && [ $ret -ne 130 ]
 then
-  logwarn "⚠️ ssh exited with code $ret. If it could not connect: a codespace created before the SSH server was added to .devcontainer/ needs 'Codespaces: Rebuild Container' first"
+  logwarn "⚠️ ssh exited with code $ret. If it could not connect ('failed to start SSH server'): a codespace created before the SSH server was added to .devcontainer/, or from an older prebuild, has none: rebuild it with 'gh codespace rebuild -c $codespace'"
 fi
 exit $ret

@@ -30,31 +30,13 @@ fi
 secret_backend_ready || exit 1
 
 #
-# Build the whole file in memory before contacting any instance: a locked
-# 1Password then fails before a half written file lands on the remote side.
+# Resolved from the store (not the environment), in parallel, and built in memory
+# before contacting any instance: see secret_build_payload.
 #
-# Like `playground secrets push-github`, this deliberately reads the store and
-# not the environment. The instance must get what the store holds, not what the
-# shell that happens to launch the command still has exported.
-#
-# The file is sourced by the playground .zshrc, so every value is single quoted
-# (secret_shell_assignment): a bare name=value turns a password holding a space
-# into a command, and one holding a brace into a parse error.
-#
-payload=""
-nb=0
-nb_failed=0
-for name in $names
-do
-    if value=$(secret_get_from_store "$name" "$profile")
-    then
-        payload="${payload}$(secret_shell_assignment "$name" "$value")"$'\n'
-        nb=$((nb+1))
-    else
-        logwarn "⚠️ $name could not be resolved, skipped"
-        nb_failed=$((nb_failed+1))
-    fi
-done
+secret_build_payload "$profile" all shell
+payload="$SECRET_PAYLOAD"
+nb=$SECRET_PAYLOAD_NB
+nb_failed=$SECRET_PAYLOAD_NB_FAILED
 
 if [ $nb -eq 0 ]
 then
@@ -62,35 +44,9 @@ then
     exit 1
 fi
 
-#
-# Credentials that cannot live in the secrets store, because they are multi
-# line files and not name=value pairs. They used to travel inside secrets.tar,
-# which the cloud formation bootstrap decrypted on the instance; sending them
-# over ssh instead is what makes that tarball removable.
-#
-# Each entry is <local file at repo root>:<remote path>:<mode>.
-#
-# The two aws ones are bind mounted into the connect container by the
-# *-with-assuming-iam-role examples, hence the world readable mode: the uid
-# inside the container is not the uid of the ec2 user.
-#
-files_to_send=(
-    "aws_credentials_with_assuming_iam_role:.aws/credentials-with-assuming-iam-role:644"
-    "aws_credentials_aws_account_with_assume_role:.aws/credentials_aws_account_with_assume_role:644"
-    "github_ssh_key_file:.ssh/id_rsa:600"
-)
-
-available_files=()
-for entry in "${files_to_send[@]}"
-do
-    local_file="$root_folder/${entry%%:*}"
-    if [ -f "$local_file" ]
-    then
-        available_files+=("$entry")
-    else
-        logwarn "⚠️ $local_file does not exist, it will not be sent"
-    fi
-done
+# the credentials that are files, not name=value pairs (see SECRET_PUSH_FILES)
+secret_push_available_files
+available_files=("${SECRET_PUSH_AVAILABLE_FILES[@]}")
 
 if [[ -n "$dry_run" ]]
 then
@@ -163,33 +119,7 @@ do
         mode="${rest##*:}"
 
         log "🔐 Sending $(basename "$local_file") to $name (~/$remote_path)"
-        #
-        # umask first so the file is never readable by anyone else while it is
-        # being written, then the final mode once it is complete.
-        #
-        # ~/.ssh is created by root in the cloud formation user data, and only
-        # its content is given back to the user, so a plain `cat > ~/.ssh/id_rsa`
-        # fails with "Permission denied" on every instance created before that
-        # was fixed. Take ownership of the directory with sudo (passwordless on
-        # the playground instances) when it is not writable.
-        #
-        # The content lands in a temporary file next to its destination and is
-        # renamed once complete: never a half written credential file, and the
-        # rename also replaces a destination owned by root.
-        #
-        # A missing final newline is added: ssh-keygen (and therefore git over
-        # ssh) rejects a private key whose last line is not terminated with
-        # "Load key: invalid format", and so do most credential parsers.
-        #
-        printf -v remote_script 'umask 077
-dir="$HOME/%s"
-mkdir -p "$dir" 2>/dev/null || sudo mkdir -p "$dir"
-[ -w "$dir" ] || sudo chown -R "$(id -u):$(id -g)" "$dir"
-tmp=$(mktemp "$dir/.playground-push.XXXXXX") || exit 1
-cat > "$tmp" || { rm -f "$tmp"; exit 1; }
-[ -n "$(tail -c1 "$tmp")" ] && echo >> "$tmp"
-chmod %s "$tmp" && mv -f "$tmp" "$HOME/%s" || { rm -f "$tmp"; exit 1; }' \
-            "$(dirname "$remote_path")" "$mode" "$remote_path"
+        remote_script=$(secret_push_file_remote_script "$remote_path" "$mode")
 
         if ssh -i "$pem_file" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             "$username@$ip" "$remote_script" < "$local_file"

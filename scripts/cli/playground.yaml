@@ -12549,14 +12549,16 @@ subcommands:
     your laptop and no AWS account. It is also where the\nexamples that do not work
     on ARM64 run.\n\n  create              create a codespace and open it\n  open
     \               open it in VS Code (or the browser with --web)\n  ssh                 a
-    shell, or one command, in it\n  list / start / stop / delete\n\nA thin layer over
-    'gh codespace': it needs the GitHub CLI with the\n'codespace' scope (gh auth refresh
-    -h github.com -s codespace).\n\n\U0001F4B0 A running codespace uses your Codespaces
-    quota (30 hours a month on 4\n   cores with GitHub Free), then is billed. It stops
-    by itself after 30\n   minutes idle; 'playground codespace stop' when you pause,
-    and\n   'playground codespace delete' when you are done (a stopped codespace\n
-    \  still uses storage).\n\n\U0001F510 The private reproduction-models submodule
-    is not cloned in a codespace."
+    shell, or one command, in it\n  push-secrets        send your credentials to its
+    secrets store\n  sync-repro-folder   keep reproduction-models in step, both directions\n
+    \ list / start / stop / delete\n\nA thin layer over 'gh codespace': it needs the
+    GitHub CLI with the\n'codespace' scope (gh auth refresh -h github.com -s codespace).\n\n\U0001F4B0
+    A running codespace uses your Codespaces quota (30 hours a month on 4\n   cores
+    with GitHub Free), then is billed. It stops by itself after 30\n   minutes idle;
+    'playground codespace stop' when you pause, and\n   'playground codespace delete'
+    when you are done (a stopped codespace\n   still uses storage).\n\n\U0001F510
+    The private reproduction-models submodule is not cloned in a codespace:\n   'playground
+    codespace sync-repro-folder local-to-codespace' copies yours."
   usage: playground codespace COMMAND
   options: []
   subcommands:
@@ -12598,6 +12600,16 @@ subcommands:
       - "--no-open"
       argument: ''
       description: "\U0001F648 do not open the codespace in VS Code once it is created"
+    - names:
+      - "--push-secrets"
+      argument: ''
+      description: "\U0001F510 once it is available, send your secrets store to it
+        (playground codespace push-secrets)"
+    - names:
+      - "--sync-repro-folder"
+      argument: ''
+      description: "\U0001F449 once it is available, copy your reproduction-models
+        folder to it (playground codespace sync-repro-folder local-to-codespace)"
   - name: list
     description: "\U0001F518 List your kafka-docker-playground codespaces\n\nTheir
       name, branch and state. An Available one is running and uses your\nquota."
@@ -12627,9 +12639,9 @@ subcommands:
     description: "\U0001F41A Open a shell in a codespace, or run one command in it\n\nEverything
       after -- runs in the codespace, from the repository folder, in\na login shell
       (so playground is in the PATH). A stopped codespace is\nstarted on the way.\n\nIt
-      needs the SSH server of .devcontainer/: a codespace created before it\nwas added
-      needs a 'Codespaces: Rebuild Container' first.\n\nWithout --codespace, the most
-      recently used codespace is used."
+      needs the SSH server of .devcontainer/: a codespace created before it\nwas added,
+      or from a prebuild older than that, needs a rebuild first\n(gh codespace rebuild
+      -c <name>).\n\nWithout --codespace, the most recently used codespace is used."
     usage: playground codespace ssh [OPTIONS] [--] [COMMAND...]
     options:
     - names:
@@ -12688,3 +12700,86 @@ subcommands:
       description: "☁️ codespace name, as shown by 'playground codespace list' (use
         completion)\n\n\U0001F393 Tip: if not specified, the most recently used codespace
         is used"
+  - name: push-secrets
+    description: "\U0001F510 Send the secrets store to a codespace\n\nResolves every
+      variable of the profile on your laptop (1Password, macOS\nKeychain…), then imports
+      them into the secrets store of the codespace\n(backend file, ~/.config/kafka-docker-playground):
+      credentials as\ncredentials, plain variables as plain variables. 'playground
+      run' in the\ncodespace then loads what each example declares, as on your laptop,
+      and\n'playground secrets list' or 'check' work there. Nothing to install in
+      the\ncodespace, no 1Password token to give it.\n\nThe values are piped over
+      'gh codespace ssh', so no clear text copy is\never written locally and they
+      never appear in 'ps'. In the codespace they\nare stored in clear text in secrets.ini
+      (mode 0600), like any file backend.\n\nThe credentials that cannot be stored
+      as name=value pairs are sent too,\nwhen they exist at the root of the repository
+      (same as 'playground ec2\npush-secrets'):\n\n  aws_credentials_with_assuming_iam_role
+      \      -> ~/.aws/credentials-with-assuming-iam-role\n  aws_credentials_aws_account_with_assume_role
+      -> ~/.aws/credentials_aws_account_with_assume_role\n  github_ssh_key_file                          ->
+      ~/.ssh/id_rsa\n\n⚠️ 'Codespaces: Rebuild Container' empties the home directory:
+      run it\nagain after a rebuild.\n\nWithout --codespace, the most recently used
+      codespace is used."
+    usage: playground codespace push-secrets [OPTIONS]
+    options:
+    - names:
+      - "--codespace"
+      - "-c"
+      argument: CODESPACE
+      description: "☁️ codespace name, as shown by 'playground codespace list' (use
+        completion)\n\n\U0001F393 Tip: if not specified, the most recently used codespace
+        is used"
+    - names:
+      - "--profile"
+      argument: PROFILE
+      description: "\U0001F5C2️ Secrets profile to send (default is the active one),
+        imported into the profile of the same name"
+    - names:
+      - "--dry-run"
+      argument: ''
+      description: "\U0001F50D List what would be sent, change nothing"
+  - name: sync-repro-folder
+    description: |-
+      ↔️ Synchronize reproduction-models folder between local and a codespace
+
+      reproduction-models is a private submodule: a codespace cannot clone it,
+      and the models you write there are lost with the codespace. These two
+      commands copy that folder in one direction or the other with rsync, over
+      the ssh tunnel of 'gh codespace ssh' (only newer files, .git and what
+      .gitignore lists are left out, nothing is deleted on the other side).
+
+        local-to-codespace   push what you wrote locally, before running it there
+        codespace-to-local   pull back what you wrote there, before deleting it
+
+      'playground codespace create --sync-repro-folder' runs local-to-codespace
+      for you.
+
+      ⚠️ Get into the habit of running codespace-to-local before
+      'playground codespace delete', nothing else brings those files back.
+    usage: playground codespace sync-repro-folder COMMAND
+    options: []
+    subcommands:
+    - name: local-to-codespace
+      description: "\U0001F449 Sync local reproduction-models folder to a codespace\n\nWithout
+        --codespace, the most recently used codespace is used."
+      usage: playground codespace sync-repro-folder local-to-codespace [OPTIONS]
+      options:
+      - names:
+        - "--codespace"
+        - "-c"
+        argument: CODESPACE
+        description: "☁️ codespace name, as shown by 'playground codespace list' (use
+          completion)\n\n\U0001F393 Tip: if not specified, the most recently used
+          codespace is used"
+    - name: codespace-to-local
+      description: "\U0001F448 Sync a codespace reproduction-models folder to local\n\nBrings
+        back the models you wrote in the codespace. Run it before\n'playground codespace
+        delete', otherwise they go with the codespace.\n\nWithout --codespace, the
+        most recently used codespace is used."
+      usage: playground codespace sync-repro-folder codespace-to-local [OPTIONS]
+      options:
+      - names:
+        - "--codespace"
+        - "-c"
+        argument: CODESPACE
+        description: "☁️ codespace name, as shown by 'playground codespace list' (use
+          completion)\n\n\U0001F393 Tip: if not specified, the most recently used
+          codespace is used"

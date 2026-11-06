@@ -3,6 +3,8 @@ branch="${args[--branch]}"
 suffix="${args[--suffix]}"
 location="${args[--location]}"
 no_open="${args[--no-open]}"
+push_secrets="${args[--push-secrets]}"
+sync_repro_folder="${args[--sync-repro-folder]}"
 
 repo=$(codespace_repo)
 
@@ -48,6 +50,24 @@ codespace=$(echo "$codespace" | tail -1)
 log "✅ codespace $codespace created"
 log "📥 the default images are already there with a prebuild, otherwise they are pulled in the background (Codespaces: View Creation Log)"
 log "💰 it uses your Codespaces quota while it runs: 'playground codespace stop' when you pause, 'playground codespace delete' when you are done"
+
+if [[ -n "$push_secrets" ]] || [[ -n "$sync_repro_folder" ]]
+then
+  log "⏳ waiting for codespace $codespace to be available"
+  if ! state=$(codespace_wait_state "$codespace" "Available")
+  then
+    logerror "❌ codespace $codespace is still $state after 5 minutes, run 'playground codespace push-secrets' / 'sync-repro-folder local-to-codespace' yourself later"
+    exit 1
+  fi
+  if [[ -n "$push_secrets" ]]
+  then
+    playground codespace push-secrets --codespace "$codespace" || logwarn "⚠️ push-secrets failed, run it again: playground codespace push-secrets --codespace $codespace"
+  fi
+  if [[ -n "$sync_repro_folder" ]]
+  then
+    playground codespace sync-repro-folder local-to-codespace --codespace "$codespace" || logwarn "⚠️ the sync failed, run it again: playground codespace sync-repro-folder local-to-codespace --codespace $codespace"
+  fi
+fi
 
 if [[ -n "$no_open" ]]
 then
