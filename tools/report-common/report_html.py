@@ -34,6 +34,7 @@ SERIES_2 = "#eb6834"
 
 # the look of analyze thread-dump, gc-logs, oracle-xstream-report and tcp-dump, which add their own rules with style()
 BASE_CSS = """
+.lv-edit{text-decoration:none;margin-left:5px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5}
 .page{max-width:1300px;margin:0 auto;padding:24px}
