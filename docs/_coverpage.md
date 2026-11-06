@@ -5,6 +5,7 @@
 >
 > 👷‍♂️ Easily build examples or reproduction models
 
+[⚡ Install](/how-to-use?id=%e2%9a%a1-install-in-one-command)
 [🐳 Introduction](/introduction.md)
 [👾 Content](/content.md)
 [🚀 How to Use](/how-to-use.md)

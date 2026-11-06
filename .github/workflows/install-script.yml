@@ -1,0 +1,66 @@
+name: Install Script
+
+# tests docs/install.sh, the one-line installer served at https://kafka-docker-playground.io/install.sh
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'docs/install.sh'
+      - '.github/workflows/install-script.yml'
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/install.sh'
+      - '.github/workflows/install-script.yml'
+
+jobs:
+  install-script:
+    name: install.sh on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      KDP_DIR: ${{ github.workspace }}/../kdp-install-test
+      # the installer picks the startup file from SHELL: ~/.bash_profile on macOS, ~/.bashrc on Linux
+      SHELL: /bin/bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: shellcheck
+        if: runner.os == 'Linux'
+        run: shellcheck -S warning docs/install.sh
+
+      - name: Dry run changes nothing
+        run: |
+          bash docs/install.sh --dry-run --dir "$KDP_DIR" < /dev/null
+          test ! -e "$KDP_DIR"
+
+      # /bin/bash is bash 3.2 on macOS: the script must run with it, as with 'curl | bash'
+      - name: Install (piped into /bin/bash, as with curl | bash)
+        run: |
+          /bin/bash -s -- --yes --dir "$KDP_DIR" < docs/install.sh
+
+      - name: playground is in the PATH of a new shell
+        run: |
+          case "$(uname -s)" in Darwin) rc=~/.bash_profile ;; *) rc=~/.bashrc ;; esac
+          grep -F "# >>> kafka-docker-playground >>>" "$rc"
+          # interactive, like a terminal: the default ~/.bashrc of Ubuntu returns early in non-interactive shells
+          bash -ic "source $rc; command -v playground; playground --version"
+
+      - name: Running it again changes nothing
+        run: |
+          case "$(uname -s)" in Darwin) rc=~/.bash_profile ;; *) rc=~/.bashrc ;; esac
+          cp "$rc" /tmp/rc.before
+          /bin/bash docs/install.sh --yes --dir "$KDP_DIR" < /dev/null
+          diff /tmp/rc.before "$rc"
+
+      - name: Uninstall removes the block and keeps the folder
+        run: |
+          case "$(uname -s)" in Darwin) rc=~/.bash_profile ;; *) rc=~/.bashrc ;; esac
+          /bin/bash docs/install.sh --uninstall --yes < /dev/null
+          if grep -F "kafka-docker-playground >>>" "$rc"; then echo "block still in $rc"; exit 1; fi
+          test -d "$KDP_DIR"

@@ -10,7 +10,7 @@ Pages are Markdown files rendered with Docsify: append `.md` to a page path to g
 
 - [Introduction](https://kafka-docker-playground.io/introduction.md): features overview
 - [Content](https://kafka-docker-playground.io/content.md): list of all examples (connectors, environments, ccloud, ksqlDB, multi-DC...) with versions and CI status
-- [How to Use](https://kafka-docker-playground.io/how-to-use.md): prerequisites, running examples, specifying CP/connector versions, options (ksqlDB, Control Center, Grafana...)
+- [How to Use](https://kafka-docker-playground.io/how-to-use.md): one-line installer (`curl -fsSL https://kafka-docker-playground.io/install.sh | bash`, script in [docs/install.sh](https://kafka-docker-playground.io/install.sh)), prerequisites, running examples, specifying CP/connector versions, options (ksqlDB, Control Center, Grafana...)
 - [CLI](https://kafka-docker-playground.io/cli.md): setup of the `playground` CLI and command reference
 - [How it works](https://kafka-docker-playground.io/how-it-works.md): environments, docker compose overrides, CI
 - [Reproduction toolkit](https://kafka-docker-playground.io/reusables.md): index of the pages below, and the everyday commands (status, logs, errors, waiting, containers, records, offsets)
