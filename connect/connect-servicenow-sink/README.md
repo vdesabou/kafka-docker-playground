@@ -13,6 +13,7 @@ Quickly test the [ServiceNow Sink](https://docs.confluent.io/kafka-connectors/se
 | --- | --- |
 | `SERVICENOW_URL` | ServiceNow instance URL, ending with `/` (e.g. `https://dev12345.service-now.com/`) |
 | `SERVICENOW_PASSWORD` | Password of the ServiceNow `admin` user |
+| `SERVICENOW_DEVELOPER_USERNAME`, `SERVICENOW_DEVELOPER_PASSWORD` | Optional: your ServiceNow ID (developer.servicenow.com account). When set and the instance is hibernating, the example wakes it up (Playwright, `scripts/servicenow-instance-wakeup/wakeup.py`). Without them, wake it up by hand in *Manage my instance* |
 
 ## How to run
 

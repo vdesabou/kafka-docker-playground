@@ -876,6 +876,69 @@ function salesforce_get_jwt_keystore_base64() {
   base64 < "$keystore_path" | tr -d '\n'
 }
 
+# Print "awake" when $SERVICENOW_URL (ending with /) answers the REST API with JSON (whatever the
+# credentials), "hibernating" when it answers the Instance Hibernating page, "unknown" otherwise.
+function servicenow_instance_state() {
+  local response=""
+
+  response=$(curl -s -m 30 -u admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if echo "$response" | jq -e . > /dev/null 2>&1
+  then
+    echo "awake"
+  elif echo "$response" | grep -qi "hibernat"
+  then
+    echo "hibernating"
+  else
+    echo "unknown"
+  fi
+}
+
+# Personal Developer Instances hibernate when unused. When $SERVICENOW_URL is hibernating, wake it up
+# with scripts/servicenow-instance-wakeup/wakeup.py (Playwright: logs in to developer.servicenow.com
+# with SERVICENOW_DEVELOPER_USERNAME / SERVICENOW_DEVELOPER_PASSWORD and clicks the wake up button of
+# "Manage my instance"), then wait for the REST API to answer. Does nothing when the instance is awake.
+function servicenow_wake_up_instance() {
+  local state="" wait=0 max_wait=900 out_dir=""
+  local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null && pwd)/servicenow-instance-wakeup"
+
+  state=$(servicenow_instance_state)
+  if [ "$state" != "hibernating" ]
+  then
+    return 0
+  fi
+
+  if [ -z "$SERVICENOW_DEVELOPER_USERNAME" ] || [ -z "$SERVICENOW_DEVELOPER_PASSWORD" ]
+  then
+    logerror "❌ ServiceNow instance $SERVICENOW_URL is hibernating: wake it up at https://developer.servicenow.com (Manage my instance), or export SERVICENOW_DEVELOPER_USERNAME and SERVICENOW_DEVELOPER_PASSWORD (your ServiceNow ID) to do it automatically"
+    return 1
+  fi
+
+  log "🛌 ServiceNow instance $SERVICENOW_URL is hibernating, waking it up (it can take several minutes)"
+  out_dir=$(mktemp -d /tmp/servicenow-wakeup-XXXXXX)
+  chmod 777 "$out_dir"
+  if ! docker run --rm -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" \
+    -v "$script_dir:/wakeup:ro" -v "$out_dir:/out" mcr.microsoft.com/playwright/python:v1.48.0-noble \
+    bash -c "pip install -q --disable-pip-version-check --root-user-action=ignore playwright==1.48.0 > /dev/null && python3 -I /wakeup/wakeup.py /out 600"
+  then
+    logerror "❌ could not wake up ServiceNow instance $SERVICENOW_URL (screenshots in $out_dir): wake it up at https://developer.servicenow.com (Manage my instance)"
+    return 1
+  fi
+
+  log "⌛ Waiting up to $max_wait seconds for the REST API of $SERVICENOW_URL to answer"
+  while [ "$(servicenow_instance_state)" != "awake" ]
+  do
+    if [ $wait -ge $max_wait ]
+    then
+      logerror "❌ ServiceNow instance $SERVICENOW_URL still does not answer the REST API after $max_wait seconds (screenshots in $out_dir)"
+      return 1
+    fi
+    sleep 15
+    wait=$((wait + 15))
+  done
+  rm -rf "$out_dir"
+  log "🛌 ServiceNow instance $SERVICENOW_URL is awake"
+}
+
 # Make sure user admin of $SERVICENOW_URL (ending with /) can use basic authentication on the REST
 # API, which the ServiceNow examples and connectors use. Recent ServiceNow releases answer 401 to
 # basic authentication unless the Identity Type of the user is Machine (User Administration > Users >
