@@ -656,11 +656,142 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
         drop_alternating_changes(c)
     for f in files:
         f.pop("configs", None)
-    return {"summary": summary(files), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
-            "root_causes": causes, "files": [f for f in files if f["records"]],
-            "files_without_findings": [f["label"] for f in files if not f["records"]],
-            "coverage": coverage(files),
-            "configuration": configuration}
+    res = {"summary": summary(files), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
+           "root_causes": causes, "files": [f for f in files if f["records"]],
+           "files_without_findings": [f["label"] for f in files if not f["records"]],
+           "coverage": coverage(files),
+           "configuration": configuration}
+    res["timeline"] = incident_timeline(res, files)
+    return res
+
+
+# the config classes logged when a component starts: the dump is a (re)start of the worker, broker, registry…
+START_CONFIGS = {"DistributedConfig": "Connect worker", "StandaloneConfig": "Connect worker (standalone)",
+                 "KafkaConfig": "broker", "KafkaRestConfig": "REST Proxy", "SchemaRegistryConfig": "Schema Registry",
+                 "KsqlConfig": "ksqlDB server", "KsqlRestConfig": "ksqlDB server"}
+CONNECTOR_CONFIGS = {"SourceConnectorConfig", "SinkConnectorConfig", "ConnectorConfig"}
+TIMELINE_LIMIT = 200
+
+
+def record_label(r: dict) -> str:
+    """the deepest exception of a record and its own message (not the example of its root cause, which can come from
+    another record), without the class name repeated at the start of the message"""
+    rc = r.get("root_cause") or ""
+    msg = r.get("root_cause_message") or short_message(r["message"])
+    if rc:
+        i = msg.find(rc + ":", 0, 300)
+        if i >= 0:
+            msg = msg[i + len(rc) + 1:].lstrip()
+        return f"{rc.split('.')[-1]}: {msg}"
+    return msg
+
+
+def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
+    """one chronological list, all files merged: the first occurrence of each root cause and of each known cause, the
+    (re)starts of the components (their startup config dump), the connectors (re)configured and the config keys changed
+    between restarts. Answers "what happened first?"; only what has a timestamp, the first TIMELINE_LIMIT events"""
+    by_index = {r.get("index"): (f, r) for f in files for r in f["records"] if r.get("index") is not None}
+    events: Dict[Tuple[str, int], dict] = {}
+
+    def add(time, file, line, kind, level, text, connector=None, count=None):
+        if not time:
+            return
+        key = (file, line or 0)
+        ev = events.get(key)
+        if ev and kind == "known_cause":
+            # the first occurrence of a known cause is often the first occurrence of a root cause: one row, both texts
+            ev["known_causes"] = ev.get("known_causes", []) + [text]
+            return
+        if ev:
+            return
+        events[key] = {"time": time, "kind": kind, "level": level, "text": text, "file": file, "line": line,
+                       "connector": connector, "count": count}
+        if kind == "known_cause":
+            events[key]["known_causes"] = [text]
+
+    for c in res["root_causes"]:
+        first = None
+        for meta in c["records_meta"]:
+            fr = by_index.get(meta[4])
+            if fr and fr[1].get("first_ts") and (first is None or fr[1]["first_ts"] < first[1]["first_ts"]):
+                first = fr
+        if first:
+            f, r = first
+            add(r["first_ts"], f["label"], r["first_line"], "first_error", r["level"], record_label(r)[:200],
+                r.get("connector"), c["occurrences"])
+    for h in res["known_causes"]:
+        first = h.get("first") or {}
+        add(first.get("timestamp"), first.get("file"), first.get("line"), "known_cause", h["severity"], h["title"])
+    seen_connector = set()
+    for c in res["configuration"]:
+        if c.get("source") != "log" or not c.get("time"):
+            continue
+        if c["title"] in START_CONFIGS:
+            add(c["time"], c["file"], c.get("line"), "start", None, f"🔄 {START_CONFIGS[c['title']]} started ({c['title']} logged)")
+        elif c["title"] in CONNECTOR_CONFIGS:
+            name = config_connector(c) or ""
+            if (name, c["time"][:16]) not in seen_connector:
+                seen_connector.add((name, c["time"][:16]))
+                add(c["time"], c["file"], c.get("line"), "connector_config", None,
+                    f"🔌 connector {name or '?'} (re)configured", name or None)
+        for ch in c.get("changes") or []:
+            add(ch.get("time"), c["file"], ch.get("line"), "config_change", None,
+                f"⚙️ {c['title']}: {ch['key']} {ch['previous'] or '∅'} → {ch['value'] or '∅'}"[:200], config_connector(c))
+    out = sorted(events.values(), key=lambda ev: (ev["time"], ev["file"] or "", ev["line"] or 0))
+    return out[:TIMELINE_LIMIT]
+
+
+TIMELINE_ICONS = {"FATAL": "💀", "ERROR": "🔴", "WARN": "🟠", "CRITICAL": "🧠", "HIGH": "🧠", "MEDIUM": "🧠", "LOW": "🧠"}
+
+
+def timeline_what(ev: dict) -> str:
+    """the text of an event: the known causes first (what it means), then the error itself"""
+    if ev["kind"] == "known_cause":
+        return " · ".join(ev["known_causes"])
+    if ev["kind"] == "first_error":
+        icon = TIMELINE_ICONS.get(ev["level"], "")
+        what = f"{icon} first {ev['level']}: {ev['text']}"
+        return (" · ".join(ev["known_causes"]) + " ⬅️ " + what) if ev.get("known_causes") else what
+    return ev["text"]
+
+
+def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) -> str:
+    """the 🗓️ Incident timeline card: the first `shown` events, the others in a <details>"""
+    if not events:
+        return ""
+
+    def row(ev):
+        where = log_viewer.link(viewers, ev["file"], e(f"{ev['file'].split('/')[-1]}:{ev['line']}"), ev["line"]) if ev.get("line") else e(ev["file"])
+        cls = "tl-known" if ev.get("known_causes") else f"tl-{ev['kind']}"
+        return (f"<tr class='{cls}' data-component='{file_component(ev['file'])}'><td class='mono'>{e(ev['time'].replace('T', ' '))}</td>"
+                f"<td>{component_chips([ev['file']])}</td><td>{e(timeline_what(ev))}"
+                + (f" <span class='fi-conn'>{e(ev['connector'])}</span>" if ev.get("connector") else "")
+                + (f" <span class='fi-meta'>×{ev['count']}</span>" if ev.get("count") else "")
+                + f"</td><td class='mono'>{where}</td></tr>")
+    head = "<tr><th>Time</th><th>Component</th><th>What</th><th>Where</th></tr>"
+    first = "".join(row(ev) for ev in events[:shown])
+    more = ""
+    if len(events) > shown:
+        more = (f"<details><summary>{len(events) - shown} more event(s)</summary><table>{head}"
+                + "".join(row(ev) for ev in events[shown:]) + "</table></details>")
+    return ("<style>tr.tl-known td{background:#fff7ed}tr.tl-start td,tr.tl-connector_config td{background:#f0f9ff}"
+            "tr.tl-config_change td{background:#fefce8}html[data-theme=dark] tr.tl-known td{background:#3a2406}"
+            "html[data-theme=dark] tr.tl-start td,html[data-theme=dark] tr.tl-connector_config td{background:#0c2a3a}"
+            "html[data-theme=dark] tr.tl-config_change td{background:#33300a}</style>"
+            "<div class='table-card'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
+            "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
+            "logged at startup), the connectors (re)configured and the config keys changed between restarts. It is the "
+            "whole report: the filters above do not change it.</p>"
+            f"<table>{head}{first}</table>{more}</div>")
+
+
+def timeline_text(events: List[dict], top: int = 8) -> List[str]:
+    if not events:
+        return []
+    out = [f"🗓️ Timeline (first {min(top, len(events))} of {len(events)} event(s), all files merged)"]
+    for ev in events[:top]:
+        out.append(f"   {ev['time'].replace('T', ' ')} {timeline_what(ev)[:160]} ({ev['file'].split('/')[-1]}:{ev['line']})")
+    return out
 
 
 # ── Text (terminal digest of playground analyze logs) ────────────────────────
@@ -758,6 +889,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["example"]
             who = f" · {len(c['connectors'])} connector(s): {first_names(c['connectors'])}" if c["connectors"] else ""
             out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
+    # what happened first, all files merged (🗓️ Incident timeline of the HTML report, .timeline of --json)
+    out += timeline_text(res.get("timeline") or [])
     configs = res.get("configuration") or []
     if configs:
         out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
@@ -2192,7 +2325,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
-            .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count")]
+            .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
+            timeline_html(res.get("timeline") or [], viewers)]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -2340,7 +2474,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration (default: all)")
+                         "files_without_findings,coverage,configuration,timeline (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
