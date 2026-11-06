@@ -158,7 +158,13 @@ def parse_records(path: str) -> List[dict]:
                 current["records"].append(rec)
                 done = None
             elif line.startswith("@@PGTS@@\t") and rec is not None:
-                rec["timestamps"] = line.split("\t", 1)[1].split()
+                # "x<stride> t1 t2 …": the times kept are every stride-th occurrence (summarize_log_errors spreads 1000 of
+                # them over the life of the record), each stands for stride occurrences
+                times = line.split("\t", 1)[1].split()
+                if times and times[0].startswith("x") and times[0][1:].isdigit():
+                    rec["ts_stride"] = int(times[0][1:])
+                    times = times[1:]
+                rec["timestamps"] = times
                 finish_record(rec)
                 done, rec = rec, None
             elif line.startswith("@@PGCFG@@\t") and current is not None:
@@ -399,7 +405,7 @@ def root_causes(files: List[dict]) -> List[dict]:
         c["files"][f["label"]] = True
         # level, connector, count and epoch seconds of each record, for the filters of the HTML report
         c["records_meta"].append((r["level"], r.get("connector") or "", r["count"], epochs(r["timestamps"]),
-                                  r.get("index", -1), r.get("file_index", -1)))
+                                  r.get("index", -1), r.get("file_index", -1), r.get("ts_stride", 1)))
         if r["connector"]:
             c["connectors"][r["connector"]] = c["connectors"].get(r["connector"], 0) + r["count"]
         else:
@@ -961,19 +967,21 @@ def show_config(res: dict, name: str) -> str:
 
 # ── HTML ──────────────────────────────────────────────────────────────────────
 
-def timeline(files: List[dict]) -> Tuple[List[Tuple[datetime, str]], bool]:
-    """Occurrences, errors (ERROR + FATAL) and warnings, with their time; and whether the timestamps of a record were capped."""
-    points: List[Tuple[datetime, str]] = []
-    capped = False
+def timeline(files: List[dict]) -> Tuple[List[tuple], bool]:
+    """Occurrences, errors (ERROR + FATAL) and warnings, with their time and weight (the stride of the record: each time
+    kept stands for that many occurrences); and whether the times of a record were sampled."""
+    points: List[tuple] = []
+    sampled = False
     for _, r in all_records(files):
-        if len(r["timestamps"]) < r["count"]:
-            capped = True
+        stride = r.get("ts_stride", 1)
+        if stride > 1:
+            sampled = True
         for ts in r["timestamps"]:
             try:
-                points.append((datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S"), "warnings" if r["level"] == "WARN" else "errors"))
+                points.append((datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S"), "warnings" if r["level"] == "WARN" else "errors", stride))
             except ValueError:
                 pass
-    return points, capped
+    return points, sampled
 
 
 def cause_label(c: dict) -> str:
@@ -1018,7 +1026,8 @@ def file_component(label: str) -> str:
 
 def occurrences_json(causes: List[dict], files: Optional[List[dict]] = None) -> str:
     """Every record of the report as [root cause index, level, connector index, occurrences, epoch seconds, record
-    index (data-rec of its block), file index (data-file of its row of the files table)]: what the
+    index (data-rec of its block), file index (data-file of its row of the files table), stride (each time stands for
+    that many occurrences)]: what the
     📈 occurrences chart, the 🔝 top causes chart, the 🌳 root causes table and the records are all counted again from
     when a level,
     a connector or a period is selected (pgRecords() of FILTER_SCRIPT). The timestamps are here once, not in the chart
@@ -1026,11 +1035,11 @@ def occurrences_json(causes: List[dict], files: Optional[List[dict]] = None) -> 
     names: Dict[str, int] = {}
     records = []
     for i, c in enumerate(causes):
-        for level, connector, count, times, index, file_index in c["records_meta"]:
+        for level, connector, count, times, index, file_index, stride in c["records_meta"]:
             if connector and connector not in names:
                 names[connector] = len(names)
             records.append([i, LEVEL_ORDER.get(level, 9), names[connector] if connector else -1, count,
-                            encode_times(times), index, file_index])
+                            encode_times(times), index, file_index, stride])
     # the component of each file with findings (file index -> code): the Component chips of the filter bar
     components = [file_component(f["label"]) for f in files or []]
     return json.dumps({"connectors": list(names), "records": records, "components": components}, separators=(",", ":"))
@@ -1041,7 +1050,7 @@ def charts_html(files: List[dict], causes: List[dict]) -> str:
     rows = [(cause_label(c), c["occurrences"], f"{cause_label(c)}: {c['occurrences']} occurrence(s)") for c in causes[:10]]
     # the series are built by pgChartTimes() from the records of the selected levels and connector, not embedded here
     chart = time_chart(points, [("errors", "ERROR/FATAL", SERIES_1), ("warnings", "WARN", SERIES_2)],
-                       " · first 1000 occurrences of each record" if capped else "",
+                       " · a record of more than 1000 occurrences is sampled over its whole period" if capped else "",
                        # which record levels each series counts, by label (a series without any point is left out)
                        chart_id=TIME_CHART_ID, embed_times=False,
                        extra={"pgLevels": {"ERROR/FATAL": [LEVEL_ORDER["FATAL"], LEVEL_ORDER["ERROR"]],
@@ -1312,7 +1321,8 @@ function pgInWindow(rec) {
   let n = 0;
   // [from, to), as the buckets of the chart
   for (const t of times) if (t >= pgWindow[0] && t < pgWindow[1]) n++;
-  return [n, n > 0];
+  // a sampled record (more than 1000 occurrences): each time kept stands for rec[7] of them
+  return [Math.min(rec[3], n * (rec[7] || 1)), n > 0];
 }
 function pgRead() {
   const off = [...document.querySelectorAll(".lvl-chip[aria-pressed=false]")].map(c => +c.dataset.levelCode);
@@ -1340,14 +1350,19 @@ function pgStamp(t) {
 window.pgChartTimes = function (box, chart) {
   if (box.id !== "@@CHART@@") return null;
   const levels = (chart.series || []).map(s => (chart.pgLevels || {})[s.label] || []);
-  const out = levels.map(() => []);
+  const pairs = levels.map(() => []);
+  let weighted = false;
   for (const rec of pgOcc.records) {
     if (!pgKeeps(rec)) continue;
-    const times = pgTimes(rec);
+    const times = pgTimes(rec), w = rec[7] || 1;
     if (!times.length) continue;
-    for (let i = 0; i < levels.length; i++) if (levels[i].indexOf(rec[1]) >= 0) { for (const t of times) out[i].push(t); break; }
+    if (w > 1) weighted = true;
+    for (let i = 0; i < levels.length; i++) if (levels[i].indexOf(rec[1]) >= 0) { for (const t of times) pairs[i].push([t, w]); break; }
   }
-  return out.map(a => a.sort((x, y) => x - y));
+  // the times of each series, sorted; their weights (a sampled record) for zoom_chart.js, as a property of the array
+  const out = pairs.map(a => a.sort((x, y) => x[0] - y[0]).map(p => p[0]));
+  if (weighted) out.weights = pairs.map(a => a.map(p => p[1]));
+  return out;
 };
 // 🔝 Root causes (occurrences): the same horizontal bars as svg_hbars() of report_html.py, top 10 of what is kept
 function pgTopCauses(byCause) {
@@ -2438,8 +2453,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        f"{e(' …' if len(c['files']) > 5 else '')}</td>"
                        + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
                        + f"<td>{finding_cell(c, i)}</td></tr>" for i, c in enumerate(res["root_causes"]))
-        untimed = sum(count - len(times) for c in res["root_causes"] for _, _, count, times, _, _ in c["records_meta"]
-                      if count > len(times))
+        untimed = sum(count - len(times) * stride for c in res["root_causes"] for _, _, count, times, _, _, stride in c["records_meta"]
+                      if count > len(times) * stride)
         follows = ("<p class='legend'>Every distinct error of the logs, grouped by its deepest exception (or its message when "
                    "it has none), most frequent first. 🔎 Findings above is the short list to start with; the Finding column "
                    "says which card explains a row (a known cause, or a 🌳 card of the most frequent unexplained errors), "
