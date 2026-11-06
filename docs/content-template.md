@@ -356,7 +356,6 @@ Test Self-Managed connector mugration to Fully Managed using [playground connect
 - 🔀 [Partition reassignment and leader election](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/topic-reassign-and-leader-election) with `playground topic reassign` and `playground topic elect-leader`, on 3 brokers :other/topic-reassign-and-leader-election:
 - 👻 Testing [KIP-108](https://cwiki.apache.org/confluence/display/KAFKA/KIP-108%3A+Create+Topic+Policy) [Create Topic Policy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/create-topic-policy) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💾 [Tiered storage with AWS S3](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/tiered-storage-with-aws) :other/tiered-storage-with-aws:
-- ⚖ [Confluent Rebalancer](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rebalancer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ### 🌍 Multi-Data-Center deployments
@@ -380,7 +379,6 @@ With Confluent Cloud:
 
 - ♻️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/mirrormaker2) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-- ♻️ [Cluster Linking Quick Start with service account only](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cluster-linking-with-service-accounts-only) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 Monitoring:
 
@@ -396,7 +394,6 @@ Monitoring:
 - 📃 [How to write logs to files when using docker-compose](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/write-logs-to-files) :other/write-logs-to-files:
 - 📢 [Publish logs to kafka with Elastic Filebeat](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/filebeat-to-kafka) :other/filebeat-to-kafka:
 - 📉 [Monitoring Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-demo) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-- 🐶 [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ### ☕ Java clients
 
@@ -421,8 +418,6 @@ Monitoring:
 - 🪦 [Recovery from schema hard deletion](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/recover-from-schema-hard-deletion) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🛂 [Schema Validation on Confluent Server](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/broker-schema-validation) Schema Validation on Confluent Server :other/broker-schema-validation:
 - 🔗 [Schema Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/schema-linking) :multi-data-center/schema-linking:
-- 🗺️ [Multi-Cluster Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/multiple-sr-hybrid) with hybrid configuration (onprem/confluent cloud) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-- 📦 [Migrate Schemas to Confluent Cloud](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/migrate-schemas-to-confluent-cloud) using Confluent Replicator ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🧢 [RBAC with SR Basic Auth and ACLs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-sr-basic-auth-acl) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🤿 [Anonymous SR-example with RBAC](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-anonymous-sr) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
@@ -520,7 +515,6 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
 - 🗃️ [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs) :other/audit-logs:
 - 🚦 [MDS centralized ACLs with RBAC](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-centralized-acls) centralized ACLs vs kafka-acls, DENY over a role binding, LDAP group ACLs :other/rbac-centralized-acls:
-- 📒 [Testing RBAC with Azure AD](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-azure-ad) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🗝️ [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-registry-security-plugin) with Confluent Platform :other/schema-registry-security-plugin:
 - 🗝️ [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/schema-registry-security-plugin) with Confluent Cloud :ccloud/schema-registry-security-plugin:
 - 🔒️ [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rest-proxy-security-plugin) with Confluent Platform, SASL/SSL and 2WAY/SSL Principal Propagation :other/rest-proxy-security-plugin:
@@ -532,7 +526,6 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
 ### 🌐 Confluent Cloud infra
 
-- 🌨 Using [Confluent for Kubernetes](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/confluent-for-kubernetes/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🔰 [Confluent Cloud Networking](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy) using HAProxy ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ## 👾 Other Playgrounds
@@ -549,16 +542,16 @@ The Confluent Cloud examples are in the area they belong to:
 - 🧑‍💻 A producer and a consumer for each client: the Confluent Cloud column of the [Clients](/content?id=%F0%9F%A7%91%F0%9F%92%BB-clients) table
 - 🐿️ [Flink SQL on Confluent Cloud](/content?id=🐿️-flink)
 - ♻️ Replicator, MirrorMaker 2 and Cluster Linking: [Multi-Data-Center deployments](/content?id=🌍-multi-data-center-deployments)
-- 🔰 Multi-cluster Schema Registry and schema migration: [Schema Registry](/content?id=🔰-schema-registry)
+- 🔗 Schema migration with Schema Linking: [Schema Registry](/content?id=🔰-schema-registry)
 - 🔑 Schema Registry and REST Proxy security plugins: [Security features](/content?id=🔑-security-features)
-- 🌨 CFK with Confluent Cloud and networking with HAProxy: [Confluent Cloud infra](/content?id=🌐-confluent-cloud-infra)
+- 🔰 Networking with HAProxy: [Confluent Cloud infra](/content?id=🌐-confluent-cloud-infra)
 
 ## 💸 Confluent Commercial
 
 The examples of Confluent commercial features are in the area they belong to:
 
 - 💻 [Control Center](/content?id=💻-control-center)
-- 💾 Tiered Storage, ⚖ Confluent Rebalancer: [Brokers](/content?id=🩺-brokers)
+- 💾 Tiered Storage: [Brokers](/content?id=🩺-brokers)
 - ♻️ Cluster Linking, 🔗 Schema Linking, Replicator: [Multi-Data-Center deployments](/content?id=🌍-multi-data-center-deployments)
 - 🛂 Schema Validation on Confluent Server: [Schema Registry](/content?id=🔰-schema-registry)
 - 🗃️ Audit Logs, RBAC, centralized ACLs, Schema Registry and REST Proxy security plugins, 🙊 Secrets Management, ⛓ Connect Secret Registry, 🗝️ log redactor: [Security features](/content?id=🔑-security-features)
