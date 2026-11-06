@@ -376,7 +376,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | --- | --- |
 | verdict and tiles | 🕐 **period covered**, files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
 | ▾ every section | folds by a click on its title (findings, charts, root causes, files, each file card, configuration, sections of other tools); **Fold all** / **Unfold all** next to 🔎 Findings |
-| 📤 Share (top right) | a panel to send the report to a colleague: **📦 the .zip of the report and its file pages**, written next to it (`📤 To share it: <dir>/<name>-log-report.zip`) when the pages are under 200 MB, else the `zip` command to copy (a page holds a whole log file); **📋 Copy the summary** (verdict, period, known causes, root causes as text, for Slack or a ticket); **🔗 Copy the path**; **✉️ Email the summary**. It says first whether the report is sanitized (`--sanitize` before sending it outside Confluent) |
+| 📤 Share (top right) | a panel to send the report to a colleague: **📦 the .zip of the report and its file pages** (one top folder `<name>-log-report/`), written next to it (`📤 To share it: <dir>/<name>-log-report.zip`) when the pages are under 200 MB, else the `zip` command to copy (a page holds a whole log file); **📋 Copy the summary** (verdict, period, known causes, root causes as text, for Slack or a ticket); **🔗 Copy the path**; **✉️ Email the summary**. It says first whether the report is sanitized (`--sanitize` before sending it outside Confluent) |
 | 🔎 findings | well-known causes first (task killed, authentication, cloud credentials (AWS `SignatureDoesNotMatch`, `Status Code: 403`), authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings). In the HTML report each card shows the count in a colored chip (`1,148,717×`), the cards are sorted by count within a severity, the first occurrence is its time with 📄 (the page of the file at the line) and ✏️ (the editor), the path on hover, and the advice is a 👉 line; every card lists its exception chains the same way, most frequent first (all of them for the killed tasks, the 5 most frequent for the other known causes and for the root causes no known cause explains, whose title is their exception, or the start of their message): its count, the exception class in orange (an `…Error` in red), `⬅️ Caused by` on its own line, the connectors as chips (5 shown, `+n more` unfolds the rest) and its first occurrence. A message without exception is one chain whatever the client and the broker it names (`[Producer clientId=…]` and `(host/ip:port)` ignored): 1.1 million `failed authentication` lines of 321 connectors make one chain, not 670 |
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records. **Drag over it to zoom on a range** (◀ ▶ to move the window, double-click or **All** to zoom out): the buckets are counted again for the window, so zooming on a burst shows it per minute, then per second |
 | 🔝 root causes (occurrences) | the 10 most frequent root causes of what is kept, as horizontal bars |
@@ -397,9 +397,9 @@ starts with a date (a log without timestamps, `docker logs` without `--timestamp
 as well: the `Nov 03 18:29:20 host connect-distributed[1080]: ` prefix of each line is skipped to find the log4j
 timestamp, and the `-- Logs begin at … --` banner is not counted as a logged line.
 
-🎚️ **Everything below the sticky filter bar is one view of the same records**: the two charts, the root causes, the
-files with findings and the record cards are all counted again whenever you change a filter. The verdict and the tiles
-above the bar stay the figures of the whole report. There are three filters, and they combine:
+🎚️ **Everything below the sticky filter bar is one view of the same records**: the findings, the two charts, the root
+causes, the files with findings and the record cards follow it whenever you change a filter. The bar is right under the
+verdict and the tiles, which stay the figures of the whole report. The filters combine:
 
 | Filter | Where | What it keeps |
 | --- | --- | --- |
@@ -419,7 +419,11 @@ the per-connector counts in `.summary.by_connector`, `.root_causes[].connectors`
 whole report (`🧨 A connector task was killed: 1200 occurrence(s) in 12 files (first at connect-0.log line 88,
 2026-11-02 20:03:14)`). They only say how much of themselves is in what you selected — `▸ 340 of 1200 occurrence(s)
 here` under the card, `▸ nothing in this selection` and the card dimmed when none of it is. So picking a connector
-never hides a problem of the cluster, it tells you which of them that connector is actually hit by.
+never hides a problem of the cluster, it tells you which of them that connector is actually hit by. A **component** is
+a choice of scope instead: with `🔌 Connect` picked, the findings of the other components are hidden (`🙈 3 finding(s)
+of other components hidden … show them`). The component picked is **remembered** for the next reports (the
+`localStorage` of the browser): someone who works on Connect opens every report on `🔌 Connect` when it has Connect
+files (`· remembered from your last report`); `🧩 All components` forgets it.
 
 Occurrences beyond the first 1000 kept per record (and lines without a timestamp) have no time of their own: they are
 not counted in a period, the legend of the root causes says how many there are, and a record that has only those stays

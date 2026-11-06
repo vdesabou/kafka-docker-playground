@@ -1026,7 +1026,16 @@ then
     rm -f "$output_dir/$share_zip"
     if [ "${share_kb:-0}" -lt $((200 * 1024)) ]
     then
-        if (cd "$output_dir" && zip -qr "$share_zip" "${stem}-log-report.html" $( [ -d "$share_files" ] && printf '%s' "$share_files" )) 2>/dev/null
+        # one top folder in the zip (<name>-log-report/): unzipped by a colleague, the report and its pages stay together
+        # instead of landing loose in the current folder. Staged with symlinks, zip stores the files they point to
+        share_stage="$tmp_dir/share/${stem}-log-report"
+        mkdir -p "$share_stage"
+        ln -s "$output_dir/${stem}-log-report.html" "$share_stage/${stem}-log-report.html"
+        if [ -d "$output_dir/$share_files" ]
+        then
+            ln -s "$output_dir/$share_files" "$share_stage/$share_files"
+        fi
+        if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
         then
             log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"
         fi
