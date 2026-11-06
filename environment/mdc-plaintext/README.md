@@ -15,6 +15,21 @@ control-center is monitoring the two clusters
 
 N.B: we have dedicated zookepper and broker for metrics.
 
+## 📊 Grafana (`--enable-jmx-grafana`)
+
+`playground run -f <example> --enable-jmx-grafana` (or `playground start-environment --environment mdc-plaintext` with `ENABLE_JMX_GRAFANA=true`) adds the same monitoring stack as the single-cluster environments, for both clusters:
+
+* Grafana: http://127.0.0.1:3000 (admin/password), with the dashboards of `environment/plaintext/grafana/provisioning/dashboards`: pick the cluster with the `env` variable (`europe` or `us`), for example in *Kafka cluster*, *Kafka Connect cluster*, *Cluster Linking* and *Cluster Linking Overview*
+* Prometheus: http://127.0.0.1:9090, configured in [`prometheus/prometheus.yml`](prometheus/prometheus.yml): JMX exporter of `broker-europe`, `broker-us`, `controller-europe`, `controller-us`, `connect-europe`, `connect-us` (label `env`)
+* Kafka Lag Exporter on both clusters, configured in [`kafka-lag-exporter/application.conf`](kafka-lag-exporter/application.conf): label `cluster_name` `europe` or `us` in the *Kafka Lag Exporter* dashboard
+* Pyroscope: http://127.0.0.1:4040
+
+Example, cluster linking metrics while the link of the example replicates:
+
+```bash
+playground run -f multi-data-center/cluster-linking/start-plaintext.sh --enable-jmx-grafana
+```
+
 ## How to run
 
 Simply run:

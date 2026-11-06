@@ -647,6 +647,8 @@ You can enable this with `--enable-jmx-grafana` option of [playground run](/play
 🛡️ Prometheus is reachable at [http://127.0.0.1:9090](http://127.0.0.1:9090) (it scrapes the JMX exporters every 15 s)
 📛 [Pyroscope](https://pyroscope.io/docs/) is reachable at [http://127.0.0.1:4040](http://127.0.0.1:4040)
 
+It works with the single-cluster environments and with the multi data center environment `mdc-plaintext`: there, the `env` variable of the dashboards picks the cluster (`europe` or `us`), and the Kafka Lag Exporter watches both clusters (see [environment/mdc-plaintext](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)).
+
 > [!TIP]
 > [playground connector benchmark](/toolkit-performance?id=%f0%9f%93%8a-grafana) annotates its measure on the Kafka Connect, connector and Kafka cluster dashboards, and links to them at the time of the run.
 
@@ -668,7 +670,7 @@ List of provided dashboards:
  - Debezium CDC source Connectors
  - Mongo source and sink Connector
  - Kafka lag exporter (no screenshot)
- - Cluster Linking (no screenshot)
+ - Cluster Linking (no screenshot): with the `mdc-plaintext` environment, for example `playground run -f multi-data-center/cluster-linking/start-plaintext.sh --enable-jmx-grafana`
  - Flink (no screenshot)
 
 

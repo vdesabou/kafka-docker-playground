@@ -61,6 +61,15 @@ rules:
     labels:
       clientId: "$3"
       broker: "$4:$5"
+  # Cluster Linking fetcher of a destination cluster: domain kafka.server.link, not matched by the kafka.(\w+) rules
+  # kafka.server.link:type=ClusterLinkFetcherManager,name=MaxLag,clientId=ClusterLink,link-name={linkName}
+  # (MaxLag, TotalLag, TotalFetchRate, MinFetchRate, DeadThreadCount, FailedPartitionsCount: dashboard "Cluster Linking")
+  - pattern: kafka.server.link<type=ClusterLinkFetcherManager, name=(.+), clientId=(.+), link-name=(.+)><>Value
+    name: kafka_server_cluster_link_fetcher_manager_$1
+    cache: true
+    labels:
+      clientId: "$2"
+      link_name: "$3"
   # Needed for Cluster Linking metrics
   # "kafka.server:type=*, name=*, *=*, *=*, *=*, *=*"
   - pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+), (.+)=(.+), (.+)=(.+)><>(Count|Value)

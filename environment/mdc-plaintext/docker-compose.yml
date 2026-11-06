@@ -43,7 +43,13 @@ services:
     container_name: broker-europe
     depends_on:
       - broker-metrics
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     environment:
+      # --enable-jmx-grafana: JMX exporter (port 1234) and Pyroscope agents, empty otherwise
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "broker-europe"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
       KAFKA_BROKER_ID: 1
       # JMX for playground broker metrics (read from inside the container)
       KAFKA_JMX_PORT: 9999
@@ -93,7 +99,13 @@ services:
     container_name: broker-us
     depends_on:
       - broker-metrics
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     environment:
+      # --enable-jmx-grafana: JMX exporter (port 1234) and Pyroscope agents, empty otherwise
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "broker-us"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
       KAFKA_BROKER_ID: 1
       # JMX for playground broker metrics (read from inside the container)
       KAFKA_JMX_PORT: 9999
@@ -186,6 +198,10 @@ services:
       - broker-us
       - broker-metrics
     environment:
+      # --enable-jmx-grafana: JMX exporter (port 1234) and Pyroscope agents, empty otherwise
+      EXTRA_ARGS: -name connectDistributed -loggc ${GRAFANA_AGENT_CONNECT}
+      PYROSCOPE_APPLICATION_NAME: "connect-us"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
       CONNECT_BOOTSTRAP_SERVERS: 'broker-us:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect-us
       CONNECT_GROUP_ID: "connect-us"
@@ -224,6 +240,7 @@ services:
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
 
     volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
       - ../../confluent-hub:/usr/share/confluent-hub-components
 
   connect-europe:
@@ -237,6 +254,10 @@ services:
       - broker-europe
       - broker-metrics
     environment:
+      # --enable-jmx-grafana: JMX exporter (port 1234) and Pyroscope agents, empty otherwise
+      EXTRA_ARGS: -name connectDistributed -loggc ${GRAFANA_AGENT_CONNECT}
+      PYROSCOPE_APPLICATION_NAME: "connect-europe"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
       CONNECT_BOOTSTRAP_SERVERS: 'broker-europe:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect-europe
       CONNECT_GROUP_ID: "connect-europe"
@@ -275,6 +296,7 @@ services:
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
 
     volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
       - ../../confluent-hub:/usr/share/confluent-hub-components
       
   schema-registry-europe:
@@ -368,3 +390,89 @@ services:
     volumes:
       - ../../environment/plaintext/control-center-v2-config:/mnt/config
     command: "--web.external-url=http://localhost --config.file=/etc/alertmanager/alertmanager.yml"
+
+  # --enable-jmx-grafana: same stack as environment/plaintext (dashboards, alert rules, jmx exporter configs are shared),
+  # with a Prometheus and a Kafka Lag Exporter that know both clusters (label env: europe or us)
+  grafana:
+    image: grafana/grafana:8.5.27
+    hostname: grafana
+    container_name: grafana
+    profiles:
+      - "grafana"
+    environment:
+      - "GF_SECURITY_ADMIN_USER=admin"
+      - "GF_SECURITY_ADMIN_PASSWORD=password"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../environment/plaintext/grafana/provisioning/:/etc/grafana/provisioning/
+      - ../../environment/plaintext/grafana/config/grafana.ini:/etc/grafana/grafana.ini
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:v2.29.2
+    hostname: prometheus
+    container_name: prometheus
+    profiles:
+      - "grafana"
+    ports:
+      - 9090:9090
+    volumes:
+      - ../../environment/mdc-plaintext/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../../environment/plaintext/prometheus/alert.rules:/etc/prometheus/alert.rules
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  kafka-lag-exporter:
+    image: seglo/kafka-lag-exporter:0.7.1
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    profiles:
+      - "grafana"
+    restart: always
+    ports:
+      - 9998:9998
+    volumes:
+      - ../../environment/mdc-plaintext/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ../../environment/plaintext/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  pyroscope:
+    hostname: pyroscope
+    container_name: pyroscope
+    image: pyroscope/pyroscope:0.37.2
+    profiles:
+      - "grafana"
+    ports:
+      - '4040:4040'
+    command:
+      - "server"
+      - "-no-self-profiling"
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    hostname: alertmanager
+    container_name: alertmanager
+    profiles:
+      - "grafana"
+    ports:
+      - 9093:9093
+
+  node-exporter:
+    image: prom/node-exporter:v1.2.2
+    hostname: node-exporter
+    container_name: node-exporter
+    profiles:
+      - "grafana"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points"
+      - "^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)"
