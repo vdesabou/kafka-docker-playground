@@ -48,6 +48,18 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Times and time zones
+
+The digest keeps the offset written after a timestamp (`2026-10-13T10:00:05.123+02:00`, `…Z`, `…-0700`, as `+HH:MM`).
+`log_report.parse_records()` then normalizes every timestamp to 19 characters (`normalize_times()`, also used by
+`log_overview.py`): with one offset in the whole input (or none), it is stripped and the times stay **as written in the
+logs**; when the files mix several offsets (UTC broker logs and local time Connect logs), the times with an offset are
+**converted to UTC**, else they would be hours apart with a fake gap: `🌐 times in UTC: the files mix the offsets …` in the
+summary, `🌐 UTC` on the 🕐 Period covered tile, `.summary.time_zone` (`offsets`, `converted_to_utc`, `without_offset`) in
+`--json`. Times are wall clock times encoded as UTC epochs (`epoch()`, `report_html.wall_epoch()`) and shown with the UTC
+fields of JavaScript (`stamp()` of `zoom_chart.js`, `pgStamp()`): a report shows the same times in every time zone, and a
+DST change of the machine that writes it adds no hole to the 📈 chart.
+
 ## HTML report and JSON
 
 With `--sources <label<tab>path<tab>1 when the file stays on disk>` (written by `analyze logs`) and `--html-out`,

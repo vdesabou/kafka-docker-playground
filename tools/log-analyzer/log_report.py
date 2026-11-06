@@ -25,7 +25,8 @@ import os
 import re
 import sys
 from collections import Counter, OrderedDict
-from datetime import datetime
+import calendar
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Sequence, Tuple
 from urllib.parse import quote
 
@@ -54,9 +55,81 @@ EXCEPTION_RE = re.compile(r"^(?:(?:Caused by:|--->|\[cause\]:)\s*)?((?:[a-zA-Z_$
 CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
 
 
+TS_FORMAT = "%Y-%m-%dT%H:%M:%S"
+# a timestamp of the digest with the offset written in the log (2026-10-13T10:00:05+02:00, Z written +00:00)
+_OFFSET_TS_RE = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)([+-])(\d\d):(\d\d)$")
+
+
+def epoch(ts: str) -> int:
+    """a timestamp of the digest (wall clock time, as written in the logs) as a UTC epoch: never shifted by the time zone
+    of the machine or by a DST change; zoom_chart.js and pgStamp() show it back with the UTC fields"""
+    return calendar.timegm(datetime.strptime(ts[:19], TS_FORMAT).timetuple())
+
+
+def iso(seconds: float) -> str:
+    """the inverse of epoch()"""
+    return datetime.fromtimestamp(int(seconds), timezone.utc).strftime(TS_FORMAT)
+
+
+class Files(list):
+    """the files of a records file, with time_zone: the offsets of their timestamps (see normalize_times)"""
+    time_zone: Optional[dict] = None
+
+
+def normalize_times(files: List[dict]) -> dict:
+    """timestamps with the offset of the log (summarize_log_errors keeps it): with one offset in the whole input (or
+    none), stripped, the times stay as written in the logs; with several (UTC broker logs and local time Connect logs),
+    the times with an offset are converted to UTC, else they would be hours apart. Every timestamp is then 19
+    characters, as the rest of this module expects"""
+    def stamps():
+        for f in files:
+            yield f.get("log_first_ts")
+            yield f.get("log_last_ts")
+            for r in f["records"]:
+                yield r.get("first_ts")
+                yield r.get("last_ts")
+                yield from r.get("timestamps") or []
+            for c in f.get("configs") or []:
+                yield c.get("time")
+                for ch in c.get("changes") or []:
+                    yield ch.get("time")
+    offsets, naive = set(), False
+    for t in stamps():
+        if not t:
+            continue
+        m = _OFFSET_TS_RE.match(t)
+        if m:
+            offsets.add(m.group(2) + m.group(3) + ":" + m.group(4))
+        else:
+            naive = True
+    to_utc = len(offsets) > 1
+
+    def fix(t):
+        if not t or len(t) <= 19:
+            return t
+        m = _OFFSET_TS_RE.match(t)
+        if not m or not to_utc:
+            return t[:19]
+        shift = timedelta(hours=int(m.group(3)), minutes=int(m.group(4)))
+        local = datetime.strptime(m.group(1), TS_FORMAT)
+        return (local - shift if m.group(2) == "+" else local + shift).strftime(TS_FORMAT)
+    for f in files:
+        f["log_first_ts"], f["log_last_ts"] = fix(f.get("log_first_ts")), fix(f.get("log_last_ts"))
+        for r in f["records"]:
+            r["first_ts"], r["last_ts"] = fix(r.get("first_ts")), fix(r.get("last_ts"))
+            if r.get("timestamps"):
+                r["timestamps"] = [fix(t) for t in r["timestamps"]]
+        for c in f.get("configs") or []:
+            c["time"] = fix(c.get("time"))
+            for ch in c.get("changes") or []:
+                ch["time"] = fix(ch.get("time"))
+    return {"offsets": sorted(offsets), "converted_to_utc": to_utc, "without_offset": naive and bool(offsets)}
+
+
 def parse_records(path: str) -> List[dict]:
-    """Files of a records file, each with its records, in the order they were written."""
-    files: List[dict] = []
+    """Files of a records file, each with its records, in the order they were written; their timestamps normalized
+    (normalize_times, in .time_zone)"""
+    files: List[dict] = Files()
     current: Optional[dict] = None
     rec: Optional[dict] = None
     # last finished record, for its @@PGCTX@@ lines
@@ -109,6 +182,7 @@ def parse_records(path: str) -> List[dict]:
                 rec["lines"].append(line)
     for f in files:
         f["records"].sort(key=lambda r: (LEVEL_ORDER.get(r["level"], 9), -r["count"]))
+    files.time_zone = normalize_times(files)
     return files
 
 
@@ -282,7 +356,7 @@ def epochs(timestamps: List[str]) -> List[int]:
     out = []
     for ts in timestamps:
         try:
-            out.append(int(datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S").timestamp()))
+            out.append(epoch(ts))
         except ValueError:
             pass
     out.sort()
@@ -487,7 +561,7 @@ def drop_alternating_changes(config: dict, window: int = 60) -> None:
 
     def seconds(ch):
         try:
-            return datetime.strptime(ch["time"], "%Y-%m-%dT%H:%M:%S").timestamp() if ch.get("time") else None
+            return epoch(ch["time"]) if ch.get("time") else None
         except ValueError:
             return None
 
@@ -516,7 +590,7 @@ def ts_seconds(ts: Optional[str]) -> Optional[float]:
     if not ts:
         return None
     try:
-        return datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S").timestamp()
+        return epoch(ts)
     except ValueError:
         return None
 
@@ -543,8 +617,7 @@ def coverage(files: List[dict]) -> dict:
     t1 = max((ts_seconds(x["last"]) for x in timed), default=None)
 
     def gap(folder: str, a: float, b: float, where: str) -> dict:
-        return {"folder": folder, "from": datetime.fromtimestamp(a).strftime("%Y-%m-%dT%H:%M:%S"),
-                "to": datetime.fromtimestamp(b).strftime("%Y-%m-%dT%H:%M:%S"), "seconds": int(b - a), "where": where}
+        return {"folder": folder, "from": iso(a), "to": iso(b), "seconds": int(b - a), "where": where}
     for folder, xs in folders.items():
         spans = sorted((ts_seconds(x["first"]), ts_seconds(x["last"])) for x in xs if x["seconds"] is not None)
         if not spans:
@@ -629,6 +702,15 @@ def config_changes_lines(configs: List[dict], top: int = 10) -> List[str]:
     return out
 
 
+def time_zone_note(s: dict) -> str:
+    """"" when the times are as written in the logs, else what normalize_times did"""
+    tz = s.get("time_zone") or {}
+    if not tz.get("converted_to_utc"):
+        return ""
+    return (f"🌐 times in UTC: the files mix the offsets {', '.join(tz['offsets'])}"
+            + (" (the lines without an offset are as written)" if tz.get("without_offset") else ""))
+
+
 def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     """bounded summary printed after the per-file digests: what the HTML report says first (time range, connectors,
     known causes with what to do, root causes no known cause explains, configuration logged and its changes)"""
@@ -648,6 +730,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         if s["log_duration_seconds"] < SHORT_PERIOD_SECONDS:
             covered += f" ⚠️ shorter than {human_duration(SHORT_PERIOD_SECONDS)}: the logs may not cover the incident"
         out.append(covered)
+    if time_zone_note(s):
+        out.append("   " + time_zone_note(s))
     gaps = (res.get("coverage") or {}).get("gaps") or []
     if gaps:
         biggest = max(gaps, key=lambda g: g["seconds"])
@@ -1092,9 +1176,10 @@ function pgRead() {
   pgComponent = comp ? comp.dataset.component : "";
 }
 function pgStamp(t) {
+  // wall clock times encoded as UTC epochs (epoch()): the UTC fields give them back as written in the logs
   const d = new Date(Math.round(t * 1000)), p = n => String(n).padStart(2, "0");
-  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " +
-    p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+  return d.getUTCFullYear() + "-" + p(d.getUTCMonth() + 1) + "-" + p(d.getUTCDate()) + " " +
+    p(d.getUTCHours()) + ":" + p(d.getUTCMinutes()) + ":" + p(d.getUTCSeconds());
 }
 // the series of the occurrences chart, from the records kept: zoom_chart.js asks for them before the first draw
 window.pgChartTimes = function (box, chart) {
@@ -2068,6 +2153,9 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     elif s["findings_duration_seconds"] is not None and covered_seconds and s["findings_duration_seconds"] < covered_seconds:
         detail.append(f"{levels} over {human_duration(s['findings_duration_seconds'])} of it")
         hover += f" — the {levels} records span {period_text(s['first_timestamp'], s['last_timestamp'])}"
+    if time_zone_note(s):
+        detail.append("🌐 UTC")
+        hover += " — " + time_zone_note(s)
     kpis = "".join([
         kpi("🕐 Period covered", human_duration(covered_seconds), " · ".join(detail) if covered_seconds is not None
             else "no timestamped line in the logs", "warn" if short_window else "", hover),
@@ -2249,6 +2337,7 @@ def main() -> int:
         res["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
     res["summary"]["binary_files_skipped"] = args.skipped
     res["summary"]["incomplete_inputs"] = read_incomplete(args.incomplete)
+    res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
     if args.json:
         # the timestamps of every occurrence are only for the timeline and the time filter of the HTML report

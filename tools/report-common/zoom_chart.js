@@ -57,10 +57,12 @@
     for (let v = Math.floor(lo / step) * step; v < hi + step * 0.999; v += step) ticks.push(+v.toPrecision(12));
     return ticks;
   }
+  // the times are wall clock times as written in the logs, encoded as UTC epochs (report_html.wall_epoch): shown with the
+  // UTC fields, never shifted by the time zone of the browser or by a DST change
   function stamp(t, ms) {
     const d = new Date(Math.round(t * 1000));
-    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " +
-      pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + (ms ? "." + String(d.getMilliseconds()).padStart(3, "0") : "");
+    return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()) + " " +
+      pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds()) + (ms ? "." + String(d.getUTCMilliseconds()).padStart(3, "0") : "");
   }
   function fmtBucket(s) {
     return s < 1 ? Math.round(s * 1000) + "ms" : s < 60 ? s + "s" : s < 3600 ? s / 60 + "min" : s < 86400 ? s / 3600 + "h" : s / 86400 + "d";
@@ -204,7 +206,7 @@
         return out;
       });
       const d0 = new Date(start * 1000), d1 = new Date((start + n * bucket) * 1000 - 1);
-      const oneDay = d0.toDateString() === d1.toDateString(), ms = bucket < 1;
+      const oneDay = d0.toISOString().slice(0, 10) === d1.toISOString().slice(0, 10), ms = bucket < 1;
       const xlab = t => { const s = stamp(t, ms); return ms ? s.slice(17) : bucket < 60 ? s.slice(11) : oneDay ? s.slice(11, 16) : s.slice(5, 16); };
       const body = columns(n, (i, j) => counts[j][i], i => stamp(start + i * bucket, ms), i => xlab(start + i * bucket));
       const inWindow = c.times.map(ts => lowerBound(ts, b) - lowerBound(ts, a));

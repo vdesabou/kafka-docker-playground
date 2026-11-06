@@ -19,6 +19,7 @@ own "Toggle theme" button, with the same blue header and the same light / dark p
 """
 
 import json
+import calendar
 import os
 import re
 from datetime import datetime, timedelta
@@ -407,6 +408,16 @@ def fmt_bucket(seconds: int) -> str:
     return f"{seconds // 86400}d"
 
 
+_EPOCH = datetime(1970, 1, 1)
+
+
+def wall_epoch(dt: datetime) -> float:
+    """the wall clock time of dt (as written in the logs, its tzinfo ignored) as a UTC epoch: zoom_chart.js shows it with
+    the UTC fields, so a time is never shifted by the time zone of the browser, and a DST change of the machine that
+    writes the report adds no hole (02:30 → 03:00 is 30 min, not 90), hourly buckets start on the hour everywhere"""
+    return calendar.timegm(dt.timetuple()) + dt.microsecond / 1e6
+
+
 def time_bins(points: List[Tuple[datetime, str]], keys: Sequence[str]) -> Optional[dict]:
     """Count of points per key and per time bucket (at most 60 buckets); None without points."""
     if not points:
@@ -415,7 +426,7 @@ def time_bins(points: List[Tuple[datetime, str]], keys: Sequence[str]) -> Option
     end = max(p[0] for p in points)
     span = (end - start).total_seconds()
     bucket = next((b for b in BUCKETS if span / b <= 60), BUCKETS[-1])
-    start = datetime.fromtimestamp(int(start.timestamp()) // bucket * bucket)
+    start = _EPOCH + timedelta(seconds=int(wall_epoch(start)) // bucket * bucket)
     n = int((end - start).total_seconds() // bucket) + 1
     bins: List[Dict] = [dict({"start": start + timedelta(seconds=i * bucket)}, **{k: 0 for k in keys}) for i in range(n)]
     for ts, key in points:
@@ -492,7 +503,7 @@ def time_chart(points: List[Tuple[datetime, str]], series: Sequence[Tuple[str, s
         return ""
     times: Dict[str, List[int]] = {k: [] for k, _, _ in series}
     for ts, key in points:
-        times[key].append(round(ts.timestamp(), 3) if ms else int(ts.timestamp()))
+        times[key].append(round(wall_epoch(ts), 3) if ms else int(wall_epoch(ts)))
     shown = [s for s in series if times[s[0]]] or list(series[:1])
     data = [sorted(times[k])[:max_points] if embed_times else [] for k, _, _ in shown]
     every = [t for k, _, _ in series for t in times[k]]

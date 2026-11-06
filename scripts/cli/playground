@@ -30253,7 +30253,7 @@ function summarize_log_errors() {
         return n
     }
     # "2026-10-13 10:00:05" or "2026-10-13T10:00:05" at the start of the record, as 2026-10-13T10:00:05
-    function timestamp_of(head,    h, t) {
+    function timestamp_of(head,    h, t, z) {
         # journalctl export: "-- Logs begin at Tue 2026-11-03 01:59:29 PST, end at … --" is not a logged line, and the
         # "Nov 03 18:29:20 host connect-distributed[217934]: " prefix of each line pushes the log4j timestamp past
         # the first 80 characters
@@ -30277,6 +30277,17 @@ function summarize_log_errors() {
         }
         t = substr(h, RSTART, RLENGTH)
         sub(/ /, "T", t)
+        # the offset written after it (2026-10-13T10:00:05.123+02:00, …Z, …-0700), kept as +HH:MM: log_report.py strips it
+        # when the input has one offset, and converts the times to UTC when its files mix several (UTC broker logs and
+        # local time Connect logs: hours apart otherwise)
+        z = substr(h, RSTART + RLENGTH)
+        if (match(z, /^([.,][0-9]+)?(Z|[+-][0-9][0-9]:?[0-9][0-9])/)) {
+            z = substr(z, 1, RLENGTH)
+            sub(/^[.,][0-9]+/, "", z)
+            if (z == "Z") z = "+00:00"
+            else if (length(z) == 5) z = substr(z, 1, 3) ":" substr(z, 4, 2)
+            t = t z
+        }
         return t
     }
     # epoch seconds as 2026-11-05T10:00:05 (UTC), without strftime (not in every awk): days to civil date (H. Hinnant)
