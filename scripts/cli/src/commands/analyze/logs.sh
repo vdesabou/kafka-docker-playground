@@ -22,6 +22,7 @@ with_worker="${args[--with-worker]}"
 show_config="${args[--show-config]}"
 json_sections="${args[--json-sections]}"
 problem="${args[--problem]}"
+compare="${args[--compare]}"
 
 # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
 if [[ -n "$json_out" ]]
@@ -223,7 +224,8 @@ nb_extracted=0
 # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
 # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
 sanitizer="$root_folder/tools/report-common/sanitizer.py"
-sanitize_state="$tmp_dir/sanitize-state.json"
+# PG_SANITIZE_STATE: the state of the run that started this one (--compare): the same placeholder for a value in both
+sanitize_state="${PG_SANITIZE_STATE:-$tmp_dir/sanitize-state.json}"
 sanitize=""
 no_sanitize=1
 if [[ -n "$want_sanitize" ]]
@@ -959,6 +961,43 @@ then
     title="sample ${sample_array[*]}"
 fi
 report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
+# --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
+# same filters and the same sanitizer state), compared by log_report.py --compare
+if [[ -n "$compare" ]]
+then
+    compare_json="$tmp_dir/compare.json"
+    if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
+    then
+        cp "$compare" "$compare_json"
+    elif [ -e "$compare" ]
+    then
+        progress_step "🔁 analyzing $compare for the comparison"
+        log "🔁 Analyzing $compare for the comparison (same filters)"
+        compare_cmd=("$root_folder/scripts/cli/playground" analyze logs -f "$compare" --json --logs-only --max-findings "$max_findings")
+        [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
+        [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+        [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+        for connector in "${connector_array[@]}"
+        do
+            compare_cmd+=(--connector "$connector")
+        done
+        # no progress page of its own, the sanitizer state of this run
+        if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
+            || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+        then
+            logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+            tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
+            compare_json=""
+        fi
+    else
+        logwarn "⚠️ --compare: $compare does not exist, no comparison"
+        compare_json=""
+    fi
+    if [[ -n "$compare_json" ]]
+    then
+        report_args+=(--compare "$compare_json" --compare-label "$compare")
+    fi
+fi
 for connector in "${connector_array[@]}"
 do
     report_args+=(--connector "$connector")
@@ -969,7 +1008,7 @@ then
 fi
 # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
 # changes), on stderr with --json; then the configs asked with --show-config
-if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || [ -n "${compare_json:-}" ] || grep -q '^@@PGCFG@@' "$records_file"
 then
     progress_step "🧭 summary: known causes, root causes, configuration"
     echo ""

@@ -10,6 +10,19 @@
     🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze
 
     🎓 Tip: can be set several times. TAB lists the log files, exports, archives and folders of Downloads, Desktop and the current folder, newest first
+- long: --compare
+  required: false
+  arg: before
+  completions:
+    dynamic:
+    - playground get-log-files-with-fzf "$completion_current"
+  help: |-
+    🔁 Compare with another input: the logs before a fix, another worker, the day before. A log file, folder or archive
+    (analyzed with the same --connector, --with-worker, --errors-only and --sanitize), or a JSON written by --json
+
+    The report says what is new, gone, growing or shrinking: root causes, known causes, connectors and the totals by level
+    (per hour when the two inputs cover different periods), in a 🔁 Comparison section, the terminal summary and
+    .comparison of --json
 - long: --sample
   short: -s
   required: false
@@ -95,7 +108,7 @@
   required: false
   arg: sections
   help: |-
-    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors (default: all). For example --json-sections summary,findings,root_causes
+    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison (default: all). For example --json-sections summary,findings,root_causes
 - long: --component
   required: false
   repeatable: true

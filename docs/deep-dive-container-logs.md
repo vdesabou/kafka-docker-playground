@@ -591,6 +591,7 @@ playground stop
 | the logs of a Kafka Streams application that rebalances in a loop, restores forever or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section (state of each instance over time, rebalances, tasks, Streams errors). On a running example: `playground streams status --html` |
 | the logs of a Python, Go, .NET, JavaScript, C/C++ or Rust client application | `playground analyze logs -f <the logs>`: librdkafka lines, tracebacks, panics and unhandled exceptions are read (🧰). To reproduce, `other/client-<language>` runs that client against the playground |
 | a CI artifact or a log pasted in a ticket | save it to a file, `playground analyze logs -f <file>` |
+| did the fix work? the logs before and after it (or two workers, two days) | `playground analyze logs -f <after> --compare <before>`: 🔁 Comparison of the root causes, known causes and connectors new, gone, growing or shrinking, per hour when the periods differ (`<before>` can also be a JSON of `--json`) |
 | "the connector failed during the night" (still running env) | `container logs -c connect --errors`: look at `xN` and *last seen line*, then `--grep "<connector name>" --no-follow` around it |
 | "is it the connector or the broker?" | `container logs -c connect -c broker --errors --since 30m` |
 | a repro that must wait for a log line instead of `sleep` | `container logs -c connect --wait-for-log "<line specific to this run>" --max-wait 120` |
@@ -621,6 +622,7 @@ playground container logs -c <container> [-c <c2>] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
 playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--errors-only] [--max-findings N] [--output-dir <dir>] [--json]
                        [--connector <name> [--with-worker]] [--show-config <name>] [--json-sections summary,findings]
+                       [--compare <before: file|folder|bundle|JSON of --json>]
                        [--sanitize] [--logs-only] [--component connect] [--severity high] [--problem "<symptom>"] # CFK support bundle
 playground analyze logs --sample connect_task_failure|support_bundle
 ```

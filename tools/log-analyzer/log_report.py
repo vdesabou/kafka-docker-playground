@@ -850,6 +850,148 @@ def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
     return out
 
 
+# a root cause, a known cause or a connector changed when its count (per hour when both inputs have a period) is at
+# least this ratio higher or lower; and at least COMPARE_MIN_DELTA occurrences apart (1 → 2 is not "growing")
+COMPARE_RATIO = 1.5
+COMPARE_MIN_DELTA = 3
+
+
+def compare_reports(res: dict, prev: dict, label: str) -> dict:
+    """what changed between the analysis of another input (prev, the JSON of analyze logs: the logs before a fix, another
+    worker, the day before) and this one: root causes, known causes and connectors new, gone, growing or shrinking, and
+    the totals by level. Counts per hour when both inputs have a period (an input of 2 h against one of 10 min)"""
+    s, ps = res["summary"], prev.get("summary") or {}
+    hours, phours = (s.get("log_duration_seconds") or 0) / 3600, (ps.get("log_duration_seconds") or 0) / 3600
+    per_hour = hours > 0 and phours > 0 and abs(hours - phours) / max(hours, phours) > 0.1
+
+    def rate(n, h):
+        return n / h if per_hour else n
+
+    def classify(now, before, h_now, h_before):
+        if before == 0 and now > 0:
+            return "new"
+        if now == 0 and before > 0:
+            return "gone"
+        a, b = rate(now, h_now), rate(before, h_before)
+        if abs(now - before) >= COMPARE_MIN_DELTA and a >= b * COMPARE_RATIO:
+            return "growing"
+        if abs(now - before) >= COMPARE_MIN_DELTA and a * COMPARE_RATIO <= b:
+            return "shrinking"
+        return "same"
+
+    def diff(cur: Dict[str, dict], old: Dict[str, dict], extra=lambda c: {}) -> List[dict]:
+        out = []
+        for key in list(cur) + [k for k in old if k not in cur]:
+            n, b = (cur.get(key) or {}).get("occurrences", 0), (old.get(key) or {}).get("occurrences", 0)
+            item = dict({"key": key, "status": classify(n, b, hours, phours), "occurrences": n, "before": b},
+                        **extra(cur.get(key) or old.get(key)))
+            if per_hour:
+                item["per_hour"], item["before_per_hour"] = round(n / hours, 2), round(b / phours, 2)
+            out.append(item)
+        order = {"new": 0, "growing": 1, "shrinking": 2, "gone": 3, "same": 4}
+        out.sort(key=lambda x: (order[x["status"]], -max(x["occurrences"], x["before"])))
+        return out
+
+    root_causes = diff({c["label"]: c for c in res["root_causes"]}, {c["label"]: c for c in prev.get("root_causes") or []},
+                       lambda c: {"level": c.get("level"), "root_cause": c.get("root_cause"), "example": c.get("example", "")[:300],
+                                  "index": next((i for i, x in enumerate(res["root_causes"]) if x["label"] == c["label"]), None)})
+    known = diff({h["title"]: h for h in res["known_causes"]}, {h["title"]: h for h in prev.get("known_causes") or []},
+                 lambda h: {"severity": h.get("severity")})
+    connectors = diff({n: {"occurrences": v} for n, v in (s.get("by_connector") or {}).items()},
+                      {n: {"occurrences": v} for n, v in (ps.get("by_connector") or {}).items()})
+    totals = {lvl: {"now": (s.get("by_level") or {}).get(lvl, 0), "before": (ps.get("by_level") or {}).get(lvl, 0)}
+              for lvl in ("FATAL", "ERROR", "WARN")}
+    count = lambda items, st: sum(1 for x in items if x["status"] == st)
+    return {"label": label, "per_hour": per_hour,
+            "period": {"now": period_text(s.get("log_first_timestamp"), s.get("log_last_timestamp")),
+                       "now_seconds": s.get("log_duration_seconds"),
+                       "before": period_text(ps.get("log_first_timestamp"), ps.get("log_last_timestamp")),
+                       "before_seconds": ps.get("log_duration_seconds")},
+            "totals": totals,
+            "counts": {st: count(root_causes, st) for st in ("new", "gone", "growing", "shrinking", "same")},
+            "root_causes": root_causes, "known_causes": known, "connectors": connectors}
+
+
+COMPARE_ICONS = {"new": "🆕", "growing": "📈", "shrinking": "📉", "gone": "✅", "same": "＝"}
+
+
+def compare_counts(x: dict) -> str:
+    """the counts before and now (1 → 7), and the rates when the comparison is per hour (6.7/h → 0.3/h)"""
+    out = f"{x['before']:,} → {x['occurrences']:,}"
+    if "per_hour" in x:
+        out += f" ({x['before_per_hour']:g}/h → {x['per_hour']:g}/h)"
+    return out
+
+
+def compare_verdict(cmp: dict) -> str:
+    c = cmp["counts"]
+    kc_new = [x["key"] for x in cmp["known_causes"] if x["status"] == "new"]
+    kc_gone = [x["key"] for x in cmp["known_causes"] if x["status"] == "gone"]
+    out = (f"🔁 Compared with {cmp['label']}: {c['new']} new root cause(s), {c['growing']} growing, {c['shrinking']} "
+           f"shrinking, {c['gone']} gone, {c['same']} unchanged" + (" (per hour: the periods differ)" if cmp["per_hour"] else ""))
+    if kc_new:
+        out += f" · new known cause(s): {', '.join(kc_new[:4])}"
+    if kc_gone:
+        out += f" · gone: {', '.join(kc_gone[:4])}"
+    return out
+
+
+def compare_text(cmp: Optional[dict], top: int = 6) -> List[str]:
+    if not cmp:
+        return []
+    out = [compare_verdict(cmp)]
+    t = cmp["totals"]
+    out.append("   " + " · ".join(f"{lvl} {t[lvl]['before']} → {t[lvl]['now']}" for lvl in ("FATAL", "ERROR", "WARN"))
+               + f" · period {human_duration(cmp['period']['before_seconds'])} → {human_duration(cmp['period']['now_seconds'])}")
+    for x in [x for x in cmp["root_causes"] if x["status"] != "same"][:top]:
+        what = f"{x['root_cause'].split('.')[-1]}: {x['example']}" if x.get("root_cause") else x["example"] or x["key"]
+        out.append(f"   {COMPARE_ICONS[x['status']]} {x['status']:<9} {compare_counts(x)} {what[:160]}")
+    return out
+
+
+def compare_html(cmp: Optional[dict]) -> str:
+    """the 🔁 Comparison section, right after the verdict"""
+    if not cmp:
+        return ""
+
+    def rows(items, link):
+        out = []
+        for x in items:
+            what = (f"<span class='mono'>{e((x.get('root_cause') or '—').split('.')[-1])}</span> {e(x.get('example') or x['key'])}"
+                    if "example" in x else e(x["key"]))
+            if link and x.get("index") is not None:
+                what = f"<a href='#root-cause-{x['index']}' title='its row in 🌳 All root causes'>{what}</a>"
+            rates = "per_hour" in x
+            out.append(f"<tr class='cmp-{x['status']}'><td>{COMPARE_ICONS[x['status']]} {x['status']}</td>"
+                       f"<td class='num'>{x['before']:,}" + (f"<br><span class='fi-meta'>{x['before_per_hour']:g}/h</span>" if rates else "") + "</td>"
+                       f"<td class='num'>{x['occurrences']:,}" + (f"<br><span class='fi-meta'>{x['per_hour']:g}/h</span>" if rates else "") + "</td>"
+                       f"<td>{what}</td></tr>")
+        return "".join(out)
+
+    def table(title, items, link=False):
+        changed, same = [x for x in items if x["status"] != "same"], [x for x in items if x["status"] == "same"]
+        if not items:
+            return ""
+        head = "<tr><th></th><th class='num'>Before</th><th class='num'>Now</th><th>What</th></tr>"
+        out = f"<h3>{title}</h3>"
+        out += f"<table>{head}{rows(changed, link)}</table>" if changed else "<p class='legend'>No change.</p>"
+        if same:
+            out += f"<details><summary>{len(same)} unchanged</summary><table>{head}{rows(same, link)}</table></details>"
+        return out
+    t = cmp["totals"]
+    tiles = "".join(f"<span class='cmp-tile'>{lvl} <b>{t[lvl]['before']:,} → {t[lvl]['now']:,}</b></span>" for lvl in ("FATAL", "ERROR", "WARN"))
+    return ("<style>.cmp-tile{display:inline-block;margin:0 14px 6px 0;font-size:.85rem}tr.cmp-new td,tr.cmp-growing td{background:#fef2f2}"
+            "tr.cmp-gone td,tr.cmp-shrinking td{background:#f0fdf4}html[data-theme=dark] tr.cmp-new td,html[data-theme=dark] tr.cmp-growing td{background:#3b1515}"
+            "html[data-theme=dark] tr.cmp-gone td,html[data-theme=dark] tr.cmp-shrinking td{background:#0f2a1a}.cmp h3{font-size:.92rem;margin:14px 0 4px}</style>"
+            f"<div class='table-card cmp'><h2>🔁 Comparison with {e(cmp['label'])}</h2><p class='legend'>{e(compare_verdict(cmp))}. "
+            f"Before: {e(cmp['period']['before'])} ({e(human_duration(cmp['period']['before_seconds']))}); now: "
+            f"{e(cmp['period']['now'])} ({e(human_duration(cmp['period']['now_seconds']))})."
+            + (" Growing and shrinking compare the counts per hour, the two inputs covering different periods." if cmp["per_hour"] else "")
+            + f" A change is at least ×{COMPARE_RATIO} and {COMPARE_MIN_DELTA} occurrences.</p><div>{tiles}</div>"
+            + table("🌳 Root causes", cmp["root_causes"], link=True) + table("🧠 Known causes", cmp["known_causes"])
+            + table("🔌 Connectors", cmp["connectors"]) + "</div>")
+
+
 TIMELINE_ICONS = {"FATAL": "💀", "ERROR": "🔴", "WARN": "🟠", "CRITICAL": "🧠", "HIGH": "🧠", "MEDIUM": "🧠", "LOW": "🧠"}
 
 
@@ -1003,6 +1145,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["example"]
             who = f" · {len(c['connectors'])} connector(s): {first_names(c['connectors'])}" if c["connectors"] else ""
             out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
+    # what changed against the input of --compare (🔁 Comparison of the HTML report, .comparison of --json)
+    out += compare_text(res.get("comparison"))
     # what happened first, all files merged (🗓️ Incident timeline of the HTML report, .timeline of --json)
     out += timeline_text(res.get("timeline") or [])
     # one line per connector (🔌 Connectors of the HTML report, .connectors of --json)
@@ -2614,6 +2758,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # the filter bar above the findings: a component picked (🔌 Connect) keeps its findings right below
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
     body = [verdict_html(*verdict(res, levels, unit)), incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
+            compare_html(res.get("comparison")),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
@@ -2744,6 +2889,8 @@ def main() -> int:
     ap.add_argument("--levels", default="ERROR/FATAL", help="levels reported, for the report")
     ap.add_argument("--skipped", type=int, default=0, help="number of binary files skipped")
     ap.add_argument("--incomplete", metavar="FILE", help="label<tab>reason of each input not fully read")
+    ap.add_argument("--compare", metavar="JSON", help="the JSON of analyze logs of another input, to compare with")
+    ap.add_argument("--compare-label", metavar="LABEL", default="", help="what that other input is, for the report")
     ap.add_argument("--json", action="store_true", help="print the analysis as JSON")
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
     ap.add_argument("--heading", default="🔥 Log Analysis", help="title of the report")
@@ -2766,7 +2913,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration,timeline,connectors (default: all)")
+                         "files_without_findings,coverage,configuration,timeline,connectors,comparison (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
@@ -2777,6 +2924,12 @@ def main() -> int:
         res["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
     res["summary"]["binary_files_skipped"] = args.skipped
     res["summary"]["incomplete_inputs"] = read_incomplete(args.incomplete)
+    if args.compare:
+        try:
+            with open(args.compare, encoding="utf-8") as fh:
+                res["comparison"] = compare_reports(res, json.load(fh), args.compare_label or args.compare)
+        except (OSError, ValueError) as ex:
+            print(f"⚠️ --compare: cannot read {args.compare}: {ex}", file=sys.stderr)
     res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
     if args.json:
