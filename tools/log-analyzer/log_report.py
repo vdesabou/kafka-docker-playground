@@ -853,7 +853,8 @@ FILE_COMPONENTS = [
     ("zookeeper", "🦓 ZooKeeper", r"zookeeper|(^|[/_-])zk([/_.-]|\d|$)"),
     ("streams", "🌊 Kafka Streams", r"kafka[-_]?streams|(^|[/_.-])streams?\d*([/_.-]|$)"),
     ("connect", "🔌 Connect", r"connect|(^|[/_-])cw\d|worker"),
-    ("clients", "📡 Clients", r"producer|consumer|client|librdkafka|kafkajs|confluent[-_]kafka|panic|uncaught|python|dotnet|golang|(^|[/_-])go[-_]|rust|node"),
+    ("clients", "📡 Clients", r"producer|consumer|client|librdkafka|kafkajs|confluent[-_]kafka|panic|uncaught|python|dotnet|golang|"
+                             r"^go[-_](app|client)|rust|node[-_.]?js|^node[-_](app|client)"),
     ("kafka", "🗄️ Kafka", r"kafka|broker|server\.log|controller|state-change|kraft"),
 ]
 
@@ -867,10 +868,13 @@ def component_chips(labels: List[str]) -> str:
 
 
 def file_component(label: str) -> str:
-    low = label.lower()
-    for code, _, pattern in FILE_COMPONENTS:
-        if re.search(pattern, low):
-            return code
+    """the parts of the label from the deepest: the file name (server.log, connect.log), then its folders, then the
+    archive it comes from and the folders of the input. The whole label was matched at once: the clients pattern (node)
+    took kafka-node-1/server.log, and the name of an archive (acme-connect-bundle.zip:broker/server.log) its brokers"""
+    for part in reversed([p for p in re.split(r"[/\\:]", label.lower()) if p]):
+        for code, _, pattern in FILE_COMPONENTS:
+            if re.search(pattern, part):
+                return code
     return "other"
 
 
@@ -1127,7 +1131,7 @@ FILTER_SCRIPT = ("<style>[data-level][hidden]{display:none}.file-records[hidden]
                  "border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer}"
                  "html[data-theme=dark] .rc-reset{background:#0f172a;color:#cbd5e1;border-color:#334155}"
                  ".rec-scope:not(:empty){display:block;margin-top:4px;font-size:.75rem;color:#64748b}"
-                 ".rec-card.out{opacity:.45}.fi-scope{font-weight:400;font-size:.78rem;opacity:.75}</style>") + """<script>
+                 ".rec-card.out{opacity:.45}.rec-card.pg-nomatch{display:none}.fi-scope{font-weight:400;font-size:.78rem;opacity:.75}</style>") + """<script>
 // ── the filters of the report: levels, connector, and the period selected on the occurrences chart ──────────────
 // pgOccurrences: {connectors: [name], records: [[root cause index, level (0 FATAL, 1 ERROR, 2 WARN), connector index
 // (-1: none), occurrences, epoch seconds]]} - occurrences_json() of log_report.py. The times of a record are the
@@ -1142,6 +1146,8 @@ var pgLevelsOff = null;   // Set of the level codes switched off
 var pgConnector = "";     // "" all, "-" the records without a connector context, else a connector name
 var pgComponent = "";     // "" all, else the component of the files kept (connect, kafka, clients…)
 var pgConnIdx = -1;       // index of pgConnector in pgOcc.connectors
+var pgQuery = "";         // the text of the search box, lower case
+var pgMatch = null;       // Set of the record indexes whose block contains pgQuery, null without a search
 function pgTimes(rec) {
   if (rec.times === undefined) {
     let t = 0;
@@ -1151,6 +1157,8 @@ function pgTimes(rec) {
 }
 function pgKeeps(rec) {
   if (pgLevelsOff && pgLevelsOff.has(rec[1])) return false;
+  // the search box: the records whose block contains the text (a record without a block cannot be searched)
+  if (pgMatch && (rec[5] < 0 || !pgMatch.has(rec[5]))) return false;
   // the Component chips: the component of the file of the record (pgOcc.components, by file index)
   if (pgComponent && (pgOcc.components || [])[rec[6]] !== pgComponent) return false;
   if (pgConnector === "") return true;
@@ -1163,7 +1171,8 @@ function pgInWindow(rec) {
   const times = pgTimes(rec);
   if (!times.length) return [rec[3], true];
   let n = 0;
-  for (const t of times) if (t >= pgWindow[0] && t <= pgWindow[1]) n++;
+  // [from, to), as the buckets of the chart
+  for (const t of times) if (t >= pgWindow[0] && t < pgWindow[1]) n++;
   return [n, n > 0];
 }
 function pgRead() {
@@ -1174,6 +1183,13 @@ function pgRead() {
   pgConnIdx = pgOcc.connectors.indexOf(pgConnector);
   const comp = document.querySelector(".comp-chip.active");
   pgComponent = comp ? comp.dataset.component : "";
+  const box = document.querySelector(".pg-search");
+  pgQuery = box ? box.value.toLowerCase().trim() : "";
+  pgMatch = null;
+  if (pgQuery) {
+    pgMatch = new Set();
+    document.querySelectorAll("details[data-rec]").forEach(el => { if (el.textContent.toLowerCase().includes(pgQuery)) pgMatch.add(+el.dataset.rec); });
+  }
 }
 function pgStamp(t) {
   // wall clock times encoded as UTC epochs (epoch()): the UTC fields give them back as written in the logs
@@ -1252,7 +1268,7 @@ function pgRootCauses() {
     const what = kept ? kept + " of " + rows.length + " root cause(s) · " + occurrences + " occurrence(s)"
       : "no root cause left";
     note.textContent = pgWindow ? "⏱ " + pgStamp(pgWindow[0]) + " → " + pgStamp(pgWindow[1]) + " · " + what
-      : (pgLevelsOff || pgConnector !== "") ? what : "";
+      : (pgLevelsOff || pgConnector !== "" || pgComponent !== "" || pgQuery) ? what : "";
     if (reset) reset.hidden = !pgWindow;
   }
   return byCause;
@@ -1315,7 +1331,7 @@ function pgFindings() {
   const cards = document.querySelectorAll(".rec-card[data-recs]");
   if (!cards.length) return;
   if (!pgByRecord) { pgByRecord = {}; for (const rec of pgOcc.records) if (rec[5] >= 0) pgByRecord[rec[5]] = rec; }
-  const filtered = pgWindow !== null || pgLevelsOff !== null || pgConnector !== "" || pgComponent !== "";
+  const filtered = pgWindow !== null || pgLevelsOff !== null || pgConnector !== "" || pgComponent !== "" || pgQuery !== "";
   cards.forEach(function (card) {
     const span = card.querySelector(".rec-scope");
     if (!span) return;
@@ -1355,6 +1371,7 @@ function pgFindings() {
     else if (pgConnector !== "") bits.push(pgConnector);
     if (pgLevelsOff) bits.push([...pgLevelsOff].map(l => PG_LEVELS[l]).join(" + ") + " off");
     if (pgComponent !== "") bits.push(pgComponent);
+    if (pgQuery) bits.push("🔎 " + JSON.stringify(pgQuery));
     scope.textContent = bits.length ? " · selection: " + bits.join(" · ") : "";
   }
 }
@@ -1365,18 +1382,12 @@ function pgApply() {
   pgFindings();
   pgSearch();
 }
-// the search box: what the other filters keep and whose text contains it (records, root causes, findings, files)
+// the search box filters the records in pgKeeps() (chart, top causes, root causes, files, records follow); a card of the
+// findings whose text does not contain it is hidden too, with a class: the hidden attribute is the severity chips'
 function pgSearch() {
-  const box = document.querySelector(".pg-search");
-  const q = box ? box.value.toLowerCase().trim() : "";
-  // the cards of the findings are only hidden by the search (the other filters dim them)
-  document.querySelectorAll(".rec-card[hidden]").forEach(c => { c.hidden = false; });
-  if (!q) return;
-  const has = el => el.textContent.toLowerCase().includes(q);
-  document.querySelectorAll("details[data-rec]:not([hidden])").forEach(el => { if (!has(el)) el.hidden = true; });
-  document.querySelectorAll("tr.rc-row:not([hidden])").forEach(el => { if (!has(el)) el.hidden = true; });
-  document.querySelectorAll(".rec-card:not([hidden])").forEach(el => { if (!has(el)) el.hidden = true; });
-  document.querySelectorAll(".file-records").forEach(card => { card.hidden = !card.querySelector("details[data-rec]:not([hidden])"); });
+  document.querySelectorAll(".rec-card").forEach(c => {
+    c.classList.toggle("pg-nomatch", pgQuery !== "" && !c.textContent.toLowerCase().includes(pgQuery));
+  });
 }
 function pgApplyFilters() {
   pgRead();
@@ -1432,7 +1443,7 @@ let pgSearchTimer = null;
 document.addEventListener("input", function (ev) {
   if (!ev.target.closest(".pg-search")) return;
   clearTimeout(pgSearchTimer);
-  pgSearchTimer = setTimeout(pgApply, 150);
+  pgSearchTimer = setTimeout(pgApplyFilters, 200);
 });
 document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
 document.addEventListener("DOMContentLoaded", function () {
@@ -1446,6 +1457,9 @@ document.addEventListener("DOMContentLoaded", function () {
     hint.className = "comp-remembered fb-label";
     hint.textContent = "· remembered from your last report (🧩 All components to forget it)";
     chip.after(hint);
+    // drawn before this handler (zoom_chart.js listens first): drawn again for the component
+    pgApplyFilters();
+    return;
   }
   pgRead(); pgApply();
 });
@@ -1840,13 +1854,13 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
     counts: "OrderedDict[str, int]" = OrderedDict()
     for f in files or []:
         code = file_component(f["label"])
-        counts[code] = counts.get(code, 0) + f["distinct"]
+        counts[code] = counts.get(code, 0) + f["occurrences"]
     if len(counts) >= 2:
         names = {code: name for code, name, _ in FILE_COMPONENTS}
         names["other"] = "📄 Other"
         second.append("<span class='fb-label'>Component</span><button type='button' class='pill comp-chip active' data-component=''>"
                       f"🧩 All components <span class='n'>{sum(counts.values()):,}</span></button>")
-        second += [f"<button type='button' class='pill comp-chip' data-component='{code}' title='only the files of {e(names[code][2:].strip())}'>"
+        second += [f"<button type='button' class='pill comp-chip' data-component='{code}' title='only the files of {e(names[code][2:].strip())} (occurrences)'>"
                    f"{names[code]} <span class='n'>{n:,}</span></button>"
                    for code, n in sorted(counts.items(), key=lambda kv: -kv[1])]
     if by_connector:

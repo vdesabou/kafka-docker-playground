@@ -86,7 +86,12 @@ dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys cha
 config from the `@@PGCFGCHG@@` lines, and the `.properties` / connector JSON files that `analyze logs` appends), with a
 level and connector filter (connector taken from the
 `[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`)
-and a period filter (drag over the 📈 occurrences chart). The three filters drive **everything below the filter bar**
+a period filter (drag over the 📈 occurrences chart, `[from, to)` as its buckets), the Component chips (the component of
+each file from the deepest part of its label: the file name `server.log` / `connect.log` first, then its folders, then the
+archive; counted in occurrences, like the level pills; the one picked is remembered in `localStorage` and the chart is
+drawn again for it on load) and the search box (the records whose block contains the text, `pgMatch` in `pgKeeps()`; a
+finding card that does not contain it gets `.pg-nomatch`, never the `hidden` attribute of the severity chips). These
+filters drive **everything below the filter bar**
 from one index of records written once in the page, `occurrences_json()`: `<script type="application/json"
 id="pg-occurrences">` holds `[root cause index, level, connector index, occurrences, epoch seconds, record index, file
 index]` per record, the times being the first value then the deltas in base 36 (`encode_times()` / `pgTimes()`). On
