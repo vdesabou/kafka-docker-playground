@@ -68,17 +68,6 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 ==========================
 Security
 ==========================
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -151,6 +140,17 @@ Note that this config is considered advanced, please only customize the cipher l
 
 	 - Type: LIST
 	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+May be overridden with the KAFKA_COUCHBASE_TRUST_STORE_PASSWORD environment variable.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
 	 - Importance: MEDIUM
 	 - Required: false
 
