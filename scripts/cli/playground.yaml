@@ -3895,8 +3895,11 @@ subcommands:
     description: "\U0001F3A9 Install the \"kafka-docker-playground (kdp)\" Alfred
       workflow (macOS, Alfred 5 with the Powerpack)\n\nA launcher for the playground
       CLI: type 'kdp' in Alfred, or select text\nanywhere (a connector config, a stack
-      trace, a connector class, a config\nkey, a case number) and use the Universal
-      Action \"kdp: config, stack\ntrace, connector class, key, case…\":\n\n  kdp
+      trace, a connector class, a config\nkey, a case number), or files and folders
+      in Finder (logs, a support\nbundle, a thread dump, a GC log, a heap dump, a
+      .jfr, a .pcap, an\norclcdc_diag report), and use the Universal Action \"kdp:
+      config, stack\ntrace, logs, connector class, key, case…\" (files: the matching
+      'playground\nanalyze' command, its HTML report opened right away):\n\n  kdp
       how <question>          find-command: the command that answers a question, ⌥
       its --help, ⇧ its deep dive\n  kdp find <words>            find-example: ↩ opens
       the script in VS Code, ⌘ copies 'playground run -f …'\n  kdp history [words]

@@ -134,8 +134,8 @@ done
 
 for html_out in "${reports[@]}"
 do
-    # only open a browser in an interactive terminal
-    if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null; then
+    # only open a browser in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+    if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null; then
         log "🌐 Opening $html_out in browser..."
         open "$html_out"
     else

@@ -139,6 +139,38 @@ def check_modes(root, cache):
             fail("kdp {}: {}".format(q, err))
         else:
             check_items(q, out)
+    check_files(env, cache)
+
+
+def check_files(env, cache):
+    """Files and folders given to the Universal Action (tab or newline separated): the matching analyze command."""
+    folder = os.path.join(cache, "selected files")
+    os.makedirs(os.path.join(folder, "bundle"))
+    for name in ("connect.log", "kafka-gc.log.0.current", "jstack-1.txt", "dump.hprof", "capture.pcap", "orclcdc_diag_1.html"):
+        open(os.path.join(folder, name), "w").close()
+    p = lambda name: os.path.join(folder, name)
+    cases = [
+        (p("connect.log"), ["🧭 Analyze logs"], "analyze logs -f"),
+        (p("bundle"), ["🧭 Analyze logs"], "analyze logs -f"),
+        (p("connect.log") + "\t" + p("bundle"), ["🧭 Analyze logs"], "analyze logs -f"),
+        (p("kafka-gc.log.0.current"), ["♻️", "🧭 Analyze logs"], "analyze gc-logs -f"),
+        (p("jstack-1.txt") + "\n", ["🧵", "🧭 Analyze logs"], "analyze thread-dump -f"),
+        (p("dump.hprof"), ["🧠"], "analyze heap-dump -f"),
+        (p("capture.pcap"), ["🦈"], "analyze tcp-dump -f"),
+        (p("orclcdc_diag_1.html"), ["🔶"], "analyze oracle-xstream-report -f"),
+        (p("dump.hprof") + "\n" + p("connect.log"), ["🧭 Analyze logs"], "analyze logs -f"),
+    ]
+    for query, titles, command in cases:
+        label = "files " + " + ".join(os.path.basename(x) for x in query.split("\n") for x in x.split("\t") if x)
+        out, err = run_query(query, env)
+        items = (out or {}).get("items") or []
+        got = [i["title"] for i in items]
+        if out is None or len(got) != len(titles) or not all(g.startswith(t) for g, t in zip(got, titles)):
+            fail("{}: expected {}, got {} {}".format(label, titles, got, err))
+        elif command not in items[0]["arg"] or "PLAYGROUND_RUN_LOG_TERMINAL=1" not in items[0]["arg"]:
+            fail("{}: {!r} not in {}".format(label, command, items[0]["arg"]))
+        else:
+            ok("{}: {}".format(label, " · ".join(got)))
 
 
 def check_view(root, cache):
