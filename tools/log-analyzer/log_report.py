@@ -1248,7 +1248,7 @@ SELECT_CSS = (".conn-filter,.cfg-conn-select{font-family:inherit;font-size:.8rem
               "border-color:#334155}html[data-theme=dark] .conn-filter option,html[data-theme=dark] .cfg-conn-select option{background:#0f172a}")
 
 
-FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:8px;"
+FILTER_CSS = ("<style>::highlight(pg-search){background:#fde047;color:#111}.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:8px;"
               "padding:10px 14px;margin-bottom:14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
               "font-size:.8rem;color:#475569}.fb-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}"
               ".fb-label{font-size:.75rem;color:#64748b;margin:0 2px 0 4px}"
@@ -1294,8 +1294,63 @@ var pgLevelsOff = null;   // Set of the level codes switched off
 var pgConnector = "";     // "" all, "-" the records without a connector context, else a connector name
 var pgComponent = "";     // "" all, else the component of the files kept (connect, kafka, clients…)
 var pgConnIdx = -1;       // index of pgConnector in pgOcc.connectors
-var pgQuery = "";         // the text of the search box, lower case
-var pgMatch = null;       // Set of the record indexes whose block contains pgQuery, null without a search
+var pgQuery = "";         // the text of the search box
+var pgTest = null;        // its test of a text (pgCompile), null without a search
+var pgTerms = [];         // its terms: {neg, rx, word}
+var pgMatch = null;       // Set of the record indexes whose block passes pgTest, null without a search
+// the search: words that must all be in the text (any case), -word for a word that must not be, "a phrase", /a regex/
+// (-/regex/ too); an invalid regex is searched as text
+function pgCompile(q) {
+  const terms = [], re = /(-?)(?:"([^"]+)"|\/((?:\\.|[^\/])+)\/|(\S+))/g;
+  let m;
+  while ((m = re.exec(q))) {
+    const neg = m[1] === "-" && (m[2] !== undefined || m[3] !== undefined || m[4] !== undefined);
+    let rx = null, word = null;
+    if (m[3] !== undefined) { try { rx = new RegExp(m[3], "i"); } catch (e) { word = m[3].toLowerCase(); } }
+    else word = (m[2] !== undefined ? m[2] : m[4] !== undefined ? m[4] : m[1]).toLowerCase();
+    if (!rx && !word) continue;
+    terms.push({neg: neg, rx: rx, word: word});
+  }
+  pgTerms = terms;
+  if (!terms.length) return null;
+  return function (text) {
+    const low = text.toLowerCase();
+    return terms.every(t => (t.rx ? t.rx.test(text) : low.includes(t.word)) !== t.neg);
+  };
+}
+// the words and regexes searched, highlighted in what is shown (CSS Custom Highlight API: the page is not modified;
+// nothing in a browser without it)
+function pgHighlight() {
+  if (!window.CSS || !CSS.highlights || typeof Highlight === "undefined") return;
+  CSS.highlights.delete("pg-search");
+  const pos = pgTest ? pgTerms.filter(t => !t.neg) : [];
+  if (!pos.length) return;
+  const ranges = [], MAX = 3000;
+  const roots = document.querySelectorAll("details[data-rec]:not([hidden]), tr.rc-row:not([hidden]), .rec-card:not(.pg-nomatch), tr.tl-row:not([hidden])");
+  for (const root of roots) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode()) && ranges.length < MAX) {
+      const text = node.nodeValue, low = text.toLowerCase();
+      for (const t of pos) {
+        if (t.rx) {
+          const g = new RegExp(t.rx.source, "gi");
+          let m;
+          while ((m = g.exec(text)) && ranges.length < MAX) {
+            if (!m[0]) { g.lastIndex++; continue; }
+            const r = new Range(); r.setStart(node, m.index); r.setEnd(node, m.index + m[0].length); ranges.push(r);
+          }
+        } else {
+          for (let i = low.indexOf(t.word); i >= 0 && ranges.length < MAX; i = low.indexOf(t.word, i + t.word.length)) {
+            const r = new Range(); r.setStart(node, i); r.setEnd(node, i + t.word.length); ranges.push(r);
+          }
+        }
+      }
+    }
+    if (ranges.length >= MAX) break;
+  }
+  if (ranges.length) CSS.highlights.set("pg-search", new Highlight(...ranges));
+}
 function pgTimes(rec) {
   if (rec.times === undefined) {
     let t = 0;
@@ -1333,11 +1388,12 @@ function pgRead() {
   const comp = document.querySelector(".comp-chip.active");
   pgComponent = comp ? comp.dataset.component : "";
   const box = document.querySelector(".pg-search");
-  pgQuery = box ? box.value.toLowerCase().trim() : "";
+  pgQuery = box ? box.value.trim() : "";
+  pgTest = pgCompile(pgQuery);
   pgMatch = null;
-  if (pgQuery) {
+  if (pgTest) {
     pgMatch = new Set();
-    document.querySelectorAll("details[data-rec]").forEach(el => { if (el.textContent.toLowerCase().includes(pgQuery)) pgMatch.add(+el.dataset.rec); });
+    document.querySelectorAll("details[data-rec]").forEach(el => { if (pgTest(el.textContent)) pgMatch.add(+el.dataset.rec); });
   }
 }
 function pgStamp(t) {
@@ -1543,7 +1599,7 @@ function pgTimeline() {
     if (keep && pgConnector === "-" && d.conn) keep = false;
     if (keep && pgConnector !== "" && pgConnector !== "-" && d.conn && d.conn !== pgConnector) keep = false;
     if (keep && pgWindow && d.t && (+d.t < pgWindow[0] || +d.t >= pgWindow[1])) keep = false;
-    if (keep && pgQuery) keep = d.rec !== undefined ? (pgMatch && pgMatch.has(+d.rec)) : tr.textContent.toLowerCase().includes(pgQuery);
+    if (keep && pgTest) keep = d.rec !== undefined ? (pgMatch && pgMatch.has(+d.rec)) : pgTest(tr.textContent);
     tr.hidden = !keep;
     if (keep) shown++;
   });
@@ -1605,13 +1661,14 @@ function pgApply() {
   pgFindings();
   pgSearch();
   pgTimeline();
+  pgHighlight();
   pgStateWrite();
 }
 // the search box filters the records in pgKeeps() (chart, top causes, root causes, files, records follow); a card of the
 // findings whose text does not contain it is hidden too, with a class: the hidden attribute is the severity chips'
 function pgSearch() {
   document.querySelectorAll(".rec-card").forEach(c => {
-    c.classList.toggle("pg-nomatch", pgQuery !== "" && !c.textContent.toLowerCase().includes(pgQuery));
+    c.classList.toggle("pg-nomatch", !!pgTest && !pgTest(c.textContent));
   });
 }
 function pgApplyFilters() {
@@ -2081,8 +2138,9 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
         first += [f"<button type='button' class='pill lvl-chip' data-level='{lvl}' data-level-code='{LEVEL_ORDER[lvl]}' "
                   f"aria-pressed='true' title='only the {lvl} records'>{icon} {lvl} <span class='n'>{by_level[lvl]:,}</span></button>"
                   for lvl, icon in LEVEL_PILLS if by_level.get(lvl)]
-    first.append("<input class='pg-search' type='search' placeholder='Search messages, files, connectors…' "
-                 "title='the records, the root causes and the findings whose text contains it'>")
+    first.append("<input class='pg-search' type='search' placeholder='Search: words, -exclude, \"a phrase\", /regex/' "
+                 "title='the records, root causes, findings and timeline rows whose text has all the words (any case); "
+                 "-word: without it; \"two words\": that phrase; /regex/ (or -/regex/): a regular expression. The matches are highlighted'>")
     first.append("<button type='button' class='pill pg-copy-view' title='the filters are in the URL of the page: copy the link "
                  "that opens this report on the same view'>🔗 Link to this view</button>")
     rows.append("<div class='fb-row'>" + "".join(first if len(present) >= 2 else first[1:]) + "</div>")

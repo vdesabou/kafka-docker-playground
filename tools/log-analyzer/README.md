@@ -119,7 +119,9 @@ level and connector filter (connector taken from the
 a period filter (drag over the 📈 occurrences chart, `[from, to)` as its buckets), the Component chips (the component of
 each file from the deepest part of its label: the file name `server.log` / `connect.log` first, then its folders, then the
 archive; counted in occurrences, like the level pills; the one picked is remembered in `localStorage` and the chart is
-drawn again for it on load) and the search box (the records whose block contains the text, `pgMatch` in `pgKeeps()`; a
+drawn again for it on load) and the search box (`pgCompile()`: words that must all be there, `-word` to exclude, `"a phrase"`, `/regex/` and
+`-/regex/`, an invalid regex searched as text; the records whose block passes it, `pgMatch` in `pgKeeps()`; the matches
+highlighted with the CSS Custom Highlight API, `pgHighlight()`, the page itself untouched; a
 finding card that does not contain it gets `.pg-nomatch`, never the `hidden` attribute of the severity chips). The filters are written in the URL of the page (`#pg:lvl=1&comp=connect&conn=s3-sink&q=timeout&t=<from>-<to>`,
 `pgStateWrite()` / `pgStateRead()`, the URL wins over the component remembered in `localStorage`): 🔗 **Link to this view**
 copies it, and the link opens the report on the same view. These
