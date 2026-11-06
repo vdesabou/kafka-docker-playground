@@ -10,10 +10,10 @@ flags:
     validate: not_empty
     arg: tags
     help: |-
-      💯 list of tags
+      💯 list of CP versions (space separated) to compute the badges for: only their CI files are downloaded from S3 (default: the default tag of scripts/utils.sh)
   - long: --generate-for-kb
     required: false
   - long: --skip-gh-issues
     required: false
     help: |-
-      🔥 read the open GitHub issues (the badges of a failing test link to its 🔥 issue), but never create, comment, edit or close one: only the nightly CI manages them (used by the Update Docs workflow)
+      🔥 read the open GitHub issues (the badges of a failing test link to its 🔥 issue), but never create, comment, edit or close one: only the nightly CI manages them (used by the Update Docs workflow). The CI output logs, only used in issues, are not downloaded

@@ -2,6 +2,19 @@ tags="${args[--tags]}"
 generate_for_kb="${args[--generate-for-kb]}"
 skip_gh_issues="${args[--skip-gh-issues]}"
 
+if [ -z "$tags" ]
+then
+  # without --tags, nothing would be computed: use the default CP version, like the Update Docs workflow
+  tags=$(grep '# default tag' "${root_folder}/scripts/utils.sh" | sed -E 's/.*TAG=([^ ]+).*/\1/')
+  log "💯 --tags not set, using the default tag ${tags}"
+fi
+# only the files of these CP versions are downloaded from s3://kafka-docker-playground/ (names start with <tag>-)
+s3_include_args=(--exclude "*")
+for image_version in $tags
+do
+  s3_include_args+=(--include "${image_version}-*")
+done
+
 set +e
 tmp_dir="/tmp/update-readme"
 rm -rf $tmp_dir
@@ -31,16 +44,22 @@ cp $badges_template_file $badges_file
 curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o $tmp_dir/README.txt
 
 ci_folder="$tmp_dir/ci"
-log "Getting ci result files"
+log "Getting ci result files (${tags})"
 rm -rf "$ci_folder"
 mkdir -p "$ci_folder"
-aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1
+aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ "${ci_folder}/" --recursive --no-progress --region us-east-1 "${s3_include_args[@]}"
 
 ci_output_folder="$tmp_dir/ci_output"
-log "Getting ci output log files"
 rm -rf "$ci_output_folder"
 mkdir -p "$ci_output_folder"
-aws s3 cp --only-show-errors s3://kafka-docker-playground/ci_output/ "${ci_output_folder}/" --recursive --no-progress --region us-east-1
+# the output logs only go into the body of the 🔥 GitHub issues
+if [ -z "$skip_gh_issues" ]
+then
+  log "Getting ci output log files (${tags})"
+  aws s3 cp --only-show-errors s3://kafka-docker-playground/ci_output/ "${ci_output_folder}/" --recursive --no-progress --region us-east-1 "${s3_include_args[@]}"
+else
+  log "⏭️ --skip-gh-issues: not getting ci output log files (only used in GitHub issues)"
+fi
 
 # list open GH issues once instead of once or twice per test (several hundred calls), refreshed after create
 open_issues_file=$tmp_dir/open_issues.json
