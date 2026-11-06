@@ -9,3 +9,5 @@ services:
       - ../../ksqldb/udf-logging/udf-custom-logger/target/udf-custom-logger-1.0.0-jar-with-dependencies.jar:/opt/ksqldb-extensions/udf-custom-logger-1.0.0-jar-with-dependencies.jar
     environment:
       KSQL_KSQL_EXTENSION_DIR: "/opt/ksqldb-extensions"
+      # CP 8 (log4j2): the image renders /etc/ksqldb-server/log4j2.yaml with this logger; CP 7 reads log4j.template.properties above
+      KSQL_LOG4J_LOGGERS: "com.example.FormulaUdfLog4jCustomLoggingLevel=DEBUG"

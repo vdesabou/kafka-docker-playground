@@ -109,10 +109,10 @@ EOF
 # Caused by: io.confluent.kafka.schemaregistry.rules.RuleException: Expr failed: 'message.totalPriceCents > 0'
 
 log "Try to produce record with REST Proxy"
-docker exec -i rest-proxy curl -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" \
+curl -s -X POST -H "Content-Type: application/vnd.kafka.avro.v2+json" \
       -H "Accept: application/vnd.kafka.v2+json" \
       --data '{"value_schema_id": "4", "records": [{"value": {"orderId": 1, "customerId": 2, "totalPriceCents": 15, "state": "Pending", "timestamp": 1693591356}}]}' \
-      http://rest-proxy:8082/topics/orders
+      http://localhost:8082/topics/orders
 #It's failing because, Kafka REST Proxy is missing required JARs.
 #You would need to copy these JARs into share/java/kafka-rest-lib. The jars already exist in CP in share/java/kafka-serde-tools so you can copy them from there.
 
@@ -147,8 +147,8 @@ SELECT * FROM TESTDATACONTRACTS EMIT CHANGES LIMIT 1;
 
 EOF
 
-# It's failing ask ksqlDb doesn't support yet Data Contract feature
-playground ksqldb sql << EOF
+# Expected to fail: ksqlDB doesn't support the Data Contract rules yet
+playground ksqldb sql --ignore-errors << 'EOF'
 INSERT INTO TESTDATACONTRACTS(`f1`) VALUES ('this is success');
 INSERT INTO orders2 (`orderId`, `customerId`, `totalPriceCents`, `state`, `timestamp`) VALUES (1, 3, 15, 'Pending', FROM_UNIXTIME(UNIX_TIMESTAMP()));
 EOF

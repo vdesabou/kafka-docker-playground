@@ -14,16 +14,16 @@ services:
     - ldap3
     networks:
       testing_net:
-        ipv4_address: 172.28.1.1
+        ipv4_address: 10.28.1.1
 
   ldap:
     hostname: ldap.confluent.io
     networks:
       testing_net:
-        ipv4_address: 172.28.1.2
+        ipv4_address: 10.28.1.2
     environment:
-      LDAP_TLS_CRT_FILENAME: ldap-ca1-signed.crt
-      LDAP_TLS_KEY_FILENAME: ldap.key
+      LDAP_TLS_CRT_FILENAME: ldap.confluent.io-ca1-signed.crt
+      LDAP_TLS_KEY_FILENAME: ldap.confluent.io.key
       LDAP_TLS_CA_CRT_FILENAME: snakeoil-ca-1.crt
       LDAP_TLS_VERIFY_CLIENT: "try"
     volumes:
@@ -37,8 +37,8 @@ services:
     environment:
       LDAP_ORGANISATION: "Confluent"
       LDAP_DOMAIN: "confluent.io"
-      LDAP_TLS_CRT_FILENAME: ldap2-ca1-signed.crt
-      LDAP_TLS_KEY_FILENAME: ldap2.key
+      LDAP_TLS_CRT_FILENAME: ldap2.confluent.io-ca1-signed.crt
+      LDAP_TLS_KEY_FILENAME: ldap2.confluent.io.key
       LDAP_TLS_CA_CRT_FILENAME: snakeoil-ca-1.crt
       LDAP_TLS_VERIFY_CLIENT: "try"
     volumes:
@@ -47,7 +47,7 @@ services:
     command: "--copy-service"
     networks:
       testing_net:
-        ipv4_address: 172.28.1.3
+        ipv4_address: 10.28.1.3
 
   ldap3:
     image: osixia/openldap:1.3.0
@@ -56,8 +56,8 @@ services:
     environment:
       LDAP_ORGANISATION: "Confluent"
       LDAP_DOMAIN: "confluent.io"
-      LDAP_TLS_CRT_FILENAME: ldap3-ca1-signed.crt
-      LDAP_TLS_KEY_FILENAME: ldap3.key
+      LDAP_TLS_CRT_FILENAME: ldap3.confluent.io-ca1-signed.crt
+      LDAP_TLS_KEY_FILENAME: ldap3.confluent.io.key
       LDAP_TLS_CA_CRT_FILENAME: snakeoil-ca-1.crt
       LDAP_TLS_VERIFY_CLIENT: "try"
     volumes:
@@ -66,18 +66,18 @@ services:
     command: "--copy-service"
     networks:
       testing_net:
-        ipv4_address: 172.28.1.4
+        ipv4_address: 10.28.1.4
 
   zookeeper:
     hostname: zookeeper.confluent.io
     networks:
       testing_net:
-        ipv4_address: 172.28.1.5
+        ipv4_address: 10.28.1.5
 
   broker:
     hostname: broker.confluent.io
     # this is not working so workaround with /etc/resolv.conf
-    dns: 172.28.1.1
+    dns: 10.28.1.1
     dns_search: confluent.io
     volumes:
       - ../../other/ldap-authorizer-with-ldap-failover/resolv.conf:/etc/resolv.conf
@@ -94,19 +94,21 @@ services:
       # KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
       #             -Djavax.net.debug=all
     networks:
+      # default: to reach the KRaft controller (CP 8+), which is not on testing_net
+      default:
       testing_net:
-        ipv4_address: 172.28.1.6
+        ipv4_address: 10.28.1.6
 
   schema-registry:
     hostname: schema-registry.confluent.io
     networks:
       testing_net:
-        ipv4_address: 172.28.1.7
+        ipv4_address: 10.28.1.7
 
 
   connect:
     # this is not working so workaround with /etc/resolv.conf
-    dns: 172.28.1.1
+    dns: 10.28.1.1
     dns_search: confluent.io
     volumes:
       - ../../other/ldap-authorizer-with-ldap-failover/resolv.conf:/etc/resolv.conf
@@ -118,13 +120,13 @@ services:
     - bind
     networks:
       testing_net:
-        ipv4_address: 172.28.1.8
+        ipv4_address: 10.28.1.8
 
   control-center:
     hostname: control-center.confluent.io
     networks:
       testing_net:
-        ipv4_address: 172.28.1.9
+        ipv4_address: 10.28.1.9
 
 networks:
   default:
@@ -133,4 +135,4 @@ networks:
     ipam:
         driver: default
         config:
-        - subnet: 172.28.0.0/16
+        - subnet: 10.28.0.0/16

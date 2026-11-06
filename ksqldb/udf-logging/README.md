@@ -76,6 +76,14 @@ Addivity is a Log4j 1 concepts permitting to one log message to be handle by mul
 With additivity enabled, the UDF debug message will be outputted twice, once via the logger `com.example.FormulaUdfLog4jCustomLoggingLeve` with appender `stdout` and a second time with the UDF's parent logger (rootLogger) which has `stdout` has appender. 
 To prevent this duplication, we set the the flag `log4j.additivity.com.example.FormulaUdfLog4jCustomLoggingLevel=false`.
 
+With CP 8+ (log4j2), the image renders `/etc/ksqldb-server/log4j2.yaml` from environment variables instead (the log4j 1 template above is ignored): set the logger level with `KSQL_LOG4J_LOGGERS`, as [`docker-compose.plaintext.yml`](docker-compose.plaintext.yml) does:
+
+```yaml
+      KSQL_LOG4J_LOGGERS: "com.example.FormulaUdfLog4jCustomLoggingLevel=DEBUG"
+```
+
+The rendered logger has its own `Console` appender and keeps the additivity, so each debug line is printed twice.
+
 Example of output log:
 ```
 [2021-09-21 08:53:58,973] DEBUG V1: 2, V2: 3 (com.example.FormulaUdfLog4jCustomLoggingLevel)
@@ -84,6 +92,13 @@ Example of output log:
 ```
 
 ## Use a custom Log framework
+
+⚠️ This only works up to CP 7.x. With CP 8+, the SLF4J binding of ksqlDB (log4j2) wins over the Logback bundled in the UDF jar (`SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]`), so `logback.xml` is ignored and the UDF logs use the format and levels of ksqlDB:
+
+```
+[2026-11-06 14:39:53,765] INFO V1: 2, V2: 3 (com.example.FormulaUdfCustomLogger)
+```
+
 Let's say you want to use logback as Log framework rather than Log4J for your UDF, then you'll have 3 main point of interests:
 
 1- Add the logback dependency in your UDF JAR

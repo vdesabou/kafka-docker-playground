@@ -40,10 +40,10 @@ playground start-environment --environment ldap-authorizer-sasl-plain --docker-c
 # confluent.io.            604800  IN      NS      bind.confluent.io.
 
 # ;; ADDITIONAL SECTION:
-# ldap.confluent.io.       604800  IN      A       172.28.1.2
-# ldap2.confluent.io.      604800  IN      A       172.28.1.7
-# ldap3.confluent.io.      604800  IN      A       172.28.1.8
-# bind.confluent.io.       604800  IN      A       172.28.1.1
+# ldap.confluent.io.       604800  IN      A       10.28.1.2
+# ldap2.confluent.io.      604800  IN      A       10.28.1.7
+# ldap3.confluent.io.      604800  IN      A       10.28.1.8
+# bind.confluent.io.       604800  IN      A       10.28.1.1
 
 # ;; Query time: 3 msec
 # ;; SERVER: 127.0.0.11#53(127.0.0.11)
