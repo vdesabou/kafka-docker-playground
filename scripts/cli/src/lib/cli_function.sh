@@ -4241,6 +4241,69 @@ function filter_aws_ec2_permissions() {
   fi
 }
 
+#
+# GitHub Codespaces (playground codespace): a thin layer over 'gh codespace'
+#
+
+# repository the codespaces are created from (PLAYGROUND_CODESPACE_REPO for a fork)
+function codespace_repo() {
+  echo "${PLAYGROUND_CODESPACE_REPO:-vdesabou/kafka-docker-playground}"
+}
+
+# bashly filter of 'playground codespace': gh installed, logged in, with the codespace scope
+function filter_gh_codespace() {
+  if ! command -v gh > /dev/null 2>&1
+  then
+    logerror "❌ the GitHub CLI (gh) is required: https://cli.github.com"
+    return
+  fi
+  local status
+  if ! status=$(gh auth status --active -h github.com 2>&1)
+  then
+    logerror "❌ gh is not logged in to github.com: run 'gh auth login'"
+    return
+  fi
+  # a token from GH_TOKEN / GITHUB_TOKEN shows no scopes: let gh itself report what is missing
+  if echo "$status" | grep -qi "token scopes" && ! echo "$status" | grep -i "token scopes" | grep -q "'codespace'"
+  then
+    logerror "❌ the gh token is missing the 'codespace' scope: run 'gh auth refresh -h github.com -s codespace'"
+  fi
+}
+
+# json of your codespaces of the repository, most recently used first
+function codespace_list_json() {
+  gh codespace list -R "$(codespace_repo)" --json name,displayName,state,machineName,lastUsedAt,gitStatus 2> /dev/null \
+    | jq 'sort_by(.lastUsedAt) | reverse'
+}
+
+# names of your codespaces of the repository, most recently used first
+function codespace_names() {
+  codespace_list_json | jq -r '.[].name' 2> /dev/null
+}
+
+# the codespace to act on: the one given, else the most recently used one
+function codespace_pick() {
+  local codespace="$1"
+  if [ -n "$codespace" ]
+  then
+    echo "$codespace"
+    return 0
+  fi
+  local names
+  names=$(codespace_names)
+  if [ -z "$names" ]
+  then
+    logerror "💤 no codespace of $(codespace_repo) was found: create one with 'playground codespace create'" >&2
+    return 1
+  fi
+  codespace=$(echo "$names" | head -1)
+  if [ "$(echo "$names" | wc -l | tr -d ' ')" -gt 1 ]
+  then
+    logwarn "☁️ several codespaces, using the most recently used one: $codespace (--codespace to pick another)" >&2
+  fi
+  echo "$codespace"
+}
+
 function increment_cli_metric() {
   metric_name="$1"
   metric=$(playground state get "metrics.$metric_name")

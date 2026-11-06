@@ -22,6 +22,25 @@ The codespace is an Ubuntu machine (x86_64, 4 cores, 16 GB) set up by [.devconta
 > [!TIP]
 > `?quickstart=1` in the link reopens your existing codespace instead of creating a new one each time. The same `.devcontainer` also works locally with the VS Code [Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers) extension.
 
+#### 🧠 From the terminal: playground codespace
+
+The same codespaces can be managed from your laptop with [playground codespace](/playground%20codespace), the way [playground ec2](/playground%20ec2) manages EC2 instances. It uses the [GitHub CLI](https://cli.github.com), which needs the `codespace` scope once:
+
+```bash
+gh auth refresh -h github.com -s codespace
+```
+
+```bash
+playground codespace create --suffix 123456        # 👷 pg-<you>-123456 on 4 cores (--machine 8-core), opened in VS Code
+playground codespace list                          # 🔘 your codespaces and their state
+playground codespace ssh -- playground status      # 🐚 run one command in it (or a shell without --)
+playground codespace open --web                    # 🌐 VS Code in the browser
+playground codespace stop                          # 🔴 stop the running ones, 'start' to resume
+playground codespace delete                        # ❌ delete them (asks first, shows unpushed work)
+```
+
+Without `--codespace`, a command acts on your most recently used codespace (`stop` and `delete` on all of them). Set `PLAYGROUND_CODESPACE_REPO` to create them from your fork.
+
 ### 💻️ Locally
 
 #### ⚡ Install in one command

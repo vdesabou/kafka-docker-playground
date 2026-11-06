@@ -81,6 +81,8 @@ commands:
 
 - import: src/commands/get-ec2-cloudformation-list.yml
 
+- import: src/commands/get-codespace-list.yml
+
 - import: src/commands/get-zazkia-connection-list.yml
 
 - import: src/commands/get-secret-list.yml
@@ -248,3 +250,5 @@ commands:
 - import: src/commands/connector.yml
 
 - import: src/commands/ec2.yml
+
+- import: src/commands/codespace.yml

@@ -1,0 +1,190 @@
+name: codespace
+expose: always
+group: Codespace
+filters:
+  - gh_codespace
+help: |-
+  ☁️ Create and manage GitHub Codespaces to run kafka-docker-playground
+
+  🪄 Open them in Visual Studio Code (or the browser), or run a command in them over ssh
+
+  The same thing as the "Open in GitHub Codespaces" button, from the
+  terminal: an Ubuntu x86_64 machine set up by .devcontainer/ (Docker with
+  compose v2, fzf, playground in the PATH, the default images pulled), with
+  nothing to install on your laptop and no AWS account. It is also where the
+  examples that do not work on ARM64 run.
+
+    create              create a codespace and open it
+    open                open it in VS Code (or the browser with --web)
+    ssh                 a shell, or one command, in it
+    list / start / stop / delete
+
+  A thin layer over 'gh codespace': it needs the GitHub CLI with the
+  'codespace' scope (gh auth refresh -h github.com -s codespace).
+
+  💰 A running codespace uses your Codespaces quota (30 hours a month on 4
+     cores with GitHub Free), then is billed. It stops by itself after 30
+     minutes idle; 'playground codespace stop' when you pause, and
+     'playground codespace delete' when you are done (a stopped codespace
+     still uses storage).
+
+  🔐 The private reproduction-models submodule is not cloned in a codespace.
+environment_variables:
+  - name: PLAYGROUND_CODESPACE_REPO
+    help: 🐙 Repository the codespaces are created from, as OWNER/REPO (default vdesabou/kafka-docker-playground, set it to use your fork)
+commands:
+- name: create
+  help: |-
+    👷 Create a GitHub Codespace of kafka-docker-playground, then open it
+
+    The codespace is created from the master branch (--branch to change it)
+    on a 4-core / 16 GB machine, the minimum for a broker, Connect and Schema
+    Registry. When a prebuild is configured for the repository, it starts
+    with the default images already pulled; otherwise they are pulled in the
+    background once it is open.
+
+    It is named pg-<username>-<suffix>, like the ec2 instances, so that
+    'playground codespace list' tells them apart.
+  flags:
+  - long: --machine
+    required: false
+    arg: machine
+    default: 4-core
+    allowed:
+      - 4-core
+      - 8-core
+      - 16-core
+    help: |-
+      🧑‍💻 machine size: 4-core (16 GB), 8-core (32 GB) or 16-core (64 GB). default is 4-core
+
+      🎓 Tip: an 8-core machine uses your quota twice as fast as a 4-core one
+  - long: --branch
+    short: -b
+    required: false
+    arg: branch
+    default: master
+    help: 🌿 branch the codespace is created from. default is master
+  - long: --suffix
+    required: false
+    arg: suffix
+    help: |-
+      📮 suffix to add to the codespace display name, giving pg-<username>-<suffix>
+
+      if not set, the name is pg-<username>-<6 random characters>
+
+      🎓 Tip: set it to the case number you are working on
+  - long: --location
+    required: false
+    arg: location
+    allowed:
+      - EastUs
+      - SouthEastAsia
+      - WestEurope
+      - WestUs2
+    help: 🌍 region of the codespace (default is picked by GitHub, close to you)
+  - long: --no-open
+    required: false
+    help: 🙈 do not open the codespace in VS Code once it is created
+  examples:
+  - playground codespace create
+  - playground codespace create --suffix 123456 --machine 8-core
+  - playground codespace create --branch my-feature --no-open
+
+- name: list
+  help: |-
+    🔘 List your kafka-docker-playground codespaces
+
+    Their name, branch and state. An Available one is running and uses your
+    quota.
+
+- name: open
+  help: |-
+    👨‍💻 Open a codespace in Visual Studio Code
+
+    Opens your local VS Code connected to the codespace (it needs the GitHub
+    Codespaces extension), or VS Code in the browser with --web. A stopped
+    codespace is started on the way.
+
+    Without --codespace, the most recently used codespace is opened.
+  flags:
+  - &codespace
+    long: --codespace
+    short: -c
+    required: false
+    arg: codespace
+    validate: not_empty
+    completions:
+      dynamic:
+      - playground get-codespace-list $completion_current
+    help: |-
+      ☁️ codespace name, as shown by 'playground codespace list' (use completion)
+
+      🎓 Tip: if not specified, the most recently used codespace is used
+  - long: --web
+    short: -w
+    required: false
+    help: 🌐 open VS Code in the browser instead of the local VS Code
+  examples:
+  - playground codespace open
+  - playground codespace open --web
+
+- name: ssh
+  help: |-
+    🐚 Open a shell in a codespace, or run one command in it
+
+    Everything after -- runs in the codespace, from the repository folder, in
+    a login shell (so playground is in the PATH). A stopped codespace is
+    started on the way.
+
+    It needs the SSH server of .devcontainer/: a codespace created before it
+    was added needs a 'Codespaces: Rebuild Container' first.
+
+    Without --codespace, the most recently used codespace is used.
+  catch_all:
+    label: command
+    help: command to run in the codespace, after --
+  flags:
+  - *codespace
+  examples:
+  - playground codespace ssh
+  - playground codespace ssh -- playground status
+  - playground codespace ssh --codespace pg-jdoe-123456 -- docker images
+
+- name: stop
+  help: |-
+    🔴 Stop a codespace
+
+    Shuts the machine down while keeping its disk, so you stop using compute
+    and find your work again on 'playground codespace start'. A codespace
+    also stops by itself after 30 minutes idle.
+
+    Without --codespace, all your running codespaces are stopped.
+  flags:
+  - *codespace
+
+- name: start
+  help: |-
+    🟢 Start a codespace
+
+    Starts a stopped codespace and waits until it is available. 'open' and
+    'ssh' start it too.
+
+    Without --codespace, the most recently used codespace is started.
+  flags:
+  - *codespace
+
+- name: delete
+  help: |-
+    ❌ Delete a codespace
+
+    This is what stops the storage billing for good, unlike stop. The branch
+    and the uncommitted / unpushed state of each codespace are shown before
+    you confirm.
+
+    ⚠️ Everything in the codespace is lost, including the reproduction models
+    you wrote there.
+
+    Without --codespace, it applies to all your codespaces, and asks you to
+    confirm first.
+  flags:
+  - *codespace
