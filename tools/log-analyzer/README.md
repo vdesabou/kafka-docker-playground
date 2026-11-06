@@ -48,6 +48,16 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Incident timeline
+
+`incident_timeline()` (in `analyze()`, `.timeline` of `--json`, at most `TIMELINE_LIMIT` = 200 events) merges all the
+files in one chronological list: the first occurrence of each root cause (the record's own message, `record_label()`),
+the first occurrence of each known cause (one row with the error when they are on the same line), the (re)starts of the
+components (a `START_CONFIGS` dump logged at startup: `DistributedConfig`, `KafkaConfig`…), the connectors (re)configured
+(once per connector and minute) and the config keys changed between restarts (`@@PGCFGCHG@@`). Only what has a
+timestamp. The HTML report shows it in 🗓️ **Incident timeline** right after the findings (30 rows, the others in a
+`<details>`, 📄 links to the line), static like the findings; the terminal summary prints its first 8 events.
+
 ## Times and time zones
 
 The digest keeps the offset written after a timestamp (`2026-10-13T10:00:05.123+02:00`, `…Z`, `…-0700`, as `+HH:MM`).
