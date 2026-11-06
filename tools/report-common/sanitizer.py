@@ -19,7 +19,8 @@ Data Sanitizer of the log analyzers: redacts secrets, IPs, hostnames, emails and
 
     python3 -I sanitizer.py --keep ips,ldap-dns,hashes --workflow-secrets .github/workflows/ci.yml < log > sanitized-log
 
-Best effort: always review the output before sharing it outside Confluent.
+Best effort: always review the output before sharing it outside Confluent. Leaks, over-redaction and the speed on
+adversarial lines are tested by test_sanitizer.py (python3 -I tools/report-common/test_sanitizer.py): run it after a change.
 """
 
 import argparse
@@ -37,10 +38,12 @@ from typing import Dict, Any, Tuple
 # token.max.lifetime.ms…).
 _SECRET_KEY = (
     r'[\w.-]*(?:password|passwd|pwd|secret|token|api[_.-]?key|apikey|credentials?|'
-    r'user\.info|auth\.info|private[_.-]?key|client[_.-]?secret|access[_.-]?key)[\w.-]*'
+    r'user\.info|auth\.info|private[_.-]?key|client[_.-]?secret|access[_.-]?key|account[_.-]?key)[\w.-]*'
 )
+# (?<![\w.-]): a key starts at the beginning of a token. Without it, a long run of word characters (a base64 payload of
+# 100 KB on one line) was scanned again from each of its characters: quadratic, 10 s for 20,000 characters
 _SECRET_KV_RE = re.compile(
-    r'(["\']?)(' + _SECRET_KEY + r')\1(\s*[:=]\s*)'
+    r'(?<![\w.-])(["\']?)(' + _SECRET_KEY + r')\1(\s*[:=]\s*)'
     r'("(?:[^"\\]|\\.)*"|\'[^\']*\'|\[hidden\]|[^\s,;}\]\)]+)',
     re.IGNORECASE,
 )
@@ -59,7 +62,13 @@ _SIMPLE_RULES = [
     # HTTP auth headers, on the same line (BASIC at the end of a line is a value, like credentials.provider=BASIC)
     (re.compile(r'\b(Basic|Bearer)[ \t]+[A-Za-z0-9+/=._~-]{8,}', re.IGNORECASE), r'\1 <REDACTED>'),
     # Credentials embedded in URLs: scheme://user:pass@host
-    (re.compile(r'(\b[a-z][a-z0-9+.-]*://)[^\s/:@]+:[^\s/@]+@', re.IGNORECASE), r'\1<REDACTED>@'),
+    # (the password may hold a @: up to the last @ before the host). The scheme starts at the beginning of a token, not
+    # at each \b of a dotted run (a.a.a.… of 50,000 characters took 3 s)
+    (re.compile(r'((?<![a-z0-9+.-])[a-z][a-z0-9+.-]*://)[^\s/:@]+:[^\s/]+@', re.IGNORECASE), r'\1<REDACTED>@'),
+    # Oracle thin URLs: jdbc:oracle:thin:scott/tiger@//host:1521/ORCL, jdbc:oracle:thin:scott/tiger@host:1521:ORCL
+    (re.compile(r'(jdbc:oracle:[a-z0-9]+:)[^/\s@"\']+/[^@\s"\']+@', re.IGNORECASE), r'\1<REDACTED>@'),
+    # the signature of an Azure SAS URL or token (…?sv=2022-11-02&ss=b&sig=AbCd%2B…%3D)
+    (re.compile(r'([?&;]sig=)[^&\s"\';]+', re.IGNORECASE), r'\1<REDACTED>'),
     # Cloud keys
     (re.compile(r'\bAKIA[0-9A-Z]{16}\b'), '<AWS-KEY-REDACTED>'),
     (re.compile(r'\bAIza[0-9A-Za-z\-_]{35}\b'), '<GCP-KEY-REDACTED>'),
@@ -110,6 +119,9 @@ _CONFIG_KEY_AFTER_RE = re.compile(r'["\']?[ \t]*(?:=|:(?!\d))')
 # a name in a URL (https://host), with a port (host:9092) or with its IP (host/10.0.0.1:2888, a java InetSocketAddress,
 # the IP being already <IP-1>): a hostname whatever its TLD (.anz, .corp…)
 _HOST_AFTER_RE = re.compile(r':\d{2,5}\b|/(?:<IP-|\d{1,3}\.\d)')
+# a name that a DNS lookup failed on: a hostname whatever its TLD and what follows it
+_HOST_BEFORE_RE = re.compile(r'(?:UnknownHostException|No such host is known|could not resolve host|Name or service not known for)'
+                             r'[:\s(]+["\']?$', re.IGNORECASE)
 
 
 class DataSanitizer:
@@ -134,6 +146,10 @@ class DataSanitizer:
         self.patterns = {
             'ipv4': re.compile(r'(?<![\w.])(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?![\w.])'),
             'ipv6': re.compile(r'\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b'),
+            # compressed (2001:db8::1, fe80::1%eth0, [fe80::1ff:fe23:4567:890a]): a :: and a digit, never inside a token
+            # (a C++ / Rust path like Foo::bar has no digit, a timestamp has no ::)
+            'ipv6_compressed': re.compile(r'(?<![\w:.])(?=[0-9a-fA-F:]*\d)(?:[0-9a-fA-F]{1,4}:){1,6}:'
+                                          r'(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4}){0,5})?(?:%[\w.]+)?(?![\w:])'),
             # starts at the beginning of a run of local-part characters only: with \b, a long run without @ (an URL-encoded
             # query of Control Center, 366 KB on one line) was scanned again from each word boundary in it (quadratic, 24 s)
             'email': re.compile(r'(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'),
@@ -223,6 +239,7 @@ class DataSanitizer:
         if 'ips' not in self.keep:
             sanitized = self._redact_ips(sanitized)
             sanitized = self._redact_with_map(sanitized, self.patterns['ipv6'], self.ip_map, 'IPV6')
+            sanitized = self._redact_with_map(sanitized, self.patterns['ipv6_compressed'], self.ip_map, 'IPV6')
         if 'hostnames' not in self.keep:
             sanitized = self._redact_hostnames(sanitized)
         return sanitized
@@ -295,7 +312,7 @@ class DataSanitizer:
         def replacer(match):
             original = match.group(0)
             before = text[max(0, match.start() - 60):match.start()]
-            if re.search(r'(?:(?<![a-z])v|version[\s=:"]*|[\w.-]+/[\w.-]+:)$', before, re.IGNORECASE):
+            if re.search(r'(?:(?<![a-z])v|version[\s=:"]*|(?<![a-z])(?:jdk|jre|java|openjdk|cp)[\s-]*|[\w.-]+/[\w.-]+:)$', before, re.IGNORECASE):
                 return original
             if original not in self.ip_map:
                 self.ip_map[original] = f'<IP-{self.counter["ip"]}>'
@@ -328,11 +345,17 @@ class DataSanitizer:
                 return False
             if labels[0].lower() in _JAVA_ROOTS:
                 return False  # org.apache.kafka…, io.confluent…, java.lang…
+            # already redacted elsewhere (db.acme.corp:5432): the same name is a hostname everywhere, even followed by
+            # ". " (end of a sentence) or ": " (UnknownHostException: db.acme.corp: Name or service not known), whatever its case
+            if host.lower() in self.hostname_map:
+                return True
             if after in ('.', '(', '$', '='):
                 return False  # dotted identifier (kafka.server.KafkaServer) or config key (basic.auth.user.info=)
             if tld.lower() in _FILE_EXTENSIONS:
                 return False
             if self._confident_host(text, match):
+                return True
+            if _HOST_BEFORE_RE.search(text, max(0, match.start() - 40), match.start()):
                 return True
             if tld.lower() in _CONFIG_KEY_ENDINGS or _CONFIG_KEY_AFTER_RE.match(text, match.end()):
                 return False  # retry.backoff.ms = 100, "report.errors.as": "error_string"
@@ -348,10 +371,12 @@ class DataSanitizer:
             hostname = match.group(0)
             if not is_hostname(match):
                 return hostname
-            if hostname not in self.hostname_map:
-                self.hostname_map[hostname] = f'<HOST-{self.counter["host"]}>'
+            # one placeholder per name whatever its case (DB.ACME.CORP and db.acme.corp)
+            key = hostname.lower()
+            if key not in self.hostname_map:
+                self.hostname_map[key] = f'<HOST-{self.counter["host"]}>'
                 self.counter['host'] += 1
-            return self.hostname_map[hostname]
+            return self.hostname_map[key]
 
         return self.patterns['hostname'].sub(replacer, text)
 
@@ -394,6 +419,31 @@ def _save_state(sanitizer: DataSanitizer, path: str):
 PAYLOAD_MARKERS = ("@@PGCTX@@", "@@PGCFGL@@", "@@PGCFGCHG@@")
 
 
+_PEM_BEGIN_RE = re.compile(r'-----BEGIN [A-Z ]+-----')
+_PEM_END_RE = re.compile(r'-----END [A-Z ]+-----')
+
+
+def redact_pem_lines(lines: list) -> None:
+    """a PEM block spread over consecutive lines (a key in the context of a record, one line per marker line), redacted
+    line by line in place: the block rule of sanitize_text would make one line of it, and the marker lines would then
+    be sanitized one by one, where it no longer matches (the key body stayed). Each line keeps its line number."""
+    inside = False
+    for i, line in enumerate(lines):
+        begin = None if inside else _PEM_BEGIN_RE.search(line)
+        if begin:
+            end = _PEM_END_RE.search(line, begin.end())
+            if end:
+                continue  # on one line: the block rule of sanitize_text
+            lines[i] = line[:begin.start()] + '<PEM-REDACTED>'
+            inside = True
+        elif inside:
+            end = _PEM_END_RE.search(line)
+            # the base64 of the key; a line number prefix (fewer than 8 digits) stays
+            lines[i] = (re.sub(r'[A-Za-z0-9+/=]{8,}', '<PEM-REDACTED>', line[:end.start()]) + line[end.end():] if end
+                        else re.sub(r'[A-Za-z0-9+/=]{8,}', '<PEM-REDACTED>', line))
+            inside = not end
+
+
 def sanitize_stream(sanitizer: DataSanitizer, text: str) -> str:
     """Sanitizes text, keeping the @@PG marker lines of a records file as they are, except the payload of
     PAYLOAD_MARKERS lines, sanitized like the records (consecutive lines of a marker together, for multi-line secrets)"""
@@ -406,6 +456,7 @@ def sanitize_stream(sanitizer: DataSanitizer, text: str) -> str:
 
     def flush_payload():
         if payload:
+            redact_pem_lines(payload)
             sanitized = sanitizer.sanitize_text("\n".join(payload)).split("\n")
             # a PEM block or a multi-line secret collapsed: line by line, so each line keeps its marker
             if len(sanitized) != len(payload):

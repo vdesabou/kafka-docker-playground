@@ -252,7 +252,7 @@ KNOWN_CAUSES = [
                "Process faster or in smaller batches (max.poll.records in Java), or raise max.poll.interval.ms"},
     {"name": "connection_refused", "severity": "high", "category": "Network Issues",
      "pattern": r"connection refused|Connection reset by peer|NoRouteToHostException|No route to host|Broken pipe"
-                r"|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|\d+/\d+ brokers are down|ALL_BROKERS_DOWN"
+                r"|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|(?<!\d)\d{1,5}/\d{1,5} brokers are down|ALL_BROKERS_DOWN"
                 r"|connect timed out|Connection to node -?\d+ .{0,200} could not be established|Communications link failure",
      "title": "🔌 Connection failure",
      "advice": "the host is down, unreachable or the name does not resolve: check the host, port and network "
