@@ -1,0 +1,31 @@
+==========================
+null
+==========================
+🔘 file
+
+Destination filename. If not specified, the standard output will be used
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+
