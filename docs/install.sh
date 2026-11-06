@@ -6,8 +6,8 @@
 #
 # What it does, asking before each change:
 #   1. checks git, bash 4+, fzf, docker + compose v2 (or podman), free disk space, and changes nothing
-#   2. installs what is missing with brew (macOS) or the package manager (Linux): bash, fzf, git.
-#      It never installs Docker or Podman: it gives you the link instead.
+#   2. installs what is missing with brew (macOS) or the package manager (Linux): bash, fzf, git, and the
+#      Confluent CLI (used by the Confluent Cloud examples). It never installs Docker or Podman: it gives you the link instead.
 #   3. clones the repository (--depth 1), or updates an existing clone
 #   4. adds ONE block, between markers, to ~/.zshrc / ~/.bashrc / ~/.bash_profile, with a backup of the file:
 #        # >>> kafka-docker-playground >>>
@@ -22,6 +22,7 @@
 #   --yes, -y      answer yes to every question (no prompt, for scripts and CI)
 #   --dry-run      show what would be done, change nothing
 #   --no-rc        do not touch any shell startup file
+#   --no-confluent-cli  do not install the Confluent CLI (only needed by the Confluent Cloud examples)
 #   --uninstall    remove the block from the shell startup files, then offer to delete the clone
 #   --help, -h     this help
 #
@@ -40,6 +41,7 @@ opt_branch="master"
 opt_yes=0
 opt_dry_run=0
 opt_no_rc=0
+opt_no_confluent_cli=0
 opt_uninstall=0
 
 nb_errors=0
@@ -119,6 +121,7 @@ parse_args() {
       -y|--yes) opt_yes=1; shift ;;
       --dry-run) opt_dry_run=1; shift ;;
       --no-rc) opt_no_rc=1; shift ;;
+      --no-confluent-cli) opt_no_confluent_cli=1; shift ;;
       --uninstall) opt_uninstall=1; shift ;;
       -h|--help) usage; exit 0 ;;
       *) die "unknown option: $1 (see --help)" ;;
@@ -217,6 +220,33 @@ rc_files_for_shell() {
 # ---------------------------------------------------------------------------------------------------------------------
 
 missing_packages=""
+confluent_missing=0
+# set when the Confluent CLI is in ~/.local/bin and that folder is not in the PATH: the shell block adds it
+confluent_bin_dir=""
+
+path_has_dir() {
+  case ":$PATH:" in *":$1:"*) return 0 ;; *) return 1 ;; esac
+}
+
+check_confluent_cli() {
+  local version
+  if command -v confluent > /dev/null 2>&1
+  then
+    version="$(confluent version 2> /dev/null | awk '/^Version/ {print $2}')"
+    log_ok "Confluent CLI ${version}"
+  elif [ -x "$HOME/.local/bin/confluent" ]
+  then
+    version="$("$HOME/.local/bin/confluent" version 2> /dev/null | awk '/^Version/ {print $2}')"
+    log_ok "Confluent CLI ${version} in $HOME/.local/bin (the PATH block will add that folder)"
+    path_has_dir "$HOME/.local/bin" || confluent_bin_dir="$HOME/.local/bin"
+  elif [ "$opt_no_confluent_cli" = "1" ]
+  then
+    log "Confluent CLI not installed (--no-confluent-cli)"
+  else
+    log "Confluent CLI not installed (used by the Confluent Cloud examples)"
+    confluent_missing=1
+  fi
+}
 
 check_prerequisites() {
   title "🔎 1/5 Checking your machine (nothing is changed)"
@@ -250,6 +280,8 @@ check_prerequisites() {
     logwarn "fzf is missing (used by the interactive menus of playground)"
     missing_packages="$missing_packages fzf"
   fi
+
+  check_confluent_cli
 
   if ! command -v docker > /dev/null 2>&1
   then
@@ -286,6 +318,35 @@ check_prerequisites() {
 # ---------------------------------------------------------------------------------------------------------------------
 # 2. missing tools
 # ---------------------------------------------------------------------------------------------------------------------
+
+# the Confluent CLI: brew on macOS, else the official installer into ~/.local/bin (no sudo)
+install_confluent_cli() {
+  [ "$confluent_missing" = "1" ] || return 0
+  if [ "$os" = "macos" ] && [ -n "$brew_bin" ]
+  then
+    if confirm "install the Confluent CLI, used by the Confluent Cloud examples ($brew_bin install confluentinc/tap/cli)?"
+    then
+      run "$brew_bin" install confluentinc/tap/cli || { logwarn "brew install of the Confluent CLI failed: https://docs.confluent.io/confluent-cli/current/install.html"; return 0; }
+    else
+      log "skipped: install it later from https://docs.confluent.io/confluent-cli/current/install.html if you use Confluent Cloud"
+    fi
+    return 0
+  fi
+  if ! command -v curl > /dev/null 2>&1
+  then
+    logwarn "curl is missing: install the Confluent CLI yourself from https://docs.confluent.io/confluent-cli/current/install.html"
+    return 0
+  fi
+  if confirm "install the Confluent CLI, used by the Confluent Cloud examples, into $HOME/.local/bin (curl -sL --http1.1 https://cnfl.io/cli | sh)?"
+  then
+    run mkdir -p "$HOME/.local/bin"
+    run sh -c "curl -sL --http1.1 https://cnfl.io/cli | sh -s -- -b \"$HOME/.local/bin\"" \
+      || { logwarn "the Confluent CLI install failed: https://docs.confluent.io/confluent-cli/current/install.html"; return 0; }
+    path_has_dir "$HOME/.local/bin" || confluent_bin_dir="$HOME/.local/bin"
+  else
+    log "skipped: install it later from https://docs.confluent.io/confluent-cli/current/install.html if you use Confluent Cloud"
+  fi
+}
 
 sudo_cmd() {
   if [ "$(id -u)" = "0" ]; then echo ""; else echo "sudo"; fi
@@ -417,6 +478,10 @@ rc_block() {
   if ! path_bash_is_4 && [ -n "$bash4" ]
   then
     echo "export PATH=\"$(dirname "$bash4"):\$PATH\"   # bash 4+, needed by playground"
+  fi
+  if [ -n "$confluent_bin_dir" ]
+  then
+    echo "export PATH=\"$confluent_bin_dir:\$PATH\"   # Confluent CLI"
   fi
   echo "export PATH=\"$install_dir/scripts/cli:\$PATH\""
   echo "source \"$install_dir/scripts/cli/completions.$shell_name\""
@@ -595,6 +660,7 @@ uninstall() {
     fi
     opt_yes="$saved_yes"
   fi
+  log "the Confluent CLI, bash, fzf and git stay installed: remove them with brew or your package manager (or rm ~/.local/bin/confluent) if you no longer need them"
   log "Docker images stay on your machine: free the space with 'docker system prune -a' if you no longer need them"
   log "open a new terminal to finish"
 }
@@ -615,6 +681,7 @@ main() {
 
   check_prerequisites
   install_missing || true
+  install_confluent_cli
   choose_dir
   clone_or_update
   setup_rc

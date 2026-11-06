@@ -16,7 +16,7 @@ curl -fsSL https://kafka-docker-playground.io/install.sh | bash
 It asks before each change, and only does this:
 
 1. **checks** your machine and changes nothing: git, bash 4+, fzf, docker + compose v2 (or Podman), free disk space
-2. **installs what is missing** (bash, fzf, git) with Homebrew on macOS or the package manager on Linux. It never installs Docker or Podman for you: it gives you the link
+2. **installs what is missing** (bash, fzf, git) with Homebrew on macOS or the package manager on Linux, and the [Confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html) used by the Confluent Cloud examples (Homebrew on macOS, else the official installer into `~/.local/bin`). It never installs Docker or Podman for you: it gives you the link
 3. **clones** the repository into `~/kafka-docker-playground` (latest version only), or updates the clone you already have
 4. **adds one block** to `~/.zshrc` (or `~/.bashrc`, `~/.bash_profile`), with a backup of the file, so that `playground` and its completion are in your `PATH`:
 
@@ -44,6 +44,7 @@ Then open a new terminal and run `playground run`.
 | `--yes` | answer yes to every question (no prompt, for scripts) |
 | `--dir <path>` | clone somewhere else than `~/kafka-docker-playground` |
 | `--no-rc` | do not touch any shell startup file, print the lines to add instead |
+| `--no-confluent-cli` | do not install the Confluent CLI (only needed by the Confluent Cloud examples) |
 | `--uninstall` | remove the block from your shell startup files, then offer to delete the folder (default: keep it, it may hold your `playground.ini` and reproduction models) |
 
 Pass options after `bash -s --`, for example `curl -fsSL https://kafka-docker-playground.io/install.sh | bash -s -- --uninstall`. Running it again is safe: it updates the clone and leaves the block as it is.
