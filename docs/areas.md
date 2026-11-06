@@ -7,10 +7,10 @@ deep dives to read, and a support case reproduced in 3 commands.
 
 | Area | Covers | Start here |
 | --- | --- | --- |
-| 🔗 Connect | self-managed and fully managed connectors, Kafka Connect, offsets and lag, the dead letter queue, plugin versions, customer configs | [🔗 Connect](/area-connect.md), the 170+ self-managed and 100+ fully managed examples of [👾 Content](/content.md) |
-| 🖥️ Brokers, clients and observability | Kafka brokers, KRaft, replication, transactions, Java clients, Control Center, metrics | [🖥️ Brokers, clients and observability](/area-core-observability.md) |
-| 🌊 Streams, schemas and non-Java clients | Schema Registry, data contracts, ksqlDB, Flink, Kafka Streams, .NET / JavaScript / Python / Go / Rust / C clients | [🌊 Streams, schemas and non-Java clients](/area-streams-schema-registry.md) |
-| 🛡️ Platform, security and Cloud infra | CFK, SASL / SSL / Kerberos / LDAP / RBAC / OAuth, certificates, connectivity to Confluent Cloud | [🛡️ Platform, security and Cloud infra](/area-platform-security.md) |
+| 🔗 Connect | self-managed and fully managed connectors, Kafka Connect, offsets and lag, the dead letter queue, plugin versions, customer configs | [🔗 Connect](/area-connect.md), the 170+ self-managed and 100+ fully managed examples of [👾 Content](/content?id=🔗-connect) |
+| 🖥️ Brokers, clients and observability | Kafka brokers, KRaft, replication, transactions, Java clients, Control Center, metrics | [🖥️ Brokers, clients and observability](/area-core-observability.md), its examples in [👾 Content](/content?id=🖥️-brokers-clients-and-observability) |
+| 🌊 Streams, schemas and non-Java clients | Schema Registry, data contracts, ksqlDB, Flink, Kafka Streams, .NET / JavaScript / Python / Go / Rust / C clients | [🌊 Streams, schemas and non-Java clients](/area-streams-schema-registry.md), its examples in [👾 Content](/content?id=🌊-streams-schemas-and-non-java-clients) |
+| 🛡️ Platform, security and Cloud infra | CFK, SASL / SSL / Kerberos / LDAP / RBAC / OAuth, certificates, connectivity to Confluent Cloud | [🛡️ Platform, security and Cloud infra](/area-platform-security.md), its examples in [👾 Content](/content?id=🛡️-platform-security-and-cloud-infra) |
 
 > [!TIP]
 > Don't know the command? Describe the symptom in your words: `playground find-command "<symptom>"` prints the 5 best
