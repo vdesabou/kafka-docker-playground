@@ -1693,7 +1693,8 @@ def exception_html(text: str) -> str:
     """"SaslAuthenticationException: {..}" -> the class in color (an Error in red), then the message"""
     m = re.match(r"^([A-Za-z_$][\w$.]*(?:Exception|Error|Throwable|Fault|Failure))(?::\s*(.*))?$", text or "", re.S)
     if not m:
-        return f"<span class='fi-msg'>{e(text)}</span>"
+        # anything else (the clients: FAIL [rdkafka#producer-1] …, panic:, Error:, [Connection] …): the colors of the log
+        return f"<span class='fi-msg'>{log_html(text)}</span>"
     cls = "fi-exc error" if m.group(1).endswith("Error") else "fi-exc"
     return f"<span class='{cls}'>{e(m.group(1))}</span>" + (f"<span class='fi-msg'>: {e(m.group(2))}</span>" if m.group(2) else "")
 

@@ -184,13 +184,25 @@ LOG_CSS = """
 
 _LOG_LEVEL_CLASS = {"fatal": "fatal", "severe": "fatal", "error": "error", "warn": "warn", "warning": "warn",
                     "info": "info", "debug": "debug", "trace": "trace"}
+# the levels of the Kafka clients other than Java: librdkafka syslog severity (%3|… error, %4|… warning) and facility
+# FAIL, Go panic: / fatal error:, .NET console logger fail: / crit:, Node.js / .NET Error: at the start of a line
+_CLIENT_LEVEL = {"%0|": "fatal", "%1|": "fatal", "%2|": "fatal", "%3|": "error", "%4|": "warn", "%5|": "info", "%6|": "info",
+                 "%7|": "debug", "FAIL": "error", "panic:": "fatal", "fatal error:": "fatal", "fail:": "error",
+                 "crit:": "fatal", "Error:": "error", "warn:": "warn"}
 _LOG_TOKEN_RE = re.compile(
-    r"(?P<ts>\b\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:[.,]\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?(?!\d))"
+    # librdkafka: %3|1793896102.923|FAIL|rdkafka#producer-1| …: the severity, then the epoch timestamp
+    r"(?P<clvl>^%[0-7]\||(?<![\w-])FAIL(?![\w-])|^(?:panic:|fatal error:|fail:|crit:|warn:|Error:))"
+    r"|(?P<ts>\b\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:[.,]\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?(?!\d)|(?<=\|)1\d{9}\.\d{3}(?=\|))"
     r'|(?P<jlvl>"level"\s*:\s*"(?P<jv>(?i:fatal|error|warn|warning|info|debug|trace))")'
     r"|(?P<lvl>(?<![\w.-])(?:FATAL|SEVERE|ERROR|WARN|WARNING|INFO|DEBUG|TRACE)(?![\w-]))"
     r"|(?P<cause>Caused by:)"
-    r"|(?P<mdc>\[[\w.-]+\|(?:task-\d+|worker)(?:\|[\w.-]+)?\])"
-    r"|(?P<exc>\b(?:[a-z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error)\b)"
+    r"|(?P<mdc>\[[\w.-]+\|(?:task-\d+|worker)(?:\|[\w.-]+)?\]"
+    # the context of a client: [rdkafka#producer-1], [thrd:main], KafkaJS [Connection], Java [Producer clientId=…]
+    r"|\[(?:rdkafka#[\w-]+|thrd:[^\]]*|Connection|BrokerPool|Cluster|Runner|Consumer|Producer|ConsumerGroup)\]"
+    r"|\[(?:Producer|Consumer|AdminClient) clientId=[^\]]*\])"
+    r"|(?P<exc>\b(?:[a-z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error)\b"
+    # an exception without its package (KafkaException, KafkaError), a librdkafka error code (_MSG_TIMED_OUT), errno
+    r"|\b[A-Z][A-Za-z0-9$]+(?:Exception|Error)\b|(?<![\w])_[A-Z][A-Z_]{3,}\b|\bE(?:CONNREFUSED|CONNRESET|TIMEDOUT|NOTFOUND|HOSTUNREACH|PIPE)\b)"
     r"|(?P<ph><(?:[A-Z0-9]+-)*(?:REDACTED|IP-\d+|HOST-\d+|EMAIL-\d+|DN-\d+)>)"
     r"|(?P<logger>\((?:[a-z_$][\w$]*\.)+[A-Za-z_$][\w$]*(?::\d+)?\)\s*$)"
 )
@@ -199,7 +211,8 @@ _LOG_FRAME_RE = re.compile(r"^\s+(?:at |\.\.\. \d+ (?:more|common frames omitted
 
 def log_html(text) -> str:
     """Escaped log text with colors (LOG_CSS): timestamp, level (FATAL / ERROR / WARN / INFO / DEBUG / TRACE and JSON
-    "level":"error"), exception class, Caused by, [connector|task-0] context, (logger) at the end of a line, stack
+    "level":"error", and the levels of the clients: librdkafka %3| / FAIL, panic:, fail:, Error:…), exception class (with
+    or without package, librdkafka error codes, errno), client context ([rdkafka#producer-1], [Connection]…), Caused by, [connector|task-0] context, (logger) at the end of a line, stack
     frames, <IP-1> / <REDACTED> placeholders of the sanitizer"""
     out = []
     for line in str(text).split("\n"):
@@ -215,6 +228,8 @@ def log_html(text) -> str:
             if kind in ("lvl", "jlvl"):
                 level = _LOG_LEVEL_CLASS[(m.group("jv") or token).lower()]
                 parts.append(f'<span class="lh-lvl lh-{level}">{e(token)}</span>')
+            elif kind == "clvl":
+                parts.append(f'<span class="lh-lvl lh-{_CLIENT_LEVEL.get(token, "error")}">{e(token)}</span>')
             else:
                 parts.append(f'<span class="lh-{kind}">{e(token)}</span>')
             pos = m.end()
