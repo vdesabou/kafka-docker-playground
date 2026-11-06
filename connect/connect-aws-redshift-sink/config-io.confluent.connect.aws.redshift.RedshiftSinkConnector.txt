@@ -46,6 +46,15 @@ Password to authenticate with the database
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 jdbc.credentials.provider.class
+
+Credentials provider or provider chain to use for authentication to database. By default the connector uses ``io.confluent.connect.aws.redshift.jdbc.util.DefaultJdbcCredentialsProvider``.
+
+	 - Type: CLASS
+	 - Default: io.confluent.connect.aws.redshift.jdbc.util.DefaultJdbcCredentialsProvider
+	 - Importance: LOW
+	 - Required: false
+
 🔘 connection.attempts
 
 Maximum number of attempts to retrieve a valid JDBC connection. Must be a positive integer.
@@ -193,6 +202,33 @@ Name of the JDBC timezone that should be used in the connector when inserting DA
 	 - Importance: LOW
 	 - Required: false
 
+🔘 timestamp.fields.list
+
+List of comma-separated record value timestamp field names that should be converted to timestamps. These fields will be converted based on precision mode specified in timestamp.precision.mode(microseconds or nanoseconds). The timestamp fields included here should be Long or String type and nested fields are not supported.
+
+	 - Type: LIST
+	 - Default: 
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 timestamp.precision.mode
+
+Convert the Timestamp with precision. If set to microseconds, the timestamp will be converted to microsecond precision. If set to nanoseconds the timestamp will be converted to nanoseconds precision.
+
+	 - Type: STRING
+	 - Default: MICROSECONDS
+	 - Importance: LOW
+	 - Required: false
+
+🔘 date.calendar.system
+
+Conversion of time since epoch value in kafka topic record to DATE or TIMESTAMP depends on the calendar used to interpret it. If LEGACY is used, it will use the hybrid Gregorian/Julian calendar which was the default in the older java date time APIs. However, if 'PROLEPTIC_GREGORIAN' is used, then it will use the proleptic gregorian calendar which extends the Gregorian rules backward indefinitely and does not apply the 1582 cutover. This matches the behavior of modern Java date/time APIs (java.time). This is defaulted to LEGACY for backward compatibility. The ideal setting for this depends on whether the values in source topic were populated using old or new java date time APIs. Changing this configuration on an existing connector might lead to a drift in the DATE/TIMESTAMP column's values populated in the sink database.
+
+	 - Type: STRING
+	 - Default: LEGACY
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 DDL Support
 ==========================
@@ -216,7 +252,7 @@ Whether to automatically add columns in the table schema when found to be missin
 
 🔘 quote.sql.identifiers
 
-When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``.
+When to quote table names, column names, and other identifiers in SQL statements. For backward compatibility, the default is ``always``. Identifiers containing control characters are always rejected. With ``never``, identifiers also may not contain ``;``, SQL comment sequences (including ``#`` on MySQL and MariaDB), whitespace, quote characters, parentheses, or commas, since they cannot be used unquoted.
 
 	 - Type: STRING
 	 - Default: ALWAYS
