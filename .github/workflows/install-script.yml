@@ -57,6 +57,9 @@ jobs:
           cp "$rc" /tmp/rc.before
           /bin/bash docs/install.sh --yes --dir "$KDP_DIR" < /dev/null
           diff /tmp/rc.before "$rc"
+          # from a new terminal, whose PATH already has what the block added: the block must not lose its lines
+          bash -ic "source $rc; /bin/bash docs/install.sh --yes --dir \"$KDP_DIR\" < /dev/null"
+          diff /tmp/rc.before "$rc"
 
       - name: Uninstall removes the block and keeps the folder
         run: |
@@ -64,3 +67,50 @@ jobs:
           /bin/bash docs/install.sh --uninstall --yes < /dev/null
           if grep -F "kafka-docker-playground >>>" "$rc"; then echo "block still in $rc"; exit 1; fi
           test -d "$KDP_DIR"
+
+      # the macOS runners cannot start a VM (no podman machine, no Docker Desktop): check the plan only
+      - name: Container engine plan on a machine without engine (dry run)
+        if: runner.os == 'macOS'
+        env:
+          KDP_INSTALL_TEST_NO_ENGINE: "1"
+        run: |
+          out=$(/bin/bash docs/install.sh --dry-run --no-confluent-cli --dir "$RUNNER_TEMP/kdp-plan" --engine podman < /dev/null 2>&1)
+          echo "$out"
+          echo "$out" | grep -F "install podman docker docker-compose"
+          echo "$out" | grep -F "podman machine init --rootful"
+          echo "$out" | grep -F "playground switch-podman"
+          out=$(/bin/bash docs/install.sh --dry-run --no-confluent-cli --dir "$RUNNER_TEMP/kdp-plan" --engine docker-desktop < /dev/null 2>&1)
+          echo "$out"
+          echo "$out" | grep -F "install --cask docker-desktop"
+          out=$(/bin/bash docs/install.sh --dry-run --no-confluent-cli --dir "$RUNNER_TEMP/kdp-plan" --yes < /dev/null 2>&1)
+          echo "$out" | grep -F -- "--yes does not install one"
+
+  # a real Docker Engine install, as a regular user with sudo, in an Ubuntu container running systemd
+  docker-engine:
+    name: install.sh --engine docker on Ubuntu with systemd
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Start an Ubuntu container with systemd
+        run: |
+          mkdir -p "$RUNNER_TEMP/systemd-ubuntu"
+          cat > "$RUNNER_TEMP/systemd-ubuntu/Dockerfile" << 'EOF'
+          FROM ubuntu:24.04
+          RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq systemd systemd-sysv curl sudo > /dev/null \
+           && useradd -m -s /bin/bash alice && echo "alice ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/alice
+          STOPSIGNAL SIGRTMIN+3
+          CMD ["/sbin/init"]
+          EOF
+          docker build -q -t kdp-systemd-ubuntu "$RUNNER_TEMP/systemd-ubuntu"
+          docker run -d --name kdp-systemd --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v "$PWD/docs:/mnt:ro" kdp-systemd-ubuntu
+          for _ in $(seq 1 30); do docker exec kdp-systemd systemctl is-system-running 2> /dev/null | grep -qE 'running|degraded' && break; sleep 2; done
+
+      - name: Install Docker Engine and the playground
+        run: |
+          docker exec -u alice -e SHELL=/bin/bash -e USER=alice -e HOME=/home/alice -w /home/alice kdp-systemd \
+            bash /mnt/install.sh --yes --engine docker --no-confluent-cli | tee /tmp/install.log
+          grep -F "Docker Engine is running" /tmp/install.log
+          grep -F "all good, the docker engine is ready for the playground" /tmp/install.log
+          docker exec kdp-systemd id -nG alice | grep -qw docker

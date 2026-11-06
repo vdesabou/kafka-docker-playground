@@ -6,7 +6,7 @@ It makes so much easier to use the playground and reduces a lot the Docker knowl
 ## 🚜 Setup
 
 > [!TIP]
-> The one-line installer does all of this for you (clone, bash 4+, fzf, Confluent CLI, `PATH` and completion), asking before each change: `curl -fsSL https://kafka-docker-playground.io/install.sh | bash`. See [Install in one command](/how-to-use?id=%e2%9a%a1-install-in-one-command).
+> The one-line installer does all of this for you (clone, bash 4+, fzf, Confluent CLI, a container engine if you have none, `PATH` and completion), asking before each change: `curl -fsSL https://kafka-docker-playground.io/install.sh | bash`. See [Install in one command](/how-to-use?id=%e2%9a%a1-install-in-one-command).
 
 ### 🦶 Setup PATH
 

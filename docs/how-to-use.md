@@ -35,9 +35,10 @@ curl -fsSL https://kafka-docker-playground.io/install.sh | bash
 It asks before each change, and only does this:
 
 1. **checks** your machine and changes nothing: git, bash 4+, fzf, docker + compose v2 (or Podman), free disk space
-2. **installs what is missing** (bash, fzf, git) with Homebrew on macOS or the package manager on Linux, and the [Confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html) used by the Confluent Cloud examples (Homebrew on macOS, else the official installer into `~/.local/bin`). It never installs Docker or Podman for you: it gives you the link
+2. **installs what is missing** (bash, fzf, git) with Homebrew on macOS or the package manager on Linux, and the [Confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html) used by the Confluent Cloud examples (Homebrew on macOS, else the official installer into `~/.local/bin`)
 3. **clones** the repository into `~/kafka-docker-playground` (latest version only), or updates the clone you already have
-4. **adds one block** to `~/.zshrc` (or `~/.bashrc`, `~/.bash_profile`), with a backup of the file, so that `playground` and its completion are in your `PATH`:
+4. **offers to install a container engine**, only when none is installed at all (see below)
+5. **adds one block** to `~/.zshrc` (or `~/.bashrc`, `~/.bash_profile`), with a backup of the file, so that `playground` and its completion are in your `PATH`:
 
    ```bash
    # >>> kafka-docker-playground >>>
@@ -46,9 +47,27 @@ It asks before each change, and only does this:
    # <<< kafka-docker-playground <<<
    ```
 
-5. **runs** [playground doctor](/playground%20doctor) to check that the container engine is ready
+6. **runs** [playground doctor](/playground%20doctor) to check that the container engine is ready
 
 Then open a new terminal and run `playground run`.
+
+##### 🐳 Container engine
+
+When no engine answers and none is installed, the installer asks which one to install:
+
+| Platform | Choices | What it runs |
+| --- | --- | --- |
+| macOS | 🦭 **Podman** (default): free, installed and started for you | `brew install podman docker docker-compose`, links the compose plugin into `~/.docker/cli-plugins`, `podman machine init --rootful --cpus 4 --memory 12288 --disk-size 100` (less memory on a Mac with less than 16GB), then [playground switch-podman](/playground%20switch-podman) |
+| macOS | 🐳 **Docker Desktop** | `brew install --cask docker-desktop` and `open -a Docker`: accept its agreement in the window, the installer waits for the engine. Give it at least 8GB of memory in Settings > Resources |
+| Linux | 🐳 **Docker Engine**: free | Docker's installer (`https://get.docker.com`, Ubuntu, Debian, Fedora, CentOS, RHEL), `sudo systemctl enable --now docker`, and adds you to the `docker` group (applies to your next login) |
+| Windows WSL 2 | none | install [Docker Desktop for Windows with the WSL 2 integration](https://docs.docker.com/desktop/features/wsl/). With systemd enabled in the distribution, Docker Engine is offered as on Linux |
+
+> [!WARNING]
+> Docker Desktop needs a [paid subscription](https://www.docker.com/pricing/faq/) in companies with more than 250 employees or more than $10 million revenue: check that yours has one, or pick Podman.
+
+- An engine already installed but stopped (Docker Desktop, OrbStack, Rancher Desktop, Colima, Podman) is never replaced: the installer tells you how to start it.
+- `--yes` alone never installs an engine: pass `--engine podman`, `--engine docker-desktop` (macOS), `--engine docker` (Linux) or `--engine none`.
+- `--uninstall` leaves the engine installed.
 
 > [!TIP]
 > Want to read it first? The script is [docs/install.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/docs/install.sh). See what it would do without changing anything:
@@ -64,6 +83,7 @@ Then open a new terminal and run `playground run`.
 | `--dir <path>` | clone somewhere else than `~/kafka-docker-playground` |
 | `--no-rc` | do not touch any shell startup file, print the lines to add instead |
 | `--no-confluent-cli` | do not install the Confluent CLI (only needed by the Confluent Cloud examples) |
+| `--engine <engine>` | container engine to install when none is found, without asking: `podman` or `docker-desktop` on macOS, `docker` on Linux, `none` |
 | `--uninstall` | remove the block from your shell startup files, then offer to delete the folder (default: keep it, it may hold your `playground.ini` and reproduction models) |
 
 Pass options after `bash -s --`, for example `curl -fsSL https://kafka-docker-playground.io/install.sh | bash -s -- --uninstall`. Running it again is safe: it updates the clone and leaves the block as it is.
