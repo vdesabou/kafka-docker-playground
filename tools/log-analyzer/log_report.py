@@ -1312,7 +1312,7 @@ var pgMatch = null;       // Set of the record indexes whose block passes pgTest
 // the search: words that must all be in the text (any case), -word for a word that must not be, "a phrase", /a regex/
 // (-/regex/ too); an invalid regex is searched as text
 function pgCompile(q) {
-  const terms = [], re = /(-?)(?:"([^"]+)"|\/((?:\\.|[^\/])+)\/|(\S+))/g;
+  const terms = [], re = /(-?)(?:"([^"]+)"|\\/((?:\\\\.|[^\\/])+)\\/|(\\S+))/g;
   let m;
   while ((m = re.exec(q))) {
     const neg = m[1] === "-" && (m[2] !== undefined || m[3] !== undefined || m[4] !== undefined);
