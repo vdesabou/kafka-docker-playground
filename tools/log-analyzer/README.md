@@ -37,6 +37,17 @@ frequent messages (masked: numbers, hex ids, UUIDs) and loggers, and hints (peri
 INFO/DEBUG records, an export of a log console cut at its size limit). `analyze logs` prints it, adds it to the HTML
 report (🔭 Overview section) and to `--json` (`.overview`).
 
+## Inputs not fully read
+
+`analyze logs` writes `label<tab>reason` to `$tmp_dir/incomplete` for each input it could not read completely: a `.gz`
+that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up to the error), an archive that `unzip`
+/ `tar` / 7-Zip do not fully extract, a digest that fails. They are listed at the end of the terminal output, in a ⚠️
+**Not fully read** block below the verdict of the HTML report (`log_report.py --incomplete`) and in
+`.summary.incomplete_inputs` of `--json` (`[]` when everything was read). With no finding, the verdict is ⚠️ instead of
+✅, and the exit code is `1` when nothing could be read at all. The digest (`summarize_log_errors`) runs its awk with
+`LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
+conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
+
 ## HTML report and JSON
 
 With `--sources <label<tab>path<tab>1 when the file stays on disk>` (written by `analyze logs`) and `--html-out`,

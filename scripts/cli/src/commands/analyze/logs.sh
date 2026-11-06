@@ -172,6 +172,15 @@ sources_file="$tmp_dir/sources"
 # label<tab>format<tab>number of events of each JSON / CSV export converted back to log lines (🔭 overview)
 exports_file="$tmp_dir/exports"
 : > "$exports_file"
+# label<tab>reason of each input not fully read (digest failed, truncated gzip, archive not fully extracted): a ⚠️ in the
+# terminal, in the HTML report and in --json (.summary.incomplete_inputs), never a silent ✅
+incomplete_file="$tmp_dir/incomplete"
+: > "$incomplete_file"
+# $1: label, $2: reason
+function note_incomplete () {
+    logwarn "⚠️ $1: $2"
+    printf '%s\t%s\n' "$1" "$2" >> "$incomplete_file"
+}
 nb_files=0
 nb_bytes=0
 nb_files_with_findings=0
@@ -340,6 +349,11 @@ function analyze_logs_digest () {
     else
         output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
     fi
+    local digest_rc=$?
+    if [ $digest_rc -ne 0 ]
+    then
+        note_incomplete "$label" "the digest failed (exit $digest_rc): records of this file may be missing"
+    fi
     nb_files=$((nb_files+1))
     nb_bytes=$((nb_bytes+${input_bytes:-0}))
     if [[ "$output" == "✅"* ]]
@@ -356,6 +370,19 @@ function analyze_logs_digest () {
     # there is no --since here
     echo "$output" | sed 's/ or narrow with --since$//'
     echo ""
+}
+
+# digest of a .gz file: a truncated or corrupt one (a partial download) is read up to the error, and said so
+# $1: label, $2: path
+function analyze_logs_gzip () {
+    local gzip_err="$tmp_dir/gzip.err"
+    : > "$gzip_err"
+    analyze_logs_digest "$1" "$2" < <(gzip -dc "$2" 2> "$gzip_err")
+    # the digest has read up to the end of the output of gzip: gzip has written its error, if any, before closing it
+    if [ -s "$gzip_err" ]
+    then
+        note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(head -n 1 "$gzip_err" | sed 's/^gzip: //'))"
+    fi
 }
 
 # config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
@@ -535,9 +562,10 @@ function analyze_logs_path_entry () {
                 tar|bsdtar) "$seven_zip" -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
                 *) "$seven_zip" x -y -o"$extract_dir" "$path" > /dev/null 2>&1 ;;
             esac
-            if [ $? -ne 0 ]
+            extract_rc=$?
+            if [ $extract_rc -ne 0 ]
             then
-                logwarn "⚠️ could not fully extract $label"
+                note_incomplete "$label" "could not fully extract the archive (exit $extract_rc): files may be missing"
             fi
             progress_add_extracted "$path" "$extract_dir"
             analyze_logs_path "$extract_dir" "$label:"
@@ -570,9 +598,10 @@ function analyze_logs_path_entry () {
                     fi
                     ;;
             esac
-            if [ $? -ne 0 ]
+            extract_rc=$?
+            if [ $extract_rc -ne 0 ]
             then
-                logwarn "⚠️ could not fully extract $label"
+                note_incomplete "$label" "could not fully extract the archive (exit $extract_rc): files may be missing"
             fi
             progress_add_extracted "$path" "$extract_dir"
             analyze_logs_path "$extract_dir" "$label:"
@@ -594,7 +623,7 @@ function analyze_logs_path_entry () {
                 :
             elif [[ "$path" == *.gz ]]
             then
-                analyze_logs_digest "$label" "$path" < <(gzip -dc "$path" 2>/dev/null)
+                analyze_logs_gzip "$label" "$path"
             else
                 analyze_logs_digest "$label" "$path" < "$path"
                 append_config_file "$path" "$label"
@@ -603,7 +632,7 @@ function analyze_logs_path_entry () {
         *.gz)
             if ! is_duplicate_file "$path" "$label"
             then
-                analyze_logs_digest "$label" "$path" < <(gzip -dc "$path" 2>/dev/null)
+                analyze_logs_gzip "$label" "$path"
             fi
             ;;
         *)
@@ -820,11 +849,29 @@ then
     levels="ERROR/FATAL/WARN"
 fi
 read_msg="$(python3 -I "$root_folder/tools/log-analyzer/progress.py" human "$nb_bytes" 2>/dev/null || echo "$nb_bytes bytes") read in $(( (SECONDS-analyze_started) / 60 )) min $(( (SECONDS-analyze_started) % 60 )) s"
-if [ $nb_files_with_findings -eq 0 ]
+nb_incomplete=$(grep -c . "$incomplete_file" || true)
+if [ $nb_files_with_findings -eq 0 ] && [ "$nb_incomplete" -gt 0 ]
+then
+    logwarn "⚠️ no $levels record found in $nb_files file(s), but $nb_incomplete input(s) were not fully read: the missing part may hold errors, $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
+elif [ $nb_files_with_findings -eq 0 ]
 then
     log "✅ no $levels record found in $nb_files file(s), $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
 else
     log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned, $read_msg (binary files skipped: $nb_skipped${duplicates_msg})"
+fi
+if [ "$nb_incomplete" -gt 0 ]
+then
+    logwarn "⚠️ Not fully read (ask for a complete copy):"
+    while IFS=$'\t' read -r incomplete_label incomplete_reason
+    do
+        logwarn "   • $incomplete_label: $incomplete_reason"
+    done < "$incomplete_file"
+fi
+# nothing could be read at all (an archive that does not extract, a gzip that does not decompress): a failure, not a ✅
+incomplete_exit=0
+if [ $nb_files -eq 0 ] && [ "$nb_incomplete" -gt 0 ]
+then
+    incomplete_exit=1
 fi
 
 if ! command -v python3 &>/dev/null
@@ -833,6 +880,7 @@ then
     exit 0
 fi
 sanitize_file "$records_file"
+sanitize_file "$incomplete_file"
 
 # 🔭 no finding: what the logs contain (period covered, levels, top messages and loggers) and what to ask for next,
 # instead of a bare "no record found" (tools/log-analyzer/log_overview.py)
@@ -910,7 +958,7 @@ if [[ ${#sample_array[@]} -gt 0 ]]
 then
     title="sample ${sample_array[*]}"
 fi
-report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
+report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
 for connector in "${connector_array[@]}"
 do
     report_args+=(--connector "$connector")
@@ -951,7 +999,7 @@ then
             '. + {cfk_bundles: $cfk[0]} + (if ($comparison[0] | length) > 0 then {cfk_comparison: $comparison[0]} else {} end)' \
             "$tmp_dir/logs-redacted.json" >&3
     fi
-    exit $cfk_exit
+    exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))
 fi
 
 mkdir -p "$output_dir"
@@ -1043,4 +1091,4 @@ then
         log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$output_dir\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
     fi
 fi
-exit $cfk_exit
+exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))
