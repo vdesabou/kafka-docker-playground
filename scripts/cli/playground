@@ -30649,7 +30649,8 @@ function open_html_report() {
             xdg-open "$report" > /dev/null 2>&1 || true
         fi
     else
-        log "🔗 Open in browser: file://$report"
+        # percent-encoded: a space, a # or a ? in the path would cut the URL pasted in a browser
+        log "🔗 Open in browser: file://$(python3 -I -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$report" 2>/dev/null || echo "$report")"
     fi
 }
 

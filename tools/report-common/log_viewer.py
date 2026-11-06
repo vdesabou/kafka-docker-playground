@@ -195,7 +195,7 @@ def write_page(path: str, out_path: str, label: str, hits: Iterable[int], report
     if previous_end < len(lines):
         body.append(f"<div class='gap'>⋯ lines {previous_end + 1}–{len(lines)} not shown {e(gap)}</div>")
     shown = "whole file" if whole else f"{sum(hi - lo + 1 for lo, hi in ranges)} of {len(lines)} lines shown"
-    bar = (f"<div class='lv-bar'><a class='lv-btn' href='../{e(report_name)}'>⬅️ Report</a>"
+    bar = (f"<div class='lv-bar'><a class='lv-btn' href='../{e(quote(report_name))}'>⬅️ Report</a>"
            f"<button type='button' id='lv-prev' title='previous finding (p)'>▲ Previous</button>"
            f"<button type='button' id='lv-next' title='next finding (n)'>▼ Next</button>"
            f"<span>finding <span id='lv-pos'>– / {len(hits)}</span></span>"
@@ -245,7 +245,8 @@ def write_pages(report_path: str, files: List[Tuple[str, str, Iterable[int], Opt
         copy = not original or original.endswith(".gz")
         editor_path = os.path.join(host_dir, folder, name[:-len(".html")]) if copy else original
         if write_page(path, os.path.join(report_dir, folder, name), label, hits, report_name, editor_path, copy):
-            hrefs[label] = f"{folder}/{name}"
+            # percent-encoded: the report is named after the input, a # or a ? in its name would cut the URL
+            hrefs[label] = f"{quote(folder)}/{quote(name)}"
             hrefs.editor_paths[label] = editor_path
     return hrefs
 
