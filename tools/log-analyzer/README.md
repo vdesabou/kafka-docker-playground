@@ -112,6 +112,12 @@ Passwords are masked by Connect (`password=********`).
 
 ### Logs of the other clients
 
+In the HTML report, `log_html()` of `tools/report-common/report_html.py` colors their lines like the Java ones: the
+levels (librdkafka `%3|` / `FAIL`, `panic:`, `fatal error:`, .NET `fail:` / `crit:`, `Error:`), the librdkafka epoch
+timestamp, the client context (`[rdkafka#producer-1]`, `[thrd:…]`, KafkaJS `[Connection]`, Java `[Producer clientId=…]`),
+the exceptions without package (`KafkaException`, `KafkaError`), the librdkafka error codes (`_MSG_TIMED_OUT`) and errno
+(`ECONNREFUSED`); the exception chains of the findings use it for anything that is not a Java `Exception: message`.
+
 `summarize_log_errors` reads the levels and crashes of every Confluent client, not only Java: the librdkafka lines
 (`%3|<epoch>|FAC|name| …`, syslog level 0-2 FATAL, 3 ERROR, 4 WARN, timestamp converted from the epoch, UTC, by
 `epoch_iso()`), the Node.js objects of the JavaScript client logger (`js_rdkafka()`: `fac: 'FAIL'` / `'ERROR'`, written
