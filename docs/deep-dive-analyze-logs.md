@@ -208,7 +208,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🎚️ filter bar | levels, components, connector, search, period: everything below follows it, and the URL keeps it |
 | 🔎 findings | the known causes with what to do and their exception chains, then the most frequent errors no known cause explains; each card says how much of it is in the current selection |
 | 🗓️ incident timeline | *what happened first?*: all files merged, the first occurrence of each error and known cause, restarts, connectors reconfigured, config changed between restarts |
-| 🔌 connectors | a card per connector: errors, task kills, known causes, configuration, keys changed; ▶ only this connector |
+| 🔌 connectors | a card per connector, the 30 with the most errors first (show the others): errors, task kills, known causes, configuration, keys changed; ▶ only this connector keeps its card only (⤺ for all of them), the search filters the cards |
 | 📈 occurrences over time | drag to zoom down to the second; an error repeated all day is spread over the day (sampled, counted with its weight) |
 | 🌳 all root causes | every distinct error, by deepest exception, linked to the finding that explains it |
 | 🗂️ files and 🕰️ log coverage | per file and per folder of rotated logs, with the hours a folder has no log |
@@ -229,8 +229,9 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 - The component you pick is remembered for the next reports; a link wins over it.
 
 > [!NOTE]
-> The 🔎 findings are never rewritten by a filter: they are the diagnosis of the bundle, and only say
-> `▸ 340 of 1200 occurrence(s) here`. Picking a connector never hides a problem of the cluster.
+> The 🔎 findings are never rewritten by a filter: they are the diagnosis of the bundle. Each one says how much of it is
+> in the selection (`▸ 340 of 1200 occurrence(s) here`), and the ones with nothing in it are hidden, with a
+> `🙈 5 finding(s) with nothing in this selection hidden` **show them** to bring them back.
 
 Times are shown **as written in the logs**, whatever the time zone of your browser; when the files mix offsets
 (`+02:00` Connect logs and `Z` broker logs), they are converted to UTC so that the files line up (`🌐 UTC` on the 🕐
