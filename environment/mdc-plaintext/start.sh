@@ -44,7 +44,7 @@ then
   log "🔍 Starting only services: $START_SERVICES"
 fi
 
-DOCKER_COMPOSE_ARGS="-f ${DIR}/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command}"
+DOCKER_COMPOSE_ARGS="-f ${DIR}/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} ${profile_grafana_command}"
 
 # Only run 'down' if we're NOT skipping container stop (--no-stop not set)
 if [[ -z "$NO_STOP" ]]

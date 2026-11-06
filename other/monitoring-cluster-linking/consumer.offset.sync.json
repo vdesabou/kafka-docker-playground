@@ -1,7 +1,0 @@
-{
-    "groupFilters": [{
-        "name": "my-replicated-consumer-group",
-        "patternType": "LITERAL",
-        "filterType": "INCLUDE"
-    }]
-}

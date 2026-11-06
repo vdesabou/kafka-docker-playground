@@ -415,8 +415,7 @@ playground connector display-metrics-api | display-metrics-api-with-grafana   # 
 
 **Links**
 
-- 🧪 Lab: [`other/deep-dive-labs/observability.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/deep-dive-labs/observability.sh);
-  example [`other/monitoring-demo`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-demo)
+- 🧪 Lab: [`other/deep-dive-labs/observability.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/deep-dive-labs/observability.sh)
 - 🍪 Deep dives: [brokers and transactions](/deep-dive-broker.md), [`connector diagnose`](/deep-dive-connector-troubleshooting.md),
   [offsets and lag](/deep-dive-offsets-and-lag.md), [JVM diagnostics](/deep-dive-jvm-diagnostics.md),
   [benchmark a connector](/deep-dive-connector-benchmark.md)

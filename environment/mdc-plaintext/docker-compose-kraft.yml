@@ -48,7 +48,13 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: controller-us
     container_name: controller-us
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     environment:
+      # --enable-jmx-grafana: JMX exporter (port 1234) and Pyroscope agents, empty otherwise
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "controller-us"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
       KAFKA_NODE_ID: 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -91,7 +97,13 @@ services:
     image: ${CP_KAFKA_IMAGE}:${CP_KAFKA_TAG}
     hostname: controller-europe
     container_name: controller-europe
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     environment:
+      # --enable-jmx-grafana: JMX exporter (port 1234) and Pyroscope agents, empty otherwise
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "controller-europe"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
       KAFKA_NODE_ID: 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
