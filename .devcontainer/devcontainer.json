@@ -3,8 +3,10 @@
   // Open it in one click: https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1
   // Docs: https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces
   "name": "kafka-docker-playground",
-  // Ubuntu with bash 5 and git: no bash upgrade needed, unlike macOS
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  // Ubuntu with bash 5 and git: no bash upgrade needed, unlike macOS.
+  // Pinned to 24.04 (noble): the floating 'ubuntu' tag moved to 26.04 (resolute), where the docker-in-docker
+  // feature refuses to install Moby ("The 'moby' option is not supported on ubuntu 'resolute'")
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "features": {
     // a Docker engine with compose v2 inside the codespace
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
