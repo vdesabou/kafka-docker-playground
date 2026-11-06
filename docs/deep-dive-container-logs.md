@@ -1,4 +1,4 @@
-# 🍪 Deep dive: `playground container logs` and `playground analyze logs`
+# 🍪 Deep dive: `playground container logs` (and `playground analyze logs`)
 
 The two commands that read logs for you. `container logs` reads the logs of a running container (or CFK pod): raw,
 filtered, waited for, or summarized into a digest of ERROR/FATAL records. `analyze logs` gives the same digest for
@@ -153,334 +153,24 @@ Gotchas:
 
 ## 4. Offline: `playground analyze logs`
 
-```bash
-playground analyze logs -f connect.log
-playground analyze logs -f ./customer-logs.zip --errors-only   # WARN records are reported by default
-playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
+> [!TIP]
+> `analyze logs` has its own page: **[🍪 Deep dive: `playground analyze logs`](deep-dive-analyze-logs.md)**. Every kind
+> of input (bundles, exports of CloudWatch / OpenSearch / Kibana / Splunk, the non-Java clients, Kafka Streams), the
+> HTML report section by section, the incident timeline, the connector cards, `--compare` to check a fix, `--json` for
+> scripts and agents, `--sanitize`, with example reports and its own lab.
 
-# try it on the shipped samples
-playground analyze logs --sample connect_task_failure     # a Connect worker log (Oracle XStream task failure)
-playground analyze logs --sample support_bundle           # a .zip with that log and a gzipped broker log
-playground analyze logs --sample kafka_streams            # the logs of 3 Kafka Streams instances (see 🌊 below)
-playground analyze logs --sample kafka_clients            # C/C++, Python, Go, .NET, JavaScript, KafkaJS, Rust clients (see 🧰 below)
-playground analyze logs --sample cfk_bundle               # a CFK support bundle (see below)
-playground analyze logs --sample cfk_kraft_migration      # a CFK support bundle with a stuck ZooKeeper to KRaft migration
-playground analyze logs --sample cfk_rollout              # a CFK support bundle with a half-done CP upgrade
-playground analyze logs --sample cfk_rollout --sample cfk_rollout_after   # two bundles of that cluster, compared
-```
-
-What it does with what you give it:
-
-| Input | Handling |
-| --- | --- |
-| a folder | scanned recursively, sorted, `__MACOSX/` and `.DS_Store` ignored |
-| `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z` | extracted to a temporary folder (deleted at the end), nested archives too. `.7z` needs `bsdtar` (the `tar` of macOS) or 7-Zip; `.rar`, `.xz`, `.zst`… are skipped with a warning: extract them first |
-| `.gz` | decompressed on the fly |
-| a JSON export of log events (`.json`, `.jsonl`, `.ndjson`, also gzipped): AWS CloudWatch Logs Insights (`[{"@timestamp": …, "@message": …}]`, console or `get-query-results`), CloudWatch `filter-log-events` / `get-log-events` (`{"events": [{"timestamp", "message"}]}`), Elasticsearch / OpenSearch hits (`_source.message`), structured JSON logs (`level`, `logger_name`, `message`, `stack_trace`) | converted back to log lines, **oldest first** (console exports are newest first), one event per line and its stack trace below it, then analyzed as a log file: `🔄 <file>: JSON export of <n> log events, analyzed as log lines (oldest first)`. The line numbers of the digest and of the HTML report are those of the converted file. Any other JSON is read as it is |
-| a CSV export of log events (`.csv`, also gzipped) with a header row: Kibana / OpenSearch Dashboards Discover (`"Oct 14, 2026 @ 19:13:28.977"` timestamps, `-` for an empty cell), Splunk, Datadog, Grafana / Loki | one event per row, the columns are its fields; a cell holding a JSON object (the `log` column with the ECS / logback JSON line of the container) is parsed and its `level`, `logger`, `message`, `error.stack_trace` win. Then converted like a JSON export: `🔄 <file>: CSV export of <n> log events, analyzed as log lines (oldest first)`. A CSV without a message-like column (`message`, `log`, `@message`, `line`, `_source`…) is read as it is |
-| JSON lines whatever the extension (`.log`, `.txt`: a fluentd / Kubernetes / logstash dump, `{"log":"[ERROR] 2026-10-14 …","kubernetes":{…}}` per line) | detected by their first character `{` and converted like a JSON export, **streamed** (a dump of 2.4 GB in about 10 s): `🔄 <file>: JSON lines export of <n> log events (2.2 GB), analyzed as log lines (oldest first)`. The digest then reads the messages instead of the metadata (7× less in a Kubernetes dump), and sees the level of `"log":"[ERROR] …"`, which it misses in the raw JSON. A message without its own time (the second part of a line split by Docker at 16 KB, a GC log line) gets the time of the event in front; the next lines of a multi-line message are indented, so a date in them is not taken as the time of the log |
-| a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`; or a flat collection of `kubectl` outputs with a `confluent-operator-*.log` or the YAML of a `platform.confluent.io` custom resource at its top), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, in its own HTML report. `--problem "<component, symptom, since when>"` matches it against the problem of the customer (🎯 verdict, issues that explain it first), and a 📥 Data to request section says what to ask the customer for next. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
-| logs with Kafka Streams lines (`stream-client [`, `stream-thread [`) | the digest as for any log, plus a 🌊 **Kafka Streams** section (see below) |
-| a `.properties` file, a JSON file with connector configs | analyzed like a text file, and shown in the ⚙️ configuration section of the HTML report |
-| any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
-| a copy of a file or of a CFK support bundle already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …` / `⏭️ … same CFK support bundle as …`, only one report), counted in the last line |
-
-🟠 **WARN is reported by default** (since the Kafka clients log real problems at WARN: `consumer poll timeout has
-expired` when a consumer leaves its group, `Expiring N record(s)` in the producer, `NetworkException` retries), always
-after the errors: the terminal digest prints FATAL, then ERROR, then WARN within `--max-findings` per file, the 🌳 cards
-of the findings rank ERROR first, and the **Levels** chips of the HTML report hide the WARN records in one click.
-`--errors-only` leaves them out (the previous default); `--include-warnings` is still accepted. On 1.1 GB of Connect
-logs, WARN made the run 6 % longer (120 s → 127 s), added 3 known causes (`🐢 Consumer left its group:
-max.poll.interval.ms exceeded`, `⌛ Records not delivered in time`, `🔀 Serialization or conversion error`) and tripled
-the rows of 🌳 All root causes (deprecation warnings and the like).
-
-🔭 **No finding is not a verdict.** When no file has an ERROR/FATAL/WARN record (ERROR/FATAL with
-`--errors-only`), `analyze logs` prints an overview of what the logs contain instead of stopping at `✅ no
-ERROR/FATAL/WARN record found`: each file with its lines, the period covered and its records by level, the 10 most frequent
-messages (numbers masked as `N`, identifiers as `<hex>` / `<uuid>`) and the 5 most frequent loggers, then 👉 what to
-ask for next:
-
-```text
-🔭 Overview: no ERROR/FATAL record, what the logs contain
-   📄 export.csv: 17946 lines, 2026-10-14 19:13:24 → 19:13:28 (4 s), CSV export of 17833 events
-      INFO 17833
-   🔝 Top messages (N: a number, <hex> / <uuid>: an identifier)
-        2393× INFO  Ended stream task for key … at offset N, partition N, and topic …
-   👉 What to ask for next
-      🕐 export.csv: shorter than 10 min of logs. Ask for the whole incident window, from before the problem started to after it ended
-      🔇 only INFO records: the logs (or the export) may be filtered on a level or a component, or the problem is not logged here. …
-      📤 CSV export of a log console: Kibana / OpenSearch Dashboards Discover exports the newest rows first and stops at a size limit …
-```
-
-The same overview is the 🔭 **Overview** section of the HTML report and `.overview` of `--json` (`files`,
-`top_messages`, `top_loggers`, `hints`).
-
-⏳ **Large inputs.** A file of 20 MB or more shows a bar in the terminal while it is converted and read
-(`⏳ <file> ▕████████████████░░░░░░░░░▏  66% 202.0 MB/308.4 MB 19.2 MB/s ETA 0:05`). With 20 MB or more of input in an
-interactive terminal, the report is opened in the browser right away (`🌐 Opening <report> in browser: it shows the
-progress, then the report`): a page with the step, a bar for the file being read (same as the terminal: %, MB, speed,
-ETA), a second one for the whole input (an archive counts for its content once extracted), tiles for the elapsed time, the speed, the
-ETA of the file and of the whole input (🏁 `~1:13`: the average rate since the start applied to what is left, an estimate) and the files done, with the look of the reports, reloaded every 2 s, which becomes
-the report at the end (written next to it then renamed, so the page never loads half a report). The last line says how
-much was read and how long it took: `📊 1 file(s) with findings out of 2 scanned, 2.4 GB read in 0 min 28 s`.
-An archive (`.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`) shows a bar while it is extracted, and the page shows each
-CFK support bundle as it is analyzed (`☸️ CFK support bundle 2 of 6: …`).
-
-🗂️ **One tab.** A folder or an archive with several CFK support bundles used to open a tab per bundle, one for their
-comparison and one for the log report (8 for 6 bundles). Their reports are now written without being opened: the log
-report links them in a ☸️ **CFK support bundles** section (the comparison first), and their paths are in the terminal.
-With only CFK bundles and no other log, the one opened is the report of the bundle, or the comparison of several (the
-progress page goes to it).
-
-⚡ Several CFK support bundles are analyzed **in parallel**, a container each, 4 at a time (`PLAYGROUND_CFK_PARALLELISM=2`
-on a laptop short of memory, `8` on a large one): `☸️ Analyzing 6 CFK support bundles, 4 at a time`. The output of each
-bundle is printed in their order, as soon as it and the ones before it are done; 6 bundles of the same namespace take
-about 20 s instead of 55 s.
-
-🔒 The digest, the HTML report and the JSON are **not sanitized by default**: `--sanitize` redacts them, before sharing
-them outside Confluent. Off by default because it can hide evidence (a dump of bytes taken for a secret, the IP of the
-broker you need to correlate) and doubles the time on a large bundle. With `--sanitize`:
-- **What is replaced:** passwords and other secrets (`password=…`, JAAS configs, tokens, API keys, credentials in
-  URLs, PEM blocks), IPs, hostnames, emails and LDAP DNs.
-- **Placeholders:** `<REDACTED>`, `<IP-1>`, `<HOST-1>`… A value gets the same placeholder everywhere in one run.
-  Values the application already masked (`password=********`) are left as they are.
-- **Report:** the last log line says what was redacted (`redaction_summary` in the JSON).
-- **Best effort:** review before sharing.
-
-The output names each file with its path inside the archive, and only shows files with findings:
-
-```text
-🔥 ERROR/FATAL digest for …/support-bundle.zip:bundle/broker/server.log.gz
-🔎 1 distinct record(s), 24 occurrence(s), in 54 lines
-
-🟠 WARN x24 (first seen line 1, last seen line 52)
-[2026-10-14 09:59:12,446] WARN No client metrics available in request, skipping export (io.confluent.telemetry.emitter.ClientMetricsTelemetryExporter)
-
-🔥 ERROR/FATAL digest for …/support-bundle.zip:bundle/connect/connect.log
-🔎 12 distinct record(s), 19 occurrence(s), in 5278 lines
-…
-✂️ 9 more distinct record(s) not shown, increase --max-findings
-
-📊 2 file(s) with findings out of 2 scanned, 1.4 MB read in 0 min 3 s (binary files skipped: 0)
-✅ HTML report saved: /home/me/log-analysis-output/support_bundle-log-report.html
-```
-
-### 🌊 Kafka Streams logs
-
-When files contain the lines the Kafka Streams library logs at INFO, `analyze logs` adds a 🌊 Kafka Streams section,
-after the digest, in the HTML report and in `--json` (`kafka_streams`): for each application (`application.id`) and
-each file (an instance), the state of the client and since when, the rebalances and the time spent in REBALANCING,
-the restarts, the threads with their active and standby tasks, the tasks not restored yet, the records restored, and
-the known Kafka Streams errors with their advice (task migrated, fenced producer, deserialization or production
-handler, missing source topic, topics not co-partitioned, state directory locked, uncaught exception). The HTML report
-draws the state of each instance over time (with a marker where each Kafka Streams error was logged), the Kafka
-Streams errors and the rebalances over time (zoomable, as 📈 Occurrences over time), and the task assignment
-(task × instance). The Kafka Streams errors are
-also known causes of the 🧭 summary. It reads the logs of any application, Kafka Streams 3.0+, as long as they are at
-INFO; `playground streams status` is the same view on the running instances of an example.
+`analyze logs` is the same digest as `--errors`, for logs that don't come from a running container: a customer support
+bundle, a CI artifact, a log file you were sent. Save the log of a container and you get the same digest offline,
+plus the HTML report:
 
 ```bash
-playground analyze logs --sample kafka_streams     # other/kafka-streams/serde-errors.sh: a demo application in ERROR
+playground container logs -c connect --no-follow --tail all > /tmp/connect.log
+playground analyze logs -f /tmp/connect.log                         # the digest, the 🧭 summary and an HTML report
+playground analyze logs -f /tmp/connect.log --connector bad-sink    # only one connector
+playground analyze logs --sample support_bundle                     # try it on a shipped customer bundle
 ```
 
-```text
-🌊 application streams-serde-errors-fail-on-poison-pill (Kafka Streams 4.4.0): 3 instance(s)
-  INSTANCE      STATE    SINCE     REBALANCES  THREADS    ACTIVE TASKS  STANDBY TASKS  NOT RESTORED
-  streams.log   ERROR    15:19:21  3 (0.5s)    1 DEAD     0_0           -              -
-  streams2.log  RUNNING  15:19:05  3 (0.5s)    1 RUNNING  0_1           -              -
-  streams3.log  RUNNING  15:19:06  2 (2.7s)    1 RUNNING  0_2           -              -
-  ❌ streams.log: the client is ERROR since 2026-11-05 15:19:21
-  🧪 Deserialization error x2 (streams.log, streams3.log, first 2026-11-05 15:19:20, last 2026-11-05 15:19:20)
-     👉 a record could not be deserialized with the configured serdes (poison pill, wrong format, schema not found): …
-```
-
-### 🧰 Logs of the other Kafka clients (C/C++, Python, Go, .NET, JavaScript, Rust)
-
-The digest reads the logs of every client of [the Confluent client list](https://docs.confluent.io/kafka-clients/overview.html),
-not only Java, the same way in `analyze logs`, `container logs --errors` (the `client-*` containers of
-`other/client-*`) and the other commands that write the digest:
-
-| Client | What is read |
-| --- | --- |
-| librdkafka: C/C++, and the Python, Go, .NET and JavaScript clients built on it | `%3\|1793896102.923\|FAIL\|rdkafka#producer-1\| [thrd:…]: …`: the level is the syslog level (0-2 FATAL, 3 ERROR, 4 WARN, 5-7 ignored), the timestamp the epoch seconds (UTC), wherever the line comes from (stderr of the client, a log framework that kept it). The same error of several clients is one record |
-| JavaScript (`@confluentinc/kafka-javascript`) | its default logger prints the librdkafka logs as Node.js objects without level (`{ message: '…', fac: 'FAIL', timestamp: 1793896130218, name: 'rdkafka#producer-1' }`): the `FAIL` and `ERROR` facilities are errors, written back as the librdkafka line |
-| Python | a `Traceback (most recent call last):`, alone or after a `logging.exception()` record, is one record with its chained tracebacks (`The above exception was the direct cause…`): the chain lists the outermost exception first and the **deepest cause last**, with the 3 last frames (`File "/app/client.py", line 57, in produce`) of the deepest cause; `KafkaError{code=…}` printed by the application counts as an error |
-| .NET | the console logger (`fail: Program[0]` / `crit:` / `warn:` and its indented message, joined), `` Unhandled exception. Confluent.Kafka.ProduceException`2[…]: … `` (FATAL), the inner exceptions (` ---> `) as `Caused by:`, the frames of the deepest one |
-| Go | `panic: …` and `fatal error: …` (FATAL) with the functions of the first goroutine, `2026/11/05 10:00:05` timestamps of the `log` package |
-| Rust (`confluent-kafka`, native) | the `tracing` lines (`2026-11-05T16:30:02.123456Z ERROR confluent_kafka::producer: …`), `thread 'main' panicked at src/producer.rs:45:10:` (FATAL) joined to its message, the `Error: …` of a `main` that returns an error |
-| Node.js (KafkaJS and the JavaScript client) | the JSON logs of KafkaJS (`"level":"ERROR"`), an uncaught error (`KafkaJSNonRetriableError: …`, `Error [ERR_X]: …`) with its `[cause]:` |
-
-The known causes include what these clients log: `Local: Message timed out` / `Expiring 3 record(s)` (⌛ records not
-delivered in time), `Local: Queue full` (📥 producer buffer full), `Application maximum poll interval` (🐢
-max.poll.interval.ms exceeded), `No such configuration property` (⚙️ invalid client configuration), `not present in
-metadata after` (🗺️ topic not found in the metadata), `might be caused by incorrect security.protocol` (🔀 wrong
-security.protocol), `N/N brokers are down`, `Failed to resolve`, `ECONNREFUSED` (🔌 connection failure), and
-`Disconnected (after 600013ms in state UP)` (💤 idle connection closed by the broker: low, usually harmless). A line an
-application prints without level (`delivery failed: Local: Message timed out`) is not a record, as for any log.
-
-```bash
-playground analyze logs --sample kafka_clients     # real logs of other/client-* against a broker that refuses connections
-```
-
-```text
-🧭 Summary: 207 occurrence(s) of 22 distinct record(s) in 12 file(s), 2026-11-05 16:28:22 → 2026-11-05 16:33:40
-🧠 Known causes
-   [HIGH] 🔌 Connection failure ×195 in 7 files (first at python-producer.log line 1, 2026-11-05 16:28:22)
-   [HIGH] ⚙️ Invalid client configuration ×1 in python-producer.log (first at line 34)
-   [HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)
-   [HIGH] 🗺️ Topic not found in the metadata ×2 in 2 files (first at rust-producer.log line 1)
-```
-
-### 🧭 The summary, `--connector`, `--show-config`
-
-After the digest of each file, a short **summary** gives what the HTML report says first, across all the files:
-
-```text
-🧭 Summary: 6 occurrence(s) of 6 distinct record(s) in 1 file(s), 2026-10-14 10:03:58 → 2026-10-14 10:05:55
-   🕐 Period covered: 2026-10-14 10:01:03 → 10:05:55 (4 min 52 s) ⚠️ shorter than 10 min: the logs may not cover the incident
-   🔌 by connector: cdc-xstream-oracle-source 1 · no connector context 5
-🧠 Known causes
-   [HIGH] 🧨 A connector task was killed ×1 in connect-oracle-xstream-task-failure.log (first at line 5251, 2026-10-14 10:05:55)
-      → it stays FAILED until it is restarted: fix the cause (the exception chain of the record), then playground connector restart --connector <connector>
-   [HIGH] 🔑 Authentication failure ×1 in connect-oracle-xstream-task-failure.log (first at line 9, 2026-10-14 10:03:58)
-      → check the credentials (user, password, API key, keytab) of the client or of the external system
-🌳 Root causes not explained by a known cause
-   ERROR ×1 StreamsException: ORA-26804: Apply "XOUT" is disabled.
-   …
-⚙️ Configuration logged (24), the last dump of each: --show-config <connector|config class|client id> prints one
-   🧩 cdc-xstream-oracle-source: SourceConnectorConfig ×3, EnrichedConnectorConfig ×3, AbstractConfig, …
-   📡 Clients: AdminClientConfig, ConsumerConfig
-```
-
-| Flag | What it does |
-| --- | --- |
-| `--connector <name>` (`-c`, repeatable) | only the records and configs of that connector (`[name\|task-0]` / `[name\|worker]` context, `WorkerSinkTask{id=name-0}`), in the digest of each file, the summary, the HTML report and the JSON. The digest says how many records of the file it left out. `--with-worker` also keeps what has no connector context (worker, Kafka) |
-| `--show-config <name>` | prints the configuration logged at startup as `key = value` (sanitized), the last dump of each, with the keys changed between restarts. For a **connector**: its own configs only (`EnrichedSourceConnectorConfig`, the connector's own class such as `AbstractConfig`, converters, `TaskConfig`); a config contained in a bigger one with the same values (`SourceConnectorConfig`, the `[name\|worker]` copy of a `[name\|task-0]` one) is only named, and its producer / consumer / admin clients are summed up in one line. For a **config class** (`ProducerConfig`, `DistributedConfig`…) or a **client id**: every match |
-| `--json-sections summary,findings,root_causes` | with `--json`, only these sections (`summary`, `findings`, `known_causes`, `root_causes`, `files`, `files_without_findings`, `configuration`). The configuration is most of the JSON (one dump of 100 keys per client), so leave it out unless you need it |
-
-**🔁 Changed between restarts**: when a config is logged again (a restart of the connector or the worker) with
-another value for a key, the summary, `--show-config`, the HTML report and `.configuration[].changes` of `--json` list
-it, for example `SinkConnectorConfig [my-sink|worker]: tasks.max 1 → 4 · first line 12 (2026-10-29 10:10:00)`.
-That answers "did the customer change something before it broke?". Each dump lists every key of its config class,
-defaults included, so only values that differ count. Two configs logged with the same identity (the key and the
-value converter, two consumers with one `client.id`) would look like a value going back and forth: a change undone
-within 60 s is ignored.
-
-### 🌐 The HTML report, and `--json`
-
-Besides the terminal digest, `analyze logs` writes a self-contained HTML report, `<first input>-log-report.html`, in
-`--output-dir` (default `./log-analysis-output`). It opens in the browser when you run the command from a terminal.
-It holds **every** distinct record, not only the first `--max-findings` of each file:
-
-| Section | What it shows |
-| --- | --- |
-| verdict and tiles | 🕐 **period covered**, files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
-| ⚠️ not fully read | right under the verdict when an input could not be read completely: a truncated or corrupt `.gz` (a partial download, read up to the error), an archive that does not fully extract, a digest that failed. The findings only cover what could be read; with no finding the verdict is ⚠️ instead of ✅, and the command exits 1 when nothing could be read at all. Also listed at the end of the terminal output and in `.summary.incomplete_inputs` of `--json` |
-| 🔁 comparison | with `--compare <before>` (the logs before a fix, another worker, the day before, or a JSON of `--json`): the root causes, known causes and connectors 🆕 new, ✅ gone, 📈 growing or 📉 shrinking (×1.5 and 3 occurrences at least), per hour with the rates when the two periods differ, and the totals by level; each root cause links to its row. Also in the terminal summary and `.comparison` of `--json` |
-| ▾ every section | folds by a click on its title (findings, charts, root causes, files, each file card, configuration, sections of other tools); **Fold all** / **Unfold all** next to 🔎 Findings |
-| 📤 Share (top right) | a panel to send the report to a colleague: **📦 the .zip of the report and its file pages** (one top folder `<name>-log-report/`), written next to it (`📤 To share it: <dir>/<name>-log-report.zip`) when the pages are under 200 MB, else the `zip` command to copy (a page holds a whole log file); **📋 Copy the summary** (verdict, period, known causes, root causes as text, for Slack or a ticket); **🔗 Copy the path**; **✉️ Email the summary**. It says first whether the report is sanitized (`--sanitize` before sending it outside Confluent) |
-| 🔎 findings | well-known causes first (task killed, authentication, cloud credentials (AWS `SignatureDoesNotMatch`, `Status Code: 403`), authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings). In the HTML report each card shows the count in a colored chip (`1,148,717×`), the cards are sorted by count within a severity, the first occurrence is its time with 📄 (the page of the file at the line) and ✏️ (the editor), the path on hover, and the advice is a 👉 line; every card lists its exception chains the same way, most frequent first (all of them for the killed tasks, the 5 most frequent for the other known causes and for the root causes no known cause explains, whose title is their exception, or the start of their message): its count, the exception class in orange (an `…Error` in red), `⬅️ Caused by` on its own line, the connectors as chips (5 shown, `+n more` unfolds the rest) and its first occurrence. A message without exception is one chain whatever the client and the broker it names (`[Producer clientId=…]` and `(host/ip:port)` ignored): 1.1 million `failed authentication` lines of 321 connectors make one chain, not 670 |
-| 🗓️ incident timeline | *what happened first?*, all files merged in one chronological list: the first occurrence of each error and of each known cause (one row when they share a line), the (re)starts of the components (the config they log at startup), the connectors (re)configured and the config keys changed between restarts, with 📄 links to the line. It follows the filters below (the restarts and configurations without connector stay). The first 8 events are in the terminal summary, all of them (up to 200) in `.timeline` of `--json` |
-| 🔌 connectors | one card per connector of the logs, most errors first: occurrences by level, first and last time, 🧨 task kills, the known causes of its records, its configuration dumps and clients, the keys changed between restarts; **▶ only this connector** sets the connector filter. One line per connector in the terminal summary, `.connectors` in `--json` |
-| 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records. **Drag over it to zoom on a range** (◀ ▶ to move the window, double-click or **All** to zoom out): the buckets are counted again for the window, so zooming on a burst shows it per minute, then per second |
-| 🔝 root causes (occurrences) | the 10 most frequent root causes of what is kept, as horizontal bars |
-| 🌳 all root causes | **every** distinct error, grouped by its deepest exception (or by message when it has none, the client context `[Producer clientId=…]` and `(host/ip:port)` left out: one row for the same error of 300 connectors, not 300), with occurrences, files and connectors; it follows the period, level and connector filters. 🔎 Findings is the short list to start with, this table the inventory: its **Finding** column links each row to the card that explains it, the known causes sharing its records (`🔑 Authentication failure`, several when its records match several) or `🌳 card in Findings` for the most frequent unexplained errors, `—` for the long tail; a 🌳 card links back to its row (`🌳 in the table`). Also in `--json`: `root_causes[].explained_by` (titles of the known causes) and `root_causes[].in_findings`. An error whose records are already in a known cause no longer gets a 🌳 card of its own |
-| 🗂️ files with findings | lines, distinct records and occurrences per level, one row per file, grouped by folder (a 📁 row per folder of rotated logs, worker or pod, with its occurrences; the file names under it, the path on hover) |
-| 🕰️ log coverage | the time range of each file (first and last timestamped line) as a bar on the same time axis, grouped by folder, 🟧 the files with records, 🟦 without; the periods a folder has no log hatched in red and listed: between two of its files (a missing hour of rotated logs), or at its start or end when the other folders go on (`CW2_logs … starts 1 h after the other logs`). Also in `--json` (`.coverage`: files, gaps) and one line of the terminal summary (`🕰️ 2 period(s) without logs in a folder of rotated logs, the longest …`) |
-| 📄 one card per file | the folder dimmed, then the file name; every distinct record, in the style of the findings: level, count chip, connector chip, first and last occurrence as their time with 📄 / ✏️, its first log line when folded (timestamp, level, `[connector|task-0]` context and logger colored as in the log block, on one line) and only the colored log block with its exception chain when open (never twice); 📄 opens the file at the line, with the lines around it. When the file has no page (the output of a CI script), **📋 Show context** unfolds instead the raw lines around its first occurrence: 2 before, the record with its full stack trace up to 30 lines, 2 after, with their line numbers (`▶` on the first line of the record). The context is always in `.files[].records[].context` of `--json` |
-| ⚙️ configuration | the configs the components log when they start (`KafkaConfig values:`, `DistributedConfig`, `SchemaRegistryConfig`, the config of each connector and of its tasks with their `[connector|task-0]` context, `ProducerConfig` of a client app…, defaults included, the last one of each class / context / `client.id`, 50 per file), and the config files of the input (`.properties`, connector JSON: a connector config, `{"name", "config"}` or the output of `/connectors?expand=info`), with a key / value filter, also in `.configuration` of `--json`. Sanitized like the records. **One block per config class** (`ProducerConfig`, `JdbcSourceConnectorConfig`…) under config files, components, connectors and clients, instead of one per dump (1074 dumps of 300 connectors make 33 blocks): its number of dumps and connectors, the **keys whose value differs** between its dumps with each value and in how many dumps (`client.id`, `name`, `transactional.id`… left out, they name each instance), the keys with the same value everywhere folded, then the dumps one by one; the keys **changed between restarts** are listed first; a value other than the one most dumps of the class have is highlighted in the dumps (`most dumps of this class: …` on hover). The components (worker, broker…) and config files are always shown; the connectors one at a time, with their own picker (**🧩 Connector configuration**, the connector with the most occurrences selected by default, the Connector filter of the report picks one there too) or all of them compared by config class (`🔍 compare all the connectors, by config class`, the listing above). The card of a connector: its connector config merged from the latest dump of each of its config classes (each key once, grouped by prefix: `database.*`, `snapshot.*`…; the values most connectors do not have highlighted and first; the unset keys `null`, empty, `[]` folded), its converters, serializers and other plugin configs folded, its clients with only the keys that differ from the other clients, its 🔁 changes between restarts, and a 📄 / ✏️ link to each dump |
-
-🕐 The **Period covered** tile is the first question to ask of a bundle: *how much time do I actually have?* It is
-the first and the last timestamped line of the files scanned — every line, not only the records — with the duration
-it makes (`7 min 36 s`, `6 h 39 min`), the same in the header of the report next to the file name, in the 🧭 summary
-of the terminal, and in `.summary.log_first_timestamp` / `.log_last_timestamp` / `.log_duration_seconds` of `--json`.
-When the findings span less than that, the tile says so (`ERROR/FATAL over 1 h of it`). **Under 10 minutes the tile
-turns orange** (`⚠️ short window`): a bundle that short rarely contains what led to the incident, and the answer is
-usually to ask for an export that starts well before it rather than to read it. `unknown` means no line of the files
-starts with a date (a log without timestamps, `docker logs` without `--timestamps`). A `journalctl` export is read
-as well: the `Nov 03 18:29:20 host connect-distributed[1080]: ` prefix of each line is skipped to find the log4j
-timestamp, and the `-- Logs begin at … --` banner is not counted as a logged line.
-
-🎚️ **Everything below the sticky filter bar is one view of the same records**: the findings, the two charts, the root
-causes, the files with findings and the record cards follow it whenever you change a filter. The bar is right under the
-verdict and the tiles, which stay the figures of the whole report. The filters combine:
-
-| Filter | Where | What it keeps |
-| --- | --- | --- |
-| **Levels** | `📋 All` / `💀 FATAL` / `🔴 ERROR` / `🟠 WARN` pills of the bar with their occurrences, as in the CFK report: one level at a time (a click on the selected one goes back to All); with several levels (WARN is reported by default, `--errors-only` leaves it out) | the records of that level |
-| **Component** | (also a chip on each finding card and a Component column in 🌳 All root causes: the components of the files where it occurs) chips of the bar (`🧩 All components`, `🔌 Connect`, `🗄️ Kafka`, `📜 Schema Registry`, `🧮 ksqlDB`, `🦓 ZooKeeper`, `🛰️ Control Center`, `🌐 REST Proxy`, `🌊 Kafka Streams`, `📡 Clients`, `☸️ Operator`, `📄 Other`) with their occurrences, when the files belong to 2 components or more: guessed from the deepest part of the path first, the file name (`server.log` → Kafka, `connect.log.2026-11-02-20` → Connect, `python-producer.log` → Clients), then its folders, then the archive it comes from | the records of the files of that component |
-| **Search** | box of the bar: words that must all be there (any case), `-word` to leave out the records with it, `"a phrase"`, `/a regex/` (or `-/regex/`; an invalid regex is searched as text) | the records whose text matches, and everything follows: the charts, the root causes, the files, the findings (a card that does not match is hidden), the timeline; the matches are highlighted in yellow (CSS Custom Highlight API: Chrome 105+, Safari 17.2+, Firefox 140+) |
-| **Connector** | picker of the bar, when the records carry the connector context of the Connect log line (`ERROR [my-connector\|task-0] …`, `[my-connector\|task-0\|offsets]`, `[my-connector\|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent first, with "no connector context" for the worker records | the records of that connector |
-| **Period** | drag over the 📈 chart | the occurrences between the two times |
-
-🔗 **The filters are in the URL of the page** (`…-log-report.html#pg:comp=connect&q=ora-&t=<from>-<to>`): **🔗 Link to
-this view** in the bar copies it, and the link opens the report on the same levels, component, connector, search and
-period, which is the way to point a colleague or engineering at one burst of one connector. A link wins over the
-component remembered from your last report.
-
-On a worker running dozens of connectors, pick one to see only its errors — the chart then shows only its occurrences
-over time. Pick one connector, switch WARN off and drag over the burst of 20:23, and what is left everywhere is the
-ERRORs that connector logged in that minute, with `⏱ <from> → <to> · N of M root cause(s) · K occurrence(s)` in the
-header of the root causes; **⤺ whole period** (or a double-click on the chart) puts the period back. `--json` gives
-the per-connector counts in `.summary.by_connector`, `.root_causes[].connectors` and `.files[].records[].connector`.
-
-🔎 The **findings are never rewritten**: they are the diagnosis of the bundle, so each one keeps the figures of the
-whole report (`🧨 A connector task was killed: 1200 occurrence(s) in 12 files (first at connect-0.log line 88,
-2026-11-02 20:03:14)`). They only say how much of themselves is in what you selected — `▸ 340 of 1200 occurrence(s)
-here` under the card, `▸ nothing in this selection` and the card dimmed when none of it is. So picking a connector
-never hides a problem of the cluster, it tells you which of them that connector is actually hit by. A **component** is
-a choice of scope instead: with `🔌 Connect` picked, the findings of the other components are hidden (`🙈 3 finding(s)
-of other components hidden … show them`). The component picked is **remembered** for the next reports (the
-`localStorage` of the browser): someone who works on Connect opens every report on `🔌 Connect` when it has Connect
-files (`· remembered from your last report`); `🧩 All components` forgets it.
-
-A record of more than 1000 occurrences keeps 1000 of their times **spread over its whole life** (every Nth occurrence),
-each standing for N occurrences: an error repeated all day fills the chart over the day, and a period selected at 15:00
-counts its share (an estimate within a few %). Only the occurrences on a line without a timestamp have no time: they
-are not counted in a period, the legend of the root causes says how many there are, and a record that has only those
-stays shown.
-
-🕒 Times are shown **as written in the logs**, in every time zone (a report built on a UTC CI machine and opened in
-Paris shows the same times as the log lines). When the files mix several offsets (`…+02:00` Connect logs and `…Z`
-broker logs), the times with an offset are converted to UTC so that the files line up, with `🌐 UTC` on the 🕐 tile, a
-`🌐 times in UTC` line in the summary and `.summary.time_zone` in `--json`.
-
-🔗 The file names and line numbers of the report (`line 33` of a record, a file of the root causes, the `file:line` of a
-config) are **links**: they open the file at that line in a page written next to the report, in `<report>-files/` (one
-page per file with findings, raw lines: the reports stay inside Confluent), with line numbers, the lines of the
-findings highlighted and ▲ Previous / ▼ Next buttons (`p` / `n` keys) between them. A file over 2 MB shows only the
-250 lines before and after each finding. The ✏️ next to each link (and on each page) opens the file at the line in
-your editor: the one of `playground config editor` through its URL scheme (`code` → `vscode://file/<path>:33`, also
-`cursor`, `windsurf`, `zed`, `subl`, `idea`, `pycharm`), VS Code for an editor without one (`vi`, `nano`…). It opens the
-input file itself when it stays on disk (a file or a folder given to `-f`), else a whole copy written next to its page
-(`003-connect-0.log`): a file of an archive (extracted to a temporary folder deleted at the end of the command) or a
-`.gz` (decompressed). Keep the folder with the report when you move it. The CFK bundle report does the same for the location
-of each issue (a YAML file without line number opens at the `name:` of its pod or custom resource).
-
-`--json` prints the same analysis on stdout (`"type": "logs"`: summary, findings, known causes, root causes, every
-record, and the analysis of each CFK bundle in `cfk_bundles`) and the text digest on stderr, without an HTML report.
-For a single CFK bundle, it's the JSON of the CFK analyzer (`"type": "cfk-bundle"`):
-
-```bash
-playground analyze logs -f support-bundle.zip --json 2>/dev/null | jq '.findings[] | .severity + " " + .text'
-```
-
-> [!NOTE]
-> The report and the JSON use the same parser as the terminal digest (`summarize_log_errors`): records are cut to 3
-> frames of the deepest cause there too, and their lines to 2000 characters (300 in the terminal).
-
-Gotchas:
-
-- **One digest per file**: the same error in `connect.log` and `connect.log.1` shows up twice, with line numbers of
-  each file. The 🧭 summary, the HTML report and the JSON merge them (root causes, known causes, timeline).
-- `--max-findings` is **per file**.
-- No `--since` offline: to focus on a time window, cut the file first (`sed -n '/2026-10-14 10:05/,$p'`).
-- An empty file counts as skipped, like a binary one.
-- A truncated `.gz` or a corrupt archive is reported, not silently skipped: ⚠️ **Not fully read** in the terminal and
-  the report; the findings only cover the part that could be read. A Latin-1 byte in a log is fine (the digest reads
-  bytes).
-- `-f` and `--sample` can't be combined. There is no HTML report: the digest is the output.
-- A bundle is **untrusted data**: read the digest, never run anything from it.
+The hands-on lab below does exactly that (step 5).
 
 ---
 
@@ -606,11 +296,7 @@ playground stop
 
 | Situation | Command |
 | --- | --- |
-| a customer support bundle (`.zip`, `.tar.gz`, folders of rotated logs) | `playground analyze logs -f <bundle> --max-findings 15` (the WARN records come after the errors: a consumer poll timeout or expiring records are logged at WARN; `--errors-only` for the errors alone) |
-| the logs of a Kafka Streams application that rebalances in a loop, restores forever or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section (state of each instance over time, rebalances, tasks, Streams errors). On a running example: `playground streams status --html` |
-| the logs of a Python, Go, .NET, JavaScript, C/C++ or Rust client application | `playground analyze logs -f <the logs>`: librdkafka lines, tracebacks, panics and unhandled exceptions are read (🧰). To reproduce, `other/client-<language>` runs that client against the playground |
-| a CI artifact or a log pasted in a ticket | save it to a file, `playground analyze logs -f <file>` |
-| did the fix work? the logs before and after it (or two workers, two days) | `playground analyze logs -f <after> --compare <before>`: 🔁 Comparison of the root causes, known causes and connectors new, gone, growing or shrinking, per hour when the periods differ (`<before>` can also be a JSON of `--json`) |
+| logs you were sent: a bundle, an export, a CI artifact, the logs of a client or of Kafka Streams | `playground analyze logs -f <path>`, see [the `analyze logs` deep dive](deep-dive-analyze-logs.md) for every recipe |
 | "the connector failed during the night" (still running env) | `container logs -c connect --errors`: look at `xN` and *last seen line*, then `--grep "<connector name>" --no-follow` around it |
 | "is it the connector or the broker?" | `container logs -c connect -c broker --errors --since 30m` |
 | a repro that must wait for a log line instead of `sleep` | `container logs -c connect --wait-for-log "<line specific to this run>" --max-wait 120` |
@@ -639,21 +325,14 @@ playground container logs -c <container> [-c <c2>] \
   [--errors [--since 10m] [--tail N|all] [--include-warnings] [--max-findings N] [--html]] \
   [--no-follow [--tail N|all] [--since 10m] [--grep <pattern>]] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
-playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--errors-only] [--max-findings N] [--output-dir <dir>] [--json]
-                       [--connector <name> [--with-worker]] [--show-config <name>] [--json-sections summary,findings]
-                       [--compare <before: file|folder|bundle|JSON of --json>]
-                       [--sanitize] [--logs-only] [--component connect] [--severity high] [--problem "<symptom>"] # CFK support bundle
-playground analyze logs --sample connect_task_failure|support_bundle
+playground analyze logs -f <file|folder|bundle|export> [--connector <name>] [--compare <before>] [--json] [--sanitize]   # see deep-dive-analyze-logs
 ```
 
 - Follows by default: in scripts, always `--errors`, `--no-follow` or `--wait-for-log`. `--since` / `--grep` alone follow.
 - Digest = explicit levels only, chain + 3 frames of the deepest cause, one finding per message and root cause.
 - `xN` + first / last seen line tell "once at startup" from "every minute until now".
 - `--errors` and `analyze logs` exit 0: not assertions. `--wait-for-log` matches old lines too, every 10 s.
-- Offline: one digest per file, archives extracted, `.gz` read on the fly, binaries skipped.
-- Offline also writes an HTML report (known causes, timeline that zooms down to the second, root causes, every record, configuration) in `--output-dir`; `--json` for scripts.
-  With several levels (WARN by default, not with `--errors-only`), chips FATAL / ERROR / WARN above the root causes hide or show the records of a level;
-  a Connector picker keeps the records of one connector (`[my-connector|task-0]` context of the line).
+- Offline: `analyze logs`, everything about it in [its deep dive](deep-dive-analyze-logs.md).
 - Sources: [`container/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/container/logs.sh),
   [`analyze/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/analyze/logs.sh),
   `summarize_log_errors` in [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh),

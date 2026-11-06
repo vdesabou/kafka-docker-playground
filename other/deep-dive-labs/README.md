@@ -12,7 +12,8 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `reproduction-models.sh` | [Reproduction models: bootstrap, check, export, import](https://kafka-docker-playground.io/#/deep-dive-reproduction-models) (needs the private `reproduction-models` submodule, exits 111 without it) |
 | `container-lifecycle.sh` | [Containers: exec, cp, restart vs recreate, environment, JDK](https://kafka-docker-playground.io/#/deep-dive-container-lifecycle) |
 | `connector-troubleshooting.sh` | [`connector diagnose` and the dead letter queue](https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting) |
-| `container-logs.sh` | [`container logs` and `analyze logs`](https://kafka-docker-playground.io/#/deep-dive-container-logs) |
+| `container-logs.sh` | [`container logs`](https://kafka-docker-playground.io/#/deep-dive-container-logs) |
+| `analyze-logs.sh` | [`analyze logs`](https://kafka-docker-playground.io/#/deep-dive-analyze-logs) (no container: the samples and small files written by the lab) |
 | `offsets-and-lag.sh` | [offsets and lag](https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag) |
 | `log-levels.sh` | [log levels](https://kafka-docker-playground.io/#/deep-dive-log-levels) |
 | `network-traffic.sh` | [A slow or broken network, on purpose](https://kafka-docker-playground.io/#/deep-dive-network-traffic) |

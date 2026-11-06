@@ -1,2 +1,3 @@
 # the repository ignores *.log: keep the samples
 !samples/*.log
+!samples/**/*.log

@@ -33,7 +33,7 @@ report and click around: this is what you get on your own data.
     <a href="reports/logs.html" target="_blank" rel="noopener"><img src="images/reports/logs.png" alt="🔥 Log analysis report" loading="lazy"></a>
     <div class="report-body">
       <h3><a href="#/playground%20analyze%20logs">🔥 Log analysis</a></h3>
-      <p>What is failing in this customer bundle? Known causes with what to do (task killed, errors.tolerance, authentication, TLS, fenced producer, rebalances…), an incident timeline of all the files, a card per connector, occurrences over time, root causes, and every distinct ERROR / FATAL / WARN record of each file. Filters for levels, component, connector, search (<code>-word</code>, <code>/regex/</code>) and period, kept in the URL (🔗 Link to this view); <code>--compare &lt;before&gt;</code> says what is new, gone, growing or shrinking.</p>
+      <p>What is failing in this customer bundle? Known causes with what to do (task killed, errors.tolerance, authentication, TLS, fenced producer, rebalances…), an incident timeline of all the files, a card per connector, occurrences over time, root causes, and every distinct ERROR / FATAL / WARN record of each file. Filters for levels, component, connector, search (<code>-word</code>, <code>/regex/</code>) and period, kept in the URL (🔗 Link to this view); <code>--compare &lt;before&gt;</code> says what is new, gone, growing or shrinking. More examples in the <a href="#/deep-dive-analyze-logs">🍪 deep dive</a>.</p>
       <p><code>playground analyze logs -f support-bundle.zip</code></p>
       <p>Try it: <code>playground analyze logs --sample support_bundle</code></p>
     </div>

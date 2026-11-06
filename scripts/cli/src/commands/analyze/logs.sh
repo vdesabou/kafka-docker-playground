@@ -49,6 +49,11 @@ do
         support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
         kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
         kafka_clients) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-clients") ;;
+        # the day after a fix, compared with the day before (unless --compare names another input)
+        compare_fix)
+            file_array+=("$root_folder/tools/log-analyzer/samples/compare/after.log")
+            [[ -z "$compare" ]] && compare="$root_folder/tools/log-analyzer/samples/compare/before.log"
+            ;;
         cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
         cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
         cfk_rollout) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout.tar.gz") ;;
@@ -380,10 +385,13 @@ function analyze_logs_gzip () {
     local gzip_err="$tmp_dir/gzip.err"
     : > "$gzip_err"
     analyze_logs_digest "$1" "$2" < <(gzip -dc "$2" 2> "$gzip_err")
-    # the digest has read up to the end of the output of gzip: gzip has written its error, if any, before closing it
+    # its error is complete once gzip has exited
+    wait $! 2> /dev/null || true
+    # the first line that is not empty: GNU gzip starts its message with a new line ("\ngzip: x.gz: unexpected end of
+    # file"), the message was empty on Linux
     if [ -s "$gzip_err" ]
     then
-        note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(head -n 1 "$gzip_err" | sed 's/^gzip: //'))"
+        note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$gzip_err" | sed 's/^gzip: //'))"
     fi
 }
 
@@ -995,7 +1003,8 @@ then
     fi
     if [[ -n "$compare_json" ]]
     then
-        report_args+=(--compare "$compare_json" --compare-label "$compare")
+        # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
+        report_args+=(--compare "$compare_json" --compare-label "${compare#"$root_folder"/}")
     fi
 fi
 for connector in "${connector_array[@]}"
