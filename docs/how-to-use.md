@@ -5,6 +5,51 @@
 
 ### 💻️ Locally
 
+#### ⚡ Install in one command
+
+Paste this in a terminal (macOS, Linux or Windows WSL 2):
+
+```bash
+curl -fsSL https://kafka-docker-playground.io/install.sh | bash
+```
+
+It asks before each change, and only does this:
+
+1. **checks** your machine and changes nothing: git, bash 4+, fzf, docker + compose v2 (or Podman), free disk space
+2. **installs what is missing** (bash, fzf, git) with Homebrew on macOS or the package manager on Linux. It never installs Docker or Podman for you: it gives you the link
+3. **clones** the repository into `~/kafka-docker-playground` (latest version only), or updates the clone you already have
+4. **adds one block** to `~/.zshrc` (or `~/.bashrc`, `~/.bash_profile`), with a backup of the file, so that `playground` and its completion are in your `PATH`:
+
+   ```bash
+   # >>> kafka-docker-playground >>>
+   export PATH="$HOME/kafka-docker-playground/scripts/cli:$PATH"
+   source "$HOME/kafka-docker-playground/scripts/cli/completions.zsh"
+   # <<< kafka-docker-playground <<<
+   ```
+
+5. **runs** [playground doctor](/playground%20doctor) to check that the container engine is ready
+
+Then open a new terminal and run `playground run`.
+
+> [!TIP]
+> Want to read it first? The script is [docs/install.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/docs/install.sh). See what it would do without changing anything:
+>
+> ```bash
+> curl -fsSL https://kafka-docker-playground.io/install.sh | bash -s -- --dry-run
+> ```
+
+| Option | What it does |
+| --- | --- |
+| `--dry-run` | show what would be done, change nothing |
+| `--yes` | answer yes to every question (no prompt, for scripts) |
+| `--dir <path>` | clone somewhere else than `~/kafka-docker-playground` |
+| `--no-rc` | do not touch any shell startup file, print the lines to add instead |
+| `--uninstall` | remove the block from your shell startup files, then offer to delete the folder (default: keep it, it may hold your `playground.ini` and reproduction models) |
+
+Pass options after `bash -s --`, for example `curl -fsSL https://kafka-docker-playground.io/install.sh | bash -s -- --uninstall`. Running it again is safe: it updates the clone and leaves the block as it is.
+
+Prefer to do it by hand? Follow the sections below.
+
 #### ☑️ Prerequisites
 
 * You just need to have [docker](https://docs.docker.com/get-docker/) with the [compose v2 plugin](https://docs.docker.com/compose/install/) (`docker compose` 2.0.0 or greater) installed on your machine, or [Podman](/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) 5.0 or greater !
