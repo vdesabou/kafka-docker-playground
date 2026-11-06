@@ -1,5 +1,6 @@
 tags="${args[--tags]}"
 generate_for_kb="${args[--generate-for-kb]}"
+skip_gh_issues="${args[--skip-gh-issues]}"
 
 set +e
 tmp_dir="/tmp/update-readme"
@@ -72,7 +73,7 @@ nb_total_fail=0
 nb_total_success=0
 
 # podman results (container_engine=podman in CI) are stored with a -podman suffix
-if ls "${ci_folder}"/*-podman > /dev/null 2>&1
+if [ -z "$skip_gh_issues" ] && ls "${ci_folder}"/*-podman > /dev/null 2>&1
 then
   gh label create "podman" --description "fails when run with podman" --color "892CA0" > /dev/null 2>&1 || true
 fi
@@ -377,7 +378,11 @@ do
       log "Number of successful tests: $nb_success/${nb_tests}"
       if [ ${nb_fail} -gt 0 ] && [ -n "$gh_issues_available" ]
       then
-        if [ -z "$issue_number" ]
+        if [ -n "$skip_gh_issues" ]
+        then
+          # read-only: the badge links to the open issue, the nightly CI creates or comments it
+          log "⏭️ --skip-gh-issues: GH issue with title $title not created nor commented"
+        elif [ -z "$issue_number" ]
         then
           echo -e "🆕💥 New issue !\n" >> ${gh_msg_file_intro}
           cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
@@ -403,7 +408,7 @@ do
         fi
         gh_issue_number="$issue_number"
       fi
-      if [ ${nb_tests} -gt 0 ] && [ ${nb_success} -eq ${nb_tests} ] && [ -n "$gh_issues_available" ]
+      if [ ${nb_tests} -gt 0 ] && [ ${nb_success} -eq ${nb_tests} ] && [ -n "$gh_issues_available" ] && [ -z "$skip_gh_issues" ]
       then
         # if all scripts in tests are now successful, close the issue
         issue_number=$(get_open_issue_number "$title")

@@ -3,6 +3,7 @@ name: Update Docs
 on:
   workflow_dispatch:
   # publish a merged change to the hand-written pages or to the CLI help right away, instead of waiting for the nightly CI
+  # (Run workflow also regenerates content.md, badges.md and introduction.md from the last CI results)
   push:
     branches:
       - master
@@ -14,6 +15,8 @@ on:
       - 'scripts/cli/src/flags/**'
       - 'scripts/cli/docs-template/**'
       - 'scripts/publish-docs.sh'
+      # the generator of content.md, badges.md and introduction.md (playground update-readme; their templates are in docs/)
+      - 'scripts/cli/src/commands/update-readme.sh'
 
 # a later merge publishes everything a pending run would have published
 concurrency:
@@ -39,6 +42,33 @@ jobs:
           sudo gem install bashly
           cd ./scripts/cli
           ./playground update-docs
+
+      # content.md, badges.md and introduction.md, from the results of the last CI runs (S3): on workflow_dispatch, or when
+      # a template changed. Otherwise they are left as published by the nightly CI (publish-docs.sh never deletes a generated page)
+      - name: Check if content.md must be generated
+        id: readme
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          if [ "$EVENT_NAME" == "workflow_dispatch" ] || git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" 2>/dev/null | grep -qE '^docs/(content-template|badges-template|introduction-header|introduction-footer)\.md$|^scripts/cli/src/commands/update-readme\.sh$'
+          then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # --skip-gh-issues: only the nightly CI creates, comments and closes the 🔥 issues
+      - name: Update README
+        if: steps.readme.outputs.run == 'true'
+        run: |
+          tag=$(grep '# default tag' scripts/utils.sh | sed -E 's/.*TAG=([^ ]+).*/\1/')
+          cd ./scripts/cli
+          ./playground update-readme --tags "$tag" --skip-gh-issues
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          AWS_REGION: ${{ vars.AWS_REGION}}
 
       # publishes docs/ (hand-written pages + the pages generated above) to the repository serving kafka-docker-playground.io
       - name: Pushes docs
