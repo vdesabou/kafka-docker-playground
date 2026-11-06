@@ -12,14 +12,29 @@ then
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+if version_gt $TAG_BASE "7.9.99" || [ -n "$ENABLE_KRAFT" ]
+then
+    log "📝 KRaft: the create topic policy is configured on the controller (docker-compose.plaintext.kraft.yml)"
+    DOCKER_COMPOSE_OVERRIDE_FILE="${PWD}/docker-compose.plaintext.kraft.yml"
+else
+    log "📝 ZooKeeper: the create topic policy is configured on the broker (docker-compose.plaintext.yml)"
+    DOCKER_COMPOSE_OVERRIDE_FILE="${PWD}/docker-compose.plaintext.yml"
+fi
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${DOCKER_COMPOSE_OVERRIDE_FILE}"
 
 wait_container_ready
 
-set +e
 log "Trying to create a topic with name that does not start with kafka-docker-playground, it should FAIL"
-docker exec connect kafka-topics --create --topic mytopic --bootstrap-server broker:9092
+set +e
+playground topic create --topic mytopic
+rc=$?
 set -e
+if [ $rc -eq 0 ]
+then
+    logerror "❌ topic mytopic should have been refused by the create topic policy"
+    exit 1
+fi
+log "✅ topic mytopic refused by the create topic policy, as expected"
 
 log "Trying to create a topic with name that starts with kafka-docker-playground, it should WORK"
-docker exec connect kafka-topics --create --topic kafka-docker-playground2 --bootstrap-server broker:9092
+playground topic create --topic kafka-docker-playground2

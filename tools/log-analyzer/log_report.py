@@ -158,7 +158,13 @@ def parse_records(path: str) -> List[dict]:
                 current["records"].append(rec)
                 done = None
             elif line.startswith("@@PGTS@@\t") and rec is not None:
-                rec["timestamps"] = line.split("\t", 1)[1].split()
+                # "x<stride> t1 t2 …": the times kept are every stride-th occurrence (summarize_log_errors spreads 1000 of
+                # them over the life of the record), each stands for stride occurrences
+                times = line.split("\t", 1)[1].split()
+                if times and times[0].startswith("x") and times[0][1:].isdigit():
+                    rec["ts_stride"] = int(times[0][1:])
+                    times = times[1:]
+                rec["timestamps"] = times
                 finish_record(rec)
                 done, rec = rec, None
             elif line.startswith("@@PGCFG@@\t") and current is not None:
@@ -399,7 +405,7 @@ def root_causes(files: List[dict]) -> List[dict]:
         c["files"][f["label"]] = True
         # level, connector, count and epoch seconds of each record, for the filters of the HTML report
         c["records_meta"].append((r["level"], r.get("connector") or "", r["count"], epochs(r["timestamps"]),
-                                  r.get("index", -1), r.get("file_index", -1)))
+                                  r.get("index", -1), r.get("file_index", -1), r.get("ts_stride", 1)))
         if r["connector"]:
             c["connectors"][r["connector"]] = c["connectors"].get(r["connector"], 0) + r["count"]
         else:
@@ -662,6 +668,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
            "coverage": coverage(files),
            "configuration": configuration}
     res["timeline"] = incident_timeline(res, files)
+    res["connectors"] = connector_health(res, files)
     return res
 
 
@@ -693,7 +700,7 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
     by_index = {r.get("index"): (f, r) for f in files for r in f["records"] if r.get("index") is not None}
     events: Dict[Tuple[str, int], dict] = {}
 
-    def add(time, file, line, kind, level, text, connector=None, count=None):
+    def add(time, file, line, kind, level, text, connector=None, count=None, record=None):
         if not time:
             return
         key = (file, line or 0)
@@ -705,7 +712,7 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
         if ev:
             return
         events[key] = {"time": time, "kind": kind, "level": level, "text": text, "file": file, "line": line,
-                       "connector": connector, "count": count}
+                       "connector": connector, "count": count, "record": record}
         if kind == "known_cause":
             events[key]["known_causes"] = [text]
 
@@ -718,7 +725,7 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
         if first:
             f, r = first
             add(r["first_ts"], f["label"], r["first_line"], "first_error", r["level"], record_label(r)[:200],
-                r.get("connector"), c["occurrences"])
+                r.get("connector"), c["occurrences"], r.get("index"))
     for h in res["known_causes"]:
         first = h.get("first") or {}
         add(first.get("timestamp"), first.get("file"), first.get("line"), "known_cause", h["severity"], h["title"])
@@ -739,6 +746,250 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
                 f"⚙️ {c['title']}: {ch['key']} {ch['previous'] or '∅'} → {ch['value'] or '∅'}"[:200], config_connector(c))
     out = sorted(events.values(), key=lambda ev: (ev["time"], ev["file"] or "", ev["line"] or 0))
     return out[:TIMELINE_LIMIT]
+
+
+def connector_health(res: dict, files: List[dict]) -> List[dict]:
+    """one card per connector of the logs: its errors and warnings (by level, first and last time), whether a task was
+    killed, the known causes of its records, its configuration logged (dumps, keys changed between restarts) and the
+    clients it owns (connector-producer-<name>-0…), most errors first"""
+    titles_of: Dict[int, List[str]] = {}
+    for h in res["known_causes"]:
+        for i in h.get("records") or []:
+            titles_of.setdefault(i, []).append(h["title"])
+    cards: "OrderedDict[str, dict]" = OrderedDict()
+
+    def card(name):
+        return cards.setdefault(name, {"connector": name, "by_level": {"FATAL": 0, "ERROR": 0, "WARN": 0}, "records": 0,
+                                       "first_timestamp": None, "last_timestamp": None, "task_killed": 0,
+                                       "known_causes": [], "config_dumps": 0, "config_changes": [], "clients": []})
+    for f in files:
+        for r in f["records"]:
+            name = r.get("connector")
+            if not name:
+                continue
+            c = card(name)
+            c["by_level"][r["level"]] = c["by_level"].get(r["level"], 0) + r["count"]
+            c["records"] += 1
+            if r.get("first_ts") and (not c["first_timestamp"] or r["first_ts"] < c["first_timestamp"]):
+                c["first_timestamp"] = r["first_ts"]
+            if r.get("last_ts") and (not c["last_timestamp"] or r["last_ts"] > c["last_timestamp"]):
+                c["last_timestamp"] = r["last_ts"]
+            titles = titles_of.get(r.get("index"), [])
+            if KILLED_TASK_TITLE in titles:
+                c["task_killed"] += r["count"]
+            for t in titles:
+                if t not in c["known_causes"]:
+                    c["known_causes"].append(t)
+    for cfg in res["configuration"]:
+        name = config_connector_of(cfg)
+        if not name or name not in cards:
+            continue
+        c = cards[name]
+        c["config_dumps"] += 1
+        client = cfg.get("id") or ""
+        if re.match(r"^connector-(?:producer|consumer|dlq-producer|admin)-", client) and client not in c["clients"]:
+            c["clients"].append(client)
+        for ch in cfg.get("changes") or []:
+            c["config_changes"].append({"time": ch.get("time"), "config": cfg["title"], "key": ch["key"],
+                                        "previous": ch["previous"], "value": ch["value"]})
+    out = list(cards.values())
+    out.sort(key=lambda c: (-(c["by_level"]["FATAL"] + c["by_level"]["ERROR"]), -c["by_level"]["WARN"], c["connector"]))
+    return out
+
+
+def connectors_health_html(cards: List[dict]) -> str:
+    """the 🔌 Connectors section: a card per connector, ▶ only this connector sets the connector filter"""
+    if not cards:
+        return ""
+    items = []
+    for c in cards:
+        errors = c["by_level"]["FATAL"] + c["by_level"]["ERROR"]
+        state = ("danger", "🧨 task killed") if c["task_killed"] else ("danger", "🔴 errors") if errors else \
+            ("warn", "🟠 warnings only") if c["by_level"]["WARN"] else ("ok", "✅")
+        counts = " · ".join(f"{icon} {c['by_level'][lvl]:,} {lvl}" for lvl, icon in LEVEL_PILLS if c["by_level"].get(lvl))
+        period = period_text(c["first_timestamp"], c["last_timestamp"]) if c["first_timestamp"] else "no timestamp"
+        changes = "".join(f"<li class='mono'>{e((ch['time'] or '').replace('T', ' '))} {e(ch['config'])}: {e(ch['key'])} "
+                          f"{e(ch['previous'] or '∅')} → {e(ch['value'] or '∅')}</li>" for ch in c["config_changes"][:8])
+        more = f"<li class='fi-meta'>+{len(c['config_changes']) - 8} more</li>" if len(c["config_changes"]) > 8 else ""
+        items.append(
+            f"<div class='conn-card {state[0]}'><div class='conn-head'><span class='fi-conn'>{e(c['connector'])}</span> "
+            f"<span class='conn-state'>{state[1]}</span><button type='button' class='pill conn-only' data-conn='{e(c['connector'])}' "
+            f"title='show only the records, root causes, timeline and chart of this connector'>▶ only this connector</button></div>"
+            f"<div class='fi-meta'>{counts} in {c['records']} distinct record(s) · {e(period)}"
+            + (f" · 🧨 {c['task_killed']} task kill(s)" if c["task_killed"] else "") + "</div>"
+            + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
+            + (f"<div class='fi-meta'>⚙️ {c['config_dumps']} configuration dump(s)"
+               + (f", clients: <span class='mono'>{e(', '.join(c['clients'][:6]))}</span>" if c["clients"] else "") + "</div>"
+               if c["config_dumps"] else "")
+            + (f"<details><summary>🔁 {len(c['config_changes'])} key(s) changed between restarts</summary><ul>{changes}{more}</ul></details>"
+               if c["config_changes"] else "")
+            + "</div>")
+    return ("<style>.conn-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px}"
+            ".conn-card{border:1px solid #e2e8f0;border-left:5px solid #94a3b8;border-radius:8px;padding:8px 12px;font-size:.84rem}"
+            ".conn-card.danger{border-left-color:#dc2626}.conn-card.warn{border-left-color:#d97706}.conn-card.ok{border-left-color:#16a34a}"
+            ".conn-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}.conn-only{margin-left:auto;font-size:.72rem}"
+            "html[data-theme=dark] .conn-card{border-color:#334155}</style>"
+            f"<div class='table-card'><h2>🔌 Connectors ({len(cards)})</h2><p class='legend'>One card per connector of the logs "
+            "(the [connector|task-0] context of the lines): its errors and warnings, the known causes of its records, a task "
+            "killed, its configuration and the keys changed between restarts. ▶ only this connector filters the report on it.</p>"
+            f"<div class='conn-cards'>{''.join(items)}</div></div>")
+
+
+def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
+    if not cards:
+        return []
+    out = [f"🔌 Connectors ({len(cards)}, most errors first)"]
+    for c in cards[:top]:
+        lv = c["by_level"]
+        bits = [f"{lv['FATAL'] + lv['ERROR']} ERROR/FATAL", f"{lv['WARN']} WARN"]
+        if c["task_killed"]:
+            bits.append(f"🧨 {c['task_killed']} task kill(s)")
+        if c["config_changes"]:
+            bits.append(f"🔁 {len(c['config_changes'])} config key(s) changed")
+        out.append(f"   {c['connector']}: {', '.join(bits)}" + (f" · {', '.join(c['known_causes'][:3])}" if c["known_causes"] else ""))
+    return out
+
+
+# a root cause, a known cause or a connector changed when its count (per hour when both inputs have a period) is at
+# least this ratio higher or lower; and at least COMPARE_MIN_DELTA occurrences apart (1 → 2 is not "growing")
+COMPARE_RATIO = 1.5
+COMPARE_MIN_DELTA = 3
+
+
+def compare_reports(res: dict, prev: dict, label: str) -> dict:
+    """what changed between the analysis of another input (prev, the JSON of analyze logs: the logs before a fix, another
+    worker, the day before) and this one: root causes, known causes and connectors new, gone, growing or shrinking, and
+    the totals by level. Counts per hour when both inputs have a period (an input of 2 h against one of 10 min)"""
+    s, ps = res["summary"], prev.get("summary") or {}
+    hours, phours = (s.get("log_duration_seconds") or 0) / 3600, (ps.get("log_duration_seconds") or 0) / 3600
+    per_hour = hours > 0 and phours > 0 and abs(hours - phours) / max(hours, phours) > 0.1
+
+    def rate(n, h):
+        return n / h if per_hour else n
+
+    def classify(now, before, h_now, h_before):
+        if before == 0 and now > 0:
+            return "new"
+        if now == 0 and before > 0:
+            return "gone"
+        a, b = rate(now, h_now), rate(before, h_before)
+        if abs(now - before) >= COMPARE_MIN_DELTA and a >= b * COMPARE_RATIO:
+            return "growing"
+        if abs(now - before) >= COMPARE_MIN_DELTA and a * COMPARE_RATIO <= b:
+            return "shrinking"
+        return "same"
+
+    def diff(cur: Dict[str, dict], old: Dict[str, dict], extra=lambda c: {}) -> List[dict]:
+        out = []
+        for key in list(cur) + [k for k in old if k not in cur]:
+            n, b = (cur.get(key) or {}).get("occurrences", 0), (old.get(key) or {}).get("occurrences", 0)
+            item = dict({"key": key, "status": classify(n, b, hours, phours), "occurrences": n, "before": b},
+                        **extra(cur.get(key) or old.get(key)))
+            if per_hour:
+                item["per_hour"], item["before_per_hour"] = round(n / hours, 2), round(b / phours, 2)
+            out.append(item)
+        order = {"new": 0, "growing": 1, "shrinking": 2, "gone": 3, "same": 4}
+        out.sort(key=lambda x: (order[x["status"]], -max(x["occurrences"], x["before"])))
+        return out
+
+    root_causes = diff({c["label"]: c for c in res["root_causes"]}, {c["label"]: c for c in prev.get("root_causes") or []},
+                       lambda c: {"level": c.get("level"), "root_cause": c.get("root_cause"), "example": c.get("example", "")[:300],
+                                  "index": next((i for i, x in enumerate(res["root_causes"]) if x["label"] == c["label"]), None)})
+    known = diff({h["title"]: h for h in res["known_causes"]}, {h["title"]: h for h in prev.get("known_causes") or []},
+                 lambda h: {"severity": h.get("severity")})
+    connectors = diff({n: {"occurrences": v} for n, v in (s.get("by_connector") or {}).items()},
+                      {n: {"occurrences": v} for n, v in (ps.get("by_connector") or {}).items()})
+    totals = {lvl: {"now": (s.get("by_level") or {}).get(lvl, 0), "before": (ps.get("by_level") or {}).get(lvl, 0)}
+              for lvl in ("FATAL", "ERROR", "WARN")}
+    count = lambda items, st: sum(1 for x in items if x["status"] == st)
+    return {"label": label, "per_hour": per_hour,
+            "period": {"now": period_text(s.get("log_first_timestamp"), s.get("log_last_timestamp")),
+                       "now_seconds": s.get("log_duration_seconds"),
+                       "before": period_text(ps.get("log_first_timestamp"), ps.get("log_last_timestamp")),
+                       "before_seconds": ps.get("log_duration_seconds")},
+            "totals": totals,
+            "counts": {st: count(root_causes, st) for st in ("new", "gone", "growing", "shrinking", "same")},
+            "root_causes": root_causes, "known_causes": known, "connectors": connectors}
+
+
+COMPARE_ICONS = {"new": "🆕", "growing": "📈", "shrinking": "📉", "gone": "✅", "same": "＝"}
+
+
+def compare_counts(x: dict) -> str:
+    """the counts before and now (1 → 7), and the rates when the comparison is per hour (6.7/h → 0.3/h)"""
+    out = f"{x['before']:,} → {x['occurrences']:,}"
+    if "per_hour" in x:
+        out += f" ({x['before_per_hour']:g}/h → {x['per_hour']:g}/h)"
+    return out
+
+
+def compare_verdict(cmp: dict) -> str:
+    c = cmp["counts"]
+    kc_new = [x["key"] for x in cmp["known_causes"] if x["status"] == "new"]
+    kc_gone = [x["key"] for x in cmp["known_causes"] if x["status"] == "gone"]
+    out = (f"🔁 Compared with {cmp['label']}: {c['new']} new root cause(s), {c['growing']} growing, {c['shrinking']} "
+           f"shrinking, {c['gone']} gone, {c['same']} unchanged" + (" (per hour: the periods differ)" if cmp["per_hour"] else ""))
+    if kc_new:
+        out += f" · new known cause(s): {', '.join(kc_new[:4])}"
+    if kc_gone:
+        out += f" · gone: {', '.join(kc_gone[:4])}"
+    return out
+
+
+def compare_text(cmp: Optional[dict], top: int = 6) -> List[str]:
+    if not cmp:
+        return []
+    out = [compare_verdict(cmp)]
+    t = cmp["totals"]
+    out.append("   " + " · ".join(f"{lvl} {t[lvl]['before']} → {t[lvl]['now']}" for lvl in ("FATAL", "ERROR", "WARN"))
+               + f" · period {human_duration(cmp['period']['before_seconds'])} → {human_duration(cmp['period']['now_seconds'])}")
+    for x in [x for x in cmp["root_causes"] if x["status"] != "same"][:top]:
+        what = f"{x['root_cause'].split('.')[-1]}: {x['example']}" if x.get("root_cause") else x["example"] or x["key"]
+        out.append(f"   {COMPARE_ICONS[x['status']]} {x['status']:<9} {compare_counts(x)} {what[:160]}")
+    return out
+
+
+def compare_html(cmp: Optional[dict]) -> str:
+    """the 🔁 Comparison section, right after the verdict"""
+    if not cmp:
+        return ""
+
+    def rows(items, link):
+        out = []
+        for x in items:
+            what = (f"<span class='mono'>{e((x.get('root_cause') or '—').split('.')[-1])}</span> {e(x.get('example') or x['key'])}"
+                    if "example" in x else e(x["key"]))
+            if link and x.get("index") is not None:
+                what = f"<a href='#root-cause-{x['index']}' title='its row in 🌳 All root causes'>{what}</a>"
+            rates = "per_hour" in x
+            out.append(f"<tr class='cmp-{x['status']}'><td>{COMPARE_ICONS[x['status']]} {x['status']}</td>"
+                       f"<td class='num'>{x['before']:,}" + (f"<br><span class='fi-meta'>{x['before_per_hour']:g}/h</span>" if rates else "") + "</td>"
+                       f"<td class='num'>{x['occurrences']:,}" + (f"<br><span class='fi-meta'>{x['per_hour']:g}/h</span>" if rates else "") + "</td>"
+                       f"<td>{what}</td></tr>")
+        return "".join(out)
+
+    def table(title, items, link=False):
+        changed, same = [x for x in items if x["status"] != "same"], [x for x in items if x["status"] == "same"]
+        if not items:
+            return ""
+        head = "<tr><th></th><th class='num'>Before</th><th class='num'>Now</th><th>What</th></tr>"
+        out = f"<h3>{title}</h3>"
+        out += f"<table>{head}{rows(changed, link)}</table>" if changed else "<p class='legend'>No change.</p>"
+        if same:
+            out += f"<details><summary>{len(same)} unchanged</summary><table>{head}{rows(same, link)}</table></details>"
+        return out
+    t = cmp["totals"]
+    tiles = "".join(f"<span class='cmp-tile'>{lvl} <b>{t[lvl]['before']:,} → {t[lvl]['now']:,}</b></span>" for lvl in ("FATAL", "ERROR", "WARN"))
+    return ("<style>.cmp-tile{display:inline-block;margin:0 14px 6px 0;font-size:.85rem}tr.cmp-new td,tr.cmp-growing td{background:#fef2f2}"
+            "tr.cmp-gone td,tr.cmp-shrinking td{background:#f0fdf4}html[data-theme=dark] tr.cmp-new td,html[data-theme=dark] tr.cmp-growing td{background:#3b1515}"
+            "html[data-theme=dark] tr.cmp-gone td,html[data-theme=dark] tr.cmp-shrinking td{background:#0f2a1a}.cmp h3{font-size:.92rem;margin:14px 0 4px}</style>"
+            f"<div class='table-card cmp'><h2>🔁 Comparison with {e(cmp['label'])}</h2><p class='legend'>{e(compare_verdict(cmp))}. "
+            f"Before: {e(cmp['period']['before'])} ({e(human_duration(cmp['period']['before_seconds']))}); now: "
+            f"{e(cmp['period']['now'])} ({e(human_duration(cmp['period']['now_seconds']))})."
+            + (" Growing and shrinking compare the counts per hour, the two inputs covering different periods." if cmp["per_hour"] else "")
+            + f" A change is at least ×{COMPARE_RATIO} and {COMPARE_MIN_DELTA} occurrences.</p><div>{tiles}</div>"
+            + table("🌳 Root causes", cmp["root_causes"], link=True) + table("🧠 Known causes", cmp["known_causes"])
+            + table("🔌 Connectors", cmp["connectors"]) + "</div>")
 
 
 TIMELINE_ICONS = {"FATAL": "💀", "ERROR": "🔴", "WARN": "🟠", "CRITICAL": "🧠", "HIGH": "🧠", "MEDIUM": "🧠", "LOW": "🧠"}
@@ -763,7 +1014,11 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
     def row(ev):
         where = log_viewer.link(viewers, ev["file"], e(f"{ev['file'].split('/')[-1]}:{ev['line']}"), ev["line"]) if ev.get("line") else e(ev["file"])
         cls = "tl-known" if ev.get("known_causes") else f"tl-{ev['kind']}"
-        return (f"<tr class='{cls}' data-component='{file_component(ev['file'])}'><td class='mono'>{e(ev['time'].replace('T', ' '))}</td>"
+        # what the filters of the report need: level, connector, time, record (the search reads the record block)
+        attrs = (f" data-level='{LEVEL_ORDER.get(ev['level'], '')}'" if ev["kind"] == "first_error" else "") \
+            + (f" data-conn='{e(ev['connector'])}'" if ev.get("connector") else "") \
+            + f" data-t='{epoch(ev['time'])}'" + (f" data-rec='{ev['record']}'" if ev.get("record") is not None else "")
+        return (f"<tr class='tl-row {cls}' data-component='{file_component(ev['file'])}'{attrs}><td class='mono'>{e(ev['time'].replace('T', ' '))}</td>"
                 f"<td>{component_chips([ev['file']])}</td><td>{e(timeline_what(ev))}"
                 + (f" <span class='fi-conn'>{e(ev['connector'])}</span>" if ev.get("connector") else "")
                 + (f" <span class='fi-meta'>×{ev['count']}</span>" if ev.get("count") else "")
@@ -780,8 +1035,9 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "html[data-theme=dark] tr.tl-config_change td{background:#33300a}</style>"
             "<div class='table-card'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
             "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
-            "logged at startup), the connectors (re)configured and the config keys changed between restarts. It is the "
-            "whole report: the filters above do not change it.</p>"
+            "logged at startup), the connectors (re)configured and the config keys changed between restarts. It follows the "
+            "filters above (levels, component, connector, search, period): the rows of the other connectors are hidden, "
+            "the restarts and configurations without connector stay.</p><p class='legend tl-none' hidden>No event in this selection.</p>"
             f"<table>{head}{first}</table>{more}</div>")
 
 
@@ -889,8 +1145,12 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["example"]
             who = f" · {len(c['connectors'])} connector(s): {first_names(c['connectors'])}" if c["connectors"] else ""
             out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
+    # what changed against the input of --compare (🔁 Comparison of the HTML report, .comparison of --json)
+    out += compare_text(res.get("comparison"))
     # what happened first, all files merged (🗓️ Incident timeline of the HTML report, .timeline of --json)
     out += timeline_text(res.get("timeline") or [])
+    # one line per connector (🔌 Connectors of the HTML report, .connectors of --json)
+    out += connectors_text(res.get("connectors") or [])
     configs = res.get("configuration") or []
     if configs:
         out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
@@ -956,19 +1216,21 @@ def show_config(res: dict, name: str) -> str:
 
 # ── HTML ──────────────────────────────────────────────────────────────────────
 
-def timeline(files: List[dict]) -> Tuple[List[Tuple[datetime, str]], bool]:
-    """Occurrences, errors (ERROR + FATAL) and warnings, with their time; and whether the timestamps of a record were capped."""
-    points: List[Tuple[datetime, str]] = []
-    capped = False
+def timeline(files: List[dict]) -> Tuple[List[tuple], bool]:
+    """Occurrences, errors (ERROR + FATAL) and warnings, with their time and weight (the stride of the record: each time
+    kept stands for that many occurrences); and whether the times of a record were sampled."""
+    points: List[tuple] = []
+    sampled = False
     for _, r in all_records(files):
-        if len(r["timestamps"]) < r["count"]:
-            capped = True
+        stride = r.get("ts_stride", 1)
+        if stride > 1:
+            sampled = True
         for ts in r["timestamps"]:
             try:
-                points.append((datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S"), "warnings" if r["level"] == "WARN" else "errors"))
+                points.append((datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S"), "warnings" if r["level"] == "WARN" else "errors", stride))
             except ValueError:
                 pass
-    return points, capped
+    return points, sampled
 
 
 def cause_label(c: dict) -> str:
@@ -1013,7 +1275,8 @@ def file_component(label: str) -> str:
 
 def occurrences_json(causes: List[dict], files: Optional[List[dict]] = None) -> str:
     """Every record of the report as [root cause index, level, connector index, occurrences, epoch seconds, record
-    index (data-rec of its block), file index (data-file of its row of the files table)]: what the
+    index (data-rec of its block), file index (data-file of its row of the files table), stride (each time stands for
+    that many occurrences)]: what the
     📈 occurrences chart, the 🔝 top causes chart, the 🌳 root causes table and the records are all counted again from
     when a level,
     a connector or a period is selected (pgRecords() of FILTER_SCRIPT). The timestamps are here once, not in the chart
@@ -1021,11 +1284,11 @@ def occurrences_json(causes: List[dict], files: Optional[List[dict]] = None) -> 
     names: Dict[str, int] = {}
     records = []
     for i, c in enumerate(causes):
-        for level, connector, count, times, index, file_index in c["records_meta"]:
+        for level, connector, count, times, index, file_index, stride in c["records_meta"]:
             if connector and connector not in names:
                 names[connector] = len(names)
             records.append([i, LEVEL_ORDER.get(level, 9), names[connector] if connector else -1, count,
-                            encode_times(times), index, file_index])
+                            encode_times(times), index, file_index, stride])
     # the component of each file with findings (file index -> code): the Component chips of the filter bar
     components = [file_component(f["label"]) for f in files or []]
     return json.dumps({"connectors": list(names), "records": records, "components": components}, separators=(",", ":"))
@@ -1036,7 +1299,7 @@ def charts_html(files: List[dict], causes: List[dict]) -> str:
     rows = [(cause_label(c), c["occurrences"], f"{cause_label(c)}: {c['occurrences']} occurrence(s)") for c in causes[:10]]
     # the series are built by pgChartTimes() from the records of the selected levels and connector, not embedded here
     chart = time_chart(points, [("errors", "ERROR/FATAL", SERIES_1), ("warnings", "WARN", SERIES_2)],
-                       " · first 1000 occurrences of each record" if capped else "",
+                       " · a record of more than 1000 occurrences is sampled over its whole period" if capped else "",
                        # which record levels each series counts, by label (a series without any point is left out)
                        chart_id=TIME_CHART_ID, embed_times=False,
                        extra={"pgLevels": {"ERROR/FATAL": [LEVEL_ORDER["FATAL"], LEVEL_ORDER["ERROR"]],
@@ -1173,7 +1436,8 @@ document.addEventListener("DOMContentLoaded", function () {
     else if (b.dataset.share === "mail") {
       const body = "Log analysis report: " + path.split("/").pop() + " (attached .zip)\\n\\n" + summary;
       location.href = "mailto:?subject=" + encodeURIComponent("🔥 Log analysis: " + dlg.dataset.title)
-        + "&body=" + encodeURIComponent(body.length > 1800 ? body.slice(0, 1800) + "\\n…" : body);
+        // cut by code points: a cut in the middle of an emoji (a surrogate pair) made encodeURIComponent throw (URIError)
+        + "&body=" + encodeURIComponent(Array.from(body).length > 1800 ? Array.from(body).slice(0, 1800).join("") + "\\n…" : body);
     }
   });
 });
@@ -1189,19 +1453,30 @@ SECTION_TOGGLE = """<style>
 .sec-collapsed{padding-bottom:6px}
 .sec-all{font-family:inherit;font-size:.72rem;margin-left:8px;padding:1px 8px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer;font-weight:400}
 html[data-theme=dark] .sec-all{background:#0f172a;color:#cbd5e1;border-color:#334155}
+html[data-theme=dark] .sec-caret,html[data-theme=dark] .rc-range,html[data-theme=dark] .cov-when{color:#94a3b8}
 </style><script>
 document.addEventListener("DOMContentLoaded", function () {
   const heads = document.querySelectorAll(".table-card > h2, .chart-card > h2, .findings > .section-title");
   function fold(h, collapsed) {
     h.parentElement.classList.toggle("sec-collapsed", collapsed);
     h.querySelector(".sec-caret").textContent = collapsed ? "▸" : "▾";
+    h.setAttribute("aria-expanded", collapsed ? "false" : "true");
   }
   heads.forEach(function (h) {
     h.classList.add("sec-toggle");
     h.title = "click to fold / unfold this section";
-    h.insertAdjacentHTML("afterbegin", "<span class='sec-caret'>▾</span>");
+    h.insertAdjacentHTML("afterbegin", "<span class='sec-caret' aria-hidden='true'>▾</span>");
+    // a button for the keyboard and the screen readers too: Tab to it, Enter or Space folds it
+    h.setAttribute("role", "button");
+    h.setAttribute("tabindex", "0");
+    h.setAttribute("aria-expanded", "true");
     h.addEventListener("click", function (ev) {
       if (ev.target.closest("button, a, select, input, label")) return;
+      fold(h, !h.parentElement.classList.contains("sec-collapsed"));
+    });
+    h.addEventListener("keydown", function (ev) {
+      if (ev.target !== h || (ev.key !== "Enter" && ev.key !== " ")) return;
+      ev.preventDefault();
       fold(h, !h.parentElement.classList.contains("sec-collapsed"));
     });
   });
@@ -1233,7 +1508,7 @@ SELECT_CSS = (".conn-filter,.cfg-conn-select{font-family:inherit;font-size:.8rem
               "border-color:#334155}html[data-theme=dark] .conn-filter option,html[data-theme=dark] .cfg-conn-select option{background:#0f172a}")
 
 
-FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:8px;"
+FILTER_CSS = ("<style>::highlight(pg-search){background:#fde047;color:#111}.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:8px;"
               "padding:10px 14px;margin-bottom:14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
               "font-size:.8rem;color:#475569}.fb-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}"
               ".fb-label{font-size:.75rem;color:#64748b;margin:0 2px 0 4px}"
@@ -1279,8 +1554,63 @@ var pgLevelsOff = null;   // Set of the level codes switched off
 var pgConnector = "";     // "" all, "-" the records without a connector context, else a connector name
 var pgComponent = "";     // "" all, else the component of the files kept (connect, kafka, clients…)
 var pgConnIdx = -1;       // index of pgConnector in pgOcc.connectors
-var pgQuery = "";         // the text of the search box, lower case
-var pgMatch = null;       // Set of the record indexes whose block contains pgQuery, null without a search
+var pgQuery = "";         // the text of the search box
+var pgTest = null;        // its test of a text (pgCompile), null without a search
+var pgTerms = [];         // its terms: {neg, rx, word}
+var pgMatch = null;       // Set of the record indexes whose block passes pgTest, null without a search
+// the search: words that must all be in the text (any case), -word for a word that must not be, "a phrase", /a regex/
+// (-/regex/ too); an invalid regex is searched as text
+function pgCompile(q) {
+  const terms = [], re = /(-?)(?:"([^"]+)"|\\/((?:\\\\.|[^\\/])+)\\/|(\\S+))/g;
+  let m;
+  while ((m = re.exec(q))) {
+    const neg = m[1] === "-" && (m[2] !== undefined || m[3] !== undefined || m[4] !== undefined);
+    let rx = null, word = null;
+    if (m[3] !== undefined) { try { rx = new RegExp(m[3], "i"); } catch (e) { word = m[3].toLowerCase(); } }
+    else word = (m[2] !== undefined ? m[2] : m[4] !== undefined ? m[4] : m[1]).toLowerCase();
+    if (!rx && !word) continue;
+    terms.push({neg: neg, rx: rx, word: word});
+  }
+  pgTerms = terms;
+  if (!terms.length) return null;
+  return function (text) {
+    const low = text.toLowerCase();
+    return terms.every(t => (t.rx ? t.rx.test(text) : low.includes(t.word)) !== t.neg);
+  };
+}
+// the words and regexes searched, highlighted in what is shown (CSS Custom Highlight API: the page is not modified;
+// nothing in a browser without it)
+function pgHighlight() {
+  if (!window.CSS || !CSS.highlights || typeof Highlight === "undefined") return;
+  CSS.highlights.delete("pg-search");
+  const pos = pgTest ? pgTerms.filter(t => !t.neg) : [];
+  if (!pos.length) return;
+  const ranges = [], MAX = 3000;
+  const roots = document.querySelectorAll("details[data-rec]:not([hidden]), tr.rc-row:not([hidden]), .rec-card:not(.pg-nomatch), tr.tl-row:not([hidden])");
+  for (const root of roots) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode()) && ranges.length < MAX) {
+      const text = node.nodeValue, low = text.toLowerCase();
+      for (const t of pos) {
+        if (t.rx) {
+          const g = new RegExp(t.rx.source, "gi");
+          let m;
+          while ((m = g.exec(text)) && ranges.length < MAX) {
+            if (!m[0]) { g.lastIndex++; continue; }
+            const r = new Range(); r.setStart(node, m.index); r.setEnd(node, m.index + m[0].length); ranges.push(r);
+          }
+        } else {
+          for (let i = low.indexOf(t.word); i >= 0 && ranges.length < MAX; i = low.indexOf(t.word, i + t.word.length)) {
+            const r = new Range(); r.setStart(node, i); r.setEnd(node, i + t.word.length); ranges.push(r);
+          }
+        }
+      }
+    }
+    if (ranges.length >= MAX) break;
+  }
+  if (ranges.length) CSS.highlights.set("pg-search", new Highlight(...ranges));
+}
 function pgTimes(rec) {
   if (rec.times === undefined) {
     let t = 0;
@@ -1306,7 +1636,8 @@ function pgInWindow(rec) {
   let n = 0;
   // [from, to), as the buckets of the chart
   for (const t of times) if (t >= pgWindow[0] && t < pgWindow[1]) n++;
-  return [n, n > 0];
+  // a sampled record (more than 1000 occurrences): each time kept stands for rec[7] of them
+  return [Math.min(rec[3], n * (rec[7] || 1)), n > 0];
 }
 function pgRead() {
   const off = [...document.querySelectorAll(".lvl-chip[aria-pressed=false]")].map(c => +c.dataset.levelCode);
@@ -1317,11 +1648,12 @@ function pgRead() {
   const comp = document.querySelector(".comp-chip.active");
   pgComponent = comp ? comp.dataset.component : "";
   const box = document.querySelector(".pg-search");
-  pgQuery = box ? box.value.toLowerCase().trim() : "";
+  pgQuery = box ? box.value.trim() : "";
+  pgTest = pgCompile(pgQuery);
   pgMatch = null;
-  if (pgQuery) {
+  if (pgTest) {
     pgMatch = new Set();
-    document.querySelectorAll("details[data-rec]").forEach(el => { if (el.textContent.toLowerCase().includes(pgQuery)) pgMatch.add(+el.dataset.rec); });
+    document.querySelectorAll("details[data-rec]").forEach(el => { if (pgTest(el.textContent)) pgMatch.add(+el.dataset.rec); });
   }
 }
 function pgStamp(t) {
@@ -1334,14 +1666,19 @@ function pgStamp(t) {
 window.pgChartTimes = function (box, chart) {
   if (box.id !== "@@CHART@@") return null;
   const levels = (chart.series || []).map(s => (chart.pgLevels || {})[s.label] || []);
-  const out = levels.map(() => []);
+  const pairs = levels.map(() => []);
+  let weighted = false;
   for (const rec of pgOcc.records) {
     if (!pgKeeps(rec)) continue;
-    const times = pgTimes(rec);
+    const times = pgTimes(rec), w = rec[7] || 1;
     if (!times.length) continue;
-    for (let i = 0; i < levels.length; i++) if (levels[i].indexOf(rec[1]) >= 0) { for (const t of times) out[i].push(t); break; }
+    if (w > 1) weighted = true;
+    for (let i = 0; i < levels.length; i++) if (levels[i].indexOf(rec[1]) >= 0) { for (const t of times) pairs[i].push([t, w]); break; }
   }
-  return out.map(a => a.sort((x, y) => x - y));
+  // the times of each series, sorted; their weights (a sampled record) for zoom_chart.js, as a property of the array
+  const out = pairs.map(a => a.sort((x, y) => x[0] - y[0]).map(p => p[0]));
+  if (weighted) out.weights = pairs.map(a => a.map(p => p[1]));
+  return out;
 };
 // 🔝 Root causes (occurrences): the same horizontal bars as svg_hbars() of report_html.py, top 10 of what is kept
 function pgTopCauses(byCause) {
@@ -1360,7 +1697,8 @@ function pgTopCauses(byCause) {
   if (!top.length) { holder.innerHTML = "<p class='legend'>No root cause left with these filters.</p>"; return; }
   const W = 600, rowh = 22, L = 300, H = 10 + rowh * top.length, mx = top[0][1] || 1;
   const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const o = ['<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img">'];
+  const o = ['<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
+    esc("top root causes by occurrences: " + top.map(r => r[0].slice(0, 60) + " " + r[1]).join("; ")) + '">'];
   top.forEach(function (r, i) {
     const y = 5 + i * rowh, w = (W - L - 70) * r[1] / mx;
     o.push('<text x="' + (L - 6) + '" y="' + (y + 14) + '" font-size="10" fill="#334155" text-anchor="end">' + esc(r[0].slice(0, 52)) + "</text>" +
@@ -1508,18 +1846,95 @@ function pgFindings() {
     scope.textContent = bits.length ? " · selection: " + bits.join(" · ") : "";
   }
 }
+// 🗓️ Incident timeline: its rows follow the filters (a row of another connector, level, component or period is hidden;
+// a first error out of the search too, the other rows by their text)
+function pgTimeline() {
+  const rows = document.querySelectorAll("tr.tl-row");
+  if (!rows.length) return;
+  let shown = 0;
+  rows.forEach(function (tr) {
+    const d = tr.dataset;
+    let keep = true;
+    if (pgComponent && d.component !== pgComponent) keep = false;
+    if (keep && pgLevelsOff && d.level !== undefined && d.level !== "" && pgLevelsOff.has(+d.level)) keep = false;
+    if (keep && pgConnector === "-" && d.conn) keep = false;
+    if (keep && pgConnector !== "" && pgConnector !== "-" && d.conn && d.conn !== pgConnector) keep = false;
+    if (keep && pgWindow && d.t && (+d.t < pgWindow[0] || +d.t >= pgWindow[1])) keep = false;
+    if (keep && pgTest) keep = d.rec !== undefined ? (pgMatch && pgMatch.has(+d.rec)) : pgTest(tr.textContent);
+    tr.hidden = !keep;
+    if (keep) shown++;
+  });
+  const none = document.querySelector(".tl-none");
+  if (none) none.hidden = shown > 0;
+}
+// the filters in the URL (#pg:lvl=1&comp=connect&conn=s3-sink&q=timeout&t=<from>-<to>): a link opens the report on the
+// same view (🔗 Link to this view); an anchor of the report (#finding-…) replaces it until the next change
+var pgRestoring = false;
+// false until the page has read the URL: the first draw of the chart fires a zoomchange before, which wrote an empty
+// state over the link being opened
+var pgReady = false;
+function pgStateWrite() {
+  if (pgRestoring || !pgReady) return;
+  const p = new URLSearchParams();
+  const only = document.querySelector(".lvl-chip.active");
+  if (only) p.set("lvl", only.dataset.levelCode);
+  if (pgComponent) p.set("comp", pgComponent);
+  if (pgConnector) p.set("conn", pgConnector);
+  if (pgQuery) p.set("q", pgQuery);
+  if (pgWindow) p.set("t", Math.floor(pgWindow[0]) + "-" + Math.ceil(pgWindow[1]));
+  const s = p.toString(), url = location.href.split("#")[0] + (s ? "#pg:" + s : "");
+  if (url === location.href || (!s && !location.hash.startsWith("#pg:"))) return;
+  try { history.replaceState(null, "", url); } catch (e) { if (s) location.replace("#pg:" + s); }
+}
+function pgStateRead() {
+  if (!location.hash.startsWith("#pg:")) return false;
+  const p = new URLSearchParams(location.hash.slice(4));
+  pgRestoring = true;
+  try {
+    if (p.has("lvl")) {
+      const chip = document.querySelector(".lvl-chip[data-level-code='" + p.get("lvl") + "']");
+      if (chip) {
+        document.querySelectorAll(".lvl-chip").forEach(c => { c.setAttribute("aria-pressed", c === chip ? "true" : "false"); c.classList.toggle("active", c === chip); });
+        const allBtn = document.querySelector(".lvl-all");
+        if (allBtn) allBtn.classList.remove("active");
+      }
+    }
+    if (p.has("comp")) {
+      const chip = document.querySelector(".comp-chip[data-component='" + CSS.escape(p.get("comp")) + "']");
+      if (chip) document.querySelectorAll(".comp-chip").forEach(c => c.classList.toggle("active", c === chip));
+    }
+    const sel = document.querySelector(".conn-filter");
+    if (sel && p.has("conn") && [...sel.options].some(o => o.value === p.get("conn"))) sel.value = p.get("conn");
+    const box = document.querySelector(".pg-search");
+    if (box && p.has("q")) box.value = p.get("q");
+    pgApplyFilters();
+    const t = (p.get("t") || "").split("-").map(Number), chart = document.getElementById("@@CHART@@");
+    if (t.length === 2 && t.every(Number.isFinite) && chart && chart.zoomTo) chart.zoomTo(t[0], t[1]);
+  } finally { pgRestoring = false; }
+  pgReady = true;
+  pgStateWrite();
+  return true;
+}
 function pgApply() {
   pgTopCauses(pgRootCauses());
   pgRecordBlocks();
   pgFilesTable();
   pgFindings();
   pgSearch();
+  pgTimeline();
+  pgHighlight();
+  pgAria();
+  pgStateWrite();
+}
+// the state of the chips for the screen readers: aria-pressed on the component chips and on 📋 All
+function pgAria() {
+  document.querySelectorAll(".comp-chip, .lvl-all").forEach(c => c.setAttribute("aria-pressed", c.classList.contains("active") ? "true" : "false"));
 }
 // the search box filters the records in pgKeeps() (chart, top causes, root causes, files, records follow); a card of the
 // findings whose text does not contain it is hidden too, with a class: the hidden attribute is the severity chips'
 function pgSearch() {
   document.querySelectorAll(".rec-card").forEach(c => {
-    c.classList.toggle("pg-nomatch", pgQuery !== "" && !c.textContent.toLowerCase().includes(pgQuery));
+    c.classList.toggle("pg-nomatch", !!pgTest && !pgTest(c.textContent));
   });
 }
 function pgApplyFilters() {
@@ -1554,6 +1969,21 @@ document.addEventListener("click", function (ev) {
     pgApplyFilters();
     return;
   }
+  if (ev.target.closest(".conn-only")) {
+    const sel = document.querySelector(".conn-filter"), name = ev.target.closest(".conn-only").dataset.conn;
+    if (sel && [...sel.options].some(o => o.value === name)) {
+      sel.value = name;
+      pgApplyFilters();
+      sel.scrollIntoView({block: "nearest"});
+    }
+    return;
+  }
+  if (ev.target.closest(".pg-copy-view")) {
+    const btn = ev.target.closest(".pg-copy-view"), url = location.href, done = () => { const t = btn.textContent; btn.textContent = "✅ Link copied"; setTimeout(() => { btn.textContent = t; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => window.prompt("Link to this view:", url));
+    else window.prompt("Link to this view:", url);
+    return;
+  }
   if (ev.target.closest(".fi-show-all")) {
     document.querySelectorAll(".rec-card.other-comp").forEach(c => c.classList.remove("other-comp"));
     const note = document.querySelector(".fi-others");
@@ -1580,6 +2010,9 @@ document.addEventListener("input", function (ev) {
 });
 document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
 document.addEventListener("DOMContentLoaded", function () {
+  // a link to a view (#pg:…) wins over the component remembered from the last report
+  if (pgStateRead()) return;
+  pgReady = true;
   // the component picked in a previous report (🔌 Connect for someone who works on Connect), when this one has it
   let saved = null;
   try { saved = localStorage.getItem("pg-log-report-component"); } catch (e) {}
@@ -1980,8 +2413,11 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
         first += [f"<button type='button' class='pill lvl-chip' data-level='{lvl}' data-level-code='{LEVEL_ORDER[lvl]}' "
                   f"aria-pressed='true' title='only the {lvl} records'>{icon} {lvl} <span class='n'>{by_level[lvl]:,}</span></button>"
                   for lvl, icon in LEVEL_PILLS if by_level.get(lvl)]
-    first.append("<input class='pg-search' type='search' placeholder='Search messages, files, connectors…' "
-                 "title='the records, the root causes and the findings whose text contains it'>")
+    first.append("<input class='pg-search' type='search' placeholder='Search: words, -exclude, \"a phrase\", /regex/' "
+                 "title='the records, root causes, findings and timeline rows whose text has all the words (any case); "
+                 "-word: without it; \"two words\": that phrase; /regex/ (or -/regex/): a regular expression. The matches are highlighted'>")
+    first.append("<button type='button' class='pill pg-copy-view' title='the filters are in the URL of the page: copy the link "
+                 "that opens this report on the same view'>🔗 Link to this view</button>")
     rows.append("<div class='fb-row'>" + "".join(first if len(present) >= 2 else first[1:]) + "</div>")
     second = []
     counts: "OrderedDict[str, int]" = OrderedDict()
@@ -2322,11 +2758,12 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # the filter bar above the findings: a component picked (🔌 Connect) keeps its findings right below
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
     body = [verdict_html(*verdict(res, levels, unit)), incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
+            compare_html(res.get("comparison")),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
-            timeline_html(res.get("timeline") or [], viewers)]
+            timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or [])]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -2346,12 +2783,12 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        f"<td>{component_chips(c['files'])}</td>"
                        f"<td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
                        f"<td class='mono'>{e(c['example'][:300])}</td><td class='num rc-occ'>{c['occurrences']}</td>"
-                       f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x)) for x in c['files'][:5])}"
+                       f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x), edit=False) for x in c['files'][:5])}"
                        f"{e(' …' if len(c['files']) > 5 else '')}</td>"
                        + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
                        + f"<td>{finding_cell(c, i)}</td></tr>" for i, c in enumerate(res["root_causes"]))
-        untimed = sum(count - len(times) for c in res["root_causes"] for _, _, count, times, _, _ in c["records_meta"]
-                      if count > len(times))
+        untimed = sum(count - len(times) * stride for c in res["root_causes"] for _, _, count, times, _, _, stride in c["records_meta"]
+                      if count > len(times) * stride)
         follows = ("<p class='legend'>Every distinct error of the logs, grouped by its deepest exception (or its message when "
                    "it has none), most frequent first. 🔎 Findings above is the short list to start with; the Finding column "
                    "says which card explains a row (a known cause, or a 🌳 card of the most frequent unexplained errors), "
@@ -2452,6 +2889,8 @@ def main() -> int:
     ap.add_argument("--levels", default="ERROR/FATAL", help="levels reported, for the report")
     ap.add_argument("--skipped", type=int, default=0, help="number of binary files skipped")
     ap.add_argument("--incomplete", metavar="FILE", help="label<tab>reason of each input not fully read")
+    ap.add_argument("--compare", metavar="JSON", help="the JSON of analyze logs of another input, to compare with")
+    ap.add_argument("--compare-label", metavar="LABEL", default="", help="what that other input is, for the report")
     ap.add_argument("--json", action="store_true", help="print the analysis as JSON")
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
     ap.add_argument("--heading", default="🔥 Log Analysis", help="title of the report")
@@ -2474,7 +2913,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration,timeline (default: all)")
+                         "files_without_findings,coverage,configuration,timeline,connectors,comparison (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
@@ -2485,6 +2924,12 @@ def main() -> int:
         res["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
     res["summary"]["binary_files_skipped"] = args.skipped
     res["summary"]["incomplete_inputs"] = read_incomplete(args.incomplete)
+    if args.compare:
+        try:
+            with open(args.compare, encoding="utf-8") as fh:
+                res["comparison"] = compare_reports(res, json.load(fh), args.compare_label or args.compare)
+        except (OSError, ValueError) as ex:
+            print(f"⚠️ --compare: cannot read {args.compare}: {ex}", file=sys.stderr)
     res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
     if args.json:

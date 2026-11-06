@@ -20,7 +20,7 @@ Data Sanitizer of the log analyzers: redacts secrets, IPs, hostnames, emails and
     python3 -I sanitizer.py --keep ips,ldap-dns,hashes --workflow-secrets .github/workflows/ci.yml < log > sanitized-log
 
 Best effort: always review the output before sharing it outside Confluent. Leaks, over-redaction and the speed on
-adversarial lines are tested by test_sanitizer.py (python3 -I tools/report-common/test_sanitizer.py): run it after a change.
+adversarial lines are tested by test_sanitizer.py (python3 -I tools/report-common/test_sanitizer.py), run by the Tools tests workflow on the pull requests that change it.
 """
 
 import argparse
@@ -38,13 +38,15 @@ from typing import Dict, Any, Tuple
 # token.max.lifetime.ms…).
 _SECRET_KEY = (
     r'[\w.-]*(?:password|passwd|pwd|secret|token|api[_.-]?key|apikey|credentials?|'
-    r'user\.info|auth\.info|private[_.-]?key|client[_.-]?secret|access[_.-]?key|account[_.-]?key)[\w.-]*'
+    r'user\.info|auth\.info|private[_.-]?key|client[_.-]?secret|access[_.-]?key|account[_.-]?key|consumer[_.-]?(?:key|secret))[\w.-]*'
 )
 # (?<![\w.-]): a key starts at the beginning of a token. Without it, a long run of word characters (a base64 payload of
 # 100 KB on one line) was scanned again from each of its characters: quadratic, 10 s for 20,000 characters
 _SECRET_KV_RE = re.compile(
-    r'(?<![\w.-])(["\']?)(' + _SECRET_KEY + r')\1(\s*[:=]\s*)'
-    r'("(?:[^"\\]|\\.)*"|\'[^\']*\'|\[hidden\]|[^\s,;}\]\)]+)',
+    r'(?<![\w.-])(["\']?)(' + _SECRET_KEY + r')\1(\s*[:=]\s*|\t+)'
+    # an unquoted value goes on after a , or a ; that does not start the next key (password=abc,def;ghi is one value,
+    # password=abc, retries=3 stops at the comma); a tab separates the key of a TSV export from its value
+    r'("(?:[^"\\]|\\.)*"|\'[^\']*\'|\[hidden\]|(?:[^\s,;}\]\)]|[,;](?![\s\w.-]*[=:]|\s|$))+)',
     re.IGNORECASE,
 )
 _SECRET_KEY_KEEP_RE = re.compile(r'(?:ref|refs|name|file|path|location|type|mechanisms?|enabled?|algorithm|provider|source|'
@@ -69,6 +71,16 @@ _SIMPLE_RULES = [
     (re.compile(r'(jdbc:oracle:[a-z0-9]+:)[^/\s@"\']+/[^@\s"\']+@', re.IGNORECASE), r'\1<REDACTED>@'),
     # the signature of an Azure SAS URL or token (…?sv=2022-11-02&ss=b&sig=AbCd%2B…%3D)
     (re.compile(r'([?&;]sig=)[^&\s"\';]+', re.IGNORECASE), r'\1<REDACTED>'),
+    # XML elements of a secret: <password>x</password>, <ns:clientSecret>…</ns:clientSecret>
+    (re.compile(r'(<(?:[\w.-]+:)?[\w.-]*(?:password|passwd|secret|token|api[_.-]?key|credentials?|private[_.-]?key)[\w.-]*>)'
+                r'([^<]+)(</)', re.IGNORECASE), r'\1<REDACTED>\3'),
+    # cookies of an HTTP request or response, and curl -u / --user user:password
+    (re.compile(r'\b((?:Set-)?Cookie:)[ \t]*[^\r\n]+', re.IGNORECASE), r'\1 <REDACTED>'),
+    (re.compile(r'(\bcurl\b[^\n]*?\s(?:-u|--user)[ \t=]+)[^\s:]+:\S+'), r'\1<REDACTED>'),
+    # tokens of known services: Slack, Stripe, GitHub
+    (re.compile(r'\bxox[abposr]-[A-Za-z0-9-]{10,}'), '<TOKEN-REDACTED>'),
+    (re.compile(r'\b[sr]k_(?:live|test)_[A-Za-z0-9]{16,}'), '<TOKEN-REDACTED>'),
+    (re.compile(r'\bgh[pousr]_[A-Za-z0-9]{36,}'), '<TOKEN-REDACTED>'),
     # Cloud keys
     (re.compile(r'\bAKIA[0-9A-Z]{16}\b'), '<AWS-KEY-REDACTED>'),
     (re.compile(r'\bAIza[0-9A-Za-z\-_]{35}\b'), '<GCP-KEY-REDACTED>'),

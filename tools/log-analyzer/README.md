@@ -20,6 +20,14 @@ the extension: `analyze logs` sends a `.log` / `.txt` whose first character is `
 time at its start gets the time of the event (`iso_ts()`: epoch seconds / ms / ns become ISO 8601), and the next lines
 of a multi-line message are indented, except exception lines and `Caused by:`.
 
+Also: the Loki query API (`data.result[].values`, streams merged in time order with their labels), Elasticsearch /
+OpenSearch hits with `fields` instead of `_source`, Splunk `_time` (its newest-first CSV is reversed), numeric levels
+(pino / bunyan `"level":50` is ERROR, syslog / GELF `3` is ERROR), epoch seconds written as a string (`"1697310809.5"`),
+and the `stack_trace` of an event without level. A message is taken as an already formatted log line only when it has
+a level word **and** a time near its start (`"Task failed: WARN threshold"` of an ERROR event keeps its level, logger
+and stack trace). A CSV cell holding JSON is merged only when it is a log line (it has a message), and times with an
+offset are compared in UTC to detect a newest-first export. Tests: `python3 -I tools/log-analyzer/test_log_analyzer.py`, run with `tools/report-common/test_sanitizer.py` by the Tools tests workflow (`.github/workflows/tools-tests.yml`) on the pull requests that change `tools/log-analyzer/` or `tools/report-common/`.
+
 ## Progress of large inputs
 
 `progress.py` shows the progress of a large input: `cat` copies stdin to the digest with a bar on stderr (terminal
@@ -37,6 +45,10 @@ frequent messages (masked: numbers, hex ids, UUIDs) and loggers, and hints (peri
 INFO/DEBUG records, an export of a log console cut at its size limit). `analyze logs` prints it, adds it to the HTML
 report (🔭 Overview section) and to `--json` (`.overview`).
 
+The levels of the overview also read logfmt `level=error`, JSON `"level":"error"`, zap / logrus after the time, the
+.NET console logger (`fail:`) and klog (`E1014 10:00:05`); a line without level that starts with its own time is a record
+of its own, not the next line of the previous one.
+
 ## Inputs not fully read
 
 `analyze logs` writes `label<tab>reason` to `$tmp_dir/incomplete` for each input it could not read completely: a `.gz`
@@ -48,6 +60,34 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Comparison with another input
+
+`--compare <before>` (the logs before a fix, another worker, the day before) runs `analyze logs` again on `<before>` with
+`--json --logs-only` and the same `--connector`, `--with-worker`, `--errors-only`, `--sanitize` (and the same sanitizer
+state, `PG_SANITIZE_STATE`: a value gets the same placeholder on both sides), or takes `<before>` as it is when it is a
+JSON of `--json`. `log_report.py --compare <json> --compare-label <before>` then compares (`compare_reports()`): the root
+causes (by label), the known causes (by title) and the connectors are new, gone, growing or shrinking (×`COMPARE_RATIO`
+= 1.5 and at least `COMPARE_MIN_DELTA` = 3 occurrences), per hour when the two periods differ by more than 10 % (the
+rates are shown), with the totals by level. In the 🔁 Comparison section of the HTML report (after the tiles, the root
+causes linked to their row), the terminal summary (also when the input has no finding left: everything gone) and
+`.comparison` of `--json`.
+
+## Connectors
+
+`connector_health()` (in `analyze()`, `.connectors` of `--json`) builds one card per connector of the logs (the
+`[connector|task-0]` context of the lines), most errors first: its occurrences by level, first and last time, the task
+kills (records of the 🧨 known cause), the known causes of its records, its configuration dumps, the clients it owns
+(`connector-producer-<name>-0`…) and the keys changed between restarts. The HTML report shows them in 🔌 **Connectors**
+(▶ only this connector sets the connector filter), the terminal summary one line per connector.
+
+## Size of the report
+
+The 🌳 root cause rows link each file to its page without the ✏️ of the editor (the page has it), the style of the ✏️
+links is in `BASE_CSS` (once), and the links have no `rel='noopener'` (implied by `target=_blank`): 6,000 distinct records
+make an 11.5 MB report instead of 12.9 MB. The page of a file over `MAX_FULL_BYTES` (2 MB) reads it as a stream and keeps
+only the windows around the findings (`log_viewer.read_windows`), and the copy of a `.gz` for the editor is
+decompressed as a stream: 101 MB of memory instead of 175 MB for a 44 MB log.
+
 ## Incident timeline
 
 `incident_timeline()` (in `analyze()`, `.timeline` of `--json`, at most `TIMELINE_LIMIT` = 200 events) merges all the
@@ -56,7 +96,7 @@ the first occurrence of each known cause (one row with the error when they are o
 components (a `START_CONFIGS` dump logged at startup: `DistributedConfig`, `KafkaConfig`…), the connectors (re)configured
 (once per connector and minute) and the config keys changed between restarts (`@@PGCFGCHG@@`). Only what has a
 timestamp. The HTML report shows it in 🗓️ **Incident timeline** right after the findings (30 rows, the others in a
-`<details>`, 📄 links to the line), static like the findings; the terminal summary prints its first 8 events.
+`<details>`, 📄 links to the line), following the filters (`pgTimeline()`: level, component, connector, period, and the search through the record of a first error; the restarts and configurations without connector stay); the terminal summary prints its first 8 events.
 
 ## Times and time zones
 
@@ -99,8 +139,12 @@ level and connector filter (connector taken from the
 a period filter (drag over the 📈 occurrences chart, `[from, to)` as its buckets), the Component chips (the component of
 each file from the deepest part of its label: the file name `server.log` / `connect.log` first, then its folders, then the
 archive; counted in occurrences, like the level pills; the one picked is remembered in `localStorage` and the chart is
-drawn again for it on load) and the search box (the records whose block contains the text, `pgMatch` in `pgKeeps()`; a
-finding card that does not contain it gets `.pg-nomatch`, never the `hidden` attribute of the severity chips). These
+drawn again for it on load) and the search box (`pgCompile()`: words that must all be there, `-word` to exclude, `"a phrase"`, `/regex/` and
+`-/regex/`, an invalid regex searched as text; the records whose block passes it, `pgMatch` in `pgKeeps()`; the matches
+highlighted with the CSS Custom Highlight API, `pgHighlight()`, the page itself untouched; a
+finding card that does not contain it gets `.pg-nomatch`, never the `hidden` attribute of the severity chips). The filters are written in the URL of the page (`#pg:lvl=1&comp=connect&conn=s3-sink&q=timeout&t=<from>-<to>`,
+`pgStateWrite()` / `pgStateRead()`, the URL wins over the component remembered in `localStorage`): 🔗 **Link to this view**
+copies it, and the link opens the report on the same view. These
 filters drive **everything below the filter bar**
 from one index of records written once in the page, `occurrences_json()`: `<script type="application/json"
 id="pg-occurrences">` holds `[root cause index, level, connector index, occurrences, epoch seconds, record index, file
@@ -111,8 +155,12 @@ root causes rows (`tr.rc-row[data-cause]`), the 🗂️ files rows (`tr.file-row
 (`details[data-rec]`, `.rec-count`). The period comes from the `zoomchange` event of the chart (id
 `occurrences-chart`). The 🔎 findings are the exception: their text is never rewritten (it is the diagnosis of the
 bundle), each card only gets `▸ N of M occurrence(s) here` in its `.rec-scope` span, or is dimmed (`.out`) when none
-of it is in the selection - from the `data-recs` indexes that `findings_html()` writes for an item with `records`. Occurrences beyond the 1000 kept per record have no time of their own: they count in the totals
-but not in a period, and the legend of the root causes says how many there are.
+of it is in the selection - from the `data-recs` indexes that `findings_html()` writes for an item with `records`. The times of a record of more than 1000 occurrences are sampled by `summarize_log_errors` over its whole life (every
+stride-th one, the stride doubling each time 1000 are kept: `@@PGTS@@\tx<stride> t1 t2 …`), and each time kept stands for
+`stride` occurrences: the 8th field of a record in `pg-occurrences`, the weights of the chart (`times.weights`, prefix
+sums in `zoom_chart.js`) and the counts of a period (`pgInWindow()`). Before, the first 1000 were kept: an error of a
+whole day was a burst at its start in the chart, and 0 in any later period. Only the occurrences on a line without a
+time stay out of a period; the legend of the root causes says how many there are.
 `tools/connector-diagnose/diagnose_report.py` imports it for the
 errors section of the `playground connector diagnose` report. `get-ci-result --logs`, `container logs --errors --html`
 and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last

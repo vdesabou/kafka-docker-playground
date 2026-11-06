@@ -4,10 +4,10 @@
 
 Quickly test [KIP-108](https://cwiki.apache.org/confluence/display/KAFKA/KIP-108%3A+Create+Topic+Policy) Create Topic Policy.
 
-Configuration setup:
+Configuration setup: in KRaft mode (CP 8+, the default), create topic requests are validated by the **controller**, so the policy is set on the `controller` ([`docker-compose.plaintext.kraft.yml`](docker-compose.plaintext.kraft.yml)); a policy set only on the brokers is silently ignored. In ZooKeeper mode (CP 7), it is set on the `broker` ([`docker-compose.plaintext.yml`](docker-compose.plaintext.yml)):
 
 ```yml
-  broker:
+  controller:   # broker: with ZooKeeper
       environment:
         KAFKA_CREATE_TOPIC_POLICY_CLASS_NAME : "com.github.vdesabou.MyTopicPolicy"
         CLASSPATH: /tmp/mytopicpolicy-1.0.0-jar-with-dependencies.jar

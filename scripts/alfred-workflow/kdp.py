@@ -496,6 +496,59 @@ def smart_items(raw):
     return items
 
 
+def selected_paths(raw):
+    """The files and folders given to the Universal Action (selected in Finder, or in Alfred's file navigation):
+    one path per line or tab-separated. Empty when it is text (one of the pieces is not an existing path)."""
+    pieces = [p.strip() for p in re.split(r"[\t\n]", raw or "") if p.strip()]
+    if not pieces or not all(p.startswith(("/", "~/")) for p in pieces):
+        return []
+    paths = [os.path.expanduser(p) for p in pieces]
+    return paths if all(os.path.exists(p) for p in paths) else []
+
+
+# the analyze command of a file, by its lowercase name and whether it is a folder:
+# (test, command, title, takes several -f, analyze logs also offered)
+ANALYZERS = [
+    (lambda n, d: n.endswith(".hprof"), "heap-dump", "🧠 Analyze this heap dump", False, False),
+    (lambda n, d: n.endswith(".jfr"), "flight-recorder", "🛩️ Analyze this flight recording", True, False),
+    (lambda n, d: n.endswith((".pcap", ".pcapng", ".cap")), "tcp-dump", "🦈 Analyze this network capture", True, False),
+    (lambda n, d: n.startswith("orclcdc_diag") and n.endswith((".html", ".htm")), "oracle-xstream-report",
+     "🔶 Analyze this Oracle XStream report", True, False),
+    (lambda n, d: d and n.startswith("jscissors"), "jscissors", "✂️ Analyze this jscissors capture", False, False),
+    (lambda n, d: not d and re.search(r"(^|[^a-z])gc([^a-z]|$)", n), "gc-logs", "♻️ Analyze these GC logs", True, True),
+    (lambda n, d: not d and re.search(r"thread|jstack|tdump", n), "thread-dump", "🧵 Analyze these thread dumps", True, True),
+]
+
+
+def analyze_cmd(command, paths):
+    """playground analyze <command> -f … with its HTML report opened right away: PLAYGROUND_RUN_LOG_TERMINAL tells
+    the CLI someone is there to see it, also in the Text View (no terminal there)."""
+    return in_root("PLAYGROUND_RUN_LOG_TERMINAL=1 playground analyze {} {} --output-dir {}".format(
+        command, " ".join("-f " + q(p) for p in paths), q("/tmp/kdp-analyze-" + command)))
+
+
+def file_items(paths):
+    """Files and folders selected in Finder: the analyze command that matches them, its HTML report opened."""
+    names = ", ".join(os.path.basename(p.rstrip("/")) for p in paths[:3]) + (" +{}".format(len(paths) - 3) if len(paths) > 3 else "")
+    kinds = [next((a for a in ANALYZERS if a[0](os.path.basename(p.rstrip("/")).lower(), os.path.isdir(p))), None)
+             for p in paths]
+    items = []
+    if kinds[0] and all(k is kinds[0] for k in kinds):
+        _, command, title, multi, also_logs = kinds[0]
+        for group in ([paths] if multi else [[p] for p in paths]):
+            items.append(item(title if multi else "{} ({})".format(title, os.path.basename(group[0].rstrip("/"))),
+                              "playground analyze {} · HTML report opened · {}".format(command, names), "output",
+                              analyze_cmd(command, group)))
+        if not also_logs:
+            return items
+    # log files, folders, archives (.zip, .tar.gz…), CFK support bundles, exports of a log console
+    logs = analyze_cmd("logs", paths)
+    items.append(item("🧭 Analyze logs: " + names, "playground analyze logs (CFK bundles detected) · HTML report opened",
+                      "output", logs, mods={"cmd": mod("⌘ without the WARN records (--errors-only)", "output",
+                                                       logs + " --errors-only")}))
+    return items
+
+
 def mode_menu(rest, raw=""):
     first = rest.split()[0].lower() if rest.split() else ""
     items = []
@@ -1456,6 +1509,9 @@ def script_filter(query):
     if not os.path.exists(CLI):
         return {"items": [info("⚠️ kafka-docker-playground not found in " + ROOT,
                                "set kdp_root in the workflow configuration")]}
+    paths = selected_paths(raw)
+    if paths:
+        return {"items": file_items(paths)}
     first, _, rest = query.partition(" ")
     fn = MODES.get(first.lower())
     if fn:

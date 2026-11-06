@@ -11,6 +11,8 @@ import os
 import sys
 import time
 
+# no __pycache__ next to the tools of the repository
+sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import known_causes  # noqa: E402
@@ -33,6 +35,16 @@ LEAKS = [
     ("connecting to [2001:db8::1]:9092 and fe80::1ff:fe23:4567:890a%eth0", "2001:db8::1"),
     ("connecting to [2001:db8::1]:9092 and fe80::1ff:fe23:4567:890a%eth0", "fe80::1ff"),
     ("broker at 10.42.0.12:9092", "10.42.0.12"),
+    ("connection.password=abc,def;ghi", "def;ghi"),
+    ("<settings><password>XmlS3cret</password></settings>", "XmlS3cret"),
+    ("connection.password\tTsvS3cret", "TsvS3cret"),
+    ("salesforce.consumer.key=3MVG9SalesforceKey", "3MVG9SalesforceKey"),
+    ("salesforce.consumer.secret=SfSecret123", "SfSecret123"),
+    ("> Cookie: JSESSIONID=abc123def456; session=xyz", "abc123def456"),
+    ("curl -s -u alice:alicepass http://connect:8083/connectors", "alicepass"),
+    ("token xoxb-123456789012-abcdefghijkl leaked", "xoxb-123456789012"),
+    ("key sk_live_51HabcdefghijKLMNOPQR", "sk_live_51Habc"),
+    ("GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123456789", "ghp_abcdefghijklmnop"),
 ]
 
 KEPT = [
@@ -46,6 +58,8 @@ KEPT = [
     "std::string and rdkafka::error::KafkaError and Vec::new",
     "at 10:00:00 the task restarted",
     "assignment.strategy = signature design",
+    "<configuration><name>tasks.max</name><value>1</value></configuration>",
+    "connection.password\tPASSWORD\tHIGH",
 ]
 
 
@@ -64,6 +78,14 @@ def test_kept():
     for text in KEPT:
         out = DataSanitizer().sanitize_text(text)
         check("kept", out == text, f"{text!r} became {out!r}")
+
+
+def test_value_stops_at_the_next_key():
+    for text, want in [("password=x1, retries=3 then", "password=<REDACTED>, retries=3 then"),
+                       ("ssl.key.password=k1,ssl.truststore.location=/etc/ts.jks", "ssl.key.password=<REDACTED>,ssl.truststore.location=/etc/ts.jks"),
+                       ("connection.password=abc,def;ghi end", "connection.password=<REDACTED> end")]:
+        out = DataSanitizer().sanitize_text(text)
+        check("value end", out == want, f"{text!r} became {out!r}")
 
 
 def test_same_placeholder_any_case_and_after_colon():

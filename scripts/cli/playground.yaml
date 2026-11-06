@@ -3895,8 +3895,11 @@ subcommands:
     description: "\U0001F3A9 Install the \"kafka-docker-playground (kdp)\" Alfred
       workflow (macOS, Alfred 5 with the Powerpack)\n\nA launcher for the playground
       CLI: type 'kdp' in Alfred, or select text\nanywhere (a connector config, a stack
-      trace, a connector class, a config\nkey, a case number) and use the Universal
-      Action \"kdp: config, stack\ntrace, connector class, key, case…\":\n\n  kdp
+      trace, a connector class, a config\nkey, a case number), or files and folders
+      in Finder (logs, a support\nbundle, a thread dump, a GC log, a heap dump, a
+      .jfr, a .pcap, an\norclcdc_diag report), and use the Universal Action \"kdp:
+      config, stack\ntrace, logs, connector class, key, case…\" (files: the matching
+      'playground\nanalyze' command, its HTML report opened right away):\n\n  kdp
       how <question>          find-command: the command that answers a question, ⌥
       its --help, ⇧ its deep dive\n  kdp find <words>            find-example: ↩ opens
       the script in VS Code, ⌘ copies 'playground run -f …'\n  kdp history [words]
@@ -4574,11 +4577,13 @@ subcommands:
       TLS, wrong security.protocol, unknown magic byte, OutOfMemoryError, fenced producer,
       rebalances, throttling, offsets not committed in time, task not stopped in time...),
       an incident timeline (all files merged: first occurrence of each error and known
-      cause, restarts, connectors reconfigured, config changes), occurrences over
-      time, root causes (deepest exception of each record), files with findings, and
-      every distinct record. Everything below the filter bar is one view of the same
-      records: the level chips, the component chips, the connector picker, the search
-      box and the period selected by dragging over the occurrences chart all recount
+      cause, restarts, connectors reconfigured, config changes), a card per connector
+      (errors, task killed, known causes, config changes), occurrences over time,
+      root causes (deepest exception of each record), files with findings, and every
+      distinct record. Everything below the filter bar is one view of the same records:
+      the level chips, the component chips, the connector picker, the search box and
+      the period selected by dragging over the occurrences chart (all kept in the
+      URL: \U0001F517 Link to this view opens the report on the same view) all recount
       the two charts, the root causes, the files with findings and the record cards
       (double-click the chart, or ⤺ whole period, to go back). The findings keep the
       figures of the whole report and only say how much of each of them is in the
@@ -4594,6 +4599,16 @@ subcommands:
         .gz file to analyze\n\n\U0001F393 Tip: can be set several times. TAB lists
         the log files, exports, archives and folders of Downloads, Desktop and the
         current folder, newest first\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--compare"
+      argument: BEFORE
+      description: "\U0001F501 Compare with another input: the logs before a fix,
+        another worker, the day before. A log file, folder or archive\n(analyzed with
+        the same --connector, --with-worker, --errors-only and --sanitize), or a JSON
+        written by --json\n\nThe report says what is new, gone, growing or shrinking:
+        root causes, known causes, connectors and the totals by level\n(per hour when
+        the two inputs cover different periods), in a \U0001F501 Comparison section,
+        the terminal summary and\n.comparison of --json"
     - names:
       - "--sample"
       - "-s"
@@ -4695,8 +4710,8 @@ subcommands:
       argument: SECTIONS
       description: "\U0001F5C2️ With --json, only these sections, comma separated:
         summary, findings, known_causes, root_causes, files, files_without_findings,
-        coverage, configuration, timeline (default: all). For example --json-sections
-        summary,findings,root_causes"
+        coverage, configuration, timeline, connectors, comparison (default: all).
+        For example --json-sections summary,findings,root_causes"
     - names:
       - "--component"
       argument: COMPONENT

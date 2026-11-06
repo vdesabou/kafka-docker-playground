@@ -58,12 +58,24 @@ EOF
 
 playground ksqldb wait
 
-log "Verify the UDF logs using KSQL SLF4J+Log4j1 logger and default log level..."
+log "Verify the UDF logs using KSQL SLF4J logger (log4j) and default log level..."
 playground container logs -c ksqldb-server --no-follow --grep "INFO V1: [0-9]*, V2: [0-9]* (com.example.FormulaUdfSimpleLog4jLogging)"
 
-log "Verify the UDF logs using KSQL SLF4J+Log4j1 logger and custom log level..."
-playground container exec -c ksqldb-server --command "grep FormulaUdfLog4jCustomLoggingLevel /etc/ksqldb-server/log4j.properties"
+log "Verify the UDF logs using KSQL SLF4J logger (log4j) and custom log level..."
+if version_gt $TAG_BASE "7.9.99"
+then
+    playground container exec -c ksqldb-server --command "grep -A1 FormulaUdfLog4jCustomLoggingLevel /etc/ksqldb-server/log4j2.yaml"
+else
+    playground container exec -c ksqldb-server --command "grep FormulaUdfLog4jCustomLoggingLevel /etc/ksqldb-server/log4j.properties"
+fi
 playground container logs -c ksqldb-server --no-follow --grep "DEBUG V1: [0-9]*, V2: [0-9]* (com.example.FormulaUdfLog4jCustomLoggingLevel)"
 
-log "Verify the UDF logs using a custom SLF4J+Logback logger, custom log level and custom message format..."
-playground container logs -c ksqldb-server --no-follow --grep "INFO  com.example.FormulaUdfCustomLogger - V1: [0-9]*, V2: [0-9]*"
+if version_gt $TAG_BASE "7.9.99"
+then
+    log "Verify the UDF logs using a custom SLF4J+Logback logger..."
+    logwarn "⚠️ CP 8+: the SLF4J binding of ksqlDB (log4j2) wins over the Logback bundled in the UDF jar, so logback.xml is ignored: the UDF logs use the format and levels of ksqlDB"
+    playground container logs -c ksqldb-server --no-follow --grep "INFO V1: [0-9]*, V2: [0-9]* (com.example.FormulaUdfCustomLogger)"
+else
+    log "Verify the UDF logs using a custom SLF4J+Logback logger, custom log level and custom message format..."
+    playground container logs -c ksqldb-server --no-follow --grep "INFO  com.example.FormulaUdfCustomLogger - V1: [0-9]*, V2: [0-9]*"
+fi

@@ -9186,7 +9186,7 @@ playground_tools_install_vscode_extension_usage() {
 playground_tools_install_alfred_workflow_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground tools install-alfred-workflow\n\n"
-    printf "  🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5\n  with the Powerpack)\n  \n  A launcher for the playground CLI: type 'kdp' in Alfred, or select text\n  anywhere (a connector config, a stack trace, a connector class, a config\n  key, a case number) and use the Universal Action \"kdp: config, stack\n  trace, connector class, key, case…\":\n  \n    kdp how <question>          find-command: the command that answers a\n  question, ⌥ its --help, ⇧ its deep dive\n    kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘\n  copies 'playground run -f …'\n    kdp history [words]         replay a past run with its exact flags (Tab:\n  re-run it)\n    kdp plugin <words> [ver]    pick a plugin, then a version, then info,\n  changelog, source code, jars, CVEs\n    kdp key <words>             pick a config key, then a connector: config-key\n    kdp docs [words]            deep dive pages\n    kdp connector [words]       pick a running connector: diagnose, status,\n  tasks, metrics, history…\n    kdp logs [container] [pat]  pick a container: errors, last lines, grep,\n  follow\n    kdp topic / schema / ci     pick a topic, a subject, a CI test: describe,\n  records, history, CI result\n    kdp status                  status, connector status / diagnose, connect\n  errors\n    kdp repro / notes / case    reproduction models, notes, support cases (when\n  present)\n  \n  On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\n  it in the terminal (for an example, that stops the running environment),\n  ⌥ and ⇧ depend on the mode. On a script (find, repro, history): ↩ opens\n  it in VS Code and ⌘ copies 'playground run -f …'.\n  \n  Read-only commands (plugin, key, status) show their output in the Alfred\n  window, streamed while they run. \"Show output\" and \"Run in the terminal\"\n  are workflow settings: the output can go to the terminal instead, and the\n  terminal is the one set in Alfred (default), a new VS Code integrated\n  terminal, Terminal.app, or copy only.\n  \n  By default, builds the workflow from scripts/alfred-workflow/ and opens it\n  in Alfred, which asks to import it: run the command again after a pull to\n  update it. With --link, the folder is symlinked into your Alfred\n  preferences instead, to work on it: Alfred does not watch the folder\n  behind the link, so run the command again after an edit (it reloads the\n  workflow in Alfred).\n  Alfred then writes its settings to scripts/alfred-workflow/prefs.plist\n  (ignored by git) and may rewrite info.plist when you edit the workflow in\n  Alfred Preferences: check git diff before committing.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%8e%%a9-alfred-workflow-macos\n\n"
+    printf "  🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5\n  with the Powerpack)\n  \n  A launcher for the playground CLI: type 'kdp' in Alfred, or select text\n  anywhere (a connector config, a stack trace, a connector class, a config\n  key, a case number), or files and folders in Finder (logs, a support\n  bundle, a thread dump, a GC log, a heap dump, a .jfr, a .pcap, an\n  orclcdc_diag report), and use the Universal Action \"kdp: config, stack\n  trace, logs, connector class, key, case…\" (files: the matching 'playground\n  analyze' command, its HTML report opened right away):\n  \n    kdp how <question>          find-command: the command that answers a\n  question, ⌥ its --help, ⇧ its deep dive\n    kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘\n  copies 'playground run -f …'\n    kdp history [words]         replay a past run with its exact flags (Tab:\n  re-run it)\n    kdp plugin <words> [ver]    pick a plugin, then a version, then info,\n  changelog, source code, jars, CVEs\n    kdp key <words>             pick a config key, then a connector: config-key\n    kdp docs [words]            deep dive pages\n    kdp connector [words]       pick a running connector: diagnose, status,\n  tasks, metrics, history…\n    kdp logs [container] [pat]  pick a container: errors, last lines, grep,\n  follow\n    kdp topic / schema / ci     pick a topic, a subject, a CI test: describe,\n  records, history, CI result\n    kdp status                  status, connector status / diagnose, connect\n  errors\n    kdp repro / notes / case    reproduction models, notes, support cases (when\n  present)\n  \n  On a result: ↩ copies the command (or opens), ⌘ opens in VS Code, ⌃ runs\n  it in the terminal (for an example, that stops the running environment),\n  ⌥ and ⇧ depend on the mode. On a script (find, repro, history): ↩ opens\n  it in VS Code and ⌘ copies 'playground run -f …'.\n  \n  Read-only commands (plugin, key, status) show their output in the Alfred\n  window, streamed while they run. \"Show output\" and \"Run in the terminal\"\n  are workflow settings: the output can go to the terminal instead, and the\n  terminal is the one set in Alfred (default), a new VS Code integrated\n  terminal, Terminal.app, or copy only.\n  \n  By default, builds the workflow from scripts/alfred-workflow/ and opens it\n  in Alfred, which asks to import it: run the command again after a pull to\n  update it. With --link, the folder is symlinked into your Alfred\n  preferences instead, to work on it: Alfred does not watch the folder\n  behind the link, so run the command again after an edit (it reloads the\n  workflow in Alfred).\n  Alfred then writes its settings to scripts/alfred-workflow/prefs.plist\n  (ignored by git) and may rewrite info.plist when you edit the workflow in\n  Alfred Preferences: check git diff before committing.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/cli?id=%%f0%%9f%%8e%%a9-alfred-workflow-macos\n\n"
   else
     printf "playground tools install-alfred-workflow - 🎩 Install the \"kafka-docker-playground (kdp)\" Alfred workflow (macOS, Alfred 5 with the Powerpack)\n\n"
   fi
@@ -10071,7 +10071,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. So are JSON lines whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). ⚠️ An input not fully read (a truncated or\n  corrupt .gz, an archive that does not fully extract) is listed at the\n  end, in the HTML report and in --json (.summary.incomplete_inputs):\n  never a silent ✅, and exit code 1 when nothing could be read at all.\n  Bytes that are not UTF-8 (a Latin-1 character) are read as they are.\n  Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, a bar for the file\n  being read and one for the whole input, elapsed time, speed, ETA of the file\n  and of the whole input) that becomes the report when the analysis ends. The\n  last line\n  gives the size read and the time it took. 📤 Share in the report: the\n  .zip of the report and its file pages (written next to it when they are\n  under 200 MB), the summary to paste, an email. An archive (.tar, .tar.gz,\n  .tgz…) shows a bar while it is extracted.\n  \n  🗂️ One tab in the browser: with CFK support bundles in the input, their\n  reports and their comparison are written but not opened one by one, the\n  log report links them in a ☸️ CFK support bundles section. With only CFK\n  bundles, the report of the bundle (or the comparison of several) is the\n  one opened. Several CFK bundles are analyzed in parallel, 4 at a time\n  (PLAYGROUND_CFK_PARALLELISM to change it), their output printed in order.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 --sanitize\n  replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best\n  effort: review before sharing). --logs-only gives the plain log digest\n  instead. 🎯 --problem \"<component, symptom, since when>\" matches the bundle\n  against what the customer reports: the issues that explain it first, a verdict\n  (explained, not explained, not covered by the logs), the changes before the\n  date. 📥 A Data to request section says what to ask the customer for next, with\n  why and the command: from the gaps of the bundle (logs that start too late,\n  previous logs of restarted containers, no events, no operator log), from its\n  findings (OOMKilled, Pending pods, TLS, failed connectors) and from the\n  symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  errors.tolerance exceeded, authentication, TLS, wrong security.protocol,\n  unknown magic byte, OutOfMemoryError, fenced producer, rebalances, throttling,\n  offsets not committed in time, task not stopped in time...), an incident\n  timeline (all files merged: first occurrence of each error and known cause,\n  restarts, connectors reconfigured, config changes), occurrences over time,\n  root causes (deepest exception of each record), files with findings, and every\n  distinct record. Everything below the filter bar is one view of the same\n  records: the level chips, the component chips, the connector picker, the\n  search box and the period selected by dragging over the occurrences chart all\n  recount the two charts, the root causes, the files with findings and the\n  record cards (double-click the chart, or ⤺ whole period, to go back). The\n  findings keep the figures of the whole report and only say how much of each of\n  them is in the selection.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. So are JSON lines whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). ⚠️ An input not fully read (a truncated or\n  corrupt .gz, an archive that does not fully extract) is listed at the\n  end, in the HTML report and in --json (.summary.incomplete_inputs):\n  never a silent ✅, and exit code 1 when nothing could be read at all.\n  Bytes that are not UTF-8 (a Latin-1 character) are read as they are.\n  Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, a bar for the file\n  being read and one for the whole input, elapsed time, speed, ETA of the file\n  and of the whole input) that becomes the report when the analysis ends. The\n  last line\n  gives the size read and the time it took. 📤 Share in the report: the\n  .zip of the report and its file pages (written next to it when they are\n  under 200 MB), the summary to paste, an email. An archive (.tar, .tar.gz,\n  .tgz…) shows a bar while it is extracted.\n  \n  🗂️ One tab in the browser: with CFK support bundles in the input, their\n  reports and their comparison are written but not opened one by one, the\n  log report links them in a ☸️ CFK support bundles section. With only CFK\n  bundles, the report of the bundle (or the comparison of several) is the\n  one opened. Several CFK bundles are analyzed in parallel, 4 at a time\n  (PLAYGROUND_CFK_PARALLELISM to change it), their output printed in order.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole, in a Docker image built on\n  first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks), the environment checked against the\n  CFK support matrix (Kubernetes, CFK operator, CP and init container versions),\n  the recent changes (who edited which CR and when, StatefulSet rollouts, pod\n  restarts), the configuration (kafka.properties, zookeeper.properties,\n  schemaregistry.properties, connect.properties and controlcenter.properties\n  rendered by CFK, configOverrides, config logged at startup, connector configs\n  from the Connector CRs and the config dumps of the logs), a JVM default\n  truststore set without its password, and the ERROR/FATAL records of its logs,\n  sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft,\n  replication, storage, scheduling…) with remediation steps. 📕 The log messages\n  and events of known CFK problems (CFK triage table of Confluent support: roll\n  blocked by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID,\n  ZooKeeper to KRaft migration, authorizer timeout, license secret…) are listed\n  first, with what they mean and the KB / docs to read;\n  PLAYGROUND_CFK_RUNBOOKS_FILE adds the internal runbook links of Confluent\n  support (🔒 in the terminal, the HTML report and --json). 🔄 A CR whose image is\n  not what its StatefulSet or pods run (operator did not apply it, roll not\n  complete) is one finding, the exceeded quota events become one finding per\n  ResourceQuota, each Warning event is counted once (event.txt and event.yaml)\n  and a copy of the bundle inside the bundle is analyzed once. 🕰️ The time range\n  of each log is listed, with a finding when a log starts long after its pod or\n  after the last change of the CRs, and CRs that keep the \"Reconcile is blocked\"\n  condition after the annotation was removed are one finding. 🕒 The changes of\n  the CRs in the hour before the first critical / high issue are marked and\n  listed in one finding. 🧩 A Connect whose spec.build.onDemand plugins cannot be\n  installed (config-init-container failing, install error, slow init) and a\n  Connector CR whose class is not installed are findings with next steps. 🔁 With\n  several CFK bundles (-f a.tgz -f b.tgz), they are compared, sorted by\n  collection time: same cluster or not, versions, changes of the CRs between\n  them, issues fixed / new / still there, known CFK issues, with a verdict (HTML\n  report, \"comparison\" in --json). 🚚 A ZooKeeper to KRaft migration gets its own\n  finding: phase / sub-phase of the KRaftMigrationJob, how long it has been\n  there (events, operator requeues), its last error and the next steps of that\n  sub-phase (DUAL-WRITE waiting for the finalize annotation is low). Probe\n  failures and back-offs of a pod that is Running and Ready in the bundle are\n  low and marked transient. Each issue is attributed to a component and an\n  instance (CR name), and to its connector: --component keeps some of them, the\n  HTML report has Component / Instance / Connector filters. 🔒 --sanitize\n  replaces secrets, IPs, hostnames, emails and LDAP DNs by placeholders (best\n  effort: review before sharing). --logs-only gives the plain log digest\n  instead. 🎯 --problem \"<component, symptom, since when>\" matches the bundle\n  against what the customer reports: the issues that explain it first, a verdict\n  (explained, not explained, not covered by the logs), the changes before the\n  date. 📥 A Data to request section says what to ask the customer for next, with\n  why and the command: from the gaps of the bundle (logs that start too late,\n  previous logs of restarted containers, no events, no operator log), from its\n  findings (OOMKilled, Pending pods, TLS, failed connectors) and from the\n  symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  errors.tolerance exceeded, authentication, TLS, wrong security.protocol,\n  unknown magic byte, OutOfMemoryError, fenced producer, rebalances, throttling,\n  offsets not committed in time, task not stopped in time...), an incident\n  timeline (all files merged: first occurrence of each error and known cause,\n  restarts, connectors reconfigured, config changes), a card per connector\n  (errors, task killed, known causes, config changes), occurrences over time,\n  root causes (deepest exception of each record), files with findings, and every\n  distinct record. Everything below the filter bar is one view of the same\n  records: the level chips, the component chips, the connector picker, the\n  search box and the period selected by dragging over the occurrences chart (all\n  kept in the URL: 🔗 Link to this view opens the report on the same view) all\n  recount the two charts, the root causes, the files with findings and the\n  record cards (double-click the chart, or ⤺ whole period, to go back). The\n  findings keep the figures of the whole report and only say how much of each of\n  them is in the selection.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -10090,6 +10090,11 @@ playground_analyze_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
     printf "    🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze\n    \n    🎓 Tip: can be set several times. TAB lists the log files, exports, archives\n    and folders of Downloads, Desktop and the current folder, newest first\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compare BEFORE")"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n"
     echo
 
     # :flag.usage
@@ -10149,7 +10154,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline (default: all). For example --json-sections\n    summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison (default: all). For example\n    --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -11233,6 +11238,11 @@ playground_debug_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--compare BEFORE")"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
     printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      kafka_clients          logs of the non-Java clients (C/C++, Python, Go,\n    .NET, JavaScript, KafkaJS, Rust) of\n                             other/client-*: a broker that refuses connections\n    or does not resolve, records\n                             timed out, an unknown property, and crashes (Python\n    traceback, .NET unhandled\n                             exception, Go and Rust panics, uncaught Node.js\n    error)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
     printf "    %s\n" "Allowed: connect_task_failure, support_bundle, kafka_streams, kafka_clients, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
@@ -11289,7 +11299,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline (default: all). For example --json-sections\n    summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison (default: all). For example\n    --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -30510,7 +30520,22 @@ function summarize_log_errors() {
         nrec = nlines
         nlines = 0
         ts = timestamp_of(r[1])
-        if (records_file != "" && ts != "" && nts[key] < 1000) { timestamps[key] = timestamps[key] " " ts; nts[key]++ }
+        # the times of the occurrences, at most 1000 per record, spread over its whole life: every stride-th one is kept,
+        # and when 1000 are kept every other one is dropped and the stride doubles (the first 1000 were kept: an error
+        # of a whole day showed as a burst at its start). Each time kept stands for stride occurrences
+        if (records_file != "" && ts != "") {
+            if (!(key in ts_stride)) ts_stride[key] = 1
+            if (ts_seen[key]++ % ts_stride[key] == 0) {
+                timestamps[key] = timestamps[key] " " ts
+                if (++nts[key] >= 1000) {
+                    nkept = split(substr(timestamps[key], 2), kept_ts, " ")
+                    timestamps[key] = ""
+                    for (i = 1; i <= nkept; i += 2) timestamps[key] = timestamps[key] " " kept_ts[i]
+                    nts[key] = int((nkept + 1) / 2)
+                    ts_stride[key] *= 2
+                }
+            }
+        }
         if (key in count) {
             count[key]++
             last_seen[key] = rec_line
@@ -30598,7 +30623,7 @@ function summarize_log_errors() {
             printf "@@PGFILE@@\t%s\t%d\t%d\t%d\t%s\t%s\n", label, NR, nkeys, total_occurrences, log_first_ts, log_last_ts >> records_file
             for (i = 1; i <= nkeys; i++) {
                 k = order[i]
-                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], long_text[k], substr(timestamps[k], 2) >> records_file
+                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], long_text[k], (ts_stride[k] > 1 ? "x" ts_stride[k] " " : "") substr(timestamps[k], 2) >> records_file
                 n = split(ctx[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCTX@@\t%s\n", cl[j] >> records_file
             }
@@ -62316,14 +62341,8 @@ playground_analyze_thread_dump_command() {
 
   if [[ -n "$html_out" && -f "$html_out" ]]; then
       log ""
-      log "✅ HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
+      # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      open_html_report "$html_out"
   fi
 
   exit 0
@@ -62495,6 +62514,7 @@ playground_analyze_logs_command() {
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
+  compare="${args[--compare]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -62696,7 +62716,8 @@ playground_analyze_logs_command() {
   # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
   # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
   sanitizer="$root_folder/tools/report-common/sanitizer.py"
-  sanitize_state="$tmp_dir/sanitize-state.json"
+  # PG_SANITIZE_STATE: the state of the run that started this one (--compare): the same placeholder for a value in both
+  sanitize_state="${PG_SANITIZE_STATE:-$tmp_dir/sanitize-state.json}"
   sanitize=""
   no_sanitize=1
   if [[ -n "$want_sanitize" ]]
@@ -63432,6 +63453,43 @@ playground_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
+  # --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
+  # same filters and the same sanitizer state), compared by log_report.py --compare
+  if [[ -n "$compare" ]]
+  then
+      compare_json="$tmp_dir/compare.json"
+      if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
+      then
+          cp "$compare" "$compare_json"
+      elif [ -e "$compare" ]
+      then
+          progress_step "🔁 analyzing $compare for the comparison"
+          log "🔁 Analyzing $compare for the comparison (same filters)"
+          compare_cmd=("$root_folder/scripts/cli/playground" analyze logs -f "$compare" --json --logs-only --max-findings "$max_findings")
+          [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
+          [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+          [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+          for connector in "${connector_array[@]}"
+          do
+              compare_cmd+=(--connector "$connector")
+          done
+          # no progress page of its own, the sanitizer state of this run
+          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
+              || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+          then
+              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+              tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
+              compare_json=""
+          fi
+      else
+          logwarn "⚠️ --compare: $compare does not exist, no comparison"
+          compare_json=""
+      fi
+      if [[ -n "$compare_json" ]]
+      then
+          report_args+=(--compare "$compare_json" --compare-label "$compare")
+      fi
+  fi
   for connector in "${connector_array[@]}"
   do
       report_args+=(--connector "$connector")
@@ -63442,7 +63500,7 @@ playground_analyze_logs_command() {
   fi
   # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
   # changes), on stderr with --json; then the configs asked with --show-config
-  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || [ -n "${compare_json:-}" ] || grep -q '^@@PGCFG@@' "$records_file"
   then
       progress_step "🧭 summary: known causes, root causes, configuration"
       echo ""
@@ -63707,14 +63765,8 @@ playground_analyze_gc_logs_command() {
 
   if [[ -n "$html_out" && -f "$html_out" ]]; then
       log ""
-      log "✅ HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
+      # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      open_html_report "$html_out"
   fi
 
   exit 0
@@ -63821,14 +63873,8 @@ playground_analyze_oracle_xstream_report_command() {
 
   if [[ -n "$html_out" && -f "$html_out" ]]; then
       log ""
-      log "✅ HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
+      # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      open_html_report "$html_out"
   fi
 
   exit 0
@@ -64049,14 +64095,8 @@ playground_analyze_flight_recorder_command() {
 
   if [[ -f "$html_out" ]]; then
       log ""
-      log "✅ HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
+      # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      open_html_report "$html_out"
   fi
 
   exit 0
@@ -64115,14 +64155,8 @@ playground_analyze_jscissors_command() {
 
   if [[ -f "$html_out" ]]; then
       log ""
-      log "✅ HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
+      # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      open_html_report "$html_out"
   fi
 
   exit 0
@@ -64269,8 +64303,8 @@ playground_analyze_tcp_dump_command() {
 
   for html_out in "${reports[@]}"
   do
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null; then
+      # only open a browser in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null; then
           log "🌐 Opening $html_out in browser..."
           open "$html_out"
       else
@@ -64663,14 +64697,8 @@ playground_debug_thread_analyze_command() {
 
   if [[ -n "$html_out" && -f "$html_out" ]]; then
       log ""
-      log "✅ HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
+      # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      open_html_report "$html_out"
   fi
 
   exit 0
@@ -64984,6 +65012,7 @@ playground_debug_analyze_logs_command() {
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
+  compare="${args[--compare]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -65185,7 +65214,8 @@ playground_debug_analyze_logs_command() {
   # --sanitize: secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best
   # effort), with the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
   sanitizer="$root_folder/tools/report-common/sanitizer.py"
-  sanitize_state="$tmp_dir/sanitize-state.json"
+  # PG_SANITIZE_STATE: the state of the run that started this one (--compare): the same placeholder for a value in both
+  sanitize_state="${PG_SANITIZE_STATE:-$tmp_dir/sanitize-state.json}"
   sanitize=""
   no_sanitize=1
   if [[ -n "$want_sanitize" ]]
@@ -65921,6 +65951,43 @@ playground_debug_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
+  # --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
+  # same filters and the same sanitizer state), compared by log_report.py --compare
+  if [[ -n "$compare" ]]
+  then
+      compare_json="$tmp_dir/compare.json"
+      if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
+      then
+          cp "$compare" "$compare_json"
+      elif [ -e "$compare" ]
+      then
+          progress_step "🔁 analyzing $compare for the comparison"
+          log "🔁 Analyzing $compare for the comparison (same filters)"
+          compare_cmd=("$root_folder/scripts/cli/playground" analyze logs -f "$compare" --json --logs-only --max-findings "$max_findings")
+          [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
+          [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+          [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
+          for connector in "${connector_array[@]}"
+          do
+              compare_cmd+=(--connector "$connector")
+          done
+          # no progress page of its own, the sanitizer state of this run
+          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
+              || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+          then
+              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+              tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
+              compare_json=""
+          fi
+      else
+          logwarn "⚠️ --compare: $compare does not exist, no comparison"
+          compare_json=""
+      fi
+      if [[ -n "$compare_json" ]]
+      then
+          report_args+=(--compare "$compare_json" --compare-label "$compare")
+      fi
+  fi
   for connector in "${connector_array[@]}"
   do
       report_args+=(--connector "$connector")
@@ -65931,7 +65998,7 @@ playground_debug_analyze_logs_command() {
   fi
   # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
   # changes), on stderr with --json; then the configs asked with --show-config
-  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || [ -n "${compare_json:-}" ] || grep -q '^@@PGCFG@@' "$records_file"
   then
       progress_step "🧭 summary: known causes, root causes, configuration"
       echo ""
@@ -66196,14 +66263,8 @@ playground_debug_gc_analyze_command() {
 
   if [[ -n "$html_out" && -f "$html_out" ]]; then
       log ""
-      log "✅ HTML report saved: $html_out"
-      # only open a browser in an interactive terminal
-      if [[ -t 1 ]] && command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
+      # opened in an interactive terminal (or with PLAYGROUND_RUN_LOG_TERMINAL set: playground run, the Alfred workflow)
+      open_html_report "$html_out"
   fi
 
   exit 0
@@ -116313,6 +116374,20 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --compare)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compare']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compare requires an argument: --compare BEFORE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --sample | -s)
 
         # :flag.case_arg
@@ -119220,6 +119295,20 @@ playground_debug_analyze_logs_parse_requirements() {
           shift
         else
           printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --compare)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compare']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compare requires an argument: --compare BEFORE" >&2
           exit 1
         fi
         ;;
@@ -159381,6 +159470,19 @@ playground_analyze_logs_completion() {
         shift
 
         ;;
+      --compare)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-log-files-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compare"]=1
+
+        ;;
       --sample | -s)
         shift
         if [[ $# -eq 0 ]]; then
@@ -159540,6 +159642,7 @@ playground_analyze_logs_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
@@ -160868,6 +160971,19 @@ playground_debug_analyze_logs_completion() {
         shift
 
         ;;
+      --compare)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-log-files-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compare"]=1
+
+        ;;
       --sample | -s)
         shift
         if [[ $# -eq 0 ]]; then
@@ -161027,6 +161143,7 @@ playground_debug_analyze_logs_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings

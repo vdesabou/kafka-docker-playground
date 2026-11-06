@@ -57,8 +57,11 @@ commands:
 
     A launcher for the playground CLI: type 'kdp' in Alfred, or select text
     anywhere (a connector config, a stack trace, a connector class, a config
-    key, a case number) and use the Universal Action "kdp: config, stack
-    trace, connector class, key, case…":
+    key, a case number), or files and folders in Finder (logs, a support
+    bundle, a thread dump, a GC log, a heap dump, a .jfr, a .pcap, an
+    orclcdc_diag report), and use the Universal Action "kdp: config, stack
+    trace, logs, connector class, key, case…" (files: the matching 'playground
+    analyze' command, its HTML report opened right away):
 
       kdp how <question>          find-command: the command that answers a question, ⌥ its --help, ⇧ its deep dive
       kdp find <words>            find-example: ↩ opens the script in VS Code, ⌘ copies 'playground run -f …'
