@@ -62877,10 +62877,13 @@ playground_analyze_logs_command() {
       local gzip_err="$tmp_dir/gzip.err"
       : > "$gzip_err"
       analyze_logs_digest "$1" "$2" < <(gzip -dc "$2" 2> "$gzip_err")
-      # the digest has read up to the end of the output of gzip: gzip has written its error, if any, before closing it
+      # its error is complete once gzip has exited
+      wait $! 2> /dev/null || true
+      # the first line that is not empty: GNU gzip starts its message with a new line ("\ngzip: x.gz: unexpected end of
+      # file"), the message was empty on Linux
       if [ -s "$gzip_err" ]
       then
-          note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(head -n 1 "$gzip_err" | sed 's/^gzip: //'))"
+          note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$gzip_err" | sed 's/^gzip: //'))"
       fi
   }
 
@@ -65381,10 +65384,13 @@ playground_debug_analyze_logs_command() {
       local gzip_err="$tmp_dir/gzip.err"
       : > "$gzip_err"
       analyze_logs_digest "$1" "$2" < <(gzip -dc "$2" 2> "$gzip_err")
-      # the digest has read up to the end of the output of gzip: gzip has written its error, if any, before closing it
+      # its error is complete once gzip has exited
+      wait $! 2> /dev/null || true
+      # the first line that is not empty: GNU gzip starts its message with a new line ("\ngzip: x.gz: unexpected end of
+      # file"), the message was empty on Linux
       if [ -s "$gzip_err" ]
       then
-          note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(head -n 1 "$gzip_err" | sed 's/^gzip: //'))"
+          note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$gzip_err" | sed 's/^gzip: //'))"
       fi
   }
 
