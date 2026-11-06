@@ -48,7 +48,8 @@ jobs:
         run: |
           case "$(uname -s)" in Darwin) rc=~/.bash_profile ;; *) rc=~/.bashrc ;; esac
           grep -F "# >>> kafka-docker-playground >>>" "$rc"
-          bash -c "source $rc; command -v playground; playground --version"
+          # interactive, like a terminal: the default ~/.bashrc of Ubuntu returns early in non-interactive shells
+          bash -ic "source $rc; command -v playground; playground --version"
 
       - name: Running it again changes nothing
         run: |
