@@ -282,6 +282,8 @@
       holder.innerHTML = leg + '<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img">' + body +
         '<rect class="zoom-sel" x="0" y="' + T + '" width="0" height="' + ph + '" fill="#2a78d6" opacity=".15" pointer-events="none"/></svg>';
       info.textContent = text;
+      // the accessible name of the chart: what its caption says of the visible window
+      holder.querySelector("svg").setAttribute("aria-label", "chart: " + text);
       box.querySelectorAll("[data-zoom]").forEach(x => x.classList.remove("on"));
       const preset = box.querySelector("[data-zoom='all']");
       if (!zoomed()) preset.classList.add("on");
