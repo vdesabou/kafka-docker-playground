@@ -155,7 +155,7 @@ Gotchas:
 
 ```bash
 playground analyze logs -f connect.log
-playground analyze logs -f ./customer-logs.zip --include-warnings
+playground analyze logs -f ./customer-logs.zip --errors-only   # WARN records are reported by default
 playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
 
 # try it on the shipped samples
@@ -185,9 +185,18 @@ What it does with what you give it:
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
 | a copy of a file or of a CFK support bundle already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …` / `⏭️ … same CFK support bundle as …`, only one report), counted in the last line |
 
-🔭 **No finding is not a verdict.** When no file has an ERROR/FATAL record (ERROR/FATAL/WARN with
-`--include-warnings`), `analyze logs` prints an overview of what the logs contain instead of stopping at `✅ no
-ERROR/FATAL record found`: each file with its lines, the period covered and its records by level, the 10 most frequent
+🟠 **WARN is reported by default** (since the Kafka clients log real problems at WARN: `consumer poll timeout has
+expired` when a consumer leaves its group, `Expiring N record(s)` in the producer, `NetworkException` retries), always
+after the errors: the terminal digest prints FATAL, then ERROR, then WARN within `--max-findings` per file, the 🌳 cards
+of the findings rank ERROR first, and the **Levels** chips of the HTML report hide the WARN records in one click.
+`--errors-only` leaves them out (the previous default); `--include-warnings` is still accepted. On 1.1 GB of Connect
+logs, WARN made the run 6 % longer (120 s → 127 s), added 3 known causes (`🐢 Consumer left its group:
+max.poll.interval.ms exceeded`, `⌛ Records not delivered in time`, `🔀 Serialization or conversion error`) and tripled
+the rows of 🌳 All root causes (deprecation warnings and the like).
+
+🔭 **No finding is not a verdict.** When no file has an ERROR/FATAL/WARN record (ERROR/FATAL with
+`--errors-only`), `analyze logs` prints an overview of what the logs contain instead of stopping at `✅ no
+ERROR/FATAL/WARN record found`: each file with its lines, the period covered and its records by level, the 10 most frequent
 messages (numbers masked as `N`, identifiers as `<hex>` / `<uuid>`) and the 5 most frequent loggers, then 👉 what to
 ask for next:
 
@@ -393,7 +402,7 @@ above the bar stay the figures of the whole report. There are three filters, and
 
 | Filter | Where | What it keeps |
 | --- | --- | --- |
-| **Levels** | FATAL / ERROR / WARN chips of the bar, with several levels (`--include-warnings`) | the records of the levels still pressed |
+| **Levels** | FATAL / ERROR / WARN chips of the bar, with several levels (WARN is reported by default, `--errors-only` leaves it out) | the records of the levels still pressed |
 | **Connector** | picker of the bar, when the records carry the connector context of the Connect log line (`ERROR [my-connector\|task-0] …`, `[my-connector\|task-0\|offsets]`, `[my-connector\|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent first, with "no connector context" for the worker records | the records of that connector |
 | **Period** | drag over the 📈 chart | the occurrences between the two times |
 
@@ -571,7 +580,7 @@ playground stop
 
 | Situation | Command |
 | --- | --- |
-| a customer support bundle (`.zip`, `.tar.gz`, folders of rotated logs) | `playground analyze logs -f <bundle> --max-findings 15`, then `--include-warnings` if no ERROR explains it |
+| a customer support bundle (`.zip`, `.tar.gz`, folders of rotated logs) | `playground analyze logs -f <bundle> --max-findings 15` (the WARN records come after the errors: a consumer poll timeout or expiring records are logged at WARN; `--errors-only` for the errors alone) |
 | the logs of a Kafka Streams application that rebalances in a loop, restores forever or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section (state of each instance over time, rebalances, tasks, Streams errors). On a running example: `playground streams status --html` |
 | the logs of a Python, Go, .NET, JavaScript, C/C++ or Rust client application | `playground analyze logs -f <the logs>`: librdkafka lines, tracebacks, panics and unhandled exceptions are read (🧰). To reproduce, `other/client-<language>` runs that client against the playground |
 | a CI artifact or a log pasted in a ticket | save it to a file, `playground analyze logs -f <file>` |
@@ -603,7 +612,7 @@ playground container logs -c <container> [-c <c2>] \
   [--errors [--since 10m] [--tail N|all] [--include-warnings] [--max-findings N] [--html]] \
   [--no-follow [--tail N|all] [--since 10m] [--grep <pattern>]] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
-playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--include-warnings] [--max-findings N] [--output-dir <dir>] [--json]
+playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--errors-only] [--max-findings N] [--output-dir <dir>] [--json]
                        [--connector <name> [--with-worker]] [--show-config <name>] [--json-sections summary,findings]
                        [--sanitize] [--logs-only] [--component connect] [--severity high] [--problem "<symptom>"] # CFK support bundle
 playground analyze logs --sample connect_task_failure|support_bundle
@@ -615,7 +624,7 @@ playground analyze logs --sample connect_task_failure|support_bundle
 - `--errors` and `analyze logs` exit 0: not assertions. `--wait-for-log` matches old lines too, every 10 s.
 - Offline: one digest per file, archives extracted, `.gz` read on the fly, binaries skipped.
 - Offline also writes an HTML report (known causes, timeline that zooms down to the second, root causes, every record, configuration) in `--output-dir`; `--json` for scripts.
-  With several levels (`--include-warnings`), chips FATAL / ERROR / WARN above the root causes hide or show the records of a level;
+  With several levels (WARN by default, not with `--errors-only`), chips FATAL / ERROR / WARN above the root causes hide or show the records of a level;
   a Connector picker keeps the records of one connector (`[my-connector|task-0]` context of the line).
 - Sources: [`container/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/container/logs.sh),
   [`analyze/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/analyze/logs.sh),

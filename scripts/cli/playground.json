@@ -4424,10 +4424,17 @@
             },
             {
               "names": [
+                "--errors-only"
+              ],
+              "argument": "",
+              "description": "🔴 Only the ERROR/FATAL records: the WARN records are reported by default (the Kafka clients log some real problems at WARN: consumer poll timeout, records expiring in the producer, network errors), sorted after the errors\n\nConflicts with: --include-warnings"
+            },
+            {
+              "names": [
                 "--include-warnings"
               ],
               "argument": "",
-              "description": "🟠 Also report WARN records"
+              "description": "🟠 Kept for compatibility: the WARN records are reported by default (--errors-only to leave them out). With a CFK support bundle, also the WARN log records that match no known category\n\nConflicts with: --errors-only"
             },
             {
               "names": [

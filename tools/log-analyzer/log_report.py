@@ -1752,7 +1752,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         kpi("🔁 Occurrences", s["occurrences"], "all levels reported"),
         kpi("💀 FATAL", s["by_level"]["FATAL"], "occurrences", "danger" if s["by_level"]["FATAL"] else "ok"),
         kpi("🔴 ERROR", s["by_level"]["ERROR"], "occurrences", "danger" if s["by_level"]["ERROR"] else "ok"),
-        kpi("🟠 WARN", s["by_level"]["WARN"], "occurrences" if "WARN" in levels else "not included (--include-warnings)",
+        kpi("🟠 WARN", s["by_level"]["WARN"], "occurrences" if "WARN" in levels else "not included (--errors-only)",
             "warn" if s["by_level"]["WARN"] else ""),
     ])
     # the most frequent first within a severity (the text summary and --json keep the order of the known causes)

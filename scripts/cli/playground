@@ -10051,8 +10051,15 @@ playground_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--errors-only")"
+    printf "    🔴 Only the ERROR/FATAL records: the WARN records are reported by default\n    (the Kafka clients log some real problems at WARN: consumer poll timeout,\n    records expiring in the producer, network errors), sorted after the errors\n"
+    printf "    %s\n" "Conflicts: --include-warnings"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--include-warnings")"
-    printf "    🟠 Also report WARN records\n"
+    printf "    🟠 Kept for compatibility: the WARN records are reported by default\n    (--errors-only to leave them out). With a CFK support bundle, also the WARN\n    log records that match no known category\n"
+    printf "    %s\n" "Conflicts: --errors-only"
     echo
 
     # :flag.usage
@@ -10148,9 +10155,9 @@ playground_analyze_logs_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground analyze logs --sample connect_task_failure\n"
-    printf "  playground analyze logs --sample support_bundle --include-warnings\n"
+    printf "  playground analyze logs --sample support_bundle\n"
     printf "  playground analyze logs --file connect.log\n"
-    printf "  playground analyze logs --file connect-logs.zip --include-warnings\n"
+    printf "  playground analyze logs --file connect-logs.zip --errors-only\n"
     printf "  playground analyze logs -f ./logs -f broker.log.gz --max-findings 10\n"
     printf "  playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports\n"
     printf "  playground analyze logs -f connect.log --json\n"
@@ -11184,8 +11191,15 @@ playground_debug_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--errors-only")"
+    printf "    🔴 Only the ERROR/FATAL records: the WARN records are reported by default\n    (the Kafka clients log some real problems at WARN: consumer poll timeout,\n    records expiring in the producer, network errors), sorted after the errors\n"
+    printf "    %s\n" "Conflicts: --include-warnings"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--include-warnings")"
-    printf "    🟠 Also report WARN records\n"
+    printf "    🟠 Kept for compatibility: the WARN records are reported by default\n    (--errors-only to leave them out). With a CFK support bundle, also the WARN\n    log records that match no known category\n"
+    printf "    %s\n" "Conflicts: --errors-only"
     echo
 
     # :flag.usage
@@ -61595,7 +61609,16 @@ playground_analyze_logs_command() {
   # src/commands/analyze/logs.sh
   eval "file_array=(${args[--file]})"
   eval "sample_array=(${args[--sample]})"
-  include_warnings="${args[--include-warnings]}"
+  # the WARN records are reported by default (--errors-only leaves them out): the Kafka clients log real problems at WARN
+  # (consumer poll timeout, records expiring in the producer); --include-warnings is kept for compatibility, and for a CFK
+  # bundle it still adds the WARN records that match no known category (cfk-analysis --include-warnings)
+  errors_only="${args[--errors-only]}"
+  cfk_include_warnings="${args[--include-warnings]}"
+  include_warnings=1
+  if [[ -n "$errors_only" ]]
+  then
+      include_warnings=""
+  fi
   max_findings="${args[--max-findings]}"
   output_dir="${args[--output-dir]}"
   json_out="${args[--json]}"
@@ -62331,9 +62354,9 @@ playground_analyze_logs_command() {
           CFK_ANALYSIS_HTML=""
           if [[ -n "$json_out" ]]
           then
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
           else
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
           fi
           rc=$?
           printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
@@ -64043,7 +64066,16 @@ playground_debug_analyze_logs_command() {
   # src/commands/analyze/logs.sh
   eval "file_array=(${args[--file]})"
   eval "sample_array=(${args[--sample]})"
-  include_warnings="${args[--include-warnings]}"
+  # the WARN records are reported by default (--errors-only leaves them out): the Kafka clients log real problems at WARN
+  # (consumer poll timeout, records expiring in the producer); --include-warnings is kept for compatibility, and for a CFK
+  # bundle it still adds the WARN records that match no known category (cfk-analysis --include-warnings)
+  errors_only="${args[--errors-only]}"
+  cfk_include_warnings="${args[--include-warnings]}"
+  include_warnings=1
+  if [[ -n "$errors_only" ]]
+  then
+      include_warnings=""
+  fi
   max_findings="${args[--max-findings]}"
   output_dir="${args[--output-dir]}"
   json_out="${args[--json]}"
@@ -64779,9 +64811,9 @@ playground_debug_analyze_logs_command() {
           CFK_ANALYSIS_HTML=""
           if [[ -n "$json_out" ]]
           then
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
           else
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
           fi
           rc=$?
           printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
@@ -114809,7 +114841,25 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --errors-only)
+        # :flag.conflicts
+        if [[ -n "${args['--include-warnings']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--include-warnings" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--errors-only']=1
+        shift
+        ;;
+
+      # :flag.case
       --include-warnings)
+        # :flag.conflicts
+        if [[ -n "${args['--errors-only']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--errors-only" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--include-warnings']=1
@@ -117628,7 +117678,25 @@ playground_debug_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --errors-only)
+        # :flag.conflicts
+        if [[ -n "${args['--include-warnings']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--include-warnings" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--errors-only']=1
+        shift
+        ;;
+
+      # :flag.case
       --include-warnings)
+        # :flag.conflicts
+        if [[ -n "${args['--errors-only']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--errors-only" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--include-warnings']=1
@@ -156542,8 +156610,15 @@ playground_analyze_logs_completion() {
         shift
 
         ;;
+      --errors-only)
+        completion_blocked_flags["--errors-only"]=1
+        completion_blocked_flags["--include-warnings"]=1
+
+        shift
+        ;;
       --include-warnings)
         completion_blocked_flags["--include-warnings"]=1
+        completion_blocked_flags["--errors-only"]=1
 
         shift
         ;;
@@ -156675,6 +156750,7 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --sample "$completion_current" --sample -s
+    completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
@@ -158021,8 +158097,15 @@ playground_debug_analyze_logs_completion() {
         shift
 
         ;;
+      --errors-only)
+        completion_blocked_flags["--errors-only"]=1
+        completion_blocked_flags["--include-warnings"]=1
+
+        shift
+        ;;
       --include-warnings)
         completion_blocked_flags["--include-warnings"]=1
+        completion_blocked_flags["--errors-only"]=1
 
         shift
         ;;
@@ -158154,6 +158237,7 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --sample "$completion_current" --sample -s
+    completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
