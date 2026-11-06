@@ -78,7 +78,9 @@ results_file="$tmp_dir/results.jsonl"
 nb_failed=0
 while IFS= read -r record
 do
-    output=$(echo "$record" | docker exec -i schema-registry "$producer" --bootstrap-server broker:9092 --topic "$tmp_name" \
+    # SCHEMA_REGISTRY_JMX_OPTS / JMX_PORT emptied: schema-registry-run-class adds them to every JVM it starts, and the
+    # remote JMX port of the container (10001) is already held by Schema Registry (java.net.BindException)
+    output=$(echo "$record" | docker exec -i -e SCHEMA_REGISTRY_JMX_OPTS= -e JMX_PORT= schema-registry "$producer" --bootstrap-server broker:9092 --topic "$tmp_name" \
         --property schema.registry.url=http://schema-registry:8081 --property auto.register.schemas=false \
         --property use.latest.version=true --property latest.compatibility.strict=false \
         --property "value.schema=$schema_string" 2>&1)
