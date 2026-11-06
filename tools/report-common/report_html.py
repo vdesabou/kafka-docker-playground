@@ -430,8 +430,9 @@ def time_bins(points: List[Tuple[datetime, str]], keys: Sequence[str]) -> Option
     start = _EPOCH + timedelta(seconds=int(wall_epoch(start)) // bucket * bucket)
     n = int((end - start).total_seconds() // bucket) + 1
     bins: List[Dict] = [dict({"start": start + timedelta(seconds=i * bucket)}, **{k: 0 for k in keys}) for i in range(n)]
-    for ts, key in points:
-        bins[int((ts - start).total_seconds() // bucket)][key] += 1
+    # a point may carry a weight (ts, key, weight): a sampled time that stands for several occurrences
+    for p in points:
+        bins[int((p[0] - start).total_seconds() // bucket)][p[1]] += p[2] if len(p) > 2 else 1
     return {"bucket": bucket, "bins": bins}
 
 
@@ -503,8 +504,8 @@ def time_chart(points: List[Tuple[datetime, str]], series: Sequence[Tuple[str, s
     if not tl:
         return ""
     times: Dict[str, List[int]] = {k: [] for k, _, _ in series}
-    for ts, key in points:
-        times[key].append(round(wall_epoch(ts), 3) if ms else int(wall_epoch(ts)))
+    for p in points:
+        times[p[1]].append(round(wall_epoch(p[0]), 3) if ms else int(wall_epoch(p[0])))
     shown = [s for s in series if times[s[0]]] or list(series[:1])
     data = [sorted(times[k])[:max_points] if embed_times else [] for k, _, _ in shown]
     every = [t for k, _, _ in series for t in times[k]]

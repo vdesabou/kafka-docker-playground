@@ -30510,7 +30510,22 @@ function summarize_log_errors() {
         nrec = nlines
         nlines = 0
         ts = timestamp_of(r[1])
-        if (records_file != "" && ts != "" && nts[key] < 1000) { timestamps[key] = timestamps[key] " " ts; nts[key]++ }
+        # the times of the occurrences, at most 1000 per record, spread over its whole life: every stride-th one is kept,
+        # and when 1000 are kept every other one is dropped and the stride doubles (the first 1000 were kept: an error
+        # of a whole day showed as a burst at its start). Each time kept stands for stride occurrences
+        if (records_file != "" && ts != "") {
+            if (!(key in ts_stride)) ts_stride[key] = 1
+            if (ts_seen[key]++ % ts_stride[key] == 0) {
+                timestamps[key] = timestamps[key] " " ts
+                if (++nts[key] >= 1000) {
+                    nkept = split(substr(timestamps[key], 2), kept_ts, " ")
+                    timestamps[key] = ""
+                    for (i = 1; i <= nkept; i += 2) timestamps[key] = timestamps[key] " " kept_ts[i]
+                    nts[key] = int((nkept + 1) / 2)
+                    ts_stride[key] *= 2
+                }
+            }
+        }
         if (key in count) {
             count[key]++
             last_seen[key] = rec_line
@@ -30598,7 +30613,7 @@ function summarize_log_errors() {
             printf "@@PGFILE@@\t%s\t%d\t%d\t%d\t%s\t%s\n", label, NR, nkeys, total_occurrences, log_first_ts, log_last_ts >> records_file
             for (i = 1; i <= nkeys; i++) {
                 k = order[i]
-                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], long_text[k], substr(timestamps[k], 2) >> records_file
+                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], long_text[k], (ts_stride[k] > 1 ? "x" ts_stride[k] " " : "") substr(timestamps[k], 2) >> records_file
                 n = split(ctx[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCTX@@\t%s\n", cl[j] >> records_file
             }

@@ -67,6 +67,15 @@
   function fmtBucket(s) {
     return s < 1 ? Math.round(s * 1000) + "ms" : s < 60 ? s + "s" : s < 3600 ? s / 60 + "min" : s < 86400 ? s / 3600 + "h" : s / 86400 + "d";
   }
+  // the occurrences between two indexes of a series: their number, or the sum of their weights when the times carry
+  // some (times.weights: a sampled time stands for several occurrences), from prefix sums computed once per series
+  function weightOfFor(c, j, i0, i1) {
+    const w = c.times.weights;
+    if (!w || !w[j]) return i1 - i0;
+    if (!c._cums) c._cums = [];
+    if (!c._cums[j]) { const s = [0]; for (const x of w[j]) s.push(s[s.length - 1] + x); c._cums[j] = s; }
+    return Math.round(c._cums[j][i1] - c._cums[j][i0]);
+  }
   function lowerBound(arr, x) {
     let lo = 0, hi = arr.length;
     while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < x) lo = m + 1; else hi = m; }
@@ -98,6 +107,7 @@
 
   function init(box) {
     const c = JSON.parse(box.dataset.chart), type = c.type, fmt = c.fmt || "int";
+    const weightOf = (j, i0, i1) => weightOfFor(c, j, i0, i1);
     const W = c.W || 600, H = c.H || (type === "xy" ? 270 : 200), R = 10;
     const L = c.L || (type === "xy" ? 56 : 54), T = type === "xy" ? 14 : 16, B = type === "xy" ? 36 : 26;
     const pw = W - L - R, ph = H - T - B;
@@ -124,7 +134,7 @@
     }
     self.show = show;
     // draw the chart again with other series (events): the x axis and the visible window do not move
-    box.setTimes = function (arrays) { c.times = arrays; draw(); };
+    box.setTimes = function (arrays) { c.times = arrays; c._cums = null; draw(); };
     // zoom on [from, to): x values (ISO days of a columns chart); false when nothing of the chart is in that range
     box.zoomTo = function (from, to) {
       if (type !== "columns") { if (+to <= lo || +from >= hi) return false; show(+from, +to); return true; }
@@ -199,17 +209,17 @@
       const list = c.ms ? MS_BUCKETS : BUCKETS;
       const bucket = list.find(bk => (b - a) / bk <= 60) || list[list.length - 1];
       const start = Math.floor(a / bucket) * bucket, n = Math.max(1, Math.ceil((b - start) / bucket - 1e-9));
-      const counts = c.times.map(ts => {
+      const counts = c.times.map((ts, j) => {
         const out = [];
         let prev = lowerBound(ts, start);
-        for (let i = 0; i < n; i++) { const next = lowerBound(ts, start + (i + 1) * bucket); out.push(next - prev); prev = next; }
+        for (let i = 0; i < n; i++) { const next = lowerBound(ts, start + (i + 1) * bucket); out.push(weightOf(j, prev, next)); prev = next; }
         return out;
       });
       const d0 = new Date(start * 1000), d1 = new Date((start + n * bucket) * 1000 - 1);
       const oneDay = d0.toISOString().slice(0, 10) === d1.toISOString().slice(0, 10), ms = bucket < 1;
       const xlab = t => { const s = stamp(t, ms); return ms ? s.slice(17) : bucket < 60 ? s.slice(11) : oneDay ? s.slice(11, 16) : s.slice(5, 16); };
       const body = columns(n, (i, j) => counts[j][i], i => stamp(start + i * bucket, ms), i => xlab(start + i * bucket));
-      const inWindow = c.times.map(ts => lowerBound(ts, b) - lowerBound(ts, a));
+      const inWindow = c.times.map((ts, j) => weightOf(j, lowerBound(ts, a), lowerBound(ts, b)));
       const showMs = c.ms && b - a < 60;  // milliseconds in the range only when they matter
       const text = stamp(a, showMs) + " → " + stamp(b, showMs) + " · " + series.map((s, j) => fmtValue(inWindow[j], "int") + " " + s.label).join(" · ");
       return [legend(series, "per " + fmtBucket(bucket) + (c.note || "")), body, text];

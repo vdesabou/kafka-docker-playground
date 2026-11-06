@@ -133,8 +133,12 @@ root causes rows (`tr.rc-row[data-cause]`), the 🗂️ files rows (`tr.file-row
 (`details[data-rec]`, `.rec-count`). The period comes from the `zoomchange` event of the chart (id
 `occurrences-chart`). The 🔎 findings are the exception: their text is never rewritten (it is the diagnosis of the
 bundle), each card only gets `▸ N of M occurrence(s) here` in its `.rec-scope` span, or is dimmed (`.out`) when none
-of it is in the selection - from the `data-recs` indexes that `findings_html()` writes for an item with `records`. Occurrences beyond the 1000 kept per record have no time of their own: they count in the totals
-but not in a period, and the legend of the root causes says how many there are.
+of it is in the selection - from the `data-recs` indexes that `findings_html()` writes for an item with `records`. The times of a record of more than 1000 occurrences are sampled by `summarize_log_errors` over its whole life (every
+stride-th one, the stride doubling each time 1000 are kept: `@@PGTS@@\tx<stride> t1 t2 …`), and each time kept stands for
+`stride` occurrences: the 8th field of a record in `pg-occurrences`, the weights of the chart (`times.weights`, prefix
+sums in `zoom_chart.js`) and the counts of a period (`pgInWindow()`). Before, the first 1000 were kept: an error of a
+whole day was a burst at its start in the chart, and 0 in any later period. Only the occurrences on a line without a
+time stay out of a period; the legend of the root causes says how many there are.
 `tools/connector-diagnose/diagnose_report.py` imports it for the
 errors section of the `playground connector diagnose` report. `get-ci-result --logs`, `container logs --errors --html`
 and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last
