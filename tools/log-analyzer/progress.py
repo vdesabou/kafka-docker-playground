@@ -34,8 +34,10 @@ MIN_BAR_SIZE = 20 << 20
 
 def human(n: float) -> str:
     for unit in ("B", "KB", "MB", "GB"):
-        if n < 1024:
-            return f"{n:.0f} {unit}" if unit in ("B", "KB") else f"{n:.1f} {unit}"
+        # rounded first: 1023.6 KB is 1.0 MB, not "1024 KB"
+        text = f"{n:.0f}" if unit in ("B", "KB") else f"{n:.1f}"
+        if float(text) < 1024:
+            return f"{text} {unit}"
         n /= 1024
     return f"{n:.1f} TB"
 
@@ -85,7 +87,10 @@ def write_page(step: str, read_bytes: int = 0, file_size=None, speed: float = 0)
     if not path:
         return
     title = os.environ.get("PG_PROGRESS_TITLE", "playground analyze logs")
-    started = float(os.environ.get("PG_PROGRESS_STARTED") or time.time())
+    try:
+        started = float(os.environ.get("PG_PROGRESS_STARTED") or time.time())
+    except ValueError:
+        started = time.time()
     done, total = env_int("PG_PROGRESS_DONE"), env_int("PG_PROGRESS_TOTAL")
     done_bytes, total_bytes = env_int("PG_PROGRESS_BYTES"), env_int("PG_PROGRESS_TOTAL_BYTES")
     elapsed = time.time() - started
