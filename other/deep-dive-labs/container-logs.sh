@@ -95,7 +95,7 @@ lab_expect_equals "$(grep -o "<option value='bad-sink'>" "$report_dir/lab-connec
 # on the 📈 chart: they are counted again from one index of records written in the page
 lab_expect_equals "$(grep -o "id='occurrences-chart'" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "id='occurrences-chart'" "occurrences chart id in the HTML report"
 lab_expect_equals "$(grep -o "id='pg-occurrences'" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "id='pg-occurrences'" "index of the records the filters recount from, in the HTML report"
-lab_expect_equals "$(grep -o "<tr class='rc-row' data-level='[A-Z]*' data-cause='0'" "$report_dir/lab-connect-$$-log-report.html" | head -1 | sed 's/data-level=.[A-Z]*. //')" "<tr class='rc-row' data-cause='0'" "root cause rows wired to that index"
+lab_expect_equals "$(grep -o "<tr class='rc-row'[^>]* data-cause='0'" "$report_dir/lab-connect-$$-log-report.html" | head -1 | sed -E "s/ (id|data-level)='[^']*'//g")" "<tr class='rc-row' data-cause='0'" "root cause rows wired to that index"
 lab_expect_equals "$(grep -o "Drag over 📈 Occurrences over time to select a period" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "Drag over 📈 Occurrences over time to select a period" "period filter of the root causes in the HTML report"
 # the findings keep the figures of the whole report, and only say how much of each of them is in the selection
 lab_expect_equals "$(grep -o 'data-recs="[0-9]' "$report_dir/lab-connect-$$-log-report.html" | head -1 | cut -c1-11)" 'data-recs="' "findings wired to the records they were built from"
