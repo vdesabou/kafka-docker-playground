@@ -142,7 +142,7 @@ They are packaged as the `kdp-support` [Claude Code plugin](https://docs.claude.
 | Skill | Use it to | Call it |
 |---|---|---|
 | `kdp-case` | investigate a support case end to end: ticket context, customer log bundles, fully managed connector checks (read-only), connector code at the exact version, known issues, a minimal reproduction model, and a note with root cause, evidence and a draft customer reply | `/kdp-case <ticket number>`, "investigate ticket 368735" |
-| `kdp-kb-review` | review a knowledge-base article or draft claim by claim against the connector code, docs and release notes, and propose a corrected article | `/kdp-kb-review <KB url \| file>`, `/kdp-kb-review --find "<error message>"` |
+| `kdp-kb-review` | review a knowledge-base article or draft claim by claim against the connector code, docs, release notes and the KB content standards, and propose a corrected article; or create a new standards-compliant article from a case, with a paste-ready HTML version | `/kdp-kb-review <KB url \| file>`, `/kdp-kb-review --find "<error message>"`, `/kdp-kb-review --create --ticket <n>` |
 
 The Confluent Claude Code policy only allows approved plugin marketplaces (`/plugin marketplace add` fails with
 `blocked by enterprise policy`), so link the skills into your personal skills folder instead, once, from the root of
