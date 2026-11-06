@@ -9,11 +9,6 @@ samples="${args[--samples]}"
 json="${args[--json]}"
 verbose="${args[--verbose]}"
 
-if ! command -v python3 > /dev/null 2>&1
-then
-    logerror "❌ python3 is required by playground topic check-format"
-    exit 1
-fi
 
 sides="key,value"
 [[ -n "$key_only" ]] && sides="key"

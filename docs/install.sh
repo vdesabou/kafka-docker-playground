@@ -5,8 +5,8 @@
 #   curl -fsSL https://kafka-docker-playground.io/install.sh | bash -s -- --dry-run
 #
 # What it does, asking before each change:
-#   1. checks git, bash 4+, fzf, docker + compose v2 (or podman), free disk space, and changes nothing
-#   2. installs what is missing with brew (macOS) or the package manager (Linux): bash, fzf, git, and the
+#   1. checks git, bash 4+, fzf, python3, docker + compose v2 (or podman), free disk space, and changes nothing
+#   2. installs what is missing with brew (macOS) or the package manager (Linux): bash, fzf, git, python3, unzip, and the
 #      Confluent CLI (used by the Confluent Cloud examples)
 #   3. clones the repository (--depth 1), or updates an existing clone
 #   4. when no container engine is installed at all, offers to install one: Podman or Docker Desktop on macOS,
@@ -301,6 +301,14 @@ check_prerequisites() {
     missing_packages="$missing_packages fzf"
   fi
 
+  check_python3
+
+  if ! command -v unzip > /dev/null 2>&1
+  then
+    logwarn "unzip is missing (used by playground connector-plugin search-jar, schema import...)"
+    missing_packages="$missing_packages unzip"
+  fi
+
   check_confluent_cli
 
   if ! command -v docker > /dev/null 2>&1
@@ -368,6 +376,30 @@ install_confluent_cli() {
   fi
 }
 
+# python3 3.9+, used by most support commands: playground analyze, schema, connector-plugin, connector diagnose,
+# streams status, topic check-format. Only the standard library is needed.
+check_python3() {
+  local version
+  # macOS without the Command Line Tools: /usr/bin/python3 is a stub that opens an install dialog, never run it
+  if [ "$os" = "macos" ] && [ "$(command -v python3 2> /dev/null)" = "/usr/bin/python3" ] && ! xcode-select -p > /dev/null 2>&1
+  then
+    version=""
+  elif command -v python3 > /dev/null 2>&1
+  then
+    version="$(python3 -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])' 2> /dev/null)"
+  fi
+  if [ -z "${version:-}" ]
+  then
+    logwarn "python3 is missing (used by playground analyze, schema, connector-plugin, connector diagnose...)"
+    if [ "$os" = "macos" ]; then missing_packages="$missing_packages python"; else missing_packages="$missing_packages python3"; fi
+  elif python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' 2> /dev/null
+  then
+    log_ok "python3 $version"
+  else
+    logwarn "python3 $version is older than 3.9: playground analyze, schema and connector-plugin commands may fail, upgrade it"
+  fi
+}
+
 sudo_cmd() {
   if [ "$(id -u)" = "0" ]; then echo ""; else echo "sudo"; fi
 }
@@ -431,6 +463,7 @@ install_missing() {
   find_bash4 > /dev/null || logwarn "bash 4+ still not found"
   command -v git > /dev/null 2>&1 || logerror "git still not found"
   command -v fzf > /dev/null 2>&1 || logwarn "fzf still not found"
+  command -v python3 > /dev/null 2>&1 || logwarn "python3 still not found"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

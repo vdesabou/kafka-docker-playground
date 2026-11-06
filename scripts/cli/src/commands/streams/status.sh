@@ -34,11 +34,6 @@ then
     exit 1
 fi
 
-if ! command -v python3 &>/dev/null
-then
-    logerror "❌ python3 is required for this command"
-    exit 1
-fi
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]

@@ -26,10 +26,6 @@ if [[ ! -e "$file" ]]; then
     exit 1
 fi
 
-if ! command -v python3 &>/dev/null; then
-    logerror "❌ python3 is required but not found on PATH"
-    exit 1
-fi
 analyzer="$root_folder/tools/jscissors/jscissors_report.py"
 
 if [[ -n "$json_out" ]]; then

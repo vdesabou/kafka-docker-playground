@@ -44,10 +44,6 @@ if [[ ! -f "$analyzer" ]]; then
     exit 1
 fi
 
-if ! command -v python3 &>/dev/null; then
-    logerror "❌ python3 is required but not found on PATH"
-    exit 1
-fi
 
 # ── Container mode: find the GC log and copy it with its rotated files ─────
 if [[ -n "$container" ]]; then

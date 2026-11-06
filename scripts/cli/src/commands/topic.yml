@@ -593,6 +593,8 @@ commands:
            18-19          2      25/0         transactional    none    103 B      2026-11-04 16:02:52
 
   - name: check-format
+    dependencies:
+      python3: visit https://www.python.org/downloads/ to install
     group: Topic
     help: |-
       🧬 Check the format of the records of a topic, from their bytes

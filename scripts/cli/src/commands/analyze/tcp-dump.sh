@@ -54,10 +54,6 @@ done
 
 analyzer="$root_folder/tools/tcp-dump/tcp_dump_analyzer.py"
 extractor="$root_folder/tools/tcp-dump/extract.sh"
-if ! command -v python3 &>/dev/null; then
-    logerror "❌ python3 is required but not found on PATH"
-    exit 1
-fi
 if ! docker image inspect $PLAYGROUND_NETSHOOT_IMAGE > /dev/null 2>&1; then
     log "📥 pulling $PLAYGROUND_NETSHOOT_IMAGE (tshark, only the first time)"
     docker pull $PLAYGROUND_NETSHOOT_IMAGE > /dev/null

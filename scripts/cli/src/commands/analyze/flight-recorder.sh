@@ -25,10 +25,6 @@ if [[ $nb_modes -eq 0 ]]; then
 fi
 
 analyzer="$root_folder/tools/jfr-analyzer/jfr_analyzer.py"
-if ! command -v python3 &>/dev/null; then
-    logerror "❌ python3 is required but not found on PATH"
-    exit 1
-fi
 
 # with --json, logs go to stderr and only the analysis to stdout
 if [[ -n "$json_out" ]]; then

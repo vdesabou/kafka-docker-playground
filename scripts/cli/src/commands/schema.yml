@@ -375,6 +375,8 @@ commands:
     playground schema check-compatibility --subject orders-value --version 1 --json < customer-v2.avsc
 
 - name: diff
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   group: Schema
   help: |-
     🔀 Compare two schemas field by field, with the verdict of each compatibility rule
@@ -472,6 +474,8 @@ commands:
   - playground schema describe --subject orders-value --json | jq '.versions[] | select(.deleted)'
 
 - name: history
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   group: Schema
   help: |-
     📜 Timeline of the Schema Registry, from its _schemas topic
@@ -567,6 +571,8 @@ commands:
   - playground schema export --subject-prefix orders -o ./schemas
 
 - name: import
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   group: Schema
   filters:
   - schema_registry_running
@@ -689,6 +695,8 @@ commands:
   - playground schema contexts --cluster us --json
 
 - name: compare
+  dependencies:
+    python3: visit https://www.python.org/downloads/ to install
   group: Schema
   help: |-
     🔀 Compare the subjects of two registries (or two contexts)
