@@ -50,8 +50,8 @@ minutes to read and run.
    | Offsets of the records | new offsets in the destination | new offsets in the destination | **the same offsets** (byte for byte copy of the partitions) |
    | Consumer group offsets | translated by timestamp, only for consumers that ran the `ConsumerTimestampsInterceptor` in the source | translated from offset syncs (`sync.group.offsets.enabled`, off by default), approximate | copied as is (`consumer.offset.sync.enable`) |
    | Topic configs, partitions | yes (`topic.config.sync`, `topic.preserve.partitions`, both true by default) | yes (`sync.topic.configs.enabled`, true by default) | yes: `cluster-linking/start-plaintext.sh` changes `retention.ms` and the partitions of the source and checks the mirror |
-   | Schemas | yes, by replicating `_schemas` with `schema.registry.topic` (see `ccloud/migrate-schemas-to-confluent-cloud`) | no | no |
-   | ACLs | no (no ACL key in its config reference) | yes (`sync.topic.acls.enabled`, true by default) | yes (`acl.sync.enable` + `--acl-filters-json-file`, see `ccloud/cluster-linking-with-service-accounts-only`) |
+   | Schemas | yes, by replicating `_schemas` with `schema.registry.topic` | no | no |
+   | ACLs | no (no ACL key in its config reference) | yes (`sync.topic.acls.enabled`, true by default) | yes (`acl.sync.enable` + `--acl-filters-json-file`) |
    | Loop prevention | provenance header `__replicator_id` (`provenance.header.enable`, false by default) | the topic prefix: a topic whose prefix is the source or target alias is not replicated again (`isCycle`) | a link is one way |
 
 3. **Offset translation is the heart of a failover, and it is never free.** A consumer group committed offset 10
@@ -86,8 +86,6 @@ minutes to read and run.
 | `connect/connect-replicator/replicator.sh` (`-sasl-ssl`, `-2way-ssl`) | Replicator copying `test-topic` to `test-topic-duplicate` **in the same cluster**: to test security settings, not replication between clusters | `plaintext`, `sasl-ssl`, `2way-ssl` | yes |
 | `ccloud/replicator/connect-onprem-to-cloud*.sh` | Replicator connector from a local cluster to Confluent Cloud (`dest.kafka.*` read from `${file:/datacloud:…}`); exits 111 with CP 8+ | `ccloud` | no |
 | `ccloud/mirrormaker2/mirrormaker2.sh` | MirrorMaker 2 from a local 3-broker cluster (`broker1..3`) to Confluent Cloud, `sync.group.offsets.enabled = true`, empty `replication.policy.separator` / aliases so the topic keeps its name | `ccloud` | no |
-| `ccloud/migrate-schemas-to-confluent-cloud/start.sh` | Replicator executable replicating `_schemas` (`schema.registry.topic=_schemas`) into Confluent Cloud Schema Registry in `IMPORT` mode, then the source registry set `READONLY` | `ccloud` | no |
-| `ccloud/cluster-linking-with-service-accounts-only/` | notes (no script): a Confluent Cloud cluster link with service accounts and least privilege ACLs | | no |
 
 Gotchas:
 
@@ -186,7 +184,7 @@ Gotchas:
 - The `kafka-*` tools through `playground container exec`, with an explicit `--bootstrap-server broker-us:9092` or
   `broker-europe:9092`, keep working: the cluster linking examples use them for `kafka-cluster-links` and `kafka-mirrors`.
 - **In the `ccloud` examples, `playground topic …` targets Confluent Cloud** (the `ccloud` environment is not
-  filtered): `migrate-schemas-to-confluent-cloud` produces to the local cluster with `playground container exec -c
+  filtered): a `ccloud` example that feeds a local cluster produces with `playground container exec -c
   connect --command "kafka-avro-console-producer --bootstrap-server broker:9092 …"` for that reason.
 - `playground container exec` passes stdin to the container (`docker exec -i`): a heredoc or a pipe works.
 - A process started in the background with `container exec` (`nohup … &`, like MirrorMaker 2 in the lab) keeps
@@ -512,7 +510,7 @@ playground stop
 | "messages loop between the two data centers" | Replicator both ways without `provenance.header.enable=true` (`replicator-connect` sets it). MirrorMaker 2 doesn't loop: the prefix marks remote topics |
 | "Replicator to Confluent Cloud" | `ccloud/replicator/connect-onprem-to-cloud.sh` (CP 7.x only, exits 111 with 8+): `dest.kafka.*` with `SASL_SSL`, `topic.auto.create=false` and the topic created first |
 | "Schema Linking: are the schemas in DR? the DR consumers fail with `Schema not found`" | the example [`multi-data-center/schema-linking`](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/schema-linking) (with Cluster Linking), or the lab override (exporter extension on both registries), `playground schema exporter create --name <n> --cluster europe --destination-context europe`, `playground schema compare --from europe --to us --to-context .europe`; the ids are in the context: `schema get --id <id> --cluster us` fails, `--context europe` works (see the [schema deep dive](/deep-dive-schema.md)) |
-| "migrate schemas to Confluent Cloud" | `ccloud/migrate-schemas-to-confluent-cloud/start.sh`: destination registry in `IMPORT` mode, `_schemas` replicated with `schema.registry.topic`, source registry `READONLY` |
+| "migrate schemas to Confluent Cloud" | Schema Linking: an exporter in the source registry with `--destination-url` / `--destination-auth` pointing to the Confluent Cloud registry and context type `NONE` (`playground schema exporter create --help`), then `playground schema compare`; the mechanics are in the example [`multi-data-center/schema-linking`](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/schema-linking) |
 | "move a sink connector to the DR cluster without rewriting everything" | `multi-data-center/cluster-linking/start-plaintext-migrate-sink-connector.sh`: the group `connect-<connector>` follows through the link |
 | "the source data center goes down: what happens to the replication, the consumers?" | `playground broker stop --cluster europe --broker 1 --kill`, look at the Replicator / MirrorMaker 2 tasks (`playground connector status --cluster us`) and the groups on the other side, then `playground broker start --cluster europe --broker 1` |
 | "a mirror topic refuses writes" | expected until `kafka-mirrors --promote --topics <t>` (lab step 5) |
