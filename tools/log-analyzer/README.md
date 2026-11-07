@@ -84,6 +84,13 @@ kills (records of the 🧨 known cause), the known causes of its records, its co
 (`connector-producer-<name>-0`…) and the keys changed between restarts. The HTML report shows them in 🔌 **Connectors**
 (▶ only this connector sets the connector filter and keeps its card only, ⤺ goes back to all, the search filters the cards, the first `CONN_CARDS_SHOWN` = 30 then "show the other N connectors"), the terminal summary one line per connector.
 
+## Summary for a ticket
+
+`ticket_markdown()` writes the verdict, the period, the known causes with what to do, the errors no known cause explains,
+the comparison, the timeline and the connectors as Markdown (tables), **always sanitized** with `sanitizer.py` (a
+ticket can leave Confluent): `--ticket-out <path>` (`analyze logs` writes `<stem>-ticket.md` next to the report) and 📤
+Share > 📋 Copy for a ticket (`<script type='text/plain' id='pg-share-ticket'>`).
+
 ## Size of the report
 
 The 🌳 root cause rows link each file to its page without the ✏️ of the editor (the page has it), the style of the ✏️
