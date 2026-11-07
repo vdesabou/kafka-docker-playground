@@ -236,12 +236,97 @@ def finish_record(rec: dict) -> None:
             rec["root_cause_message"] = msg.strip()
 
 
+# the config of a Connector custom resource of a CFK support bundle (cfk-analysis .configuration.connectors.<name>.cr)
+CFK_CONNECTOR_CR = "Connector CR"
+
+
+def is_connector_config(title: str) -> bool:
+    """a config of a connector itself (not of its clients): logged (SinkConnectorConfig…), a connector JSON of the input,
+    the Connector CR of a CFK bundle"""
+    return title.endswith("ConnectorConfig") or title in ("connector config", CFK_CONNECTOR_CR)
+
+
+def cfk_configs(bundles: List[dict]) -> List[dict]:
+    """⚙️ the configuration of CFK support bundles (cfk-analysis --json .configuration) that the logs do not have: the
+    properties rendered by CFK (ConfigMap <cr>-shared-config: kafka.properties, connect.properties, jvm.config…), the
+    configOverrides of each CR, and the Connector CRs. Source "cfk"; the config logged at startup is already in the logs"""
+    out = []
+    for b in bundles:
+        conf = b.get("configuration") or {}
+        for component, crs in (conf.get("components") or {}).items():
+            for cr, data in (crs or {}).items():
+                where = f"☸️ {data.get('source') or component + '/' + cr}"
+                for fname, text in (data.get("files") or {}).items():
+                    if isinstance(text, str) and text.strip():
+                        out.append({"title": f"{fname} (rendered by CFK, ConfigMap {cr}-shared-config)", "context": "",
+                                    "source": "cfk", "line": None, "time": None, "id": f"{component}/{cr}", "file": where,
+                                    "text": text.strip()})
+                for kind, text in (data.get("overrides") or {}).items():
+                    if isinstance(text, str) and text.strip():
+                        out.append({"title": f"configOverrides.{kind} of the {component} CR {cr}", "context": "",
+                                    "source": "cfk", "line": None, "time": None, "id": f"{component}/{cr}", "file": where,
+                                    "text": text.strip()})
+        for name, data in (conf.get("connectors") or {}).items():
+            cr = (data or {}).get("cr") or {}
+            if cr.get("text"):
+                out.append({"title": CFK_CONNECTOR_CR, "context": "", "source": "cfk", "line": cr.get("line"), "time": None,
+                            "id": name, "file": f"☸️ {cr.get('file') or 'Connector/' + name}", "text": cr["text"].strip()})
+    return out
+
+
+def config_drift(res: dict) -> List[dict]:
+    """🔀 the keys of a Connector CR whose value differs from the config the worker logged when it started the connector
+    (its last dumps: SinkConnectorConfig and the config class of the plugin): the operator did not apply a change, or the
+    connector runs an older config. Only the keys both have; passwords ([hidden]) and ${…} placeholders are skipped"""
+    def norm(v: str) -> str:
+        v = (v or "").strip()
+        v = re.sub(r"^class\s+", "", v)
+        if v.startswith("[") and v.endswith("]"):
+            v = v[1:-1]
+        v = ",".join(x.strip() for x in v.split(",")) if "," in v else v
+        return "" if v in ("null", "None") else v
+    crs = {c["id"]: c for c in res.get("configuration") or [] if c.get("title") == CFK_CONNECTOR_CR and c.get("id")}
+    out = []
+    for name, cr in crs.items():
+        logged: "OrderedDict[str, Tuple[str, dict]]" = OrderedDict()
+        for c in res.get("configuration") or []:
+            if c.get("source") != "log" or c["title"] in CLIENT_CONFIGS or config_connector_of(c) != name:
+                continue
+            for k, v in config_values(c).items():
+                logged[k] = (v, c)
+        if not logged:
+            continue
+        for k, v in config_values(cr).items():
+            if k not in logged or "${" in v:
+                continue
+            lv, c = logged[k]
+            if lv.strip() in ("[hidden]", "<REDACTED>") or v.strip() in ("<REDACTED>",):
+                continue
+            if norm(v) != norm(lv):
+                out.append({"connector": name, "key": k, "cr": v, "logged": lv, "file": c.get("file"), "line": c.get("line"),
+                            "time": c.get("time"), "config": c["title"]})
+    return out
+
+
+def config_drift_text(items: List[dict], top: int = 8) -> List[str]:
+    if not items:
+        return []
+    out = [f"🔀 Connector CR and config logged differ ({len(items)} key(s), .config_drift of --json): the operator did not "
+           "apply a change, or the connector runs an older config"]
+    for x in items[:top]:
+        out.append(f"   {x['connector']}: {x['key']} = {x['cr'][:80]} in the CR, {x['logged'][:80]} logged "
+                   f"({x['config']}, {(x['time'] or '').replace('T', ' ')})")
+    if len(items) > top:
+        out.append(f"   … {len(items) - top} more in .config_drift of --json")
+    return out
+
+
 def config_connector(c: dict) -> Optional[str]:
     """connector of a config: its [connector|task-0] context, else the name of a connector config (file or log)"""
     m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
     if m:
         return m.group(1)
-    if c["title"].endswith("ConnectorConfig") or c["title"] == "connector config":
+    if is_connector_config(c["title"]):
         return c.get("id")
     return None
 
@@ -701,6 +786,8 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     # the "<Class>Config values:" dumps of the logs and the config files of the input (.properties, connector JSON)
     configuration = [dict({k: v for k, v in c.items() if k != "lines"}, file=f["label"], text="\n".join(c["lines"]))
                      for f in files for c in f.get("configs", []) if c["lines"]]
+    # first: config lint keeps the last config of a connector, the one logged by the worker wins over its CR
+    configuration = cfk_configs(getattr(files, "cfk_bundles", None) or []) + configuration
     for c in configuration:
         drop_alternating_changes(c)
     for f in files:
@@ -717,8 +804,10 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
     res["config_lint"] = config_lint(res)
+    res["config_drift"] = config_drift(res)
     for c in res["connectors"]:
         c["config_lint"] = [x for x in res["config_lint"] if x["connector"] == c["connector"]]
+        c["config_drift"] = [x for x in res["config_drift"] if x["connector"] == c["connector"]]
     # the counts on the 🔌 card of each connector
     for c in res["connectors"]:
         for r in res["lifecycle"]["rows"]:
@@ -1576,7 +1665,7 @@ def config_lint(res: dict) -> List[dict]:
         if not name:
             continue
         cid = c.get("id") or ""
-        if c["title"] in ("SinkConnectorConfig", "SourceConnectorConfig", "ConnectorConfig", "connector config"):
+        if c["title"] in ("SinkConnectorConfig", "SourceConnectorConfig", "ConnectorConfig", "connector config", CFK_CONNECTOR_CR):
             kind = "sink" if c["title"] == "SinkConnectorConfig" else "connector"
         elif c["title"] == "ConsumerConfig" and cid.startswith("connector-consumer-"):
             kind = "consumer"
@@ -1692,6 +1781,10 @@ def connectors_health_html(cards: List[dict]) -> str:
                       + (f": upgrade to {e(x['upgrade_to'])} or later" if x["verdict"] == "affected" else
                          ": fixed in its version" if x["verdict"] == "fixed" else ": version unknown") + "</div>"
                       for x in c.get("fixed_bugs") or [])
+            + (f"<details class='conn-lint' open><summary>🔀 {len(c['config_drift'])} key(s) of the Connector CR differ from the config logged</summary><ul>"
+               + "".join(f"<li><span class='mono'>{e(x['key'])}</span>: <span class='mono'>{e(x['cr'][:120])}</span> in the CR, "
+                         f"<span class='mono'>{e(x['logged'][:120])}</span> logged ({e(x['config'])}, {e((x['time'] or '').replace('T', ' '))})</li>"
+                         for x in c["config_drift"]) + "</ul></details>" if c.get("config_drift") else "")
             + (f"<details class='conn-lint'><summary>🧪 {len(c['config_lint'])} config warning(s)</summary><ul>"
                + "".join(f"<li><span class='st {x['severity'].lower()}'>{x['severity']}</span> <span class='mono'>{e(x['key'])}={e(x['value'])}</span>: {e(x['message'])}</li>"
                          for x in c["config_lint"]) + "</ul></details>" if c.get("config_lint") else "")
@@ -2174,6 +2267,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += lifecycle_text(res.get("lifecycle"))
     # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
     out += config_lint_text(res.get("config_lint") or [])
+    # the keys of a Connector CR that differ from the config logged (🔀 on the 🔌 cards, .config_drift of --json)
+    out += config_drift_text(res.get("config_drift") or [])
     # what to ask the customer for next (📥 of the HTML report, .data_to_request of --json)
     out += data_to_request_text(res.get("data_to_request") or [])
     # which worker ran which task, a connector failing on one worker only (🖥️ of the HTML report, .task_workers of --json)
@@ -2499,6 +2594,11 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Config lint (configuration logged at startup)", "", "| Severity | Connector | Key | What to do |", "| --- | --- | --- | --- |"]
         for x in lint[:10]:
             out.append(f"| {x['severity']} | `{md_cell(x['connector'])}` | `{md_cell(x['key'] + '=' + x['value'])}` | {md_cell(x['message'])} |")
+    drift = res.get("config_drift") or []
+    if drift:
+        out += ["", "### Connector CR and config logged differ", "", "| Connector | Key | In the CR | Logged by the worker |", "| --- | --- | --- | --- |"]
+        for x in drift[:10]:
+            out.append(f"| `{md_cell(x['connector'])}` | `{md_cell(x['key'])}` | `{md_cell(x['cr'][:120])}` | `{md_cell(x['logged'][:120])}` |")
     lc_rows = (res.get("lifecycle") or {}).get("rows") or []
     if lc_rows:
         out += ["", "### Restarts and rebalances", "", "| What | Group / connector | Count | Per hour |", "| --- | --- | --- | --- |"]
@@ -3559,11 +3659,13 @@ CLIENT_CONFIGS = ("ProducerConfig", "ConsumerConfig", "AdminClientConfig")
 def config_group(c: dict) -> Tuple[int, str]:
     """(order, title) of the group of a config: config files, components, one group per connector, clients"""
     m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
-    connector = m.group(1) if m else (c.get("id") if c["title"].endswith("ConnectorConfig") or c["title"] == "connector config" else None)
+    connector = m.group(1) if m else (c.get("id") if is_connector_config(c["title"]) else None)
     if connector:
         return 2, f"🧩 {connector}"
     if c["source"] == "file":
         return 0, "📄 Config files"
+    if c["source"] == "cfk":
+        return 0, "☸️ CFK: properties rendered by the operator, configOverrides"
     if c["title"] in CLIENT_CONFIGS:
         return 3, "📡 Clients"
     return 1, "🧱 Components"
@@ -3578,9 +3680,11 @@ def config_kind(c: dict) -> Tuple[int, str]:
     m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
     if c["source"] == "file":
         return 0, "📄 Config files"
+    if c["source"] == "cfk" and not is_connector_config(c["title"]):
+        return 0, "☸️ CFK: properties rendered by the operator, configOverrides"
     if c["title"] in CLIENT_CONFIGS:
         return 3, "📡 Clients (producers, consumers and admin clients of the connectors and the worker)"
-    if m or c["title"].endswith("ConnectorConfig") or c["title"] == "connector config":
+    if m or is_connector_config(c["title"]):
         return 2, "🧩 Connectors"
     return 1, "🧱 Components"
 
@@ -3589,7 +3693,7 @@ def config_connector_of(c: dict) -> str:
     m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
     if m:
         return m.group(1)
-    if c["title"].endswith("ConnectorConfig") or c["title"] == "connector config":
+    if is_connector_config(c["title"]):
         return c.get("id") or ""
     # a client of a connector: connector-producer-<name>-<task>
     cid = re.match(r"^connector-(?:producer|consumer|dlq-producer|admin)-(.+?)(?:-\d+)?$", c.get("id") or "")
@@ -3604,12 +3708,115 @@ def config_values(c: dict) -> "OrderedDict[str, str]":
     return out
 
 
-def config_html(configs: List[dict], viewers: Optional[Dict[str, str]] = None, ranked: Sequence[str] = ()) -> str:
+CFK_CONFIG_COMPONENTS = (
+    ("kafka", "🧱 Kafka", "kafka.properties"),
+    ("zookeeper", "🦓 ZooKeeper", "zookeeper.properties"),
+    ("schemaregistry", "📜 Schema Registry", "schemaregistry.properties"),
+    ("connect", "🔌 Connect", "connect.properties"),
+    ("controlcenter", "🎛️ Control Center", "controlcenter.properties"),
+)
+
+
+def properties_table(text: str, marked: Sequence[str] = ()) -> Tuple[str, int]:
+    """key=value lines as a table (comments and blank lines left out), with the number of keys; the keys of `marked` (🔀
+    drift) highlighted"""
+    rows = []
+    for line in (text or "").splitlines():
+        line = line.strip()
+        if not line or line.startswith(("#", "!")):
+            continue
+        key, _, value = line.partition("=")
+        cls = " cfk-drift" if key.strip() in marked else ""
+        rows.append(f"<tr class='cfg-row{cls}'><td class='mono'>{e(key.strip())}</td><td class='mono'>{e(value.strip())}</td></tr>")
+    return f"<table class='cfk-props'><tr><th>Key</th><th>Value</th></tr>{''.join(rows)}</table>", len(rows)
+
+
+def dump_where(d: dict) -> str:
+    where = d.get("file") or ""
+    if d.get("line"):
+        where += f":{d['line']}"
+    if d.get("time"):
+        where += f" ({d['time'].replace('T', ' ')})"
+    return where
+
+
+def cfk_configuration_html(bundles: List[dict], drift: List[dict]) -> str:
+    """☸️ the configuration of each CFK support bundle, laid out as in its own report (cfk-analysis): one heading per
+    component, one block per CR (the properties rendered by CFK, configOverrides, jvm.config / log4j.properties /
+    plugins.json, the config logged at startup), one block per connector (its Connector CR and the config logged when it
+    started, the 🔀 keys that differ highlighted). Inside the ⚙️ card: its key / value filter and the Connector picker apply"""
+    out = []
+    for b in bundles:
+        conf = b.get("configuration") or {}
+        components = conf.get("components") or {}
+        connectors = conf.get("connectors") or {}
+        if not any(components.values()) and not connectors:
+            continue
+        label = (b.get("label") or "").split("/")[-1]
+        blocks = [f"<h3 class='cfg-kind'>☸️ CFK support bundle{(' ' + e(label)) if label else ''} "
+                  "<span class='fi-meta'>· properties rendered by CFK (ConfigMap &lt;cr&gt;-shared-config), configOverrides of "
+                  "the CR, config logged at startup · connectors: Connector CRs, config logged when they start</span></h3>"]
+        for kind, title, main in CFK_CONFIG_COMPONENTS:
+            crs = components.get(kind) or {}
+            if not crs:
+                continue
+            blocks.append(f"<h4 class='cfk-comp'>{title} ({len(crs)})</h4>")
+            for name in sorted(crs):
+                cfg = crs[name] or {}
+                files = cfg.get("files") or {}
+                inner, nb = [], 0
+                if files.get(main):
+                    table, nb = properties_table(files[main])
+                    inner.append(f"<div class='fi-meta'>{e(main)} rendered by CFK, from {e(cfg.get('source') or '')}</div>{table}")
+                for key, text in (cfg.get("overrides") or {}).items():
+                    if key == "server":
+                        table, n = properties_table(text)
+                        inner.append(f"<details class='cfg'><summary>✏️ configOverrides.server of the CR ({n} keys, already in {e(main)} above)</summary>{table}</details>")
+                    else:
+                        inner.append(f"<details class='cfg'><summary>✏️ configOverrides.{e(key)} of the CR</summary><pre>{e(text)}</pre></details>")
+                for fname in ("jvm.config", "log4j.properties", "plugins.json"):
+                    if files.get(fname):
+                        inner.append(f"<details class='cfg'><summary>📄 {e(fname)}</summary><pre>{e(files[fname])}</pre></details>")
+                for d in cfg.get("dumps") or []:
+                    table, n = properties_table(d.get("text") or "")
+                    inner.append(f"<details class='cfg'><summary>🪵 {e(d.get('title') or '')} logged at startup, with the defaults "
+                                 f"({n} keys) · {e(dump_where(d))}</summary>{table}</details>")
+                what = f"{main}, {nb} keys" if nb else "no ConfigMap in the bundle"
+                blocks.append(f"<details class='cfg'><summary><strong>{e(name)}</strong> <span class='fi-meta'>{e(what)}</span></summary>"
+                              f"{''.join(inner)}</details>")
+        blocks.append(f"<h4 class='cfk-comp'>🧩 Connectors ({len(connectors)})</h4>")
+        for name, conn in sorted(connectors.items()):
+            keys = [x["key"] for x in drift if x["connector"] == name]
+            sources = ([conn["cr"]] if conn.get("cr") else []) + list((conn.get("dumps") or {}).values())
+            inner = []
+            if keys:
+                inner.append("<div class='tw-only'>🔀 " + e(", ".join(f"{x['key']}: {x['cr']} in the CR, {x['logged']} logged"
+                                                                     for x in drift if x["connector"] == name)) + "</div>")
+            for src in sources:
+                table, n = properties_table(src.get("text") or "", keys)
+                inner.append(f"<div class='fi-meta'>{e(src.get('title') or '')} ({n} keys) · {e(dump_where(src))}</div>{table}")
+            facts = " · ".join(x for x in ((conn.get("class") or "").split(".")[-1], conn.get("cluster"), conn.get("state")) if x)
+            blocks.append(f"<details class='cfg' data-cfg-connectors='{e(name)}'><summary>🧩 <strong>{e(name)}</strong> "
+                          f"<span class='fi-meta'>{e(facts)}</span>{' <span class=tw-only>🔀 ' + str(len(keys)) + ' key(s) differ</span>' if keys else ''}"
+                          f"</summary>{''.join(inner)}</details>")
+        out.append("".join(blocks))
+    if not out:
+        return ""
+    return ("<style>.cfk-comp{margin:12px 0 4px;font-size:.9rem}.cfk-props{font-size:.8rem;margin:4px 0 8px}"
+            "tr.cfk-drift td{background:#fef2f2;font-weight:600}html[data-theme=dark] tr.cfk-drift td{background:#3b1515}"
+            ".tw-only{font-weight:600;color:#b91c1c}html[data-theme=dark] .tw-only{color:#fca5a5}</style>" + "".join(out))
+
+
+def config_html(configs: List[dict], viewers: Optional[Dict[str, str]] = None, ranked: Sequence[str] = (),
+                cfk_bundles: Sequence[dict] = (), drift: Sequence[dict] = ()) -> str:
     """⚙️ Configuration: one block per config class (ProducerConfig, JdbcSourceConnectorConfig…) instead of one per dump:
     how many dumps, the keys whose value differs between them (with their values), the keys that are the same in all of
     them, then the dumps themselves; the keys changed between restarts first. The Connector picker of the report keeps the
     configs of a connector; ranked: the connectors by occurrences, the first one with configs is shown first"""
-    if not configs:
+    cfk_block = cfk_configuration_html(list(cfk_bundles), list(drift))
+    # the configuration of the CFK bundles: in their own block (cfk_block), not again as config classes
+    configs = [c for c in configs if c.get("source") != "cfk"]
+    if not configs and not cfk_block:
         return ""
     classes: Dict[Tuple[int, str], "OrderedDict[str, List[dict]]"] = {}
     for c in configs:
@@ -3653,10 +3860,12 @@ def config_html(configs: List[dict], viewers: Optional[Dict[str, str]] = None, r
             f"{sum(len(v) for v in classes.values())} config class(es), {len(configs)} dump(s)</span></h2>"
             "<p class='legend'>🪵 the configs the components log when they start (<span class='mono'>KafkaConfig values:</span>, "
             "<span class='mono'>DistributedConfig</span>, a connector config, the <span class='mono'>ProducerConfig</span> of each "
-            "client…, defaults included, the last one of each), 📄 the config files of the input. The components first, then "
+            "client…, defaults included, the last one of each), 📄 the config files of the input"
+            + (", ☸️ the configuration of the CFK support bundle, laid out as in its own report (🔀 the keys of a Connector CR "
+               "that differ from the config logged)" if cfk_block else "") + ". The components first, then "
             "the configuration of one connector at a time (pick it below), or all the connectors compared by config class.</p>"
             "<input class='cfg-search' type='search' placeholder='Filter keys and values…'>"
-            f"{''.join(blocks)}</div>{CONFIG_SCRIPT}")
+            f"{cfk_block}{''.join(blocks)}</div>{CONFIG_SCRIPT}")
 
 
 # a value that says nothing: folded in the card of a connector
@@ -3797,7 +4006,7 @@ def config_class_html(name: str, dumps: List[dict], viewers: Optional[Dict[str, 
     """one config class: its dumps compared"""
     connectors = sorted({config_connector_of(c) for c in dumps} - {""})
     attr = f" data-cfg-connectors='{e(' '.join(connectors + (['-'] if any(not config_connector_of(c) for c in dumps) else [])))}'"
-    icon = "📄" if dumps[0]["source"] == "file" else "🪵"
+    icon = {"file": "📄", "cfk": "☸️"}.get(dumps[0]["source"], "🪵")
     nchanged = sum(1 for c in dumps if c.get("changes"))
     flag = f" <span class='st warn'>🔁 {nchanged} with keys changed between restarts</span>" if nchanged else ""
     if len(dumps) == 1:
@@ -3855,7 +4064,7 @@ def config_block_html(c: dict, viewers: Optional[Dict[str, str]] = None, common:
     where = (log_viewer.link(viewers or {}, c["file"], e(c["file"] + (f":{c['line']}" if c.get("line") else "")), c.get("line"))
              + e(f" ({c['time'].replace('T', ' ')})" if c.get("time") else ""))
     what = " ".join(x for x in (c.get("context"), c.get("id")) if x)
-    icon = "📄" if c["source"] == "file" else "🪵"
+    icon = {"file": "📄", "cfk": "☸️"}.get(c["source"], "🪵")
     changes = "".join(f"<li class='mono'>{e(ch['key'])}: {e(ch['previous'])} → {e(ch['value'])}"
                       + (f" <span class='legend'>· line {ch['line']}</span>" if ch.get("line") else "") + "</li>"
                       for ch in c.get("changes", []))
@@ -4316,7 +4525,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                           + log_viewer.link(viewers, f["label"], e(name)))
             body.append(f"<div class='table-card file-records'><h2>📄 {file_title}</h2>"
                         f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
-    body.append(config_html(res.get("configuration") or [], viewers, list(s["by_connector"])))
+    body.append(config_html(res.get("configuration") or [], viewers, list(s["by_connector"]), res.get("_cfk_bundles") or [],
+                            res.get("config_drift") or []))
     # last: the index of the records the filters count again from, then the filters themselves
     body.append("<script type='application/json' id='pg-occurrences'>"
                 + occurrences_json(res["root_causes"], res["files"]).replace("<", "\\u003c") + "</script>")
@@ -4402,7 +4612,7 @@ def main() -> int:
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
                          "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint,"
-                         "other_files,fixed_bugs,task_workers,data_to_request (default: all)")
+                         "other_files,fixed_bugs,task_workers,data_to_request,config_drift (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)

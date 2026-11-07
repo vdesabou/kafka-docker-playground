@@ -271,7 +271,16 @@ infra event, a custom resource edited or a StatefulSet rolled out a `config_chan
 (💥 counted after them too). Their location is `☸️ <component>/<kind>/<name>`, without a line. The whole analysis of each bundle is kept too: the
 summary for a ticket gets its ☸️ section (`cfk_ticket_lines()`: environment, issues by severity, known CFK issues with
 their public links only, critical and high issues) and `data_to_request()` adds its data to request (`☸️ <what>`, its
-`command` as how).
+`command` as how). Its configuration joins `.configuration` (`cfk_configs()`, source `cfk`, before the configs of the
+logs so that config lint keeps the logged one): the properties rendered by CFK, the `configOverrides` of each CR, the
+Connector CRs (`Connector CR`, attributed to its connector by `is_connector_config()`). `config_drift()` compares each
+key of a Connector CR with the last dumps the worker logged for that connector (not its clients): values normalized
+(`class ` prefix, `[a, b]` lists, `null`), `[hidden]` / `<REDACTED>` and `${…}` skipped, keys the logs do not have
+left out. `.config_drift`, 🔀 in the summary, on the 🔌 card and in the summary for a ticket. In the HTML report, the
+configuration of a bundle is one ☸️ block at the top of ⚙️ Configuration, laid out as in the CFK report
+(`cfk_configuration_html()`: a heading per component, a block per CR with its rendered properties, `configOverrides`,
+`jvm.config` / `log4j.properties` / `plugins.json` and the dumps logged at startup, a block per connector with its CR and
+the config logged, the 🔀 keys highlighted), not again as config classes; the filter and the Connector picker apply.
 `after_effects()` counts the ERROR / WARN occurrences of every file (their kept timestamps, weighted by their stride) in
 the `EFFECT_WINDOW_SECONDS` = 60 s after each infra event and each process (re)start: when they reach `EFFECT_RATIO` = 3
 times the average per 60 s of the logs (`EFFECT_MIN` = 5 at least), the event gets `effects` (occurrences, usual rate, the
