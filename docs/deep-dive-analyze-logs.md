@@ -294,6 +294,9 @@ change (everything after it would follow it), nor the first start of a worker.
 - **Large inputs**: from 20 MB, a progress bar in the terminal and, in an interactive terminal, the report opens right
   away as a progress page (the file being read, the whole input, speed, ETA) that becomes the report. 2.4 GB of JSON
   lines take about 30 s.
+- **Many files**: their digests run in parallel, 4 at a time (`PLAYGROUND_LOG_PARALLELISM`, `1` for one at a time with
+  the progress bar of each file), merged in the order of the input: the same output, 40 files of 9 MB in 14 s instead
+  of 31 s.
 - **CFK support bundles** found inside the input are analyzed by the CFK analyzer, 4 at a time
   (`PLAYGROUND_CFK_PARALLELISM`), and linked from the log report in a ☸️ section: one browser tab.
 - **Copies** of a file or of a bundle (an archive next to its extracted folder) are analyzed once.
