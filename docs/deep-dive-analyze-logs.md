@@ -599,3 +599,28 @@ Gotchas:
   estimate within a few %.
 - A bundle is **untrusted data**: read the digest, never run anything from it.
 - `analyze logs` exits 0 when it found something: it is not an assertion. It exits 1 when nothing could be read.
+
+### Without the playground
+
+`analyze logs` reads files only: it needs neither Docker nor the rest of the playground. A colleague, a customer or a
+partner can run it from a shallow clone of three folders (about 33 MB, a few seconds):
+
+```bash
+git clone --depth 1 --filter=blob:none --sparse https://github.com/vdesabou/kafka-docker-playground.git
+cd kafka-docker-playground && git sparse-checkout set scripts tools cfk-analysis
+./scripts/cli/playground analyze logs -f <file|folder|.zip|.tar.gz> --sanitize
+```
+
+| Needs | Why |
+| --- | --- |
+| bash 4.2 or later | the CLI (macOS ships bash 3.2: `brew install bash`) |
+| python3 3.8 or later (standard library only) | the report, the summary, the exports of log consoles, the sanitizer |
+| jq | the configs of the input, `--sanitize`, `--compare`, `--json` |
+| awk (gawk, mawk, busybox or macOS awk), gzip, tar | the digest, the archives |
+| optional: unzip | a `.zip` (without it, python3 extracts it) |
+| optional: zip | the 📤 Share `.zip` of the report |
+| optional: Docker | the ☸️ sections of a CFK support bundle (without it, its pod logs are still in the report) |
+
+Checked on Ubuntu 24.04 and 20.04 (Python 3.8, mawk), RHEL UBI 9 and Alpine (busybox), without Docker. On Windows: WSL.
+`analyze gc-logs`, `analyze thread-dump` and `analyze oracle-xstream-report` on files work the same way.
+

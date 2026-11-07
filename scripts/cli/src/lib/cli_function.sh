@@ -4243,6 +4243,12 @@ function filter_docker_running() {
     doctor|help|""|state|state\ *|config|config\ *|switch-podman|switch-docker)
       return 0
     ;;
+    # the offline analyzers read files: they work without a container engine (a customer bundle on a laptop without
+    # Docker, a colleague who only wants the log report); the parts that need one say it themselves (the CFK analysis
+    # of a support bundle is skipped, its pod logs are still read)
+    analyze\ logs|analyze\ gc-logs|analyze\ thread-dump|analyze\ oracle-xstream-report|find-command|find-example)
+      return 0
+    ;;
   esac
   docker info >/dev/null 2>&1 || logerror "container engine must be running - run 'playground doctor'"
 }

@@ -31,6 +31,13 @@ if [[ -n "$json_out" ]]
 then
     exec 3>&1 1>&2
 fi
+# the jq binary (not the jq function of the playground, which runs it in a container): configs of the input, --sanitize,
+# --compare, --json. Checked first, the analysis works offline without a container engine
+if ! type -P jq > /dev/null 2>&1
+then
+    logerror "❌ analyze logs needs jq: brew install jq, apt install jq, dnf install jq, apk add jq"
+    exit 1
+fi
 
 if [[ ${#file_array[@]} -gt 0 && ${#sample_array[@]} -gt 0 ]]
 then
@@ -730,7 +737,15 @@ function analyze_logs_path_entry () {
             mkdir -p "$extract_dir"
             progress_step "📦 extracting $label ($(file_size_human "$path"))"
             case "$path" in
-                *.zip) unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1 ;;
+                # without unzip (a minimal image), the zipfile module of python3 extracts it
+                *.zip)
+                    if command -v unzip > /dev/null 2>&1
+                    then
+                        unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1
+                    else
+                        python3 -I -m zipfile -e "$path" "$extract_dir" > /dev/null 2>&1
+                    fi
+                    ;;
                 *)
                     if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
                     then
@@ -846,8 +861,13 @@ cfk_parallelism="${PLAYGROUND_CFK_PARALLELISM:-4}"
 [[ "$cfk_parallelism" =~ ^[1-9][0-9]*$ ]] || cfk_parallelism=4
 if [ ${#cfk_bundles[@]} -gt 0 ]
 then
-    # built once, not by each job
-    if ! cfk_analyzer_image > /dev/null
+    # built once, not by each job. Without a container engine (a laptop without Docker): the ☸️ sections of the bundles
+    # are left out, their pod logs are in the report all the same (walk_cfk_bundle_logs), not a failure
+    if ! command -v docker > /dev/null 2>&1 || ! docker info > /dev/null 2>&1
+    then
+        logwarn "⚠️ no container engine (docker): the ☸️ sections of the CFK support bundle(s) (pods, custom resources, events, versions) are left out, their pod and operator logs are in the report"
+        cfk_bundles=()
+    elif ! cfk_analyzer_image > /dev/null
     then
         cfk_exit=1
         cfk_bundles=()

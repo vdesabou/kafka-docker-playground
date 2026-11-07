@@ -32,6 +32,16 @@ a level word **and** a time near its start (`"Task failed: WARN threshold"` of a
 and stack trace). A CSV cell holding JSON is merged only when it is a log line (it has a message), and times with an
 offset are compared in UTC to detect a newest-first export. Tests: `python3 -I tools/log-analyzer/test_log_analyzer.py`, run with `tools/report-common/test_sanitizer.py` by the Tools tests workflow (`.github/workflows/tools-tests.yml`) on the pull requests that change `tools/log-analyzer/` or `tools/report-common/`.
 
+## Without Docker, without the playground
+
+`analyze logs` (and the other offline analyzers: `gc-logs`, `thread-dump`, `oracle-xstream-report`, plus `find-command`,
+`find-example`) skip the container engine check of the CLI (`filter_docker_running`), and the CLI has no global `docker`
+dependency anymore. It needs bash 4.2+, python3 3.8+ (standard library), the `jq` binary (checked with `type -P`: the `jq`
+function of the playground runs it in a container), awk, gzip and tar. A `.zip` without `unzip` is extracted with
+`python3 -m zipfile`. Without a container engine, a CFK bundle has no ☸️ sections (a warning, not a failure), its pod logs
+are read. A shallow sparse clone of `scripts`, `tools` and `cfk-analysis` (about 33 MB) is enough: see "Without the
+playground" in the deep dive.
+
 ## Digests in parallel
 
 `analyze logs` runs the digest of each file in the background, `PLAYGROUND_LOG_PARALLELISM` at a time (4 by default; 1: one
