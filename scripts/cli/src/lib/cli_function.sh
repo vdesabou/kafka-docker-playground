@@ -7880,7 +7880,9 @@ function find_commands() {
         cmds([]) | select(.path != "help")
         | [.path,
            (.desc | split("\n")[0]),
-           ((.names | join(" ")) + " " + (.desc | gsub("[\t\n\r]+"; " "))),
+           # the URLs left out of the text searched: kafka-docker-playground.io in the 🍪 / 🎬 links of a help made it
+           # match "docker" ("docker logs" found analyze logs before container logs)
+           ((.names | join(" ")) + " " + (.desc | gsub("https?://[^ \t\n)]+"; " ") | gsub("[\t\n\r]+"; " "))),
            ((.desc | capture("Deep dive: (?<u>https://[^ \n)]+)") | .u) // "")]
         | @tsv' "$spec" > "$commands_tsv"
 
@@ -7950,6 +7952,9 @@ function find_commands() {
         }
         need = (ncount <= 2 ? 1 : int((ncount + 1) / 2))
         if (hits < need && path_hits < need) return
+        # the words typed, in that order, in the text ("docker logs" in "instead of `docker logs <c>`"): the row says what
+        # was asked, not only a command whose help has one of the words many times
+        if (nterms >= 2 && index(low, phrase) > 0) score += weight
         s = score * ((hits > path_hits ? hits : path_hits) / ncount)
         if (!(cmd in best) || s > best[cmd]) {
             best[cmd] = s
@@ -7977,6 +7982,7 @@ function find_commands() {
             typed = w
             w = stem(w)
             if (!(w in seen)) {
+                phrase = (nterms ? phrase " " : "") typed
                 seen[w] = 1; terms[++nterms] = w; word[nterms] = typed
                 if (w in is_generic) generic[nterms] = 1
                 else nsig++
