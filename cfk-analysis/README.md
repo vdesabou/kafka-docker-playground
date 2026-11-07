@@ -175,6 +175,10 @@ the lines for everything else (Kubernetes symptoms, operator states, KRaft migra
 versions, log window). Not for the operator log and the files converted from an export of log events (JSON lines): their
 line numbers are not those of the file. Without `--log-records` (the analyzer run alone), the records are parsed as before.
 
+`analyze logs -f <after> --compare <before>` analyzes `<before>` in the same mode (a bundle as a bundle, not
+`--logs-only`): its log analysis (`.log_analysis`) is compared with the one of `<after>`, and its bundle analysis with the
+bundles of `<after>` (`compare.py`, sorted by collection time; the comparison report is the one opened).
+
 ## Sample
 
 `samples/cfk-support-bundle-synthetic.tar.gz` (`--sample synthetic`) is a synthetic bundle in the

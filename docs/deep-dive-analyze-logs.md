@@ -558,7 +558,7 @@ The error is in the part that was not received. Without the warning, it would ha
 | a customer support bundle (`.zip`, `.tar.gz`, folders of rotated logs) | `playground analyze logs -f <bundle>`: read the 🧭 summary, then the 🗓️ timeline of the report for what came first |
 | a connector that fails on one worker only (a cluster of workers) | `playground analyze logs -f <the logs of every worker>`: 🎯 in 🖥️ Tasks by worker names the worker its errors come from |
 | a worker with hundreds of connectors, one is failing | `playground analyze logs -f <bundle> --connector <name>`, or ▶ only this connector on its 🔌 card |
-| did the fix work? the logs before and after it (two workers, two days) | `playground analyze logs -f <after> --compare <before>` |
+| did the fix work? the logs before and after it (two workers, two days) | `playground analyze logs -f <after> --compare <before>` (two CFK support bundles: the bundles and their pod logs are compared) |
 | a CloudWatch, OpenSearch, Kibana, Splunk, Datadog or Loki export | `playground analyze logs -f <export.json\|.csv>`: converted back to log lines, oldest first |
 | the logs of a Python, Go, .NET, JavaScript, C/C++ or Rust application | `playground analyze logs -f <the logs>`; to reproduce, `other/client-<language>` runs that client against the playground |
 | a Kafka Streams application that rebalances in a loop or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section |

@@ -383,6 +383,33 @@ def test_cluster_events_in_timeline():
     check("💥 after the pod restart", (cl[1].get("effects") or {}).get("occurrences") == 29, cl[1])
 
 
+def test_cfk_bundle_in_ticket_and_data_to_request():
+    """☸️ the section of a CFK bundle in the summary for a ticket (public links only, never the 🔒 internal ones) and its
+    data to request in the one 📥 list"""
+    bundle = {"label": "/x/case.tgz:bundle", "summary": {"total_issues": 3, "critical": 1, "high": 1, "medium": 1, "low": 0},
+              "environment": {"kubernetes_version": "v1.33.4", "cfk_version": "3.1.0"},
+              "runbooks": [{"title": "Expired certificate", "occurrences": 2, "advice": "renew it",
+                            "links": [{"title": "Manage TLS", "url": "https://docs.confluent.io/x"}],
+                            "internal_links": [{"title": "GTS runbook", "url": "https://confluentinc.atlassian.net/wiki/x"}]}],
+              "issues": [{"severity": "critical", "category": "Pod Failures", "message": "CrashLoopBackOff", "component": "kafka", "count": 4},
+                         {"severity": "medium", "category": "Other", "message": "meh"}],
+              "data_to_request": [{"what": "the nodes and the volumes", "why": "a pod cannot be scheduled", "command": "kubectl describe nodes"}],
+              "timeline": []}
+    text = "@@PGFILE@@|bundle:confluent/kafka/logs/kafka-0.log|10|0|0|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        files.cfk_bundles = [bundle]
+        res = log_report.analyze(files)
+        res["data_to_request"] = log_report.data_to_request(res, files)
+        res["_cfk_bundles"] = files.cfk_bundles
+    md = log_report.ticket_markdown(res, "t", "ERROR/FATAL/WARN")
+    for x in ("### ☸️ CFK support bundle: case.tgz:bundle", "Kubernetes v1.33.4, CFK 3.1.0", "critical 1", "Expired certificate",
+              "https://docs.confluent.io/x", "`critical` Pod Failures: CrashLoopBackOff (kafka) ×4", "☸️ the nodes and the volumes",
+              "kubectl describe nodes"):
+        check(x, x in md, md)
+    check("no internal link", "atlassian" not in md and "meh" not in md, md)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

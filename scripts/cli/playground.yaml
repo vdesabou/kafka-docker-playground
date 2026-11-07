@@ -4572,22 +4572,27 @@ subcommands:
       bundle JSON); the issues of its log records come from the same records, and
       the ☸️ changes of the cluster (pods terminated or restarted, custom resources
       edited, rollouts) join its incident timeline, so that \U0001F517 and \U0001F4A5
-      link the errors of the pod logs to them. --logs-only gives only the log report,
-      of every file of the bundle. \U0001F3AF --problem \"<component, symptom, since
-      when>\" matches the bundle against what the customer reports: the issues that
-      explain it first, a verdict (explained, not explained, not covered by the logs),
-      the changes before the date. \U0001F4E5 A Data to request section says what
-      to ask the customer for next, with why and the command: from the gaps of the
-      bundle (logs that start too late, previous logs of restarted containers, no
-      events, no operator log), from its findings (OOMKilled, Pending pods, TLS, failed
-      connectors) and from the symptoms of --problem.\n\n\U0001F512 With --sanitize,
-      passwords and other secrets (password=…, JAAS configs, tokens, keys, credentials
-      in URLs), IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>,
-      <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON). Off by
-      default: use it before sharing the output outside Confluent, and review it anyway
-      (best effort).\n\n\U0001F9ED After the digest of each file, a short summary:
-      time range, occurrences by connector, known causes with what to do (\U0001F4DA
-      and a Confluent knowledge-base article for many of them, \U0001F512 the internal
+      link the errors of the pod logs to them. One output for the case: <input>-ticket.md
+      has a ☸️ section per bundle (environment, issues by severity, known CFK issues
+      with their public links, critical and high issues), the \U0001F4E5 data to request
+      of the bundle joins the one of the logs, and --compare <before bundle> compares
+      both the bundles (versions, CR changes, issues fixed / new / still there) and
+      their pod logs. --logs-only gives only the log report, of every file of the
+      bundle. \U0001F3AF --problem \"<component, symptom, since when>\" matches the
+      bundle against what the customer reports: the issues that explain it first,
+      a verdict (explained, not explained, not covered by the logs), the changes before
+      the date. \U0001F4E5 A Data to request section says what to ask the customer
+      for next, with why and the command: from the gaps of the bundle (logs that start
+      too late, previous logs of restarted containers, no events, no operator log),
+      from its findings (OOMKilled, Pending pods, TLS, failed connectors) and from
+      the symptoms of --problem.\n\n\U0001F512 With --sanitize, passwords and other
+      secrets (password=…, JAAS configs, tokens, keys, credentials in URLs), IPs,
+      hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>, <IP-1>,
+      <HOST-1>…, the same in the digest, the report and the JSON). Off by default:
+      use it before sharing the output outside Confluent, and review it anyway (best
+      effort).\n\n\U0001F9ED After the digest of each file, a short summary: time
+      range, occurrences by connector, known causes with what to do (\U0001F4DA and
+      a Confluent knowledge-base article for many of them, \U0001F512 the internal
       runbooks of Confluent support when the private reproduction-models repository
       is there), root causes no known cause explains, and the configuration logged
       at startup (connectors, components, clients) with the keys changed between restarts.

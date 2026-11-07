@@ -1388,6 +1388,11 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
                 ex = c["example"]
                 loggers[pkg] = (c.get("root_cause") or "").split(".")[-1] or f"\"{ex[:70]}{'…' if len(ex) > 70 else ''}\""
                 break
+    # the data to request of the CFK support bundles of the input (cfk-analysis: gaps of the bundle, --problem): one list
+    for b in getattr(files, "cfk_bundles", None) or []:
+        for x in b.get("data_to_request") or []:
+            if x.get("what"):
+                ask(f"☸️ {x['what']}", x.get("why") or "", x.get("command") or "")
     for pkg, what in list(loggers.items())[:2]:
         ask(f"the logs with {pkg} at DEBUG while the error happens",
             f"{what} is not a known cause: the DEBUG lines of that package say what the plugin was doing",
@@ -2382,6 +2387,34 @@ def md_cell(text) -> str:
     return str(text).replace("\n", " ").replace("|", "\\|").strip()
 
 
+def cfk_ticket_lines(b: dict) -> List[str]:
+    """☸️ the section of a CFK support bundle in the summary for a ticket: environment, issues by severity, the known CFK
+    issues with their public links (never the 🔒 internal ones: a ticket can leave Confluent), the critical / high issues"""
+    s = b.get("summary") or {}
+    env = b.get("environment") or {}
+    out = ["", f"### ☸️ CFK support bundle{(': ' + b['label'].split('/')[-1]) if b.get('label') else ''}", ""]
+    parts = [f"Kubernetes {env['kubernetes_version']}" if env.get("kubernetes_version") else "",
+             f"CFK {env['cfk_version']}" if env.get("cfk_version") else ""]
+    if any(parts):
+        out.append(f"**Environment:** {', '.join(p for p in parts if p)}")
+    out.append(f"**Issues:** {s.get('total_issues', 0)} (critical {s.get('critical', 0)} · high {s.get('high', 0)} · "
+               f"medium {s.get('medium', 0)} · low {s.get('low', 0)})")
+    books = b.get("runbooks") or []
+    if books:
+        out += ["", "| Known CFK issue | Occurrences | What to do |", "| --- | --- | --- |"]
+        for r in books[:6]:
+            links = "".join(f" · 📚 [{md_cell(l.get('title') or 'doc')}]({l['url']})" for l in r.get("links") or [] if l.get("url"))
+            out.append(f"| {md_cell(r.get('title') or r.get('name') or '')} | {r.get('occurrences', '')} | {md_cell((r.get('advice') or '')[:300])}{links} |")
+    top = [i for i in b.get("issues") or [] if i.get("severity") in ("critical", "high")][:6]
+    if top:
+        out += ["", "Critical and high issues of the bundle:", ""]
+        for i in top:
+            who = f" ({i['component']}{'/' + i['instance'] if i.get('instance') and i.get('instance') != i.get('component') else ''})" if i.get("component") else ""
+            out.append(f"- `{i['severity']}` {md_cell(i.get('category') or '')}: {md_cell((i.get('message') or '')[:200])}{who}"
+                       + (f" ×{i['count']}" if (i.get("count") or 1) > 1 else ""))
+    return out
+
+
 def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> str:
     """the summary to paste in a Zendesk or Jira ticket, as Markdown: verdict, period, known causes with what to do, the
     root causes no known cause explains, the timeline, the connectors and the comparison. Always sanitized (best effort):
@@ -2405,6 +2438,8 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             where = f"{first.get('file', '').split('/')[-1]}:{first.get('line', '')}" + (f" {first['timestamp'].replace('T', ' ')}" if first.get("timestamp") else "")
             reads = "".join(f" · 📚 [{md_cell(label)}]({url})" for label, url in reading_links(h))
             out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])}{reads} |")
+    for b in res.get("_cfk_bundles") or []:
+        out += cfk_ticket_lines(b)
     asks = res.get("data_to_request") or []
     if asks:
         out += ["", "### Data to request", ""]
@@ -4380,6 +4415,8 @@ def main() -> int:
             continue
         for b in bundles.get("cfk_bundles") or [bundles]:
             files.cluster_events = (getattr(files, "cluster_events", None) or []) + list(b.get("timeline") or [])
+            # the whole analysis of the bundle: its section of the summary for a ticket, its data to request
+            files.cfk_bundles = (getattr(files, "cfk_bundles", None) or []) + [b]
     if args.records_under:
         # the labels as written by analyze logs (not shortened): <bundle label>/<path in the bundle>
         keep = ("level", "count", "first_line", "last_line", "first_ts", "last_ts", "message", "chain", "connector", "context")
@@ -4421,11 +4458,12 @@ def main() -> int:
             print(f"⚠️ --other-files: cannot read {args.other_files}: {ex}", file=sys.stderr)
     # what to ask the customer for next: from the gaps of the input and its findings (📥, .data_to_request of --json)
     res["data_to_request"] = data_to_request(res, files)
+    res["_cfk_bundles"] = getattr(files, "cfk_bundles", None) or []
     res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
     if args.json:
         # the timestamps of every occurrence are only for the timeline and the time filter of the HTML report
-        compact = dict(res, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
+        compact = dict({k: v for k, v in res.items() if k != "_cfk_bundles"}, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
                                    for f in res["files"]],
                        root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
                        known_causes=[{k: v for k, v in h.items() if k not in ("records", "_chains")} for h in res["known_causes"]],
