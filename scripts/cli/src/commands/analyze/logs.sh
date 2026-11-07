@@ -1161,7 +1161,13 @@ if [ -n "$progress_page" ] && [ "$progress_page" == "$output_dir/${stem}-log-rep
 then
     report_no_open=1
 fi
+# 📋 the summary for a ticket (Markdown, always sanitized), next to the report (also 📤 Share > Copy for a ticket)
+report_args+=(--ticket-out "$output_dir/${stem}-ticket.md")
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
+if [ -s "$output_dir/${stem}-ticket.md" ]
+then
+    log "📋 For a ticket (Markdown, sanitized: review it): $output_dir/${stem}-ticket.md"
+fi
 # the .zip to send to a colleague (📤 Share of the report): only when the file pages are under 200 MB (a page holds a
 # whole log file: 1 GB of logs makes 1 GB of pages), else the command to make it
 if command -v zip > /dev/null 2>&1 && [ -f "$output_dir/${stem}-log-report.html" ]

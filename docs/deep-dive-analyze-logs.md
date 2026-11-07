@@ -214,7 +214,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🗂️ files and 🕰️ log coverage | per file and per folder of rotated logs, with the hours a folder has no log |
 | 📄 records of each file | every distinct record, its exception chain colored, 📄 / ✏️ to the line |
 | ⚙️ configuration | the configs logged at startup (one block per config class, the keys that differ between dumps, the keys changed between restarts) and the `.properties` / connector JSON of the input |
-| 📤 Share | the `.zip` of the report and its pages, the summary to paste, an email, the sanitization state |
+| 📤 Share | the `.zip` of the report and its pages, the summary to paste, **📋 Copy for a ticket** (Markdown, always sanitized), an email, the sanitization state |
 
 ### The filters, the search, and links to a view
 
@@ -374,6 +374,15 @@ playground analyze logs -f secrets.log --sanitize
 ```text
 [2026-11-06 10:00:00,000] ERROR [jdbc-sink|task-0] Login failed for user 'app' to jdbc:postgresql://<HOST-1>:5432/orders with sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="app" password=<REDACTED>; from <IP-1> (io.…
 ℹ️ 🔒 Sanitized (best effort, review before sharing): 2 secret(s), 1 IP(s), 1 hostname(s), 0 email(s), 0 LDAP DN(s) (--sanitize)
+```
+
+📋 **For a ticket**, every run also writes `<name>-ticket.md` next to the report (and 📤 Share > Copy for a ticket):
+the verdict, the period, the known causes with what to do, the errors no known cause explains, the comparison, the
+timeline and the connectors as Markdown tables, ready for Zendesk or Jira. It is **always sanitized**, even without
+`--sanitize`:
+
+```text
+ℹ️ 📋 For a ticket (Markdown, sanitized: review it): ./log-analysis-output/connect_task_failure-ticket.md
 ```
 
 Passwords, JAAS configs, tokens, API keys (AWS, GCP, Azure `AccountKey` and SAS `sig`), credentials in URLs (JDBC,

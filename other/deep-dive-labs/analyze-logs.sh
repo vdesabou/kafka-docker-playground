@@ -31,6 +31,8 @@ lab_expect_contains "2026-10-14 10:04:59 🔌 connector cdc-xstream-oracle-sourc
 lab_expect_contains "🔌 Connectors (1, most errors first)"
 lab_expect_contains "cdc-xstream-oracle-source: 1 ERROR/FATAL, 6 WARN, 🧨 1 task kill(s) · 🧨 A connector task was killed"
 lab_expect_contains "⚙️ Configuration logged (24), the last dump of each: --show-config <connector|config class|client id> prints one"
+lab_expect_contains "📋 For a ticket (Markdown, sanitized: review it): $report_dir/connect_task_failure-ticket.md"
+lab_expect_equals "$(head -n 1 "$report_dir/connect_task_failure-ticket.md")" "## 🔥 Log analysis: sample connect_task_failure" "the summary for a ticket"
 report=$(find "$report_dir" -maxdepth 1 -name "connect_task_failure-log-report.html" | head -1)
 lab_expect_equals "$([ -n "$report" ] && grep -q "<h2>🗓️ Incident timeline</h2>" "$report" && echo yes)" "yes" "the report has the 🗓️ incident timeline"
 lab_expect_equals "$(grep -q "<h2>🔌 Connectors (1)</h2>" "$report" && echo yes)" "yes" "the report has the 🔌 connector cards"
