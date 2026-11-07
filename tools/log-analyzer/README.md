@@ -149,7 +149,8 @@ logs, or the image tags of the CRs of a CFK bundle (`cp-server:8.1.0`); 🏷️ 
 🟠 High, 🟡 Medium, 🟢 Low (`findings_severity_tiles()`) count the cards of 🔎 Findings at each severity, the ☸️ CFK ones
 included: a click keeps only those cards (the severity chips of the section follow) and goes there, again shows them all.
 The tiles of the CFK bundles join the same row (`cfk_kpi_tiles()`: ☸️ CFK issues, clickable, the Kubernetes and CFK
-versions). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
+versions). The header has a 🐳 kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report link to
+the deep dive page (`ANALYZE_LOGS_DOC`). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
 The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
 tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅

@@ -3219,26 +3219,33 @@ def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket
              "before sending it outside Confluent.</p>" if sanitized else
              "<p class='share-warn'>⚠️ Not sanitized: it can contain passwords, IPs and hostnames of the logs. For someone outside "
              "Confluent, run the same command again with <span class='mono'>--sanitize</span>.</p>")
-    zip_item = (f"<li><a class='share-btn' href='{e(quote(share_zip))}' download>📦 Download the report and its file pages (.zip)</a>"
-                "<span class='fi-meta'> send it: your colleague unzips it and opens the .html (📄 and the line links keep working)</span>"
-                "<div class='fi-meta' style='margin-top:4px'>No .zip next to the report? Its file pages are larger than 200 MB "
-                "(a page holds a whole log file): <button type='button' class='share-close' data-share='zipcmd'>📋 Copy the zip "
-                "command</button> and run it in a terminal (or send the .html alone: everything but 📄 works)</div></li>"
+    def card(tag: str, attrs: str, icon: str, what: str, why: str, cls: str = "") -> str:
+        """an action of the dialog: a card clicked as a whole (data-share for the script, the <a download> of the .zip)"""
+        return (f"<{tag} class='share-card {cls}' {attrs}><span class='sc-icon'>{icon}</span><span class='sc-body'>"
+                f"<b>{what}</b><small>{why}</small></span><span class='sc-go' aria-hidden='true'>›</span></{tag}>")
+    zip_item = ((card("a", f"href='{e(quote(share_zip))}' download", "📦", "Download the report (.zip)",
+                      "the report and its file pages: your colleague unzips it and opens the .html, 📄 and the line links keep working",
+                      "sc-primary")
+                 + "<p class='sc-note'>No .zip next to the report? Its file pages are larger than 200 MB (a page holds a whole log "
+                 "file): <button type='button' class='sc-link' data-share='zipcmd'>📋 copy the zip command</button> and run it in a "
+                 "terminal, or send the .html alone (everything but 📄 works).</p>")
                 if share_zip else
-                "<li><span class='fi-meta'>📦 no .zip was written with this report: send the .html together with its "
-                "<span class='mono'>-files/</span> folder</span></li>")
+                "<p class='sc-note'>📦 No .zip was written with this report: send the .html together with its "
+                "<span class='mono'>-files/</span> folder.</p>")
     return (SHARE_CSS + f"<script type='text/plain' id='pg-share-summary'>{safe}</script>"
             + (f"<script type='text/plain' id='pg-share-ticket'>{ticket.replace('<', chr(92) + 'u003c')}</script>" if ticket else "") +
-            f"<dialog class='share-dlg' data-title='{e(title)}'><h3>📤 Share this report</h3>{state}<ul>{zip_item}"
-            "<li><button type='button' class='share-btn' data-share='summary'>📋 Copy the summary</button>"
-            "<span class='fi-meta'> the verdict, the period, the known causes and the root causes, as text: paste it in Slack</span></li>"
-            + ("<li><button type='button' class='share-btn' data-share='ticket'>📋 Copy for a ticket (Markdown, sanitized)</button>"
-               "<span class='fi-meta'> verdict, period, known causes with what to do, timeline, connectors and comparison as Markdown "
-               "tables, secrets / IPs / hostnames replaced: paste it in Zendesk or Jira</span></li>" if ticket else "") +
-            "<li><button type='button' class='share-btn' data-share='path'>🔗 Copy the path of the report</button></li>"
-            "<li><button type='button' class='share-btn' data-share='mail'>✉️ Email the summary</button>"
-            "<span class='fi-meta'> a new mail with the summary, attach the .zip</span></li></ul>"
-            "<p class='share-done fi-meta' aria-live='polite'></p><button type='button' class='share-close'>Close</button></dialog>"
+            f"<dialog class='share-dlg' data-title='{e(title)}'><div class='sd-head'><h3>📤 Share this report</h3>"
+            "<button type='button' class='share-close sd-x' aria-label='close'>✕</button></div>"
+            f"<div class='sd-body'>{state}{zip_item}<div class='share-grid'>"
+            + card("button", "type='button' data-share='summary'", "💬", "Copy the summary",
+                   "verdict, period, known causes and root causes as text: paste it in Slack")
+            + (card("button", "type='button' data-share='ticket'", "🎫", "Copy for a ticket",
+                    "Markdown tables, secrets / IPs / hostnames replaced: paste it in Zendesk or Jira") if ticket else "")
+            + card("button", "type='button' data-share='path'", "🔗", "Copy the path", "where the report is on this machine")
+            + card("button", "type='button' data-share='mail'", "✉️", "Email the summary", "a new mail with the summary: attach the .zip")
+            + "</div><p class='share-done' aria-live='polite'></p></div>"
+            "<div class='sd-foot'><span class='fi-meta'>S opens this dialog, Esc closes it</span>"
+            "<button type='button' class='share-close'>Close</button></div></dialog>"
             + SHARE_SCRIPT)
 
 
@@ -3249,17 +3256,52 @@ box-shadow:0 4px 14px rgba(15,23,42,.25);transition:transform .1s}.share-hero:ho
 .share-bar{font-weight:700;color:#fff!important;background:#7c3aed!important;border-color:#7c3aed!important}.share-bar:hover{background:#6d28d9!important}
 .share-side{margin-top:10px;font-size:.8rem;font-weight:700;padding:6px 10px;border-radius:8px;border:0;background:#7c3aed;color:#fff;text-align:left}
 .share-float{position:fixed;top:12px;right:16px;z-index:30;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:999px;border:0;background:#7c3aed;color:#fff}
-.share-dlg{border:0;border-radius:14px;padding:20px 24px;width:min(640px,92vw);max-width:640px;max-height:86vh;overflow:auto;
-box-shadow:0 20px 60px rgba(0,0,0,.35);background:#fff;color:#1e293b;position:fixed;inset:0;margin:auto;height:fit-content}
-.share-dlg::backdrop{background:rgba(15,23,42,.55)}
-.share-dlg h3{font-size:1.05rem;margin-bottom:10px}.share-dlg ul{list-style:none;margin:12px 0}.share-dlg li{margin:10px 0}
-.share-btn{display:inline-block;font:inherit;font-size:.85rem;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid #2563eb;background:#2563eb;color:#fff;cursor:pointer;text-decoration:none}
-.share-btn:hover{background:#1d4ed8}
-.share-warn{background:#fef3c7;color:#92400e;border-radius:8px;padding:8px 12px;font-size:.84rem}
-.share-ok{background:#dcfce7;color:#166534;border-radius:8px;padding:8px 12px;font-size:.84rem}
+.share-dlg{border:0;border-radius:18px;padding:0;width:min(660px,92vw);max-width:660px;max-height:88vh;overflow:auto;
+box-shadow:0 30px 80px rgba(15,23,42,.45);background:#fff;color:#1e293b;position:fixed;inset:0;margin:auto;height:fit-content}
+.share-dlg[open]{animation:sd-in .22s cubic-bezier(.22,1,.36,1)}
+@keyframes sd-in{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.share-dlg::backdrop{background:rgba(15,23,42,.6);backdrop-filter:blur(3px)}
+.sd-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;color:#fff;
+background:radial-gradient(500px 120px at 0% 0%,rgba(56,189,248,.35),transparent 60%),linear-gradient(120deg,#312e81,#6d28d9 60%,#a21caf)}
+.sd-head h3{font-size:1.1rem;margin:0;color:#fff!important}
+.sd-x{border:0!important;background:rgba(255,255,255,.16)!important;color:#fff!important;width:30px;height:30px;padding:0!important;border-radius:50%!important;font-size:.9rem}
+.sd-x:hover{background:rgba(255,255,255,.3)!important}
+.sd-body{padding:16px 20px 6px}
+.share-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+.share-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;text-decoration:none;cursor:pointer;
+padding:12px 14px;border-radius:14px;border:1px solid #e2e8f0;background:#f8fafc;transition:transform .12s,box-shadow .12s,border-color .12s,background .12s}
+.share-card:hover{transform:translateY(-2px);border-color:#a78bfa;box-shadow:0 10px 24px -12px rgba(109,40,217,.5);background:#faf5ff}
+.share-card:focus-visible{outline:2px solid #7c3aed;outline-offset:2px}
+.sc-icon{flex:none;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;font-size:1.25rem;
+background:linear-gradient(135deg,#ede9fe,#e0f2fe)}
+.sc-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sc-body b{font-size:.9rem}.sc-body small{font-size:.74rem;color:#64748b;line-height:1.35}
+.sc-go{margin-left:auto;font-size:1.3rem;color:#a78bfa;transition:transform .12s}.share-card:hover .sc-go{transform:translateX(3px)}
+.share-card.sc-primary{color:#fff;border:0;padding:14px 16px;background:linear-gradient(120deg,#2563eb,#7c3aed);box-shadow:0 12px 28px -14px rgba(37,99,235,.8)}
+.share-card.sc-primary:hover{background:linear-gradient(120deg,#1d4ed8,#6d28d9)}
+.share-card.sc-primary .sc-icon{background:rgba(255,255,255,.18)}.share-card.sc-primary small{color:rgba(255,255,255,.85)}
+.share-card.sc-primary .sc-go{color:#fff}
+.share-card.sc-done{border-color:#22c55e!important;background:#f0fdf4!important}
+.share-card.sc-done .sc-icon{background:#bbf7d0}
+.sc-note{margin:8px 2px 0;font-size:.76rem;color:#64748b}
+.sc-link{font:inherit;font-weight:600;border:0;background:none;color:#6d28d9;cursor:pointer;padding:0;text-decoration:underline}
+.share-done{min-height:1.4em;margin:8px 0 0;font-size:.82rem;font-weight:600;color:#15803d}
+.sd-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 16px}
+@media (max-width:560px){.share-grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.share-dlg[open]{animation:none}.share-card{transition:none}}
+.share-warn{background:#fef3c7;color:#92400e;border-radius:12px;padding:10px 14px;font-size:.82rem;border-left:4px solid #f59e0b;margin-bottom:12px}
+.share-ok{background:#dcfce7;color:#166534;border-radius:12px;padding:10px 14px;font-size:.82rem;border-left:4px solid #22c55e;margin-bottom:12px}
 .share-close{font:inherit;font-size:.8rem;padding:3px 12px;border-radius:6px;border:1px solid #cbd5e1;background:transparent;color:inherit;cursor:pointer}
 html[data-theme=dark] .share-hero{background:#ede9fe;color:#4c1d95}
 html[data-theme=dark] .share-dlg{background:#1e293b;color:#e2e8f0}
+html[data-theme=dark] .share-card{background:#0f172a;border-color:#334155}
+html[data-theme=dark] .share-card:hover{background:#1e1b4b;border-color:#7c3aed}
+html[data-theme=dark] .sc-icon{background:linear-gradient(135deg,#312e81,#0c4a6e)}
+html[data-theme=dark] .sc-body small,html[data-theme=dark] .sc-note{color:#94a3b8}
+html[data-theme=dark] .share-card.sc-primary{background:linear-gradient(120deg,#2563eb,#7c3aed)}
+html[data-theme=dark] .share-card.sc-primary small{color:rgba(255,255,255,.85)}
+html[data-theme=dark] .share-card.sc-done{background:#052e16!important}
+html[data-theme=dark] .sc-link{color:#c4b5fd}html[data-theme=dark] .share-done{color:#86efac}
 html[data-theme=dark] .share-warn{background:#422006;color:#fcd34d}html[data-theme=dark] .share-ok{background:#052e16;color:#86efac}
 html[data-theme=dark] .share-close{border-color:#334155}
 </style>"""
@@ -3309,6 +3351,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const b = ev.target.closest("[data-share]");
     if (ev.target.closest(".share-close") || ev.target === dlg) { dlg.close(); return; }
     if (!b) return;
+    // the card clicked turns green for a moment (the message under the cards says what was copied)
+    const cardEl = b.closest(".share-card");
+    if (cardEl) { cardEl.classList.add("sc-done"); setTimeout(() => cardEl.classList.remove("sc-done"), 1600); }
     const path = decodeURIComponent(location.pathname);
     const dir = path.slice(0, path.lastIndexOf("/")), page = path.split("/").pop();
     const q = x => "'" + x.replace(/'/g, "'\\''") + "'";
@@ -3335,6 +3380,9 @@ document.addEventListener("DOMContentLoaded", function () {
 # "Fold all" / "Unfold all" at the top of the findings
 # the tiles at the top of the report open their section: unfolded if folded, scrolled to, flashed; a tile whose section
 # is not in the report (no file with findings…) stays a plain tile
+KDP_SITE = "https://kafka-docker-playground.io/"
+ANALYZE_LOGS_DOC = "https://kafka-docker-playground.io/#/deep-dive-analyze-logs"
+
 # the header of the log report (page() of report_html is shared by every report: styled only when it holds .lr-title)
 HEADER_CSS = """<style>
 .header:has(.lr-title){position:relative;overflow:hidden;border-radius:18px;padding:26px 32px 22px;
@@ -3354,6 +3402,15 @@ background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop
 .header:has(.lr-title) .header-meta span{font-size:.78rem;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.12);
 border:1px solid rgba(255,255,255,.2);margin:0}
 .header:has(.lr-title) .header-meta a{color:#fff}
+.lr-brand{grid-column:1 / -1;justify-self:start;display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;
+letter-spacing:.04em;color:#fff;text-decoration:none;padding:3px 12px 3px 6px;border-radius:999px;background:rgba(255,255,255,.12);
+border:1px solid rgba(255,255,255,.22);transition:background .15s}
+.lr-brand:hover{background:rgba(255,255,255,.22)}
+.lr-whale{font-size:1.25rem;line-height:1;display:inline-block;animation:lr-swim 4s ease-in-out infinite}
+@keyframes lr-swim{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-6deg)}}
+@media (prefers-reduced-motion:reduce){.lr-whale{animation:none}}
+.header:has(.lr-title) .header-meta span:has(.lr-howto){background:rgba(56,189,248,.22);border-color:rgba(125,211,252,.55)}
+.lr-howto{text-decoration:none;font-weight:600}.lr-howto:hover{text-decoration:underline}
 </style>"""
 
 QUICK_LINKS = "<nav class='quick-links' aria-label='sections of the report'></nav>"
@@ -5609,7 +5666,12 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         what = f"<span class='lr-title'>{e(heading)}</span>"
         sub = e(title)
         page_title = f"{heading[2:].strip()} report — {title}"
-    h1 = (f"{what}<span class='lr-status {vcls}' title='{e(vtext)}'>{e(status)}</span><span class='lr-sub'>📄 {sub}</span>"
+    # 🐳 where the report comes from, and how to generate one (the deep dive page of analyze logs)
+    brand = (f"<a class='lr-brand' href='{KDP_SITE}' title='kafka-docker-playground: the playground CLI that generated this report'>"
+             "<span class='lr-whale'>🐳</span> kafka-docker-playground</a>")
+    meta.append(f"<a class='lr-howto' href='{ANALYZE_LOGS_DOC}' title='how to generate this report: playground analyze logs, "
+                "also offline without the playground (deep dive page)'>❓ How to generate this report</a>")
+    h1 = (f"{brand}{what}<span class='lr-status {vcls}' title='{e(vtext)}'>{e(status)}</span><span class='lr-sub'>📄 {sub}</span>"
           + HEADER_CSS)
     return page(page_title, h1, meta, "".join(body),
                 f"🛠️ Generated by {e(command)} (self-contained, no external resource). Records are cut to 300 "
