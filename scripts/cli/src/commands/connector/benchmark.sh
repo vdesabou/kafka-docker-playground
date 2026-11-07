@@ -672,16 +672,7 @@ function restore_run_state () {
         playground state set run.connector_type "$connector_type"
     fi
 }
-# the stream load is a tree of processes (bash, playground, docker exec): stop all of them
-function kill_tree () {
-    local pid="$1" child
-    for child in $(pgrep -P "$pid" 2> /dev/null)
-    do
-        kill_tree "$child"
-    done
-    # the process can already be gone (a parent exits when its child is killed): not an error
-    kill "$pid" 2> /dev/null || true
-}
+# the stream load is a tree of processes (bash, playground, docker exec): kill_tree (cli_function.sh) stops all of them
 function benchmark_cleanup () {
     restore_run_state
     if [ -z "$fully_managed" ]
