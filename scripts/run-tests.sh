@@ -258,6 +258,35 @@ do
         else
             exists=$(aws s3 ls $s3_file --region us-east-1)
         fi
+        # a fully managed connector runs in Confluent Cloud: the CP version (TAG) of the result file does not matter.
+        # Without a result for this TAG (a new default CP version), reuse the latest result of another CP version
+        # (copied under this TAG, for update-readme), then the usual rules below decide (failure, 14 days, change)
+        result_tag="$TAG"
+        if [ -z "$exists" ] && [[ "$dir" =~ ^ccloud/(fm-|fully-managed-|custom-connector-) ]]
+        then
+            if [ -z "$s3_all_results_listed" ]
+            then
+                s3_all_results=$(aws s3 ls "s3://kafka-docker-playground/ci/" --region us-east-1 2>/dev/null)
+                s3_all_results_listed=1
+            fi
+            file_without_tag="${file#"$TAG"}"
+            # newest CP version first; a "skipped" result (CP version not the latest one, see above) is not a real run
+            for previous_file in $(echo "$s3_all_results" | awk -v suffix="$file_without_tag" '{ name=$NF; n=length(name)-length(suffix); if (n>0 && substr(name, n+1)==suffix && substr(name, 1, n) ~ /^[0-9]+[.][0-9]+[.][0-9]+$/) print name }' | sort -t '-' -k 1,1 -V -r)
+            do
+                rm -f "/tmp/$previous_file"
+                aws s3 cp "s3://kafka-docker-playground/ci/$previous_file" /tmp/ --region us-east-1 > /dev/null 2>&1
+                if [ -f "/tmp/$previous_file" ] && [ "$(tail -1 "/tmp/$previous_file" | cut -d "|" -f 3)" != "skipped" ]
+                then
+                    log "♻️ no result with CP $TAG for fully managed connector test $dir/$script, reusing $previous_file (the CP version does not matter for a fully managed connector)"
+                    if aws s3 cp "s3://kafka-docker-playground/ci/$previous_file" "$s3_file" --region us-east-1 > /dev/null
+                    then
+                        exists="$previous_file"
+                        result_tag="${previous_file%%-*}"
+                    fi
+                    break
+                fi
+            done
+        fi
         if [ -z "$exists" ]; then
             log "$s3_file does not exist on the bucket, run the test"
             log "no prior S3 result for $dir/$script, scheduling execution"
@@ -290,7 +319,8 @@ do
                     done
                 fi
                 
-                v=$(echo $tag | sed -e 's/\./[.]/g')
+                # the CP version in the job name is the one of the run that wrote the result (another one for a reused fully managed result)
+                v=$(echo ${result_tag:-$tag} | sed -e 's/\./[.]/g')
                 # CI job names end with "<playground_environment>" (+ " 🦭" on podman): the same test list runs in several jobs
                 job_name_end_regex=" ${environment:-plaintext} ?$"
                 if [ "$container_engine" = "podman" ]
