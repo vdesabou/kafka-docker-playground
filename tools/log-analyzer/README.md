@@ -104,6 +104,10 @@ timestamp. The HTML report shows it in 🗓️ **Incident timeline** right after
 
 ## Times and time zones
 
+`--since` / `--until` (`log_window_filter` of `analyze logs`): the lines out of the window become empty lines before the
+digest (the line numbers stay those of the file, for the links to the file pages), a line without its own time follows
+the line before it; the times are compared as text, as written in the logs. The window is in the title of the report.
+
 The digest keeps the offset written after a timestamp (`2026-10-13T10:00:05.123+02:00`, `…Z`, `…-0700`, as `+HH:MM`).
 `log_report.parse_records()` then normalizes every timestamp to 19 characters (`normalize_times()`, also used by
 `log_overview.py`): with one offset in the whole input (or none), it is stripped and the times stay **as written in the
