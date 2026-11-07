@@ -122,6 +122,19 @@ over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 car
 summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
 `--json` and a line of the summary for a ticket.
 
+## Known bugs fixed in a later version (🩹)
+
+`fixed_bugs_found()` matches each entry of `tools/report-common/fixed_bugs.py` (`FIXED_BUGS`: title, plugin, connector
+classes, pattern, `fixed_in`, ref, advice) against the records, their text and their raw context lines from their own
+first line (`own_context()`: the 2 lines before a record are the end of the previous one). The connectors of the records
+that match (or, logged without connector context, the connectors of that plugin) get a verdict from the version of their
+🔌 card (`fixed_bugs.verdict()`): `affected` with `upgrade_to`, the first fixed version of its minor line (or of the first
+line above it); `fixed` when its line has the fix (a line newer than every fixed line has it); `unknown` without a
+version. A connector of another plugin (its class does not match `classes`) is left out. Shown in the summary, the 🩹
+section of the HTML report (after the findings), on the 🔌 card, in the summary for a ticket and in `.fixed_bugs` of
+`--json`. A new entry: the changelog line (`playground connector-plugin changelog -c <plugin> --grep <ref>`, the first
+fixed version of each line) and the pull request of the fix, which gives the exception and the frames to match.
+
 ## Config lint
 
 `config_lint()` checks the last dump of the configuration of each connector (`SinkConnectorConfig`,

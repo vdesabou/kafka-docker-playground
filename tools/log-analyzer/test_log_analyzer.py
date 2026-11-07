@@ -196,8 +196,16 @@ def test_bundle_triage():
 
 def records_file(tmp, text):
     path = os.path.join(tmp, "records")
+    # | separates the fields of the @@…@@ lines (the payload of @@PGCTX@@ is a raw log line, kept as it is)
+    out = []
+    for line in text.split("\n"):
+        if line.startswith("@@PGCTX@@"):
+            line = line.replace("|", "\t", 1)
+        elif line.startswith("@@"):
+            line = line.replace("|", "\t")
+        out.append(line)
     with open(path, "w") as fh:
-        fh.write(text.replace("|", "\t"))
+        fh.write("\n".join(out))
     return path
 
 
@@ -230,6 +238,37 @@ def test_infra_events_and_bursts():
     check("lifecycle rows", {"process_stop", "controller_change", "gc_pause"} <= kinds, kinds)
     out = log_report.text_summary(res, [])
     check("summary", "💥 39 ERROR/WARN occurrence(s) in the next 60 s" in out, out)
+
+
+def test_fixed_bugs_found():
+    """🩹 a verdict per connector from its plugin version; the context lines before a record (the end of the previous
+    stack trace) do not make it match"""
+    text = ("@@PGFILE@@|connect.log|20|2|2|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            "@@PGREC@@|ERROR|1|3|8|2026-11-07T10:05:00|2026-11-07T10:05:00\n"
+            "[2026-11-07 10:05:00,000] ERROR [jdbc-sink|task-0] Task threw an uncaught and unrecoverable exception (x)\n"
+            "    java.lang.NullPointerException: fields must be non-null\n"
+            "@@PGTS@@|2026-11-07T10:05:00\n"
+            "@@PGCTX@@|before\n@@PGCTX@@|before\n"
+            "@@PGCTX@@|[2026-11-07 10:05:00,000] ERROR [jdbc-sink|task-0] Task threw an uncaught and unrecoverable exception (x)\n"
+            "@@PGCTX@@|java.lang.NullPointerException: fields must be non-null\n"
+            "@@PGCTX@@|\tat io.confluent.connect.jdbc.sink.JdbcDbWriter.getSchemaSafe(JdbcDbWriter.java:149)\n"
+            "@@PGREC@@|ERROR|1|9|11|2026-11-07T10:06:00|2026-11-07T10:06:00\n"
+            "[2026-11-07 10:06:00,000] ERROR [s3-sink|task-0] Task threw an uncaught and unrecoverable exception (x)\n"
+            "    java.lang.NullPointerException\n"
+            "@@PGTS@@|2026-11-07T10:06:00\n"
+            "@@PGCTX@@|\tat io.confluent.connect.jdbc.sink.JdbcDbWriter.getSchemaSafe(JdbcDbWriter.java:149)\n"
+            "@@PGCTX@@|\tat io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:69)\n"
+            "@@PGCTX@@|[2026-11-07 10:06:00,000] ERROR [s3-sink|task-0] Task threw an uncaught and unrecoverable exception (x)\n"
+            "@@PGCTX@@|java.lang.NullPointerException\n"
+            "@@PGEVT@@|plugin_version|1|2026-11-07T10:00:00|jdbc-sink|10.8.5 io.confluent.connect.jdbc.JdbcSinkConnector\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    bugs = {b["ref"]: b for b in res["fixed_bugs"]}
+    check("only the JDBC bug", list(bugs) == ["CC-46266 (PR-1707)"], list(bugs))
+    b = bugs["CC-46266 (PR-1707)"]
+    check("verdict", b["connectors"] == [{"connector": "jdbc-sink", "version": "10.8.5", "verdict": "affected", "upgrade_to": "10.8.13"}], b["connectors"])
+    card = next(c for c in res["connectors"] if c["connector"] == "jdbc-sink")
+    check("on the card", card.get("fixed_bugs") and card["fixed_bugs"][0]["verdict"] == "affected", card.get("fixed_bugs"))
 
 
 if __name__ == "__main__":

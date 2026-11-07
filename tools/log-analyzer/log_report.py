@@ -35,6 +35,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, time_chart, verdict_html, dark)
+import fixed_bugs  # noqa: E402
 import known_causes  # noqa: E402
 import log_viewer  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
@@ -713,6 +714,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["connectors"] = connector_health(res, files)
     res["summary"]["kafka_versions"] = kafka_versions(files)
     res["lifecycle"] = lifecycle(res, files)
+    res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["config_lint"] = config_lint(res)
     for c in res["connectors"]:
         c["config_lint"] = [x for x in res["config_lint"] if x["connector"] == c["connector"]]
@@ -1126,6 +1128,110 @@ def lifecycle_html(lc: Optional[dict]) -> str:
             f"{rows}</table></div>")
 
 
+VERDICT_ICONS = {"affected": "⛔", "fixed": "✅", "unknown": "❔"}
+
+
+def own_context(r: dict) -> str:
+    """the raw context lines of a record from its own first line: the 2 lines before it belong to another record (the
+    stack trace of the previous error would match too)"""
+    lines = (r.get("context") or "").split("\n")
+    head = (r.get("message") or "")[:60]
+    for i, line in enumerate(lines[:4]):
+        if head and line[:60] == head:
+            return "\n".join(lines[i:])
+    return "\n".join(lines[2:])
+
+
+def fixed_bugs_found(res: dict, files: List[dict]) -> List[dict]:
+    """🩹 the known bugs of tools/report-common/fixed_bugs.py whose pattern a record matches (its text and its raw context
+    lines), with a verdict per connector from the plugin version of its 🔌 card: affected (the version to upgrade to),
+    fixed in its version (another cause, or a regression), unknown (no "Instantiated connector … with version" line).
+    The verdict is also put on the card of the connector"""
+    cards = {c["connector"]: c for c in res["connectors"]}
+    out = []
+    for b in fixed_bugs.FIXED_BUGS:
+        rx, crx = re.compile(b["pattern"]), re.compile(b["classes"])
+        matches = [(i, f, r) for i, f in enumerate(files) for r in f["records"]
+                   if rx.search(r["text"] + "\n" + own_context(r))]
+        if not matches:
+            continue
+        names = list(OrderedDict((r["connector"], True) for _, _, r in matches if r.get("connector")))
+        if not names:
+            # logged without connector context: the connectors of that plugin
+            names = [n for n, c in cards.items() if crx.search(c.get("class") or "")]
+        conns = []
+        for name in names:
+            c = cards.get(name) or {}
+            if c.get("class") and not crx.search(c["class"]):
+                # same exception in a connector of another plugin: not this bug
+                continue
+            version = (c.get("versions") or [None])[-1]
+            v, upgrade = fixed_bugs.verdict(version, b["fixed_in"]) if version else ("unknown", None)
+            conns.append({"connector": name, "version": version, "verdict": v, "upgrade_to": upgrade})
+            if c:
+                c.setdefault("fixed_bugs", []).append({"title": b["title"], "ref": b["ref"], "verdict": v,
+                                                       "version": version, "upgrade_to": upgrade})
+        if names and not conns:
+            continue
+        _, first_f, first_r = earliest(matches)
+        out.append({"title": b["title"], "ref": b["ref"], "plugin": b["plugin"], "fixed_in": b["fixed_in"],
+                    "advice": b["advice"], "occurrences": sum(r["count"] for _, _, r in matches),
+                    "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
+                    "connectors": conns,
+                    "verdict": "affected" if any(x["verdict"] == "affected" for x in conns) else
+                               "unknown" if not conns or any(x["verdict"] == "unknown" for x in conns) else "fixed",
+                    "records": [r["index"] for _, _, r in matches if r.get("index") is not None]})
+    out.sort(key=lambda b: ["affected", "unknown", "fixed"].index(b["verdict"]))
+    return out
+
+
+def fixed_bug_lines(b: dict) -> List[str]:
+    """the verdict of each connector, one line each (terminal, ticket)"""
+    lines = []
+    for x in b["connectors"] or [{"connector": None, "version": None, "verdict": "unknown", "upgrade_to": None}]:
+        who = f"{x['connector']} " if x["connector"] else ""
+        if x["verdict"] == "affected":
+            lines.append(f"⛔ {who}runs {x['version']}: affected, upgrade to {x['upgrade_to']} or later "
+                         f"(playground connector-plugin changelog -c {b['plugin']} --from {x['version']} --grep {b['ref'].split(' ')[0]})")
+        elif x["verdict"] == "fixed":
+            lines.append(f"✅ {who}runs {x['version']}, which has the fix: another cause, or a regression")
+        else:
+            lines.append(f"❔ {who}plugin version not in the logs (no \"Instantiated connector … with version\" line): "
+                         f"fixed in {', '.join(b['fixed_in'])}")
+    return lines
+
+
+def fixed_bugs_text(items: List[dict], top: int = 5) -> List[str]:
+    if not items:
+        return []
+    out = ["🩹 Known bugs fixed in a later version of the plugin (.fixed_bugs of --json)"]
+    for b in items[:top]:
+        out.append(f"   {b['title']} ×{b['occurrences']:,} · {b['ref']}, fixed in {', '.join(b['fixed_in'])}")
+        out += [f"      {line}" for line in fixed_bug_lines(b)]
+        out.append(f"      → {b['advice']}")
+    return out
+
+
+def fixed_bugs_html(items: List[dict], viewers: Dict[str, str]) -> str:
+    if not items:
+        return ""
+    rows = []
+    for b in items:
+        first = b["first"]
+        where = log_viewer.link(viewers, first["file"], e(f"{first['file'].split('/')[-1]}:{first['line']}"), first["line"])
+        verdicts = "".join(f"<li>{e(line)}</li>" for line in fixed_bug_lines(b))
+        rows.append(f"<tr class='fb-{b['verdict']}'><td>{VERDICT_ICONS[b['verdict']]} {e(b['title'])}<div class='fi-meta'>"
+                    f"{e(b['ref'])} · fixed in {e(', '.join(b['fixed_in']))} · ×{b['occurrences']:,} · first at {where}</div></td>"
+                    f"<td><ul class='fb-verdicts'>{verdicts}</ul><div class='fi-meta'>→ {e(b['advice'])}</div></td></tr>")
+    return ("<style>tr.fb-affected td{background:#fef2f2}html[data-theme=dark] tr.fb-affected td{background:#3b1515}"
+            ".fb-verdicts{margin:0;padding-left:18px}</style>"
+            "<div class='table-card'><h2>🩹 Known bugs fixed in a later version</h2><p class='legend'>Errors of the logs that "
+            "match a bug of the connector plugin fixed in a later version (from its changelog and the pull request of the "
+            "fix), with a verdict from the version each connector runs (🏷️ on its card): ⛔ affected, upgrade; ✅ it runs a "
+            "version with the fix, so another cause (or a regression); ❔ the logs do not give its version.</p>"
+            "<table><tr><th>Bug</th><th>Verdict</th></tr>" + "".join(rows) + "</table></div>")
+
+
 def other_files_text(of: Optional[dict], top: int = 8) -> List[str]:
     """🧰 the files of the input for another analyzer (tools/log-analyzer/bundle_triage.py), with the command to run"""
     cmds = (of or {}).get("commands") or []
@@ -1278,6 +1384,10 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else "")
             + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
+            + "".join(f"<div class='conn-note-bug'>{VERDICT_ICONS[x['verdict']]} {e(x['title'])} ({e(x['ref'])})"
+                      + (f": upgrade to {e(x['upgrade_to'])} or later" if x["verdict"] == "affected" else
+                         ": fixed in its version" if x["verdict"] == "fixed" else ": version unknown") + "</div>"
+                      for x in c.get("fixed_bugs") or [])
             + (f"<details class='conn-lint'><summary>🧪 {len(c['config_lint'])} config warning(s)</summary><ul>"
                + "".join(f"<li><span class='st {x['severity'].lower()}'>{x['severity']}</span> <span class='mono'>{e(x['key'])}={e(x['value'])}</span>: {e(x['message'])}</li>"
                          for x in c["config_lint"]) + "</ul></details>" if c.get("config_lint") else "")
@@ -1754,6 +1864,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += lifecycle_text(res.get("lifecycle"))
     # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
     out += config_lint_text(res.get("config_lint") or [])
+    # the known bugs fixed in a later version (🩹 of the HTML report, .fixed_bugs of --json)
+    out += fixed_bugs_text(res.get("fixed_bugs") or [])
     # the files for another analyzer (🧰 of the HTML report, .other_files of --json)
     out += other_files_text(res.get("other_files"))
     configs = res.get("configuration") or []
@@ -1984,6 +2096,12 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             where = f"{first.get('file', '').split('/')[-1]}:{first.get('line', '')}" + (f" {first['timestamp'].replace('T', ' ')}" if first.get("timestamp") else "")
             reads = "".join(f" · 📚 [{md_cell(label)}]({url})" for label, url in reading_links(h))
             out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])}{reads} |")
+    bugs = res.get("fixed_bugs") or []
+    if bugs:
+        out += ["", "### Known bugs fixed in a later version of the plugin", ""]
+        for b in bugs[:5]:
+            out.append(f"- **{md_cell(b['title'])}** ({md_cell(b['ref'])}, fixed in {', '.join(b['fixed_in'])}), ×{b['occurrences']:,}")
+            out += [f"  - {md_cell(line)}" for line in fixed_bug_lines(b)]
     others = [c for c in res["root_causes"] if not c.get("explained_by")][:5]
     if others:
         out += ["", "### Errors no known cause explains (most frequent)", ""]
@@ -3763,6 +3881,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
+            fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
             lifecycle_html(res.get("lifecycle")), other_files_html(res.get("other_files"))]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
@@ -3919,7 +4038,7 @@ def main() -> int:
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
                          "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint,"
-                         "other_files (default: all)")
+                         "other_files,fixed_bugs (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
