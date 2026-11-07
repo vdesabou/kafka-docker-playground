@@ -1400,13 +1400,15 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
         attrs = (f" data-level='{LEVEL_ORDER.get(ev['level'], '')}'" if ev["kind"] == "first_error" else "") \
             + (f" data-conn='{e(ev['connector'])}'" if ev.get("connector") else "") \
             + f" data-t='{epoch(ev['time'])}'" + (f" data-rec='{ev['record']}'" if ev.get("record") is not None else "")
-        return (f"<tr class='tl-row {cls}' data-component='{file_component(ev['file'])}'{attrs}><td class='mono'>{e(ev['time'].replace('T', ' '))}</td>"
+        return (f"<tr class='tl-row {cls}' data-component='{file_component(ev['file'])}'{attrs}><td class='mono tl-time'>{e(ev['time'][:10])}<br>{e(ev['time'][11:19])}</td>"
+                "<td class='mono tl-delta'></td>"
                 f"<td>{component_chips([ev['file']])}</td><td>{e(timeline_what(ev))}"
                 + (f" <span class='fi-conn'>{e(ev['connector'])}</span>" if ev.get("connector") else "")
                 + (f" <span class='fi-meta'>×{ev['count']}</span>" if ev.get("count") else "")
                 + (f"<div class='tl-after'>🔗{e(after_text(ev))}</div>" if ev.get("after") else "")
                 + f"</td><td class='mono'>{where}</td></tr>")
-    head = "<tr><th>Time</th><th>Component</th><th>What</th><th>Where</th></tr>"
+    head = ("<tr><th>Time</th><th title='time since the previous event shown (bold: a big gap)'>Δ</th><th>Component</th>"
+            "<th>What</th><th>Where</th></tr>")
     first = "".join(row(ev) for ev in events[:shown])
     more = ""
     if len(events) > shown:
@@ -1415,12 +1417,33 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
     return ("<style>.tl-after{font-size:.8rem;font-weight:600;color:#b45309}html[data-theme=dark] .tl-after{color:#fcd34d}tr.tl-known td{background:#fff7ed}tr.tl-start td,tr.tl-connector_config td{background:#f0f9ff}"
             "tr.tl-config_change td{background:#fefce8}html[data-theme=dark] tr.tl-known td{background:#3a2406}"
             "html[data-theme=dark] tr.tl-start td,html[data-theme=dark] tr.tl-connector_config td{background:#0c2a3a}"
-            "html[data-theme=dark] tr.tl-config_change td{background:#33300a}</style>"
+            "html[data-theme=dark] tr.tl-config_change td{background:#33300a}"
+            ".tl-time{white-space:nowrap}.tl-delta{white-space:nowrap;color:#64748b;font-size:.8rem}.tl-delta.tl-big{color:#b91c1c;font-weight:700}"
+            "html[data-theme=dark] .tl-delta.tl-big{color:#fca5a5}"
+            ".tl-chart{margin:6px 0 4px}.tl-chart svg{display:block;font-size:11px}.tl-lane{fill:#f8fafc}.tl-lane-alt{fill:#f1f5f9}"
+            ".tl-lane-label{fill:#334155;font-weight:600}.tl-tick{fill:#64748b}.tl-axis{stroke:#94a3b8}.tl-grid{stroke:#e2e8f0}"
+            ".tl-break{fill:#e2e8f0;opacity:.7}.tl-break-edge{stroke:#94a3b8;stroke-dasharray:3 3}"
+            ".tl-break-label{fill:#64748b;font-weight:600;cursor:help}.tl-ev{cursor:pointer}.tl-ev:hover>*,.tl-ev:focus>*{stroke:#0f172a;stroke-width:2}"
+            ".tl-known-mark{stroke:#7c2d12;stroke-width:1}"
+            "html[data-theme=dark] .tl-lane{fill:#1e293b}html[data-theme=dark] .tl-lane-alt{fill:#0f172a}"
+            "html[data-theme=dark] .tl-lane-label{fill:#cbd5e1}html[data-theme=dark] .tl-tick,html[data-theme=dark] .tl-break-label{fill:#94a3b8}"
+            "html[data-theme=dark] .tl-grid{stroke:#334155}html[data-theme=dark] .tl-break{fill:#334155}"
+            "html[data-theme=dark] .tl-ev:hover>*,html[data-theme=dark] .tl-ev:focus>*{stroke:#f8fafc}"
+            ".tl-legend span{margin-right:12px;white-space:nowrap}.tl-legend span[hidden]{display:none}"
+            "@keyframes tlflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}tr.tl-flash td{animation:tlflash 1.6s ease-out}"
+            "</style>"
             "<div class='table-card'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
             "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
             "logged at startup), the connectors (re)configured and the config keys changed between restarts. It follows the "
             "filters above (levels, component, connector, search, period): the rows of the other connectors are hidden, "
             "the restarts and configurations without connector stay.</p><p class='legend tl-none' hidden>No event in this selection.</p>"
+            "<p class='legend tl-chart-caption' hidden></p><div class='tl-chart' hidden></div>"
+            "<p class='legend tl-legend' hidden><span data-kind='fatal' style='color:#991b1b'>● first FATAL</span>"
+            "<span data-kind='error' style='color:#dc2626'>● first ERROR</span><span data-kind='warn' style='color:#f59e0b'>● first WARN</span>"
+            "<span data-kind='known' style='color:#ea580c'>◆ known cause</span><span data-kind='start' style='color:#2563eb'>▲ (re)start</span>"
+            "<span data-kind='lifecycle' style='color:#7c3aed'>○ rebalance / process start</span>"
+            "<span data-kind='config' style='color:#0d9488'>■ connector (re)configured / config changed</span>"
+            "<span data-kind='break'>⫽ long gap cut</span><span>hover a mark for its time and Δ, click it for its row</span></p>"
             f"<table>{head}{first}</table>{more}</div>")
 
 
@@ -2384,6 +2407,217 @@ function pgConnCards() {
     more.textContent = "show the other " + (matching - @@CONN_SHOWN@@) + " connector(s)";
   }
 }
+// 🗓️ Incident timeline: a duration as people say it (4 min 46 s, 2 h 13 min)
+function pgDur(s) {
+  s = Math.round(s);
+  if (s < 60) return s + " s";
+  const m = Math.floor(s / 60), r = s % 60;
+  if (m < 60) return m + " min" + (r ? " " + r + " s" : "");
+  const h = Math.floor(m / 60), mm = m % 60;
+  if (h < 48) return h + " h" + (mm ? " " + mm + " min" : "");
+  const d = Math.floor(h / 24), hh = h % 24;
+  return d + " d" + (hh ? " " + hh + " h" : "");
+}
+// the Δ column: the time since the previous event shown, in bold when it is a big gap of the timeline shown
+function pgTimelineDeltas(rows) {
+  const ts = rows.map(function (tr) { return tr.dataset.t ? +tr.dataset.t : null; });
+  const known = ts.filter(function (t) { return t !== null; });
+  const span = known.length ? known[known.length - 1] - known[0] : 0;
+  let maxGap = 0;
+  for (let i = 1; i < known.length; i++) maxGap = Math.max(maxGap, known[i] - known[i - 1]);
+  let prev = null;
+  rows.forEach(function (tr, i) {
+    const cell = tr.querySelector(".tl-delta");
+    if (!cell) return;
+    const t = ts[i];
+    cell.classList.remove("tl-big");
+    if (t === null) { cell.textContent = ""; return; }
+    if (prev === null) { cell.textContent = "start"; cell.title = "the first event shown"; }
+    else {
+      const d = t - prev;
+      cell.textContent = d === 0 ? "+0 s" : "+" + pgDur(d);
+      cell.title = "+" + pgDur(d) + " after the previous event shown, +" + pgDur(t - known[0]) + " after the first";
+      // the biggest gaps only: 30 s or more, half of the biggest one, 15 % of the timeline shown
+      if (d >= 30 && d >= maxGap * 0.5 && d >= span * 0.15) cell.classList.add("tl-big");
+    }
+    prev = t;
+  });
+}
+// the chart above the table: a lane per component, the events placed by time (the long gaps cut ⫽), the shape and the
+// color give the kind; hover for the details, click to go to the row. Drawn from the rows shown: it follows the filters
+const PG_TL_KINDS = {
+  fatal: ["circle", "#991b1b", "first FATAL"], error: ["circle", "#dc2626", "first ERROR"], warn: ["circle", "#f59e0b", "first WARN"],
+  known: ["diamond", "#ea580c", "known cause"], start: ["triangle", "#2563eb", "(re)start"],
+  lifecycle: ["ring", "#7c3aed", "rebalance / process start"], config: ["square", "#0d9488", "connector (re)configured / config changed"]
+};
+function pgTimelineKind(tr) {
+  const c = tr.classList;
+  if (c.contains("tl-known")) return "known";
+  if (c.contains("tl-first_error")) return tr.dataset.level === "0" ? "fatal" : (tr.dataset.level === "2" ? "warn" : "error");
+  if (c.contains("tl-start")) return "start";
+  if (c.contains("tl-lifecycle")) return "lifecycle";
+  if (c.contains("tl-connector_config") || c.contains("tl-config_change")) return "config";
+  return "error";
+}
+function pgTimelineChart(rows) {
+  const box = document.querySelector(".tl-chart");
+  if (!box) return;
+  const ns = "http://www.w3.org/2000/svg";
+  const evs = [];
+  rows.forEach(function (tr) {
+    if (!tr.dataset.t) return;
+    const cells = tr.cells;
+    evs.push({ t: +tr.dataset.t, tr: tr, kind: pgTimelineKind(tr), comp: tr.dataset.component || "other",
+               compLabel: cells[2] ? cells[2].textContent.trim() : "", what: cells[3] ? cells[3].textContent.replace(/\\s+/g, " ").trim() : "" });
+  });
+  box.textContent = "";
+  const caption = document.querySelector(".tl-chart-caption"), legend = document.querySelector(".tl-legend");
+  if (evs.length < 2) { box.hidden = true; if (caption) caption.hidden = true; if (legend) legend.hidden = true; return; }
+  box.hidden = false;
+  if (legend) legend.hidden = false;
+  evs.sort(function (a, b) { return a.t - b.t; });
+  const t0 = evs[0].t, t1 = evs[evs.length - 1].t, span = t1 - t0;
+  // the lanes: one per component, in the order of their first event
+  const lanes = [];
+  evs.forEach(function (ev) {
+    if (lanes.indexOf(ev.comp) < 0) lanes.push(ev.comp);
+    if (!lanes["_" + ev.comp]) lanes["_" + ev.comp] = ev.compLabel;
+  });
+  // the long gaps (a quarter of the span, 2 minutes or more) are cut: a fixed width with their duration
+  const times = evs.map(function (ev) { return ev.t; }).filter(function (t, i, a) { return i === 0 || t !== a[i - 1]; });
+  const breaks = [];
+  for (let i = 1; i < times.length; i++) {
+    const g = times[i] - times[i - 1];
+    if (g >= 120 && g >= span * 0.25) breaks.push([times[i - 1], times[i]]);
+  }
+  const cut = breaks.reduce(function (s, b) { return s + b[1] - b[0]; }, 0);
+  const W = Math.max(box.clientWidth || 900, 480), labelW = 120, pad = 16, right = 16 + pad, laneH = 40, top = 8, axisH = 30, breakW = 34;
+  const H = top + lanes.length * laneH + axisH;
+  const avail = W - labelW - pad - right - breaks.length * breakW;
+  const linear = Math.max(span - cut, 1);
+  const scale = avail / linear;
+  function x(t) {
+    let off = 0, nb = 0;
+    for (const b of breaks) { if (t >= b[1]) { off += b[1] - b[0]; nb++; } }
+    return labelW + pad + (span === 0 ? avail / 2 : (t - t0 - off) * scale) + nb * breakW;
+  }
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", evs.length + " events over " + pgDur(span));
+  function el(name, attrs, parent) {
+    const n = document.createElementNS(ns, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(n);
+    return n;
+  }
+  // lanes
+  lanes.forEach(function (comp, i) {
+    const y = top + i * laneH;
+    el("rect", { x: labelW, y: y, width: W - labelW - right + pad, height: laneH, "class": "tl-lane" + (i % 2 ? " tl-lane-alt" : "") });
+    const label = el("text", { x: labelW - 8, y: y + laneH / 2 + 4, "text-anchor": "end", "class": "tl-lane-label" });
+    label.textContent = lanes["_" + comp] || comp;
+  });
+  const axisY = top + lanes.length * laneH;
+  el("line", { x1: labelW, x2: W - right + pad, y1: axisY, y2: axisY, "class": "tl-axis" });
+  // ticks: a round step giving ~1 tick per 110 px, in each part between the cuts
+  const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 604800];
+  const want = linear / Math.max(avail / 110, 1);
+  const step = steps.find(function (s) { return s >= want; }) || steps[steps.length - 1];
+  const parts = [];
+  let from = t0;
+  breaks.forEach(function (b) { parts.push([from, b[0]]); from = b[1]; });
+  parts.push([from, t1]);
+  const multiDay = pgStamp(t0).slice(0, 10) !== pgStamp(t1).slice(0, 10);
+  parts.forEach(function (p) {
+    for (let t = Math.ceil(p[0] / step) * step; t <= p[1]; t += step) {
+      const tx = x(t), s = pgStamp(t);
+      el("line", { x1: tx, x2: tx, y1: top, y2: axisY + 4, "class": "tl-grid" });
+      const label = el("text", { x: tx, y: axisY + 17, "text-anchor": "middle", "class": "tl-tick" });
+      label.textContent = (multiDay && step >= 3600 ? s.slice(5, 10) + " " : "") + (step >= 60 ? s.slice(11, 16) : s.slice(11, 19));
+    }
+  });
+  if (span > 0 && parts.every(function (p) { return Math.ceil(p[0] / step) * step > p[1]; })) {
+    // no round tick in a short span: the first and the last time
+    [t0, t1].forEach(function (t, i) {
+      const label = el("text", { x: x(t), y: axisY + 17, "text-anchor": i ? "end" : "start", "class": "tl-tick" });
+      label.textContent = pgStamp(t).slice(11, 19);
+    });
+  }
+  // the cuts
+  breaks.forEach(function (b) {
+    const bx = x(b[0]);
+    el("rect", { x: bx + 4, y: top, width: breakW - 8, height: lanes.length * laneH, "class": "tl-break" });
+    el("line", { x1: bx + 4, x2: bx + 4, y1: top, y2: axisY, "class": "tl-break-edge" });
+    el("line", { x1: bx + breakW - 4, x2: bx + breakW - 4, y1: top, y2: axisY, "class": "tl-break-edge" });
+    // its duration, vertical in the cut: never over a lane label or a tick
+    const cx = bx + breakW / 2, cy = top + lanes.length * laneH / 2;
+    const label = el("text", { x: cx, y: cy, "text-anchor": "middle", "dominant-baseline": "middle",
+                               transform: "rotate(-90 " + cx + " " + cy + ")", "class": "tl-break-label" });
+    label.textContent = "⫽ " + pgDur(b[1] - b[0]);
+    const tip = el("title", {}, label);
+    tip.textContent = pgDur(b[1] - b[0]) + " without event (" + pgStamp(b[0]) + " → " + pgStamp(b[1]) + "), cut";
+  });
+  // the events: a mark that would touch another one of its lane goes above or below it
+  const placed = lanes.map(function () { return []; });
+  const offsets = [0, -10, 10, -17, 17];
+  let prev = null;
+  evs.forEach(function (ev) {
+    const lane = lanes.indexOf(ev.comp);
+    const ex = x(ev.t);
+    let dy = offsets.find(function (o) {
+      return placed[lane].every(function (p) { return Math.abs(p[0] - ex) >= 12 || Math.abs(p[1] - o) >= 7; });
+    });
+    if (dy === undefined) dy = 0;
+    placed[lane].push([ex, dy]);
+    const ey = top + lane * laneH + laneH / 2 + dy;
+    const spec = PG_TL_KINDS[ev.kind];
+    const g = el("g", { "class": "tl-ev", tabindex: "0" });
+    let shape;
+    if (spec[0] === "circle") shape = el("circle", { cx: ex, cy: ey, r: ev.kind === "warn" ? 4 : 5, fill: spec[1] }, g);
+    else if (spec[0] === "ring") shape = el("circle", { cx: ex, cy: ey, r: 4.5, fill: "none", stroke: spec[1], "stroke-width": 2 }, g);
+    else if (spec[0] === "square") shape = el("rect", { x: ex - 4.5, y: ey - 4.5, width: 9, height: 9, fill: spec[1] }, g);
+    else if (spec[0] === "triangle") shape = el("path", { d: "M" + ex + " " + (ey - 6) + "L" + (ex + 6) + " " + (ey + 5) + "L" + (ex - 6) + " " + (ey + 5) + "Z", fill: spec[1] }, g);
+    else shape = el("path", { d: "M" + ex + " " + (ey - 7) + "L" + (ex + 7) + " " + ey + "L" + ex + " " + (ey + 7) + "L" + (ex - 7) + " " + ey + "Z", fill: spec[1], "class": "tl-known-mark" }, g);
+    const tip = el("title", {}, g);
+    tip.textContent = pgStamp(ev.t) + "  (+" + pgDur(ev.t - t0) + " after the first" + (prev === null ? "" : ", +" + pgDur(ev.t - prev) + " after the previous") + ")\\n"
+      + ev.compLabel + " · " + spec[2] + "\\n" + ev.what;
+    prev = ev.t;
+    function go() {
+      const details = ev.tr.closest("details");
+      if (details && !details.open) details.open = true;
+      ev.tr.scrollIntoView({ block: "center", behavior: "smooth" });
+      ev.tr.classList.remove("tl-flash");
+      void ev.tr.offsetWidth;
+      ev.tr.classList.add("tl-flash");
+    }
+    g.addEventListener("click", go);
+    g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  box.appendChild(svg);
+  if (legend) {
+    const present = {};
+    evs.forEach(function (ev) { present[ev.kind] = true; });
+    if (breaks.length) present["break"] = true;
+    legend.querySelectorAll("span[data-kind]").forEach(function (sp) { sp.hidden = !present[sp.dataset.kind]; });
+  }
+  if (caption) {
+    caption.hidden = false;
+    let biggest = 0, at = 0;
+    for (let i = 1; i < evs.length; i++) if (evs[i].t - evs[i - 1].t > biggest) { biggest = evs[i].t - evs[i - 1].t; at = i; }
+    caption.textContent = evs.length + " events over " + pgDur(span) + " (" + pgStamp(t0) + " → " + pgStamp(t1) + ")"
+      + (biggest ? " · biggest gap: " + pgDur(biggest) + " before " + pgStamp(evs[at].t).slice(11) : "")
+      + (breaks.length ? " · ⫽ " + breaks.length + " long gap(s) cut" : "");
+  }
+}
+var pgTimelineResize = null;
+window.addEventListener("resize", function () {
+  clearTimeout(pgTimelineResize);
+  pgTimelineResize = setTimeout(function () {
+    pgTimelineChart(Array.prototype.filter.call(document.querySelectorAll("tr.tl-row"), function (tr) { return !tr.hidden; }));
+  }, 150);
+});
 // 🗓️ Incident timeline: its rows follow the filters (a row of another connector, level, component or period is hidden;
 // a first error out of the search too, the other rows by their text)
 function pgTimeline() {
@@ -2404,6 +2638,9 @@ function pgTimeline() {
   });
   const none = document.querySelector(".tl-none");
   if (none) none.hidden = shown > 0;
+  const visible = Array.prototype.filter.call(rows, function (tr) { return !tr.hidden; });
+  pgTimelineDeltas(visible);
+  pgTimelineChart(visible);
 }
 // the filters in the URL (#pg:lvl=1&comp=connect&conn=s3-sink&q=timeout&t=<from>-<to>): a link opens the report on the
 // same view (🔗 Link to this view); an anchor of the report (#finding-…) replaces it until the next change
