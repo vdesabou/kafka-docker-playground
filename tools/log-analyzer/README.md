@@ -94,6 +94,15 @@ over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 car
 summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
 `--json` and a line of the summary for a ticket.
 
+## Config lint
+
+`config_lint()` checks the last dump of the configuration of each connector (`SinkConnectorConfig`,
+`SourceConnectorConfig`, `ConnectorConfig`, a connector config file) and of its own clients (`ConsumerConfig` of
+`connector-consumer-<name>-*`, `ProducerConfig` of `connector-producer-<name>-*`, not the other clients of its context
+such as a license manager): `errors.tolerance=all` without a DLQ on a sink, skipped records not logged, a DLQ with one
+replica, `max.poll.records` ≥ 5000 with `max.poll.interval.ms` ≤ 300000, `auto.offset.reset=latest` on a sink, `acks` other
+than `all` on a source producer. 🧪 on the 🔌 card, the terminal summary, the summary for a ticket, `.config_lint` of `--json`.
+
 ## Errors right after a change
 
 `link_causes()` (in `incident_timeline()`) marks a first ERROR / FATAL or a known cause that comes within

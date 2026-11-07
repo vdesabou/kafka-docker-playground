@@ -10164,7 +10164,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle (default: all).\n    For example --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle, config_lint\n    (default: all). For example --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -11319,7 +11319,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle (default: all).\n    For example --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle, config_lint\n    (default: all). For example --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
