@@ -164,7 +164,7 @@ The CI, including the list of tests executed, is defined in [`.github/workflows/
 > 
 > * It was failing in the last run
 > * A change has been made in the test directory
-> * CP and/or connector version(s) has/have changed
+> * CP and/or connector version(s) has/have changed (a new CP version does not re-run fully managed connector tests: the connector runs in Confluent Cloud, so their last result with the previous CP version is kept)
 > * Last execution was more than 14 days ago
 
 If a test is failing 🔥, a Github issue will be automatically opened or updated with results for each CP version.

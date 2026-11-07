@@ -277,7 +277,8 @@ do
         
         v=$(echo $image_version | sed -e 's/\./[.]/g')
         html_url=""
-        for job_name_regex in "${v}.*${test}.*${job_name_end_regex}" "${v}.*${test}"
+        # last regex without the CP version: run-tests.sh reuses the result of a fully managed connector test written with another CP version
+        for job_name_regex in "${v}.*${test}.*${job_name_end_regex}" "${v}.*${test}" "${test}.*${job_name_end_regex}"
         do
           for i in {1..10}
           do
