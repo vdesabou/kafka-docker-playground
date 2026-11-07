@@ -10093,8 +10093,8 @@ playground_analyze_logs_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--compare BEFORE")"
-    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n"
+    printf "  %s\n" "$(magenta "--compare BEFORE (repeatable)")"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n    \n    🎓 Tip: can be set several times, oldest first (-f day3 --compare day1\n    --compare day2): the comparison is with the last\n    one, and a 📈 Trend gives the totals and the main root causes of every input\n    in order (.trend of --json)\n"
     echo
 
     # :flag.usage
@@ -10164,7 +10164,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle, config_lint\n    (default: all). For example --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, trend, lifecycle,\n    config_lint (default: all). For example --json-sections\n    summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -11248,8 +11248,8 @@ playground_debug_analyze_logs_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--compare BEFORE")"
-    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n"
+    printf "  %s\n" "$(magenta "--compare BEFORE (repeatable)")"
+    printf "    🔁 Compare with another input: the logs before a fix, another worker, the day\n    before. A log file, folder or archive\n    (analyzed with the same --connector, --with-worker, --errors-only and\n    --sanitize), or a JSON written by --json\n    \n    The report says what is new, gone, growing or shrinking: root causes, known\n    causes, connectors and the totals by level\n    (per hour when the two inputs cover different periods), in a 🔁 Comparison\n    section, the terminal summary and\n    .comparison of --json\n    \n    🎓 Tip: can be set several times, oldest first (-f day3 --compare day1\n    --compare day2): the comparison is with the last\n    one, and a 📈 Trend gives the totals and the main root causes of every input\n    in order (.trend of --json)\n"
     echo
 
     # :flag.usage
@@ -11319,7 +11319,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle, config_lint\n    (default: all). For example --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, trend, lifecycle,\n    config_lint (default: all). For example --json-sections\n    summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -62614,7 +62614,7 @@ playground_analyze_logs_command() {
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
-  compare="${args[--compare]}"
+  eval "compare_array=(${args[--compare]})"
   since="${args[--since]}"
   until_ts="${args[--until]}"
 
@@ -62693,7 +62693,7 @@ playground_analyze_logs_command() {
           # the day after a fix, compared with the day before (unless --compare names another input)
           compare_fix)
               file_array+=("$root_folder/tools/log-analyzer/samples/compare/after.log")
-              [[ -z "$compare" ]] && compare="$root_folder/tools/log-analyzer/samples/compare/before.log"
+              [[ ${#compare_array[@]} -eq 0 ]] && compare_array=("$root_folder/tools/log-analyzer/samples/compare/before.log")
               ;;
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
           cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
@@ -63610,14 +63610,18 @@ playground_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
-  # --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
-  # same filters and the same sanitizer state), compared by log_report.py --compare
-  if [[ -n "$compare" ]]
-  then
-      compare_json="$tmp_dir/compare.json"
+  # --compare (repeatable, oldest first): each other input as the JSON of analyze logs (given, or written by this command run
+  # again on it, with the same filters and the same sanitizer state), compared by log_report.py --compare (the last one) and
+  # drawn as a trend (all of them)
+  compare_json=""
+  compare_index=0
+  for compare in "${compare_array[@]}"
+  do
+      compare_index=$((compare_index+1))
+      one_json="$tmp_dir/compare-$compare_index.json"
       if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
       then
-          cp "$compare" "$compare_json"
+          cp "$compare" "$one_json"
       elif [ -e "$compare" ]
       then
           progress_step "🔁 analyzing $compare for the comparison"
@@ -63631,23 +63635,21 @@ playground_analyze_logs_command() {
               compare_cmd+=(--connector "$connector")
           done
           # no progress page of its own, the sanitizer state of this run
-          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
-              || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json" 2> "$tmp_dir/compare.log" \
+              || ! jq -e '.type == "logs"' "$one_json" > /dev/null 2>&1
           then
-              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
               tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
-              compare_json=""
+              continue
           fi
       else
-          logwarn "⚠️ --compare: $compare does not exist, no comparison"
-          compare_json=""
+          logwarn "⚠️ --compare: $compare does not exist, left out of the comparison"
+          continue
       fi
-      if [[ -n "$compare_json" ]]
-      then
-          # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
-          report_args+=(--compare "$compare_json" --compare-label "${compare#"$root_folder"/}")
-      fi
-  fi
+      compare_json="$one_json"
+      # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
+      report_args+=(--compare "$one_json" --compare-label "${compare#"$root_folder"/}")
+  done
   for connector in "${connector_array[@]}"
   do
       report_args+=(--connector "$connector")
@@ -65176,7 +65178,7 @@ playground_debug_analyze_logs_command() {
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
-  compare="${args[--compare]}"
+  eval "compare_array=(${args[--compare]})"
   since="${args[--since]}"
   until_ts="${args[--until]}"
 
@@ -65255,7 +65257,7 @@ playground_debug_analyze_logs_command() {
           # the day after a fix, compared with the day before (unless --compare names another input)
           compare_fix)
               file_array+=("$root_folder/tools/log-analyzer/samples/compare/after.log")
-              [[ -z "$compare" ]] && compare="$root_folder/tools/log-analyzer/samples/compare/before.log"
+              [[ ${#compare_array[@]} -eq 0 ]] && compare_array=("$root_folder/tools/log-analyzer/samples/compare/before.log")
               ;;
           cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
           cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
@@ -66172,14 +66174,18 @@ playground_debug_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
-  # --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
-  # same filters and the same sanitizer state), compared by log_report.py --compare
-  if [[ -n "$compare" ]]
-  then
-      compare_json="$tmp_dir/compare.json"
+  # --compare (repeatable, oldest first): each other input as the JSON of analyze logs (given, or written by this command run
+  # again on it, with the same filters and the same sanitizer state), compared by log_report.py --compare (the last one) and
+  # drawn as a trend (all of them)
+  compare_json=""
+  compare_index=0
+  for compare in "${compare_array[@]}"
+  do
+      compare_index=$((compare_index+1))
+      one_json="$tmp_dir/compare-$compare_index.json"
       if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
       then
-          cp "$compare" "$compare_json"
+          cp "$compare" "$one_json"
       elif [ -e "$compare" ]
       then
           progress_step "🔁 analyzing $compare for the comparison"
@@ -66193,23 +66199,21 @@ playground_debug_analyze_logs_command() {
               compare_cmd+=(--connector "$connector")
           done
           # no progress page of its own, the sanitizer state of this run
-          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
-              || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+          if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json" 2> "$tmp_dir/compare.log" \
+              || ! jq -e '.type == "logs"' "$one_json" > /dev/null 2>&1
           then
-              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+              logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
               tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
-              compare_json=""
+              continue
           fi
       else
-          logwarn "⚠️ --compare: $compare does not exist, no comparison"
-          compare_json=""
+          logwarn "⚠️ --compare: $compare does not exist, left out of the comparison"
+          continue
       fi
-      if [[ -n "$compare_json" ]]
-      then
-          # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
-          report_args+=(--compare "$compare_json" --compare-label "${compare#"$root_folder"/}")
-      fi
-  fi
+      compare_json="$one_json"
+      # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
+      report_args+=(--compare "$one_json" --compare-label "${compare#"$root_folder"/}")
+  done
   for connector in "${connector_array[@]}"
   do
       report_args+=(--connector "$connector")
@@ -116606,7 +116610,12 @@ playground_analyze_logs_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--compare']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--compare']+x} ]]; then
+            args['--compare']="$escaped"
+          else
+            args['--compare']="${args['--compare']} $escaped"
+          fi
           shift
           shift
         else
@@ -119560,7 +119569,12 @@ playground_debug_analyze_logs_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--compare']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--compare']+x} ]]; then
+            args['--compare']="$escaped"
+          else
+            args['--compare']="${args['--compare']} $escaped"
+          fi
           shift
           shift
         else
@@ -159764,7 +159778,6 @@ playground_analyze_logs_completion() {
           return
         fi
         shift
-        completion_blocked_flags["--compare"]=1
 
         ;;
       --sample | -s)
@@ -161288,7 +161301,6 @@ playground_debug_analyze_logs_completion() {
           return
         fi
         shift
-        completion_blocked_flags["--compare"]=1
 
         ;;
       --sample | -s)

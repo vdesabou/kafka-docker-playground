@@ -4419,7 +4419,7 @@
                 "--compare"
               ],
               "argument": "BEFORE",
-              "description": "🔁 Compare with another input: the logs before a fix, another worker, the day before. A log file, folder or archive\n(analyzed with the same --connector, --with-worker, --errors-only and --sanitize), or a JSON written by --json\n\nThe report says what is new, gone, growing or shrinking: root causes, known causes, connectors and the totals by level\n(per hour when the two inputs cover different periods), in a 🔁 Comparison section, the terminal summary and\n.comparison of --json"
+              "description": "🔁 Compare with another input: the logs before a fix, another worker, the day before. A log file, folder or archive\n(analyzed with the same --connector, --with-worker, --errors-only and --sanitize), or a JSON written by --json\n\nThe report says what is new, gone, growing or shrinking: root causes, known causes, connectors and the totals by level\n(per hour when the two inputs cover different periods), in a 🔁 Comparison section, the terminal summary and\n.comparison of --json\n\n🎓 Tip: can be set several times, oldest first (-f day3 --compare day1 --compare day2): the comparison is with the last\none, and a 📈 Trend gives the totals and the main root causes of every input in order (.trend of --json)\n\nRepeatable: ✓ Yes"
             },
             {
               "names": [
@@ -4513,7 +4513,7 @@
                 "--json-sections"
               ],
               "argument": "SECTIONS",
-              "description": "🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, lifecycle, config_lint (default: all). For example --json-sections summary,findings,root_causes"
+              "description": "🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, trend, lifecycle, config_lint (default: all). For example --json-sections summary,findings,root_causes"
             },
             {
               "names": [

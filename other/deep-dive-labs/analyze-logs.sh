@@ -152,6 +152,12 @@ lab_expect_contains "✅ gone 1 → 0 ProducerFencedException:"
 lab_expect_contains "✅ gone 1 → 0 PolicyViolationException: Topic replication factor must be 3"
 lab_expect_contains "✅ gone 1 → 0 AmazonS3Exception: Please reduce your request rate."
 
+grep -v "SQLRecoverableException\|10:06:0[3-6]" "${DIR}/../../tools/log-analyzer/samples/compare/after.log" | sed 's/2026-11-06/2026-11-07/g' > "$work/day3.log"
+lab_run bash -c "cd '${DIR}/../..' && playground analyze logs -f '$work/day3.log' --compare tools/log-analyzer/samples/compare/before.log --compare tools/log-analyzer/samples/compare/after.log --output-dir '$report_dir'"
+lab_expect_contains "📈 Trend over 3 inputs (oldest first: tools/log-analyzer/samples/compare/before.log → tools/log-analyzer/samples/compare/after.log → "
+lab_expect_contains "FATAL 0 → 0 → 0 · ERROR 6 → 5 → 4 · WARN 4 → 9 → 5"
+lab_expect_contains "1 → 7 → 3 RebalanceInProgressException: Offset commit cannot be completed since the consumer is undergoing a rebalance"
+
 log "Section 7: JSON for scripts and agents"
 lab_run bash -c "playground analyze logs --sample support_bundle --json 2>/dev/null | jq -r '.known_causes[] | \"\(.severity) \(.title) ×\(.occurrences)\"'"
 lab_expect_contains "HIGH 🧨 A connector task was killed ×1"

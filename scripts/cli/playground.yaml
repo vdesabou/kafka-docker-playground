@@ -4612,7 +4612,11 @@ subcommands:
         written by --json\n\nThe report says what is new, gone, growing or shrinking:
         root causes, known causes, connectors and the totals by level\n(per hour when
         the two inputs cover different periods), in a \U0001F501 Comparison section,
-        the terminal summary and\n.comparison of --json"
+        the terminal summary and\n.comparison of --json\n\n\U0001F393 Tip: can be
+        set several times, oldest first (-f day3 --compare day1 --compare day2): the
+        comparison is with the last\none, and a \U0001F4C8 Trend gives the totals
+        and the main root causes of every input in order (.trend of --json)\n\nRepeatable:
+        ✓ Yes"
     - names:
       - "--sample"
       - "-s"
@@ -4727,8 +4731,8 @@ subcommands:
       argument: SECTIONS
       description: "\U0001F5C2️ With --json, only these sections, comma separated:
         summary, findings, known_causes, root_causes, files, files_without_findings,
-        coverage, configuration, timeline, connectors, comparison, lifecycle, config_lint
-        (default: all). For example --json-sections summary,findings,root_causes"
+        coverage, configuration, timeline, connectors, comparison, trend, lifecycle,
+        config_lint (default: all). For example --json-sections summary,findings,root_causes"
     - names:
       - "--component"
       argument: COMPONENT
