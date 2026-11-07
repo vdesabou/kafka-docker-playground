@@ -391,11 +391,12 @@ def run(
     json_out: Optional[str] = None,
     label: Optional[str] = None,
     problem: Optional[str] = None,
+    log_records: Optional[str] = None,
 ) -> int:
     # the bundle stays extracted until the HTML report is written: it copies the files of the issues next to it
     with extracted_bundle(bundle_path) as bundle_dir:
         return analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, html_out, include_warnings,
-                              components, json_out, label, problem)
+                              components, json_out, label, problem, log_records)
 
 
 def write_viewers(html_out: str, bundle_dir: str, raw_issues: list, issues: list) -> None:
@@ -438,8 +439,16 @@ def yaml_line(bundle_dir: str, rel: str, name: Optional[str], cache: dict) -> Op
 
 
 def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, html_out, include_warnings, components,
-                   json_out, label, problem=None) -> int:
-    analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings)
+                   json_out, label, problem=None, log_records=None) -> int:
+    records = None
+    if log_records:
+        # {path in the bundle: [records]} of the log digest of playground analyze logs
+        try:
+            with open(log_records, encoding="utf-8") as fh:
+                records = json.load(fh)
+        except (OSError, ValueError) as ex:
+            print(f"⚠️ --log-records: cannot read {log_records}: {ex}, the records are read from the logs", file=sys.stderr)
+    analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings, log_records=records)
     # analyzer.analyze() prints decode/parse warnings via print() to stdout.
     # Send those to stderr so --json mode produces clean JSON on stdout.
     with redirect_stdout(sys.stderr):
@@ -550,6 +559,8 @@ def main() -> int:
     p.add_argument("--json-out", help="Also write the JSON of --json to this file (with the text report)")
     p.add_argument("--label", help="Name of the bundle in the JSON (label), for the comparison of several bundles")
     p.add_argument("--problem", metavar="TEXT", help="Problem statement (symptom, component, since when): matched against the bundle")
+    p.add_argument("--log-records", metavar="JSON", help="the records of the *.log files from the log digest of playground "
+                   "analyze logs ({path in the bundle: [records]}): the issues of these files come from them")
     args = p.parse_args()
 
     try:
@@ -565,6 +576,7 @@ def main() -> int:
             json_out=args.json_out,
             label=args.label,
             problem=args.problem,
+            log_records=args.log_records,
         )
     except (FileNotFoundError, ValueError, BundleError) as e:
         print(f"Error: {e}", file=sys.stderr)

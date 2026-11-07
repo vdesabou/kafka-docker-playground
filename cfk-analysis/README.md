@@ -167,6 +167,14 @@ regular log digest of `analyze logs`, which writes its log report next to this o
 `<!--pg-log-analysis-->` marker of this report (stdlib only, run on the host). With `--json`, the log analysis is
 `.log_analysis` of the bundle JSON. `--logs-only` gives only the log report, of every file of the bundle.
 
+The issues of the log records of those files come from the same digest: `analyze logs` passes the records of each
+bundle (`log_report.py --records-under <bundle label>`: `{path in the bundle: [records]}`, raw) with `--log-records`
+(`CFK_ANALYSIS_LOG_RECORDS`, mounted in the container), and `_analyze_text_file` classifies them
+(`_handle_digest_record`, same classifier and occurrence counts) instead of parsing the records itself. It still reads
+the lines for everything else (Kubernetes symptoms, operator states, KRaft migration, plugin install, config dumps,
+versions, log window). Not for the operator log and the files converted from an export of log events (JSON lines): their
+line numbers are not those of the file. Without `--log-records` (the analyzer run alone), the records are parsed as before.
+
 ## Sample
 
 `samples/cfk-support-bundle-synthetic.tar.gz` (`--sample synthetic`) is a synthetic bundle in the

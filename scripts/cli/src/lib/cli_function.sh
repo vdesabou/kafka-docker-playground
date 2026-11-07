@@ -7732,6 +7732,13 @@ function analyze_cfk_bundle() {
     then
         cli_args+=(--problem "$CFK_ANALYSIS_PROBLEM")
     fi
+    # playground analyze logs: the records of the *.log files of the bundle from the log digest ({path in the bundle:
+    # [records]}), the issues of these files come from them (the same records as the log report)
+    if [[ -n "${CFK_ANALYSIS_LOG_RECORDS:-}" ]] && [[ -s "$CFK_ANALYSIS_LOG_RECORDS" ]]
+    then
+        docker_args+=(-v "$CFK_ANALYSIS_LOG_RECORDS:/tmp/cfk-log-records.json:ro")
+        cli_args+=(--log-records /tmp/cfk-log-records.json)
+    fi
 
     docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
     local exit_code=$?

@@ -4314,6 +4314,9 @@ def main() -> int:
     ap.add_argument("--ticket-out", metavar="PATH", help="also write the summary for a ticket (Markdown, sanitized) there")
     ap.add_argument("--compare-label", metavar="LABEL", action="append", default=[],
                     help="what that other input is, for the report (one per --compare)")
+    ap.add_argument("--records-under", metavar="PREFIX", action="append", default=[],
+                    help="print {path under PREFIX: [records]} of the files whose label starts with PREFIX/ or PREFIX: "
+                         "(the records of a CFK support bundle for cfk-analysis --log-records), one JSON per line, and exit")
     ap.add_argument("--other-files", metavar="JSON", help="the files of the input for another analyzer (bundle_triage.py)")
     ap.add_argument("--json", action="store_true", help="print the analysis as JSON")
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
@@ -4342,6 +4345,18 @@ def main() -> int:
     args = ap.parse_args()
 
     files = parse_records(args.records)
+    if args.records_under:
+        # the labels as written by analyze logs (not shortened): <bundle label>/<path in the bundle>
+        keep = ("level", "count", "first_line", "last_line", "first_ts", "last_ts", "message", "chain", "connector", "context")
+        for prefix in args.records_under:
+            out = {}
+            for f in files:
+                for sep in ("/", ":"):
+                    if f["label"].startswith(prefix.rstrip("/:") + sep):
+                        out[f["label"][len(prefix.rstrip("/:")) + 1:]] = [{k: r.get(k) for k in keep} for r in f["records"]]
+                        break
+            print(json.dumps(out, ensure_ascii=False))
+        return 0
     if args.connector:
         filter_connectors(files, args.connector, args.with_worker)
     res = analyze(files, args.unit)
