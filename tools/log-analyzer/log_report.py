@@ -1216,6 +1216,68 @@ def compare_reports(res: dict, prev: dict, label: str) -> dict:
 
 
 COMPARE_ICONS = {"new": "🆕", "growing": "📈", "shrinking": "📉", "gone": "✅", "same": "＝"}
+TREND_ROWS = 12
+
+
+def trend(res: dict, prevs: List[dict], labels: List[str], title: str) -> dict:
+    """the totals and the main root causes of every input, oldest first (--compare given several times, then this one):
+    per hour when their periods differ by more than 10 %"""
+    points = [(labels[i], p.get("summary") or {}, p.get("root_causes") or []) for i, p in enumerate(prevs)]
+    points.append((title or "now", res["summary"], res["root_causes"]))
+    hours = [(s.get("log_duration_seconds") or 0) / 3600 for _, s, _ in points]
+    per_hour = all(h > 0 for h in hours) and (max(hours) - min(hours)) / max(hours) > 0.1
+
+    def value(n, h):
+        return round(n / h, 2) if per_hour else n
+    totals = {lvl: [value((s.get("by_level") or {}).get(lvl, 0), hours[i]) for i, (_, s, _) in enumerate(points)]
+              for lvl in ("FATAL", "ERROR", "WARN")}
+    counts: Dict[str, List[float]] = {}
+    meta: Dict[str, dict] = {}
+    for i, (_, _, causes) in enumerate(points):
+        for c in causes:
+            counts.setdefault(c["label"], [0] * len(points))[i] = value(c.get("occurrences", 0), hours[i])
+            meta.setdefault(c["label"], {"root_cause": c.get("root_cause"), "example": c.get("example", ""), "level": c.get("level")})
+    rows = [dict(meta[k], key=k, values=v) for k, v in counts.items()]
+    # the most frequent now first, then the ones that were frequent before (gone)
+    rows.sort(key=lambda r: (-r["values"][-1], -max(r["values"])))
+    return {"labels": [p[0] for p in points], "per_hour": per_hour, "totals": totals, "root_causes": rows[:TREND_ROWS],
+            "more": max(0, len(rows) - TREND_ROWS)}
+
+
+def trend_values(values: List[float]) -> str:
+    return " → ".join(f"{v:g}" for v in values)
+
+
+def trend_text(tr: Optional[dict], top: int = 6) -> List[str]:
+    if not tr:
+        return []
+    out = [f"📈 Trend over {len(tr['labels'])} inputs (oldest first: {' → '.join(tr['labels'])})" + (" per hour" if tr["per_hour"] else "")]
+    out.append("   " + " · ".join(f"{lvl} {trend_values(tr['totals'][lvl])}" for lvl in ("FATAL", "ERROR", "WARN")))
+    for r in tr["root_causes"][:top]:
+        what = f"{r['root_cause'].split('.')[-1]}: {r['example']}" if r.get("root_cause") else r.get("example") or r["key"]
+        out.append(f"   {trend_values(r['values'])}  {what[:140]}")
+    return out
+
+
+def trend_html(tr: Optional[dict]) -> str:
+    if not tr:
+        return ""
+    head = "".join(f"<th class='num' title='{e(l)}'>{e(l.split('/')[-1][:24])}</th>" for l in tr["labels"])
+
+    def cells(values):
+        out, prev = [], None
+        for v in values:
+            arrow = "" if prev is None else (" 📈" if v > prev else " 📉" if v < prev else "")
+            out.append(f"<td class='num'>{v:g}{arrow}</td>")
+            prev = v
+        return "".join(out)
+    rows = "".join(f"<tr><td><b>{lvl}</b></td>{cells(tr['totals'][lvl])}</tr>" for lvl in ("FATAL", "ERROR", "WARN"))
+    rows += "".join(f"<tr><td class='mono'>{e((r.get('root_cause') or '—').split('.')[-1])} {e((r.get('example') or r['key'])[:160])}</td>{cells(r['values'])}</tr>"
+                    for r in tr["root_causes"])
+    return (f"<div class='table-card'><h2>📈 Trend over {len(tr['labels'])} inputs</h2><p class='legend'>Oldest first (the inputs of "
+            "--compare in the order given, then this one): the totals by level and the main root causes"
+            + (", per hour (the periods differ)" if tr["per_hour"] else "") + (f"; {tr['more']} more root causes in .trend of --json" if tr["more"] else "")
+            + f".</p><table><tr><th>What</th>{head}</tr>{rows}</table></div>")
 
 
 def compare_counts(x: dict) -> str:
@@ -1463,6 +1525,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
     # what changed against the input of --compare (🔁 Comparison of the HTML report, .comparison of --json)
     out += compare_text(res.get("comparison"))
+    # several --compare: the trend over all the inputs (📈 Trend of the HTML report, .trend of --json)
+    out += trend_text(res.get("trend"))
     # the errors that came right after a change (🔗 in the timeline of the HTML report, .timeline[].after of --json)
     out += causes_text(res.get("timeline") or [])
     # what happened first, all files merged (🗓️ Incident timeline of the HTML report, .timeline of --json)
@@ -1725,6 +1789,15 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Timeline (what happened first)", "", "| Time | Event | Where |", "| --- | --- | --- |"]
         for ev in events[:10]:
             out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200] + after_text(ev))} | {md_cell(ev['file'].split('/')[-1])}:{ev['line']} |")
+    tr = res.get("trend")
+    if tr:
+        out += ["", f"### Trend over {len(tr['labels'])} inputs" + (" (per hour)" if tr["per_hour"] else ""), "",
+                "| What | " + " | ".join(md_cell(l.split('/')[-1]) for l in tr["labels"]) + " |", "| --- |" + " --- |" * len(tr["labels"])]
+        for lvl in ("FATAL", "ERROR", "WARN"):
+            out.append(f"| **{lvl}** | " + " | ".join(f"{v:g}" for v in tr["totals"][lvl]) + " |")
+        for r in tr["root_causes"][:8]:
+            what = f"{(r.get('root_cause') or '').split('.')[-1]} {r.get('example') or r['key']}".strip()
+            out.append(f"| {md_cell(what[:120])} | " + " | ".join(f"{v:g}" for v in r["values"]) + " |")
     lint = res.get("config_lint") or []
     if lint:
         out += ["", "### Config lint (configuration logged at startup)", "", "| Severity | Connector | Key | What to do |", "| --- | --- | --- | --- |"]
@@ -3220,7 +3293,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # the filter bar above the findings: a component picked (🔌 Connect) keeps its findings right below
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
     body = [verdict_html(*verdict(res, levels, unit)), incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
-            compare_html(res.get("comparison")),
+            compare_html(res.get("comparison")), trend_html(res.get("trend")),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
@@ -3352,9 +3425,11 @@ def main() -> int:
     ap.add_argument("--levels", default="ERROR/FATAL", help="levels reported, for the report")
     ap.add_argument("--skipped", type=int, default=0, help="number of binary files skipped")
     ap.add_argument("--incomplete", metavar="FILE", help="label<tab>reason of each input not fully read")
-    ap.add_argument("--compare", metavar="JSON", help="the JSON of analyze logs of another input, to compare with")
+    ap.add_argument("--compare", metavar="JSON", action="append", default=[],
+                    help="the JSON of analyze logs of another input, to compare with (repeatable, oldest first: a trend)")
     ap.add_argument("--ticket-out", metavar="PATH", help="also write the summary for a ticket (Markdown, sanitized) there")
-    ap.add_argument("--compare-label", metavar="LABEL", default="", help="what that other input is, for the report")
+    ap.add_argument("--compare-label", metavar="LABEL", action="append", default=[],
+                    help="what that other input is, for the report (one per --compare)")
     ap.add_argument("--json", action="store_true", help="print the analysis as JSON")
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
     ap.add_argument("--heading", default="🔥 Log Analysis", help="title of the report")
@@ -3377,7 +3452,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration,timeline,connectors,comparison,lifecycle,config_lint (default: all)")
+                         "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
@@ -3389,11 +3464,19 @@ def main() -> int:
     res["summary"]["binary_files_skipped"] = args.skipped
     res["summary"]["incomplete_inputs"] = read_incomplete(args.incomplete)
     if args.compare:
-        try:
-            with open(args.compare, encoding="utf-8") as fh:
-                res["comparison"] = compare_reports(res, json.load(fh), args.compare_label or args.compare)
-        except (OSError, ValueError) as ex:
-            print(f"⚠️ --compare: cannot read {args.compare}: {ex}", file=sys.stderr)
+        prevs, labels = [], []
+        for i, path in enumerate(args.compare):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    prevs.append(json.load(fh))
+                labels.append(args.compare_label[i] if i < len(args.compare_label) else path)
+            except (OSError, ValueError) as ex:
+                print(f"⚠️ --compare: cannot read {path}: {ex}", file=sys.stderr)
+        if prevs:
+            # the comparison with the last input given (the one just before), the trend over all of them
+            res["comparison"] = compare_reports(res, prevs[-1], labels[-1])
+            if len(prevs) > 1:
+                res["trend"] = trend(res, prevs, labels, args.title)
     res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
     if args.json:

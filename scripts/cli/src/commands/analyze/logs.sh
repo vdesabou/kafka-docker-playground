@@ -22,7 +22,7 @@ with_worker="${args[--with-worker]}"
 show_config="${args[--show-config]}"
 json_sections="${args[--json-sections]}"
 problem="${args[--problem]}"
-compare="${args[--compare]}"
+eval "compare_array=(${args[--compare]})"
 since="${args[--since]}"
 until_ts="${args[--until]}"
 
@@ -101,7 +101,7 @@ do
         # the day after a fix, compared with the day before (unless --compare names another input)
         compare_fix)
             file_array+=("$root_folder/tools/log-analyzer/samples/compare/after.log")
-            [[ -z "$compare" ]] && compare="$root_folder/tools/log-analyzer/samples/compare/before.log"
+            [[ ${#compare_array[@]} -eq 0 ]] && compare_array=("$root_folder/tools/log-analyzer/samples/compare/before.log")
             ;;
         cfk_bundle) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz") ;;
         cfk_kraft_migration) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-kraft-migration.tar.gz") ;;
@@ -1018,14 +1018,18 @@ then
     title="sample ${sample_array[*]}"
 fi
 report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
-# --compare: the other input as the JSON of analyze logs (given, or written by this command run again on it, with the
-# same filters and the same sanitizer state), compared by log_report.py --compare
-if [[ -n "$compare" ]]
-then
-    compare_json="$tmp_dir/compare.json"
+# --compare (repeatable, oldest first): each other input as the JSON of analyze logs (given, or written by this command run
+# again on it, with the same filters and the same sanitizer state), compared by log_report.py --compare (the last one) and
+# drawn as a trend (all of them)
+compare_json=""
+compare_index=0
+for compare in "${compare_array[@]}"
+do
+    compare_index=$((compare_index+1))
+    one_json="$tmp_dir/compare-$compare_index.json"
     if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
     then
-        cp "$compare" "$compare_json"
+        cp "$compare" "$one_json"
     elif [ -e "$compare" ]
     then
         progress_step "🔁 analyzing $compare for the comparison"
@@ -1039,23 +1043,21 @@ then
             compare_cmd+=(--connector "$connector")
         done
         # no progress page of its own, the sanitizer state of this run
-        if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$compare_json" 2> "$tmp_dir/compare.log" \
-            || ! jq -e '.type == "logs"' "$compare_json" > /dev/null 2>&1
+        if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json" 2> "$tmp_dir/compare.log" \
+            || ! jq -e '.type == "logs"' "$one_json" > /dev/null 2>&1
         then
-            logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), no comparison"
+            logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
             tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
-            compare_json=""
+            continue
         fi
     else
-        logwarn "⚠️ --compare: $compare does not exist, no comparison"
-        compare_json=""
+        logwarn "⚠️ --compare: $compare does not exist, left out of the comparison"
+        continue
     fi
-    if [[ -n "$compare_json" ]]
-    then
-        # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
-        report_args+=(--compare "$compare_json" --compare-label "${compare#"$root_folder"/}")
-    fi
-fi
+    compare_json="$one_json"
+    # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
+    report_args+=(--compare "$one_json" --compare-label "${compare#"$root_folder"/}")
+done
 for connector in "${connector_array[@]}"
 do
     report_args+=(--connector "$connector")

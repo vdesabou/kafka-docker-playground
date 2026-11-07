@@ -415,6 +415,23 @@ occurrences; when the two inputs cover different periods (a day of logs before, 
 compared **per hour** and the rates are shown (`1 → 7 (6.67/h → 0.3/h)`). The [🔁 comparison report](reports/logs-compare.html)
 links each root cause to its row. Also in `.comparison` of `--json`.
 
+📈 **A trend over several days**: give `--compare` several times, oldest first. The comparison is with the last one, and
+a trend gives the totals and the main root causes of every input in order:
+
+```bash
+# a third day: the JDBC error fixed, fewer rebalances
+grep -v "SQLRecoverableException\|10:06:0[3-6]" tools/log-analyzer/samples/compare/after.log | sed 's/2026-11-06/2026-11-07/g' > /tmp/day3.log
+playground analyze logs -f /tmp/day3.log --compare tools/log-analyzer/samples/compare/before.log --compare tools/log-analyzer/samples/compare/after.log
+```
+
+```text
+📈 Trend over 3 inputs (oldest first: tools/log-analyzer/samples/compare/before.log → tools/log-analyzer/samples/compare/after.log → /tmp/day3.log)
+   FATAL 0 → 0 → 0 · ERROR 6 → 5 → 4 · WARN 4 → 9 → 5
+   1 → 7 → 3  RebalanceInProgressException: Offset commit cannot be completed since the consumer is undergoing a rebalance
+```
+
+Also the 📈 Trend section of the report (📈 / 📉 on each change), the summary for a ticket and `.trend` of `--json`.
+
 ---
 
 ## 7. JSON for scripts and agents

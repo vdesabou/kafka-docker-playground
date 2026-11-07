@@ -76,6 +76,10 @@ rates are shown), with the totals by level. In the 🔁 Comparison section of th
 causes linked to their row), the terminal summary (also when the input has no finding left: everything gone) and
 `.comparison` of `--json`.
 
+`--compare` can be given several times, oldest first: `log_report.py` gets one `--compare` / `--compare-label` per input,
+compares with the last one and builds a `trend()`: the totals by level and the main root causes (`TREND_ROWS`) of every
+input then this one, per hour when the periods differ (📈 Trend section, terminal summary, summary for a ticket, `.trend`).
+
 ## Connectors
 
 `connector_health()` (in `analyze()`, `.connectors` of `--json`) builds one card per connector of the logs (the
