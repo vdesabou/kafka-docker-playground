@@ -108,6 +108,40 @@ lab_expect_contains "⚙️ SourceConnectorConfig [cdc-xstream-oracle-source|wor
 lab_expect_contains "config.action.reload = restart"
 lab_expect_contains "connector.class = io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector"
 
+log "Section 5: config lint"
+cat > "$work/lint.log" << 'EOF'
+[2026-11-06 10:00:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.s3.S3SinkConnector
+	errors.deadletterqueue.topic.name = 
+	errors.log.enable = false
+	errors.tolerance = all
+	name = s3-sink
+	topics = [orders]
+
+[2026-11-06 10:00:01,000] INFO [s3-sink|task-0] ConsumerConfig values: 
+	auto.offset.reset = earliest
+	client.id = connector-consumer-s3-sink-0
+	max.poll.interval.ms = 300000
+	max.poll.records = 20000
+
+[2026-11-06 10:00:02,000] INFO [jdbc-src|task-0] ProducerConfig values: 
+	acks = 1
+	client.id = connector-producer-jdbc-src-0
+
+[2026-11-06 10:00:03,000] INFO [jdbc-src|worker] ProducerConfig values: 
+	acks = 1
+	client.id = jdbc-src-license-manager
+
+[2026-11-06 10:05:00,000] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Commit of offsets threw an unexpected exception: org.apache.kafka.clients.consumer.CommitFailedException: Commit cannot be completed since the group has already rebalanced (org.apache.kafka.connect.runtime.WorkerSinkTask)
+EOF
+lab_run playground analyze logs -f "$work/lint.log" --output-dir "$report_dir"
+lab_expect_contains "🧪 Config lint (4, the configuration logged at startup)"
+lab_expect_contains "[MEDIUM] jdbc-src: acks=1 → the source producer does not wait for all the in-sync replicas"
+lab_expect_contains "[MEDIUM] s3-sink: errors.tolerance=all → bad records are skipped and lost: no dead letter queue"
+lab_expect_contains "[MEDIUM] s3-sink: max.poll.records=20000 → 20000 records per poll with max.poll.interval.ms=300000"
+lab_expect_contains "[LOW] s3-sink: errors.log.enable=false"
+lab_expect_not_contains "license-manager: acks"
+
 log "Section 6: did the fix work? --compare"
 lab_run playground analyze logs --sample compare_fix --output-dir "$report_dir"
 lab_expect_contains "🔁 Compared with tools/log-analyzer/samples/compare/before.log: 1 new root cause(s), 1 growing, 0 shrinking, 3 gone, 6 unchanged · new known cause(s): 🔌 Connection failure · gone: 🤺 Producer fenced (transactions, exactly-once), 🚦 Throttled by the external system, 🚧 Request refused by a broker policy"

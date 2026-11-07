@@ -691,6 +691,9 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["connectors"] = connector_health(res, files)
     res["summary"]["kafka_versions"] = kafka_versions(files)
     res["lifecycle"] = lifecycle(res, files)
+    res["config_lint"] = config_lint(res)
+    for c in res["connectors"]:
+        c["config_lint"] = [x for x in res["config_lint"] if x["connector"] == c["connector"]]
     # the counts on the 🔌 card of each connector
     for c in res["connectors"]:
         for r in res["lifecycle"]["rows"]:
@@ -984,6 +987,78 @@ def lifecycle_html(lc: Optional[dict]) -> str:
             f"{rows}</table></div>")
 
 
+def config_lint(res: dict) -> List[dict]:
+    """risky or unusual values in the configuration each connector and its clients logged at startup (the last dump of
+    each): a sink skipping bad records without a dead letter queue, a poll loop that can exceed max.poll.interval.ms, a
+    source producer without acks=all…, with what to do"""
+    latest: Dict[Tuple[str, str], Tuple["OrderedDict[str, str]", dict]] = {}
+    for c in res.get("configuration") or []:
+        name = config_connector_of(c)
+        if not name:
+            continue
+        cid = c.get("id") or ""
+        if c["title"] in ("SinkConnectorConfig", "SourceConnectorConfig", "ConnectorConfig", "connector config"):
+            kind = "sink" if c["title"] == "SinkConnectorConfig" else "connector"
+        elif c["title"] == "ConsumerConfig" and cid.startswith("connector-consumer-"):
+            kind = "consumer"
+        elif c["title"] == "ProducerConfig" and cid.startswith("connector-producer-"):
+            kind = "producer"
+        else:
+            continue
+        values = config_values(c)
+        if kind == "connector" and (values.get("topics") or values.get("topics.regex")):
+            kind = "sink"
+        latest[(name, kind)] = (values, c)
+    out: List[dict] = []
+
+    def add(name, c, severity, key, value, message):
+        out.append({"connector": name, "severity": severity, "key": key, "value": value, "message": message,
+                    "file": c.get("file"), "line": c.get("line")})
+    empty = ("", "null", "[]")
+    for (name, kind), (v, c) in latest.items():
+        if kind == "sink":
+            if v.get("errors.tolerance") == "all" and v.get("errors.deadletterqueue.topic.name", "") in empty:
+                add(name, c, "MEDIUM", "errors.tolerance", "all", "bad records are skipped and lost: no dead letter queue "
+                    "(errors.deadletterqueue.topic.name), set one to keep them and read it with playground topic dlq inspect")
+            if v.get("errors.deadletterqueue.topic.name", "") not in empty and v.get("errors.deadletterqueue.topic.replication.factor") == "1":
+                add(name, c, "LOW", "errors.deadletterqueue.topic.replication.factor", "1",
+                    "the dead letter queue has one replica: its records are lost with that broker")
+        if kind in ("sink", "connector"):
+            if v.get("errors.tolerance") == "all" and v.get("errors.log.enable") == "false" and not (
+                    kind == "sink" and v.get("errors.deadletterqueue.topic.name", "") not in empty):
+                add(name, c, "LOW", "errors.log.enable", "false", "with errors.tolerance=all, the records skipped are not "
+                    "even logged: set errors.log.enable=true (and errors.log.include.messages=true to see them)")
+        if kind == "consumer":
+            try:
+                records, interval = int(v.get("max.poll.records", "0")), int(v.get("max.poll.interval.ms", "300000"))
+            except ValueError:
+                records, interval = 0, 300000
+            if records >= 5000 and interval <= 300000:
+                add(name, c, "MEDIUM", "max.poll.records", str(records), f"{records} records per poll with "
+                    f"max.poll.interval.ms={interval}: a slow put() of the batch makes the consumer leave its group (rebalances, "
+                    "commits failing): lower consumer.override.max.poll.records or raise consumer.override.max.poll.interval.ms")
+            if v.get("auto.offset.reset") == "latest":
+                add(name, c, "LOW", "auto.offset.reset", "latest", "without committed offsets (a new connector, offsets "
+                    "deleted), the records already in the topic are skipped: Connect sinks default to earliest")
+        if kind == "producer" and v.get("acks") not in (None, "", "all", "-1"):
+            add(name, c, "MEDIUM", "acks", v.get("acks"), "the source producer does not wait for all the in-sync replicas: "
+                "records can be lost when a broker fails; Connect defaults to acks=all")
+    order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+    out.sort(key=lambda x: (order.get(x["severity"], 9), x["connector"]))
+    return out
+
+
+def config_lint_text(items: List[dict], top: int = 8) -> List[str]:
+    if not items:
+        return []
+    out = [f"🧪 Config lint ({len(items)}, the configuration logged at startup)"]
+    for x in items[:top]:
+        out.append(f"   [{x['severity']}] {x['connector']}: {x['key']}={x['value']} → {x['message']}")
+    if len(items) > top:
+        out.append(f"   … {len(items) - top} more on the 🔌 cards of the HTML report and in .config_lint of --json")
+    return out
+
+
 def kafka_versions(files: List[dict]) -> List[str]:
     """the Kafka / Confluent Platform versions of the logs ("Kafka version: 8.3.2-ce" of AppInfoParser), in order"""
     out: List[str] = []
@@ -1030,6 +1105,9 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else "")
             + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
+            + (f"<details class='conn-lint'><summary>🧪 {len(c['config_lint'])} config warning(s)</summary><ul>"
+               + "".join(f"<li><span class='st {x['severity'].lower()}'>{x['severity']}</span> <span class='mono'>{e(x['key'])}={e(x['value'])}</span>: {e(x['message'])}</li>"
+                         for x in c["config_lint"]) + "</ul></details>" if c.get("config_lint") else "")
             + ("<div class='fi-meta'>🔄 " + " · ".join(x for x in [
                 f"{c['connector_starts']} connector start(s)" if c.get("connector_starts") else "",
                 f"{c['task_starts']} task start(s)" if c.get("task_starts") else "",
@@ -1393,6 +1471,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += connectors_text(res.get("connectors") or [])
     # rebalances and restarts of the INFO lines (🔄 of the HTML report, .lifecycle of --json)
     out += lifecycle_text(res.get("lifecycle"))
+    # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
+    out += config_lint_text(res.get("config_lint") or [])
     configs = res.get("configuration") or []
     if configs:
         out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
@@ -1645,6 +1725,11 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Timeline (what happened first)", "", "| Time | Event | Where |", "| --- | --- | --- |"]
         for ev in events[:10]:
             out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200] + after_text(ev))} | {md_cell(ev['file'].split('/')[-1])}:{ev['line']} |")
+    lint = res.get("config_lint") or []
+    if lint:
+        out += ["", "### Config lint (configuration logged at startup)", "", "| Severity | Connector | Key | What to do |", "| --- | --- | --- | --- |"]
+        for x in lint[:10]:
+            out.append(f"| {x['severity']} | `{md_cell(x['connector'])}` | `{md_cell(x['key'] + '=' + x['value'])}` | {md_cell(x['message'])} |")
     lc_rows = (res.get("lifecycle") or {}).get("rows") or []
     if lc_rows:
         out += ["", "### Restarts and rebalances", "", "| What | Group / connector | Count | Per hour |", "| --- | --- | --- | --- |"]
@@ -3292,7 +3377,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration,timeline,connectors,comparison,lifecycle (default: all)")
+                         "files_without_findings,coverage,configuration,timeline,connectors,comparison,lifecycle,config_lint (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)

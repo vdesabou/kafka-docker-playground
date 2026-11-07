@@ -4513,7 +4513,7 @@
                 "--json-sections"
               ],
               "argument": "SECTIONS",
-              "description": "🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, lifecycle (default: all). For example --json-sections summary,findings,root_causes"
+              "description": "🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, lifecycle, config_lint (default: all). For example --json-sections summary,findings,root_causes"
             },
             {
               "names": [

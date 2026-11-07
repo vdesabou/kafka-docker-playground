@@ -339,7 +339,52 @@ playground analyze logs --sample connect_task_failure --until "2026-10-14 10:04"
 `--since` and `--until` take `"2026-11-06 10:00"`, `2026-11-06T10:00:00` or `2026-11-06`, compared with the times as
 written in the logs.
 
-`--show-config` also takes a config class (`ProducerConfig`) or a `client.id`. The keys **changed between restarts**
+`--show-config` also takes a config class (`ProducerConfig`) or a `client.id`.
+
+🧪 **Config lint**: the configuration each connector and its own clients (`connector-consumer-<name>-0`,
+`connector-producer-<name>-0`) logged at startup is checked for risky values: a sink with `errors.tolerance=all` and no
+dead letter queue, skipped records not logged, a DLQ with one replica, `max.poll.records` large enough to exceed
+`max.poll.interval.ms`, `auto.offset.reset=latest` on a sink, a source producer without `acks=all`. On the 🔌 card of the
+connector, in the summary, the summary for a ticket and `.config_lint` of `--json`:
+
+```bash
+cat > lint.log << 'EOF'
+[2026-11-06 10:00:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.s3.S3SinkConnector
+	errors.deadletterqueue.topic.name = 
+	errors.log.enable = false
+	errors.tolerance = all
+	name = s3-sink
+	topics = [orders]
+
+[2026-11-06 10:00:01,000] INFO [s3-sink|task-0] ConsumerConfig values: 
+	auto.offset.reset = earliest
+	client.id = connector-consumer-s3-sink-0
+	max.poll.interval.ms = 300000
+	max.poll.records = 20000
+
+[2026-11-06 10:00:02,000] INFO [jdbc-src|task-0] ProducerConfig values: 
+	acks = 1
+	client.id = connector-producer-jdbc-src-0
+
+[2026-11-06 10:00:03,000] INFO [jdbc-src|worker] ProducerConfig values: 
+	acks = 1
+	client.id = jdbc-src-license-manager
+
+[2026-11-06 10:05:00,000] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Commit of offsets threw an unexpected exception: org.apache.kafka.clients.consumer.CommitFailedException: Commit cannot be completed since the group has already rebalanced (org.apache.kafka.connect.runtime.WorkerSinkTask)
+EOF
+playground analyze logs -f lint.log
+```
+
+```text
+🧪 Config lint (4, the configuration logged at startup)
+   [MEDIUM] jdbc-src: acks=1 → the source producer does not wait for all the in-sync replicas: records can be lost when a broker fails; Connect defaults to acks=all
+   [MEDIUM] s3-sink: errors.tolerance=all → bad records are skipped and lost: no dead letter queue (errors.deadletterqueue.topic.name), set one to keep them and read it with playground topic dlq inspect
+   [MEDIUM] s3-sink: max.poll.records=20000 → 20000 records per poll with max.poll.interval.ms=300000: …
+   [LOW] s3-sink: errors.log.enable=false → with errors.tolerance=all, the records skipped are not even logged: …
+```
+
+The `acks = 1` of `jdbc-src-license-manager` is not reported: only the clients of the connector itself are. The keys **changed between restarts**
 are listed in the summary (`🔁 changed between restarts`) and in the ⚙️ section of the report.
 
 ---
