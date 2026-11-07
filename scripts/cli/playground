@@ -10099,8 +10099,8 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      compare_fix            the log of a Connect worker the day after a fix,\n    compared with the day before\n                             (--compare): errors gone, a new one, rebalances\n    growing\n      kafka_clients          logs of the non-Java clients (C/C++, Python, Go,\n    .NET, JavaScript, KafkaJS, Rust) of\n                             other/client-*: a broker that refuses connections\n    or does not resolve, records\n                             timed out, an unknown property, and crashes (Python\n    traceback, .NET unhandled\n                             exception, Go and Rust panics, uncaught Node.js\n    error)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      connect_many_connectors  Connect worker (CP 8.1.2) with 8 connectors: JDBC\n    Oracle sink killed on ORA-00942,\n                             JDBC PostgreSQL source refused, S3 Access Denied,\n    Elasticsearch malformed documents,\n                             Debezium MySQL binlog purged, HTTP 503, ServiceNow\n    429, a custom connector; 3 of them\n                             below the minimum version supported on CP 8.1 (🛟),\n    icons, connector cards\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      compare_fix            the log of a Connect worker the day after a fix,\n    compared with the day before\n                             (--compare): errors gone, a new one, rebalances\n    growing\n      kafka_clients          logs of the non-Java clients (C/C++, Python, Go,\n    .NET, JavaScript, KafkaJS, Rust) of\n                             other/client-*: a broker that refuses connections\n    or does not resolve, records\n                             timed out, an unknown property, and crashes (Python\n    traceback, .NET unhandled\n                             exception, Go and Rust panics, uncaught Node.js\n    error)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
+    printf "    %s\n" "Allowed: connect_task_failure, connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
     echo
 
     # :flag.usage
@@ -10228,6 +10228,7 @@ playground_analyze_logs_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground analyze logs --sample connect_task_failure\n"
+    printf "  playground analyze logs --sample connect_many_connectors\n"
     printf "  playground analyze logs --sample support_bundle\n"
     printf "  playground analyze logs --file connect.log\n"
     printf "  playground analyze logs --file connect-logs.zip --errors-only\n"
@@ -11264,8 +11265,8 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      compare_fix            the log of a Connect worker the day after a fix,\n    compared with the day before\n                             (--compare): errors gone, a new one, rebalances\n    growing\n      kafka_clients          logs of the non-Java clients (C/C++, Python, Go,\n    .NET, JavaScript, KafkaJS, Rust) of\n                             other/client-*: a broker that refuses connections\n    or does not resolve, records\n                             timed out, an unknown property, and crashes (Python\n    traceback, .NET unhandled\n                             exception, Go and Rust panics, uncaught Node.js\n    error)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
-    printf "    %s\n" "Allowed: connect_task_failure, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
+    printf "    🧪 Sample of tools/log-analyzer/samples and cfk-analysis/samples\n    \n      connect_task_failure   Connect worker log: Oracle XStream connector with a\n    wrong password, an unknown\n                             outbound server, and a task failing after the\n    outbound server was stopped\n      connect_many_connectors  Connect worker (CP 8.1.2) with 8 connectors: JDBC\n    Oracle sink killed on ORA-00942,\n                             JDBC PostgreSQL source refused, S3 Access Denied,\n    Elasticsearch malformed documents,\n                             Debezium MySQL binlog purged, HTTP 503, ServiceNow\n    429, a custom connector; 3 of them\n                             below the minimum version supported on CP 8.1 (🛟),\n    icons, connector cards\n      support_bundle         .zip with that log and a gzipped broker log\n      kafka_streams          logs of the 3 instances of other/kafka-streams\n    (serde-errors.sh): an application in\n                             ERROR after a poison pill, its dead stream thread,\n    deserialization and production\n                             handler errors, the 🌊 Kafka Streams section (state,\n    rebalances, tasks, timeline)\n      compare_fix            the log of a Connect worker the day after a fix,\n    compared with the day before\n                             (--compare): errors gone, a new one, rebalances\n    growing\n      kafka_clients          logs of the non-Java clients (C/C++, Python, Go,\n    .NET, JavaScript, KafkaJS, Rust) of\n                             other/client-*: a broker that refuses connections\n    or does not resolve, records\n                             timed out, an unknown property, and crashes (Python\n    traceback, .NET unhandled\n                             exception, Go and Rust panics, uncaught Node.js\n    error)\n      cfk_bundle             CFK support bundle: kafka-2 crash-looping on an\n    expired certificate, pending volume,\n                             OOMKilled Connect pod, failed connector task,\n    Schema Registry authentication\n                             failure, operator reconcile errors\n      cfk_kraft_migration    CFK support bundle: ZooKeeper to KRaft migration\n    (KRaftMigrationJob) stuck for 3\n                             days in SETUP, the KRaftController missing inter\n    replication credentials\n      cfk_rollout            CFK support bundle: CP upgrade half done\n    (KRaftController still blocked, Kafka roll\n                             stuck at 2/3), operator pod refused by the\n    ResourceQuota, stale \"Reconcile is\n                             blocked\" conditions, operator log that starts after\n    the last change\n      cfk_rollout_after      the same cluster the next day (quota raised,\n    KRaftController unblocked, roll\n                             complete): --sample cfk_rollout --sample\n    cfk_rollout_after compares the two\n"
+    printf "    %s\n" "Allowed: connect_task_failure, connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
     echo
 
     # :flag.usage
@@ -62881,6 +62882,7 @@ playground_analyze_logs_command() {
   do
       case "$sample" in
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
+          connect_many_connectors) file_array+=("$root_folder/tools/log-analyzer/samples/connect-many-connectors.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
           kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
           kafka_clients) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-clients") ;;
@@ -65677,6 +65679,7 @@ playground_debug_analyze_logs_command() {
   do
       case "$sample" in
           connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
+          connect_many_connectors) file_array+=("$root_folder/tools/log-analyzer/samples/connect-many-connectors.log") ;;
           support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
           kafka_streams) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-streams") ;;
           kafka_clients) file_array+=("$root_folder/tools/log-analyzer/samples/kafka-clients") ;;
@@ -117535,8 +117538,8 @@ playground_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|kafka_streams|kafka_clients|compare_fix|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
+    if [[ ! $i =~ ^(connect_task_failure|connect_many_connectors|support_bundle|kafka_streams|kafka_clients|compare_fix|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
       exit 1
     fi
   done
@@ -120494,8 +120497,8 @@ playground_debug_analyze_logs_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(connect_task_failure|support_bundle|kafka_streams|kafka_clients|compare_fix|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
-      printf "%s\n" "--sample must be one of: connect_task_failure, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
+    if [[ ! $i =~ ^(connect_task_failure|connect_many_connectors|support_bundle|kafka_streams|kafka_clients|compare_fix|cfk_bundle|cfk_kraft_migration|cfk_rollout|cfk_rollout_after)$ ]]; then
+      printf "%s\n" "--sample must be one of: connect_task_failure, connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after" >&2
       exit 1
     fi
   done
@@ -160414,6 +160417,7 @@ playground_analyze_logs_completion() {
         if [[ $# -eq 0 ]]; then
           local -a completion_values=(
             "connect_task_failure"
+            "connect_many_connectors"
             "support_bundle"
             "kafka_streams"
             "kafka_clients"
@@ -161937,6 +161941,7 @@ playground_debug_analyze_logs_completion() {
         if [[ $# -eq 0 ]]; then
           local -a completion_values=(
             "connect_task_failure"
+            "connect_many_connectors"
             "support_bundle"
             "kafka_streams"
             "kafka_clients"

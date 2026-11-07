@@ -121,6 +121,17 @@ second later, then the connector reconfigured twice. The 🔌 card says which **
 `NullPointerException` of the task. The report of this run is
 [🔌 a Connect worker](reports/logs-connect.html).
 
+A worker that runs many connectors, each failing its own way, is `--sample connect_many_connectors` (CP 8.1.2, 8
+connectors: JDBC, S3, Elasticsearch, Debezium MySQL, HTTP, ServiceNow, a custom one). Each 🔌 card has the icon of its
+type and 🛟 its plugin version against the minimum supported on the CP release of the worker, and the ⛔ banner at the top
+of the report lists the ones below it (Confluent Support refuses cases on them):
+
+```text
+🛟 3 connector(s) below the minimum version supported on CP 8.1: s3-sink 10.5.13 < 11.0.2, http-sink 1.7.6 < 1.7.10, jdbc-oracle-sink 10.7.4 < 10.8.4 (https://docs.confluent.io/platform/8.1/connect/supported-connector-version.html)
+[HIGH] 🧨 A connector task was killed ×3 in connect-many-connectors.log (first at line 179, 2026-11-06 09:02:20)
+🔌 Connectors (8, most errors first)
+```
+
 ---
 
 ## 3. What it reads
