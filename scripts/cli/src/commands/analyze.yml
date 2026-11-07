@@ -130,6 +130,11 @@ commands:
     end, in the HTML report and in --json (.summary.incomplete_inputs):
     never a silent ✅, and exit code 1 when nothing could be read at all.
     Bytes that are not UTF-8 (a Latin-1 character) are read as they are.
+    🌍 It works offline, without Docker: bash 4.2+, python3 3.8+, jq, awk,
+    gzip and tar are enough (a CFK bundle then has no ☸️ sections, its pod
+    logs are still read). Without the playground: a sparse clone of
+    scripts/, tools/ and cfk-analysis/ (see the deep dive, "Without the
+    playground").
     🧰 The files of the input that another analyzer reads better (GC logs,
     thread dumps, heap dumps, flight recordings, network captures, Oracle
     XStream diagnostics reports, found by their content or name) are listed

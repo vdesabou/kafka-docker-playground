@@ -1,7 +1,5 @@
 name: playground
 version: 1.0.0
-dependencies:
-  docker: visit https://docs.docker.com/get-docker to install
 help: |-
   🧠 CLI for Kafka Docker Playground 🐳
 
