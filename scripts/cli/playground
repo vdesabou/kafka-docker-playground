@@ -5817,7 +5817,7 @@ playground_repro_usage() {
 playground_repro_export_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro export\n\n"
-    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Files outside the repository that a model needs (--connector-zip /\n  --connector-jar of its run line, files whose absolute path appears in\n  the script or its compose files, like ~/Downloads/config.json) are\n  only listed, unless --include-artifacts packs them under\n  <model folder>/artifacts/. Import then points the run line, the script\n  and the compose files to the imported copies. Import also rewrites the\n  paths of the exporter's checkout (like the jar path written by\n  'repro bootstrap --custom-smt') to the local ones.\n  \n  --cluster-creds / --cluster-schema-registry-creds are removed from the\n  run line: whoever imports runs with their own cluster.\n  \n  Without --file, the current reproduction model is exported.\n  \n  📖 Each model gets a hand-off report, <model>.REPRO.md next to its\n  script in the bundle: case, jira, status, last verdict, 🎯 expected,\n  💥 actual, the commands to import and run it, the credentials it\n  needs, and what it changes compared with the script of its base\n  example (diff). 'playground repro import' prints where it is.\n  --report-only prints it (Markdown, for a Jira or a Slack message)\n  without writing the bundle, --no-report leaves it out.\n  \n  📋 On macOS, the bundle is copied to the clipboard as a file: paste it\n  (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip).\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n  The same scan runs on commits with 'playground repro check'.\n\n"
+    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Files outside the repository that a model needs (--connector-zip /\n  --connector-jar of its run line, files whose absolute path appears in\n  the script or its compose files, like ~/Downloads/config.json) are\n  only listed, unless --include-artifacts packs them under\n  <model folder>/artifacts/. Import then points the run line, the script\n  and the compose files to the imported copies. Import also rewrites the\n  paths of the exporter's checkout (like the jar path written by\n  'repro bootstrap --custom-smt') to the local ones.\n  \n  --cluster-creds / --cluster-schema-registry-creds are removed from the\n  run line: whoever imports runs with their own cluster.\n  \n  Without --file, the current reproduction model is exported.\n  \n  📖 Each model gets a hand-off report, <model>.REPRO.md next to its\n  script in the bundle: case, jira, status, last verdict, 🎯 expected,\n  💥 actual, the commands to import and run it, the credentials it\n  needs, and what it changes compared with the script of its base\n  example (diff). 'playground repro import' prints where it is.\n  --report-only prints it (Markdown, for a Jira or a Slack message)\n  without writing the bundle, --no-report leaves it out.\n  \n  📘 A README.md at the top of the bundle is the first file to open for\n  someone who never used the playground: how to install it in one\n  command (or open it in GitHub Codespaces), how to import and run the\n  models, then their hand-off reports. Import skips it.\n  \n  📋 On macOS, the bundle is copied to the clipboard as a file: paste it\n  (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip).\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n  The same scan runs on commits with 'playground repro check'.\n\n"
   else
     printf "playground repro export - 📤 Export reproduction models as a self-contained tgz bundle\n\n"
   fi
@@ -54145,6 +54145,92 @@ playground_repro_export_command() {
       echo "_Generated by \`playground repro export\` on $(date -u +%Y-%m-%d) from playground commit $(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)._"
   }
 
+  # the README.md at the top of the bundle ($1 models.json, $2 name of the bundle, $3 generated reports): the first file
+  # someone who never used the playground opens. What the bundle is, how to install the playground, how to import and
+  # run the models, then their hand-off reports
+  function repro_write_readme () {
+      local models_json="$1" bundle="$2" generated="$3"
+      local nb_models title model script description credentials
+      nb_models=$(jq -s 'length' "$models_json")
+      if [ "$nb_models" -eq 1 ]
+      then
+          title=$(jq -r '.description // ""' "$models_json")
+          echo "# 🧪 Reproduction model: ${title:-$(jq -r '.script | split("/") | last | sub("\\.sh$"; "")' "$models_json")}"
+      else
+          echo "# 🧪 $nb_models reproduction models"
+      fi
+      echo ""
+      echo "This bundle was exported with \`playground repro export\` from [kafka-docker-playground](https://kafka-docker-playground.io) on $(date -u +%Y-%m-%d) (playground commit \`$(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)\`)."
+      echo "A reproduction model is a bash script that starts a Kafka / Confluent Platform environment with Docker, then replays a scenario (connector, data, failure) to show a behaviour."
+      echo ""
+      if [ -s "$generated" ]
+      then
+          echo "| Model | Description | Hand-off report |"
+          echo "| --- | --- | --- |"
+      else
+          echo "| Model | Description |"
+          echo "| --- | --- |"
+      fi
+      while IFS= read -r model
+      do
+          script=$(jq -r '.script' <<< "$model")
+          description=$(jq -r '.description // ""' <<< "$model")
+          if [ -s "$generated" ]
+          then
+              echo "| \`$script\` | ${description:-_none_} | [\`${script%.sh}.REPRO.md\`](${script%.sh}.REPRO.md) |"
+          else
+              echo "| \`$script\` | ${description:-_none_} |"
+          fi
+      done < <(jq -c '.' "$models_json")
+      echo ""
+      echo "## 🚀 1. Get kafka-docker-playground"
+      echo ""
+      echo "Paste this in a terminal (macOS, Linux or Windows WSL 2). It checks your machine, asks before each change, installs what is missing (a container engine included, only when you have none), clones the repository into \`~/kafka-docker-playground\` and puts \`playground\` in your \`PATH\`:"
+      echo ""
+      echo '```bash'
+      echo 'curl -fsSL https://kafka-docker-playground.io/install.sh | bash'
+      echo '```'
+      echo ""
+      echo "Then open a new terminal. Details and options (\`--dry-run\` shows what it would do): https://kafka-docker-playground.io/#/how-to-use"
+      echo ""
+      echo "- 🌐 Nothing to install: open the playground in your browser with [GitHub Codespaces](https://codespaces.new/vdesabou/kafka-docker-playground?quickstart=1), then drag and drop this bundle in its file explorer."
+      echo "- 🔄 Already installed: update it first (\`git -C ~/kafka-docker-playground pull\`, or the folder of your clone), the models may use features of a recent playground."
+      echo ""
+      echo "## ▶️ 2. Import and run it"
+      echo ""
+      echo '```bash'
+      echo "playground repro import -f <path>/$bundle   # copies the models in reproduction-models/ of your clone, prints the line to run"
+      jq -r '.run_command | sub("\\{repro_dir\\}"; "<printed by import>")' "$models_json"
+      echo '```'
+      echo ""
+      if [ "$nb_models" -eq 1 ]
+      then
+          echo "\`playground repro import -f <path>/$bundle --run\` does both."
+          echo ""
+      fi
+      credentials=$(jq -s -r '[.[].credentials[]] | unique | join(", ")' "$models_json")
+      if [ -n "$credentials" ]
+      then
+          echo "🔑 Needs: $credentials (\`playground secrets set <NAME>\`, or the cloud credentials of the helper). The import lists the missing ones."
+          echo ""
+      fi
+      echo "\`playground stop\` stops the containers when you are done."
+      echo ""
+      if [ -s "$generated" ]
+      then
+          echo "## 📖 3. What it reproduces"
+          echo ""
+          echo "The hand-off report of each model follows (also in the bundle, next to its script)."
+          echo ""
+          while IFS=$'\t' read -r report source rest
+          do
+              # one heading level down, outside the code blocks, so that the reports nest under this section
+              awk '/^(```|~~~)/ { fence = !fence } !fence && /^#+ / { $0 = "#" $0 } { print }' "$source"
+              echo ""
+          done < "$generated"
+      fi
+  }
+
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
     output_folder="$OUTPUT_FOLDER"
@@ -54424,8 +54510,13 @@ playground_repro_export_command() {
           printf '%s\t%s\t\n' "$report" "$tmp_dir/reports/$report" >> "$tmp_dir/generated"
       done < <(jq -c '.' "$tmp_dir/models.json")
   fi
-  # where each file of the bundle is read from: the artifacts (outside the repository) and the generated reports
+  # the README.md at the top of the bundle, for whoever opens the archive without knowing the playground. In the manifest
+  # with its sha256, and skipped on import (an older playground skips it too, as a file outside a model folder)
+  repro_write_readme "$tmp_dir/models.json" "playground_repro_${bundle_name}_${bundle_date}.tgz" "$tmp_dir/generated" > "$tmp_dir/README.md"
+  echo "README.md" >> "$tmp_dir/files"
+  # where each file of the bundle is read from: the artifacts (outside the repository), the generated reports and README
   cat "$tmp_dir/artifacts" "$tmp_dir/generated" > "$tmp_dir/sources"
+  printf 'README.md\t%s\t\n' "$tmp_dir/README.md" >> "$tmp_dir/sources"
 
   sort -u "$tmp_dir/files" -o "$tmp_dir/files"
 
@@ -54550,7 +54641,7 @@ playground_repro_export_command() {
   output_dir=$(cd "$output_dir" && pwd)
   final_archive="$output_dir/playground_repro_${bundle_name}_${bundle_date}.tgz"
 
-  if ! (cd "$staging" && tar czf "$final_archive" repro-manifest.json $(cut -d "/" -f 1 "$tmp_dir/files" | sort -u))
+  if ! (cd "$staging" && tar czf "$final_archive" README.md repro-manifest.json $(grep "/" "$tmp_dir/files" | cut -d "/" -f 1 | sort -u))
   then
       logerror "❌ export failed as archive $final_archive could not be created !"
       exit 1
@@ -54558,6 +54649,7 @@ playground_repro_export_command() {
 
   log "📤 Exported bundle is available: $final_archive ($(du -h "$final_archive" | cut -f 1 | tr -d ' '))"
   log "📥 To import it: playground repro import -f <path>/$(basename "$final_archive")"
+  log "📘 README.md at the top of the bundle: how to install the playground, import and run it (read it: tar xzOf $final_archive README.md)"
   while IFS=$'\t' read -r report source rest
   do
       log "📖 hand-off report in the bundle: $report (read it: tar xzOf $final_archive $report)"
@@ -54916,7 +55008,10 @@ playground_repro_import_command() {
       manifest="$tmp_dir/legacy-manifest.json"
   fi
 
-  # files at the top of the bundle are not in a model folder
+  # files at the top of the bundle are not in a model folder. README.md is the bundle's own (how to install the
+  # playground, import and run it): left out without a warning
+  grep -vx "README.md" "$tmp_dir/files" > "$tmp_dir/files.tmp" || true
+  mv "$tmp_dir/files.tmp" "$tmp_dir/files"
   top_files=$(grep -v "/" "$tmp_dir/files" || true)
   if [ -n "$top_files" ]
   then

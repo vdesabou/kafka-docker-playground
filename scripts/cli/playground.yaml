@@ -1792,11 +1792,14 @@ subcommands:
       it\nneeds, and what it changes compared with the script of its base\nexample
       (diff). 'playground repro import' prints where it is.\n--report-only prints
       it (Markdown, for a Jira or a Slack message)\nwithout writing the bundle, --no-report
-      leaves it out.\n\n\U0001F4CB On macOS, the bundle is copied to the clipboard
-      as a file: paste it\n(Cmd+V) in a Slack conversation to attach it (--no-clipboard
-      to skip).\n\n\U0001F393 Tip: start with --dry-run to see what would be packed,
-      and what the scan finds.\nThe same scan runs on commits with 'playground repro
-      check'."
+      leaves it out.\n\n\U0001F4D8 A README.md at the top of the bundle is the first
+      file to open for\nsomeone who never used the playground: how to install it in
+      one\ncommand (or open it in GitHub Codespaces), how to import and run the\nmodels,
+      then their hand-off reports. Import skips it.\n\n\U0001F4CB On macOS, the bundle
+      is copied to the clipboard as a file: paste it\n(Cmd+V) in a Slack conversation
+      to attach it (--no-clipboard to skip).\n\n\U0001F393 Tip: start with --dry-run
+      to see what would be packed, and what the scan finds.\nThe same scan runs on
+      commits with 'playground repro check'."
     usage: playground repro export [OPTIONS]
     options:
     - names:
