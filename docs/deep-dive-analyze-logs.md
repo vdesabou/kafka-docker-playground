@@ -93,14 +93,19 @@ Then the 🧭 **summary**, what the HTML report says first, bounded so that it f
 🌳 Root causes not explained by a known cause (top 5 of 7)
    ERROR ×2 StreamsException: ORA-26804: Apply "XOUT" is disabled. · 1 connector(s): cdc-xstream-oracle-source
    …
-🗓️ Timeline (first 8 of 12 event(s), all files merged)
+🗓️ Timeline (first 8 of 14 event(s), all files merged)
    2026-10-14 10:03:58 🔑 Authentication failure ⬅️ 🔴 first ERROR: SQLException: ORA-01017: invalid username/password; logon denied (connect-oracle-xstream-task-failure.log:9)
    2026-10-14 10:03:59 🔴 first ERROR: The outbound server 'XOUT_MISSING' is not valid. …
+   2026-10-14 10:04:59 🔄 rebalance of the worker group connect-cluster (connect-oracle-xstream-task-failure.log:61)
    2026-10-14 10:04:59 🔌 connector cdc-xstream-oracle-source (re)configured (connect-oracle-xstream-task-failure.log:69)
    …
 🔌 Connectors (1, most errors first)
    cdc-xstream-oracle-source: 1 ERROR/FATAL, 6 WARN, 🧨 1 task kill(s), 🏷️ 1.6.0 (OracleXStreamSourceConnector) · 🧨 A connector task was killed
       👉 fixed in a newer version? playground connector-plugin changelog --connector-plugin io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector --from 1.6.0
+🔄 Restarts and rebalances (INFO lines)
+   connect-cluster: 2 worker group rebalances, 24.7/h · 2026-10-14 10:04:59 → 10:05:02
+   cflt-schemahistory: 10 consumer group rejoins, 123.3/h · consumer pro-actively leaving the group · 2026-10-14 10:05:02 → 10:05:54
+   …
 ⚙️ Configuration logged (24), the last dump of each: --show-config <connector|config class|client id> prints one
 ```
 
@@ -212,6 +217,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🎚️ filter bar | levels, components, connector, search, period: everything below follows it, and the URL keeps it |
 | 🔎 findings | the known causes with what to do and their exception chains, then the most frequent errors no known cause explains; each card says how much of it is in the current selection |
 | 🗓️ incident timeline | *what happened first?*: all files merged, the first occurrence of each error and known cause, restarts, connectors reconfigured, config changed between restarts |
+| 🔄 restarts and rebalances | from the INFO lines (the digest only keeps ERROR / WARN): the rebalances of the worker groups, the rejoins of the consumer groups with their reason, the connectors and tasks started, the workers and brokers (re)started, each counted with its rate per hour. 🌀 **storm**: 10 or more at 6 or more per hour (a consumer that leaves on purpose, `pro-actively leaving the group`, is not one); also on the 🔌 cards and in the 🗓️ timeline |
 | 🔌 connectors | a card per connector, the 30 with the most errors first (show the others): errors, task kills, known causes, configuration, keys changed; ▶ only this connector keeps its card only (⤺ for all of them), the search filters the cards |
 | 📈 occurrences over time | drag to zoom down to the second; an error repeated all day is spread over the day (sampled, counted with its weight) |
 | 🌳 all root causes | every distinct error, by deepest exception, linked to the finding that explains it |

@@ -152,7 +152,8 @@ def parse_records(path: str) -> List[dict]:
                 parts += [""] * (7 - len(parts))
                 current = {"label": parts[1], "lines": int(parts[2]), "distinct": int(parts[3]),
                            "occurrences": int(parts[4]), "log_first_ts": parts[5] or None,
-                           "log_last_ts": parts[6] or None, "records": [], "configs": [], "events": []}
+                           "log_last_ts": parts[6] or None, "records": [], "configs": [], "events": [],
+                           "event_counts": []}
                 files.append(current)
                 rec = done = None
             elif line.startswith("@@PGREC@@\t") and current is not None:
@@ -185,6 +186,10 @@ def parse_records(path: str) -> List[dict]:
                 parts = (line.rstrip("\n").split("\t") + [""] * 6)[1:6]
                 current["events"].append({"kind": parts[0], "line": int(parts[1]) if parts[1].isdigit() else None,
                                           "time": parts[2] or None, "connector": parts[3] or None, "detail": parts[4]})
+            elif line.startswith("@@PGEVTN@@\t") and current is not None:
+                # how many events of a kind for a connector or a group in the whole file (only 300 are noted)
+                parts = (line.rstrip("\n").split("\t") + [""] * 4)[1:4]
+                current["event_counts"].append({"kind": parts[0], "who": parts[1], "count": int(parts[2]) if parts[2].isdigit() else 0})
             elif line.startswith("@@PGCFGCHG@@\t") and current is not None and current["configs"]:
                 parts = (line.split("\t") + [""] * 5)[1:5]
                 key, _, previous = parts[2].partition("=")
@@ -685,6 +690,14 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["timeline"] = incident_timeline(res, files)
     res["connectors"] = connector_health(res, files)
     res["summary"]["kafka_versions"] = kafka_versions(files)
+    res["lifecycle"] = lifecycle(res, files)
+    # the counts on the 🔌 card of each connector
+    for c in res["connectors"]:
+        for r in res["lifecycle"]["rows"]:
+            if r["kind"] in ("connector_start", "task_start") and r["who"] == c["connector"]:
+                c[r["kind"] + "s"] = r["count"]
+            elif r["kind"] == "consumer_rejoin" and (r["who"] == "connect-" + c["connector"] or r.get("connector") == c["connector"]):
+                c["consumer_rejoins"] = c.get("consumer_rejoins", 0) + r["count"]
     return res
 
 
@@ -760,6 +773,15 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
         for ch in c.get("changes") or []:
             add(ch.get("time"), c["file"], ch.get("line"), "config_change", None,
                 f"⚙️ {c['title']}: {ch['key']} {ch['previous'] or '∅'} → {ch['value'] or '∅'}"[:200], config_connector(c))
+    # the lifecycle of the INFO lines: every (re)start of a worker or a broker, the first rebalances of the worker groups
+    nrebalances = 0
+    for f in files:
+        for ev in f.get("events") or []:
+            if ev["kind"] == "process_start":
+                add(ev.get("time"), f["label"], ev.get("line"), "lifecycle", None, f"🚀 {ev.get('detail') or 'started'}")
+            elif ev["kind"] == "worker_rebalance" and nrebalances < 20:
+                nrebalances += 1
+                add(ev.get("time"), f["label"], ev.get("line"), "lifecycle", None, f"🔄 rebalance of the worker group {ev.get('detail') or ''}".strip())
     out = sorted(events.values(), key=lambda ev: (ev["time"], ev["file"] or "", ev["line"] or 0))
     return out[:TIMELINE_LIMIT]
 
@@ -827,6 +849,94 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
     return out
 
 
+# a group that rebalances this often is a storm: at least STORM_MIN of them, and STORM_PER_HOUR per hour or more
+STORM_MIN = 10
+STORM_PER_HOUR = 6
+LIFECYCLE_KINDS = {"worker_rebalance": "worker group rebalances", "consumer_rejoin": "consumer group rejoins",
+                   "connector_start": "connector starts", "task_start": "task starts", "process_start": "process starts"}
+
+
+def lifecycle(res: dict, files: List[dict]) -> dict:
+    """the lifecycle of the INFO lines: rebalances of the worker groups, rejoins of the consumer groups, connectors and
+    tasks started, workers and brokers (re)started; counted per group / connector (all of them) with the first and last
+    time (of the 300 noted per kind and file), the rate per hour of the period covered, and the storms"""
+    hours = (res["summary"].get("log_duration_seconds") or 0) / 3600
+    rows: Dict[Tuple[str, str], dict] = {}
+    for f in files:
+        for c in f.get("event_counts") or []:
+            r = rows.setdefault((c["kind"], c["who"]), {"kind": c["kind"], "who": c["who"], "count": 0, "first": None,
+                                                       "last": None, "connectors": Counter(), "reasons": Counter()})
+            r["count"] += c["count"]
+        for ev in f.get("events") or []:
+            if ev["kind"] not in LIFECYCLE_KINDS:
+                continue
+            group = (ev.get("detail") or "").split(" · ")[0]
+            who = group if ev["kind"] in ("worker_rebalance", "consumer_rejoin") else \
+                ("connect" if "Connect" in (ev.get("detail") or "") else "broker") if ev["kind"] == "process_start" else ev.get("connector") or ""
+            r = rows.get((ev["kind"], who))
+            if not r:
+                continue
+            if ev.get("time"):
+                r["first"] = min(r["first"] or ev["time"], ev["time"])
+                r["last"] = max(r["last"] or ev["time"], ev["time"])
+            if ev.get("connector"):
+                r["connectors"][ev["connector"]] += 1
+            if " · " in (ev.get("detail") or ""):
+                r["reasons"][ev["detail"].split(" · ", 1)[1].strip()] += 1
+    out = []
+    for r in rows.values():
+        per_hour = round(r["count"] / hours, 1) if hours > 0 else None
+        out.append({"kind": r["kind"], "who": r["who"], "count": r["count"], "first": r["first"], "last": r["last"],
+                    "per_hour": per_hour, "connector": r["connectors"].most_common(1)[0][0] if r["connectors"] else None,
+                    "reason": r["reasons"].most_common(1)[0][0] if r["reasons"] else None,
+                    # a consumer that leaves on purpose (closed: "pro-actively leaving the group", the schema history
+                    # consumer of Debezium every few seconds) is not a storm
+                    "storm": r["kind"] in ("worker_rebalance", "consumer_rejoin") and r["count"] >= STORM_MIN
+                             and per_hour is not None and per_hour >= STORM_PER_HOUR
+                             and "pro-actively leaving" not in (r["reasons"].most_common(1)[0][0] if r["reasons"] else "")})
+    order = list(LIFECYCLE_KINDS)
+    out.sort(key=lambda r: (not r["storm"], order.index(r["kind"]), -r["count"]))
+    return {"rows": out, "storms": [r for r in out if r["storm"]]}
+
+
+def lifecycle_text(lc: Optional[dict], top: int = 6) -> List[str]:
+    if not lc or not lc.get("rows"):
+        return []
+    out = ["🔄 Restarts and rebalances (INFO lines)"]
+    for r in lc["rows"][:top]:
+        rate = f", {r['per_hour']:g}/h" if r.get("per_hour") is not None else ""
+        out.append(f"   {'🌀 STORM ' if r['storm'] else ''}{r['who'] or '?'}: {r['count']:,} {LIFECYCLE_KINDS[r['kind']]}{rate}"
+                   + (f" · {r['reason']}" if r.get("reason") else "")
+                   + (f" · {period_text(r['first'], r['last'])}" if r.get("first") else ""))
+    if len(lc["rows"]) > top:
+        out.append(f"   … {len(lc['rows']) - top} more in the HTML report and .lifecycle of --json")
+    return out
+
+
+def rate_cell(r: dict) -> str:
+    return "" if r.get("per_hour") is None else f"{r['per_hour']:g}"
+
+
+def lifecycle_html(lc: Optional[dict]) -> str:
+    if not lc or not lc.get("rows"):
+        return ""
+    rows = "".join(
+        f"<tr class='{'lc-storm' if r['storm'] else ''}'><td>{'🌀 storm' if r['storm'] else ''}</td><td>{e(LIFECYCLE_KINDS[r['kind']])}</td>"
+        f"<td class='mono'>{e(r['who'] or '?')}</td><td class='num'>{r['count']:,}</td>"
+        f"<td class='num'>{rate_cell(r)}</td>"
+        f"<td class='mono'>{e(period_text(r['first'], r['last'])) if r.get('first') else ''}</td>"
+        f"<td>{e(r.get('reason') or '')}{(' <span class=fi-conn>' + e(r['connector']) + '</span>') if r.get('connector') else ''}</td></tr>"
+        for r in lc["rows"])
+    return ("<style>tr.lc-storm td{background:#fef2f2}html[data-theme=dark] tr.lc-storm td{background:#3b1515}</style>"
+            "<div class='table-card'><h2>🔄 Restarts and rebalances</h2><p class='legend'>From the INFO lines: the rebalances of "
+            "the Connect worker groups, the rejoins of the consumer groups (a sink connector, a client), the connectors and tasks "
+            f"started, the workers and brokers (re)started. 🌀 a group that rebalanced at least {STORM_MIN} times, {STORM_PER_HOUR} "
+            "per hour or more: each rebalance stops the processing (look at the members that join and leave, session.timeout.ms, "
+            "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms).</p><table><tr><th></th><th>What</th>"
+            "<th>Group / connector</th><th class='num'>Count</th><th class='num'>Per hour</th><th>When</th><th>Reason, connector</th></tr>"
+            f"{rows}</table></div>")
+
+
 def kafka_versions(files: List[dict]) -> List[str]:
     """the Kafka / Confluent Platform versions of the logs ("Kafka version: 8.3.2-ce" of AppInfoParser), in order"""
     out: List[str] = []
@@ -873,6 +983,11 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else "")
             + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
+            + ("<div class='fi-meta'>🔄 " + " · ".join(x for x in [
+                f"{c['connector_starts']} connector start(s)" if c.get("connector_starts") else "",
+                f"{c['task_starts']} task start(s)" if c.get("task_starts") else "",
+                f"{c['consumer_rejoins']} consumer group rejoin(s)" if c.get("consumer_rejoins") else ""] if x) + "</div>"
+               if c.get("connector_starts") or c.get("task_starts") or c.get("consumer_rejoins") else "")
             + (f"<div class='fi-meta'>⚙️ {c['config_dumps']} configuration dump(s)"
                + (f", clients: <span class='mono'>{e(', '.join(c['clients'][:6]))}</span>" if c["clients"] else "") + "</div>"
                if c["config_dumps"] else "")
@@ -1216,6 +1331,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += timeline_text(res.get("timeline") or [])
     # one line per connector (🔌 Connectors of the HTML report, .connectors of --json)
     out += connectors_text(res.get("connectors") or [])
+    # rebalances and restarts of the INFO lines (🔄 of the HTML report, .lifecycle of --json)
+    out += lifecycle_text(res.get("lifecycle"))
     configs = res.get("configuration") or []
     if configs:
         out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
@@ -1463,6 +1580,11 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Timeline (what happened first)", "", "| Time | Event | Where |", "| --- | --- | --- |"]
         for ev in events[:10]:
             out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200])} | {md_cell(ev['file'].split('/')[-1])}:{ev['line']} |")
+    lc_rows = (res.get("lifecycle") or {}).get("rows") or []
+    if lc_rows:
+        out += ["", "### Restarts and rebalances", "", "| What | Group / connector | Count | Per hour |", "| --- | --- | --- | --- |"]
+        for r in lc_rows[:8]:
+            out.append(f"| {'🌀 ' if r['storm'] else ''}{LIFECYCLE_KINDS[r['kind']]} | `{md_cell(r['who'] or '?')}` | {r['count']:,} | {rate_cell(r)} |")
     conns = res.get("connectors") or []
     if conns:
         out += ["", f"### Connectors ({len(conns)}, most errors first)", "", "| Connector | Version | ERROR/FATAL | WARN | Task kills | Known causes |", "| --- | --- | --- | --- | --- | --- |"]
@@ -2953,7 +3075,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
-            timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or [])]
+            timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
+            lifecycle_html(res.get("lifecycle"))]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -3104,7 +3227,7 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration,timeline,connectors,comparison (default: all)")
+                         "files_without_findings,coverage,configuration,timeline,connectors,comparison,lifecycle (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
