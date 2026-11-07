@@ -812,14 +812,107 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
             elif ev["kind"] == "worker_rebalance" and nrebalances < 20:
                 nrebalances += 1
                 add(ev.get("time"), f["label"], ev.get("line"), "lifecycle", None, f"🔄 rebalance of the worker group {ev.get('detail') or ''}".strip())
+            elif ev["kind"] == "process_stop":
+                add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"🛑 {ev.get('detail') or 'stopping'}")
+            elif ev["kind"] == "controller_change":
+                add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"👑 {ev.get('detail') or 'a new active controller'}")
+    # the longest GC pauses (1 s or more: the JVM stopped, its sessions and requests time out)
+    pauses = [(f, ev) for f in files for ev in f.get("events") or [] if ev["kind"] == "gc_pause" and ev.get("time")]
+    pauses.sort(key=lambda x: -gc_ms(x[1]))
+    for f, ev in pauses[:GC_PAUSES_SHOWN]:
+        add(ev["time"], f["label"], ev.get("line"), "infra", None, f"♻️ {gc_text(ev)}")
     out = sorted(events.values(), key=lambda ev: (ev["time"], ev["file"] or "", ev["line"] or 0))
     link_causes(out)
+    titles_of: Dict[int, str] = {}
+    for h in res["known_causes"]:
+        for i in h.get("records") or []:
+            titles_of.setdefault(i, h["title"])
+    after_effects(out, files, titles_of)
     return out[:TIMELINE_LIMIT]
+
+
+GC_PAUSES_SHOWN = 20
+
+
+def gc_ms(ev: dict) -> int:
+    head = (ev.get("detail") or "").split(" ", 1)[0]
+    return int(head) if head.isdigit() else 0
+
+
+def gc_text(ev: dict) -> str:
+    """the detail "2345 Pause Full" as: GC pause of 2.3 s (Pause Full)"""
+    what = (ev.get("detail") or "").split(" ", 1)[1:] or [""]
+    return f"GC pause of {gc_ms(ev) / 1000:.1f} s" + (f" ({what[0]})" if what[0] else "")
+
+
+# what a GC pause, a process stopped or restarted, a new controller is followed by: the ERROR / WARN occurrences of every
+# file in the next EFFECT_WINDOW_SECONDS, when they are well above the usual rate of the logs (EFFECT_RATIO times the
+# average per window, EFFECT_MIN at least): "37 NOT_LEADER_OR_FOLLOWER in the 60 s after broker 2 restarted"
+EFFECT_WINDOW_SECONDS = 60
+EFFECT_MIN = 5
+EFFECT_RATIO = 3
+
+
+def effect_label(r: dict, titles_of: Dict[int, str]) -> str:
+    """what a record is, in a few words: its known cause, else its deepest exception, else its message without the
+    [Producer clientId=…] / [Consumer …] prefix of the clients"""
+    if r.get("index") in titles_of:
+        return titles_of[r["index"]]
+    if r.get("root_cause"):
+        return r["root_cause"].split(".")[-1]
+    msg = re.sub(r"^\[(?:Producer|Consumer|AdminClient|Worker)[^\]]*\]\s*", "", short_message(r["message"]))
+    return msg[:80]
+
+
+def after_effects(events: List[dict], files: List[dict], titles_of: Optional[Dict[int, str]] = None) -> None:
+    """ev["effects"] on each infra event (♻️ GC pause, 🛑 stop, 👑 controller) and process (re)start followed by a burst of
+    ERROR / WARN occurrences: {seconds, occurrences, usual, top: [{label, count}]}"""
+    import bisect
+    occ: List[Tuple[int, int, str]] = []
+    for f in files:
+        for r in f["records"]:
+            stride = r.get("ts_stride") or 1
+            label = effect_label(r, titles_of or {})
+            for t in epochs(r.get("timestamps") or []):
+                occ.append((t, stride, label))
+    if not occ:
+        return
+    occ.sort()
+    times = [o[0] for o in occ]
+    span = max(times[-1] - times[0], EFFECT_WINDOW_SECONDS)
+    usual = sum(o[1] for o in occ) * EFFECT_WINDOW_SECONDS / span
+    for ev in events:
+        if ev["kind"] != "infra" and not (ev["kind"] == "lifecycle" and ev["text"].startswith("🚀")):
+            continue
+        try:
+            t = epoch(ev["time"])
+        except ValueError:
+            continue
+        lo, hi = bisect.bisect_left(times, t), bisect.bisect_right(times, t + EFFECT_WINDOW_SECONDS)
+        if hi <= lo:
+            continue
+        counts: Counter = Counter()
+        for _, w, label in occ[lo:hi]:
+            counts[label] += w
+        total = sum(counts.values())
+        if total >= max(EFFECT_MIN, EFFECT_RATIO * usual):
+            ev["effects"] = {"seconds": EFFECT_WINDOW_SECONDS, "occurrences": total, "usual": round(usual, 1),
+                             "top": [{"label": k, "count": v} for k, v in counts.most_common(3)]}
+
+
+def effects_text(ev: dict) -> str:
+    x = ev.get("effects")
+    if not x:
+        return ""
+    top = ", ".join(f"{t['label']} ×{t['count']:,}" for t in x["top"])
+    return (f"💥 {x['occurrences']:,} ERROR/WARN occurrence(s) in the next {x['seconds']} s (usually {x['usual']:g} per "
+            f"{x['seconds']} s): {top}")
 
 
 # a first error this soon after a change (a config key changed, a connector reconfigured, a worker / broker restarted) is
 # marked as following it: the question behind most "it broke after…" tickets
 CAUSE_WINDOW_SECONDS = 600
+INFRA_CAUSE_WINDOW_SECONDS = 120
 
 
 def link_causes(events: List[dict]) -> None:
@@ -831,7 +924,7 @@ def link_causes(events: List[dict]) -> None:
     for ev in events:
         # a change: a config key changed, or a worker / broker restarted (not its first start in a file, nor a connector
         # created: everything after the creation of a connector would follow it)
-        if ev["kind"] == "config_change":
+        if ev["kind"] in ("config_change", "infra"):
             changes.append(ev)
             continue
         if ev["kind"] == "lifecycle" and ev["text"].startswith("🚀"):
@@ -847,6 +940,9 @@ def link_causes(events: List[dict]) -> None:
             delta = t - epoch(ch["time"])
             if delta > CAUSE_WINDOW_SECONDS:
                 break
+            # a GC pause, a process stopped, a new controller: what it breaks breaks right away
+            if ch["kind"] == "infra" and delta > INFRA_CAUSE_WINDOW_SECONDS:
+                continue
             if ev.get("connector") and ch.get("connector") and ev["connector"] != ch["connector"]:
                 continue
             ev["after"] = {"seconds": int(delta), "text": ch["text"], "time": ch["time"], "file": ch["file"], "line": ch["line"]}
@@ -925,7 +1021,9 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
 STORM_MIN = 10
 STORM_PER_HOUR = 6
 LIFECYCLE_KINDS = {"worker_rebalance": "worker group rebalances", "consumer_rejoin": "consumer group rejoins",
-                   "connector_start": "connector starts", "task_start": "task starts", "process_start": "process starts"}
+                   "connector_start": "connector starts", "task_start": "task starts", "process_start": "process starts",
+                   "process_stop": "process stops", "controller_change": "active controller changes",
+                   "gc_pause": "GC pauses of 1 s or more"}
 
 
 def lifecycle(res: dict, files: List[dict]) -> dict:
@@ -944,7 +1042,8 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                 continue
             group = (ev.get("detail") or "").split(" · ")[0]
             who = group if ev["kind"] in ("worker_rebalance", "consumer_rejoin") else \
-                ("connect" if "Connect" in (ev.get("detail") or "") else "broker") if ev["kind"] == "process_start" else ev.get("connector") or ""
+                ("connect" if "Connect" in (ev.get("detail") or "") else "broker") if ev["kind"] in ("process_start", "process_stop") else \
+                "controller" if ev["kind"] == "controller_change" else "jvm" if ev["kind"] == "gc_pause" else ev.get("connector") or ""
             r = rows.get((ev["kind"], who))
             if not r:
                 continue
@@ -1463,6 +1562,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
                 + (f" <span class='fi-conn'>{e(ev['connector'])}</span>" if ev.get("connector") else "")
                 + (f" <span class='fi-meta'>×{ev['count']}</span>" if ev.get("count") else "")
                 + (f"<div class='tl-after'>🔗{e(after_text(ev))}</div>" if ev.get("after") else "")
+                + (f"<div class='tl-effects'>{e(effects_text(ev))}</div>" if ev.get("effects") else "")
                 + f"</td><td class='mono'>{where}</td></tr>")
     head = ("<tr><th>Time</th><th title='time since the previous event shown (bold: a big gap)'>Δ</th><th>Component</th>"
             "<th>What</th><th>Where</th></tr>")
@@ -1471,7 +1571,9 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
     if len(events) > shown:
         more = (f"<details><summary>{len(events) - shown} more event(s)</summary><table>{head}"
                 + "".join(row(ev) for ev in events[shown:]) + "</table></details>")
-    return ("<style>.tl-after{font-size:.8rem;font-weight:600;color:#b45309}html[data-theme=dark] .tl-after{color:#fcd34d}tr.tl-known td{background:#fff7ed}tr.tl-start td,tr.tl-connector_config td{background:#f0f9ff}"
+    return ("<style>.tl-after{font-size:.8rem;font-weight:600;color:#b45309}html[data-theme=dark] .tl-after{color:#fcd34d}"
+            ".tl-effects{font-size:.8rem;font-weight:600;color:#b91c1c}html[data-theme=dark] .tl-effects{color:#fca5a5}"
+            "tr.tl-infra td{background:#fdf4ff}html[data-theme=dark] tr.tl-infra td{background:#2e1035}tr.tl-known td{background:#fff7ed}tr.tl-start td,tr.tl-connector_config td{background:#f0f9ff}"
             "tr.tl-config_change td{background:#fefce8}html[data-theme=dark] tr.tl-known td{background:#3a2406}"
             "html[data-theme=dark] tr.tl-start td,html[data-theme=dark] tr.tl-connector_config td{background:#0c2a3a}"
             "html[data-theme=dark] tr.tl-config_change td{background:#33300a}"
@@ -1491,7 +1593,9 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "</style>"
             "<div class='table-card'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
             "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
-            "logged at startup), the connectors (re)configured and the config keys changed between restarts. It follows the "
+            "logged at startup), the connectors (re)configured and the config keys changed between restarts, the processes "
+            "stopped, the active controller changes and the longest GC pauses (1 s or more); 💥 the bursts of ERROR / WARN of "
+            f"every file in the {EFFECT_WINDOW_SECONDS} s after one of them. It follows the "
             "filters above (levels, component, connector, search, period): the rows of the other connectors are hidden, "
             "the restarts and configurations without connector stay.</p><p class='legend tl-none' hidden>No event in this selection.</p>"
             "<p class='legend tl-chart-caption' hidden></p><div class='tl-chart' hidden></div>"
@@ -1499,6 +1603,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "<span data-kind='error' style='color:#dc2626'>● first ERROR</span><span data-kind='warn' style='color:#f59e0b'>● first WARN</span>"
             "<span data-kind='known' style='color:#ea580c'>◆ known cause</span><span data-kind='start' style='color:#2563eb'>▲ (re)start</span>"
             "<span data-kind='lifecycle' style='color:#7c3aed'>○ rebalance / process start</span>"
+            "<span data-kind='infra' style='color:#a21caf'>✕ GC pause / stop / controller change</span>"
             "<span data-kind='config' style='color:#0d9488'>■ connector (re)configured / config changed</span>"
             "<span data-kind='break'>⫽ long gap cut</span><span>hover a mark for its time and Δ, click it for its row</span></p>"
             f"<table>{head}{first}</table>{more}</div>")
@@ -1511,6 +1616,17 @@ def causes_text(events: List[dict], top: int = 5) -> List[str]:
     out = [f"🔗 Errors right after a change ({len(linked)})"]
     for ev in linked[:top]:
         out.append(f"   {ev['time'].replace('T', ' ')} {timeline_what(ev)[:150]}{after_text(ev)}")
+    return out
+
+
+def effects_lines(events: List[dict], top: int = 5) -> List[str]:
+    hit = [ev for ev in events if ev.get("effects")]
+    if not hit:
+        return []
+    out = [f"💥 Errors right after a GC pause, a stop, a restart or a controller change ({len(hit)})"]
+    for ev in hit[:top]:
+        out.append(f"   {ev['time'].replace('T', ' ')} {ev['text'][:120]} ({ev['file'].split('/')[-1]}:{ev['line']})")
+        out.append(f"      {effects_text(ev)}")
     return out
 
 
@@ -1628,6 +1744,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += trend_text(res.get("trend"))
     # the errors that came right after a change (🔗 in the timeline of the HTML report, .timeline[].after of --json)
     out += causes_text(res.get("timeline") or [])
+    # the bursts of errors right after a GC pause, a process stopped / restarted, a controller change (💥 in the timeline)
+    out += effects_lines(res.get("timeline") or [])
     # what happened first, all files merged (🗓️ Incident timeline of the HTML report, .timeline of --json)
     out += timeline_text(res.get("timeline") or [])
     # one line per connector (🔌 Connectors of the HTML report, .connectors of --json)
@@ -1887,6 +2005,11 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         out += ["", "### Errors right after a change", ""]
         for ev in linked[:5]:
             out.append(f"- {ev['time'].replace('T', ' ')} {md_cell(timeline_what(ev)[:160])} —{md_cell(after_text(ev))}")
+    burst = [ev for ev in events if ev.get("effects")]
+    if burst:
+        out += ["", "### Errors right after a GC pause, a stop, a restart or a controller change", ""]
+        for ev in burst[:5]:
+            out.append(f"- {ev['time'].replace('T', ' ')} {md_cell(ev['text'][:120])} — {md_cell(effects_text(ev))}")
     if events:
         out += ["", "### Timeline (what happened first)", "", "| Time | Event | Where |", "| --- | --- | --- |"]
         for ev in events[:10]:
@@ -2507,7 +2630,8 @@ function pgTimelineDeltas(rows) {
 const PG_TL_KINDS = {
   fatal: ["circle", "#991b1b", "first FATAL"], error: ["circle", "#dc2626", "first ERROR"], warn: ["circle", "#f59e0b", "first WARN"],
   known: ["diamond", "#ea580c", "known cause"], start: ["triangle", "#2563eb", "(re)start"],
-  lifecycle: ["ring", "#7c3aed", "rebalance / process start"], config: ["square", "#0d9488", "connector (re)configured / config changed"]
+  lifecycle: ["ring", "#7c3aed", "rebalance / process start"], config: ["square", "#0d9488", "connector (re)configured / config changed"],
+  infra: ["cross", "#a21caf", "GC pause / stop / controller change"]
 };
 function pgTimelineKind(tr) {
   const c = tr.classList;
@@ -2515,6 +2639,7 @@ function pgTimelineKind(tr) {
   if (c.contains("tl-first_error")) return tr.dataset.level === "0" ? "fatal" : (tr.dataset.level === "2" ? "warn" : "error");
   if (c.contains("tl-start")) return "start";
   if (c.contains("tl-lifecycle")) return "lifecycle";
+  if (c.contains("tl-infra")) return "infra";
   if (c.contains("tl-connector_config") || c.contains("tl-config_change")) return "config";
   return "error";
 }
@@ -2637,6 +2762,7 @@ function pgTimelineChart(rows) {
     if (spec[0] === "circle") shape = el("circle", { cx: ex, cy: ey, r: ev.kind === "warn" ? 4 : 5, fill: spec[1] }, g);
     else if (spec[0] === "ring") shape = el("circle", { cx: ex, cy: ey, r: 4.5, fill: "none", stroke: spec[1], "stroke-width": 2 }, g);
     else if (spec[0] === "square") shape = el("rect", { x: ex - 4.5, y: ey - 4.5, width: 9, height: 9, fill: spec[1] }, g);
+    else if (spec[0] === "cross") shape = el("path", { d: "M" + (ex - 5) + " " + (ey - 5) + "L" + (ex + 5) + " " + (ey + 5) + "M" + (ex + 5) + " " + (ey - 5) + "L" + (ex - 5) + " " + (ey + 5), stroke: spec[1], "stroke-width": 3, fill: "none" }, g);
     else if (spec[0] === "triangle") shape = el("path", { d: "M" + ex + " " + (ey - 6) + "L" + (ex + 6) + " " + (ey + 5) + "L" + (ex - 6) + " " + (ey + 5) + "Z", fill: spec[1] }, g);
     else shape = el("path", { d: "M" + ex + " " + (ey - 7) + "L" + (ex + 7) + " " + ey + "L" + ex + " " + (ey + 7) + "L" + (ex - 7) + " " + ey + "Z", fill: spec[1], "class": "tl-known-mark" }, g);
     const tip = el("title", {}, g);

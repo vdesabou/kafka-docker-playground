@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bundle_triage  # noqa: E402
 import json_log_export as jle  # noqa: E402
 import log_overview  # noqa: E402
+import log_report  # noqa: E402
 import progress  # noqa: E402
 
 
@@ -191,6 +192,44 @@ def test_bundle_triage():
         check("binary moved", not os.path.exists(os.path.join(src, "b/cap.pcap")))
         res = bundle_triage.triage(walked, None, src, set())
         check("no keep dir: extract first", all("<extract case.zip first>" in c["command"] for c in res["commands"]), res["commands"])
+
+
+def records_file(tmp, text):
+    path = os.path.join(tmp, "records")
+    with open(path, "w") as fh:
+        fh.write(text.replace("|", "\t"))
+    return path
+
+
+def test_infra_events_and_bursts():
+    """♻️ GC pauses, 🛑 stops and 👑 controller changes in the timeline; 💥 a burst of errors right after one, only when
+    well above the usual rate"""
+    burst = " ".join(f"2026-11-07T10:10:{s:02d}" for s in range(2, 40))
+    usual = " ".join(f"2026-11-07T10:{m:02d}:30" for m in range(0, 30, 5))
+    text = ("@@PGFILE@@|connect.log|100|2|44|2026-11-07T10:00:00|2026-11-07T10:30:00\n"
+            "@@PGREC@@|WARN|38|4|60|2026-11-07T10:10:02|2026-11-07T10:10:39\n"
+            "[2026-11-07 10:10:02,000] WARN [Producer clientId=p] Got error produce response. Error: NOT_LEADER_OR_FOLLOWER (x)\n"
+            f"@@PGTS@@|{burst}\n"
+            "@@PGREC@@|WARN|6|2|90|2026-11-07T10:00:30|2026-11-07T10:25:30\n"
+            "[2026-11-07 10:00:30,000] WARN Offset commit failed (x)\n"
+            f"@@PGTS@@|{usual}\n"
+            "@@PGFILE@@|broker/server.log|50|0|0|2026-11-07T10:00:00|2026-11-07T10:30:00\n"
+            "@@PGEVT@@|process_stop|32|2026-11-07T10:10:00||Kafka broker shutting down\n"
+            "@@PGEVT@@|controller_change|34|2026-11-07T10:20:00||node 3 became the active controller (epoch 7)\n"
+            "@@PGEVT@@|gc_pause|2|2026-11-07T10:25:00||2512 Pause Full\n"
+            "@@PGEVTN@@|process_stop|broker|1\n@@PGEVTN@@|controller_change|controller|1\n@@PGEVTN@@|gc_pause|jvm|1\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    infra = {ev["text"]: ev for ev in res["timeline"] if ev["kind"] == "infra"}
+    check("infra events", set(infra) == {"🛑 Kafka broker shutting down", "👑 node 3 became the active controller (epoch 7)",
+                                         "♻️ GC pause of 2.5 s (Pause Full)"}, list(infra))
+    fx = infra["🛑 Kafka broker shutting down"].get("effects")
+    check("burst after the stop", fx and fx["occurrences"] == 39 and fx["top"][0]["count"] == 38, fx)
+    check("no burst after the GC pause", "effects" not in infra["♻️ GC pause of 2.5 s (Pause Full)"])
+    kinds = {r["kind"] for r in res["lifecycle"]["rows"]}
+    check("lifecycle rows", {"process_stop", "controller_change", "gc_pause"} <= kinds, kinds)
+    out = log_report.text_summary(res, [])
+    check("summary", "💥 39 ERROR/WARN occurrence(s) in the next 60 s" in out, out)
 
 
 if __name__ == "__main__":

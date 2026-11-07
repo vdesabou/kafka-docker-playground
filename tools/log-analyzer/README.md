@@ -145,7 +145,10 @@ in the terminal summary and the summary for a ticket.
 The digest also notes the lifecycle of the INFO lines (`@@PGEVT@@` events, 300 per kind and file, and `@@PGEVTN@@` counts):
 `Rebalance started` of a worker group, `Request joining group due to: <reason>` of a consumer group, `Starting connector`,
 `Starting task`, `Kafka Connect started` / `worker initialization took`, `Kafka Server started` / `Transition from
-STARTING to STARTED`. `lifecycle()` counts them per group / connector with the rate per hour of the period covered and
+STARTING to STARTED`, the stops (`] shutting down (kafka.server`, `to SHUTTING_DOWN`, `Kafka Connect stopping`), the active
+controller changes (`Becoming the active controller` of KRaft, `elected as the controller` of ZooKeeper) and the GC pauses
+of 1 s or more of a GC log (`gc_pause`, detail `<ms> <what>`: unified `GC(12) Pause Full (…) … 2512.789ms`, legacy
+`[Full GC …, 1.8234560 secs]`, the total before `[Times:`; a GC log decorated with the uptime only has no time, no event). `lifecycle()` counts them per group / connector with the rate per hour of the period covered and
 marks a 🌀 storm (`STORM_MIN` = 10 at `STORM_PER_HOUR` = 6 or more, a consumer leaving on purpose excluded): the 🔄 Restarts
 and rebalances section, a line on the 🔌 card of a connector, the (re)starts and the first 20 worker group rebalances in
 the 🗓️ timeline, the terminal summary, the summary for a ticket and `.lifecycle` of `--json`.
@@ -210,6 +213,15 @@ burst after a quiet period stays readable. Marks that would touch go above or be
 since the first and the previous event and the text; click (or Enter) scrolls to the row and flashes it. The caption
 gives the span and the biggest gap. `pgTimelineDeltas()` fills the Δ column (time since the previous row shown; bold
 when 30 s or more, half of the biggest gap and 15 % of the span).
+
+The timeline also has the infra events (`kind: infra`, ✕ on the chart): the processes stopped and the active controller
+changes of the 🔄 lifecycle, and the `GC_PAUSES_SHOWN` = 20 longest GC pauses of 1 s or more. `link_causes()` takes them
+as changes for the 🔗 errors that follow, within `INFRA_CAUSE_WINDOW_SECONDS` = 120 s (a config change keeps 10 minutes).
+`after_effects()` counts the ERROR / WARN occurrences of every file (their kept timestamps, weighted by their stride) in
+the `EFFECT_WINDOW_SECONDS` = 60 s after each infra event and each process (re)start: when they reach `EFFECT_RATIO` = 3
+times the average per 60 s of the logs (`EFFECT_MIN` = 5 at least), the event gets `effects` (occurrences, usual rate, the
+3 biggest by known cause, else exception, else message): a 💥 line under its row, a 💥 block of the terminal summary
+and of the summary for a ticket.
 
 ## Times and time zones
 
