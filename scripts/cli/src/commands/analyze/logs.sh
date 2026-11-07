@@ -579,6 +579,33 @@ function progress_add_extracted () {
     fi
 }
 
+# the pod and operator logs of a CFK support bundle (its *.log files) also go through the log digest: the regular log
+# report (root causes, timeline, connectors, versions, tasks by worker, known bugs, data to request, summary for a
+# ticket) next to the report of the bundle (pods, custom resources, events, versions, recent changes), which links it
+# with a 🔥 Log analysis banner (cfk-analysis/log_banner.py). $1: bundle folder, $2: its label
+in_cfk_walk=""
+# a file of the input outside the CFK bundles: the log report is then the entry point, else the report of the bundle
+other_inputs=""
+nb_cfk_log_files=0
+function walk_cfk_bundle_logs () {
+    local path="$1"
+    local label="$2"
+    local f
+    in_cfk_walk=1
+    while IFS= read -r -d '' f
+    do
+        nb_cfk_log_files=$((nb_cfk_log_files+1))
+        printf '%s\t%s\n' "${label%/}/${f#$path/}" "$f" >> "$walked_file"
+        if [[ "$label" == *":" ]]
+        then
+            analyze_logs_path_entry "$f" "${label}${f#$path/}"
+        else
+            analyze_logs_path_entry "$f" "${label%/}/${f#$path/}"
+        fi
+    done < <(find "$path" -type f \( -name '*.log' -o -name '*.log.gz' -o -name '*.log.[0-9]*' \) ! -path "*/__MACOSX/*" -print0 | sort -z)
+    in_cfk_walk=""
+}
+
 function analyze_logs_path_entry () {
     local path="$1"
     local label="$2"
@@ -593,6 +620,7 @@ function analyze_logs_path_entry () {
             then
                 cfk_bundles+=("$path")
                 cfk_labels+=("${label%:}")
+                walk_cfk_bundle_logs "$path" "$label"
             else
                 progress_add_done_folder "$path"
             fi
@@ -655,6 +683,10 @@ function analyze_logs_path_entry () {
         return
     fi
 
+    if [ -z "$in_cfk_walk" ] && ! is_archive_path "$path"
+    then
+        other_inputs=1
+    fi
     case "$path" in
         *.7z)
             # bsdtar (macOS tar, libarchive) reads 7z, else 7-Zip
@@ -931,8 +963,15 @@ elif [ ${#cfk_json_files[@]} -ge 2 ]
 then
     compare_cfk_bundles "1" "" "${cfk_json_files[@]}" > "$cfk_comparison" || echo "[]" > "$cfk_comparison"
 fi
-# only CFK bundles: their JSON (one bundle) and no log digest
-if [ ${#cfk_bundles[@]} -gt 0 ] && [ $nb_files -eq 0 ]
+# only CFK bundles: the report of the bundle (or the comparison of several) stays the entry point, and the JSON keeps the
+# shape of cfk-analysis ("type": "cfk-bundle"), with the log analysis of their pod logs in .log_analysis. Their logs went
+# through the log digest too (walk_cfk_bundle_logs): the log report is written below, without opening it
+cfk_only=""
+if [ ${#cfk_bundles[@]} -gt 0 ] && [ -z "$other_inputs" ]
+then
+    cfk_only=1
+fi
+if [ -n "$cfk_only" ] && [ $nb_files -eq 0 ]
 then
     if [[ -n "$json_out" ]]
     then
@@ -1174,7 +1213,16 @@ then
     python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" "${json_args[@]}" > "$tmp_dir/logs.json" || exit $?
     # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
     jq --argjson redaction "$redaction" --argjson streams "$streams_json" --argjson overview "$overview_json" '. + {redaction_summary: $redaction} + (if $streams != null then {kafka_streams: $streams} else {} end) + (if $overview != null then {overview: $overview} else {} end)' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
-    if [ ${#cfk_json_files[@]} -eq 0 ]
+    if [ -n "$cfk_only" ] && [ ${#cfk_json_files[@]} -eq 1 ] && [ ${#cfk_bundles[@]} -eq 1 ]
+    then
+        # one CFK bundle: its JSON as before, the log analysis of its pod logs in .log_analysis
+        jq --slurpfile logs "$tmp_dir/logs-redacted.json" 'del(.label) + {log_analysis: ($logs[0] | del(.redaction_summary))}' "${cfk_json_files[0]}" >&3
+    elif [ -n "$cfk_only" ] && [ ${#cfk_json_files[@]} -gt 0 ]
+    then
+        jq -s --slurpfile comparison "$cfk_comparison" --slurpfile logs "$tmp_dir/logs-redacted.json" \
+            '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0], log_analysis: ($logs[0] | del(.redaction_summary))}' \
+            "${cfk_json_files[@]}" >&3
+    elif [ ${#cfk_json_files[@]} -eq 0 ]
     then
         cat "$tmp_dir/logs-redacted.json" >&3
     else
@@ -1243,6 +1291,11 @@ then
 fi
 # the progress page already open in the browser becomes the report (same path): not opened a second time
 report_no_open=""
+# only CFK bundles: the report of the bundle is the one opened (below), it links this one
+if [ -n "$cfk_only" ]
+then
+    report_no_open=1
+fi
 if [ -n "$progress_page" ] && [ "$progress_page" == "$output_dir/${stem}-log-report.html" ]
 then
     report_no_open=1
@@ -1278,6 +1331,34 @@ then
         fi
     else
         log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$output_dir\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
+    fi
+fi
+# the reports of the CFK bundles: a 🔥 Log analysis banner with the key lines of this log report and a link to it
+if [ ${#cfk_reports[@]} -gt 0 ] && [ -f "$output_dir/${stem}-log-report.html" ]
+then
+    banner_args=()
+    for cfk_report in "${cfk_reports[@]}"
+    do
+        banner_args+=(--report "$cfk_report")
+    done
+    if python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json \
+            --json-sections summary,known_causes,fixed_bugs,task_workers,timeline,connectors,data_to_request > "$tmp_dir/banner.json" 2>/dev/null
+    then
+        python3 -I "$root_folder/cfk-analysis/log_banner.py" "${banner_args[@]}" --logs-json "$tmp_dir/banner.json" \
+            --log-report "$output_dir/${stem}-log-report.html" || true
+    fi
+fi
+if [ -n "$cfk_only" ]
+then
+    log "🔥 The pod logs of the CFK bundle(s), in the regular log report: $output_dir/${stem}-log-report.html (linked from the report of the bundle)"
+    entry_report="${CFK_COMPARISON_HTML:-}"
+    if [ -z "$entry_report" ] && [ ${#cfk_reports[@]} -gt 0 ]
+    then
+        entry_report="${cfk_reports[$((${#cfk_reports[@]}-1))]}"
+    fi
+    if [ -n "$entry_report" ]
+    then
+        show_report "$entry_report"
     fi
 fi
 exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))
