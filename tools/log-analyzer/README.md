@@ -154,8 +154,7 @@ the sections, the record cards of each file left out) open each section the same
 The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
 tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅
 supported (green), ⏳ support ends within 6 months, with the days left, and ⚠️ Standard support ended but Platinum still
-running (amber), ⛔ end of support (red, pulsing, and a ⛔ banner right under the verdict, `support_banner_html()`, which
-says that Confluent Support refuses cases on a version past its end of support). A `-ccs` version in the logs is Confluent
+running (amber), ⛔ end of support (red, pulsing, and a ⛔ banner right under the verdict, `support_banner_html()`). A `-ccs` version in the logs is Confluent
 Community (🏷️ CP Community, `cp_community_status()`: the "Confluent Community Software End of Support" column, no
 Standard / Platinum extension). 📡 Clients (`clients_tile()`): the Apache Kafka Java clients ("Kafka version: x.y.z"
 without `-ce` / `-ccs`) and librdkafka (`librdkafka_version` events of the digest: `librdkafka v2.3.0 … initialized`,

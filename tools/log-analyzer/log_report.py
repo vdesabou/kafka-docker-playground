@@ -2443,9 +2443,6 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append(f"   🛟 {len(bad)} connector(s) below the minimum version supported on CP {bad[0]['support']['cp']}: "
                    + ", ".join(f"{c['connector']} {c['versions'][-1]} < {c['support']['minimum']}" for c in bad[:5])
                    + (" …" if len(bad) > 5 else "") + f" ({bad[0]['support']['doc']})")
-    if any(st["state"] == "ended" for v in cp_versions(s, res.get("_cfk_bundles") or []) for st in [cp_support(s, v)]) or bad \
-            or any(st["state"] == "ended" for _, _, st in client_versions(s)):
-        out.append("   ⛔ Confluent Support refuses cases on a version past its end of support: upgrade first")
     gaps = (res.get("coverage") or {}).get("gaps") or []
     if gaps:
         biggest = max(gaps, key=lambda g: g["seconds"])
@@ -2916,7 +2913,6 @@ SUPPORT_CSS = """<style>
 background:linear-gradient(120deg,#7f1d1d,#dc2626 55%,#ea580c);box-shadow:0 12px 30px -14px rgba(220,38,38,.7)}
 .eos-banner .eos-icon{font-size:2.2rem;line-height:1}
 .eos-banner b{display:block;font-size:1.1rem;margin-bottom:2px}
-.eos-banner b.eos-refused{display:inline;font-size:inherit;padding:1px 6px;border-radius:5px;background:rgba(0,0,0,.25)}
 .eos-banner p{font-size:.86rem;opacity:.95}
 .eos-banner a{color:#fff;font-weight:600}
 @media (prefers-reduced-motion:reduce){.kpi-card.support-ended{animation:none}}
@@ -2949,8 +2945,8 @@ def support_banner_html(s: dict, bundles: List[dict], cards: Optional[List[dict]
         lines += (f"<p>{len(bad_conns)} connector(s) run a plugin version older than the minimum supported on CP {e(bad_conns[0]['support']['cp'])}: "
                   f"{e(names)}{' …' if len(bad_conns) > 4 else ''} · <a href='{e(bad_conns[0]['support']['doc'])}'>supported connector versions</a></p>")
     return (f"<div class='eos-banner' role='alert'><span class='eos-icon'>⛔</span><div><b>{e(' · '.join(title))}</b>" + lines +
-            "<p><b class='eos-refused'>Confluent Support refuses cases on a version past its end of support:</b> upgrade to a "
-            "supported version first (no more fixes nor security patches; the fix of the issue may already be in it).</p></div></div>")
+            "<p>No more fixes nor security patches: an upgrade to a supported version comes first, a fix of the issue may "
+            "already be in it.</p></div></div>")
 
 
 def cfk_sections_html(bundles: List[dict], unit: str = "file") -> str:
