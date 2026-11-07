@@ -11,6 +11,8 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB stream"
+# RETENTION_MS=-1: the records are from 2019/2020 and the topics of the persistent queries keep these timestamps, so with
+# the default retention.ms (7 days) the broker deletes them a few seconds after they are written (empty query results)
 playground ksqldb sql << EOF
 
 CREATE STREAM TEMPERATURE_READINGS (ID VARCHAR KEY, TIMESTAMP VARCHAR, READING BIGINT)
@@ -18,7 +20,8 @@ CREATE STREAM TEMPERATURE_READINGS (ID VARCHAR KEY, TIMESTAMP VARCHAR, READING B
           VALUE_FORMAT = 'JSON',
           TIMESTAMP = 'TIMESTAMP',
           TIMESTAMP_FORMAT = 'yyyy-MM-dd HH:mm:ss',
-          PARTITIONS = 1);
+          PARTITIONS = 1,
+          RETENTION_MS = -1);
 EOF
 
 log "Insert records to the stream"
