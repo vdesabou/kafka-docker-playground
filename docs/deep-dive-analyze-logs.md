@@ -42,9 +42,10 @@ no Confluent Cloud, nothing to set up.
    connectors become **one** record with a count. INFO lines that merely contain "error" never count.
 2. **Known causes first.** About 50 known causes (task killed, `errors.tolerance` exceeded, authentication, TLS, wrong
    `security.protocol`, unknown magic byte, fenced producer, rebalances, throttling, records not delivered in time…)
-   are recognized and come with **what to do**, often the `playground` command that checks it, and for about half of
-   them a 📚 Confluent knowledge-base article to read or send (in the terminal, the HTML report and the summary for a
-   ticket). With the private `reproduction-models` repository of Confluent support, the internal GTS runbooks (PKIX,
+   are recognized and come with **what to do**, often the `playground` command that checks it, and for most of them
+   📚 Confluent knowledge-base articles to read or send (in the terminal, the HTML report and the summary for a
+   ticket): the article of the variant found in the logs first (ORA-01017, `Login failed for user`, SASL with
+   librdkafka, `_confluent-command`, OOMKilled…), then the general one. With the private `reproduction-models` repository of Confluent support, the internal GTS runbooks (PKIX,
    SASL, authorization, converters, DLQ, consumer rebalancing…) come with a 🔒, in the terminal, the HTML report and
    `--json`, never in the summary for a ticket (`PLAYGROUND_LOG_RUNBOOKS_FILE`, default
    `reproduction-models/_miscellaneous/log-analysis/runbooks-internal.json`). Everything else is in the 🌳 root
@@ -482,7 +483,7 @@ playground analyze logs --sample support_bundle --json 2>/dev/null | jq -c '.con
 | Key | What |
 | --- | --- |
 | `.summary` | totals, levels, period covered, `incomplete_inputs`, `time_zone` |
-| `.known_causes[]` | title, severity, occurrences, first occurrence, advice, exception chains of the killed tasks |
+| `.known_causes[]` | title, severity, occurrences, first occurrence, advice, exception chains of the killed tasks, knowledge-base articles (`kb_articles`) |
 | `.root_causes[]` | every distinct error, its connectors, `explained_by` |
 | `.timeline[]` | the incident timeline |
 | `.connectors[]` | the card of each connector |

@@ -276,17 +276,23 @@ worker, stay.
 
 ## Knowledge-base articles
 
-`LINKS` in `tools/report-common/known_causes.py` gives a known cause a Confluent support knowledge-base article (`kb`,
-`kb_title`) and / or a docs page (`docs`). They are in `--json` (`known_causes[].kb`), a `📚` line of the terminal summary,
-the What to do column of the summary for a ticket and the finding card of the HTML report. Only articles found in the
-knowledge base for signed-in users (most GTS runbooks are internal), and only when they explain the cause in general:
-a cause without a good article has no entry. Never build a URL by hand.
+`LINKS` in `tools/report-common/known_causes.py` gives a known cause one or more Confluent support knowledge-base
+articles (`kb`, `kb_title`) and / or a docs page (`docs`). A cause with several articles has a list; an article with a
+`pattern` (case-insensitive regex) is about one variant of the cause and is shown only when a record of the cause matches
+it, before the general ones (`MAX_KB_ARTICLES` = 3 at most; a general article marked `fallback`, too far from the
+variants, only when none matched): ORA-01017, MySQL `Access denied for user` and SASL
+`Invalid username or password` are three authentication failures with three articles. They are in `--json`
+(`known_causes[].kb_articles`, and `kb` / `kb_title` for the first one), a `📚` line each in the terminal summary, the
+What to do column of the summary for a ticket and the finding card of the HTML report. Only articles found in the
+knowledge base for signed-in users (most GTS runbooks are internal), and only when they explain the cause (or the
+variant) in general, not a connector that merely quotes the error in a stack trace: a cause without a good article has
+no entry. Never build a URL by hand.
 
 The internal runbooks of Confluent support (GTS Confluence pages, support.confluent.io articles restricted to
 *Confluent - Internal*: PKIX, SASL investigations, authorization triage, converters, DLQ, consumer group rebalancing…)
 are never in this repository: `known_causes.internal_links()` reads them from the private
 `reproduction-models/_miscellaneous/log-analysis/runbooks-internal.json` (`PLAYGROUND_LOG_RUNBOOKS_FILE` for another
-file), `{"links": {"<known cause title>": [{"title": "...", "url": "https://..."}]}}`, the same idea as the CFK runbooks
+file), `{"links": {"<known cause title>": [{"title": "...", "url": "https://...", "pattern": "optional regex of a variant"}]}}`, the same idea as the CFK runbooks
 (`cfk-analysis/runbooks.py`). They are a `🔒` line after the `📚` one in the terminal summary, a `🔒` link in the finding
 card of the HTML report and `known_causes[].internal_links` in `--json`, but never in the summary for a ticket (it can
 leave Confluent). Without the private repository (a fork, CI), nothing changes.

@@ -415,10 +415,11 @@ def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
 
 
 def reading_links(h: dict) -> List[tuple]:
-    """(label, url) of what to read about a known cause: its knowledge-base article, then its docs page"""
+    """(label, url) of what to read about a known cause: its knowledge-base articles, then its docs page"""
     out = []
-    if h.get("kb"):
-        out.append((f"KB: {h.get('kb_title') or 'knowledge base article'}", h["kb"]))
+    articles = h.get("kb_articles") or ([{"title": h.get("kb_title") or "knowledge base article", "url": h["kb"]}] if h.get("kb") else [])
+    for a in articles:
+        out.append((f"KB: {a['title']}", a["url"]))
     if h.get("docs"):
         out.append(("Docs", h["docs"]))
     return out
@@ -449,9 +450,11 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
                 # the records it matched (index set by analyze()): how much of it is in the current selection
                 "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
         # what to read about it: a knowledge-base article and / or a docs page
-        hint.update(known_causes.links(title))
+        # (an article of a variant only when one of the records matched is that variant)
+        texts = [r["text"] for _, _, r in matches]
+        hint.update(known_causes.links(title, texts))
         # the internal runbooks of Confluent support (🔒, private file): not in the summary for a ticket
-        internal = known_causes.internal_links(title)
+        internal = known_causes.internal_links(title, texts)
         if internal:
             hint["internal_links"] = internal
         # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed

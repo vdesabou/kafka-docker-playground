@@ -18,6 +18,7 @@ the record).
 
 import json
 import os
+import re
 import sys
 
 KILLED_TASK_PATTERN = r"Task threw an uncaught and unrecoverable exception|Task is being killed and will not recover"
@@ -409,9 +410,13 @@ HINT_ORDER = [
 ]
 
 
-# what to read about a known cause, by title: a Confluent support knowledge-base article ("kb": url, "kb_title") and / or
-# a docs.confluent.io page ("docs"). Only URLs found in the knowledge base (support.confluent.io articles for signed-in
-# users), never built by hand: a cause without a good article has no entry
+# what to read about a known cause, by title: one or more Confluent support knowledge-base articles ("kb": url,
+# "kb_title") and / or a docs.confluent.io page ("docs"). A list when the cause has several articles: an article with a
+# "pattern" (case-insensitive regex) is shown only when a record of the cause matches it (a variant: ORA-01017 among
+# the authentication failures, the S3 tiered storage among the cloud credentials), before the general ones,
+# MAX_KB_ARTICLES at most. A general article with "fallback": True is shown only when no variant matched.
+# Only URLs found in the knowledge base (support.confluent.io articles for signed-in users), never built by hand: a
+# cause without a good article has no entry
 KB = "https://support.confluent.io/hc/en-us/articles/"
 LINKS = {
     "📜 License error": {"kb": KB + "16805773531284-What-s-causing-Invalid-License-Failed-to-start-Error-during-startup-of-an-commercial-Confluent-Platform-component",
@@ -422,12 +427,37 @@ LINKS = {
         "kb_title": "\"trustAnchors parameter must be non-empty\""},
     "🔐 TLS handshake failure": {"kb": KB + "360039950551-How-to-investigate-no-subject-alternative-names-matching-IP-address-during-SSL-Connection",
         "kb_title": "\"no subject alternative names matching IP address\""},
-    "☁️ Cloud credentials or permission refused": {"kb": KB + "34060762750868-What-s-causing-AWS-S3-Source-Sink-connectors-to-fail-with-Your-AWS-Access-Key-API-key-is-invalid-It-might-have-been-deleted-or-its-associated-IAM-role-or-user-is-deleted-Message",
-        "kb_title": "AWS S3 connectors: \"Your AWS Access Key API key is invalid\""},
+    "☁️ Cloud credentials or permission refused": [
+        {"kb": KB + "34060762750868-What-s-causing-AWS-S3-Source-Sink-connectors-to-fail-with-Your-AWS-Access-Key-API-key-is-invalid-It-might-have-been-deleted-or-its-associated-IAM-role-or-user-is-deleted-Message",
+         "kb_title": "AWS S3 connectors: \"Your AWS Access Key API key is invalid\"",
+         "pattern": r"InvalidAccessKeyId|AWS Access Key|security token included in the request is invalid"},
+        {"kb": KB + "13635998738196-How-to-bypass-Access-Denied-error-with-tiered-storage-enabled-kafka-cluster",
+         "kb_title": "\"Access Denied\" on brokers with Tiered Storage (S3)", "pattern": r"kafka\.tier\.|TierObjectStore"},
+    ],
     "🪪 MDS / RBAC token error": {"kb": KB + "360039432052-How-to-handle-JWT-rejected-due-to-invalid-signature-messages-with-RBAC",
         "kb_title": "JWT rejected due to invalid signature with RBAC"},
-    "🚫 Authorization failure": {"kb": KB + "29997697793684-What-ACLs-are-required-for-a-Kafka-Connect-Cluster-connecting-to-Confluent-Cloud",
-        "kb_title": "ACLs required by a Connect cluster on Confluent Cloud"},
+    "🚫 Authorization failure": [
+        {"kb": KB + "20204008043668-User-is-denied-operation-Write-on-Subject",
+         "kb_title": "Schema Registry: \"User is denied operation Write on Subject\"", "pattern": r"denied operation Write on Subject"},
+        {"kb": KB + "48876768294676-How-to-handle-failed-Schema-creation-using-Confluent-for-Kubernetes-with-40301-ReadCompatibility-RBAC-error",
+         "kb_title": "CFK Schema creation fails with 40301 ReadCompatibility (RBAC)", "pattern": r"denied operation ReadCompatibility"},
+        {"kb": KB + "12299285647252-How-to-bypass-error-code-40301-when-using-schema-validation-feature",
+         "kb_title": "Error code 40301 with broker-side schema validation", "pattern": r"User is denied operation on this server"},
+        {"kb": KB + "115004560843-What-to-check-if-the-Confluent-Metrics-Reporter-not-working",
+         "kb_title": "Confluent Metrics Reporter not working (_confluent-metrics ACLs)", "pattern": r"_confluent-metrics"},
+        {"kb": KB + "360057093932-How-to-bypass-licensed-connector-fails-to-start-with-TopicAuthorizationException",
+         "kb_title": "Licensed connector fails with TopicAuthorizationException (_confluent-command)", "pattern": r"_confluent-command"},
+        {"kb": KB + "13193806015252-How-to-fix-the-error-Group-authorization-failed-FindCoordinator-response-error-Group-authorization-failed",
+         "kb_title": "\"FindCoordinator response error: Group authorization failed\"", "pattern": r"GroupAuthorizationException|Group authorization failed"},
+        {"kb": KB + "360059585631-What-ACL-s-or-Rolebindings-are-required-if-working-with-idempotent-transactional-producers",
+         "kb_title": "ACLs or role bindings of idempotent / transactional producers", "pattern": r"TransactionalIdAuthorizationException|Transactional Id authorization failed"},
+        {"kb": KB + "13813790598164-What-s-causing-ClusterAuthorizationException-after-upgrading-producers-to-Apache-Kafka-3-0",
+         "kb_title": "ClusterAuthorizationException of producers since Apache Kafka 3.0 (idempotence)", "pattern": r"ClusterAuthorizationException|Cluster authorization failed"},
+        {"kb": KB + "4417243864980-What-can-cause-authorization-exceptions-when-accessing-a-Topic-in-Confluent-Cloud",
+         "kb_title": "Authorization exceptions on a topic of Confluent Cloud", "pattern": r"TopicAuthorizationException|TOPIC_AUTHORIZATION_FAILED|Not authorized to access topics"},
+        {"kb": KB + "29997697793684-What-ACLs-are-required-for-a-Kafka-Connect-Cluster-connecting-to-Confluent-Cloud",
+         "kb_title": "ACLs required by a Connect cluster on Confluent Cloud", "fallback": True},
+    ],
     "🧬 Not enough replicas": {"kb": KB + "360046772492-How-to-interpret-NotEnoughReplicasException-within-Kafka-Broker-Logfile",
         "kb_title": "How to interpret NotEnoughReplicasException"},
     "🦓 ZooKeeper session error": {"kb": KB + "45279338995348-Why-does-a-Kafka-broker-log-Client-session-timed-out-have-not-heard-from-server-in-XXms-and-what-causes-ZooKeeper-session-timeouts",
@@ -443,8 +473,12 @@ LINKS = {
     "🧲 Unknown magic byte": {"kb": KB + "360042865291-What-s-causing-Unknown-magic-byte-error-when-consuming-avro-data",
         "kb_title": "What's causing \"Unknown magic byte\"",
         "docs": "https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html"},
-    "🔍 Schema id not found": {"kb": KB + "29396031747604-How-to-recover-Hard-Deleted-Schemas-in-Schema-Registry",
-        "kb_title": "How to recover hard-deleted schemas"},
+    "🔍 Schema id not found": [
+        {"kb": KB + "23958101841172-What-can-cause-Schema-Not-Found-Error-although-the-schema-IDs-exists-on-Schema-Registry",
+         "kb_title": "\"Schema not found\" although the schema id exists"},
+        {"kb": KB + "29396031747604-How-to-recover-Hard-Deleted-Schemas-in-Schema-Registry",
+         "kb_title": "How to recover hard-deleted schemas"},
+    ],
     "🛡️ Incompatible schema refused": {"kb": KB + "360057560832-How-to-fix-Schema-is-incompatible-with-an-earlier-schema-for-subject",
         "kb_title": "\"Schema is incompatible with an earlier schema\""},
     "📏 Record too large": {"kb": KB + "360024032811-How-to-handle-large-messages-with-Kafka",
@@ -467,17 +501,134 @@ LINKS = {
         "kb_title": "Consumer rebalances taking a long time"},
     "👑 Partition leadership changed": {"kb": KB + "4411550541716-How-to-diagnose-NotLeaderOrFollowerException",
         "kb_title": "How to diagnose NotLeaderOrFollowerException"},
+    "💥 OutOfMemoryError": [
+        {"kb": KB + "17288051968916-How-to-bypass-java-lang-OutOfMemoryError-unable-to-create-native-thread",
+         "kb_title": "\"OutOfMemoryError: unable to create native thread\"", "pattern": r"unable to create native thread"},
+        {"kb": KB + "360040326831-JVM-runs-into-OOM-if-Java-client-uses-a-SSL-SASL-SSL-port-without-setting-the-security-protocol",
+         "kb_title": "OOM of a Java client on an SSL / SASL_SSL port without security.protocol",
+         "pattern": r"OutOfMemoryError: Java heap space[\s\S]{0,3000}(?:MemoryPool|NetworkReceive\.readFrom)"},
+        {"kb": KB + "19410224820756-How-to-bypass-java-lang-OutOfMemoryError-thrown-by-UncaughtExceptionHandler",
+         "kb_title": "\"OutOfMemoryError thrown from the UncaughtExceptionHandler\" (heap size)", "pattern": r"thrown from the UncaughtExceptionHandler"},
+        {"kb": KB + "35064226035348-What-can-cause-Kubernetes-pod-continuously-restart-after-deploying-a-new-producer-application",
+         "kb_title": "Kubernetes pod restarting: OOMKilled (exit code 137)", "pattern": r"OOMKilled"},
+        {"kb": KB + "360020979972-How-to-address-out-of-memory-due-to-maximum-mmap-count-exceeded",
+         "kb_title": "Out of memory: maximum mmap count exceeded", "pattern": r"max_map_count|Map failed"},
+        {"kb": KB + "4532705835028-How-to-enable-verbose-GC-Garbage-Collection-logging-and-create-a-heapdump-on-out-of-memory-exceptions",
+         "kb_title": "Verbose GC logging and a heap dump on OutOfMemoryError"},
+    ],
+    "🧨 A connector task was killed": {"kb": KB + "21305161068820-How-to-restart-Kafka-connectors-tasks",
+        "kb_title": "How to restart connectors and tasks (after fixing the exception)"},
+    "🧯 errors.tolerance exceeded": [
+        {"kb": KB + "360041511391-Error-Handling-Behaviour-in-JDBC-Source-Sink-Connector-And-other-Sink-Connectors",
+         "kb_title": "Error handling of sink connectors: what errors.tolerance and the DLQ cover"},
+        {"kb": KB + "360031115091-How-to-skip-messages-in-Kafka-Connect-or-reset-a-connector-to-the-earliest-offset-for-sink-connectors",
+         "kb_title": "How to skip messages or reset the offsets of a sink connector"},
+    ],
+    "🔑 Authentication failure": [
+        {"kb": KB + "36653405787284-What-can-cause-SASL-authentication-error-Authentication-failed-Error-in-librdkafka-clients",
+         "kb_title": "\"SASL authentication error: Authentication failed\" (librdkafka)", "pattern": r"SASL authentication error"},
+        {"kb": KB + "4814459539348-How-to-fix-LDAP-Connection-Reset-exceptions",
+         "kb_title": "LDAP \"Connection reset\" behind \"Invalid username or password\"", "pattern": r"Failed to obtain user DN"},
+        {"kb": KB + "34412366383508-How-to-bypass-Could-not-connect-to-the-database-Error-using-Oracle-CDC-source-connector-on-Confluent-Cloud",
+         "kb_title": "Oracle CDC: \"Could not connect to the database\" (ORA-01017)", "pattern": r"ORA-01017"},
+        {"kb": KB + "36389454770836-What-s-causing-The-connector-failed-since-it-cannot-open-database-DB-name-due-to-login-failed-using-Microsoft-Sql-Server-Source-Connector-on-Confluent-Cloud",
+         "kb_title": "SQL Server: \"cannot open database ... login failed\"", "pattern": r"Login failed for user"},
+        {"kb": KB + "33949564732948-What-s-causing-unable-to-connect-to-the-database-due-to-a-connection-issue-Error-using-PostgreSQL-CDC-Source-V2-Connector-on-Confluent-Cloud",
+         "kb_title": "PostgreSQL CDC: \"password authentication failed\"", "pattern": r"password authentication failed for user"},
+        {"kb": KB + "23119096873876-How-to-configure-Confluent-Supported-Libraries-to-use-Schema-Registry-with-an-API-Key",
+         "kb_title": "Schema Registry API key of the clients (\"Unauthorized; error code: 401\")", "pattern": r"Unauthorized; error code:? ?401"},
+        {"kb": KB + "27052383612948-What-to-check-if-a-connector-on-Confluent-Cloud-fails-with-authentication-issues",
+         "kb_title": "What to check when a Confluent Cloud connector fails to authenticate", "fallback": True},
+    ],
+    "🔀 Serialization or conversion error": {"kb": KB + "360052951911-What-is-JsonConverter-s-schemas-enable-configuration-responsible-for-in-Kafka-Connect",
+        "kb_title": "What JsonConverter schemas.enable does", "pattern": r"schemas\.enable|JsonConverter"},
+    "🔌 Connection failure": [
+        {"kb": KB + "4764336830484-What-might-cause-intermittent-Connection-refused-error-when-running-multiple-Connect-worker-nodes",
+         "kb_title": "\"Connection refused\" between Connect workers (rest.advertised.host.name)", "pattern": r"forward(?:ing)? REST request"},
+        {"kb": KB + "360052984771-What-are-potential-causes-of-transient-network-issues-on-Confluent-Cloud",
+         "kb_title": "Transient network issues on Confluent Cloud", "pattern": r"terminated during authentication"},
+    ],
+    "⚙️ Invalid client configuration": {"kb": KB + "20921646333716-What-might-cause-Invalid-value-for-configuration-bootstrap-servers-Empty-list-Error",
+        "kb_title": "\"Invalid value [] for configuration bootstrap.servers: Empty list\"", "pattern": r"bootstrap\.servers: Empty list"},
+    "🗺️ Topic not found in the metadata": {"kb": KB + "360054951292-How-to-bypass-Producer-throws-TimeoutException-while-performing-a-rolling-restart-on-the-Kafka-brokers",
+        "kb_title": "Producer TimeoutException \"not present in metadata\" (max.block.ms)"},
+    "🚦 Throttled by the external system": {"kb": KB + "360061739912-How-to-reduce-S3-Sink-connector-rate-to-avoid-AWS-rate-limit",
+        "kb_title": "How to reduce the rate of the S3 sink connector (SlowDown)", "pattern": r"SlowDown|reduce your request rate"},
+    "🛑 Task or connector did not stop in time": {"kb": KB + "6254480439316-What-s-causing-JDBC-connector-leaking-connections-with-database",
+        "kb_title": "Graceful stop failed: connections left open (task.shutdown.graceful.timeout.ms)"},
+    "⏱️ Timeouts": [
+        {"kb": KB + "35776254625812-How-to-handle-TimeoutException-while-awaiting-InitProducerId",
+         "kb_title": "TimeoutException while awaiting InitProducerId", "pattern": r"awaiting InitProducerId"},
+        {"kb": KB + "360053074272-What-s-causing-Kafka-client-request-disconnect-or-timeout-errors",
+         "kb_title": "Kafka client request disconnects or timeouts", "pattern": r"org\.apache\.kafka|librdkafka|rdkafka|Disconnecting from node"},
+    ],
+    "❓ Unknown topic or partition": [
+        {"kb": KB + "360052618911-What-s-causing-UNKNOWN-TOPIC-OR-PARTITION-in-Connect-Worker-Logs-after-a-source-connector-deletion",
+         "kb_title": "UNKNOWN_TOPIC_OR_PARTITION after a source connector deletion", "pattern": r"connector-producer-"},
+        {"kb": KB + "40464792724756-How-to-handle-Executing-consumer-group-command-failed-due-to-Error-using-kafka-consumer-groups",
+         "kb_title": "kafka-consumer-groups: \"Executing consumer group command failed\"", "pattern": r"Executing consumer group command failed"},
+    ],
+    "🚧 Request refused by a broker policy": [
+        {"kb": KB + "35697098367380-How-to-address-PolicyViolationException-Unable-to-perform-excessively-large-batch-operation-Error",
+         "kb_title": "\"Unable to perform excessively large batch operation\"", "pattern": r"excessively large batch operation"},
+        {"kb": KB + "360022670532-How-to-bypass-Control-Center-max-message-bytes-exceeded-maximum-limit-error-when-connecting-to-Confluent-Cloud",
+         "kb_title": "Topic config over the Confluent Cloud limit (\"exceeded max limit\")", "pattern": r"exceeded max limit"},
+    ],
+    "🗳️ KRaft quorum error": {"kb": KB + "41381243741588-How-resolve-Renouncing-the-leadership-due-to-a-metadata-log-event-Error-using-KRaft",
+        "kb_title": "KRaft: \"Renouncing the leadership due to a metadata log event\"", "pattern": r"Renouncing the leadership"},
+    "🧷 Volume mount failure": {"kb": KB + "13538321968660-What-s-causing-Kafka-roll-get-blocked-with-Confluent-for-Kubernetes-2-5",
+        "kb_title": "CFK: Kafka roll blocked, volume mount of a missing secret", "pattern": r"secret .{0,160}not found"},
+    "📐 Schema Registry error": [
+        {"kb": KB + "6778965930260-What-might-cause-Schema-Registry-timeout-while-registering-new-schema-using-Schema-Linking-and-RBAC",
+         "kb_title": "\"Register operation timed out\" (Schema Linking, RBAC)", "pattern": r"Register operation timed out"},
+        {"kb": KB + "13916684245268-How-to-use-Schema-Validation-with-Kafka-REST-Proxy",
+         "kb_title": "Record rejected by RecordSchemaValidator (schema validation)", "pattern": r"RecordSchemaValidator"},
+        {"kb": KB + "30831560767124-JSON-Schema-regression-on-Confluent-Platform-7-6-1",
+         "kb_title": "\"Invalid JSON Schema; error code: 42201\" since CP 7.6.1", "pattern": r"Invalid JSON Schema"},
+        {"kb": KB + "25462925027860-How-to-troubleshoot-Schema-Exporter-42205-errors-existing-subjects-and-overwrite-schema-ID-conflicts",
+         "kb_title": "Schema Exporter: error code 42205", "pattern": r"error code:? ?42205"},
+    ],
 }
 
 
-def links(title):
-    """What to read about the known cause `title`: {"kb", "kb_title", "docs"} (the keys it has), or {}"""
-    return dict(LINKS.get(title) or {})
+MAX_KB_ARTICLES = 3
+
+
+def _select(entries, texts):
+    """The entries whose pattern matches one of `texts` (the variants), then those without a pattern, except the
+    "fallback" ones when a variant matched (a general article too far from the variants: Confluent Cloud only…)"""
+    variants, general = [], []
+    for entry in entries:
+        pattern = entry.get("pattern")
+        if not pattern:
+            general.append(entry)
+        elif any(re.search(pattern, t, re.IGNORECASE) for t in texts):
+            variants.append(entry)
+    return variants + [e for e in general if not (variants and e.get("fallback"))]
+
+
+def links(title, texts=()):
+    """What to read about the known cause `title`, whose records are `texts`: {"kb", "kb_title" (the first article),
+    "kb_articles": [{"title", "url"}], "docs"} (the keys it has), or {}"""
+    value = LINKS.get(title)
+    if not value:
+        return {}
+    entries = value if isinstance(value, list) else [value]
+    texts = list(texts)[:500]
+    out = {}
+    articles = [{"title": e.get("kb_title") or "knowledge base article", "url": e["kb"]}
+                for e in _select(entries, texts) if e.get("kb")][:MAX_KB_ARTICLES]
+    if articles:
+        out.update(kb=articles[0]["url"], kb_title=articles[0]["title"], kb_articles=articles)
+    docs = [e["docs"] for e in entries if e.get("docs")]
+    if docs:
+        out["docs"] = docs[0]
+    return out
 
 
 # the internal runbooks of Confluent support (GTS Confluence pages, support.confluent.io articles restricted to
 # "Confluent - Internal") of the known causes, kept in the private reproduction-models repository, never here:
-#     {"links": {"<known cause title>": [{"title": "...", "url": "https://..."}]}}
+#     {"links": {"<known cause title>": [{"title": "...", "url": "https://...", "pattern": "optional regex"}]}}
 # $PLAYGROUND_LOG_RUNBOOKS_FILE gives another file. Shown with a 🔒 in the text summary, the HTML report and --json
 # (known_causes[].internal_links), never in the summary for a ticket (it can leave Confluent)
 _PRIVATE_RUNBOOKS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "reproduction-models",
@@ -496,16 +647,19 @@ def _load_internal():
                     data = json.load(f)
                 for title, items in (data.get("links") or {}).items():
                     if isinstance(items, list):
-                        _internal[title] = [{"title": str(l.get("title") or l["url"]), "url": str(l["url"])}
+                        _internal[title] = [dict({"title": str(l.get("title") or l["url"]), "url": str(l["url"])},
+                                                 **({"pattern": str(l["pattern"])} if l.get("pattern") else {}))
                                             for l in items if isinstance(l, dict) and str(l.get("url", "")).startswith("https://")]
             except (OSError, ValueError, AttributeError) as e:
                 print(f"warning: cannot read the internal runbooks {path}: {e}", file=sys.stderr)
     return _internal
 
 
-def internal_links(title):
-    """Internal runbooks of the known cause `title`: [{"title", "url"}], [] without the private file"""
-    return [dict(l) for l in _load_internal().get(title) or []]
+def internal_links(title, texts=()):
+    """Internal runbooks of the known cause `title`, whose records are `texts`: [{"title", "url"}], [] without the
+    private file. A runbook with a "pattern" only when a record matches it, as the KB articles"""
+    texts = list(texts)[:500]
+    return [{"title": l["title"], "url": l["url"]} for l in _select(_load_internal().get(title) or [], texts)]
 
 
 def hints():

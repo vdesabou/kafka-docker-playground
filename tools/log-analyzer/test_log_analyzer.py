@@ -448,6 +448,30 @@ def test_cfk_sections_and_verdict():
     check("one verdict", cls == "danger" and text.startswith("✅ No") and "☸️ CFK bundle: 1 critical, 1 high issue(s) of 2, start with Pod Failures" in text, (cls, text))
 
 
+def test_kb_articles_of_variants():
+    kc = log_report.known_causes
+    saved = kc.LINKS.get("🔑 Authentication failure")
+    kc.LINKS["🔑 Authentication failure"] = [
+        {"kb": "https://kb/general", "kb_title": "general"},
+        {"kb": "https://kb/ora", "kb_title": "ORA-01017", "pattern": r"ORA-01017"},
+        {"kb": "https://kb/mysql", "kb_title": "MySQL", "pattern": r"Access denied for user"},
+        {"kb": "https://kb/cloud", "kb_title": "cloud", "fallback": True}]
+    try:
+        got = kc.links("🔑 Authentication failure", ["java.sql.SQLException: ORA-01017: invalid username/password"])
+        check("variant first, then general, no fallback", [a["url"] for a in got["kb_articles"]] == ["https://kb/ora", "https://kb/general"], got)
+        check("kb is the first article", got["kb"] == "https://kb/ora" and got["kb_title"] == "ORA-01017", got)
+        got = kc.links("🔑 Authentication failure", ["SaslAuthenticationException: Authentication failed"])
+        check("no variant: general and fallback", [a["url"] for a in got["kb_articles"]] == ["https://kb/general", "https://kb/cloud"], got)
+        check("reading links", log_report.reading_links(got) == [("KB: general", "https://kb/general"), ("KB: cloud", "https://kb/cloud")], got)
+    finally:
+        if saved is None:
+            kc.LINKS.pop("🔑 Authentication failure", None)
+        else:
+            kc.LINKS["🔑 Authentication failure"] = saved
+    check("single dict entry still works", kc.links("📜 License error").get("kb", "").startswith(kc.KB))
+    check("unknown cause", kc.links("no such cause") == {})
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
