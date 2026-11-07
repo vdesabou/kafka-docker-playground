@@ -88,6 +88,11 @@ commands:
     --report-only prints it (Markdown, for a Jira or a Slack message)
     without writing the bundle, --no-report leaves it out.
 
+    📘 A README.md at the top of the bundle is the first file to open for
+    someone who never used the playground: how to install it in one
+    command (or open it in GitHub Codespaces), how to import and run the
+    models, then their hand-off reports. Import skips it.
+
     📋 On macOS, the bundle is copied to the clipboard as a file: paste it
     (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip).
 

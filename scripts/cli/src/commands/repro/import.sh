@@ -150,7 +150,10 @@ else
     manifest="$tmp_dir/legacy-manifest.json"
 fi
 
-# files at the top of the bundle are not in a model folder
+# files at the top of the bundle are not in a model folder. README.md is the bundle's own (how to install the
+# playground, import and run it): left out without a warning
+grep -vx "README.md" "$tmp_dir/files" > "$tmp_dir/files.tmp" || true
+mv "$tmp_dir/files.tmp" "$tmp_dir/files"
 top_files=$(grep -v "/" "$tmp_dir/files" || true)
 if [ -n "$top_files" ]
 then

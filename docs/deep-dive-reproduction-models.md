@@ -408,6 +408,7 @@ What goes in a bundle:
 | the script, its support files (`README.md`, `stop.sh`, `config-*`, `benchmark-load.bash`, `.gitignore`), and every entry of its folder whose **name appears** in the script or in a compose file it mentions | git-ignored files, `target/`, dumps (`*.hprof`, `*.jfr`), logs, archives, credential files, files over 50 MB |
 | symlinks, **stored as their content** (the bundle doesn't depend on the version of the public example) | files outside the repository (connector zip, `~/Downloads/config.json`): listed only, packed under `<folder>/artifacts/` with `--include-artifacts` |
 | `<model>.REPRO.md`, the **hand-off report** of each model: case, jira, status, author, base example, last verdict, 🎯 expected, 💥 actual, the free comments of the header, the `📋 run output` block after `exit 0` when there is one, the commands to import and run it with the credentials it needs, and the `diff` of its scenario (no header, no cheat sheet) and of its compose override with the ones of the base example. Listed in the manifest like the other files, so an older playground imports it too (`--no-report` to leave it out) | |
+| `README.md` at the top of the archive, the first file to open for someone who never used the playground: what the bundle is, the models, how to install the playground in one command (`curl -fsSL https://kafka-docker-playground.io/install.sh \| bash`) or open it in GitHub Codespaces, how to import and run the models with the credentials they need, then their hand-off reports. In the manifest with its sha256, skipped by import (an older playground skips it too, with a `⏭️ skipping files that are not in a reproduction model folder` warning) | |
 | `repro-manifest.json`: per model the last `playground run` line (from `playground-run-history`, without `--cluster-creds`), case number, author, base example, the header fields (`expected`, `actual`, `jira`, `status`), credential **names**, external files; the playground commit; the sha256 of every file | credential values |
 
 What import does:
@@ -532,6 +533,7 @@ playground repro export -f "$PWD/$m" --dry-run
 #    📄 connect-connect-filestream-sink/README.md  (symlink to connect/connect-filestream-sink/README.md, stored as content)
 #    📄 connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.REPRO.md      <- the hand-off report
 #    …
+#    📄 README.md                                                                                 <- install, import, run, then the report
 # ✅ no secret nor customer data found
 # 🔍 dry run: no bundle written
 playground repro export -f "$PWD/$m" --report-only 2> /dev/null | head -12      # the report alone, on stdout
@@ -549,7 +551,12 @@ playground repro export -f "$PWD/$m" --output /tmp/deep-dive-repro --no-clipboar
 # 📤 Exported bundle is available: /tmp/deep-dive-repro/playground_repro_filestream-sink-repro-000000-deep-dive-lab_2026-10-23.tgz (8.0K)
 # 📥 To import it: playground repro import -f <path>/playground_repro_filestream-sink-repro-000000-deep-dive-lab_2026-10-23.tgz
 tar tzf /tmp/deep-dive-repro/playground_repro_*.tgz
-# repro-manifest.json and the 8 files under connect-connect-filestream-sink/ (the report included)
+# README.md, repro-manifest.json and the 8 files under connect-connect-filestream-sink/ (the report included)
+tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz README.md | grep '^## '
+# ## 🚀 1. Get kafka-docker-playground
+# ## ▶️ 2. Import and run it
+# ## 📖 3. What it reproduces
+# ## 🐞 000000 deep dive lab                                         <- the hand-off report, one heading level down
 tar xzOf /tmp/deep-dive-repro/playground_repro_*.tgz repro-manifest.json | jq -c '.models[0] | {script, case, base_example, jira, status, verdict: .last_verdict.verdict, run_command}'
 # {"script":"connect-connect-filestream-sink/filestream-sink-repro-000000-deep-dive-lab.sh","case":"000000","base_example":"connect/connect-filestream-sink","jira":"https://confluentinc.atlassian.net/browse/CC-1234","status":"lab only","verdict":"reproduced","run_command":"playground run -f {repro_dir}/filestream-sink-repro-000000-deep-dive-lab.sh"}
 ```
@@ -673,7 +680,7 @@ playground repro import -f <bundle.tgz | https://…> [--dry-run | --run] [--on-
 - `repro list`: newest first, from the headers, the verdicts and `git status`; filters combine.
 - `repro bisect`: one `playground run` per version (stops the environment), binary search with `--from` / `--to`, changelog where the verdict changes.
 - Secrets: blocked by `check`, the pre-commit hook and `export`. Customer data: warned only.
-- Bundle = files + symlinks as content + manifest (run line, credential names, sha256) + `<model>.REPRO.md` hand-off report. Run the model once first.
+- Bundle = files + symlinks as content + manifest (run line, credential names, sha256) + `<model>.REPRO.md` hand-off report + a `README.md` at the top (install the playground, import, run). Run the model once first.
 - Import: identical skipped, conflicts abort unless `rename` / `overwrite`, first model becomes current.
 - In a model, `create-or-update` warns instead of failing: `--wait` to make it strict.
 - Sources: [`repro/bootstrap.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/repro/bootstrap.sh),
