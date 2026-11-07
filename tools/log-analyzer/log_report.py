@@ -984,11 +984,27 @@ def rate_cell(r: dict) -> str:
     return "" if r.get("per_hour") is None else f"{r['per_hour']:g}"
 
 
+def lifecycle_connector(r: dict) -> Optional[str]:
+    """the connector a row of the 🔄 table belongs to, for the connector filter: the connector started (its task), the
+    sink connector of a consumer group; None for the worker group rebalances and the process starts, which concern every
+    connector of the worker (they stay whatever the connector picked)"""
+    if r["kind"] in ("connector_start", "task_start"):
+        return r.get("who") or None
+    if r["kind"] == "consumer_rejoin":
+        return r.get("connector") or None
+    return None
+
+
+def lifecycle_conn_attr(r: dict) -> str:
+    conn = lifecycle_connector(r)
+    return f" data-conn='{e(conn)}'" if conn else ""
+
+
 def lifecycle_html(lc: Optional[dict]) -> str:
     if not lc or not lc.get("rows"):
         return ""
     rows = "".join(
-        f"<tr class='{'lc-storm' if r['storm'] else ''}'><td>{'🌀 storm' if r['storm'] else ''}</td><td>{e(LIFECYCLE_KINDS[r['kind']])}</td>"
+        f"<tr class='lc-row{' lc-storm' if r['storm'] else ''}'{lifecycle_conn_attr(r)}><td>{'🌀 storm' if r['storm'] else ''}</td><td>{e(LIFECYCLE_KINDS[r['kind']])}</td>"
         f"<td class='mono'>{e(r['who'] or '?')}</td><td class='num'>{r['count']:,}</td>"
         f"<td class='num'>{rate_cell(r)}</td>"
         f"<td class='mono'>{e(period_text(r['first'], r['last'])) if r.get('first') else ''}</td>"
@@ -999,7 +1015,9 @@ def lifecycle_html(lc: Optional[dict]) -> str:
             "the Connect worker groups, the rejoins of the consumer groups (a sink connector, a client), the connectors and tasks "
             f"started, the workers and brokers (re)started. 🌀 a group that rebalanced at least {STORM_MIN} times, {STORM_PER_HOUR} "
             "per hour or more: each rebalance stops the processing (look at the members that join and leave, session.timeout.ms, "
-            "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms).</p><table><tr><th></th><th>What</th>"
+            "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms). It follows the connector filter: "
+            "the rows of the other connectors are hidden, the worker group rebalances and process starts stay.</p>"
+            "<p class='legend lc-none' hidden>No restart nor rebalance for this connector.</p><table class='lc-table'><tr><th></th><th>What</th>"
             "<th>Group / connector</th><th class='num'>Count</th><th class='num'>Per hour</th><th>When</th><th>Reason, connector</th></tr>"
             f"{rows}</table></div>")
 
@@ -2690,6 +2708,22 @@ function pgStateRead() {
   pgStateWrite();
   return true;
 }
+// 🔄 Restarts and rebalances: a row of another connector is hidden when a connector is picked, every connector row when
+// "no connector context" is; the worker group rebalances and the process starts (no data-conn) stay
+function pgLifecycle() {
+  const rows = document.querySelectorAll("tr.lc-row");
+  if (!rows.length) return;
+  let shown = 0;
+  rows.forEach(function (tr) {
+    const conn = tr.dataset.conn;
+    const keep = !conn || pgConnector === "" || (pgConnector !== "-" && conn === pgConnector);
+    tr.hidden = !keep;
+    if (keep) shown++;
+  });
+  const none = document.querySelector(".lc-none"), table = document.querySelector(".lc-table");
+  if (none) none.hidden = shown > 0;
+  if (table) table.hidden = shown === 0;
+}
 function pgApply() {
   pgTopCauses(pgRootCauses());
   pgRecordBlocks();
@@ -2697,6 +2731,7 @@ function pgApply() {
   pgFindings();
   pgSearch();
   pgTimeline();
+  pgLifecycle();
   pgConnCards();
   pgHighlight();
   pgAria();
