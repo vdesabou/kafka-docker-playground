@@ -4583,7 +4583,13 @@ subcommands:
       is there), root causes no known cause explains, and the configuration logged
       at startup (connectors, components, clients) with the keys changed between restarts.
       Also: \U0001F3F7️ the version of each connector plugin (with the playground
-      connector-plugin changelog command since that version) and of Kafka, \U0001F5A5️
+      connector-plugin changelog command since that version) and of Kafka, \U0001F4E5
+      the data to request next from the customer, each with why and how (a complete
+      copy of a file not fully read, a longer window, the logs since the last restart
+      of a worker whose startup is missing, the broker or Schema Registry logs when
+      the findings point there, a heap dump, GC logs, thread dumps or the TLS debug
+      output for the known causes they explain, and the exact DEBUG logger to set
+      for the errors no known cause explains), also in <input>-ticket.md, \U0001F5A5️
       which worker ran which task and when (from the \"Starting task\" lines of each
       worker's logs), with \U0001F3AF a connector whose errors all come from one worker
       while its tasks also ran on others (a DNS, truststore, plugin path or network
@@ -4766,8 +4772,8 @@ subcommands:
       description: "\U0001F5C2️ With --json, only these sections, comma separated:
         summary, findings, known_causes, root_causes, files, files_without_findings,
         coverage, configuration, timeline, connectors, comparison, trend, lifecycle,
-        config_lint, other_files, fixed_bugs, task_workers (default: all). For example
-        --json-sections summary,findings,root_causes"
+        config_lint, other_files, fixed_bugs, task_workers, data_to_request (default:
+        all). For example --json-sections summary,findings,root_causes"
     - names:
       - "--component"
       argument: COMPONENT
