@@ -215,7 +215,11 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   incident timeline, a card per connector with its plugin version, restarts and rebalances, known bugs fixed in a later
   version, which pod ran which task (`connect-0`, `connect-1`… are the workers), the data to request and a summary for a
   ticket. A 🔥 **Log analysis** banner at the top of the report of the bundle gives its key lines and links it; with
-  `--json`, it is `.log_analysis` of the bundle JSON.
+  `--json`, it is `.log_analysis` of the bundle JSON. The issues of the log records of the bundle report come from the
+  same records (the digest passes them to the CFK analyzer). The ☸️ changes of the cluster (pods terminated or restarted
+  with their reason, custom resources edited, StatefulSet rollouts) are events of the 🗓️ incident timeline of the log
+  report: 🔗 links a first error to the edit of a CR 10 minutes before it at most, 💥 the burst of errors right after a
+  pod restart.
   **📕 Known CFK issues**: the log messages and events of the CFK triage table of Confluent support (roll blocked by
   the pre-roll checks, expired certificate, `INCONSISTENT_CLUSTER_ID`, ZooKeeper to KRaft migration, authorizer that
   doesn't start, license secret, `Could not obtain JAAS context`…) are matched on every issue, and on the INFO lines of

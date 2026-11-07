@@ -760,7 +760,8 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
     def add(time, file, line, kind, level, text, connector=None, count=None, record=None):
         if not time:
             return
-        key = (file, line or 0)
+        # an event without line (a change of the cluster of a CFK bundle): one per time
+        key = (file, line or time)
         ev = events.get(key)
         # the keys changed are what matters on the line of a config dump: they replace "(re)configured", and add up
         if ev and kind == "config_change" and ev["kind"] in ("connector_config", "config_change"):
@@ -819,6 +820,22 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
                 add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"🛑 {ev.get('detail') or 'stopping'}")
             elif ev["kind"] == "controller_change":
                 add(ev.get("time"), f["label"], ev.get("line"), "infra", None, f"👑 {ev.get('detail') or 'a new active controller'}")
+    # the changes of the cluster of a CFK support bundle (cfk-analysis --json .timeline, --cluster-events): a pod that
+    # terminated or restarted is an event of the infrastructure (✕, 💥), an edit of a custom resource or a rollout of a
+    # StatefulSet a change (🔗). Their times are UTC, as the logs of the pods
+    for cev in getattr(files, "cluster_events", None) or []:
+        when = (cev.get("time") or "").replace("Z", "")[:19]
+        if len(when) != 19:
+            continue
+        where = f"☸️ {cev.get('component') or cev.get('kind', '').lower()}/{cev.get('kind', '')}/{cev.get('name', '')}"
+        text = f"☸️ {cev.get('kind', '')}/{cev.get('name', '')}: {cev.get('what', '')}"[:200]
+        if cev.get("kind") == "Pod":
+            add(when, where, None, "infra", None, text)
+        else:
+            add(when, where, None, "config_change", None, text)
+        ev = events.get((where, when))
+        if ev:
+            ev["cluster"] = True
     # the longest GC pauses (1 s or more: the JVM stopped, its sessions and requests time out)
     pauses = [(f, ev) for f in files for ev in f.get("events") or [] if ev["kind"] == "gc_pause" and ev.get("time")]
     pauses.sort(key=lambda x: -gc_ms(x[1]))
@@ -885,7 +902,7 @@ def after_effects(events: List[dict], files: List[dict], titles_of: Optional[Dic
     span = max(times[-1] - times[0], EFFECT_WINDOW_SECONDS)
     usual = sum(o[1] for o in occ) * EFFECT_WINDOW_SECONDS / span
     for ev in events:
-        if ev["kind"] != "infra" and not (ev["kind"] == "lifecycle" and ev["text"].startswith("🚀")):
+        if ev["kind"] != "infra" and not ev.get("cluster") and not (ev["kind"] == "lifecycle" and ev["text"].startswith("🚀")):
             continue
         try:
             t = epoch(ev["time"])
@@ -2011,13 +2028,19 @@ def causes_text(events: List[dict], top: int = 5) -> List[str]:
     return out
 
 
+def ev_where(ev: dict) -> str:
+    """file:line of a timeline event, the file alone without a line (a change of the cluster of a CFK bundle)"""
+    name = (ev.get("file") or "").split("/")[-1]
+    return f"{name}:{ev['line']}" if ev.get("line") else (ev.get("file") or "")
+
+
 def effects_lines(events: List[dict], top: int = 5) -> List[str]:
     hit = [ev for ev in events if ev.get("effects")]
     if not hit:
         return []
     out = [f"💥 Errors right after a GC pause, a stop, a restart or a controller change ({len(hit)})"]
     for ev in hit[:top]:
-        out.append(f"   {ev['time'].replace('T', ' ')} {ev['text'][:120]} ({ev['file'].split('/')[-1]}:{ev['line']})")
+        out.append(f"   {ev['time'].replace('T', ' ')} {ev['text'][:120]} ({ev_where(ev)})")
         out.append(f"      {effects_text(ev)}")
     return out
 
@@ -2027,7 +2050,7 @@ def timeline_text(events: List[dict], top: int = 8) -> List[str]:
         return []
     out = [f"🗓️ Timeline (first {min(top, len(events))} of {len(events)} event(s), all files merged)"]
     for ev in events[:top]:
-        out.append(f"   {ev['time'].replace('T', ' ')} {timeline_what(ev)[:160]} ({ev['file'].split('/')[-1]}:{ev['line']})")
+        out.append(f"   {ev['time'].replace('T', ' ')} {timeline_what(ev)[:160]} ({ev_where(ev)})")
     return out
 
 
@@ -2426,7 +2449,7 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
     if events:
         out += ["", "### Timeline (what happened first)", "", "| Time | Event | Where |", "| --- | --- | --- |"]
         for ev in events[:10]:
-            out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200] + after_text(ev))} | {md_cell(ev['file'].split('/')[-1])}:{ev['line']} |")
+            out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200] + after_text(ev))} | {md_cell(ev_where(ev))} |")
     tr = res.get("trend")
     if tr:
         out += ["", f"### Trend over {len(tr['labels'])} inputs" + (" (per hour)" if tr["per_hour"] else ""), "",
@@ -4317,6 +4340,9 @@ def main() -> int:
     ap.add_argument("--records-under", metavar="PREFIX", action="append", default=[],
                     help="print {path under PREFIX: [records]} of the files whose label starts with PREFIX/ or PREFIX: "
                          "(the records of a CFK support bundle for cfk-analysis --log-records), one JSON per line, and exit")
+    ap.add_argument("--cluster-events", metavar="JSON", action="append", default=[],
+                    help="the JSON of the analysis of a CFK support bundle (cfk-analysis): its changes (pods terminated or "
+                         "restarted, custom resources edited, rollouts) join the incident timeline (repeatable)")
     ap.add_argument("--other-files", metavar="JSON", help="the files of the input for another analyzer (bundle_triage.py)")
     ap.add_argument("--json", action="store_true", help="print the analysis as JSON")
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
@@ -4345,6 +4371,15 @@ def main() -> int:
     args = ap.parse_args()
 
     files = parse_records(args.records)
+    for path in args.cluster_events:
+        try:
+            with open(path, encoding="utf-8") as fh:
+                bundles = json.load(fh)
+        except (OSError, ValueError) as ex:
+            print(f"⚠️ --cluster-events: cannot read {path}: {ex}", file=sys.stderr)
+            continue
+        for b in bundles.get("cfk_bundles") or [bundles]:
+            files.cluster_events = (getattr(files, "cluster_events", None) or []) + list(b.get("timeline") or [])
     if args.records_under:
         # the labels as written by analyze logs (not shortened): <bundle label>/<path in the bundle>
         keep = ("level", "count", "first_line", "last_line", "first_ts", "last_ts", "message", "chain", "connector", "context")

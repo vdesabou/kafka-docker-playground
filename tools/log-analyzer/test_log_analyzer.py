@@ -358,6 +358,31 @@ def test_cfk_log_banner():
         check("other untouched", open(other).read() == "<main></main>")
 
 
+def test_cluster_events_in_timeline():
+    """☸️ the changes of a CFK bundle in the incident timeline: a CR edit links the first ERROR that follows (🔗), a pod
+    restart followed by a burst of errors gets 💥"""
+    burst = " ".join(f"2026-11-07T10:20:{s:02d}" for s in range(1, 30))
+    text = ("@@PGFILE@@|bundle:confluent/connect/logs/connect-0.log|100|2|30|2026-11-07T10:00:00|2026-11-07T11:00:00\n"
+            "@@PGREC@@|ERROR|1|5|5|2026-11-07T10:03:00|2026-11-07T10:03:00\n"
+            "[2026-11-07 10:03:00,000] ERROR [s3|task-0] boom (x)\n"
+            "@@PGTS@@|2026-11-07T10:03:00\n"
+            "@@PGREC@@|ERROR|29|9|60|2026-11-07T10:20:01|2026-11-07T10:20:29\n"
+            "[2026-11-07 10:20:01,000] ERROR [s3|task-0] Disconnected from node 1 (x)\n"
+            f"@@PGTS@@|{burst}\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        files.cluster_events = [
+            {"time": "2026-11-07T10:01:00Z", "kind": "Connect", "name": "connect", "what": "Update by kubectl-edit: spec.image", "component": "connect"},
+            {"time": "2026-11-07T10:20:00Z", "kind": "Pod", "name": "kafka-1", "what": "container kafka terminated: OOMKilled", "component": "kafka"},
+            {"time": "bad", "kind": "Pod", "name": "x"}]
+        res = log_report.analyze(files)
+    cl = [ev for ev in res["timeline"] if ev.get("cluster")]
+    check("two cluster events", [ev["kind"] for ev in cl] == ["config_change", "infra"], cl)
+    first = next(ev for ev in res["timeline"] if ev["kind"] == "first_error" and "boom" in ev["text"])
+    check("🔗 after the CR edit", (first.get("after") or {}).get("text", "").startswith("☸️ Connect/connect"), first)
+    check("💥 after the pod restart", (cl[1].get("effects") or {}).get("occurrences") == 29, cl[1])
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
