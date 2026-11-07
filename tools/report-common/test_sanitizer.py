@@ -16,6 +16,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import fixed_bugs  # noqa: E402
+import support_dates  # noqa: E402
 import known_causes  # noqa: E402
 from sanitizer import DataSanitizer, sanitize_stream  # noqa: E402
 
@@ -188,6 +189,21 @@ def test_fixed_bugs_patterns_and_speed():
             regex.search(line)
             took = time.time() - start
             check("fixed bug speed", took < 0.5, f"{took:.1f} s for {b['title']!r} on {line[:12]!r}…")
+
+
+def test_support_dates():
+    """🏷️ end of support of CP (Enterprise Standard, then Platinum) and CFK, from the tables of the docs"""
+    from datetime import date
+    today = date(2026, 11, 7)
+    cases = [(support_dates.cp_status("8.1.0", today), "supported"), (support_dates.cp_status("7.6.3", today), "standard_ended"),
+             (support_dates.cp_status("7.4.1", today), "ended"), (support_dates.cp_status("7.8.0", today), "ending"),
+             (support_dates.cp_status("9.0.0", today), "unknown"), (support_dates.cp_status("", today), "unknown"),
+             (support_dates.cfk_status("3.1.0", today), "supported"), (support_dates.cfk_status("2.10.2", today), "ending"),
+             (support_dates.cfk_status("2.9.0", today), "ended"), (support_dates.cp_status("7.6.0", date(2027, 3, 1)), "ended")]
+    for st, want in cases:
+        check("support state", st["state"] == want, f"{st} instead of {want}")
+    check("text", "Platinum until 2027-02-09" in support_dates.cp_status("7.6.3", today)["text"])
+    check("rows", all(len(v) == 4 for v in support_dates.CP_SUPPORT.values()) and all(len(v) == 2 for v in support_dates.CFK_SUPPORT.values()))
 
 
 if __name__ == "__main__":

@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, time_chart, verdict_html, dark)
 import fixed_bugs  # noqa: E402
+import support_dates  # noqa: E402
 import known_causes  # noqa: E402
 import log_viewer  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
@@ -2237,6 +2238,10 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append("   " + time_zone_note(s))
     if s.get("kafka_versions"):
         out.append(f"   🏷️ Kafka {' → '.join(s['kafka_versions'])} (the version the components log at startup)")
+    for v in cp_versions(s, res.get("_cfk_bundles") or []):
+        st = support_dates.cp_status(v)
+        if st["state"] in ("ended", "standard_ended", "ending"):
+            out.append(f"   🏷️ CP {v}: {st['text']} ({support_dates.CP_DOC})")
     gaps = (res.get("coverage") or {}).get("gaps") or []
     if gaps:
         biggest = max(gaps, key=lambda g: g["seconds"])
@@ -2584,7 +2589,10 @@ def cfk_kpi_tiles(bundles: List[dict]) -> List[str]:
     if k8s:
         tiles.append(kpi("☸️ Kubernetes", k8s[-1], " → ".join(k8s) if len(k8s) > 1 else "cluster"))
     if cfk:
-        tiles.append(kpi("🛠️ CFK", cfk[-1], " → ".join(cfk) if len(cfk) > 1 else (f"operator {ops[-1]}" if ops else "operator")))
+        st = support_dates.cfk_status(cfk[-1])
+        tiles.append(kpi("🛠️ CFK", cfk[-1], (" → ".join(cfk) if len(cfk) > 1 else (f"operator {ops[-1]}" if ops else "operator"))
+                         + (f" · {st['text']}" if st["text"] else ""), support_dates.TILE_CLASS[st["state"]],
+                         f"the CFK operator version; end of support from {support_dates.CFK_DOC}"))
     return tiles
 
 
@@ -2606,22 +2614,30 @@ def findings_severity_tiles(findings: List[dict]) -> List[str]:
     return tiles
 
 
+def cp_versions(s: dict, bundles: List[dict]) -> List[str]:
+    """the Confluent Platform versions of the input: logged at startup (x.y.z-ce / -ccs), the images of a CFK bundle"""
+    cp = [re.sub(r"-(ce|ccs)$", "", v) for v in s.get("kafka_versions") or [] if re.search(r"-(ce|ccs)$", v)]
+    for b in bundles:
+        for comp in ((b.get("environment") or {}).get("components") or {}).values():
+            m = re.search(r"(?:^|/)cp-[\w-]+:(\d+\.\d+\.\d+)", (comp or {}).get("image") or "") if isinstance(comp, dict) else None
+            if m:
+                cp.append(m.group(1))
+    return list(OrderedDict((v, True) for v in cp))
+
+
 def version_tile(s: dict, bundles: List[dict]) -> str:
     """🏷️ the Confluent Platform version: "Kafka version: 8.1.0-ce" (-ce, -ccs) of the logs is the CP version, and the image
     tags of the CRs of a CFK bundle (cp-server:8.1.0) give it too; plain Apache Kafka logs: 🏷️ Kafka"""
     logged = s.get("kafka_versions") or []
-    cp = [re.sub(r"-(ce|ccs)$", "", v) for v in logged if re.search(r"-(ce|ccs)$", v)]
-    images = []
-    for b in bundles:
-        for comp in ((b.get("environment") or {}).get("components") or {}).values():
-            m = re.search(r"(?:^|/)cp-[\w-]+:(\d+\.\d+\.\d+)", (comp or {}).get("image") or "") if isinstance(comp, dict) else None
-            if m and m.group(1) not in images:
-                images.append(m.group(1))
-    versions = list(OrderedDict((v, True) for v in cp + images))
+    versions = cp_versions(s, bundles)
     if versions:
-        src = ("logged at startup" if cp else "") + (" · " if cp and images else "") + ("images of the CRs" if images else "")
-        return kpi("🏷️ CP", versions[-1], " → ".join(versions) if len(versions) > 1 else src, "",
-                   "the Confluent Platform version: the components log it at startup (Kafka version: x.y.z-ce), the images of a CFK bundle carry it")
+        # the oldest version of the input decides: the one out of support first
+        worst = max((support_dates.cp_status(v) for v in versions),
+                    key=lambda st: ["unknown", "supported", "ending", "standard_ended", "ended"].index(st["state"]))
+        unit = (" → ".join(versions) if len(versions) > 1 else "Confluent Platform") + (f" · {worst['text']}" if worst["text"] else "")
+        return kpi("🏷️ CP", versions[-1], unit, support_dates.TILE_CLASS[worst["state"]],
+                   "the Confluent Platform version: the components log it at startup (Kafka version: x.y.z-ce), the images of a "
+                   f"CFK bundle carry it; end of support from {support_dates.CP_DOC}")
     if logged:
         return kpi("🏷️ Kafka", logged[-1], " → ".join(logged) if len(logged) > 1 else "logged at startup", "",
                    "the Apache Kafka version the components log at startup (AppInfoParser)")
@@ -2738,8 +2754,9 @@ def cfk_ticket_lines(b: dict) -> List[str]:
     s = b.get("summary") or {}
     env = b.get("environment") or {}
     out = ["", f"### ☸️ CFK support bundle{(': ' + b['label'].split('/')[-1]) if b.get('label') else ''}", ""]
+    cfk_st = support_dates.cfk_status(env.get("cfk_version") or "")
     parts = [f"Kubernetes {env['kubernetes_version']}" if env.get("kubernetes_version") else "",
-             f"CFK {env['cfk_version']}" if env.get("cfk_version") else ""]
+             (f"CFK {env['cfk_version']}" + (f" ({cfk_st['text']})" if cfk_st["state"] in ("ended", "ending") else "")) if env.get("cfk_version") else ""]
     if any(parts):
         out.append(f"**Environment:** {', '.join(p for p in parts if p)}")
     out.append(f"**Issues:** {s.get('total_issues', 0)} (critical {s.get('critical', 0)} · high {s.get('high', 0)} · "
@@ -2775,6 +2792,10 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
                + f" (FATAL {s['by_level']['FATAL']} · ERROR {s['by_level']['ERROR']} · WARN {s['by_level']['WARN']})")
     if s.get("kafka_versions"):
         out.append(f"**Kafka version:** {' → '.join(s['kafka_versions'])}")
+    for v in cp_versions(s, res.get("_cfk_bundles") or []):
+        st = support_dates.cp_status(v)
+        if st["state"] in ("ended", "standard_ended", "ending"):
+            out.append(f"**Confluent Platform {v}:** {st['text']} ([supported versions]({support_dates.CP_DOC}))")
     for i in s.get("incomplete_inputs") or []:
         out.append(f"**⚠️ Not fully read:** `{i['file']}`: {i['reason']}")
     if res["known_causes"]:
