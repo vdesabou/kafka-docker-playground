@@ -84,6 +84,16 @@ kills (records of the 🧨 known cause), the known causes of its records, its co
 (`connector-producer-<name>-0`…) and the keys changed between restarts. The HTML report shows them in 🔌 **Connectors**
 (▶ only this connector sets the connector filter and keeps its card only, ⤺ goes back to all, the search filters the cards, the first `CONN_CARDS_SHOWN` = 30 then "show the other N connectors"), the terminal summary one line per connector.
 
+## Versions
+
+The digest notes two INFO lines it does not keep otherwise, as `@@PGEVT@@` events of the records file: `Instantiated
+connector|task <name> with version <v> of type <class>` (the version of each connector, the class of the connector kept
+over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 card of a connector shows its version (`1.5.0
+→ 1.6.0` after an upgrade during the logs) with a 📋 button that copies `playground connector-plugin changelog
+--connector-plugin <class> --from <version>` (what changed since: is it fixed in a newer version?), also in the terminal
+summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
+`--json` and a line of the summary for a ticket.
+
 ## Summary for a ticket
 
 `ticket_markdown()` writes the verdict, the period, the known causes with what to do, the errors no known cause explains,

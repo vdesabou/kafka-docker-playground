@@ -83,6 +83,7 @@ Then the 🧭 **summary**, what the HTML report says first, bounded so that it f
 ```text
 🧭 Summary: 19 occurrence(s) of 12 distinct record(s) in 1 file(s), 2026-10-14 10:03:58 → 2026-10-14 10:05:55
    🕐 Period covered: 2026-10-14 10:01:03 → 10:05:55 (4 min 52 s) ⚠️ shorter than 10 min: the logs may not cover the incident
+   🏷️ Kafka 8.3.2-ce (the version the components log at startup)
    🔌 by connector: cdc-xstream-oracle-source 7 · no connector context 12
 🧠 Known causes
    [HIGH] 🧨 A connector task was killed ×1 in connect-oracle-xstream-task-failure.log (first at line 5251, 2026-10-14 10:05:55)
@@ -98,13 +99,16 @@ Then the 🧭 **summary**, what the HTML report says first, bounded so that it f
    2026-10-14 10:04:59 🔌 connector cdc-xstream-oracle-source (re)configured (connect-oracle-xstream-task-failure.log:69)
    …
 🔌 Connectors (1, most errors first)
-   cdc-xstream-oracle-source: 1 ERROR/FATAL, 6 WARN, 🧨 1 task kill(s) · 🧨 A connector task was killed
+   cdc-xstream-oracle-source: 1 ERROR/FATAL, 6 WARN, 🧨 1 task kill(s), 🏷️ 1.6.0 (OracleXStreamSourceConnector) · 🧨 A connector task was killed
+      👉 fixed in a newer version? playground connector-plugin changelog --connector-plugin io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector --from 1.6.0
 ⚙️ Configuration logged (24), the last dump of each: --show-config <connector|config class|client id> prints one
 ```
 
 Read it top-down: **4 min 52 s of logs** (too short to be sure the bundle holds the cause: ask for more), **a task was
 killed**, and the 🗓️ timeline says what came first: the wrong password at 10:03:58, the missing outbound server one
-second later, then the connector reconfigured twice. The report of this run is
+second later, then the connector reconfigured twice. The 🔌 card says which **version** of the connector runs (read from
+`Instantiated connector … with version 1.6.0`) with the command that lists what changed since: here 1.6.1 fixes a
+`NullPointerException` of the task. The report of this run is
 [🔌 a Connect worker](reports/logs-connect.html).
 
 ---
