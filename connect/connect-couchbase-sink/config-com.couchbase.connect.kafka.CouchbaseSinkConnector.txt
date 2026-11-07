@@ -12,15 +12,6 @@ May be overridden with the KAFKA_COUCHBASE_PASSWORD environment variable.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 Name of the Couchbase bucket to use.
@@ -32,14 +23,14 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 couchbase.bootstrap.timeout
+🔘 couchbase.username
 
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+Name of the Couchbase user to authenticate as.
 
 	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
-	 - Required: false
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.seed.nodes
 
@@ -62,6 +53,15 @@ Setting the 'couchbase.network' config property to 'default' or 'external' force
 
 	 - Type: STRING
 	 - Default: auto
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
