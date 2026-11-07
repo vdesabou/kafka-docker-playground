@@ -7340,6 +7340,8 @@ function summarize_log_errors() {
                 lc_kind = "connector_start"; lc_conn = substr($0, RSTART + 19, RLENGTH - 19); lc_who = lc_conn
             } else if (match($0, /Starting task [^ ]+/)) {
                 lc_kind = "task_start"; lc_who = substr($0, RSTART + 14, RLENGTH - 14); lc_conn = lc_who; sub(/-[0-9]+$/, "", lc_conn)
+                # the task id: which worker ran which task, and when (🖥️ Tasks by worker)
+                lc_detail = lc_who
             } else if ($0 ~ /Kafka Connect started|Kafka Connect (distributed )?worker initialization took/) {
                 lc_kind = "process_start"; lc_who = "connect"; lc_detail = "Kafka Connect worker started"
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {

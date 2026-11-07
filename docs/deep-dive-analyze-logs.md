@@ -226,6 +226,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🗓️ incident timeline | *what happened first?*: all files merged, the first occurrence of each error and known cause, restarts, connectors reconfigured, config changed between restarts, ✕ processes stopped (`shutting down`, `SHUTTING_DOWN`, `Kafka Connect stopping`), active controller changes and the 20 longest GC pauses of 1 s or more (from the GC logs of the input, unified or legacy format). 💥 under one of them: the ERROR / WARN of every file in the next 60 s, when they are 3 times the usual rate of the logs (5 at least), by known cause or exception. A chart above the table places them in time, one lane per component (the long gaps cut ⫽, hover a mark for its time and Δ, click it for its row), and the Δ column gives the time since the previous event (the biggest gaps in bold) |
 | 🔄 restarts and rebalances | from the INFO lines (the digest only keeps ERROR / WARN): the rebalances of the worker groups, the rejoins of the consumer groups with their reason, the connectors and tasks started, the workers and brokers (re)started and stopped, the active controller changes, the GC pauses of 1 s or more, each counted with its rate per hour. 🌀 **storm**: 10 or more at 6 or more per hour (a consumer that leaves on purpose, `pro-actively leaving the group`, is not one); also on the 🔌 cards and in the 🗓️ timeline. A connector picked in the filter keeps its rows, the worker group rebalances and process starts (every connector of the worker) stay |
 | 🧰 other files of the input | the GC logs, thread dumps, heap dumps, flight recordings, network captures and XStream reports of the input, with the command of the analyzer to run on each (section 3) |
+| 🖥️ tasks by worker | with the logs of several workers: which worker ran each task and when (the `Starting task` lines that the worker running it logs, whatever the rebalance protocol; the rotated files of a worker are one worker, named by their folder), the errors of the connector in each worker's logs, and 🎯 a connector whose errors (3 or more) all come from one worker while its tasks also ran on others: that host differs (DNS, truststore, plugin path, network, worker config). Also on the 🔌 card; follows the connector filter |
 | 🔌 connectors | a card per connector, the 30 with the most errors first (show the others): errors, task kills, known causes, configuration, keys changed; ▶ only this connector keeps its card only (⤺ for all of them), the search filters the cards |
 | 📈 occurrences over time | drag to zoom down to the second; an error repeated all day is spread over the day (sampled, counted with its weight) |
 | 🌳 all root causes | every distinct error, by deepest exception, linked to the finding that explains it |
@@ -475,6 +476,7 @@ playground analyze logs --sample support_bundle --json 2>/dev/null | jq -c '.con
 | `.connectors[]` | the card of each connector |
 | `.comparison` | with `--compare` |
 | `.fixed_bugs[]` | title, ref, plugin, fixed_in, occurrences, first, and `connectors[]` with version, verdict (`affected`, `fixed`, `unknown`) and `upgrade_to` |
+| `.task_workers` | `workers[]`, `tasks[]` (task, connector, `runs[]`: worker, from, to, starts) and `connectors[]` (`workers[]` with task starts, errors, warnings; `only_on`) |
 | `.other_files` | `files[]` (label, kind, path, kept) and `commands[]` of the 🧰 files for another analyzer |
 | `.configuration[]` | the configs logged (89 % of the JSON on a big bundle: `--json-sections` leaves it out) |
 | `.files[].records[]` | every record, its context, its connector |
@@ -552,6 +554,7 @@ The error is in the part that was not received. Without the warning, it would ha
 | Situation | Command |
 | --- | --- |
 | a customer support bundle (`.zip`, `.tar.gz`, folders of rotated logs) | `playground analyze logs -f <bundle>`: read the 🧭 summary, then the 🗓️ timeline of the report for what came first |
+| a connector that fails on one worker only (a cluster of workers) | `playground analyze logs -f <the logs of every worker>`: 🎯 in 🖥️ Tasks by worker names the worker its errors come from |
 | a worker with hundreds of connectors, one is failing | `playground analyze logs -f <bundle> --connector <name>`, or ▶ only this connector on its 🔌 card |
 | did the fix work? the logs before and after it (two workers, two days) | `playground analyze logs -f <after> --compare <before>` |
 | a CloudWatch, OpenSearch, Kibana, Splunk, Datadog or Loki export | `playground analyze logs -f <export.json\|.csv>`: converted back to log lines, oldest first |

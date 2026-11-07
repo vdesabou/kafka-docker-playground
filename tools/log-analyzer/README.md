@@ -122,6 +122,18 @@ over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 car
 summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
 `--json` and a line of the summary for a ticket.
 
+## Tasks by worker (🖥️)
+
+`task_workers()` reads the `task_start` events (`Starting task <connector>-<n>`, logged by the worker that runs the task,
+whatever the rebalance protocol: the `taskIds` of `got assignment` only list the tasks added with the incremental
+cooperative protocol) of each file. A worker is a file without its rotation suffix (`worker_of()`: `connect.log.1`,
+`connect.log.2026-11-06-10`, `.gz`), shown by its folder when the folders tell the workers apart. With 2 workers or more:
+`tasks[]` (the runs of each task: worker, from, to, starts), `connectors[]` (the workers of its tasks with their starts
+and the ERROR / WARN of the connector in that worker's logs) and `only_on` when the errors (`ONLY_ON_MIN_ERRORS` = 3 or
+more) all come from one worker while its tasks also ran on others. Shown in the summary, the 🖥️ section of the HTML
+report (follows the connector filter, `pgLifecycle()`), the 🔌 card, the summary for a ticket and `.task_workers` of
+`--json`.
+
 ## Known bugs fixed in a later version (🩹)
 
 `fixed_bugs_found()` matches each entry of `tools/report-common/fixed_bugs.py` (`FIXED_BUGS`: title, plugin, connector
@@ -157,7 +169,7 @@ in the terminal summary and the summary for a ticket.
 
 The digest also notes the lifecycle of the INFO lines (`@@PGEVT@@` events, 300 per kind and file, and `@@PGEVTN@@` counts):
 `Rebalance started` of a worker group, `Request joining group due to: <reason>` of a consumer group, `Starting connector`,
-`Starting task`, `Kafka Connect started` / `worker initialization took`, `Kafka Server started` / `Transition from
+`Starting task` (its task id as detail), `Kafka Connect started` / `worker initialization took`, `Kafka Server started` / `Transition from
 STARTING to STARTED`, the stops (`] shutting down (kafka.server`, `to SHUTTING_DOWN`, `Kafka Connect stopping`), the active
 controller changes (`Becoming the active controller` of KRaft, `elected as the controller` of ZooKeeper) and the GC pauses
 of 1 s or more of a GC log (`gc_pause`, detail `<ms> <what>`: unified `GC(12) Pause Full (…) … 2512.789ms`, legacy
