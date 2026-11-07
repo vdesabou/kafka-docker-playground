@@ -1032,6 +1032,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
   </header>
   <main>
     {verdict_html}
+    <!--pg-log-analysis-->
     {_problem_html(results)}
     {summary_html}
     {_runbooks_html(results)}

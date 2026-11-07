@@ -161,8 +161,11 @@ playground analyze logs -f ./bundle.tar --component connect          # only the 
 playground analyze logs -f ./bundle.tgz -p "kafka roll stuck after the upgrade yesterday"   # matched against the problem
 ```
 
-See `playground analyze logs --help` for all flags. For a raw ERROR digest of every log in the
-bundle, `playground analyze logs -f <bundle> --logs-only` complements it.
+See `playground analyze logs --help` for all flags. The pod and operator logs (`*.log`) of the bundle also go through the
+regular log digest of `analyze logs`, which writes its log report next to this one; once both are written,
+`log_banner.py` puts its key lines (known causes, 🩹 known bugs, 🎯 errors on one pod, 💥 bursts, 🔗) and a link at the
+`<!--pg-log-analysis-->` marker of this report (stdlib only, run on the host). With `--json`, the log analysis is
+`.log_analysis` of the bundle JSON. `--logs-only` gives only the log report, of every file of the bundle.
 
 ## Sample
 

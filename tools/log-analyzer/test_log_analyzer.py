@@ -321,6 +321,43 @@ def test_data_to_request():
     check("in the ticket", "### Data to request" in log_report.ticket_markdown(dict(res, data_to_request=asks), "t", "ERROR/FATAL/WARN"))
 
 
+def test_cfk_log_banner():
+    """🔥 the banner of a CFK bundle report: the key lines of the log analysis at the marker, a link to the log report
+    relative to the CFK report, nothing changed in a report without the marker"""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "cfk-analysis"))
+    import log_banner
+    logs = {"summary": {"occurrences": 8, "distinct": 6, "files_with_findings": 4, "files_scanned": 4},
+            "known_causes": [{"title": "💥 OutOfMemoryError", "occurrences": 2, "first": {"timestamp": "2026-10-14T09:00:03"}}],
+            "fixed_bugs": [{"title": "🩹 S3 sink NullPointerException", "ref": "CC-35613", "connectors": [
+                {"connector": "s3", "version": "10.6.1", "verdict": "affected", "upgrade_to": "10.6.11"}]}],
+            "task_workers": {"connectors": [{"connector": "jdbc", "only_on": "connect-1"}]},
+            "timeline": [{"time": "2026-10-14T09:01:00", "text": "🛑 Kafka broker shutting down",
+                          "effects": {"occurrences": 39, "seconds": 60}}],
+            "connectors": [{}], "data_to_request": [{}]}
+    with tempfile.TemporaryDirectory() as tmp:
+        report, other = os.path.join(tmp, "b-cfk-report.html"), os.path.join(tmp, "x.html")
+        for p in (report, other):
+            with open(p, "w") as fh:
+                fh.write("<main><div>verdict</div><!--pg-log-analysis--></main>" if p == report else "<main></main>")
+        js = os.path.join(tmp, "logs.json")
+        with open(js, "w") as fh:
+            json.dump(logs, fh)
+        saved = sys.argv
+        sys.argv = ["log_banner.py", "--report", report, "--report", other, "--logs-json", js,
+                    "--log-report", os.path.join(tmp, "case #1-log-report.html")]
+        try:
+            rc = log_banner.main()
+        finally:
+            sys.argv = saved
+        page = open(report).read()
+        check("rc", rc == 0)
+        check("marker replaced", "<!--pg-log-analysis-->" not in page and "🔥 Log analysis of the pod logs: 8 occurrence(s)" in page, page[:300])
+        check("link", "href='case%20%231-log-report.html'" in page, page)
+        for x in ("💥 OutOfMemoryError ×2", "🩹 s3 runs 10.6.1", "🎯 jdbc", "💥 39 errors"):
+            check(x, x in page, page)
+        check("other untouched", open(other).read() == "<main></main>")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

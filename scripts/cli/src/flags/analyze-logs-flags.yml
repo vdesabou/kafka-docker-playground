@@ -103,7 +103,7 @@
 - long: --logs-only
   required: false
   help: |-
-    📜 Do not detect CFK support bundles: plain ERROR/FATAL digest of every log file
+    📜 Do not detect CFK support bundles: only the regular log report, of every file of the bundle (by default, a CFK bundle gets its own report, and its pod and operator logs the regular log report too)
 - long: --connector
   short: -c
   required: false

@@ -7,6 +7,7 @@ on:
     paths:
       - "tools/report-common/**"
       - "tools/log-analyzer/**"
+      - "cfk-analysis/log_banner.py"
       - "scripts/cli/src/lib/cli_function.sh"
       - ".github/workflows/tools-tests.yml"
   push:
@@ -15,6 +16,7 @@ on:
     paths:
       - "tools/report-common/**"
       - "tools/log-analyzer/**"
+      - "cfk-analysis/log_banner.py"
       - "scripts/cli/src/lib/cli_function.sh"
       - ".github/workflows/tools-tests.yml"
   workflow_dispatch:

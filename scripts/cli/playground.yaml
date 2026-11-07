@@ -4563,22 +4563,28 @@ subcommands:
       to a component and an instance (CR name), and to its connector: --component
       keeps some of them, the HTML report has Component / Instance / Connector filters.
       \U0001F512 --sanitize replaces secrets, IPs, hostnames, emails and LDAP DNs
-      by placeholders (best effort: review before sharing). --logs-only gives the
-      plain log digest instead. \U0001F3AF --problem \"<component, symptom, since
-      when>\" matches the bundle against what the customer reports: the issues that
-      explain it first, a verdict (explained, not explained, not covered by the logs),
-      the changes before the date. \U0001F4E5 A Data to request section says what
-      to ask the customer for next, with why and the command: from the gaps of the
-      bundle (logs that start too late, previous logs of restarted containers, no
-      events, no operator log), from its findings (OOMKilled, Pending pods, TLS, failed
-      connectors) and from the symptoms of --problem.\n\n\U0001F512 With --sanitize,
-      passwords and other secrets (password=…, JAAS configs, tokens, keys, credentials
-      in URLs), IPs, hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>,
-      <IP-1>, <HOST-1>…, the same in the digest, the report and the JSON). Off by
-      default: use it before sharing the output outside Confluent, and review it anyway
-      (best effort).\n\n\U0001F9ED After the digest of each file, a short summary:
-      time range, occurrences by connector, known causes with what to do (\U0001F4DA
-      and a Confluent knowledge-base article for many of them, \U0001F512 the internal
+      by placeholders (best effort: review before sharing). \U0001F525 Its pod and
+      operator logs also go through the regular log digest: the log report (root causes,
+      timeline, connector cards and plugin versions, restarts, known bugs fixed later,
+      which pod ran which task, data to request, summary for a ticket) is written
+      next to the report of the bundle, which links it with a \U0001F525 Log analysis
+      banner at its top and stays the one opened (with --json: .log_analysis of the
+      bundle JSON). --logs-only gives only the log report, of every file of the bundle.
+      \U0001F3AF --problem \"<component, symptom, since when>\" matches the bundle
+      against what the customer reports: the issues that explain it first, a verdict
+      (explained, not explained, not covered by the logs), the changes before the
+      date. \U0001F4E5 A Data to request section says what to ask the customer for
+      next, with why and the command: from the gaps of the bundle (logs that start
+      too late, previous logs of restarted containers, no events, no operator log),
+      from its findings (OOMKilled, Pending pods, TLS, failed connectors) and from
+      the symptoms of --problem.\n\n\U0001F512 With --sanitize, passwords and other
+      secrets (password=…, JAAS configs, tokens, keys, credentials in URLs), IPs,
+      hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>, <IP-1>,
+      <HOST-1>…, the same in the digest, the report and the JSON). Off by default:
+      use it before sharing the output outside Confluent, and review it anyway (best
+      effort).\n\n\U0001F9ED After the digest of each file, a short summary: time
+      range, occurrences by connector, known causes with what to do (\U0001F4DA and
+      a Confluent knowledge-base article for many of them, \U0001F512 the internal
       runbooks of Confluent support when the private reproduction-models repository
       is there), root causes no known cause explains, and the configuration logged
       at startup (connectors, components, clients) with the keys changed between restarts.
@@ -4742,8 +4748,9 @@ subcommands:
     - names:
       - "--logs-only"
       argument: ''
-      description: "\U0001F4DC Do not detect CFK support bundles: plain ERROR/FATAL
-        digest of every log file"
+      description: "\U0001F4DC Do not detect CFK support bundles: only the regular
+        log report, of every file of the bundle (by default, a CFK bundle gets its
+        own report, and its pod and operator logs the regular log report too)"
     - names:
       - "--connector"
       - "-c"
