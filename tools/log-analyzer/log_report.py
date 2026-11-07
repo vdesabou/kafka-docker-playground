@@ -1694,13 +1694,71 @@ def data_to_request_text(items: List[dict], top: int = 6) -> List[str]:
 def data_to_request_html(items: List[dict]) -> str:
     if not items:
         return ""
-    rows = "".join(f"<tr><td>{e(x['what'])}</td><td>{e(x['why'])}</td><td class='mono dr-how'>{e(x.get('how') or '')}</td></tr>" for x in items)
-    return ("<style>.dr-how{font-size:.76rem;word-break:break-word}</style>"
-            "<div class='table-card'><h2>📥 Data to request</h2><p class='legend'>What to ask the customer for next, from the "
-            "gaps of the input (not fully read, a short window, logs without the startup of a worker, a component whose "
-            "logs are missing) and from the findings (the data that explains a known cause, DEBUG loggers for the errors "
+    def way(part: str) -> Tuple[str, str]:
+        """(label, command) of one way to get the data: the 📋 copies the command only"""
+        m = re.match(r"^(.{3,60}?):\s+(curl\s.+?)(?:\s+\((back to [^)]*)\))?$", part)
+        if m:
+            return (m.group(1) + (f" ({m.group(3)})" if m.group(3) else "")), m.group(2)
+        m = re.match(r"^(\S+=\S+) in (\S+)$", part)
+        if m:
+            return f"in {m.group(2)}", m.group(1)
+        return "", part
+
+    def how(text: str) -> str:
+        # "on a running worker, no restart: <command> (back to INFO after); or <property> in <file>": each way on its line
+        parts = [p.strip() for p in re.split(r";\s+or\s+", text) if p.strip()] if text else []
+        out = []
+        for i, part in enumerate(parts):
+            label, cmd = way(part)
+            out.append(f"<div class='dr-way'>" + (f"<span class='dr-label'>{'or ' if i else ''}{e(label)}</span>" if label else "")
+                       + f"<div class='dr-box'><pre class='dr-cmd'>{e(cmd)}</pre><button type='button' class='dr-copy' "
+                       f"data-copy='{e(cmd)}' title='copy the command'>📋</button></div></div>")
+        return "".join(out)
+    cards = "".join(f"<div class='dr-card'><span class='dr-n'>{i}</span><div class='dr-main'><b class='dr-what'>{e(x['what'])}</b>"
+                    f"<p class='dr-why'>💡 {e(x['why'])}</p>{how(x.get('how') or '')}</div></div>" for i, x in enumerate(items, 1))
+    return (DATA_REQUEST_CSS + "<div class='table-card'><h2>📥 Data to request</h2><p class='legend'>What to ask the customer for "
+            "next, from the gaps of the input (not fully read, a short window, logs without the startup of a worker, a component "
+            "whose logs are missing) and from the findings (the data that explains a known cause, DEBUG loggers for the errors "
             "no known cause explains). Also in the summary for a ticket.</p>"
-            f"<table><tr><th>What</th><th>Why</th><th>How</th></tr>{rows}</table></div>")
+            f"<div class='dr-list'>{cards}</div></div>" + DATA_REQUEST_SCRIPT)
+
+
+DATA_REQUEST_CSS = """<style>
+.dr-list{display:flex;flex-direction:column;gap:12px}
+.dr-card{display:flex;gap:14px;padding:14px 16px;border-radius:14px;border:1px solid #e2e8f0;background:#f8fafc;transition:box-shadow .15s,transform .15s}
+.dr-card:hover{transform:translateX(2px);box-shadow:0 10px 24px -14px rgba(37,99,235,.5)}
+.dr-n{flex:none;display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;font-weight:800;font-size:.85rem;
+color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 4px 12px -4px rgba(124,58,237,.7)}
+.dr-main{flex:1;min-width:0}
+.dr-what{display:block;font-size:.92rem;margin-bottom:3px}
+.dr-why{font-size:.82rem;color:#475569;margin-bottom:8px}
+.dr-way{margin-top:8px}
+.dr-label{display:block;font-size:.74rem;font-weight:600;color:#6366f1;margin:0 0 3px 2px}
+.dr-box{position:relative}
+.dr-cmd{margin:0!important;padding:10px 44px 10px 12px!important;border-radius:10px;border:1px solid #e2e8f0;font-size:.76rem!important;
+white-space:pre-wrap;word-break:normal!important;overflow-wrap:anywhere}
+.dr-copy{position:absolute;top:6px;right:6px;width:30px;height:28px;border-radius:8px;border:1px solid #c7d2fe;background:#eef2ff;cursor:pointer;
+font-size:.85rem;transition:background .15s}
+.dr-copy:hover{background:#e0e7ff}.dr-copy.done{background:#dcfce7;border-color:#86efac}
+</style>""" + "<style>" + dark("""
+.dr-card{background:#0f172a;border-color:#273449}
+.dr-card:hover{box-shadow:0 10px 24px -14px rgba(0,0,0,.8)}
+.dr-why{color:#94a3b8}
+.dr-label{color:#a5b4fc}
+.dr-cmd{border-color:#1e293b}
+.dr-copy{background:#1e1b4b;border-color:#3730a3}.dr-copy:hover{background:#312e81}.dr-copy.done{background:#052e16;border-color:#166534}
+""") + "</style>"
+
+DATA_REQUEST_SCRIPT = """<script>
+// 📋 of each way to get the data: copies its command or property, ✅ for a moment
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest(".dr-copy");
+  if (!b) return;
+  const done = () => { b.textContent = "✅"; b.classList.add("done"); setTimeout(() => { b.textContent = "📋"; b.classList.remove("done"); }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(b.dataset.copy).then(done, () => window.prompt("Copy it:", b.dataset.copy));
+  else window.prompt("Copy it:", b.dataset.copy);
+});
+</script>"""
 
 
 VERDICT_ICONS = {"affected": "⛔", "fixed": "✅", "unknown": "❔"}
@@ -4523,6 +4581,49 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>""".replace("@@CHART@@", TIME_CHART_ID).replace("@@COLOR@@", SERIES_1).replace("@@CONN_SHOWN@@", str(CONN_CARDS_SHOWN))
 
 
+# ⚙️ the look of the configuration: the connector picker as a bar, the tables as rows of cards, the keys a connector has
+# that most do not (cfg-diff) with an amber edge and a ≠ chip
+CONFIG_LOOK_CSS = """<style>
+.cfg-search{max-width:460px;padding:8px 14px 8px 36px;border-radius:999px;border-color:#c7d2fe;background-color:#f8fafc;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236366f1' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='m11 11 4 4'/%3E%3C/svg%3E")!important;
+background-repeat:no-repeat!important;background-position:13px 50%!important;transition:box-shadow .15s,border-color .15s}
+.cfg-search:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.25)}
+.cfg-pick{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 18px;border-radius:14px;color:#fff;font-size:.9rem;
+background:radial-gradient(500px 120px at 0% 0%,rgba(56,189,248,.35),transparent 60%),linear-gradient(120deg,#312e81,#6d28d9 65%,#a21caf);
+box-shadow:0 12px 28px -16px rgba(109,40,217,.8)}
+.cfg-pick .fi-meta{color:rgba(255,255,255,.8)}
+.cfg-pick .cfg-conn-select{font-size:.88rem;font-weight:600;padding:6px 32px 6px 12px;border-radius:10px;border:0;min-width:240px;
+box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+.cfg-conn-card h3{display:flex;align-items:center;gap:8px;font-size:1.15rem;margin:18px 0 6px}
+.cfg-conn-card h4{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;font-size:.92rem;margin:16px 0 6px}
+.cfg-srcs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.cfg-src{margin:0!important;padding:3px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:.76rem!important}
+table.cfg{border-collapse:separate;border-spacing:0 4px;margin-top:-4px}
+table.cfg th{background:none;border:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:4px 12px}
+table.cfg tr.cfg-row td{border:0;background:#f8fafc;padding:7px 12px;font-size:.8rem}
+table.cfg tr.cfg-row td:first-child{border-radius:9px 0 0 9px;border-left:3px solid #c7d2fe;color:#4338ca;font-weight:600}
+table.cfg tr.cfg-row td:last-child{border-radius:0 9px 9px 0}
+table.cfg tr.cfg-row:hover td{background:#eef2ff}
+table.cfg tr.cfg-diff td{background:#fffbeb!important}
+table.cfg tr.cfg-diff td:first-child{border-left:3px solid #f59e0b!important;color:#b45309}
+table.cfg tr.cfg-diff td:first-child::after{content:"≠ most";margin-left:8px;padding:0 7px;border-radius:999px;font-size:.66rem;font-weight:700;
+font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fde68a;color:#92400e;vertical-align:1px}
+table.cfg tr.cfg-group td{background:none!important;border:0;color:#6366f1!important;text-transform:uppercase;letter-spacing:.05em;font-size:.7rem!important}
+.cfg-changed{border-radius:12px}
+</style>""" + "<style>" + dark("""
+.cfg-search{background-color:#0f172a;border-color:#3730a3}
+.cfg-pick{background:radial-gradient(500px 120px at 0% 0%,rgba(56,189,248,.3),transparent 60%),linear-gradient(120deg,#312e81,#6d28d9 65%,#a21caf)}
+.cfg-src{background:#1e1b4b;color:#c7d2fe}
+table.cfg th{color:#94a3b8}
+table.cfg tr.cfg-row td{background:#0f172a}
+table.cfg tr.cfg-row td:first-child{border-left-color:#4338ca;color:#a5b4fc}
+table.cfg tr.cfg-row:hover td{background:#1e1b4b}
+table.cfg tr.cfg-diff td{background:#2a1f06!important}
+table.cfg tr.cfg-diff td:first-child{color:#fcd34d}
+table.cfg tr.cfg-diff td:first-child::after{background:#78350f;color:#fde68a}
+table.cfg tr.cfg-group td{color:#a5b4fc!important}
+""") + "</style>"
+
 CONFIG_CSS = ("<style>" + SELECT_CSS + ".cfg-kind{font-size:.92rem;margin:18px 0 6px}.cfg-class>summary,.cfg>summary{padding:6px 0}"
               ".cfg-class{border-top:1px solid #e2e8f0}.cfg-class>details,.cfg-class>p,.cfg-class>table{margin-left:18px}"
               ".cfg-val{display:inline-block;margin:2px 10px 2px 0}tr.cfg-diff td{background:#fef3c7}tr.cfg-diff td:first-child{border-left:3px solid #d97706}"
@@ -4537,7 +4638,7 @@ CONFIG_CSS = ("<style>" + SELECT_CSS + ".cfg-kind{font-size:.92rem;margin:18px 0
               "html[data-theme=dark] .cfg-class{border-top-color:#334155}html[data-theme=dark] .cfg-changed{background:#2a1f06}"
               ".cfg-search{font-family:inherit;font-size:.8rem;padding:4px 8px;border-radius:6px;border:1px solid #cbd5e1;"
               "width:100%;max-width:420px;margin:4px 0 10px}table.cfg td:first-child{width:36%}table.cfg td{word-break:break-all}"
-              "html[data-theme=dark] .cfg-search{background:#0f172a;color:#cbd5e1;border-color:#334155}</style>")
+              "html[data-theme=dark] .cfg-search{background:#0f172a;color:#cbd5e1;border-color:#334155}</style>" + CONFIG_LOOK_CSS)
 CONFIG_SCRIPT = """<script>
 // the configuration of one connector (its card), or all of them compared by config class
 function cfgShow(v) {
