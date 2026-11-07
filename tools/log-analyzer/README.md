@@ -146,6 +146,15 @@ the What to do column of the summary for a ticket and the finding card of the HT
 knowledge base for signed-in users (most GTS runbooks are internal), and only when they explain the cause in general:
 a cause without a good article has no entry. Never build a URL by hand.
 
+The internal runbooks of Confluent support (GTS Confluence pages, support.confluent.io articles restricted to
+*Confluent - Internal*: PKIX, SASL investigations, authorization triage, converters, DLQ, consumer group rebalancing…)
+are never in this repository: `known_causes.internal_links()` reads them from the private
+`reproduction-models/_miscellaneous/log-analysis/runbooks-internal.json` (`PLAYGROUND_LOG_RUNBOOKS_FILE` for another
+file), `{"links": {"<known cause title>": [{"title": "...", "url": "https://..."}]}}`, the same idea as the CFK runbooks
+(`cfk-analysis/runbooks.py`). They are a `🔒` line after the `📚` one in the terminal summary, a `🔒` link in the finding
+card of the HTML report and `known_causes[].internal_links` in `--json`, but never in the summary for a ticket (it can
+leave Confluent). Without the private repository (a fork, CI), nothing changes.
+
 ```text
    [HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)
       → the producer gave up on records not acknowledged within message.timeout.ms (librdkafka) / …

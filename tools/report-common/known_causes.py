@@ -16,6 +16,10 @@ the CFK report, but explains nothing, so the log report does not take it as a kn
 the record).
 """
 
+import json
+import os
+import sys
+
 KILLED_TASK_PATTERN = r"Task threw an uncaught and unrecoverable exception|Task is being killed and will not recover"
 # the log report lists the exception chains of this known cause: hints() rewrites the patterns, so match it by title
 KILLED_TASK_TITLE = "🧨 A connector task was killed"
@@ -469,6 +473,39 @@ LINKS = {
 def links(title):
     """What to read about the known cause `title`: {"kb", "kb_title", "docs"} (the keys it has), or {}"""
     return dict(LINKS.get(title) or {})
+
+
+# the internal runbooks of Confluent support (GTS Confluence pages, support.confluent.io articles restricted to
+# "Confluent - Internal") of the known causes, kept in the private reproduction-models repository, never here:
+#     {"links": {"<known cause title>": [{"title": "...", "url": "https://..."}]}}
+# $PLAYGROUND_LOG_RUNBOOKS_FILE gives another file. Shown with a 🔒 in the text summary, the HTML report and --json
+# (known_causes[].internal_links), never in the summary for a ticket (it can leave Confluent)
+_PRIVATE_RUNBOOKS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "reproduction-models",
+                                 "_miscellaneous", "log-analysis", "runbooks-internal.json")
+_internal = None
+
+
+def _load_internal():
+    global _internal
+    if _internal is None:
+        _internal = {}
+        path = os.environ.get("PLAYGROUND_LOG_RUNBOOKS_FILE") or _PRIVATE_RUNBOOKS
+        if os.path.isfile(path):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    data = json.load(f)
+                for title, items in (data.get("links") or {}).items():
+                    if isinstance(items, list):
+                        _internal[title] = [{"title": str(l.get("title") or l["url"]), "url": str(l["url"])}
+                                            for l in items if isinstance(l, dict) and str(l.get("url", "")).startswith("https://")]
+            except (OSError, ValueError, AttributeError) as e:
+                print(f"warning: cannot read the internal runbooks {path}: {e}", file=sys.stderr)
+    return _internal
+
+
+def internal_links(title):
+    """Internal runbooks of the known cause `title`: [{"title", "url"}], [] without the private file"""
+    return [dict(l) for l in _load_internal().get(title) or []]
 
 
 def hints():
