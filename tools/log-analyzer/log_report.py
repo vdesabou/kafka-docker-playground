@@ -2560,30 +2560,85 @@ def cfk_findings(bundles: List[dict]) -> List[dict]:
 CFK_SEV_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
 
+def cfk_kpi_tiles(bundles: List[dict]) -> List[str]:
+    """☸️ the tiles of the CFK support bundles, in the top row of the report: the issues by severity (a click shows their
+    ☸️ cards in 🔎 Findings, every bundle), the Kubernetes and CFK versions"""
+    if not bundles:
+        return []
+    tot = Counter()
+    for b in bundles:
+        for k in ("total_issues", "critical", "high", "medium", "low"):
+            tot[k] += (b.get("summary") or {}).get(k, 0) or 0
+
+    def tile(sev, label, unit, cls=""):
+        count = tot["total_issues"] if not sev else tot[sev]
+        t = kpi(label, count, unit, cls, f"show the ☸️ cards of {('the ' + sev + ' issues') if sev else 'every issue'} of the CFK bundle in 🔎 Findings")
+        return f"<a class='cfk-kpi' href='#findings' data-bundle='*' data-sev='{sev}'>{t}</a>" if count else t
+    where = "CFK bundle" if len(bundles) == 1 else f"{len(bundles)} CFK bundles"
+    # by severity: the 🔴 Critical… tiles of 🔎 Findings count their ☸️ cards too (findings_severity_tiles)
+    tiles = [tile("", "☸️ CFK issues", f"{where}: {tot['critical']} critical, {tot['high']} high · pods, CRs, events, logs",
+                  "danger" if tot["critical"] else "warn" if tot["total_issues"] else "ok")]
+    k8s = list(OrderedDict((b["environment"]["kubernetes_version"], True) for b in bundles if (b.get("environment") or {}).get("kubernetes_version")))
+    cfk = list(OrderedDict((b["environment"]["cfk_version"], True) for b in bundles if (b.get("environment") or {}).get("cfk_version")))
+    ops = list(OrderedDict((b["environment"]["operator_image_tag"], True) for b in bundles if (b.get("environment") or {}).get("operator_image_tag")))
+    if k8s:
+        tiles.append(kpi("☸️ Kubernetes", k8s[-1], " → ".join(k8s) if len(k8s) > 1 else "cluster"))
+    if cfk:
+        tiles.append(kpi("🛠️ CFK", cfk[-1], " → ".join(cfk) if len(cfk) > 1 else (f"operator {ops[-1]}" if ops else "operator")))
+    return tiles
+
+
+FINDING_TILES = (("CRITICAL", "🔴 Critical", "danger"), ("HIGH", "🟠 High", "warn"), ("MEDIUM", "🟡 Medium", ""), ("LOW", "🟢 Low", ""))
+
+
+def findings_severity_tiles(findings: List[dict]) -> List[str]:
+    """🔴 Critical, 🟠 High, 🟡 Medium, 🟢 Low: the cards of 🔎 Findings at each severity (the known causes and root causes
+    of the logs, the ☸️ cards of the CFK bundles); a click keeps only those cards and goes there, again: all of them"""
+    if not findings:
+        return []
+    tiles = []
+    for sev, label, cls in FINDING_TILES:
+        items = [f for f in findings if f.get("severity") == sev]
+        cfk = sum(1 for f in items if (f.get("_view") or {}).get("kind") == "cfk")
+        unit = "finding(s)" + (f", {cfk} ☸️ CFK" if cfk else "")
+        t = kpi(label, len(items), unit, cls if items else "ok", f"show only the {sev.lower()} cards of 🔎 Findings")
+        tiles.append(f"<a class='sev-kpi' href='#findings' data-sev='{sev}'>{t}</a>" if items else t)
+    return tiles
+
+
+def version_tile(s: dict, bundles: List[dict]) -> str:
+    """🏷️ the Confluent Platform version: "Kafka version: 8.1.0-ce" (-ce, -ccs) of the logs is the CP version, and the image
+    tags of the CRs of a CFK bundle (cp-server:8.1.0) give it too; plain Apache Kafka logs: 🏷️ Kafka"""
+    logged = s.get("kafka_versions") or []
+    cp = [re.sub(r"-(ce|ccs)$", "", v) for v in logged if re.search(r"-(ce|ccs)$", v)]
+    images = []
+    for b in bundles:
+        for comp in ((b.get("environment") or {}).get("components") or {}).values():
+            m = re.search(r"(?:^|/)cp-[\w-]+:(\d+\.\d+\.\d+)", (comp or {}).get("image") or "") if isinstance(comp, dict) else None
+            if m and m.group(1) not in images:
+                images.append(m.group(1))
+    versions = list(OrderedDict((v, True) for v in cp + images))
+    if versions:
+        src = ("logged at startup" if cp else "") + (" · " if cp and images else "") + ("images of the CRs" if images else "")
+        return kpi("🏷️ CP", versions[-1], " → ".join(versions) if len(versions) > 1 else src, "",
+                   "the Confluent Platform version: the components log it at startup (Kafka version: x.y.z-ce), the images of a CFK bundle carry it")
+    if logged:
+        return kpi("🏷️ Kafka", logged[-1], " → ".join(logged) if len(logged) > 1 else "logged at startup", "",
+                   "the Apache Kafka version the components log at startup (AppInfoParser)")
+    return ""
+
+
 def cfk_sections_html(bundles: List[dict], unit: str = "file") -> str:
-    """☸️ the sections of each CFK support bundle (cfk-analysis --json) in the log report, in its styles: the issues by
-    severity, 🎯 --problem, 📕 the known CFK issues, the environment and the recent changes of the cluster (its issues are
-    the ☸️ cards of 🔎 Findings, cfk_findings). Not the configuration and the data to request (in
+    """☸️ the sections of each CFK support bundle (cfk-analysis --json) in the log report, in its styles: 🎯 --problem,
+    📕 the known CFK issues, the environment and the recent changes of the cluster (its issues are the ☸️ cards of
+    🔎 Findings, cfk_findings; its counts and versions are tiles of the top row, cfk_kpi_tiles). Not the configuration and the data to request (in
     ⚙️ Configuration and 📥 already), nor the log coverage (🕰️ Log coverage of the pod logs below)"""
     out = []
     for n, b in enumerate(bundles):
         s = b.get("summary") or {}
         env = b.get("environment") or {}
         label = (b.get("label") or "").split("/")[-1]
-        def tile(sev, label, unit, cls=""):
-            # a click shows the ☸️ cards of 🔎 Findings of this bundle at this severity (all of them for 🔎 Issues)
-            count = s.get("total_issues", 0) if not sev else s.get(sev, 0)
-            t = kpi(label, count, unit, cls, f"show the ☸️ cards of {('the ' + sev + ' issues') if sev else 'every issue'} of this bundle in 🔎 Findings")
-            return (f"<a class='cfk-kpi' href='#findings' data-bundle='{n}' data-sev='{sev}'>{t}</a>" if count else t)
-        tiles = [tile("", "🔎 Issues", "pods, CRs, events, logs · click: in 🔎 Findings", "danger" if s.get("critical") else "warn" if s.get("total_issues") else "ok"),
-                 tile("critical", "🔴 Critical", "issues", "danger" if s.get("critical") else "ok"),
-                 tile("high", "🟠 High", "issues", "warn" if s.get("high") else "ok"),
-                 tile("medium", "🟡 Medium", "issues"), tile("low", "🟢 Low", "issues")]
-        if env.get("kubernetes_version"):
-            tiles.append(kpi("☸️ Kubernetes", env["kubernetes_version"], "cluster"))
-        if env.get("cfk_version"):
-            tiles.append(kpi("🛠️ CFK", env["cfk_version"], f"operator {env.get('operator_image_tag') or ''}".strip()))
-        parts = [kpis_html(tiles)]
+        parts = []
         pb = b.get("problem") or {}
         if pb.get("verdict_text") or pb.get("verdict"):
             parts.append(f"<p class='cfk-problem'>🎯 <strong>Problem:</strong> {e(pb.get('verdict_text') or pb.get('verdict'))}"
@@ -2663,14 +2718,14 @@ document.addEventListener("click", function (ev) {
   let first = null;
   document.querySelectorAll(".rec-card .cfk-f").forEach(function (f) {
     const c = f.closest(".rec-card");
-    const mine = f.dataset.bundle === a.dataset.bundle;
+    const mine = a.dataset.bundle === "*" || f.dataset.bundle === a.dataset.bundle;
     const out = sev !== "" && (!mine || c.dataset.sev !== sev.toUpperCase());
     c.classList.toggle("cfk-sevout", out);
     if (!out && mine && !first && !c.classList.contains("cfk-out")) first = c;
   });
   const target = first || document.querySelector(".findings");
   if (target) {
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (window.pgScrollTo) pgScrollTo(target); else target.scrollIntoView({ block: "start" });
     if (first) { first.classList.remove("tl-flash"); void first.offsetWidth; first.classList.add("tl-flash"); }
   }
 });
@@ -2852,8 +2907,14 @@ def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket
 
 
 SHARE_CSS = """<style>
-.share-open{position:absolute;top:2px;right:120px;font:inherit;font-size:.72rem;line-height:1.4;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:1px 9px;cursor:pointer}
-.share-dlg{border:0;border-radius:12px;padding:20px 24px;max-width:640px;box-shadow:0 10px 40px rgba(0,0,0,.3);background:#fff;color:#1e293b}
+.share-open{font:inherit;cursor:pointer}
+.share-hero{margin-left:auto;font-size:.85rem;font-weight:700;padding:6px 16px;border-radius:999px;border:0;background:#fff;color:#4c1d95;
+box-shadow:0 4px 14px rgba(15,23,42,.25);transition:transform .1s}.share-hero:hover{transform:translateY(-1px);background:#f5f3ff}
+.share-bar{font-weight:700;color:#fff!important;background:#7c3aed!important;border-color:#7c3aed!important}.share-bar:hover{background:#6d28d9!important}
+.share-side{margin-top:10px;font-size:.8rem;font-weight:700;padding:6px 10px;border-radius:8px;border:0;background:#7c3aed;color:#fff;text-align:left}
+.share-float{position:fixed;top:12px;right:16px;z-index:30;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:999px;border:0;background:#7c3aed;color:#fff}
+.share-dlg{border:0;border-radius:14px;padding:20px 24px;width:min(640px,92vw);max-width:640px;max-height:86vh;overflow:auto;
+box-shadow:0 20px 60px rgba(0,0,0,.35);background:#fff;color:#1e293b;position:fixed;inset:0;margin:auto;height:fit-content}
 .share-dlg::backdrop{background:rgba(15,23,42,.55)}
 .share-dlg h3{font-size:1.05rem;margin-bottom:10px}.share-dlg ul{list-style:none;margin:12px 0}.share-dlg li{margin:10px 0}
 .share-btn{display:inline-block;font:inherit;font-size:.85rem;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid #2563eb;background:#2563eb;color:#fff;cursor:pointer;text-decoration:none}
@@ -2861,7 +2922,7 @@ SHARE_CSS = """<style>
 .share-warn{background:#fef3c7;color:#92400e;border-radius:8px;padding:8px 12px;font-size:.84rem}
 .share-ok{background:#dcfce7;color:#166534;border-radius:8px;padding:8px 12px;font-size:.84rem}
 .share-close{font:inherit;font-size:.8rem;padding:3px 12px;border-radius:6px;border:1px solid #cbd5e1;background:transparent;color:inherit;cursor:pointer}
-html[data-theme=dark] .share-open{color:#cbd5e1;background:#1e293b;border-color:#334155}
+html[data-theme=dark] .share-hero{background:#ede9fe;color:#4c1d95}
 html[data-theme=dark] .share-dlg{background:#1e293b;color:#e2e8f0}
 html[data-theme=dark] .share-warn{background:#422006;color:#fcd34d}html[data-theme=dark] .share-ok{background:#052e16;color:#86efac}
 html[data-theme=dark] .share-close{border-color:#334155}
@@ -2871,11 +2932,28 @@ SHARE_SCRIPT = """<script>
 document.addEventListener("DOMContentLoaded", function () {
   const dlg = document.querySelector(".share-dlg");
   if (!dlg) return;
-  const open = document.createElement("button");
-  open.type = "button"; open.className = "share-open"; open.textContent = "📤 Share";
-  open.title = "send this report to a colleague: .zip, summary to paste, email";
-  open.addEventListener("click", () => dlg.showModal());
-  document.body.appendChild(open);
+  // 📤 where it is seen: a button of the header, one of the sticky filter bar (next to 🔗 Link to this view, always on
+  // screen), one of the 🧭 Sections panel; S opens it too (not while typing)
+  function addOpen(where, cls, text, before) {
+    if (!where) return;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "share-open " + cls; b.textContent = text;
+    b.title = "send this report to a colleague: the .zip, the summary to paste in Slack or a ticket, an email (S)";
+    b.addEventListener("click", () => dlg.showModal());
+    if (before) where.insertBefore(b, before); else where.appendChild(b);
+  }
+  addOpen(document.querySelector(".header .header-meta"), "share-hero", "📤 Share this report");
+  const copyView = document.querySelector(".pg-copy-view");
+  addOpen(copyView ? copyView.parentElement : null, "pill share-bar", "📤 Share", copyView ? copyView.nextSibling : null);
+  addOpen(document.querySelector(".side-nav"), "share-side", "📤 Share this report");
+  if (!document.querySelector(".share-open")) addOpen(document.body, "share-float", "📤 Share");
+  document.addEventListener("keydown", function (ev) {
+    if ((ev.key === "s" || ev.key === "S") && !ev.metaKey && !ev.ctrlKey && !ev.altKey
+        && !(ev.target && ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable]")) && !dlg.open) {
+      ev.preventDefault();
+      dlg.showModal();
+    }
+  });
   const done = dlg.querySelector(".share-done");
   const summary = document.getElementById("pg-share-summary").textContent.replace(/\\\\u003c/g, "<");
   function copy(text, what) {
@@ -2921,17 +2999,195 @@ document.addEventListener("DOMContentLoaded", function () {
 # "Fold all" / "Unfold all" at the top of the findings
 # the tiles at the top of the report open their section: unfolded if folded, scrolled to, flashed; a tile whose section
 # is not in the report (no file with findings…) stays a plain tile
-KPI_LINKS = """<style>a.kpi-link{color:inherit;text-decoration:none;display:block}a.kpi-link .kpi-card{cursor:pointer;transition:transform .1s}
+# the header of the log report (page() of report_html is shared by every report: styled only when it holds .lr-title)
+HEADER_CSS = """<style>
+.header:has(.lr-title){position:relative;overflow:hidden;border-radius:18px;padding:26px 32px 22px;
+background:radial-gradient(1200px 300px at 0% 0%,rgba(56,189,248,.35),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(236,72,153,.35),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#312e81 45%,#6d28d9 75%,#a21caf 100%);box-shadow:0 10px 30px rgba(49,46,129,.35)}
+.header:has(.lr-title) h1{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 18px;margin:0 0 12px}
+.lr-title{font-size:1.75rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.lr-plus{opacity:.55;margin:0 4px}
+.lr-sub{grid-column:1 / -1;font-size:.86rem;font-weight:500;opacity:.82}
+.lr-status{justify-self:end;font-size:.85rem;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap;
+background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(4px)}
+.lr-status.danger{background:rgba(239,68,68,.28);border-color:rgba(254,202,202,.6)}
+.lr-status.warn{background:rgba(245,158,11,.28);border-color:rgba(253,230,138,.6)}
+.lr-status.ok{background:rgba(34,197,94,.28);border-color:rgba(187,247,208,.6)}
+.header:has(.lr-title) .header-meta{display:flex;flex-wrap:wrap;gap:8px}
+.header:has(.lr-title) .header-meta span{font-size:.78rem;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.12);
+border:1px solid rgba(255,255,255,.2);margin:0}
+.header:has(.lr-title) .header-meta a{color:#fff}
+</style>"""
+
+QUICK_LINKS = "<nav class='quick-links' aria-label='sections of the report'></nav>"
+KPI_LINKS = """<style>.quick-links{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}.quick-links:empty{display:none}
+.quick-links a{font-size:.78rem;padding:3px 10px;border-radius:14px;border:1px solid #cbd5e1;color:inherit;text-decoration:none;white-space:nowrap}
+.quick-links a:hover{background:#eff6ff;border-color:#2563eb}html[data-theme=dark] .quick-links a{border-color:#334155}
+html[data-theme=dark] .quick-links a:hover{background:#1e3a5f}
+.to-top{position:fixed;right:22px;bottom:22px;z-index:30;padding:8px 14px;border-radius:20px;border:1px solid #cbd5e1;
+background:#fff;color:#1e293b;font:inherit;font-size:.82rem;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.18)}
+.to-top[hidden]{display:none}html[data-theme=dark] .to-top{background:#1e293b;color:#e2e8f0;border-color:#334155}
+.side-nav,.side-nav-show{display:none}
+.table-card,.chart-card,.findings{scroll-margin-top:var(--pg-sticky,12px)}
+@media (min-width:1400px){
+body.side-nav-on{padding-left:228px}
+body.side-nav-on .side-nav{display:flex}
+body:not(.side-nav-on).side-nav-ready .side-nav-show{display:block}
+}
+.side-nav{position:fixed;left:0;top:0;bottom:0;width:212px;z-index:20;flex-direction:column;gap:2px;padding:14px 10px;overflow-y:auto;
+background:#fff;border-right:1px solid #e2e8f0;font-size:.8rem}
+html[data-theme=dark] .side-nav{background:#111827;border-color:#334155}
+.side-nav .sn-head{display:flex;align-items:center;justify-content:space-between;font-weight:700;margin-bottom:6px}
+.side-nav .sn-head button,.side-nav-show{border:1px solid #cbd5e1;background:transparent;color:inherit;border-radius:8px;cursor:pointer;font:inherit;font-size:.75rem;padding:1px 7px}
+.side-nav-show{position:fixed;left:10px;top:10px;z-index:20;background:#fff}html[data-theme=dark] .side-nav-show{background:#1e293b}
+.side-nav a{color:inherit;text-decoration:none;padding:4px 8px;border-radius:6px;border-left:3px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-nav a:hover{background:#eff6ff}html[data-theme=dark] .side-nav a:hover{background:#1e3a5f}
+.side-nav a.current{border-left-color:#2563eb;background:#eff6ff;font-weight:600}html[data-theme=dark] .side-nav a.current{background:#1e3a5f}
+a.kpi-link,a.sev-kpi{color:inherit;text-decoration:none;display:block}a.sev-kpi .kpi-card{cursor:pointer;transition:transform .1s}
+a.sev-kpi:hover .kpi-card{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.15)}a.sev-kpi.active .kpi-card{outline:3px solid #2563eb;outline-offset:2px}a.kpi-link .kpi-card{cursor:pointer;transition:transform .1s}
 a.kpi-link:hover .kpi-card{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.15)}a.kpi-link.kpi-dead .kpi-card{cursor:default;transform:none;box-shadow:none}
 @keyframes kpiflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}.kpi-flash{animation:kpiflash 1.6s ease-out}</style>
 <script>
 document.querySelectorAll("a.kpi-link").forEach(function (a) {
   if (!document.getElementById(a.getAttribute("href").slice(1))) a.classList.add("kpi-dead");
 });
+// the sticky filter bar covers the top of the window: the sections stop under it when a link goes to them
+function pgStickyOffset() {
+  const bar = document.querySelector(".lvl-filter");
+  const h = bar ? Math.ceil(bar.getBoundingClientRect().height) + 12 : 12;
+  document.documentElement.style.setProperty("--pg-sticky", h + "px");
+  return h;
+}
+pgStickyOffset();
+window.addEventListener("resize", pgStickyOffset);
+// a quick scroll (250 ms, easing out) to an element, under the sticky filter bar, or to the top (null): the smooth scroll
+// of the browser takes too long on a long report
+function pgScrollTo(el) {
+  const start = window.scrollY;
+  const end = el ? Math.max(0, el.getBoundingClientRect().top + start - pgStickyOffset()) : 0;
+  const t0 = performance.now(), d = 250;
+  if (Math.abs(end - start) < 2) return;
+  function step(now) {
+    const k = Math.min(1, (now - t0) / d), ease = 1 - Math.pow(1 - k, 3);
+    window.scrollTo(0, start + (end - start) * ease);
+    if (k < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+// the quick links under the verdict: one per section of the report (its title, shortened), in the order of the page
+(function () {
+  const nav = document.querySelector(".quick-links");
+  if (!nav) return;
+  let n = 0;
+  document.querySelectorAll(".findings > .section-title, .table-card > h2, .chart-card > h2").forEach(function (h) {
+    const sec = h.parentElement;
+    // not the records of each file (one card per file): 🗂️ Files with findings links them
+    if (sec.closest("dialog") || sec.classList.contains("file-records")) return;
+    const c = h.cloneNode(true);
+    c.querySelectorAll(".fi-meta, .rc-range, button, select, input").forEach(x => x.remove());
+    let label = c.textContent.replace(/\\s+/g, " ").trim().split(/ \\(| · |: /)[0];
+    if (!label) return;
+    if (label.length > 32) label = label.slice(0, 30) + "…";
+    if (!sec.id) sec.id = "sec-" + (++n);
+    const a = document.createElement("a");
+    a.className = "ql";
+    a.href = "#" + sec.id;
+    a.textContent = label;
+    a.title = label;
+    nav.appendChild(a);
+  });
+  if (!nav.children.length) return;
+  // the navigation panel on the left (wide screens): the same links, the section on screen highlighted; hidden with ⟨,
+  // brought back with ☰ (remembered)
+  const side = document.createElement("nav");
+  side.className = "side-nav";
+  side.setAttribute("aria-label", "sections of the report");
+  side.innerHTML = "<div class='sn-head'><span>🧭 Sections</span><button type='button' class='sn-hide' title='hide this panel'>⟨</button></div>";
+  const top = document.createElement("a");
+  top.className = "ql";
+  top.href = "#";
+  top.textContent = "⬆️ Top of the report";
+  side.appendChild(top);
+  nav.querySelectorAll("a").forEach(function (a) { side.appendChild(a.cloneNode(true)); });
+  document.body.appendChild(side);
+  const show = document.createElement("button");
+  show.type = "button";
+  show.className = "side-nav-show";
+  show.textContent = "☰ Sections";
+  document.body.appendChild(show);
+  function setSide(on) {
+    document.body.classList.toggle("side-nav-on", on);
+    try { localStorage.setItem("pg-side-nav", on ? "on" : "off"); } catch (e) {}
+  }
+  let saved = null;
+  try { saved = localStorage.getItem("pg-side-nav"); } catch (e) {}
+  setSide(saved !== "off");
+  document.body.classList.add("side-nav-ready");
+  side.querySelector(".sn-hide").addEventListener("click", function () { setSide(false); });
+  show.addEventListener("click", function () { setSide(true); });
+  // the section on screen: the last one whose top reached the bottom of the sticky filter bar (a link clicked stays the
+  // current one while the page scrolls to it)
+  const links = Array.from(side.querySelectorAll("a.ql")).filter(a => a.getAttribute("href").length > 1);
+  const secs = links.map(a => document.getElementById(a.getAttribute("href").slice(1)));
+  let ticking = false, pinned = null, pinTimer = null;
+  function spy() {
+    ticking = false;
+    if (pinned) return;
+    const line = pgStickyOffset() + 8;
+    let cur = -1;
+    secs.forEach(function (sec, i) { if (sec && sec.offsetParent !== null && sec.getBoundingClientRect().top <= line) cur = i; });
+    links.forEach((a, i) => a.classList.toggle("current", i === cur));
+  }
+  side.addEventListener("click", function (ev) {
+    const a = ev.target.closest("a.ql");
+    if (!a || a.getAttribute("href").length < 2) return;
+    pinned = a;
+    links.forEach(x => x.classList.toggle("current", x === a));
+    clearTimeout(pinTimer);
+    pinTimer = setTimeout(function () { pinned = null; }, 1200);
+  });
+  window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(spy); } }, { passive: true });
+  spy();
+})();
+// 🔴 Critical / 🟠 High / 🟡 Medium / 🟢 Low: only the cards of 🔎 Findings at that severity (the chips of the section
+// follow), the page goes there; the same tile again: all of them
 document.addEventListener("click", function (ev) {
-  const a = ev.target.closest("a.kpi-link");
+  const a = ev.target.closest("a.sev-kpi");
   if (!a) return;
   ev.preventDefault();
+  const block = document.querySelector(".findings");
+  if (!block) return;
+  const same = a.classList.contains("active");
+  const sev = same ? "" : a.dataset.sev;
+  document.querySelectorAll("a.sev-kpi, a.cfk-kpi").forEach(x => x.classList.remove("active"));
+  if (sev) a.classList.add("active");
+  block.querySelectorAll(".rec-card").forEach(function (card) {
+    card.hidden = sev !== "" && card.dataset.sev !== sev;
+    card.classList.remove("cfk-sevout");
+  });
+  block.querySelectorAll(".sev-chip").forEach(c => c.setAttribute("aria-pressed", !sev || c.dataset.sev === sev ? "true" : "false"));
+  pgScrollTo(block);
+});
+// ⬆️ back to the top: shown once the page is scrolled down (after a click on a section, a tile, a link)
+(function () {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "to-top";
+  b.textContent = "⬆️ Top";
+  b.title = "back to the top of the report";
+  b.hidden = true;
+  document.body.appendChild(b);
+  b.addEventListener("click", function () { pgScrollTo(null); });
+  function toggle() { b.hidden = window.scrollY < 500; }
+  window.addEventListener("scroll", toggle, { passive: true });
+  toggle();
+})();
+document.addEventListener("click", function (ev) {
+  const a = ev.target.closest("a.kpi-link, .quick-links a.ql, .side-nav a.ql");
+  if (!a) return;
+  ev.preventDefault();
+  if (a.getAttribute("href") === "#") { pgScrollTo(null); return; }
   const el = document.getElementById(a.getAttribute("href").slice(1));
   if (!el) return;
   const card = el.closest(".table-card, .chart-card") || el;
@@ -2939,7 +3195,7 @@ document.addEventListener("click", function (ev) {
     const h = card.querySelector(":scope > h2, :scope > .section-title");
     if (h) h.click();
   }
-  card.scrollIntoView({ behavior: "smooth", block: "start" });
+  pgScrollTo(card);
   card.classList.remove("kpi-flash"); void card.offsetWidth; card.classList.add("kpi-flash");
 });
 </script>"""
@@ -4680,8 +4936,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         go("files-with-findings", kpi(f"🗂️ {Unit}s scanned", s["files_scanned"], f"{s['lines']:,} lines"
                                       + (f", {human_size(s['bytes_read'])}" if s.get("bytes_read") is not None else "")
                                       + (f", {skipped} binary skipped" if unit == "file" else ""))),
-        (kpi("🏷️ Kafka version", s["kafka_versions"][-1], " → ".join(s["kafka_versions"]) if len(s["kafka_versions"]) > 1 else "logged at startup",
-             "", "the version the components log at startup (AppInfoParser): -ce is Confluent Platform") if s.get("kafka_versions") else ""),
+        version_tile(s, res.get("_cfk_bundles") or []),
         go("files-with-findings", kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok")),
         go("all-root-causes", kpi("🧬 Distinct records", s["distinct"], "after de-duplication")),
         # the counts by level: the level chips of the filter bar have them too, one tile instead of three
@@ -4695,17 +4950,28 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
     # the ☸️ sections of the CFK support bundles (cfk-analysis --json, --cluster-events): the Kubernetes view right after
     # the verdict
-    body = [verdict_html(*verdict(res, levels, unit)), cfk_sections_html(res.get("_cfk_bundles") or [], unit),
-            incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
+    # one row of tiles: the logs, then the ☸️ CFK bundles; the quick links to the sections above them
+    kpis += "".join(findings_severity_tiles(res.get("findings") or []) + cfk_kpi_tiles(res.get("_cfk_bundles") or []))
+    body = [verdict_html(*verdict(res, levels, unit)), QUICK_LINKS, incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
+            cfk_sections_html(res.get("_cfk_bundles") or [], unit),
             compare_html(res.get("comparison")), trend_html(res.get("trend")),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
-            fixed_bugs_html(res.get("fixed_bugs") or [], viewers), data_to_request_html(res.get("data_to_request") or []),
+            fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
             lifecycle_html(res.get("lifecycle")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files"))]
-    body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
+    # the sanitization state (⚠️ Not sanitized, 🔒 Sanitization of analyze logs) is a line under the verdict, not a section
+    notes = [(t, text) for t, text in sections if t.startswith(("⚠️ Not sanitized", "🔒 Sanitization"))]
+    for t, text in notes:
+        cls = "warn" if t.startswith("⚠️") else "ok"
+        icon = t.split(" ", 1)[0]
+        body.insert(1, "<style>.san-note{margin:6px 0 2px;font-size:.82rem;padding:6px 12px;border-radius:8px;border-left:4px solid #94a3b8}"
+                       ".san-note.warn{border-left-color:#d97706;background:#fffbeb;color:#92400e}.san-note.ok{border-left-color:#16a34a;background:#f0fdf4;color:#166534}"
+                       "html[data-theme=dark] .san-note.warn{background:#3a2406;color:#fcd34d}html[data-theme=dark] .san-note.ok{background:#052e16;color:#86efac}</style>"
+                       f"<p class='san-note {cls}'>{e(icon)} {e(text.strip())}</p>")
+    body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections if (t, text) not in notes]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
     # the filter bar first: everything under it (the charts, the root causes, the records) follows the filters
@@ -4779,8 +5045,11 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                           + log_viewer.link(viewers, f["label"], e(name)))
             body.append(f"<div class='table-card file-records'><h2>📄 {file_title}</h2>"
                         f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
+    # 📥 last: what to ask the customer for, once everything above was read
+    body_end_data = data_to_request_html(res.get("data_to_request") or [])
     body.append(config_html(res.get("configuration") or [], viewers, list(s["by_connector"]), res.get("_cfk_bundles") or [],
                             res.get("config_drift") or []))
+    body.append(body_end_data)
     # last: the index of the records the filters count again from, then the filters themselves
     body.append("<script type='application/json' id='pg-occurrences'>"
                 + occurrences_json(res["root_causes"], res["files"]).replace("<", "\\u003c") + "</script>")
@@ -4789,11 +5058,36 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body.append(KPI_LINKS)
     sanitized = any(t.startswith("🔒") for t, _ in sections)
     body.append(share_html(text_summary(res, []), share_zip, sanitized, title, ticket_markdown(res, title, levels, unit)))
-    meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
+    bundles = res.get("_cfk_bundles") or []
+    meta = [f"🕐 {e(span)}", f"🎚️ {e(levels)}"]
+    if bundles:
+        env = [b.get("environment") or {} for b in bundles]
+        k8s = next((x["kubernetes_version"] for x in env if x.get("kubernetes_version")), "")
+        cfk = next((x["cfk_version"] for x in env if x.get("cfk_version")), "")
+        meta += ([f"☸️ Kubernetes {e(k8s)}"] if k8s else []) + ([f"🛠️ CFK {e(cfk)}"] if cfk else [])
     if res.get("filter"):
         meta.append(f"🔌 --connector {e(' '.join(res['filter']['connectors']))}" + (" --with-worker" if res["filter"]["with_worker"] else ""))
-    meta += [f"<a href='{e(url)}' style='color:#fff'>{e(label)}</a>" for label, url in links]
-    return page(f"{heading[2:].strip()} report — {title}", e(heading), meta, "".join(body),
+    meta += [f"<a href='{e(url)}'>{e(label)}</a>" for label, url in links]
+    # the title: what was analyzed says what the report is (a CFK support bundle, or logs), the input below it, the
+    # verdict as a pill on the right
+    vcls, vtext = verdict(res, levels, unit)
+    errors_n = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
+    status = (f"🚨 {errors_n:,} ERROR/FATAL" if errors_n else f"⚠️ {s['by_level']['WARN']:,} WARN" if s["by_level"]["WARN"] else "✅ no error")
+    if bundles:
+        crit = sum((b.get("summary") or {}).get("critical", 0) for b in bundles)
+        status += f" · ☸️ {crit} critical" if crit else ""
+    if bundles:
+        name = "☸️ CFK support bundle" + (f"s ({len(bundles)})" if len(bundles) > 1 else "")
+        what = f"<span class='lr-title'>{name} <span class='lr-plus'>·</span> 🔥 {e(heading[2:].strip())}</span>"
+        sub = "pods, custom resources, events, versions and the logs of the pods · " + e(title)
+        page_title = f"CFK support bundle analysis — {title}"
+    else:
+        what = f"<span class='lr-title'>{e(heading)}</span>"
+        sub = e(title)
+        page_title = f"{heading[2:].strip()} report — {title}"
+    h1 = (f"{what}<span class='lr-status {vcls}' title='{e(vtext)}'>{e(status)}</span><span class='lr-sub'>📄 {sub}</span>"
+          + HEADER_CSS)
+    return page(page_title, h1, meta, "".join(body),
                 f"🛠️ Generated by {e(command)} (self-contained, no external resource). Records are cut to 300 "
                 "characters per line and to 3 frames of the deepest cause, like the terminal digest; "
                 + ("📄 opens the whole file at the line." if viewers else "📋 Show context has the raw lines around their first occurrence.")

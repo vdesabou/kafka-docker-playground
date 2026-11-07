@@ -217,7 +217,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 
 | Section | What it answers |
 | --- | --- |
-| verdict and tiles | the one-line diagnosis, 🕐 the period covered (orange under 10 min), files, distinct records, occurrences (by level on the same tile); a click on a tile opens its section (🕰️ log coverage, 🗂️ files, 🌳 root causes, 📈 occurrences over time) |
+| verdict, quick links and tiles | the one-line diagnosis, a link to each section of the report (also a 🧭 Sections panel on the left of a wide screen, and a ⬆️ Top button once scrolled down), then one row of tiles: 🕐 the period covered (orange under 10 min), files and size read, 🏷️ the CP version, distinct records, occurrences (by level on the same tile), 🔴 Critical / 🟠 High / 🟡 Medium / 🟢 Low findings (a click keeps only those cards of 🔎 Findings), and the ☸️ tiles of a CFK bundle; a click on a tile opens its section (🕰️ log coverage, 🗂️ files, 🌳 root causes, 📈 occurrences over time, the ☸️ cards of 🔎 Findings) |
 | ⚠️ not fully read | which inputs could not be read completely (truncated `.gz`, archive not extracted): the findings only cover the rest |
 | 🔁 comparison | with `--compare`: what is new, gone, growing or shrinking (section 6) |
 | 🎚️ filter bar | levels, components, connector, search, period: everything below follows it, and the URL keeps it |
