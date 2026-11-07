@@ -249,6 +249,42 @@ tile).
 
 ---
 
+### 🔗 Errors right after a change
+
+"It broke after we changed something": an ERROR / FATAL that first appears less than 10 minutes after a config key
+changed (between two dumps of the same config) or a worker / broker restarted, of the same connector when both have one,
+is linked to that change, in the 🗓️ timeline (🔗), the terminal summary and the summary for a ticket:
+
+```bash
+cat > change.log << 'EOF'
+[2026-11-06 10:00:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.s3.S3SinkConnector
+	flush.size = 100
+	name = s3-sink
+	tasks.max = 1
+
+[2026-11-06 10:00:05,000] INFO [s3-sink|task-0] all good (io.confluent.connect.s3.S3SinkTask)
+[2026-11-06 10:20:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.s3.S3SinkConnector
+	flush.size = 100000
+	name = s3-sink
+	tasks.max = 1
+
+[2026-11-06 10:21:30,000] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
+    org.apache.kafka.connect.errors.ConnectException: java.lang.OutOfMemoryError: Java heap space
+[2026-11-06 10:40:00,000] ERROR [other-sink|task-0] unrelated error in another connector (com.acme.Other)
+EOF
+playground analyze logs -f change.log
+```
+
+```text
+🔗 Errors right after a change (1)
+   2026-11-06 10:21:30 💥 OutOfMemoryError · 🧨 A connector task was killed ⬅️ 🔴 first ERROR: WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception.  ⏱️ 1 min 30 s after ⚙️ SinkConnectorConfig: flush.size 100 → 100000
+```
+
+The error of `other-sink` 20 minutes later is not linked: another connector, and too late. A connector created is not a
+change (everything after it would follow it), nor the first start of a worker.
+
 ### 🔭 No finding, ⏳ large inputs, ☸️ bundles inside bundles
 
 - **No finding**: instead of a bare ✅, an 🔭 **overview** of what the logs contain (lines, period and levels of each

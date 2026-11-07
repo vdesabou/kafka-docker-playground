@@ -734,6 +734,11 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
             return
         key = (file, line or 0)
         ev = events.get(key)
+        # the keys changed are what matters on the line of a config dump: they replace "(re)configured", and add up
+        if ev and kind == "config_change" and ev["kind"] in ("connector_config", "config_change"):
+            ev["text"] = text if ev["kind"] == "connector_config" else ev["text"] + "; " + text.split(": ", 1)[-1]
+            ev["kind"] = "config_change"
+            return
         if ev and kind == "known_cause":
             # the first occurrence of a known cause is often the first occurrence of a root cause: one row, both texts
             ev["known_causes"] = ev.get("known_causes", []) + [text]
@@ -783,7 +788,49 @@ def incident_timeline(res: dict, files: List[dict]) -> List[dict]:
                 nrebalances += 1
                 add(ev.get("time"), f["label"], ev.get("line"), "lifecycle", None, f"🔄 rebalance of the worker group {ev.get('detail') or ''}".strip())
     out = sorted(events.values(), key=lambda ev: (ev["time"], ev["file"] or "", ev["line"] or 0))
+    link_causes(out)
     return out[:TIMELINE_LIMIT]
+
+
+# a first error this soon after a change (a config key changed, a connector reconfigured, a worker / broker restarted) is
+# marked as following it: the question behind most "it broke after…" tickets
+CAUSE_WINDOW_SECONDS = 600
+
+
+def link_causes(events: List[dict]) -> None:
+    """marks each first ERROR / FATAL and known cause that comes within CAUSE_WINDOW_SECONDS after a change (a config key
+    changed, a worker / broker restarted), the latest one before it, of the same connector when both have one (a restart
+    counts for every connector): ev["after"]"""
+    changes: List[dict] = []
+    started = set()
+    for ev in events:
+        # a change: a config key changed, or a worker / broker restarted (not its first start in a file, nor a connector
+        # created: everything after the creation of a connector would follow it)
+        if ev["kind"] == "config_change":
+            changes.append(ev)
+            continue
+        if ev["kind"] == "lifecycle" and ev["text"].startswith("🚀"):
+            if ev["file"] in started:
+                changes.append(ev)
+            started.add(ev["file"])
+            continue
+        # what follows: the first ERROR / FATAL of a root cause, a known cause (not a WARN)
+        if ev["kind"] not in ("first_error", "known_cause") or (ev["kind"] == "first_error" and ev.get("level") == "WARN"):
+            continue
+        t = epoch(ev["time"])
+        for ch in reversed(changes):
+            delta = t - epoch(ch["time"])
+            if delta > CAUSE_WINDOW_SECONDS:
+                break
+            if ev.get("connector") and ch.get("connector") and ev["connector"] != ch["connector"]:
+                continue
+            ev["after"] = {"seconds": int(delta), "text": ch["text"], "time": ch["time"], "file": ch["file"], "line": ch["line"]}
+            break
+
+
+def after_text(ev: dict) -> str:
+    a = ev.get("after")
+    return f" ⏱️ {human_duration(a['seconds']) if a['seconds'] else 'right'} after {a['text']}" if a else ""
 
 
 def connector_health(res: dict, files: List[dict]) -> List[dict]:
@@ -1200,6 +1247,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
                 f"<td>{component_chips([ev['file']])}</td><td>{e(timeline_what(ev))}"
                 + (f" <span class='fi-conn'>{e(ev['connector'])}</span>" if ev.get("connector") else "")
                 + (f" <span class='fi-meta'>×{ev['count']}</span>" if ev.get("count") else "")
+                + (f"<div class='tl-after'>🔗{e(after_text(ev))}</div>" if ev.get("after") else "")
                 + f"</td><td class='mono'>{where}</td></tr>")
     head = "<tr><th>Time</th><th>Component</th><th>What</th><th>Where</th></tr>"
     first = "".join(row(ev) for ev in events[:shown])
@@ -1207,7 +1255,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
     if len(events) > shown:
         more = (f"<details><summary>{len(events) - shown} more event(s)</summary><table>{head}"
                 + "".join(row(ev) for ev in events[shown:]) + "</table></details>")
-    return ("<style>tr.tl-known td{background:#fff7ed}tr.tl-start td,tr.tl-connector_config td{background:#f0f9ff}"
+    return ("<style>.tl-after{font-size:.8rem;font-weight:600;color:#b45309}html[data-theme=dark] .tl-after{color:#fcd34d}tr.tl-known td{background:#fff7ed}tr.tl-start td,tr.tl-connector_config td{background:#f0f9ff}"
             "tr.tl-config_change td{background:#fefce8}html[data-theme=dark] tr.tl-known td{background:#3a2406}"
             "html[data-theme=dark] tr.tl-start td,html[data-theme=dark] tr.tl-connector_config td{background:#0c2a3a}"
             "html[data-theme=dark] tr.tl-config_change td{background:#33300a}</style>"
@@ -1217,6 +1265,16 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "filters above (levels, component, connector, search, period): the rows of the other connectors are hidden, "
             "the restarts and configurations without connector stay.</p><p class='legend tl-none' hidden>No event in this selection.</p>"
             f"<table>{head}{first}</table>{more}</div>")
+
+
+def causes_text(events: List[dict], top: int = 5) -> List[str]:
+    linked = [ev for ev in events if ev.get("after")]
+    if not linked:
+        return []
+    out = [f"🔗 Errors right after a change ({len(linked)})"]
+    for ev in linked[:top]:
+        out.append(f"   {ev['time'].replace('T', ' ')} {timeline_what(ev)[:150]}{after_text(ev)}")
+    return out
 
 
 def timeline_text(events: List[dict], top: int = 8) -> List[str]:
@@ -1327,6 +1385,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
     # what changed against the input of --compare (🔁 Comparison of the HTML report, .comparison of --json)
     out += compare_text(res.get("comparison"))
+    # the errors that came right after a change (🔗 in the timeline of the HTML report, .timeline[].after of --json)
+    out += causes_text(res.get("timeline") or [])
     # what happened first, all files merged (🗓️ Incident timeline of the HTML report, .timeline of --json)
     out += timeline_text(res.get("timeline") or [])
     # one line per connector (🔌 Connectors of the HTML report, .connectors of --json)
@@ -1576,10 +1636,15 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             what = f"{x['root_cause'].split('.')[-1]}: {x['example']}" if x.get("root_cause") else x.get("example") or x["key"]
             out.append(f"- {COMPARE_ICONS[x['status']]} {x['status']} {compare_counts(x)}: {md_cell(what[:200])}")
     events = res.get("timeline") or []
+    linked = [ev for ev in events if ev.get("after")]
+    if linked:
+        out += ["", "### Errors right after a change", ""]
+        for ev in linked[:5]:
+            out.append(f"- {ev['time'].replace('T', ' ')} {md_cell(timeline_what(ev)[:160])} —{md_cell(after_text(ev))}")
     if events:
         out += ["", "### Timeline (what happened first)", "", "| Time | Event | Where |", "| --- | --- | --- |"]
         for ev in events[:10]:
-            out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200])} | {md_cell(ev['file'].split('/')[-1])}:{ev['line']} |")
+            out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200] + after_text(ev))} | {md_cell(ev['file'].split('/')[-1])}:{ev['line']} |")
     lc_rows = (res.get("lifecycle") or {}).get("rows") or []
     if lc_rows:
         out += ["", "### Restarts and rebalances", "", "| What | Group / connector | Count | Per hour |", "| --- | --- | --- | --- |"]

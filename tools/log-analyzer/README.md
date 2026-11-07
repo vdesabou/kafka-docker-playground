@@ -94,6 +94,15 @@ over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 car
 summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
 `--json` and a line of the summary for a ticket.
 
+## Errors right after a change
+
+`link_causes()` (in `incident_timeline()`) marks a first ERROR / FATAL or a known cause that comes within
+`CAUSE_WINDOW_SECONDS` (10 min) after a change, the latest one before it, of the same connector when both have one:
+a config key changed between two dumps of the same config (`@@PGCFGCHG@@`; on the line of the dump it replaces "connector
+(re)configured", several keys add up), or a worker / broker restarted (not its first start in a file). Not a connector
+created, not a WARN. `.timeline[].after` of `--json`, 🔗 in the timeline of the report, `🔗 Errors right after a change`
+in the terminal summary and the summary for a ticket.
+
 ## Restarts and rebalances
 
 The digest also notes the lifecycle of the INFO lines (`@@PGEVT@@` events, 300 per kind and file, and `@@PGEVTN@@` counts):
