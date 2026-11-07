@@ -213,6 +213,12 @@ def finish_record(rec: dict) -> None:
                       r"|^Unhandled exception\. ((?:[A-Z][\w]*\.)+[A-Z]\w*Exception)", rec["message"])
         if m:
             rec["root_cause"] = m.group(1) or m.group(2)
+            # its message: what follows it on the line, without the logger at its end ("… (io.confluent.connect.s3.S3SinkTask)").
+            # Without it, every AmazonS3Exception of the logs was one root cause: a SlowDown and an AccessDenied together
+            msg = rec["message"][m.end():]
+            msg = re.sub(r"^[:\s]+", "", msg)
+            msg = re.sub(r"\s+\([\w$.]+(?::\d+)?\)\s*$", "", msg)
+            rec["root_cause_message"] = msg.strip()
 
 
 def config_connector(c: dict) -> Optional[str]:
