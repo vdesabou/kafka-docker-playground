@@ -10122,6 +10122,16 @@ playground_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--since SINCE")"
+    printf "    ⏱️ Only the lines logged at or after this time: \"2026-11-06 10:00\",\n    \"2026-11-06T10:00:00\" or \"2026-11-06\". The times\n    are compared as written in the logs; a line without its own time (a stack\n    frame) follows the line before it. The\n    line numbers of the digest and of the report stay those of the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--until UNTIL")"
+    printf "    ⏱️ Only the lines logged before this time (same formats as --since)\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
     printf "    📂 Output directory for the HTML report (default: ./log-analysis-output),\n    with a <report>-files/ folder next to it: a page per file with findings,\n    which the file names and line numbers of the report open (✏️ in the editor\n    of playground config editor)\n"
     printf "    %s\n" "Default: ./log-analysis-output"
@@ -11264,6 +11274,16 @@ playground_debug_analyze_logs_usage() {
     printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
     printf "    ✂️ Maximum number of distinct records to show per file (default 40). The\n    HTML report and --json have them all\n"
     printf "    %s\n" "Default: 40"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--since SINCE")"
+    printf "    ⏱️ Only the lines logged at or after this time: \"2026-11-06 10:00\",\n    \"2026-11-06T10:00:00\" or \"2026-11-06\". The times\n    are compared as written in the logs; a line without its own time (a stack\n    frame) follows the line before it. The\n    line numbers of the digest and of the report stay those of the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--until UNTIL")"
+    printf "    ⏱️ Only the lines logged before this time (same formats as --since)\n"
     echo
 
     # :flag.usage
@@ -62534,6 +62554,8 @@ playground_analyze_logs_command() {
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
   compare="${args[--compare]}"
+  since="${args[--since]}"
+  until_ts="${args[--until]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -62551,6 +62573,53 @@ playground_analyze_logs_command() {
       logerror "❌ Must provide --file <log file, folder or bundle> (or --sample connect_task_failure to try it)"
       exit 1
   fi
+
+  # --since / --until: "2026-11-06 10:00", "2026-11-06T10:00:00" or "2026-11-06", as 2026-11-06T10:00:00 (compared as text
+  # with the time of each line, as written in the logs)
+  function normalize_window_time () {
+      local t="${1/ /T}"
+      if [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then t="${t}T00:00:00"
+      elif [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$ ]]; then t="${t}:00"
+      elif [[ ! "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then return 1
+      fi
+      echo "$t"
+  }
+  if [[ -n "$since" ]] && ! since=$(normalize_window_time "$since")
+  then
+      logerror "❌ --since ${args[--since]}: expected \"2026-11-06 10:00\", \"2026-11-06T10:00:00\" or \"2026-11-06\""
+      exit 1
+  fi
+  if [[ -n "$until_ts" ]] && ! until_ts=$(normalize_window_time "$until_ts")
+  then
+      logerror "❌ --until ${args[--until]}: expected \"2026-11-06 10:00\", \"2026-11-06T10:00:00\" or \"2026-11-06\""
+      exit 1
+  fi
+  if [[ -n "$since" || -n "$until_ts" ]]
+  then
+      log "⏱️ Only the lines logged ${since:+at or after ${since/T/ }}${since:+${until_ts:+ and }}${until_ts:+before ${until_ts/T/ }} (--since / --until)"
+  fi
+
+  # the lines out of the window of --since / --until become empty lines (the line numbers stay those of the file, for the
+  # links of the report); a line without its own time (a stack frame, the next line of a message) follows the line before
+  function log_window_filter () {
+      if [[ -z "$since" && -z "$until_ts" ]]
+      then
+          cat
+          return
+      fi
+      LC_ALL=C awk -v since="$since" -v until_ts="$until_ts" '
+          {
+              h = substr($0, 1, 120)
+              if (match(h, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) {
+                  t = substr(h, RSTART, RLENGTH)
+                  sub(/ /, "T", t)
+                  keep = (since == "" || t >= since) && (until_ts == "" || t < until_ts)
+              } else if (NR == 1) {
+                  keep = (since == "")
+              }
+              print (keep ? $0 : "")
+          }'
+  }
 
   # ── Sample mode: logs shipped in tools/log-analyzer/samples ──
   for sample in "${sample_array[@]}"
@@ -62863,9 +62932,9 @@ playground_analyze_logs_command() {
           then
               counts=0
           fi
-          output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
       else
-          output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          output=$(log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
       fi
       local digest_rc=$?
       if [ $digest_rc -ne 0 ]
@@ -63474,7 +63543,7 @@ playground_analyze_logs_command() {
       redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
       log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction") (--sanitize)"
   fi
-  title="${file_array[*]}"
+  title="${file_array[*]}${since:+ · since ${since/T/ }}${until_ts:+ · until ${until_ts/T/ }}"
   if [[ ${#sample_array[@]} -gt 0 ]]
   then
       title="sample ${sample_array[*]}"
@@ -65041,6 +65110,8 @@ playground_debug_analyze_logs_command() {
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
   compare="${args[--compare]}"
+  since="${args[--since]}"
+  until_ts="${args[--until]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -65058,6 +65129,53 @@ playground_debug_analyze_logs_command() {
       logerror "❌ Must provide --file <log file, folder or bundle> (or --sample connect_task_failure to try it)"
       exit 1
   fi
+
+  # --since / --until: "2026-11-06 10:00", "2026-11-06T10:00:00" or "2026-11-06", as 2026-11-06T10:00:00 (compared as text
+  # with the time of each line, as written in the logs)
+  function normalize_window_time () {
+      local t="${1/ /T}"
+      if [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then t="${t}T00:00:00"
+      elif [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$ ]]; then t="${t}:00"
+      elif [[ ! "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then return 1
+      fi
+      echo "$t"
+  }
+  if [[ -n "$since" ]] && ! since=$(normalize_window_time "$since")
+  then
+      logerror "❌ --since ${args[--since]}: expected \"2026-11-06 10:00\", \"2026-11-06T10:00:00\" or \"2026-11-06\""
+      exit 1
+  fi
+  if [[ -n "$until_ts" ]] && ! until_ts=$(normalize_window_time "$until_ts")
+  then
+      logerror "❌ --until ${args[--until]}: expected \"2026-11-06 10:00\", \"2026-11-06T10:00:00\" or \"2026-11-06\""
+      exit 1
+  fi
+  if [[ -n "$since" || -n "$until_ts" ]]
+  then
+      log "⏱️ Only the lines logged ${since:+at or after ${since/T/ }}${since:+${until_ts:+ and }}${until_ts:+before ${until_ts/T/ }} (--since / --until)"
+  fi
+
+  # the lines out of the window of --since / --until become empty lines (the line numbers stay those of the file, for the
+  # links of the report); a line without its own time (a stack frame, the next line of a message) follows the line before
+  function log_window_filter () {
+      if [[ -z "$since" && -z "$until_ts" ]]
+      then
+          cat
+          return
+      fi
+      LC_ALL=C awk -v since="$since" -v until_ts="$until_ts" '
+          {
+              h = substr($0, 1, 120)
+              if (match(h, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) {
+                  t = substr(h, RSTART, RLENGTH)
+                  sub(/ /, "T", t)
+                  keep = (since == "" || t >= since) && (until_ts == "" || t < until_ts)
+              } else if (NR == 1) {
+                  keep = (since == "")
+              }
+              print (keep ? $0 : "")
+          }'
+  }
 
   # ── Sample mode: logs shipped in tools/log-analyzer/samples ──
   for sample in "${sample_array[@]}"
@@ -65370,9 +65488,9 @@ playground_debug_analyze_logs_command() {
           then
               counts=0
           fi
-          output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
       else
-          output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          output=$(log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
       fi
       local digest_rc=$?
       if [ $digest_rc -ne 0 ]
@@ -65981,7 +66099,7 @@ playground_debug_analyze_logs_command() {
       redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
       log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction") (--sanitize)"
   fi
-  title="${file_array[*]}"
+  title="${file_array[*]}${since:+ · since ${since/T/ }}${until_ts:+ · until ${until_ts/T/ }}"
   if [[ ${#sample_array[@]} -gt 0 ]]
   then
       title="sample ${sample_array[*]}"
@@ -116484,6 +116602,34 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --since)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--since']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--since requires an argument: --since SINCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --until)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--until']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--until requires an argument: --until UNTIL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --output-dir | -o)
 
         # :flag.case_arg
@@ -119405,6 +119551,34 @@ playground_debug_analyze_logs_parse_requirements() {
           shift
         else
           printf "%s\n" "--max-findings requires an argument: --max-findings MAX_FINDINGS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --since)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--since']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--since requires an argument: --since SINCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --until)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--until']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--until requires an argument: --until UNTIL" >&2
           exit 1
         fi
         ;;
@@ -159563,6 +159737,26 @@ playground_analyze_logs_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --since)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--since"]=1
+
+        ;;
+      --until)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--until"]=1
+
+        ;;
       --output-dir | -o)
         shift
         if [[ $# -eq 0 ]]; then
@@ -159685,6 +159879,8 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --since "$completion_current" --since
+    completion_flag_candidates --until "$completion_current" --until
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --logs-only "$completion_current" --logs-only
@@ -161065,6 +161261,26 @@ playground_debug_analyze_logs_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --since)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--since"]=1
+
+        ;;
+      --until)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--until"]=1
+
+        ;;
       --output-dir | -o)
         shift
         if [[ $# -eq 0 ]]; then
@@ -161187,6 +161403,8 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --errors-only "$completion_current" --errors-only
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --since "$completion_current" --since
+    completion_flag_candidates --until "$completion_current" --until
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --logs-only "$completion_current" --logs-only

@@ -71,6 +71,18 @@
   default: "40"
   help: |-
     ✂️ Maximum number of distinct records to show per file (default 40). The HTML report and --json have them all
+- long: --since
+  arg: since
+  required: false
+  help: |-
+    ⏱️ Only the lines logged at or after this time: "2026-11-06 10:00", "2026-11-06T10:00:00" or "2026-11-06". The times
+    are compared as written in the logs; a line without its own time (a stack frame) follows the line before it. The
+    line numbers of the digest and of the report stay those of the files
+- long: --until
+  arg: until
+  required: false
+  help: |-
+    ⏱️ Only the lines logged before this time (same formats as --since)
 - long: --output-dir
   short: -o
   arg: output_dir

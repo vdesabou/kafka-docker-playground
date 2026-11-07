@@ -23,6 +23,8 @@ show_config="${args[--show-config]}"
 json_sections="${args[--json-sections]}"
 problem="${args[--problem]}"
 compare="${args[--compare]}"
+since="${args[--since]}"
+until_ts="${args[--until]}"
 
 # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
 if [[ -n "$json_out" ]]
@@ -40,6 +42,53 @@ then
     logerror "❌ Must provide --file <log file, folder or bundle> (or --sample connect_task_failure to try it)"
     exit 1
 fi
+
+# --since / --until: "2026-11-06 10:00", "2026-11-06T10:00:00" or "2026-11-06", as 2026-11-06T10:00:00 (compared as text
+# with the time of each line, as written in the logs)
+function normalize_window_time () {
+    local t="${1/ /T}"
+    if [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then t="${t}T00:00:00"
+    elif [[ "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$ ]]; then t="${t}:00"
+    elif [[ ! "$t" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then return 1
+    fi
+    echo "$t"
+}
+if [[ -n "$since" ]] && ! since=$(normalize_window_time "$since")
+then
+    logerror "❌ --since ${args[--since]}: expected \"2026-11-06 10:00\", \"2026-11-06T10:00:00\" or \"2026-11-06\""
+    exit 1
+fi
+if [[ -n "$until_ts" ]] && ! until_ts=$(normalize_window_time "$until_ts")
+then
+    logerror "❌ --until ${args[--until]}: expected \"2026-11-06 10:00\", \"2026-11-06T10:00:00\" or \"2026-11-06\""
+    exit 1
+fi
+if [[ -n "$since" || -n "$until_ts" ]]
+then
+    log "⏱️ Only the lines logged ${since:+at or after ${since/T/ }}${since:+${until_ts:+ and }}${until_ts:+before ${until_ts/T/ }} (--since / --until)"
+fi
+
+# the lines out of the window of --since / --until become empty lines (the line numbers stay those of the file, for the
+# links of the report); a line without its own time (a stack frame, the next line of a message) follows the line before
+function log_window_filter () {
+    if [[ -z "$since" && -z "$until_ts" ]]
+    then
+        cat
+        return
+    fi
+    LC_ALL=C awk -v since="$since" -v until_ts="$until_ts" '
+        {
+            h = substr($0, 1, 120)
+            if (match(h, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) {
+                t = substr(h, RSTART, RLENGTH)
+                sub(/ /, "T", t)
+                keep = (since == "" || t >= since) && (until_ts == "" || t < until_ts)
+            } else if (NR == 1) {
+                keep = (since == "")
+            }
+            print (keep ? $0 : "")
+        }'
+}
 
 # ── Sample mode: logs shipped in tools/log-analyzer/samples ──
 for sample in "${sample_array[@]}"
@@ -352,9 +401,9 @@ function analyze_logs_digest () {
         then
             counts=0
         fi
-        output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+        output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
     else
-        output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+        output=$(log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
     fi
     local digest_rc=$?
     if [ $digest_rc -ne 0 ]
@@ -963,7 +1012,7 @@ then
     redaction=$(python3 -I "$sanitizer" --state "$sanitize_state" --summary)
     log "🔒 Sanitized (best effort, review before sharing): $(jq -r '"\(.secrets) secret(s), \(.ip_addresses) IP(s), \(.hostnames) hostname(s), \(.emails) email(s), \(.ldap_dns) LDAP DN(s)"' <<< "$redaction") (--sanitize)"
 fi
-title="${file_array[*]}"
+title="${file_array[*]}${since:+ · since ${since/T/ }}${until_ts:+ · until ${until_ts/T/ }}"
 if [[ ${#sample_array[@]} -gt 0 ]]
 then
     title="sample ${sample_array[*]}"

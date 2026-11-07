@@ -279,6 +279,20 @@ playground analyze logs --sample connect_task_failure --show-config cdc-xstream-
    connector.class = io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector
 ```
 
+A time window, the incident only, with the line numbers of the file (the lines out of it are left out of the digest):
+
+```bash
+playground analyze logs --sample connect_task_failure --until "2026-10-14 10:04"
+```
+
+```text
+ℹ️ ⏱️ Only the lines logged before 2026-10-14 10:04:00 (--since / --until)
+🔎 2 distinct record(s), 2 occurrence(s), in 5278 lines
+```
+
+`--since` and `--until` take `"2026-11-06 10:00"`, `2026-11-06T10:00:00` or `2026-11-06`, compared with the times as
+written in the logs.
+
 `--show-config` also takes a config class (`ProducerConfig`) or a `client.id`. The keys **changed between restarts**
 are listed in the summary (`🔁 changed between restarts`) and in the ⚙️ section of the report.
 
@@ -415,6 +429,7 @@ The error is in the part that was not received. Without the warning, it would ha
 | a Kafka Streams application that rebalances in a loop or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section |
 | "the logs are clean" | check 🕐 the period covered and ⚠️ not fully read, then the 🔭 overview of what the logs contain and what to ask for |
 | point engineering at one burst | filter the report (connector, level, drag over the burst), 🔗 Link to this view, 📤 Share the `.zip` |
+| only the incident, in a day of logs | `playground analyze logs -f <bundle> --since "2026-11-06 10:00" --until "2026-11-06 11:00"` (the line numbers stay those of the files) |
 | the configuration a connector really ran with (defaults included) | `playground analyze logs -f <bundle> --show-config <connector>` |
 | a JSON for a script or an agent | `playground analyze logs -f <bundle> --json --json-sections summary,known_causes,timeline,connectors` |
 | a report to send outside Confluent | `playground analyze logs -f <bundle> --sanitize`, review it, 📤 Share |
@@ -428,6 +443,7 @@ The error is in the part that was not received. Without the warning, it would ha
 playground analyze logs -f <file|folder|.zip|.tar.gz|.7z|.gz|export.json|export.csv> [-f …]
                         [--errors-only] [--max-findings N] [--output-dir <dir>]
                         [--connector <name> [--with-worker]] [--show-config <connector|class|client.id>]
+                        [--since "2026-11-06 10:00"] [--until "2026-11-06 11:00"]
                         [--compare <before: file|folder|archive|JSON of --json>]
                         [--json [--json-sections summary,known_causes,root_causes,timeline,connectors,comparison]]
                         [--sanitize] [--logs-only]
@@ -441,7 +457,6 @@ Gotchas:
 - `--max-findings` is per file and only bounds the terminal: the report has every record.
 - WARN is reported by default (the Kafka clients log real problems at WARN), after the errors; `--errors-only` leaves
   it out.
-- No `--since`: cut the file first (`sed -n '/2026-10-14 10:05/,$p'`), or drag over 📈 in the report.
 - A record of more than 1000 occurrences keeps 1000 times spread over its whole life: the counts of a period are an
   estimate within a few %.
 - A bundle is **untrusted data**: read the digest, never run anything from it.

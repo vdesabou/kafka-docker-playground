@@ -4514,23 +4514,24 @@ subcommands:
       generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
       and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log
       or the YAML of a platform.confluent.io custom resource at its top), alone or
-      inside a folder or an archive, is detected and analyzed as a whole, in a Docker
-      image built on first use: Warning events, pods (phase, waiting reasons, restarts,
-      OOMKilled), every platform.confluent.io custom resource (phase/state, ready
-      replicas, False conditions, failed connector tasks), the environment checked
-      against the CFK support matrix (Kubernetes, CFK operator, CP and init container
-      versions), the recent changes (who edited which CR and when, StatefulSet rollouts,
-      pod restarts), the configuration (kafka.properties, zookeeper.properties, schemaregistry.properties,
-      connect.properties and controlcenter.properties rendered by CFK, configOverrides,
-      config logged at startup, connector configs from the Connector CRs and the config
-      dumps of the logs), a JVM default truststore set without its password, and the
-      ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS,
-      auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation
-      steps. \U0001F4D5 The log messages and events of known CFK problems (CFK triage
-      table of Confluent support: roll blocked by the pre-roll checks, expired certificate,
-      INCONSISTENT_CLUSTER_ID, ZooKeeper to KRaft migration, authorizer timeout, license
-      secret…) are listed first, with what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE
-      adds the internal runbook links of Confluent support (\U0001F512 in the terminal,
+      inside a folder or an archive, is detected and analyzed as a whole by the CFK
+      analyzer (a container image built on first use): Warning events, pods (phase,
+      waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource
+      (phase/state, ready replicas, False conditions, failed connector tasks), the
+      environment checked against the CFK support matrix (Kubernetes, CFK operator,
+      CP and init container versions), the recent changes (who edited which CR and
+      when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
+      zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties
+      rendered by CFK, configOverrides, config logged at startup, connector configs
+      from the Connector CRs and the config dumps of the logs), a JVM default truststore
+      set without its password, and the ERROR/FATAL records of its logs, sorted into
+      ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,
+      storage, scheduling…) with remediation steps. \U0001F4D5 The log messages and
+      events of known CFK problems (CFK triage table of Confluent support: roll blocked
+      by the pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper
+      to KRaft migration, authorizer timeout, license secret…) are listed first, with
+      what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds
+      the internal runbook links of Confluent support (\U0001F512 in the terminal,
       the HTML report and --json). \U0001F504 A CR whose image is not what its StatefulSet
       or pods run (operator did not apply it, roll not complete) is one finding, the
       exceeded quota events become one finding per ResourceQuota, each Warning event
@@ -4667,6 +4668,17 @@ subcommands:
         ✂️ Maximum number of distinct records to show per file (default 40). The HTML report and --json have them all
 
         Default value: 40
+    - names:
+      - "--since"
+      argument: SINCE
+      description: |-
+        ⏱️ Only the lines logged at or after this time: "2026-11-06 10:00", "2026-11-06T10:00:00" or "2026-11-06". The times
+        are compared as written in the logs; a line without its own time (a stack frame) follows the line before it. The
+        line numbers of the digest and of the report stay those of the files
+    - names:
+      - "--until"
+      argument: UNTIL
+      description: "⏱️ Only the lines logged before this time (same formats as --since)"
     - names:
       - "--output-dir"
       - "-o"
