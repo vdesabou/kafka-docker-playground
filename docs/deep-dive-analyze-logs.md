@@ -44,7 +44,11 @@ no Confluent Cloud, nothing to set up.
    `security.protocol`, unknown magic byte, fenced producer, rebalances, throttling, records not delivered in time…)
    are recognized and come with **what to do**, often the `playground` command that checks it, and for about half of
    them a 📚 Confluent knowledge-base article to read or send (in the terminal, the HTML report and the summary for a
-   ticket). Everything else is in the 🌳 root causes, grouped by deepest exception.
+   ticket). With the private `reproduction-models` repository of Confluent support, the internal GTS runbooks (PKIX,
+   SASL, authorization, converters, DLQ, consumer rebalancing…) come with a 🔒, in the terminal, the HTML report and
+   `--json`, never in the summary for a ticket (`PLAYGROUND_LOG_RUNBOOKS_FILE`, default
+   `reproduction-models/_miscellaneous/log-analysis/runbooks-internal.json`). Everything else is in the 🌳 root
+   causes, grouped by deepest exception.
 3. **The HTML report is the deliverable.** The terminal digest is bounded (`--max-findings` per file); the report holds
    **every** record, a timeline of all the files, a card per connector, filters, links to each line of each file, and
    a 📤 Share panel. The filters are kept in the URL: 🔗 **Link to this view** points a colleague at one burst of one

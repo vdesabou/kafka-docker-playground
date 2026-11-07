@@ -139,6 +139,32 @@ def test_known_causes_speed():
             check("known cause speed", took < 0.5, f"{took:.1f} s for {pattern[:60]!r} on {line[:12]!r}…")
 
 
+def test_known_causes_internal_links():
+    """The private runbooks file: links by known cause title, https only, nothing without the file"""
+    import json
+    import tempfile
+    saved = os.environ.get("PLAYGROUND_LOG_RUNBOOKS_FILE")
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump({"links": {"🔐 TLS handshake failure": [{"title": "PKIX runbook", "url": "https://example.com/pkix"},
+                                                             {"title": "bad", "url": "javascript:alert(1)"}]}}, f)
+        os.environ["PLAYGROUND_LOG_RUNBOOKS_FILE"] = f.name
+        known_causes._internal = None
+        check("internal links", known_causes.internal_links("🔐 TLS handshake failure")
+              == [{"title": "PKIX runbook", "url": "https://example.com/pkix"}], "the https link only")
+        check("internal links", known_causes.internal_links("🔑 Authentication failure") == [], "none for another cause")
+        os.environ["PLAYGROUND_LOG_RUNBOOKS_FILE"] = f.name + ".missing"
+        known_causes._internal = None
+        check("internal links", known_causes.internal_links("🔐 TLS handshake failure") == [], "none without the file")
+        os.unlink(f.name)
+    finally:
+        known_causes._internal = None
+        if saved is None:
+            os.environ.pop("PLAYGROUND_LOG_RUNBOOKS_FILE", None)
+        else:
+            os.environ["PLAYGROUND_LOG_RUNBOOKS_FILE"] = saved
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

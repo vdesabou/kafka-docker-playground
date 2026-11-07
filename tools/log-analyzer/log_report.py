@@ -327,8 +327,9 @@ def reading_links(h: dict) -> List[tuple]:
 
 
 def reading_list(h: dict) -> List[str]:
-    """Lines of the text summary: what to read about a known cause"""
-    return [f"{label}: {url}" for label, url in reading_links(h)]
+    """Lines of the text summary: what to read about a known cause (📚 public, 🔒 internal runbooks)"""
+    return ([f"📚 {label}: {url}" for label, url in reading_links(h)]
+            + [f"🔒 {l['title']}: {l['url']}" for l in h.get("internal_links") or []])
 
 
 def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
@@ -351,6 +352,10 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
                 "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
         # what to read about it: a knowledge-base article and / or a docs page
         hint.update(known_causes.links(title))
+        # the internal runbooks of Confluent support (🔒, private file): not in the summary for a ticket
+        internal = known_causes.internal_links(title)
+        if internal:
+            hint["internal_links"] = internal
         # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed
         # tasks have them there, as before)
         hint["_chains"] = killed_task_chains(matches)
@@ -1572,7 +1577,7 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
             out.append(f"   [{h['severity']}] {h['title']} ×{h['occurrences']} {h['where']}")
             out.append(f"      → {h['advice']}")
             for read in reading_list(h):
-                out.append(f"      📚 {read}")
+                out.append(f"      {read}")
             for d in h.get("details", [])[:5]:
                 out.append(f"      {d}")
     # same test as the 🌳 cards of the HTML report: not explained by a known cause (records in common, or its pattern)
@@ -3440,7 +3445,9 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
         # the killed tasks list all their chains (what to fix), the other known causes the most frequent ones
         chains = v.get("chains") or v.get("_chains") or []
         limit = len(chains) if v.get("chains") else CHAINS_SHOWN
-        reads = " · ".join(f"<a href='{e(url)}' target='_blank' rel='noopener'>📚 {e(label)}</a>" for label, url in reading_links(v))
+        reads = " · ".join([f"<a href='{e(url)}' target='_blank' rel='noopener'>📚 {e(label)}</a>" for label, url in reading_links(v)]
+                           + [f"<a href='{e(l['url'])}' target='_blank' rel='noopener' title='internal runbook of Confluent support'>"
+                              f"🔒 {e(l['title'])}</a>" for l in v.get("internal_links") or []])
         head += (chains_note(chains, limit) + f"<div class='fi-advice'>👉 {e(v['advice'])}</div>"
                  + (f"<div class='fi-advice fi-read'>{reads}</div>" if reads else ""))
         return dict(f, html=head, html_details=chain_rows(chains, limit, sev, viewers) or None)
