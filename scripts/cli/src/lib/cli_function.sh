@@ -7956,7 +7956,9 @@ function find_commands() {
             bmatched[cmd] = matched; busage[cmd] = usage; bsource[cmd] = source
             if (url != "") burl[cmd] = url
         }
-        count[cmd]++
+        # only the rows that match every specific term of the question add to the score: a page with many rows
+        # repeating one word of it ("logs") must not outrank the command that matches the whole question
+        if ((hits > path_hits ? hits : path_hits) >= ncount) full[cmd]++
     }
     BEGIN {
         split("a about an and any are as at be by can could do does doing for from get got has have having help how i if in into is issue it its me my no not of on or please problem show so some tell that the their them there these this to trouble was we what when where which who why will with without you your", sw, " ")
@@ -8025,7 +8027,7 @@ function find_commands() {
     END {
         if (nterms == 0) exit
         top = 0
-        for (c in best) { total[c] = best[c] + (count[c] - 1) * 0.5; if (total[c] > top) top = total[c] }
+        for (c in best) { total[c] = best[c] + (full[c] > 1 ? full[c] - 1 : 0) * 0.5; if (total[c] > top) top = total[c] }
         for (c in best) {
             # drop the long tail: weak matches far below the best one
             if (total[c] < top * 0.3) continue
