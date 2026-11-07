@@ -137,6 +137,10 @@ included: a click keeps only those cards (the severity chips of the section foll
 The tiles of the CFK bundles join the same row (`cfk_kpi_tiles()`: ☸️ CFK issues, clickable, the Kubernetes and CFK
 versions). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
+The 🏷️ CP and 🛠️ CFK tiles are marked when the version is out of support (`tools/report-common/support_dates.py`, the
+tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support): ⛔ end of support
+(red), ⚠️ Standard support ended but Platinum still running, ⏳ support ends within 6 months (orange). The summary and the
+summary for a ticket say it too. Update the tables with each release (skill `kdp-bump-cp-version`).
 On a wide screen (1400 px or more), the same links are a 🧭 Sections panel on the left (the section on screen
 highlighted, ⟨ hides it, ☰ Sections brings it back, remembered in `localStorage` as `pg-side-nav`); a ⬆️ Top button shows
 once the page is scrolled down. The jumps use a quick scroll (`pgScrollTo()`, 250 ms) that stops under the sticky filter bar.

@@ -95,6 +95,11 @@ Then review what the new version changes for the playground, and fix it in the s
   `scripts/utils.sh`. They use "greater than", so a newer version is already on the right side: only check gates with an upper bound,
 - `CFK_VERSION` in `environment/cfk/start.sh`: check that this CFK version supports CP `NEW` (CFK release notes),
   or bump it.
+- the end of support tables of `tools/report-common/support_dates.py` (`CP_SUPPORT`, `CFK_SUPPORT`, `FETCHED`), used by
+  the 🏷️ CP / 🛠️ CFK tiles of `playground analyze logs`: add the new row from the
+  [supported versions](https://docs.confluent.io/platform/current/installation/versions-interoperability.html) and
+  [CFK supported environments](https://docs.confluent.io/operator/current/co-supported-environments.html) tables
+  (the docs drop the rows of the versions out of support: keep them, a version older than the oldest row counts as ended).
 
 ## 3. Regenerate and validate
 
