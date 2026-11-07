@@ -34,10 +34,11 @@ from urllib.parse import quote
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
-                         kpi, kpis_html, page, svg_hbars, time_chart, verdict_html, dark)
+                         kpi, kpis_html, page, svg_hbars, time_chart, verdict_html, dark, wall_epoch)
 import fixed_bugs  # noqa: E402
 import support_dates  # noqa: E402
 import known_causes  # noqa: E402
+import connector_icons  # noqa: E402
 import log_viewer  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
 
@@ -1116,6 +1117,13 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
             continue
         c = cards[name]
         c["config_dumps"] += 1
+        # the database of a JDBC connector (its icon), and its class when no "Instantiated connector" line has it
+        values = {k.strip(): v.strip() for k, v in config_values(cfg).items()} if cfg.get("text") else {}
+        if values.get("connection.url") and not c.get("jdbc"):
+            # the scheme only (oracle, mysql…): the URL holds hosts
+            c["jdbc"] = connector_icons.jdbc_scheme(values["connection.url"])
+        if values.get("connector.class") and not c.get("class"):
+            c["class"] = values["connector.class"]
         client = cfg.get("id") or ""
         if re.match(r"^connector-(?:producer|consumer|dlq-producer|admin)-", client) and client not in c["clients"]:
             c["clients"].append(client)
@@ -1159,7 +1167,7 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
     for f in files:
         for c in f.get("event_counts") or []:
             r = rows.setdefault((c["kind"], c["who"]), {"kind": c["kind"], "who": c["who"], "count": 0, "first": None,
-                                                       "last": None, "connectors": Counter(), "reasons": Counter()})
+                                                       "last": None, "connectors": Counter(), "reasons": Counter(), "times": []})
             r["count"] += c["count"]
         for ev in f.get("events") or []:
             if ev["kind"] not in LIFECYCLE_KINDS:
@@ -1174,6 +1182,7 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
             if ev.get("time"):
                 r["first"] = min(r["first"] or ev["time"], ev["time"])
                 r["last"] = max(r["last"] or ev["time"], ev["time"])
+                r["times"].append(ev["time"])
             if ev.get("connector"):
                 r["connectors"][ev["connector"]] += 1
             if " · " in (ev.get("detail") or ""):
@@ -1188,10 +1197,13 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
                     # consumer of Debezium every few seconds) is not a storm
                     "storm": r["kind"] in ("worker_rebalance", "consumer_rejoin") and r["count"] >= STORM_MIN
                              and per_hour is not None and per_hour >= STORM_PER_HOUR
-                             and "pro-actively leaving" not in (r["reasons"].most_common(1)[0][0] if r["reasons"] else "")})
+                             and "pro-actively leaving" not in (r["reasons"].most_common(1)[0][0] if r["reasons"] else ""),
+                    # the times noted (300 per kind and file): the timeline of the 🔄 section of the HTML report only
+                    "_times": sorted(r["times"])})
     order = list(LIFECYCLE_KINDS)
     out.sort(key=lambda r: (not r["storm"], order.index(r["kind"]), -r["count"]))
-    return {"rows": out, "storms": [r for r in out if r["storm"]]}
+    # the period the rates are computed on: under an hour, the HTML report shows the count over it instead of a rate
+    return {"rows": out, "storms": [r for r in out if r["storm"]], "hours": round(hours, 3)}
 
 
 def lifecycle_text(lc: Optional[dict], top: int = 6) -> List[str]:
@@ -1228,26 +1240,169 @@ def lifecycle_conn_attr(r: dict) -> str:
     return f" data-conn='{e(conn)}'" if conn else ""
 
 
+# the look of each kind of row of the 🔄 table: icon and color (pill, count bar, activity span)
+LIFECYCLE_LOOK = {"worker_rebalance": ("🔁", "#7c3aed"), "consumer_rejoin": ("🔄", "#2563eb"), "connector_start": ("🔌", "#16a34a"),
+                  "task_start": ("▶️", "#059669"), "process_start": ("🚀", "#d97706"), "process_stop": ("⏹️", "#b45309"),
+                  "controller_change": ("👑", "#0891b2"), "gc_pause": ("🧹", "#dc2626")}
+
+LIFECYCLE_CSS = """<style>
+.lc-table{border-collapse:separate;border-spacing:0 6px;margin-top:-6px}
+.lc-table th{background:none;border:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:4px 12px}
+.lc-table td{border:0;padding:10px 12px;vertical-align:middle;background:#f8fafc}
+.lc-table tr.lc-row td:first-child{border-radius:10px 0 0 10px;border-left:4px solid var(--lc)}
+.lc-table tr.lc-row td:last-child{border-radius:0 10px 10px 0}
+.lc-table tr.lc-row{transition:transform .15s}
+.lc-table tr.lc-row:hover td{background:#eef2ff}
+.lc-table tr.lc-row:hover{transform:translateX(2px)}
+.lc-kind{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:600;white-space:nowrap;padding:3px 10px 3px 8px;border-radius:999px;
+color:var(--lc);background:color-mix(in srgb,var(--lc) 12%,transparent);border:1px solid color-mix(in srgb,var(--lc) 30%,transparent)}
+.lc-storm-badge{display:inline-block;margin-top:5px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;
+padding:2px 8px;border-radius:999px;background:linear-gradient(90deg,#dc2626,#f97316);box-shadow:0 0 10px rgba(220,38,38,.45);animation:lc-pulse 2s ease-in-out infinite}
+@keyframes lc-pulse{50%{box-shadow:0 0 16px rgba(249,115,22,.75)}}
+@media (prefers-reduced-motion:reduce){.lc-storm-badge{animation:none}}
+.lc-who{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;overflow-wrap:anywhere;min-width:180px;max-width:300px;color:#1e293b}
+.lc-who .lc-pre{color:#94a3b8}
+.lc-count{min-width:110px}
+.lc-count b{font-size:1.05rem;font-variant-numeric:tabular-nums}
+.lc-meter{height:5px;border-radius:999px;background:#e2e8f0;margin-top:5px;overflow:hidden}
+.lc-meter i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--lc) 55%,#fff),var(--lc))}
+.lc-rate{display:inline-block;font-size:.76rem;font-weight:700;font-variant-numeric:tabular-nums;padding:2px 9px;border-radius:999px;white-space:nowrap;background:#f1f5f9;color:#64748b}
+.lc-rate.warm{background:#fef3c7;color:#b45309}.lc-rate.hot{background:#fee2e2;color:#dc2626}
+.lc-when{min-width:230px;width:26%}
+.lc-lane{display:block;width:100%;height:14px;overflow:visible}
+.lc-lane rect{fill:var(--lc)}
+.lc-lane .lc-track{fill:#e2e8f0}
+.lc-lane .lc-range{fill:color-mix(in srgb,var(--lc) 25%,transparent)}
+.lc-chart{margin:4px 0 14px}
+.lc-times{display:flex;justify-content:space-between;gap:10px;margin-top:5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;color:#64748b;white-space:nowrap}
+.lc-axis{display:flex;justify-content:space-between;gap:8px;font-weight:400;text-transform:none;letter-spacing:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.66rem;color:#94a3b8}
+.lc-reason{font-size:.82rem;color:#475569;overflow-wrap:anywhere}
+.lc-reason .fi-conn{display:inline;overflow-wrap:anywhere;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.lc-table tr.lc-storm td{background:#fef2f2}
+.lc-table tr.lc-storm td:first-child{border-left-color:#dc2626}
+</style>""" + "<style>" + dark("""
+.lc-table th{color:#94a3b8}
+.lc-table td{background:#0f172a}
+.lc-table tr.lc-row:hover td{background:#1e1b4b}
+.lc-kind{color:color-mix(in srgb,var(--lc) 55%,#fff);background:color-mix(in srgb,var(--lc) 22%,transparent);border-color:color-mix(in srgb,var(--lc) 45%,transparent)}
+.lc-who{color:#e2e8f0}
+.lc-who .lc-pre{color:#64748b}
+.lc-meter{background:#273449}
+.lc-lane .lc-track{fill:#273449}
+.lc-rate{background:#273449;color:#94a3b8}
+.lc-rate.warm{background:#422006;color:#fcd34d}.lc-rate.hot{background:#450a0a;color:#fca5a5}
+.lc-times,.lc-reason{color:#94a3b8}
+.lc-table tr.lc-storm td{background:#2a1215}
+""") + "</style>"
+
+
+LC_BINS = 120
+
+
+def lifecycle_time(t: Optional[str]) -> Optional[float]:
+    if not t:
+        return None
+    try:
+        return wall_epoch(datetime.fromisoformat(t.replace(" ", "T")[:19]))
+    except ValueError:
+        return None
+
+
 def lifecycle_html(lc: Optional[dict]) -> str:
     if not lc or not lc.get("rows"):
         return ""
-    rows = "".join(
-        f"<tr class='lc-row{' lc-storm' if r['storm'] else ''}'{lifecycle_conn_attr(r)}><td>{'🌀 storm' if r['storm'] else ''}</td><td>{e(LIFECYCLE_KINDS[r['kind']])}</td>"
-        f"<td class='mono'>{e(r['who'] or '?')}</td><td class='num'>{r['count']:,}</td>"
-        f"<td class='num'>{rate_cell(r)}</td>"
-        f"<td class='mono'>{e(period_text(r['first'], r['last'])) if r.get('first') else ''}</td>"
-        f"<td>{e(r.get('reason') or '')}{(' <span class=fi-conn>' + e(r['connector']) + '</span>') if r.get('connector') else ''}</td></tr>"
-        for r in lc["rows"])
-    return ("<style>tr.lc-storm td{background:#fef2f2}html[data-theme=dark] tr.lc-storm td{background:#3b1515}</style>"
-            "<div class='table-card'><h2>🔄 Restarts and rebalances</h2><p class='legend'>From the INFO lines: the rebalances of "
+    max_count = max(r["count"] for r in lc["rows"]) or 1
+    # the activity of each row (first → last) on one time axis, the period of the whole table
+    times = [t for r in lc["rows"] for t in (lifecycle_time(r.get("first")), lifecycle_time(r.get("last") or r.get("first"))) if t is not None]
+    t0, t1 = (min(times), max(times)) if times else (0.0, 0.0)
+    span_all = (t1 - t0) or 1.0
+
+    def stamp(t: Optional[str]) -> str:
+        return e(t.replace("T", " ")[5:19]) if t else ""
+
+    def when(r: dict) -> str:
+        a, b = lifecycle_time(r.get("first")), lifecycle_time(r.get("last") or r.get("first"))
+        if a is None:
+            return ""
+        last = r.get("last") if r.get("last") and r.get("last") != r.get("first") else None
+        # a swimlane on the period of the table: a tick per bucket (LC_BINS of them) with occurrences, darker when there are
+        # more; the first → last span behind it
+        bins: Counter = Counter()
+        for t in r.get("_times") or []:
+            x = lifecycle_time(t)
+            if x is not None:
+                bins[min(LC_BINS - 1, int(LC_BINS * (x - t0) / span_all))] += 1
+        top = max(bins.values()) if bins else 1
+        left = LC_BINS * (a - t0) / span_all
+        width = max(0.0, LC_BINS * ((b if b is not None else a) - a) / span_all)
+        ticks = "".join(f"<rect x='{i}' y='1' width='1' height='10' rx='.4' opacity='{0.45 + 0.55 * n / top:.2f}'><title>{n}</title></rect>"
+                        for i, n in sorted(bins.items()))
+        lane = (f"<svg class='lc-lane' viewBox='0 0 {LC_BINS} 12' preserveAspectRatio='none' aria-hidden='true'>"
+                f"<rect class='lc-track' x='0' y='5' width='{LC_BINS}' height='2' rx='1'/>"
+                f"<rect class='lc-range' x='{left:.2f}' y='4' width='{max(width, 0.6):.2f}' height='4' rx='2'/>{ticks}</svg>")
+        return (f"<div title='{e(period_text(r['first'], r.get('last')))}, {sum(bins.values())} occurrence(s) with a time noted'>{lane}</div>"
+                f"<div class='lc-times'><span>{stamp(r['first'])}</span>{f'<span>→ {stamp(last)}</span>' if last else ''}</div>")
+
+    def who(r: dict) -> str:
+        name = r["who"] or "?"
+        # connect-<sink connector>: the consumer group of a sink connector, its name stands out
+        if r["kind"] == "consumer_rejoin" and name.startswith("connect-") and len(name) > 8:
+            return f"<span class='lc-pre'>connect-</span>{e(name[8:])}"
+        return e(name)
+
+    hours = lc.get("hours")
+
+    def rate(r: dict) -> str:
+        if r.get("per_hour") is None:
+            return ""
+        # red for a 🌀 storm only; a rate per hour of logs that cover a few minutes extrapolates (1 start in 5 min is
+        # not "12/h"): the count over the period covered instead
+        cls = "hot" if r["storm"] else "warm" if r["per_hour"] >= STORM_PER_HOUR else ""
+        if hours is not None and hours < 1:
+            minutes = max(1, round(hours * 60))
+            return (f"<span class='lc-rate {'hot' if r['storm'] else ''}' title='the logs cover only {minutes} min: {rate_cell(r)}/h if it went on for an "
+                    f"hour'>{r['count']:,} in {minutes} min</span>")
+        return f"<span class='lc-rate {cls}'>{rate_cell(r)}/h</span>"
+
+    def row(r: dict) -> str:
+        icon, color = LIFECYCLE_LOOK.get(r["kind"], ("•", "#64748b"))
+        storm = "<br><span class='lc-storm-badge'>🌀 storm</span>" if r["storm"] else ""
+        conn = f" <span class='fi-conn'>{e(r['connector'])}</span>" if r.get("connector") else ""
+        return (f"<tr class='lc-row{' lc-storm' if r['storm'] else ''}' style='--lc:{color}'{lifecycle_conn_attr(r)}>"
+                f"<td><span class='lc-kind'>{icon} {e(LIFECYCLE_KINDS[r['kind']])}</span>{storm}</td>"
+                f"<td class='lc-who'>{who(r)}</td>"
+                f"<td class='lc-count'><b>{r['count']:,}</b><div class='lc-meter'><i style='width:{max(2.0, 100 * r['count'] / max_count):.1f}%'></i></div></td>"
+                f"<td>{rate(r)}</td><td class='lc-when'>{when(r)}</td>"
+                f"<td class='lc-reason'>{e(r.get('reason') or '')}{conn}</td></tr>")
+
+    axis = (f"<div class='lc-axis'><span>{e(datetime.fromtimestamp(t0, timezone.utc).strftime('%m-%d %H:%M'))}</span>"
+            f"<span>{e(datetime.fromtimestamp(t1, timezone.utc).strftime('%m-%d %H:%M'))}</span></div>") if times else ""
+    # 📈 the occurrences over time, one series per kind (zoomable, as the other charts of the report)
+    points, kinds = [], []
+    for r in lc["rows"]:
+        for t in r.get("_times") or []:
+            x = lifecycle_time(t)
+            if x is not None:
+                points.append((datetime.fromtimestamp(x, timezone.utc).replace(tzinfo=None), r["kind"]))
+        if r["kind"] not in kinds:
+            kinds.append(r["kind"])
+    chart = time_chart(points, [(k, f"{LIFECYCLE_LOOK.get(k, ('', ''))[0]} {LIFECYCLE_KINDS[k]}", LIFECYCLE_LOOK.get(k, ("", "#64748b"))[1])
+                                for k in kinds], note=" · all the connectors", chart_id="lc-chart",
+                       # the whole width of the card: a wider drawing keeps the time labels apart
+                       extra={"W": 1000, "H": 200}) if len(points) > 1 else ""
+    return (LIFECYCLE_CSS
+            + "<div class='table-card'><h2>🔄 Restarts and rebalances</h2><p class='legend'>From the INFO lines: the rebalances of "
             "the Connect worker groups, the rejoins of the consumer groups (a sink connector, a client), the connectors and tasks "
             f"started, the workers and brokers (re)started. 🌀 a group that rebalanced at least {STORM_MIN} times, {STORM_PER_HOUR} "
             "per hour or more: each rebalance stops the processing (look at the members that join and leave, session.timeout.ms, "
-            "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms). It follows the connector filter: "
+            "heartbeat.interval.ms, max.poll.interval.ms, scheduled.rebalance.max.delay.ms). The chart shows them over time (drag "
+            "to zoom); the swimlane of When places each occurrence of a row on the period of the table (a tick per bucket, darker "
+            "with more), between its first and last one. It follows the connector filter (click a connector name to set it): "
             "the rows of the other connectors are hidden, the worker group rebalances and process starts stay.</p>"
-            "<p class='legend lc-none' hidden>No restart nor rebalance for this connector.</p><table class='lc-table'><tr><th></th><th>What</th>"
-            "<th>Group / connector</th><th class='num'>Count</th><th class='num'>Per hour</th><th>When</th><th>Reason, connector</th></tr>"
-            f"{rows}</table></div>")
+            + (f"<div class='lc-chart'>{chart}</div>" if chart else "")
+            + "<p class='legend lc-none' hidden>No restart nor rebalance for this connector.</p><table class='lc-table'><tr><th>What</th>"
+            f"<th>Group / connector</th><th>Count</th><th>Per hour</th><th>When {axis}</th><th>Reason, connector</th></tr>"
+            + "".join(row(r) for r in lc["rows"]) + "</table></div>")
 
 
 def worker_of(label: str) -> str:
@@ -1762,6 +1917,16 @@ def changelog_command(c: dict) -> str:
 CONN_CARDS_SHOWN = 30
 
 
+def conn_icon_html(c: dict) -> str:
+    """the icon of the examples of its class (connector_icons.py, the icons of the website), hidden when it cannot load
+    (offline): the report stays readable"""
+    url = connector_icons.icon_url(c.get("class"), "jdbc:" + c["jdbc"] if c.get("jdbc") else None)
+    if not url:
+        return "<span class='conn-icon none' aria-hidden='true'>🔌</span>"
+    return (f"<img class='conn-icon' src='{e(url)}' alt='' title='{e(c.get('class', '').split('.')[-1])}' loading='lazy' "
+            "onerror=\"this.outerHTML='<span class=&quot;conn-icon none&quot; aria-hidden=&quot;true&quot;>🔌</span>'\">")
+
+
 def connectors_health_html(cards: List[dict]) -> str:
     """the 🔌 Connectors section: a card per connector, ▶ only this connector sets the connector filter"""
     if not cards:
@@ -1777,7 +1942,7 @@ def connectors_health_html(cards: List[dict]) -> str:
                           f"{e(ch['previous'] or '∅')} → {e(ch['value'] or '∅')}</li>" for ch in c["config_changes"][:8])
         more = f"<li class='fi-meta'>+{len(c['config_changes']) - 8} more</li>" if len(c["config_changes"]) > 8 else ""
         items.append(
-            f"<div class='conn-card {state[0]}' data-conn='{e(c['connector'])}'><div class='conn-head'><span class='fi-conn'>{e(c['connector'])}</span> "
+            f"<div class='conn-card {state[0]}' data-conn='{e(c['connector'])}'><div class='conn-head'>{conn_icon_html(c)}<span class='fi-conn'>{e(c['connector'])}</span> "
             f"<span class='conn-state'>{state[1]}</span><button type='button' class='pill conn-only' data-conn='{e(c['connector'])}' "
             f"title='show only the records, root causes, timeline and chart of this connector'>▶ only this connector</button></div>"
             f"<div class='fi-meta'>{counts} in {c['records']} distinct record(s) · {e(period)}"
@@ -1817,6 +1982,9 @@ def connectors_health_html(cards: List[dict]) -> str:
     return ("<style>.conn-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px}"
             ".conn-card{border:1px solid #e2e8f0;border-left:5px solid #94a3b8;border-radius:8px;padding:8px 12px;font-size:.84rem}"
             ".conn-card.danger{border-left-color:#dc2626}.conn-card.warn{border-left-color:#d97706}.conn-card.ok{border-left-color:#16a34a}"
+            ".conn-icon{width:22px;height:22px;object-fit:contain;flex:none;border-radius:5px;background:#fff;padding:2px;box-shadow:0 0 0 1px #e2e8f0}"
+            ".conn-icon.none{display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;background:none;box-shadow:none;padding:0}"
+            "html[data-theme=dark] .conn-icon{box-shadow:0 0 0 1px #334155}"
             ".conn-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}.conn-only{margin-left:auto;font-size:.72rem}"
             "html[data-theme=dark] .conn-card{border-color:#334155}.conn-card[hidden]{display:none}"
             ".conn-note{font-weight:600}.conn-note[hidden],.conn-more[hidden]{display:none}.conn-more{margin-top:10px}</style>"
@@ -3317,7 +3485,13 @@ FILTER_SCRIPT = ("<style>[data-level][hidden]{display:none}.file-records[hidden]
                  "border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer}"
                  "html[data-theme=dark] .rc-reset{background:#0f172a;color:#cbd5e1;border-color:#334155}"
                  ".rec-scope:not(:empty){display:block;margin-top:4px;font-size:.75rem;color:#64748b}"
-                 ".rec-card.out{opacity:.45}.rec-card.pg-nomatch{display:none}.fi-scope{font-weight:400;font-size:.78rem;opacity:.75}</style>") + """<script>
+                 ".rec-card.out{opacity:.45}.rec-card.pg-nomatch{display:none}.fi-scope{font-weight:400;font-size:.78rem;opacity:.75}"
+                 # a connector name of the report: a click sets the Connector filter on it (pgMarkConnChips)
+                 ".fi-conn.pg-pick{cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}"
+                 ".fi-conn.pg-pick:hover{background:#dbeafe;color:#1d4ed8;box-shadow:0 0 0 1px #93c5fd}"
+                 ".fi-conn.pg-picked{background:#2563eb;color:#fff;box-shadow:0 0 0 1px #2563eb}"
+                 "html[data-theme=dark] .fi-conn.pg-pick:hover{background:#1e3a8a;color:#dbeafe;box-shadow:0 0 0 1px #3b82f6}"
+                 "html[data-theme=dark] .fi-conn.pg-picked{background:#2563eb;color:#fff;box-shadow:0 0 0 1px #60a5fa}</style>") + """<script>
 // ── the filters of the report: levels, connector, and the period selected on the occurrences chart ──────────────
 // pgOccurrences: {connectors: [name], records: [[root cause index, level (0 FATAL, 1 ERROR, 2 WARN), connector index
 // (-1: none), occurrences, epoch seconds]]} - occurrences_json() of log_report.py. The times of a record are the
@@ -3501,12 +3675,16 @@ function pgRootCauses() {
   }
   const note = document.querySelector(".rc-range"), reset = document.querySelector(".rc-reset");
   const rows = document.querySelectorAll("tr.rc-row");
-  let kept = 0, occurrences = 0;
+  let kept = 0, occurrences = 0, most = 1;
+  rows.forEach(function (tr) { const n = byCause[+tr.dataset.cause]; if (n && n[0] > most) most = n[0]; });
   rows.forEach(function (tr) {
     const n = byCause[+tr.dataset.cause];
     tr.hidden = !n;
     if (!n) return;
     tr.querySelector(".rc-occ").textContent = n[0];
+    // the bar under the occurrences: relative to the root cause with the most of them in the selection
+    const meter = tr.querySelector(".rc-meter i");
+    if (meter) meter.style.width = Math.max(3, 100 * n[0] / most).toFixed(1) + "%";
     tr.querySelector(".rc-rec").textContent = n[1];
     const badge = tr.querySelector("td .st"), lvl = PG_LEVELS[n[2]];
     if (badge && lvl && badge.textContent !== lvl) { badge.textContent = lvl; badge.className = "st " + lvl.toLowerCase(); }
@@ -3967,6 +4145,7 @@ function pgLifecycle() {
   if (table) table.hidden = shown === 0;
 }
 function pgApply() {
+  pgMarkConnChips();
   pgTopCauses(pgRootCauses());
   pgRecordBlocks();
   pgFilesTable();
@@ -3991,6 +4170,25 @@ function pgSearch() {
     c.classList.toggle("pg-nomatch", !!pgTest && !pgTest(c.textContent));
   });
 }
+// the connector names of the report (root causes, records, cards, tables): the ones of the Connector filter can be
+// clicked to filter on them (again: all the connectors), and the ones of the connector picked stand out
+function pgMarkConnChips() {
+  const sel = document.querySelector(".conn-filter");
+  if (!sel) return;
+  if (!pgConnNames) pgConnNames = new Set([...sel.options].map(o => o.value).filter(v => v !== "" && v !== "-"));
+  document.querySelectorAll(".fi-conn").forEach(chip => {
+    const name = chip.textContent.trim();
+    if (!pgConnNames.has(name)) return;
+    const picked = sel.value === name;
+    if (!chip.classList.contains("pg-pick")) { chip.classList.add("pg-pick"); chip.setAttribute("role", "button"); chip.tabIndex = 0; }
+    chip.classList.toggle("pg-picked", picked);
+    chip.title = picked ? "click: back to all the connectors" : "click: show only the records, root causes, timeline and chart of this connector";
+  });
+}
+var pgConnNames = null;
+document.addEventListener("keydown", function (ev) {
+  if ((ev.key === "Enter" || ev.key === " ") && ev.target.closest && ev.target.closest(".fi-conn.pg-pick")) { ev.preventDefault(); ev.target.click(); }
+});
 function pgApplyFilters() {
   pgRead();
   pgApply();
@@ -4021,6 +4219,15 @@ document.addEventListener("click", function (ev) {
     const hint = document.querySelector(".comp-remembered");
     if (hint) hint.hidden = true;
     pgApplyFilters();
+    return;
+  }
+  const connChip = ev.target.closest(".fi-conn.pg-pick");
+  if (connChip) {
+    const sel = document.querySelector(".conn-filter"), name = connChip.textContent.trim();
+    sel.value = sel.value === name ? "" : name;
+    // change: the filters, and the configuration of that connector (the listeners of .conn-filter)
+    sel.dispatchEvent(new Event("change", {bubbles: true}));
+    if (connChip.isConnected && connChip.offsetParent) connChip.scrollIntoView({block: "nearest"});
     return;
   }
   if (ev.target.closest(".conn-only")) {
@@ -4690,6 +4897,50 @@ def incomplete_html(items: List[dict]) -> str:
             f"could be read; ask for a complete copy.<ul style='margin:6px 0 0 18px;font-weight:400'>{rows}</ul></div>")
 
 
+# 🌳 All root causes: a card per row with the color of its level, the exception in color, a bar under the occurrences
+RC_CSS = """<style>
+.rc-table{border-collapse:separate;border-spacing:0 6px;margin-top:-6px}
+.rc-table th{background:none;border:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:4px 10px}
+.rc-table td{border:0;padding:10px;vertical-align:top;background:#f8fafc}
+.rc-table tr.rc-row td:first-child{border-radius:10px 0 0 10px;border-left:4px solid #d97706}
+.rc-table tr.rc-row td:last-child{border-radius:0 10px 10px 0}
+.rc-table tr.rc-fatal td:first-child{border-left-color:#dc2626}.rc-table tr.rc-error td:first-child{border-left-color:#ea580c}
+.rc-table tr.rc-row{transition:transform .15s}
+.rc-table tr.rc-row:hover td{background:#eef2ff}
+.rc-table tr.rc-row:hover{transform:translateX(2px)}
+.rc-table tr.rc-row:target td{background:#fef9c3}
+.rc-cause{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:.8rem;color:#c2410c;overflow-wrap:break-word;min-width:120px}
+.rc-fatal .rc-cause,.rc-error .rc-cause{color:#dc2626}
+.rc-msg{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;color:#334155;overflow-wrap:anywhere;min-width:200px;line-height:1.55}
+.rc-occ{font-size:1rem;font-variant-numeric:tabular-nums}
+.rc-meter{width:64px;height:5px;margin:6px 0 0 auto;border-radius:999px;background:#e2e8f0;overflow:hidden}
+.rc-meter i{display:block;height:100%;margin-left:auto;border-radius:999px;background:linear-gradient(90deg,#fbbf24,#d97706)}
+.rc-error .rc-meter i{background:linear-gradient(90deg,#fb923c,#ea580c)}.rc-fatal .rc-meter i{background:linear-gradient(90deg,#f87171,#dc2626)}
+.rc-rec{display:inline-block;min-width:28px;text-align:center;font-size:.76rem;font-weight:600;padding:1px 8px;border-radius:999px;background:#e2e8f0;color:#475569}
+.rc-files{min-width:120px}
+.rc-file{display:inline-block;max-width:220px;margin:0 4px 4px 0;padding:1px 8px;border-radius:6px;background:#eef2ff;font-size:.74rem;overflow-wrap:anywhere}
+.rc-file a{text-decoration:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.rc-conns{min-width:120px}.rc-conns .fi-conn{overflow-wrap:anywhere}
+.rc-finding{min-width:110px}
+.rc-finding a{display:inline-block;margin:0 0 4px;padding:3px 10px;border-radius:10px;font-size:.76rem;font-weight:600;text-decoration:none;
+background:#dbeafe;color:#1d4ed8;transition:background .15s}
+.rc-finding a:hover{background:#bfdbfe}
+</style>""" + "<style>" + dark("""
+.rc-table th{color:#94a3b8}
+.rc-table td{background:#0f172a}
+.rc-table tr.rc-row:hover td{background:#1e1b4b}
+.rc-table tr.rc-row:target td{background:#3a3006}
+.rc-cause{color:#fdba74}
+.rc-fatal .rc-cause,.rc-error .rc-cause{color:#fca5a5}
+.rc-msg{color:#cbd5e1}
+.rc-meter{background:#273449}
+.rc-rec{background:#273449;color:#cbd5e1}
+.rc-file{background:#1e293b}
+.rc-finding a{background:#172554;color:#93c5fd}
+.rc-finding a:hover{background:#1e3a8a}
+""") + "</style>"
+
+
 def first_names(names: List[str], top: int = 3) -> str:
     return ", ".join(names[:top]) + (f" (+{len(names) - top} more)" if len(names) > top else "")
 
@@ -5007,14 +5258,28 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             if c.get("in_findings"):
                 return f"<a href='#finding-root-{i}' title='its card in 🔎 Findings'>🌳 card in Findings</a>"
             return "<span class='fi-meta' title='not a known cause, not among the most frequent: read its records below'>—</span>"
-        rows = "".join(f"<tr class='rc-row' data-level='{e(c['level'])}' data-cause='{i}' id='root-cause-{i}'><td>{level_badge(c['level'])}</td>"
+        max_occ = max(c["occurrences"] for c in res["root_causes"]) or 1
+
+        def rc_files(c: dict) -> str:
+            # the file name only (the whole label on hover): a chip per file, the link to its page
+            return "".join(f"<span class='rc-file' title='{e(x)}'>📄 {log_viewer.link(viewers, x, e(x.rsplit('/', 1)[-1]), edit=False)}</span>"
+                           for x in c["files"][:5]) + (f"<span class='fi-meta'>+{len(c['files']) - 5} more</span>" if len(c["files"]) > 5 else "")
+
+        def rc_conns(c: dict) -> str:
+            # chips: a click picks the connector in the filter (pgMarkConnChips)
+            names = c["connectors"]
+            return "".join(f"<span class='fi-conn'>{e(n)}</span>" for n in names[:3]) + \
+                (f"<span class='fi-meta' title='{e(', '.join(names[3:50]))}'>+{len(names) - 3} more</span>" if len(names) > 3 else "")
+
+        # cells 2 and 3 (root cause, message) are read by pgTopCauses(): keep their order and their text
+        rows = "".join(f"<tr class='rc-row rc-{e(c['level'].lower())}' data-level='{e(c['level'])}' data-cause='{i}' id='root-cause-{i}'><td>{level_badge(c['level'])}</td>"
                        f"<td>{component_chips(c['files'])}</td>"
-                       f"<td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
-                       f"<td class='mono'>{e(c['example'][:300])}</td><td class='num rc-occ'>{c['occurrences']}</td>"
-                       f"<td class='num rc-rec'>{c['records']}</td><td class='mono'>{', '.join(log_viewer.link(viewers, x, e(x), edit=False) for x in c['files'][:5])}"
-                       f"{e(' …' if len(c['files']) > 5 else '')}</td>"
-                       + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
-                       + f"<td>{finding_cell(c, i)}</td></tr>" for i, c in enumerate(res["root_causes"]))
+                       f"<td class='rc-cause' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
+                       f"<td class='rc-msg'>{e(c['example'][:300])}</td>"
+                       f"<td class='num'><b class='rc-occ'>{c['occurrences']}</b><div class='rc-meter'><i style='width:{max(3.0, 100 * c['occurrences'] / max_occ):.1f}%'></i></div></td>"
+                       f"<td class='num'><span class='rc-rec'>{c['records']}</span></td><td class='rc-files'>{rc_files(c)}</td>"
+                       + (f"<td class='rc-conns'>{rc_conns(c)}</td>" if with_conn else "")
+                       + f"<td class='rc-finding'>{finding_cell(c, i)}</td></tr>" for i, c in enumerate(res["root_causes"]))
         untimed = sum(count - len(times) * stride for c in res["root_causes"] for _, _, count, times, _, _, stride in c["records_meta"]
                       if count > len(times) * stride)
         follows = ("<p class='legend'>Every distinct error of the logs, grouped by its deepest exception (or its message when "
@@ -5030,7 +5295,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                    + "</p>")
         body.append("<div class='table-card' id='all-root-causes'><h2>🌳 All root causes (every distinct error, by deepest exception)"
                     "<span class='rc-range'></span><button type='button' class='rc-reset' hidden>⤺ whole period</button>"
-                    f"</h2>{follows}<table><tr><th>Level</th><th>Component</th>"
+                    f"</h2>{follows}{RC_CSS}<table class='rc-table'><tr><th>Level</th><th>Component</th>"
                     "<th>Root cause</th><th>Message</th><th class='num'>Occurrences</th><th class='num'>Records</th>"
                     f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}<th>Finding</th></tr>"
                     f"{rows}</table></div>")
@@ -5251,6 +5516,9 @@ def main() -> int:
                        root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
                        known_causes=[{k: v for k, v in h.items() if k not in ("records", "_chains")} for h in res["known_causes"]],
                        findings=[{k: v for k, v in f.items() if k not in ("records", "_view")} for f in res["findings"]])
+        if res.get("lifecycle"):
+            strip = lambda rows: [{k: v for k, v in r.items() if k != "_times"} for r in rows]  # noqa: E731
+            compact["lifecycle"] = {"rows": strip(res["lifecycle"]["rows"]), "storms": strip(res["lifecycle"]["storms"])}
         if args.json_sections:
             sections = [x.strip() for x in args.json_sections.split(",") if x.strip()]
             compact = {k: v for k, v in compact.items() if k in sections}
