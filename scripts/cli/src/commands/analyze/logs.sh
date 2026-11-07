@@ -184,11 +184,22 @@ function finish_progress_page () {
             '<p>A CFK support bundle has its own report, or the analysis stopped: see the terminal.</p></body></html>' > "$progress_page"
     fi
 }
+# Ctrl-C, or an error: the digests still running in the background (see analyze_logs_digest) are stopped first. A
+# background job of a script ignores SIGINT, so it would otherwise go on reading its file after the command ended, and
+# fail on the tmp dir deleted under it ("awk: can't open file .../digests/1.records")
+function stop_digest_jobs () {
+    local pid
+    # -r: the running ones (jobs -p also lists a job that has ended)
+    for pid in $(jobs -rp)
+    do
+        kill_tree "$pid"
+    done
+}
 if [ -z "$PG_VERBOSE_MODE" ]
 then
-    trap 'finish_progress_page; rm -rf $tmp_dir' EXIT
+    trap 'stop_digest_jobs; finish_progress_page; rm -rf $tmp_dir' EXIT
 else
-    trap 'finish_progress_page' EXIT
+    trap 'stop_digest_jobs; finish_progress_page' EXIT
     log "🐛📂 not deleting tmp dir $tmp_dir"
 fi
 if [[ -z "$json_out" ]] && { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] \

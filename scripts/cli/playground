@@ -23300,6 +23300,22 @@ function get_environment_used() {
   environment=$(playground state get run.environment)
 }
 
+# stops a process and all its descendants (a background job of bash, its pipeline, the commands they started). The
+# children are listed first, then the parent is killed before them: a killed child would otherwise let its bash parent
+# go on with its next command, and a parent killed first reparents its children (pgrep -P no longer finds them).
+# $1: pid
+function kill_tree () {
+    local pid="$1" child children
+    # no child: pgrep fails, which must not stop a caller running with set -e (an EXIT trap)
+    children=$(pgrep -P "$pid" 2> /dev/null || true)
+    # the process can already be gone (a parent exits when its child is killed): not an error
+    kill "$pid" 2> /dev/null || true
+    for child in $children
+    do
+        kill_tree "$child"
+    done
+}
+
 # mdc-* environments run two clusters, us and europe: the commands work on the one set with --cluster, else
 # $PLAYGROUND_CLUSTER, else 'playground state set run.cluster <cluster>'. Never guessed: exits when none is set.
 # Sets $mdc_cluster and exports PLAYGROUND_CLUSTER so that the nested playground calls use the same cluster.
@@ -62781,11 +62797,22 @@ playground_analyze_logs_command() {
               '<p>A CFK support bundle has its own report, or the analysis stopped: see the terminal.</p></body></html>' > "$progress_page"
       fi
   }
+  # Ctrl-C, or an error: the digests still running in the background (see analyze_logs_digest) are stopped first. A
+  # background job of a script ignores SIGINT, so it would otherwise go on reading its file after the command ended, and
+  # fail on the tmp dir deleted under it ("awk: can't open file .../digests/1.records")
+  function stop_digest_jobs () {
+      local pid
+      # -r: the running ones (jobs -p also lists a job that has ended)
+      for pid in $(jobs -rp)
+      do
+          kill_tree "$pid"
+      done
+  }
   if [ -z "$PG_VERBOSE_MODE" ]
   then
-      trap 'finish_progress_page; rm -rf $tmp_dir' EXIT
+      trap 'stop_digest_jobs; finish_progress_page; rm -rf $tmp_dir' EXIT
   else
-      trap 'finish_progress_page' EXIT
+      trap 'stop_digest_jobs; finish_progress_page' EXIT
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
   if [[ -z "$json_out" ]] && { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] \
@@ -65388,11 +65415,22 @@ playground_debug_analyze_logs_command() {
               '<p>A CFK support bundle has its own report, or the analysis stopped: see the terminal.</p></body></html>' > "$progress_page"
       fi
   }
+  # Ctrl-C, or an error: the digests still running in the background (see analyze_logs_digest) are stopped first. A
+  # background job of a script ignores SIGINT, so it would otherwise go on reading its file after the command ended, and
+  # fail on the tmp dir deleted under it ("awk: can't open file .../digests/1.records")
+  function stop_digest_jobs () {
+      local pid
+      # -r: the running ones (jobs -p also lists a job that has ended)
+      for pid in $(jobs -rp)
+      do
+          kill_tree "$pid"
+      done
+  }
   if [ -z "$PG_VERBOSE_MODE" ]
   then
-      trap 'finish_progress_page; rm -rf $tmp_dir' EXIT
+      trap 'stop_digest_jobs; finish_progress_page; rm -rf $tmp_dir' EXIT
   else
-      trap 'finish_progress_page' EXIT
+      trap 'stop_digest_jobs; finish_progress_page' EXIT
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
   if [[ -z "$json_out" ]] && { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] \
@@ -87273,16 +87311,7 @@ playground_connector_benchmark_command() {
           playground state set run.connector_type "$connector_type"
       fi
   }
-  # the stream load is a tree of processes (bash, playground, docker exec): stop all of them
-  function kill_tree () {
-      local pid="$1" child
-      for child in $(pgrep -P "$pid" 2> /dev/null)
-      do
-          kill_tree "$child"
-      done
-      # the process can already be gone (a parent exits when its child is killed): not an error
-      kill "$pid" 2> /dev/null || true
-  }
+  # the stream load is a tree of processes (bash, playground, docker exec): kill_tree (cli_function.sh) stops all of them
   function benchmark_cleanup () {
       restore_run_state
       if [ -z "$fully_managed" ]

@@ -2,6 +2,22 @@ function get_environment_used() {
   environment=$(playground state get run.environment)
 }
 
+# stops a process and all its descendants (a background job of bash, its pipeline, the commands they started). The
+# children are listed first, then the parent is killed before them: a killed child would otherwise let its bash parent
+# go on with its next command, and a parent killed first reparents its children (pgrep -P no longer finds them).
+# $1: pid
+function kill_tree () {
+    local pid="$1" child children
+    # no child: pgrep fails, which must not stop a caller running with set -e (an EXIT trap)
+    children=$(pgrep -P "$pid" 2> /dev/null || true)
+    # the process can already be gone (a parent exits when its child is killed): not an error
+    kill "$pid" 2> /dev/null || true
+    for child in $children
+    do
+        kill_tree "$child"
+    done
+}
+
 # mdc-* environments run two clusters, us and europe: the commands work on the one set with --cluster, else
 # $PLAYGROUND_CLUSTER, else 'playground state set run.cluster <cluster>'. Never guessed: exits when none is set.
 # Sets $mdc_cluster and exports PLAYGROUND_CLUSTER so that the nested playground calls use the same cluster.
