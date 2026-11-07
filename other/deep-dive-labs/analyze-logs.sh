@@ -73,6 +73,30 @@ lab_expect_contains "streams2.log RUNNING 15:19:05 3 (0.5s) 1 RUNNING 0_1 - -"
 lab_expect_contains "streams3.log RUNNING 15:19:06 2 (2.7s) 1 RUNNING 0_2 - -"
 lab_expect_contains "❌ streams.log: the client is ERROR since 2026-11-05 15:19:21"
 
+log "Section 4: errors right after a change"
+cat > "$work/change.log" << 'EOF'
+[2026-11-06 10:00:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.s3.S3SinkConnector
+	flush.size = 100
+	name = s3-sink
+	tasks.max = 1
+
+[2026-11-06 10:00:05,000] INFO [s3-sink|task-0] all good (io.confluent.connect.s3.S3SinkTask)
+[2026-11-06 10:20:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.s3.S3SinkConnector
+	flush.size = 100000
+	name = s3-sink
+	tasks.max = 1
+
+[2026-11-06 10:21:30,000] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
+    org.apache.kafka.connect.errors.ConnectException: java.lang.OutOfMemoryError: Java heap space
+[2026-11-06 10:40:00,000] ERROR [other-sink|task-0] unrelated error in another connector (com.acme.Other)
+EOF
+lab_run playground analyze logs -f "$work/change.log" --output-dir "$report_dir"
+lab_expect_contains "🔗 Errors right after a change (1)"
+lab_expect_contains "⏱️ 1 min 30 s after ⚙️ SinkConnectorConfig: flush.size 100 → 100000"
+lab_expect_not_contains "unrelated error in another connector (com.acme.Other) ⏱️"
+
 log "Section 5: one connector, its configuration"
 lab_run playground analyze logs --sample connect_task_failure --connector cdc-xstream-oracle-source --output-dir "$report_dir"
 lab_expect_contains "🧭 Summary (--connector cdc-xstream-oracle-source): 7 occurrence(s) of 4 distinct record(s) in 1 file(s), 2026-10-14 10:05:02 → 2026-10-14 10:05:55"
