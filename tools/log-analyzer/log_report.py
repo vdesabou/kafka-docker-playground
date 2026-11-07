@@ -715,6 +715,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["summary"]["kafka_versions"] = kafka_versions(files)
     res["lifecycle"] = lifecycle(res, files)
     res["fixed_bugs"] = fixed_bugs_found(res, files)
+    res["task_workers"] = task_workers(res, files)
     res["config_lint"] = config_lint(res)
     for c in res["connectors"]:
         c["config_lint"] = [x for x in res["config_lint"] if x["connector"] == c["connector"]]
@@ -1128,6 +1129,132 @@ def lifecycle_html(lc: Optional[dict]) -> str:
             f"{rows}</table></div>")
 
 
+def worker_of(label: str) -> str:
+    """the worker a log file belongs to: its label without the rotation suffix (worker-1/connect.log.1 and
+    worker-1/connect.log.2.gz are worker-1/connect.log; connect-1.log and connect-2.log are two workers)"""
+    return re.sub(r"(?:[.-]\d+|\.\d{4}-\d\d-\d\d(?:[-_.]\d\d)?)?(?:\.gz)?$", "", label)
+
+
+# a connector whose tasks ran on several workers but whose errors all come from one of them: a DNS, truststore, plugin
+# path or network difference of that host, invisible in a merged view
+ONLY_ON_MIN_ERRORS = 3
+
+
+def task_workers(res: dict, files: List[dict]) -> dict:
+    """🖥️ which worker ran which task, and when: the "Starting task <connector>-<n>" INFO lines of each worker (a task_start
+    event, the worker that runs the task logs it, whatever the rebalance protocol), merged per worker (worker_of). For each
+    connector: the workers its tasks ran on, with their starts and the ERROR / WARN of the connector in that worker's logs,
+    and only_on when every error comes from one worker while its tasks also ran elsewhere. Empty with one worker"""
+    starts: List[Tuple[str, str, str, str]] = []
+    for f in files:
+        w = worker_of(f["label"])
+        for ev in f.get("events") or []:
+            task = ev.get("detail") or ""
+            if ev["kind"] == "task_start" and ev.get("time") and re.match(r"^\S+-\d+$", task):
+                starts.append((ev["time"], task, ev.get("connector") or re.sub(r"-\d+$", "", task), w))
+    workers = sorted({x[3] for x in starts})
+    if len(workers) < 2:
+        return {"workers": workers, "tasks": [], "connectors": []}
+    # shown by their folder (worker-3 instead of worker-3/connect.log) when the folders tell the workers apart
+    folders = {w: w.rsplit("/", 1)[0] if "/" in w else w for w in workers}
+    if len(set(folders.values())) < len(workers):
+        folders = {w: w for w in workers}
+    # without the part they all share (case.zip:bundle/worker-1, case.zip:bundle/worker-2 -> worker-1, worker-2)
+    common = os.path.commonprefix(list(folders.values()))
+    cut = max(common.rfind("/"), common.rfind(":")) + 1
+    if cut and all(len(v) > cut for v in folders.values()):
+        folders = {w: v[cut:] for w, v in folders.items()}
+    starts = sorted((t, task, conn, folders[w]) for t, task, conn, w in starts)
+    workers = sorted(set(folders.values()))
+    # the periods of each task: from a start on a worker to its next start on another worker
+    tasks: "OrderedDict[str, dict]" = OrderedDict()
+    for t, task, conn, w in starts:
+        entry = tasks.setdefault(task, {"task": task, "connector": conn, "runs": []})
+        runs = entry["runs"]
+        if runs and runs[-1]["worker"] == w:
+            runs[-1]["starts"] += 1
+            runs[-1]["last_start"] = t
+        else:
+            if runs:
+                runs[-1]["to"] = t
+            runs.append({"worker": w, "from": t, "to": None, "starts": 1, "last_start": t})
+    errors: Dict[Tuple[str, str], Counter] = {}
+    for f in files:
+        w = folders.get(worker_of(f["label"]), worker_of(f["label"]))
+        for r in f["records"]:
+            if r.get("connector"):
+                errors.setdefault((r["connector"], w), Counter())[r["level"]] += r["count"]
+    conns: "OrderedDict[str, dict]" = OrderedDict()
+    for entry in tasks.values():
+        c = conns.setdefault(entry["connector"], {"connector": entry["connector"], "workers": OrderedDict(), "only_on": None})
+        for run in entry["runs"]:
+            x = c["workers"].setdefault(run["worker"], {"worker": run["worker"], "task_starts": 0, "errors": 0, "warnings": 0})
+            x["task_starts"] += run["starts"]
+    for c in conns.values():
+        for w, x in c["workers"].items():
+            lv = errors.get((c["connector"], w), Counter())
+            x["errors"], x["warnings"] = lv["FATAL"] + lv["ERROR"], lv["WARN"]
+        with_errors = [x for x in c["workers"].values() if x["errors"]]
+        if len(c["workers"]) > 1 and len(with_errors) == 1 and with_errors[0]["errors"] >= ONLY_ON_MIN_ERRORS:
+            c["only_on"] = with_errors[0]["worker"]
+        c["workers"] = list(c["workers"].values())
+    cards = {c["connector"]: c for c in res["connectors"]}
+    for c in conns.values():
+        if c["connector"] in cards:
+            cards[c["connector"]]["workers"] = c["workers"]
+            if c["only_on"]:
+                cards[c["connector"]]["only_on"] = c["only_on"]
+    out = sorted(conns.values(), key=lambda c: (c["only_on"] is None, -sum(x["errors"] for x in c["workers"]), c["connector"]))
+    return {"workers": workers, "tasks": list(tasks.values()), "connectors": out}
+
+
+def only_on_text(c: dict) -> str:
+    others = [x["worker"] for x in c["workers"] if x["worker"] != c["only_on"]]
+    errs = next(x["errors"] for x in c["workers"] if x["worker"] == c["only_on"])
+    return (f"🎯 {c['connector']}: its {errs:,} ERROR/FATAL all come from {c['only_on']}, while its tasks also ran on "
+            f"{', '.join(others[:3])}{' …' if len(others) > 3 else ''} without error: compare that host (DNS, truststore, "
+            "plugin path, network, worker config)")
+
+
+def task_workers_text(tw: Optional[dict], top: int = 6) -> List[str]:
+    conns = (tw or {}).get("connectors") or []
+    if not conns:
+        return []
+    out = [f"🖥️ Tasks by worker ({len(tw['workers'])} workers, from the \"Starting task\" lines; .task_workers of --json)"]
+    for c in conns[:top]:
+        if c["only_on"]:
+            out.append("   " + only_on_text(c))
+        else:
+            out.append(f"   {c['connector']}: " + ", ".join(f"{x['worker']} ({x['task_starts']} start(s), {x['errors']:,} error(s))" for x in c["workers"][:4]))
+    if len(conns) > top:
+        out.append(f"   … {len(conns) - top} more in the HTML report")
+    return out
+
+
+def task_workers_html(tw: Optional[dict]) -> str:
+    tasks = (tw or {}).get("tasks") or []
+    if not tasks:
+        return ""
+    notes = "".join(f"<p class='tw-only' data-conn='{e(c['connector'])}'>{e(only_on_text(c))}</p>" for c in tw["connectors"] if c["only_on"])
+    errs = {(c["connector"], x["worker"]): x for c in tw["connectors"] for x in c["workers"]}
+    rows = []
+    for t in tasks:
+        for i, run in enumerate(t["runs"]):
+            x = errs.get((t["connector"], run["worker"])) or {}
+            rows.append(f"<tr class='tw-row' data-conn='{e(t['connector'])}'><td class='mono'>{e(t['task']) if i == 0 else ''}</td>"
+                        f"<td class='mono'>{e(run['worker'])}</td><td class='mono'>{e(run['from'].replace('T', ' '))} → "
+                        f"{e(run['to'].replace('T', ' ')) if run['to'] else 'end of the logs'}</td><td class='num'>{run['starts']}</td>"
+                        f"<td class='num'>{x.get('errors', 0) or ''}</td><td class='num'>{x.get('warnings', 0) or ''}</td></tr>")
+    return ("<style>.tw-only{font-weight:600;color:#b91c1c}html[data-theme=dark] .tw-only{color:#fca5a5}tr.tw-row[hidden],p.tw-only[hidden]{display:none}</style>"
+            f"<div class='table-card'><h2>🖥️ Tasks by worker ({len(tw['workers'])} workers)</h2><p class='legend'>Which worker "
+            "ran each task, and when, from the \"Starting task\" INFO lines that the worker running it logs (the rotated files "
+            "of a worker are one worker). The errors and warnings are those of the connector in the logs of that worker. "
+            f"🎯 a connector whose errors ({ONLY_ON_MIN_ERRORS} or more) all come from one worker while its tasks also ran on "
+            "others: that host differs (DNS, truststore, plugin path, network, worker config).</p>" + notes
+            + "<table><tr><th>Task</th><th>Worker</th><th>Ran</th><th class='num'>Starts</th><th class='num'>Errors of the connector "
+            "on this worker</th><th class='num'>Warnings</th></tr>" + "".join(rows) + "</table></div>")
+
+
 VERDICT_ICONS = {"affected": "⛔", "fixed": "✅", "unknown": "❔"}
 
 
@@ -1384,6 +1511,10 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else "")
             + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
+            + (f"<div class='fi-meta'>🖥️ tasks ran on {len(c['workers'])} worker(s): "
+               + e(", ".join(f"{x['worker']} ({x['errors']:,} error(s))" for x in c["workers"][:4]))
+               + "</div>" if c.get("workers") and len(c["workers"]) > 1 else "")
+            + (f"<div class='tw-only'>🎯 errors only on {e(c['only_on'])}</div>" if c.get("only_on") else "")
             + "".join(f"<div class='conn-note-bug'>{VERDICT_ICONS[x['verdict']]} {e(x['title'])} ({e(x['ref'])})"
                       + (f": upgrade to {e(x['upgrade_to'])} or later" if x["verdict"] == "affected" else
                          ": fixed in its version" if x["verdict"] == "fixed" else ": version unknown") + "</div>"
@@ -1864,6 +1995,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += lifecycle_text(res.get("lifecycle"))
     # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
     out += config_lint_text(res.get("config_lint") or [])
+    # which worker ran which task, a connector failing on one worker only (🖥️ of the HTML report, .task_workers of --json)
+    out += task_workers_text(res.get("task_workers"))
     # the known bugs fixed in a later version (🩹 of the HTML report, .fixed_bugs of --json)
     out += fixed_bugs_text(res.get("fixed_bugs") or [])
     # the files for another analyzer (🧰 of the HTML report, .other_files of --json)
@@ -2096,6 +2229,10 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             where = f"{first.get('file', '').split('/')[-1]}:{first.get('line', '')}" + (f" {first['timestamp'].replace('T', ' ')}" if first.get("timestamp") else "")
             reads = "".join(f" · 📚 [{md_cell(label)}]({url})" for label, url in reading_links(h))
             out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])}{reads} |")
+    only = [c for c in (res.get("task_workers") or {}).get("connectors") or [] if c["only_on"]]
+    if only:
+        out += ["", "### Errors on one worker only", ""]
+        out += [f"- {md_cell(only_on_text(c))}" for c in only[:5]]
     bugs = res.get("fixed_bugs") or []
     if bugs:
         out += ["", "### Known bugs fixed in a later version of the plugin", ""]
@@ -2996,6 +3133,11 @@ function pgStateRead() {
 // 🔄 Restarts and rebalances: a row of another connector is hidden when a connector is picked, every connector row when
 // "no connector context" is; the worker group rebalances and the process starts (no data-conn) stay
 function pgLifecycle() {
+  // the 🖥️ Tasks by worker rows and 🎯 notes too: those of the connector picked
+  document.querySelectorAll("tr.tw-row, p.tw-only").forEach(function (el) {
+    const conn = el.dataset.conn;
+    el.hidden = !(!conn || pgConnector === "" || (pgConnector !== "-" && conn === pgConnector));
+  });
   const rows = document.querySelectorAll("tr.lc-row");
   if (!rows.length) return;
   let shown = 0;
@@ -3883,7 +4025,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
             fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
-            lifecycle_html(res.get("lifecycle")), other_files_html(res.get("other_files"))]
+            lifecycle_html(res.get("lifecycle")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files"))]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -4038,7 +4180,7 @@ def main() -> int:
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
                          "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint,"
-                         "other_files,fixed_bugs (default: all)")
+                         "other_files,fixed_bugs,task_workers (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
