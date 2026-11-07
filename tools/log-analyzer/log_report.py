@@ -1027,6 +1027,40 @@ def lifecycle_html(lc: Optional[dict]) -> str:
             f"{rows}</table></div>")
 
 
+def other_files_text(of: Optional[dict], top: int = 8) -> List[str]:
+    """🧰 the files of the input for another analyzer (tools/log-analyzer/bundle_triage.py), with the command to run"""
+    cmds = (of or {}).get("commands") or []
+    if not cmds:
+        return []
+    out = ["🧰 Other files of the input, for another analyzer (.other_files of --json)"]
+    for c in cmds[:top]:
+        where = f" in {c['folder']}/" if c.get("folder") else ""
+        what = f"{len(c['files'])} {c['what']} file(s){where}" if len(c["files"]) > 1 else f"{c['what']}: {c['files'][0]}"
+        out.append(f"   {c['icon']} {what}")
+        out.append(f"      {c['command']}")
+    if len(cmds) > top:
+        out.append(f"   … {len(cmds) - top} more in the HTML report and .other_files of --json")
+    return out
+
+
+def other_files_html(of: Optional[dict]) -> str:
+    cmds = (of or {}).get("commands") or []
+    if not cmds:
+        return ""
+    kept = any(f.get("kept") for f in (of or {}).get("files") or [])
+    rows = "".join(
+        f"<tr><td>{e(c['icon'])} {e(c['what'])}</td><td class='mono'>{'<br>'.join(e(x) for x in c['files'][:10])}"
+        f"{e(' … +' + str(len(c['files']) - 10)) if len(c['files']) > 10 else ''}</td>"
+        f"<td><code class='of-cmd'>{e(c['command'])}</code></td></tr>" for c in cmds)
+    return ("<style>.of-cmd{white-space:pre-wrap;word-break:break-all;font-size:.78rem}</style>"
+            "<div class='table-card'><h2>🧰 Other files of the input, for another analyzer</h2><p class='legend'>"
+            "Files of the input that another playground analyzer reads better than this log digest: GC logs (pauses, "
+            "Full GC, heap trend), thread dumps (deadlocks, stuck threads), heap dumps, flight recordings, network "
+            "captures, Oracle XStream diagnostics reports. Run the command of each."
+            + (" The ones extracted from an archive were kept next to this report (&lt;report&gt;-other-files/)." if kept else "")
+            + "</p><table><tr><th>What</th><th>Files</th><th>Command</th></tr>" + rows + "</table></div>")
+
+
 def config_lint(res: dict) -> List[dict]:
     """risky or unusual values in the configuration each connector and its clients logged at startup (the last dump of
     each): a sink skipping bad records without a dead letter queue, a poll loop that can exceed max.poll.interval.ms, a
@@ -1602,6 +1636,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += lifecycle_text(res.get("lifecycle"))
     # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
     out += config_lint_text(res.get("config_lint") or [])
+    # the files for another analyzer (🧰 of the HTML report, .other_files of --json)
+    out += other_files_text(res.get("other_files"))
     configs = res.get("configuration") or []
     if configs:
         out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
@@ -3602,7 +3638,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
-            lifecycle_html(res.get("lifecycle"))]
+            lifecycle_html(res.get("lifecycle")), other_files_html(res.get("other_files"))]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -3733,6 +3769,7 @@ def main() -> int:
     ap.add_argument("--ticket-out", metavar="PATH", help="also write the summary for a ticket (Markdown, sanitized) there")
     ap.add_argument("--compare-label", metavar="LABEL", action="append", default=[],
                     help="what that other input is, for the report (one per --compare)")
+    ap.add_argument("--other-files", metavar="JSON", help="the files of the input for another analyzer (bundle_triage.py)")
     ap.add_argument("--json", action="store_true", help="print the analysis as JSON")
     ap.add_argument("--html-out", metavar="PATH", help="write a self-contained HTML report")
     ap.add_argument("--heading", default="🔥 Log Analysis", help="title of the report")
@@ -3755,7 +3792,8 @@ def main() -> int:
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
-                         "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint (default: all)")
+                         "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint,"
+                         "other_files (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
@@ -3780,6 +3818,12 @@ def main() -> int:
             res["comparison"] = compare_reports(res, prevs[-1], labels[-1])
             if len(prevs) > 1:
                 res["trend"] = trend(res, prevs, labels, args.title)
+    if args.other_files:
+        try:
+            with open(args.other_files, encoding="utf-8") as fh:
+                res["other_files"] = json.load(fh)
+        except (OSError, ValueError) as ex:
+            print(f"⚠️ --other-files: cannot read {args.other_files}: {ex}", file=sys.stderr)
     res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
     if args.json:

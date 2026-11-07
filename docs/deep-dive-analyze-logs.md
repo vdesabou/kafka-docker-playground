@@ -140,7 +140,8 @@ Give it anything: `-f` takes files, folders and archives, repeated as many times
 | Kafka Streams logs (`stream-client [`, `stream-thread [`) | the digest, plus a 🌊 **Kafka Streams** section: state of each instance over time, rebalances, tasks, restores |
 | a CFK support bundle | analyzed as a whole by the CFK analyzer: pods, custom resources, events, versions, recent changes, see [the CFK deep dive](deep-dive-cfk.md) (`--logs-only` for the plain digest) |
 | `.properties`, connector JSON (`/connectors?expand=info`) | shown in the ⚙️ configuration of the report |
-| a binary file | skipped, counted in the last line |
+| GC logs, thread dumps (also printed by `kill -3` in a stdout log), heap dumps (`.hprof`), flight recordings (`.jfr`), network captures (`.pcap`, `.pcapng`), Oracle XStream diagnostics reports (`orclcdc_diag*.html`) | recognized by their content or name: 🧰 **Other files of the input** gives the `playground analyze gc-logs\|thread-dump\|heap-dump\|flight-recorder\|tcp-dump\|oracle-xstream-report` command to run on each (one command for the rotated GC logs of a folder). The ones extracted from an archive are kept in `<input>-other-files/` next to the report: the temporary folder is deleted at the end. Also `.other_files` of `--json` (where nothing is kept: the command says to extract the archive first) |
+| any other binary file | skipped, counted in the last line |
 
 ### A JSON export of a log console
 
@@ -223,6 +224,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🔎 findings | the known causes with what to do and their exception chains, then the most frequent errors no known cause explains; each card says how much of it is in the current selection |
 | 🗓️ incident timeline | *what happened first?*: all files merged, the first occurrence of each error and known cause, restarts, connectors reconfigured, config changed between restarts. A chart above the table places them in time, one lane per component (the long gaps cut ⫽, hover a mark for its time and Δ, click it for its row), and the Δ column gives the time since the previous event (the biggest gaps in bold) |
 | 🔄 restarts and rebalances | from the INFO lines (the digest only keeps ERROR / WARN): the rebalances of the worker groups, the rejoins of the consumer groups with their reason, the connectors and tasks started, the workers and brokers (re)started, each counted with its rate per hour. 🌀 **storm**: 10 or more at 6 or more per hour (a consumer that leaves on purpose, `pro-actively leaving the group`, is not one); also on the 🔌 cards and in the 🗓️ timeline. A connector picked in the filter keeps its rows, the worker group rebalances and process starts (every connector of the worker) stay |
+| 🧰 other files of the input | the GC logs, thread dumps, heap dumps, flight recordings, network captures and XStream reports of the input, with the command of the analyzer to run on each (section 3) |
 | 🔌 connectors | a card per connector, the 30 with the most errors first (show the others): errors, task kills, known causes, configuration, keys changed; ▶ only this connector keeps its card only (⤺ for all of them), the search filters the cards |
 | 📈 occurrences over time | drag to zoom down to the second; an error repeated all day is spread over the day (sampled, counted with its weight) |
 | 🌳 all root causes | every distinct error, by deepest exception, linked to the finding that explains it |
@@ -471,6 +473,7 @@ playground analyze logs --sample support_bundle --json 2>/dev/null | jq -c '.con
 | `.timeline[]` | the incident timeline |
 | `.connectors[]` | the card of each connector |
 | `.comparison` | with `--compare` |
+| `.other_files` | `files[]` (label, kind, path, kept) and `commands[]` of the 🧰 files for another analyzer |
 | `.configuration[]` | the configs logged (89 % of the JSON on a big bundle: `--json-sections` leaves it out) |
 | `.files[].records[]` | every record, its context, its connector |
 
@@ -552,6 +555,7 @@ The error is in the part that was not received. Without the warning, it would ha
 | a CloudWatch, OpenSearch, Kibana, Splunk, Datadog or Loki export | `playground analyze logs -f <export.json\|.csv>`: converted back to log lines, oldest first |
 | the logs of a Python, Go, .NET, JavaScript, C/C++ or Rust application | `playground analyze logs -f <the logs>`; to reproduce, `other/client-<language>` runs that client against the playground |
 | a Kafka Streams application that rebalances in a loop or stops | `playground analyze logs -f <the logs of every instance>`: the 🌊 Kafka Streams section |
+| GC logs, thread dumps, a heap dump or a pcap in the same zip as the logs | `playground analyze logs -f <bundle>`, then run the commands of 🧰 Other files of the input (they point at the copies kept in `<input>-other-files/`) |
 | "the logs are clean" | check 🕐 the period covered and ⚠️ not fully read, then the 🔭 overview of what the logs contain and what to ask for |
 | point engineering at one burst | filter the report (connector, level, drag over the burst), 🔗 Link to this view, 📤 Share the `.zip` |
 | only the incident, in a day of logs | `playground analyze logs -f <bundle> --since "2026-11-06 10:00" --until "2026-11-06 11:00"` (the line numbers stay those of the files) |

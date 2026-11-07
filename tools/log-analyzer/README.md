@@ -72,6 +72,22 @@ that `gzip -dc` stops on (`unexpected end of file`: a partial download, read up 
 `LC_ALL=C`: in a UTF-8 locale, the awk of macOS stops on the first byte that is not UTF-8 (`awk: towc: multibyte
 conversion failure`) and every record of the file was lost; its lines are cut without leaving half a UTF-8 character.
 
+## Other files of the input (🧰 bundle triage)
+
+`analyze logs` writes `label<tab>path` of every file it walks (archives extracted) to `$tmp_dir/walked`.
+`bundle_triage.py --walked <file>` recognizes, by content (magic bytes, the first 64 KB, the whole file for a thread
+dump) or by name, the files that another analyzer of the playground reads better than the digest: GC logs (unified
+`[gc` tags, legacy `[GC (`, `[Full GC`; a file named `*gc*` or 5 GC lines in its head), thread dumps (`Full thread
+dump` and `java.lang.Thread.State:`, anywhere in a stdout log up to 2 GB, the first MB of a `.gz`), heap dumps
+(`JAVA PROFILE 1.0`, `.hprof`), flight recordings (`FLR\0`, `.jfr`), network captures (pcap / pcapng magic, `.pcap`,
+`.pcapng`, `.cap`) and Oracle XStream diagnostics reports (`orclcdc` in an `.html`). It prints JSON: `files[]` (label,
+path, kind, bytes, kept) and `commands[]`, one per kind and folder for `gc-logs`, `thread-dump` and
+`oracle-xstream-report` (they read several files), one per file for the others. With `--keep-dir`, a file extracted to
+`--tmp-dir` is kept there as `<archive name>/<path in the archive>`: hard-linked or copied when the report links to it
+(`--sources`), moved otherwise, so the commands still work after the tmp dir is deleted. `analyze logs` keeps them in
+`<stem>-other-files/` next to the report; not with `--json` (the command then says to extract the archive first).
+`log_report.py --other-files <json>` adds the 🧰 section to the summary, the HTML report and `.other_files` of `--json`.
+
 ## Comparison with another input
 
 `--compare <before>` (the logs before a fix, another worker, the day before) runs `analyze logs` again on `<before>` with
