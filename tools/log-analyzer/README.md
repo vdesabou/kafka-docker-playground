@@ -130,6 +130,21 @@ Distinct records to 🌳 All root causes (`#all-root-causes`), 🔁 Occurrences 
 of the filter bar have them too) to 📈 Occurrences over time. A folded section is unfolded; a tile whose section is not in
 the report stays a plain tile.
 
+The 🏷️ tile (`version_tile()`) is 🏷️ CP when the version is Confluent Platform: `Kafka version: 8.1.0-ce` / `-ccs` of the
+logs, or the image tags of the CRs of a CFK bundle (`cp-server:8.1.0`); 🏷️ Kafka for plain Apache Kafka logs. 🔴 Critical,
+🟠 High, 🟡 Medium, 🟢 Low (`findings_severity_tiles()`) count the cards of 🔎 Findings at each severity, the ☸️ CFK ones
+included: a click keeps only those cards (the severity chips of the section follow) and goes there, again shows them all.
+The tiles of the CFK bundles join the same row (`cfk_kpi_tiles()`: ☸️ CFK issues, clickable, the Kubernetes and CFK
+versions). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
+the sections, the record cards of each file left out) open each section the same way.
+On a wide screen (1400 px or more), the same links are a 🧭 Sections panel on the left (the section on screen
+highlighted, ⟨ hides it, ☰ Sections brings it back, remembered in `localStorage` as `pg-side-nav`); a ⬆️ Top button shows
+once the page is scrolled down. The jumps use a quick scroll (`pgScrollTo()`, 250 ms) that stops under the sticky filter bar.
+The sanitization state (⚠️ Not sanitized, 🔒 Sanitization) is a line under the verdict, not a section, and 📥 Data to
+request is the last section.
+📤 Share is a button of the header, of the sticky filter bar (next to 🔗 Link to this view) and of the 🧭 Sections panel,
+and the S key; all open the same dialog (.zip, summary, summary for a ticket, path, email).
+
 ## Sections of a CFK support bundle
 
 The log report of a CFK support bundle is its only report: `cfk_sections_html()` draws a ☸️ card per bundle (the JSON

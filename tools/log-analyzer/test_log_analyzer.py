@@ -421,11 +421,19 @@ def test_cfk_sections_and_verdict():
         res = log_report.analyze(files)
     res["_cfk_bundles"] = [bundle]
     html = log_report.cfk_sections_html([bundle])
-    for x in ("☸️ CFK support bundle: case.tgz:bundle", "kpi-card", "Expired certificate", "cp-server:8.1.0",
+    for x in ("☸️ CFK support bundle: case.tgz:bundle", "Expired certificate", "cp-server:8.1.0",
               "Update by kubectl-edit: spec.image"):
         check(x, x in html, x)
-    check("clickable tiles", "<a class='cfk-kpi' href='#findings' data-bundle='0' data-sev='critical'>" in html
-          and "data-sev='medium'>" not in html, html)
+    check("no tiles in the card", '<div class="kpi-card' not in html)
+    tiles = "".join(log_report.cfk_kpi_tiles([bundle]))
+    check("cfk tiles", "<a class='cfk-kpi' href='#findings' data-bundle='*' data-sev=''>" in tiles and "1 critical, 1 high" in tiles
+          and "v1.33.4" in tiles and "3.1.0" in tiles and "🔴 Critical" not in tiles, tiles)
+    sev = "".join(log_report.findings_severity_tiles(log_report.cfk_findings([bundle])))
+    check("severity tiles", "<a class='sev-kpi' href='#findings' data-sev='CRITICAL'>" in sev and "1 ☸️ CFK" in sev
+          and "data-sev='MEDIUM'>" not in sev, sev)
+    check("CP tile", "🏷️ CP" in log_report.version_tile({"kafka_versions": []}, [bundle]) and "8.1.0" in log_report.version_tile({}, [bundle]))
+    check("CP from -ce", ">8.3.2<" in log_report.version_tile({"kafka_versions": ["8.3.2-ce"]}, []))
+    check("Kafka", "🏷️ Kafka" in log_report.version_tile({"kafka_versions": ["4.1.0"]}, []))
     check("no issue list, no log coverage", "Pod Failures" not in html and "kafka-0" not in html and "Log coverage" not in html)
     cards = log_report.cfk_findings([bundle])
     check("cards", [c["severity"] for c in cards] == ["CRITICAL", "HIGH"], cards)

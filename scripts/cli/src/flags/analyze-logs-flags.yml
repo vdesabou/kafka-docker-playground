@@ -103,7 +103,7 @@
 - long: --logs-only
   required: false
   help: |-
-    📜 Do not detect CFK support bundles: only the regular log report, of every file of the bundle (by default, the log report of its pod and operator logs has the ☸️ sections of the bundle: pods, custom resources, events, versions, recent changes)
+    📜 Do not detect CFK support bundles: every file of the input read as logs. By default, a CFK bundle gives one report: its *.log files (pod and operator logs) in the log digest, and its ☸️ sections (pods, custom resources, events, versions, recent changes). Use it when a folder is taken for a CFK bundle by mistake (a confluent-operator-*.log or the YAML of a platform.confluent.io resource at its top): only its *.log files would be read, a log named connect.out or stdout.txt would be left out. Without Docker, the bundle is still read: its pod logs, without its ☸️ sections
 - long: --connector
   short: -c
   required: false

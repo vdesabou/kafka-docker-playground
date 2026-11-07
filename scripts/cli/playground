@@ -10144,7 +10144,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--logs-only")"
-    printf "    📜 Do not detect CFK support bundles: only the regular log report, of every\n    file of the bundle (by default, the log report of its pod and operator logs\n    has the ☸️ sections of the bundle: pods, custom resources, events, versions,\n    recent changes)\n"
+    printf "    📜 Do not detect CFK support bundles: every file of the input read as logs.\n    By default, a CFK bundle gives one report: its *.log files (pod and operator\n    logs) in the log digest, and its ☸️ sections (pods, custom resources,\n    events, versions, recent changes). Use it when a folder is taken for a CFK\n    bundle by mistake (a confluent-operator-*.log or the YAML of a\n    platform.confluent.io resource at its top): only its *.log files would be\n    read, a log named connect.out or stdout.txt would be left out. Without\n    Docker, the bundle is still read: its pod logs, without its ☸️ sections\n"
     echo
 
     # :flag.usage
@@ -11309,7 +11309,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--logs-only")"
-    printf "    📜 Do not detect CFK support bundles: only the regular log report, of every\n    file of the bundle (by default, the log report of its pod and operator logs\n    has the ☸️ sections of the bundle: pods, custom resources, events, versions,\n    recent changes)\n"
+    printf "    📜 Do not detect CFK support bundles: every file of the input read as logs.\n    By default, a CFK bundle gives one report: its *.log files (pod and operator\n    logs) in the log digest, and its ☸️ sections (pods, custom resources,\n    events, versions, recent changes). Use it when a folder is taken for a CFK\n    bundle by mistake (a confluent-operator-*.log or the YAML of a\n    platform.confluent.io resource at its top): only its *.log files would be\n    read, a log named connect.out or stdout.txt would be left out. Without\n    Docker, the bundle is still read: its pod logs, without its ☸️ sections\n"
     echo
 
     # :flag.usage
