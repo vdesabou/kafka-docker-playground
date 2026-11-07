@@ -1145,6 +1145,15 @@ then
     title="sample ${sample_array[*]}"
 fi
 report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
+# the changes of the cluster of each CFK bundle (pods terminated or restarted, custom resources edited, rollouts) join the
+# incident timeline of the log report: 🔗 and 💥 link the errors of the pod logs to them
+for cfk_events_json in "${cfk_json_files[@]}" "${cfk_compare_files[@]}"
+do
+    if [ -s "$cfk_events_json" ]
+    then
+        report_args+=(--cluster-events "$cfk_events_json")
+    fi
+done
 # --compare (repeatable, oldest first): each other input as the JSON of analyze logs (given, or written by this command run
 # again on it, with the same filters and the same sanitizer state), compared by log_report.py --compare (the last one) and
 # drawn as a trend (all of them)
