@@ -41,6 +41,7 @@ lab_expect_contains "📋 For a ticket (Markdown, sanitized: review it): $report
 lab_expect_equals "$(head -n 1 "$report_dir/connect_task_failure-ticket.md")" "## 🔥 Log analysis: sample connect_task_failure" "the summary for a ticket"
 report=$(find "$report_dir" -maxdepth 1 -name "connect_task_failure-log-report.html" | head -1)
 lab_expect_equals "$([ -n "$report" ] && grep -q "<h2>🗓️ Incident timeline</h2>" "$report" && echo yes)" "yes" "the report has the 🗓️ incident timeline"
+lab_expect_equals "$([ -n "$report" ] && grep -q "class='tl-chart'" "$report" && grep -q "class='mono tl-delta'" "$report" && echo yes)" "yes" "the timeline has its chart and its Δ column"
 lab_expect_equals "$(grep -q "<h2>🔌 Connectors (1)</h2>" "$report" && echo yes)" "yes" "the report has the 🔌 connector cards"
 
 log "Section 3: a JSON export of a log console"

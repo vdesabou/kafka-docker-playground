@@ -173,6 +173,15 @@ components (a `START_CONFIGS` dump logged at startup: `DistributedConfig`, `Kafk
 timestamp. The HTML report shows it in 🗓️ **Incident timeline** right after the findings (30 rows, the others in a
 `<details>`, 📄 links to the line), following the filters (`pgTimeline()`: level, component, connector, period, and the search through the record of a first error; the restarts and configurations without connector stay); the terminal summary prints its first 8 events.
 
+Above the table, `pgTimelineChart()` draws the rows shown (so it follows the filters, and includes the rows of the
+`<details>`) as an SVG: one lane per component, x proportional to the time, a mark per event whose shape and color give
+the kind (● first ERROR / WARN, ◆ known cause, ▲ (re)start, ○ rebalance or process start, ■ connector (re)configured or
+config changed). A gap of 2 minutes or more that is a quarter of the span is cut (`⫽ <duration>`, fixed width), so a
+burst after a quiet period stays readable. Marks that would touch go above or below. Hover gives the time, the time
+since the first and the previous event and the text; click (or Enter) scrolls to the row and flashes it. The caption
+gives the span and the biggest gap. `pgTimelineDeltas()` fills the Δ column (time since the previous row shown; bold
+when 30 s or more, half of the biggest gap and 15 % of the span).
+
 ## Times and time zones
 
 `--since` / `--until` (`log_window_filter` of `analyze logs`): the lines out of the window become empty lines before the
