@@ -242,6 +242,10 @@ exports_file="$tmp_dir/exports"
 # terminal, in the HTML report and in --json (.summary.incomplete_inputs), never a silent ✅
 incomplete_file="$tmp_dir/incomplete"
 : > "$incomplete_file"
+# label<tab>path of every file of the input (archives extracted): the 🧰 bundle triage looks there for the GC logs,
+# thread dumps, heap dumps, flight recordings, network captures and XStream reports (tools/log-analyzer/bundle_triage.py)
+walked_file="$tmp_dir/walked"
+: > "$walked_file"
 # $1: label, $2: reason
 function note_incomplete () {
     logwarn "⚠️ $1: $2"
@@ -531,6 +535,10 @@ function append_config_file () {
 # the 🔄 progress page: a file of the input handled (digested, converted, skipped as binary or as a copy) counts as done
 # with its size on disk
 function analyze_logs_path () {
+    if [ -f "$1" ] && ! is_archive_path "$1"
+    then
+        printf '%s\t%s\n' "$2" "$1" >> "$walked_file"
+    fi
     analyze_logs_path_entry "$@"
     if [ -n "${PG_PROGRESS_HTML:-}" ] && [ -f "$1" ] && ! is_archive_path "$1"
     then
@@ -1120,9 +1128,31 @@ if [[ -n "$with_worker" ]]
 then
     report_args+=(--with-worker)
 fi
+# 🧰 the files of the input for another analyzer (GC logs, thread dumps, heap dumps, flight recordings, network captures,
+# XStream reports), with the command to run on each. The ones extracted from an archive are kept next to the report
+# (<stem>-other-files/): the tmp dir is deleted at the end. Not with --json, which writes nothing in --output-dir
+other_files_json="$tmp_dir/other-files.json"
+triage_args=(--walked "$walked_file" --tmp-dir "$tmp_dir" --sources "$sources_file")
+if [[ -z "$json_out" ]]
+then
+    triage_stem=$(basename "${file_array[0]%/}")
+    triage_stem="${triage_stem%%.*}"
+    if [[ ${#sample_array[@]} -gt 0 ]]
+    then
+        triage_stem="${sample_array[0]}"
+    fi
+    triage_args+=(--keep-dir "$(mkdir -p "$output_dir" && cd "$output_dir" && pwd)/${triage_stem}-other-files")
+fi
+if python3 -I "$root_folder/tools/log-analyzer/bundle_triage.py" "${triage_args[@]}" > "$other_files_json" 2>/dev/null \
+    && [ "$(jq '.files | length' "$other_files_json" 2>/dev/null)" -gt 0 ] 2>/dev/null
+then
+    report_args+=(--other-files "$other_files_json")
+else
+    rm -f "$other_files_json"
+fi
 # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
 # changes), on stderr with --json; then the configs asked with --show-config
-if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || [ -n "${compare_json:-}" ] || grep -q '^@@PGCFG@@' "$records_file"
+if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || [ -n "${compare_json:-}" ] || [ -f "$other_files_json" ] || grep -q '^@@PGCFG@@' "$records_file"
 then
     progress_step "🧭 summary: known causes, root causes, configuration"
     echo ""

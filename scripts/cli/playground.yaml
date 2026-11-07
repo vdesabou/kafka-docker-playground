@@ -4492,24 +4492,29 @@ subcommands:
       ⚠️ An input not fully read (a truncated or\ncorrupt .gz, an archive that does
       not fully extract) is listed at the\nend, in the HTML report and in --json (.summary.incomplete_inputs):\nnever
       a silent ✅, and exit code 1 when nothing could be read at all.\nBytes that are
-      not UTF-8 (a Latin-1 character) are read as they are.\nOnly files with findings
-      are\nshown. \U0001F52D When no file has findings, an overview says what the
-      logs\ncontain (period covered, records by level, top messages and loggers) and\nwhat
-      to ask for next (a longer window, the logs of the component that\nfails, a new
-      export of a log console). The HTML report also has\nthe configuration: the configs
-      logged at startup (KafkaConfig values:,\nDistributedConfig, connector and client
-      configs…) and the .properties\nand connector JSON files of the input.\n\n⏳ A
-      large file (20 MB or more) shows a progress bar in the terminal\n(MB read, speed,
-      ETA), and with 20 MB or more of input the report opens\nin the browser right
-      away as a progress page (step, a bar for the file\nbeing read and one for the
-      whole input, elapsed time, speed, ETA of the file and of the whole input) that
-      becomes the report when the analysis ends. The last line\ngives the size read
-      and the time it took. \U0001F4E4 Share in the report: the\n.zip of the report
-      and its file pages (written next to it when they are\nunder 200 MB), the summary
-      to paste, an email. An archive (.tar, .tar.gz,\n.tgz…) shows a bar while it
-      is extracted.\n\n\U0001F5C2️ One tab in the browser: with CFK support bundles
-      in the input, their\nreports and their comparison are written but not opened
-      one by one, the\nlog report links them in a ☸️ CFK support bundles section.
+      not UTF-8 (a Latin-1 character) are read as they are.\n\U0001F9F0 The files
+      of the input that another analyzer reads better (GC logs,\nthread dumps, heap
+      dumps, flight recordings, network captures, Oracle\nXStream diagnostics reports,
+      found by their content or name) are listed\nwith the playground analyze command
+      to run on each, in the summary, the\nHTML report and --json (.other_files);
+      the ones extracted from an\narchive are kept next to the report (<input>-other-files/).\nOnly
+      files with findings are\nshown. \U0001F52D When no file has findings, an overview
+      says what the logs\ncontain (period covered, records by level, top messages
+      and loggers) and\nwhat to ask for next (a longer window, the logs of the component
+      that\nfails, a new export of a log console). The HTML report also has\nthe configuration:
+      the configs logged at startup (KafkaConfig values:,\nDistributedConfig, connector
+      and client configs…) and the .properties\nand connector JSON files of the input.\n\n⏳
+      A large file (20 MB or more) shows a progress bar in the terminal\n(MB read,
+      speed, ETA), and with 20 MB or more of input the report opens\nin the browser
+      right away as a progress page (step, a bar for the file\nbeing read and one
+      for the whole input, elapsed time, speed, ETA of the file and of the whole input)
+      that becomes the report when the analysis ends. The last line\ngives the size
+      read and the time it took. \U0001F4E4 Share in the report: the\n.zip of the
+      report and its file pages (written next to it when they are\nunder 200 MB),
+      the summary to paste, an email. An archive (.tar, .tar.gz,\n.tgz…) shows a bar
+      while it is extracted.\n\n\U0001F5C2️ One tab in the browser: with CFK support
+      bundles in the input, their\nreports and their comparison are written but not
+      opened one by one, the\nlog report links them in a ☸️ CFK support bundles section.
       With only CFK\nbundles, the report of the bundle (or the comparison of several)
       is the\none opened. Several CFK bundles are analyzed in parallel, 4 at a time\n(PLAYGROUND_CFK_PARALLELISM
       to change it), their output printed in order.\n\n☸️ A Confluent for Kubernetes
@@ -4749,7 +4754,7 @@ subcommands:
       description: "\U0001F5C2️ With --json, only these sections, comma separated:
         summary, findings, known_causes, root_causes, files, files_without_findings,
         coverage, configuration, timeline, connectors, comparison, trend, lifecycle,
-        config_lint (default: all). For example --json-sections summary,findings,root_causes"
+        config_lint, other_files (default: all). For example --json-sections summary,findings,root_causes"
     - names:
       - "--component"
       argument: COMPONENT

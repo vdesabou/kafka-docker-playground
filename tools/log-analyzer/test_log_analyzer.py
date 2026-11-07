@@ -14,6 +14,7 @@ import tempfile
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import bundle_triage  # noqa: E402
 import json_log_export as jle  # noqa: E402
 import log_overview  # noqa: E402
 import progress  # noqa: E402
@@ -146,6 +147,50 @@ def test_no_syntax_warning():
                         ast.parse(source, name)
                     except SyntaxError as ex:
                         raise AssertionError(f"{name}: {ex}")
+
+
+def test_bundle_triage():
+    """🧰 the files for another analyzer: recognized by content or name, kept out of the tmp dir, one command per folder
+    for the GC logs, nothing for a plain log that names a GC or a thread"""
+    import gzip
+    with tempfile.TemporaryDirectory() as tmp:
+        src = os.path.join(tmp, "x")
+        keep = os.path.join(tmp, "keep")
+        os.makedirs(os.path.join(src, "b"))
+        files = {
+            "b/kafkaServer-gc.log": b"[2026-11-07T10:00:00.000+0000][info][gc] GC(1) Pause Young (Normal) 10M->5M(20M) 3.1ms\n",
+            "b/stdout.log": b"x\n" * 1000 + b"Full thread dump OpenJDK 64-Bit Server VM\n\"main\" #1\n   java.lang.Thread.State: RUNNABLE\n",
+            "b/cap.pcap": b"\xd4\xc3\xb2\xa1rest",
+            "b/heap.bin": b"JAVA PROFILE 1.0.2\0rest",
+            "b/rec.jfr": b"FLR\0rest",
+            "b/orclcdc_diag_x.html": b"<html>orclcdc_diag</html>",
+            "b/other.html": b"<html>hello</html>",
+            "b/connect.log": b"2026-11-07 10:00:00 INFO GC overhead is fine, thread pool started (Worker)\n",
+        }
+        walked = os.path.join(tmp, "walked")
+        with open(walked, "w") as w:
+            for name, data in files.items():
+                path = os.path.join(src, name)
+                with open(path, "wb") as fh:
+                    fh.write(data)
+                w.write(f"case.zip:{name}\t{path}\n")
+            gz = os.path.join(src, "b", "kafkaServer-gc.log.1.gz")
+            with gzip.open(gz, "wb") as fh:
+                fh.write(files["b/kafkaServer-gc.log"])
+            w.write(f"case.zip:b/kafkaServer-gc.log.1.gz\t{gz}\n")
+        res = bundle_triage.triage(walked, keep, src, {os.path.join(src, "b/stdout.log")})
+        kinds = {f["label"].split("/")[-1]: f["kind"] for f in res["files"]}
+        check("kinds", kinds == {"kafkaServer-gc.log": "gc_log", "kafkaServer-gc.log.1.gz": "gc_log", "stdout.log": "thread_dump",
+                                 "cap.pcap": "network_capture", "heap.bin": "heap_dump", "rec.jfr": "flight_recording",
+                                 "orclcdc_diag_x.html": "xstream_report"}, kinds)
+        gc = [c for c in res["commands"] if c["kind"] == "gc_log"]
+        check("one gc command", len(gc) == 1 and gc[0]["command"].count(" -f ") == 2, gc)
+        check("kept", all(f["kept"] and f["path"].startswith(keep + "/case.zip/b/") and os.path.exists(f["path"]) for f in res["files"]), res["files"])
+        # the file the report links to stays where it is (copied), a binary one is moved
+        check("linked copied", os.path.exists(os.path.join(src, "b/stdout.log")))
+        check("binary moved", not os.path.exists(os.path.join(src, "b/cap.pcap")))
+        res = bundle_triage.triage(walked, None, src, set())
+        check("no keep dir: extract first", all("<extract case.zip first>" in c["command"] for c in res["commands"]), res["commands"])
 
 
 if __name__ == "__main__":

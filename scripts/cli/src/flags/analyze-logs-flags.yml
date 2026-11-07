@@ -126,7 +126,7 @@
   required: false
   arg: sections
   help: |-
-    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, trend, lifecycle, config_lint (default: all). For example --json-sections summary,findings,root_causes
+    🗂️ With --json, only these sections, comma separated: summary, findings, known_causes, root_causes, files, files_without_findings, coverage, configuration, timeline, connectors, comparison, trend, lifecycle, config_lint, other_files (default: all). For example --json-sections summary,findings,root_causes
 - long: --component
   required: false
   repeatable: true

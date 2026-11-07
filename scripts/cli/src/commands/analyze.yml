@@ -130,6 +130,12 @@ commands:
     end, in the HTML report and in --json (.summary.incomplete_inputs):
     never a silent ✅, and exit code 1 when nothing could be read at all.
     Bytes that are not UTF-8 (a Latin-1 character) are read as they are.
+    🧰 The files of the input that another analyzer reads better (GC logs,
+    thread dumps, heap dumps, flight recordings, network captures, Oracle
+    XStream diagnostics reports, found by their content or name) are listed
+    with the playground analyze command to run on each, in the summary, the
+    HTML report and --json (.other_files); the ones extracted from an
+    archive are kept next to the report (<input>-other-files/).
     Only files with findings are
     shown. 🔭 When no file has findings, an overview says what the logs
     contain (period covered, records by level, top messages and loggers) and
