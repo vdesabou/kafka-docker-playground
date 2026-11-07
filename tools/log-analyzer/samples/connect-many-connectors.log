@@ -1,0 +1,246 @@
+[2026-11-06 09:00:00,000] INFO Kafka version: 8.1.2-ce (org.apache.kafka.common.utils.AppInfoParser:124)
+[2026-11-06 09:00:00,000] INFO Kafka commitId: 4f5cd2a0c1b8e3d9 (org.apache.kafka.common.utils.AppInfoParser:125)
+[2026-11-06 09:00:02,014] INFO Kafka Connect worker initialization took 2140ms (org.apache.kafka.connect.cli.AbstractConnectCli:144)
+[2026-11-06 09:00:03,021] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect:57)
+[2026-11-06 09:00:04,028] INFO [Worker clientId=connect-1, groupId=connect-cluster] Rebalance started (org.apache.kafka.connect.runtime.distributed.WorkerCoordinator:242)
+[2026-11-06 09:00:10,070] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector jdbc-oracle-sink (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:10,070] INFO [jdbc-oracle-sink|worker] SinkConnectorConfig values: 
+	connection.password = [hidden]
+	connection.url = jdbc:oracle:thin:@oracle:1521/ORCLPDB1
+	connection.user = connect
+	connector.class = io.confluent.connect.jdbc.JdbcSinkConnector
+	insert.mode = upsert
+	name = jdbc-oracle-sink
+	pk.mode = record_key
+	tasks.max = 1
+	topics = [orders]
+
+[2026-11-06 09:00:10,070] INFO [jdbc-oracle-sink|worker] JdbcSinkConfig values: 
+	connection.password = [hidden]
+	connection.url = jdbc:oracle:thin:@oracle:1521/ORCLPDB1
+	connection.user = connect
+	insert.mode = upsert
+	name = jdbc-oracle-sink
+	pk.mode = record_key
+	topics = [orders]
+
+[2026-11-06 09:00:11,077] INFO [jdbc-oracle-sink|worker] Instantiated connector jdbc-oracle-sink with version 10.7.4 of type class io.confluent.connect.jdbc.JdbcSinkConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:12,084] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task jdbc-oracle-sink-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:12,084] INFO [jdbc-oracle-sink|task-0] Instantiated task jdbc-oracle-sink-0 with version 10.7.4 of type io.confluent.connect.jdbc.JdbcSinkTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:16,112] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector jdbc-postgres-source (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:16,112] INFO [jdbc-postgres-source|worker] SourceConnectorConfig values: 
+	connection.password = [hidden]
+	connection.url = jdbc:postgresql://postgres:5432/inventory
+	connection.user = connect
+	connector.class = io.confluent.connect.jdbc.JdbcSourceConnector
+	mode = timestamp+incrementing
+	name = jdbc-postgres-source
+	tasks.max = 1
+	topic.prefix = pg-
+
+[2026-11-06 09:00:16,112] INFO [jdbc-postgres-source|worker] JdbcSourceConfig values: 
+	connection.password = [hidden]
+	connection.url = jdbc:postgresql://postgres:5432/inventory
+	connection.user = connect
+	mode = timestamp+incrementing
+	name = jdbc-postgres-source
+	topic.prefix = pg-
+
+[2026-11-06 09:00:17,119] INFO [jdbc-postgres-source|worker] Instantiated connector jdbc-postgres-source with version 10.8.4 of type class io.confluent.connect.jdbc.JdbcSourceConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:18,126] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task jdbc-postgres-source-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:18,126] INFO [jdbc-postgres-source|task-0] Instantiated task jdbc-postgres-source-0 with version 10.8.4 of type io.confluent.connect.jdbc.JdbcSourceTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:22,154] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector s3-sink (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:22,154] INFO [s3-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.s3.S3SinkConnector
+	flush.size = 1000
+	format.class = io.confluent.connect.s3.format.parquet.ParquetFormat
+	name = s3-sink
+	s3.bucket.name = orders-archive
+	s3.region = eu-west-1
+	tasks.max = 1
+	topics = [orders]
+
+[2026-11-06 09:00:22,154] INFO [s3-sink|worker] S3SinkConnectorConfig values: 
+	flush.size = 1000
+	format.class = io.confluent.connect.s3.format.parquet.ParquetFormat
+	name = s3-sink
+	s3.bucket.name = orders-archive
+	s3.region = eu-west-1
+	topics = [orders]
+
+[2026-11-06 09:00:23,161] INFO [s3-sink|worker] Instantiated connector s3-sink with version 10.5.13 of type class io.confluent.connect.s3.S3SinkConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:24,168] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task s3-sink-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:24,168] INFO [s3-sink|task-0] Instantiated task s3-sink-0 with version 10.5.13 of type io.confluent.connect.s3.S3SinkTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:28,196] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector es-sink (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:28,196] INFO [es-sink|worker] SinkConnectorConfig values: 
+	behavior.on.malformed.documents = warn
+	connection.url = [http://elasticsearch:9200]
+	connector.class = io.confluent.connect.elasticsearch.ElasticsearchSinkConnector
+	name = es-sink
+	tasks.max = 1
+	topics = [orders]
+
+[2026-11-06 09:00:28,196] INFO [es-sink|worker] ElasticsearchSinkConnectorConfig values: 
+	behavior.on.malformed.documents = warn
+	connection.url = [http://elasticsearch:9200]
+	name = es-sink
+	topics = [orders]
+
+[2026-11-06 09:00:29,203] INFO [es-sink|worker] Instantiated connector es-sink with version 15.0.1 of type class io.confluent.connect.elasticsearch.ElasticsearchSinkConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:30,210] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task es-sink-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:30,210] INFO [es-sink|task-0] Instantiated task es-sink-0 with version 15.0.1 of type io.confluent.connect.elasticsearch.ElasticsearchSinkTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:34,238] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector mysql-cdc (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:34,238] INFO [mysql-cdc|worker] SourceConnectorConfig values: 
+	connector.class = io.debezium.connector.mysql.MySqlConnector
+	database.hostname = mysql
+	database.password = ********
+	database.user = debezium
+	name = mysql-cdc
+	snapshot.mode = when_needed
+	tasks.max = 1
+	topic.prefix = mysql
+
+[2026-11-06 09:00:34,238] INFO [mysql-cdc|worker] MySqlConnectorConfig values: 
+	database.hostname = mysql
+	database.password = ********
+	database.user = debezium
+	name = mysql-cdc
+	snapshot.mode = when_needed
+	topic.prefix = mysql
+
+[2026-11-06 09:00:35,245] INFO [mysql-cdc|worker] Instantiated connector mysql-cdc with version 3.1.2.Final of type class io.debezium.connector.mysql.MySqlConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:36,252] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task mysql-cdc-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:36,252] INFO [mysql-cdc|task-0] Instantiated task mysql-cdc-0 with version 3.1.2.Final of type io.debezium.connector.mysql.MySqlTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:40,280] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector http-sink (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:40,280] INFO [http-sink|worker] SinkConnectorConfig values: 
+	connector.class = io.confluent.connect.http.HttpSinkConnector
+	http.api.url = http://webhook:8080/api/orders
+	max.retries = 3
+	name = http-sink
+	retry.backoff.ms = 3000
+	tasks.max = 1
+	topics = [orders]
+
+[2026-11-06 09:00:40,280] INFO [http-sink|worker] HttpSinkConfig values: 
+	http.api.url = http://webhook:8080/api/orders
+	max.retries = 3
+	name = http-sink
+	retry.backoff.ms = 3000
+	topics = [orders]
+
+[2026-11-06 09:00:41,287] INFO [http-sink|worker] Instantiated connector http-sink with version 1.7.6 of type class io.confluent.connect.http.HttpSinkConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:42,294] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task http-sink-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:42,294] INFO [http-sink|task-0] Instantiated task http-sink-0 with version 1.7.6 of type io.confluent.connect.http.HttpSinkTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:46,322] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector servicenow-source (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:46,322] INFO [servicenow-source|worker] SourceConnectorConfig values: 
+	connector.class = io.confluent.connect.servicenow.ServiceNowSourceConnector
+	kafka.topic = servicenow-incidents
+	name = servicenow-source
+	servicenow.password = [hidden]
+	servicenow.table = incident
+	servicenow.url = https://example.service-now.com
+	tasks.max = 1
+
+[2026-11-06 09:00:46,322] INFO [servicenow-source|worker] ServiceNowSourceConnectorConfig values: 
+	kafka.topic = servicenow-incidents
+	name = servicenow-source
+	servicenow.password = [hidden]
+	servicenow.table = incident
+	servicenow.url = https://example.service-now.com
+
+[2026-11-06 09:00:47,329] INFO [servicenow-source|worker] Instantiated connector servicenow-source with version 2.5.8 of type class io.confluent.connect.servicenow.ServiceNowSourceConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:48,336] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task servicenow-source-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:48,336] INFO [servicenow-source|task-0] Instantiated task servicenow-source-0 with version 2.5.8 of type io.confluent.connect.servicenow.ServiceNowSourceTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:52,364] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting connector inventory-source (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2347)
+[2026-11-06 09:00:52,364] INFO [inventory-source|worker] SourceConnectorConfig values: 
+	connector.class = com.acme.connect.inventory.InventorySourceConnector
+	inventory.endpoint = https://inventory.internal/api
+	name = inventory-source
+	poll.interval.ms = 5000
+	tasks.max = 1
+	topic = inventory
+
+[2026-11-06 09:00:52,364] INFO [inventory-source|worker] InventorySourceConfig values: 
+	inventory.endpoint = https://inventory.internal/api
+	name = inventory-source
+	poll.interval.ms = 5000
+	topic = inventory
+
+[2026-11-06 09:00:53,371] INFO [inventory-source|worker] Instantiated connector inventory-source with version 1.0.0 of type class com.acme.connect.inventory.InventorySourceConnector (org.apache.kafka.connect.runtime.Worker:322)
+[2026-11-06 09:00:54,378] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task inventory-source-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)
+[2026-11-06 09:00:54,378] INFO [inventory-source|task-0] Instantiated task inventory-source-0 with version 1.0.0 of type com.acme.connect.inventory.InventorySourceTask (org.apache.kafka.connect.runtime.Worker:644)
+[2026-11-06 09:00:58,406] INFO [Worker clientId=connect-1, groupId=connect-cluster] Rebalance started (org.apache.kafka.connect.runtime.distributed.WorkerCoordinator:242)
+[2026-11-06 09:01:10,490] WARN [jdbc-oracle-sink|task-0] Write of 500 records failed, remainingRetries=2 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+java.sql.SQLSyntaxErrorException: ORA-00942: table or view does not exist
+[2026-11-06 09:01:30,630] WARN [jdbc-oracle-sink|task-0] Write of 500 records failed, remainingRetries=1 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+java.sql.SQLSyntaxErrorException: ORA-00942: table or view does not exist
+[2026-11-06 09:01:50,770] WARN [jdbc-oracle-sink|task-0] Write of 500 records failed, remainingRetries=0 (io.confluent.connect.jdbc.sink.JdbcSinkTask:101)
+java.sql.SQLSyntaxErrorException: ORA-00942: table or view does not exist
+[2026-11-06 09:02:20,980] ERROR [jdbc-oracle-sink|task-0] WorkerSinkTask{id=jdbc-oracle-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+	at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:636)
+Caused by: org.apache.kafka.connect.errors.ConnectException: java.sql.SQLException: Exception chain:
+java.sql.SQLSyntaxErrorException: ORA-00942: table or view does not exist
+	at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:122)
+[2026-11-06 09:03:00,260] ERROR [jdbc-postgres-source|task-0] Failed to run query for table TimestampIncrementingTableQuerier{table="inventory"."public"."products", query='null', topicPrefix='pg-', incrementingColumn='id', timestampColumns=[updated_at]}: {} (io.confluent.connect.jdbc.source.JdbcSourceTask:452)
+org.postgresql.util.PSQLException: Connection to postgres:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+Caused by: java.net.ConnectException: Connection refused
+[2026-11-06 09:03:30,470] ERROR [jdbc-postgres-source|task-0] Failed to run query for table TimestampIncrementingTableQuerier{table="inventory"."public"."products", query='null', topicPrefix='pg-', incrementingColumn='id', timestampColumns=[updated_at]}: {} (io.confluent.connect.jdbc.source.JdbcSourceTask:452)
+org.postgresql.util.PSQLException: Connection to postgres:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+Caused by: java.net.ConnectException: Connection refused
+[2026-11-06 09:04:00,680] ERROR [jdbc-postgres-source|task-0] Failed to run query for table TimestampIncrementingTableQuerier{table="inventory"."public"."products", query='null', topicPrefix='pg-', incrementingColumn='id', timestampColumns=[updated_at]}: {} (io.confluent.connect.jdbc.source.JdbcSourceTask:452)
+org.postgresql.util.PSQLException: Connection to postgres:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+Caused by: java.net.ConnectException: Connection refused
+[2026-11-06 09:04:30,890] ERROR [jdbc-postgres-source|task-0] Failed to run query for table TimestampIncrementingTableQuerier{table="inventory"."public"."products", query='null', topicPrefix='pg-', incrementingColumn='id', timestampColumns=[updated_at]}: {} (io.confluent.connect.jdbc.source.JdbcSourceTask:452)
+org.postgresql.util.PSQLException: Connection to postgres:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+Caused by: java.net.ConnectException: Connection refused
+[2026-11-06 09:05:00,100] ERROR [jdbc-postgres-source|task-0] Failed to run query for table TimestampIncrementingTableQuerier{table="inventory"."public"."products", query='null', topicPrefix='pg-', incrementingColumn='id', timestampColumns=[updated_at]}: {} (io.confluent.connect.jdbc.source.JdbcSourceTask:452)
+org.postgresql.util.PSQLException: Connection to postgres:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+Caused by: java.net.ConnectException: Connection refused
+[2026-11-06 09:05:30,310] ERROR [jdbc-postgres-source|task-0] Failed to run query for table TimestampIncrementingTableQuerier{table="inventory"."public"."products", query='null', topicPrefix='pg-', incrementingColumn='id', timestampColumns=[updated_at]}: {} (io.confluent.connect.jdbc.source.JdbcSourceTask:452)
+org.postgresql.util.PSQLException: Connection to postgres:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+Caused by: java.net.ConnectException: Connection refused
+[2026-11-06 09:04:00,680] ERROR [s3-sink|task-0] Multipart upload failed to complete for bucket 'orders-archive' key 'topics/orders/partition=0/orders+0+0000004000.parquet' (io.confluent.connect.s3.storage.S3OutputStream:222)
+com.amazonaws.services.s3.model.AmazonS3Exception: Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: 7Q2W; S3 Extended Request ID: x)
+[2026-11-06 09:04:02,694] INFO [s3-sink|task-0] [Consumer clientId=connector-consumer-s3-sink-0, groupId=connect-s3-sink] Request joining group due to: need to re-join with the given member-id: connector-consumer-s3-sink-0-a1 (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:1103)
+[2026-11-06 09:04:40,960] ERROR [s3-sink|task-0] Multipart upload failed to complete for bucket 'orders-archive' key 'topics/orders/partition=0/orders+0+0000004000.parquet' (io.confluent.connect.s3.storage.S3OutputStream:222)
+com.amazonaws.services.s3.model.AmazonS3Exception: Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: 7Q2W; S3 Extended Request ID: x)
+[2026-11-06 09:04:42,974] INFO [s3-sink|task-0] [Consumer clientId=connector-consumer-s3-sink-0, groupId=connect-s3-sink] Request joining group due to: need to re-join with the given member-id: connector-consumer-s3-sink-0-a1 (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:1103)
+[2026-11-06 09:05:20,240] ERROR [s3-sink|task-0] Multipart upload failed to complete for bucket 'orders-archive' key 'topics/orders/partition=0/orders+0+0000004000.parquet' (io.confluent.connect.s3.storage.S3OutputStream:222)
+com.amazonaws.services.s3.model.AmazonS3Exception: Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: 7Q2W; S3 Extended Request ID: x)
+[2026-11-06 09:05:22,254] INFO [s3-sink|task-0] [Consumer clientId=connector-consumer-s3-sink-0, groupId=connect-s3-sink] Request joining group due to: need to re-join with the given member-id: connector-consumer-s3-sink-0-a1 (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:1103)
+[2026-11-06 09:06:00,520] ERROR [s3-sink|task-0] Multipart upload failed to complete for bucket 'orders-archive' key 'topics/orders/partition=0/orders+0+0000004000.parquet' (io.confluent.connect.s3.storage.S3OutputStream:222)
+com.amazonaws.services.s3.model.AmazonS3Exception: Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: 7Q2W; S3 Extended Request ID: x)
+[2026-11-06 09:06:02,534] INFO [s3-sink|task-0] [Consumer clientId=connector-consumer-s3-sink-0, groupId=connect-s3-sink] Request joining group due to: need to re-join with the given member-id: connector-consumer-s3-sink-0-a1 (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:1103)
+[2026-11-06 09:05:00,100] WARN [es-sink|task-0] Ignoring malformed document orders+0+5100 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:05:25,275] WARN [es-sink|task-0] Ignoring malformed document orders+0+5101 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:05:50,450] WARN [es-sink|task-0] Ignoring malformed document orders+0+5102 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:06:15,625] WARN [es-sink|task-0] Ignoring malformed document orders+0+5103 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:06:40,800] WARN [es-sink|task-0] Ignoring malformed document orders+0+5104 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:07:05,975] WARN [es-sink|task-0] Ignoring malformed document orders+0+5105 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:07:30,150] WARN [es-sink|task-0] Ignoring malformed document orders+0+5106 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:07:55,325] WARN [es-sink|task-0] Ignoring malformed document orders+0+5107 due to error: {"type":"mapper_parsing_exception","reason":"failed to parse field [amount] of type [long]"} (io.confluent.connect.elasticsearch.ElasticsearchClient:521)
+[2026-11-06 09:07:00,940] ERROR [mysql-cdc|task-0] The connector is trying to read binlog starting at SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin.000012, currentBinlogPosition=157, currentRowNumber=0, serverId=0, sourceTime=null, threadId=-1, currentQuery=null, tableIds=[], databaseName=null], but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed. (io.debezium.connector.mysql.MySqlConnectorTask:212)
+[2026-11-06 09:07:01,947] ERROR [mysql-cdc|task-0] WorkerSourceTask{id=mysql-cdc-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+org.apache.kafka.connect.errors.ConnectException: The connector is trying to read binlog starting at SourceInfo [currentBinlogFilename=mysql-bin.000012, currentBinlogPosition=157], but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed.
+	at io.debezium.connector.mysql.MySqlConnectorTask.start(MySqlConnectorTask.java:133)
+[2026-11-06 09:08:00,360] WARN [http-sink|task-0] Write of 50 records failed, remainingRetries=2 (io.confluent.connect.http.HttpSinkTask:93)
+io.confluent.connect.http.writer.HttpResponseException: Error while processing HTTP request with Url : http://webhook:8080/api/orders, Status code : 503, Reason Phrase : Service Unavailable, Response Content : upstream unavailable
+[2026-11-06 09:08:04,388] WARN [http-sink|task-0] Write of 50 records failed, remainingRetries=1 (io.confluent.connect.http.HttpSinkTask:93)
+io.confluent.connect.http.writer.HttpResponseException: Error while processing HTTP request with Url : http://webhook:8080/api/orders, Status code : 503, Reason Phrase : Service Unavailable, Response Content : upstream unavailable
+[2026-11-06 09:08:08,416] WARN [http-sink|task-0] Write of 50 records failed, remainingRetries=0 (io.confluent.connect.http.HttpSinkTask:93)
+io.confluent.connect.http.writer.HttpResponseException: Error while processing HTTP request with Url : http://webhook:8080/api/orders, Status code : 503, Reason Phrase : Service Unavailable, Response Content : upstream unavailable
+[2026-11-06 09:08:16,472] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://webhook:8080/api/orders, Status code : 503, Reason Phrase : Service Unavailable
+[2026-11-06 09:09:00,780] WARN [servicenow-source|task-0] Received HTTP 429 Too Many Requests from ServiceNow, backing off for 30000 ms (io.confluent.connect.servicenow.rest.ServiceNowClientImpl:188)
+[2026-11-06 09:09:30,990] WARN [servicenow-source|task-0] Received HTTP 429 Too Many Requests from ServiceNow, backing off for 30000 ms (io.confluent.connect.servicenow.rest.ServiceNowClientImpl:188)
+[2026-11-06 09:10:00,200] WARN [servicenow-source|task-0] Received HTTP 429 Too Many Requests from ServiceNow, backing off for 30000 ms (io.confluent.connect.servicenow.rest.ServiceNowClientImpl:188)
+[2026-11-06 09:10:30,410] WARN [servicenow-source|task-0] Received HTTP 429 Too Many Requests from ServiceNow, backing off for 30000 ms (io.confluent.connect.servicenow.rest.ServiceNowClientImpl:188)
+[2026-11-06 09:11:00,620] WARN [servicenow-source|task-0] Received HTTP 429 Too Many Requests from ServiceNow, backing off for 30000 ms (io.confluent.connect.servicenow.rest.ServiceNowClientImpl:188)
+[2026-11-06 09:11:40,900] ERROR [inventory-source|task-0] Polling the inventory endpoint failed: HTTP 500 Internal Server Error (com.acme.connect.inventory.InventorySourceTask:77)
+com.acme.connect.inventory.InventoryApiException: HTTP 500 Internal Server Error
+[2026-11-06 09:12:40,320] ERROR [inventory-source|task-0] Polling the inventory endpoint failed: HTTP 500 Internal Server Error (com.acme.connect.inventory.InventorySourceTask:77)
+com.acme.connect.inventory.InventoryApiException: HTTP 500 Internal Server Error
+[2026-11-06 09:13:00,460] INFO [Worker clientId=connect-1, groupId=connect-cluster] Rebalance started (org.apache.kafka.connect.runtime.distributed.WorkerCoordinator:242)
+[2026-11-06 09:14:00,880] INFO [Worker clientId=connect-1, groupId=connect-cluster] Starting task jdbc-oracle-sink-0 (org.apache.kafka.connect.runtime.distributed.DistributedHerder:2032)

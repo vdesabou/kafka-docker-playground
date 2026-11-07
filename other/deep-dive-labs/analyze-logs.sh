@@ -44,6 +44,15 @@ lab_expect_equals "$([ -n "$report" ] && grep -q "<h2>🗓️ Incident timeline<
 lab_expect_equals "$([ -n "$report" ] && grep -q "class='tl-chart'" "$report" && grep -q "class='mono tl-delta'" "$report" && echo yes)" "yes" "the timeline has its chart and its Δ column"
 lab_expect_equals "$(grep -q "<h2>🔌 Connectors (1)</h2>" "$report" && echo yes)" "yes" "the report has the 🔌 connector cards"
 
+log "Section 2: a worker with many connectors"
+lab_run playground analyze logs --sample connect_many_connectors --output-dir "$report_dir"
+lab_expect_exit 0
+lab_expect_contains "🛟 3 connector(s) below the minimum version supported on CP 8.1: s3-sink 10.5.13 < 11.0.2, http-sink 1.7.6 < 1.7.10, jdbc-oracle-sink 10.7.4 < 10.8.4"
+lab_expect_contains "[HIGH] 🧨 A connector task was killed ×3 in connect-many-connectors.log (first at line 179, 2026-11-06 09:02:20)"
+lab_expect_contains "🔌 Connectors (8, most errors first)"
+report=$(find "$report_dir" -maxdepth 1 -name "connect_many_connectors-log-report.html" | head -1)
+lab_expect_equals "$([ -n "$report" ] && grep -q "eos-banner" "$report" && grep -q "conn-support bad" "$report" && echo yes)" "yes" "the report has the ⛔ banner and the 🛟 lines of the cards"
+
 log "Section 3: a JSON export of a log console"
 cat > "$work/cloudwatch.json" << 'EOF'
 [

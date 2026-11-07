@@ -190,6 +190,7 @@ commands:
 <%= File.read('src/flags/analyze-logs-flags.yml').gsub(/^(?=.)/, '    ') %>
   examples:
   - playground analyze logs --sample connect_task_failure
+  - playground analyze logs --sample connect_many_connectors
   - playground analyze logs --sample support_bundle
   - playground analyze logs --file connect.log
   - playground analyze logs --file connect-logs.zip --errors-only
