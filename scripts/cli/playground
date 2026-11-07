@@ -10164,7 +10164,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison (default: all). For example\n    --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle (default: all).\n    For example --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -11319,7 +11319,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
-    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison (default: all). For example\n    --json-sections summary,findings,root_causes\n"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, coverage,\n    configuration, timeline, connectors, comparison, lifecycle (default: all).\n    For example --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -30145,6 +30145,9 @@ function install_confluent_plugin() {
 # then the events read from the INFO lines (each distinct one once):
 #   @@PGEVT@@<tab>plugin_version<tab>line<tab>timestamp<tab>connector<tab>version class ("Instantiated connector|task …")
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
+#   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start<tab>line<tab>timestamp<tab>
+#              connector<tab>group, reason or what started: the lifecycle of the INFO lines, 300 of each kind at most
+#   @@PGEVTN@@<tab>kind<tab>connector or group<tab>count: how many of them in the whole file
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
@@ -30627,6 +30630,39 @@ function summarize_log_errors() {
                 ev[++nev] = "kafka_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version
             }
         }
+        # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
+        # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
+            lc_kind = ""; lc_who = ""; lc_detail = ""
+            lc_conn = ""
+            if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
+            if (index($0, "Rebalance started") && match($0, /groupId=[^],]+/)) {
+                lc_kind = "worker_rebalance"; lc_who = substr($0, RSTART + 8, RLENGTH - 8); lc_detail = lc_who
+            } else if (index($0, "Request joining group") && match($0, /groupId=[^],]+/)) {
+                lc_kind = "consumer_rejoin"; lc_who = substr($0, RSTART + 8, RLENGTH - 8)
+                lc_detail = lc_who
+                if (match($0, /due to: [^(]+/)) lc_detail = lc_detail " · " substr($0, RSTART + 8, RLENGTH - 9)
+                if (lc_conn == "" && lc_who ~ /^connect-/) lc_conn = substr(lc_who, 9)
+            } else if (match($0, /Starting connector [^ ]+/)) {
+                lc_kind = "connector_start"; lc_conn = substr($0, RSTART + 19, RLENGTH - 19); lc_who = lc_conn
+            } else if (match($0, /Starting task [^ ]+/)) {
+                lc_kind = "task_start"; lc_who = substr($0, RSTART + 14, RLENGTH - 14); lc_conn = lc_who; sub(/-[0-9]+$/, "", lc_conn)
+            } else if ($0 ~ /Kafka Connect started|Kafka Connect (distributed )?worker initialization took/) {
+                lc_kind = "process_start"; lc_who = "connect"; lc_detail = "Kafka Connect worker started"
+            } else {
+                lc_kind = "process_start"; lc_who = "broker"; lc_detail = "Kafka broker started"
+            }
+            if (lc_kind != "") {
+                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind == "process_start" ? lc_who : lc_conn)
+                if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
+                lc_count[lc_key]++
+                if (++lc_noted[lc_kind] <= 300) {
+                    # read before timestamp_of(), whose match() changes RSTART / RLENGTH
+                    lc_line = NR
+                    ev[++nev] = lc_kind "\t" lc_line "\t" timestamp_of($0) "\t" lc_conn "\t" lc_detail
+                }
+            }
+        }
         # most lines of a big log have no level or exception word and do not continue a record: one regex (a
         # single pass over the line) sets them aside, as the start of a level-less record, without the work below
         # (the clients: librdkafka "%3|", .NET "fail: ", Go "panic: ", Rust "panicked at ", Python "Traceback (", and
@@ -30682,6 +30718,7 @@ function summarize_log_errors() {
                 for (j = 1; j < n; j++) printf "@@PGCFGCHG@@\t%s\n", cl[j] >> records_file
             }
             for (i = 1; i <= nev; i++) printf "@@PGEVT@@\t%s\n", ev[i] >> records_file
+            for (i = 1; i <= nlc_keys; i++) printf "@@PGEVTN@@\t%s\t%d\n", lc_keys[i], lc_count[lc_keys[i]] >> records_file
             close(records_file)
         }
         # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed

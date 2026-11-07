@@ -94,6 +94,16 @@ over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 car
 summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
 `--json` and a line of the summary for a ticket.
 
+## Restarts and rebalances
+
+The digest also notes the lifecycle of the INFO lines (`@@PGEVT@@` events, 300 per kind and file, and `@@PGEVTN@@` counts):
+`Rebalance started` of a worker group, `Request joining group due to: <reason>` of a consumer group, `Starting connector`,
+`Starting task`, `Kafka Connect started` / `worker initialization took`, `Kafka Server started` / `Transition from
+STARTING to STARTED`. `lifecycle()` counts them per group / connector with the rate per hour of the period covered and
+marks a 🌀 storm (`STORM_MIN` = 10 at `STORM_PER_HOUR` = 6 or more, a consumer leaving on purpose excluded): the 🔄 Restarts
+and rebalances section, a line on the 🔌 card of a connector, the (re)starts and the first 20 worker group rebalances in
+the 🗓️ timeline, the terminal summary, the summary for a ticket and `.lifecycle` of `--json`.
+
 ## Summary for a ticket
 
 `ticket_markdown()` writes the verdict, the period, the known causes with what to do, the errors no known cause explains,
