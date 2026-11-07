@@ -316,6 +316,21 @@ def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
     return out
 
 
+def reading_links(h: dict) -> List[tuple]:
+    """(label, url) of what to read about a known cause: its knowledge-base article, then its docs page"""
+    out = []
+    if h.get("kb"):
+        out.append((f"KB: {h.get('kb_title') or 'knowledge base article'}", h["kb"]))
+    if h.get("docs"):
+        out.append(("Docs", h["docs"]))
+    return out
+
+
+def reading_list(h: dict) -> List[str]:
+    """Lines of the text summary: what to read about a known cause"""
+    return [f"{label}: {url}" for label, url in reading_links(h)]
+
+
 def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
     out = []
     for pattern, severity, title, advice in HINTS:
@@ -334,6 +349,8 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
                 "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
                 # the records it matched (index set by analyze()): how much of it is in the current selection
                 "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
+        # what to read about it: a knowledge-base article and / or a docs page
+        hint.update(known_causes.links(title))
         # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed
         # tasks have them there, as before)
         hint["_chains"] = killed_task_chains(matches)
@@ -1513,6 +1530,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         for h in res["known_causes"][:8]:
             out.append(f"   [{h['severity']}] {h['title']} ×{h['occurrences']} {h['where']}")
             out.append(f"      → {h['advice']}")
+            for read in reading_list(h):
+                out.append(f"      📚 {read}")
             for d in h.get("details", [])[:5]:
                 out.append(f"      {d}")
     # same test as the 🌳 cards of the HTML report: not explained by a known cause (records in common, or its pattern)
@@ -1763,7 +1782,8 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
         for h in res["known_causes"][:10]:
             first = h.get("first") or {}
             where = f"{first.get('file', '').split('/')[-1]}:{first.get('line', '')}" + (f" {first['timestamp'].replace('T', ' ')}" if first.get("timestamp") else "")
-            out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])} |")
+            reads = "".join(f" · 📚 [{md_cell(label)}]({url})" for label, url in reading_links(h))
+            out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])}{reads} |")
     others = [c for c in res["root_causes"] if not c.get("explained_by")][:5]
     if others:
         out += ["", "### Errors no known cause explains (most frequent)", ""]
@@ -3040,6 +3060,7 @@ details.rec[open]>summary .rec-line{display:none}
 .fi-count.low{background:#dcfce7;color:#15803d}.fi-count.info{background:#dbeafe;color:#1d4ed8}
 .fi-meta{font-size:.8rem;color:#64748b}
 .fi-advice{font-size:.84rem;color:#475569;margin-top:4px}
+.fi-read a{color:#2563eb;text-decoration:none;margin-right:4px}.fi-read a:hover{text-decoration:underline}
 .rec-details li.fi-chain{font-family:inherit;font-size:.84rem;margin:8px 0;list-style:none;margin-left:-18px;padding:8px 10px;border-radius:8px;background:#f8fafc}
 .fi-exc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#c2410c}
 .fi-exc.error{color:#dc2626}
@@ -3056,6 +3077,7 @@ details.rec[open]>summary .rec-line{display:none}
 .fi-count.critical{background:#450a0a;color:#fca5a5}.fi-count.high{background:#431407;color:#fdba74}.fi-count.medium{background:#422006;color:#fcd34d}
 .fi-count.low{background:#052e16;color:#86efac}.fi-count.info{background:#172554;color:#93c5fd}
 .fi-meta,.fi-advice{color:#94a3b8}
+.fi-read a{color:#93c5fd}
 .rec-details li.fi-chain{background:#0f172a}
 .rec-line{background:#0b1220;color:#e2e8f0}
 .fi-exc{color:#fdba74}.fi-exc.error{color:#fca5a5}
@@ -3146,7 +3168,9 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
         # the killed tasks list all their chains (what to fix), the other known causes the most frequent ones
         chains = v.get("chains") or v.get("_chains") or []
         limit = len(chains) if v.get("chains") else CHAINS_SHOWN
-        head += chains_note(chains, limit) + f"<div class='fi-advice'>👉 {e(v['advice'])}</div>"
+        reads = " · ".join(f"<a href='{e(url)}' target='_blank' rel='noopener'>📚 {e(label)}</a>" for label, url in reading_links(v))
+        head += (chains_note(chains, limit) + f"<div class='fi-advice'>👉 {e(v['advice'])}</div>"
+                 + (f"<div class='fi-advice fi-read'>{reads}</div>" if reads else ""))
         return dict(f, html=head, html_details=chain_rows(chains, limit, sev, viewers) or None)
     # a root cause no known cause explains: its exception as the title, the same rows as a known cause
     chains = v.get("_chains") or []

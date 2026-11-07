@@ -134,6 +134,20 @@ marks a 🌀 storm (`STORM_MIN` = 10 at `STORM_PER_HOUR` = 6 or more, a consumer
 and rebalances section, a line on the 🔌 card of a connector, the (re)starts and the first 20 worker group rebalances in
 the 🗓️ timeline, the terminal summary, the summary for a ticket and `.lifecycle` of `--json`.
 
+## Knowledge-base articles
+
+`LINKS` in `tools/report-common/known_causes.py` gives a known cause a Confluent support knowledge-base article (`kb`,
+`kb_title`) and / or a docs page (`docs`). They are in `--json` (`known_causes[].kb`), a `📚` line of the terminal summary,
+the What to do column of the summary for a ticket and the finding card of the HTML report. Only articles found in the
+knowledge base for signed-in users (most GTS runbooks are internal), and only when they explain the cause in general:
+a cause without a good article has no entry. Never build a URL by hand.
+
+```text
+   [HIGH] ⌛ Records not delivered in time ×5 in 2 files (first at python-producer.log line 27)
+      → the producer gave up on records not acknowledged within message.timeout.ms (librdkafka) / …
+      📚 KB: "TimeoutException: expiring records for topic": https://support.confluent.io/hc/en-us/articles/32304589191444-How-to-resolve-the-TimeoutException-expiring-records-for-topic-producer-error
+```
+
 ## Summary for a ticket
 
 `ticket_markdown()` writes the verdict, the period, the known causes with what to do, the errors no known cause explains,
