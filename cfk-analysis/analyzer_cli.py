@@ -487,23 +487,30 @@ def analyze_bundle(bundle_dir, bundle_path, sanitize, severity, top, as_json, ht
     if label:
         results["label"] = label
 
-    if html_out:
+    # CFK_ANALYSIS_EMBEDDED (playground analyze logs): no HTML page, the log report shows the sections of the bundle from
+    # the JSON of --json-out, which keeps the links to the file pages written next to it (html_out names them)
+    embedded = bool(os.environ.get("CFK_ANALYSIS_EMBEDDED"))
+    if html_out and not embedded:
         rendered = html_report.render(results, bundle_label=os.path.basename(bundle_path))
         os.makedirs(os.path.dirname(os.path.abspath(html_out)), exist_ok=True)
         with open(html_out, "w", encoding="utf-8") as f:
             f.write(rendered)
-    # the links of the HTML report are not part of the analysis
-    for issue in results["issues"]:
-        for key in ("viewer", "editor", "_viewer_name", "_viewer_line"):
-            issue.pop(key, None)
-
     if as_json or json_out:
         for issue in results["issues"]:
             issue["recommendation"] = recommendations.for_category(issue["category"])
+    links = ("viewer", "editor", "_viewer_name", "_viewer_line")
     if json_out:
-        # the same JSON as --json, next to the HTML report: playground analyze logs compares the bundles with it
+        # the same JSON as --json, next to the HTML report: playground analyze logs compares the bundles with it (and,
+        # embedded, shows the bundle in its log report, the file page links included)
+        out = dict({"type": "cfk-bundle"}, **results)
+        if not embedded:
+            out["issues"] = [{k: v for k, v in i.items() if k not in links} for i in results["issues"]]
         with open(json_out, "w", encoding="utf-8") as f:
-            json.dump(dict({"type": "cfk-bundle"}, **results), f, indent=2, default=str)
+            json.dump(out, f, indent=2, default=str)
+    # the links of the HTML report are not part of the analysis
+    for issue in results["issues"]:
+        for key in links:
+            issue.pop(key, None)
     if as_json:
         # type: playground analyze logs emits this JSON for a CFK support bundle, and its own ("logs") otherwise
         json.dump(dict({"type": "cfk-bundle"}, **results), sys.stdout, indent=2, default=str)

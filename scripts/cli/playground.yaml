@@ -4512,23 +4512,22 @@ subcommands:
       read and the time it took. \U0001F4E4 Share in the report: the\n.zip of the
       report and its file pages (written next to it when they are\nunder 200 MB),
       the summary to paste, an email. An archive (.tar, .tar.gz,\n.tgz…) shows a bar
-      while it is extracted.\n\n\U0001F5C2️ One tab in the browser: with CFK support
-      bundles in the input, their\nreports and their comparison are written but not
-      opened one by one, the\nlog report links them in a ☸️ CFK support bundles section.
-      With only CFK\nbundles, the report of the bundle (or the comparison of several)
-      is the\none opened. Several CFK bundles are analyzed in parallel, 4 at a time\n(PLAYGROUND_CFK_PARALLELISM
-      to change it), their output printed in order.\n\n☸️ A Confluent for Kubernetes
-      (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk
-      generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
-      and operator/; or a flat collection of kubectl outputs with a confluent-operator-*.log
-      or the YAML of a platform.confluent.io custom resource at its top), alone or
-      inside a folder or an archive, is detected and analyzed as a whole by the CFK
-      analyzer (a container image built on first use): Warning events, pods (phase,
-      waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource
-      (phase/state, ready replicas, False conditions, failed connector tasks), the
-      environment checked against the CFK support matrix (Kubernetes, CFK operator,
-      CP and init container versions), the recent changes (who edited which CR and
-      when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
+      while it is extracted.\n\n\U0001F5C2️ One report: the sections of each CFK support
+      bundle of the input\n(pods, custom resources, events, versions, recent changes,
+      issues by\ncategory) are in the log report, right after its verdict; the comparison\nof
+      several bundles is linked from it. Several CFK bundles are analyzed in\nparallel,
+      4 at a time (PLAYGROUND_CFK_PARALLELISM to change it), their\noutput printed
+      in order.\n\n☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent
+      support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt,
+      or with cluster-resources/ and operator/; or a flat collection of kubectl outputs
+      with a confluent-operator-*.log or the YAML of a platform.confluent.io custom
+      resource at its top), alone or inside a folder or an archive, is detected and
+      analyzed as a whole by the CFK analyzer (a container image built on first use):
+      Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io
+      custom resource (phase/state, ready replicas, False conditions, failed connector
+      tasks), the environment checked against the CFK support matrix (Kubernetes,
+      CFK operator, CP and init container versions), the recent changes (who edited
+      which CR and when, StatefulSet rollouts, pod restarts), the configuration (kafka.properties,
       zookeeper.properties, schemaregistry.properties, connect.properties and controlcenter.properties
       rendered by CFK, configOverrides, config logged at startup, connector configs
       from the Connector CRs and the config dumps of the logs), a JVM default truststore
@@ -4563,23 +4562,22 @@ subcommands:
       to a component and an instance (CR name), and to its connector: --component
       keeps some of them, the HTML report has Component / Instance / Connector filters.
       \U0001F512 --sanitize replaces secrets, IPs, hostnames, emails and LDAP DNs
-      by placeholders (best effort: review before sharing). \U0001F525 Its pod and
-      operator logs also go through the regular log digest: the log report (root causes,
-      timeline, connector cards and plugin versions, restarts, known bugs fixed later,
-      which pod ran which task, data to request, summary for a ticket) is written
-      next to the report of the bundle, which links it with a \U0001F525 Log analysis
-      banner at its top and stays the one opened (with --json: .log_analysis of the
-      bundle JSON); the issues of its log records come from the same records, and
-      the ☸️ changes of the cluster (pods terminated or restarted, custom resources
-      edited, rollouts) join its incident timeline, so that \U0001F517 and \U0001F4A5
-      link the errors of the pod logs to them. One output for the case: <input>-ticket.md
-      has a ☸️ section per bundle (environment, issues by severity, known CFK issues
-      with their public links, critical and high issues), the \U0001F4E5 data to request
-      of the bundle joins the one of the logs, and --compare <before bundle> compares
-      both the bundles (versions, CR changes, issues fixed / new / still there) and
-      their pod logs. The ⚙️ configuration of the log report also has what only the
-      bundle has: the properties rendered by CFK (ConfigMap <cr>-shared-config), the
-      configOverrides of each CR and the Connector CRs (--show-config <connector>
+      by placeholders (best effort: review before sharing). \U0001F525 One report:
+      its pod and operator logs go through the regular log digest, and the log report
+      (root causes, timeline, connector cards and plugin versions, restarts, known
+      bugs fixed later, which pod ran which task, data to request, summary for a ticket)
+      has the ☸️ sections of the bundle right after its verdict (with --json: the
+      bundle JSON, with .log_analysis); the issues of its log records come from the
+      same records, and the ☸️ changes of the cluster (pods terminated or restarted,
+      custom resources edited, rollouts) join its incident timeline, so that \U0001F517
+      and \U0001F4A5 link the errors of the pod logs to them. One output for the case:
+      <input>-ticket.md has a ☸️ section per bundle (environment, issues by severity,
+      known CFK issues with their public links, critical and high issues), the \U0001F4E5
+      data to request of the bundle joins the one of the logs, and --compare <before
+      bundle> compares both the bundles (versions, CR changes, issues fixed / new
+      / still there) and their pod logs. The ⚙️ configuration of the log report also
+      has what only the bundle has: the properties rendered by CFK (ConfigMap <cr>-shared-config),
+      the configOverrides of each CR and the Connector CRs (--show-config <connector>
       prints the CR with the config logged, config lint checks it), and \U0001F500
       the keys of a Connector CR whose value differs from the config the worker logged
       when it started the connector (the operator did not apply a change). --logs-only
@@ -4763,8 +4761,9 @@ subcommands:
       - "--logs-only"
       argument: ''
       description: "\U0001F4DC Do not detect CFK support bundles: only the regular
-        log report, of every file of the bundle (by default, a CFK bundle gets its
-        own report, and its pod and operator logs the regular log report too)"
+        log report, of every file of the bundle (by default, the log report of its
+        pod and operator logs has the ☸️ sections of the bundle: pods, custom resources,
+        events, versions, recent changes)"
     - names:
       - "--connector"
       - "-c"

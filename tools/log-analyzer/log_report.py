@@ -42,6 +42,16 @@ from known_causes import KILLED_TASK_TITLE  # noqa: E402
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
 
+
+def human_size(n: float) -> str:
+    """bytes as B / KB / MB / GB, as progress.py human (not imported: python3 -I leaves this folder out of sys.path)"""
+    for unit in ("B", "KB", "MB", "GB"):
+        text = f"{n:.0f}" if unit in ("B", "KB") else f"{n:.1f}"
+        if float(text) < 1024:
+            return f"{text} {unit}"
+        n /= 1024
+    return f"{n:.1f} TB"
+
 # well-known causes: (regex on the record, severity, title, what to do), shared with the CFK analyzer
 # (tools/report-common/known_causes.py)
 HINTS = known_causes.hints()
@@ -797,6 +807,10 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
            "files_without_findings": [f["label"] for f in files if not f["records"]],
            "coverage": coverage(files),
            "configuration": configuration}
+    # ☸️ the critical and high issues of the CFK support bundles of the input, one card per category, with the known
+    # causes of the logs in 🔎 Findings
+    res["findings"] = sorted(res["findings"] + cfk_findings(getattr(files, "cfk_bundles", None) or []),
+                             key=lambda x: SEVERITY_ORDER.index(x["severity"]))
     res["timeline"] = incident_timeline(res, files)
     res["connectors"] = connector_health(res, files)
     res["summary"]["kafka_versions"] = kafka_versions(files)
@@ -2482,6 +2496,187 @@ def md_cell(text) -> str:
     return str(text).replace("\n", " ").replace("|", "\\|").strip()
 
 
+CFK_SEV_PILL = {"critical": "fatal", "high": "error", "medium": "warn", "low": ""}
+# a CFK severity as a level of the filter bar (LEVEL_ORDER codes): critical FATAL, high ERROR, the others WARN
+CFK_SEV_LEVEL = {"critical": 0, "high": 1, "medium": 2, "low": 2}
+CFK_COMPONENTS = {"kraftcontroller": "kafka", "kafkarestproxy": "restproxy"}
+
+
+def cfk_component(c: str) -> str:
+    """the component of a CFK issue as a component of the filter bar (FILE_COMPONENTS codes)"""
+    c = (c or "").lower()
+    return CFK_COMPONENTS.get(c, c if c in {code for code, _, _ in FILE_COMPONENTS} else "other")
+
+
+def cfk_filter_attrs(issues: List[dict]) -> str:
+    """what the filter bar of the report needs (pgCfk): the levels, the components, the connectors, the time"""
+    levels = sorted({CFK_SEV_LEVEL.get(i.get("severity") or "low", 2) for i in issues})
+    comps = sorted({cfk_component(i.get("component") or "") for i in issues})
+    conns = sorted({c for i in issues for c in i.get("connectors") or []})
+    times = [epoch(t.replace("Z", "")[:19]) for i in issues for t in [i.get("first_seen") or i.get("timestamp") or ""]
+             if len(t.replace("Z", "")[:19]) == 19 and t[4:5] == "-"]
+    return (f" data-level='{' '.join(map(str, levels))}' data-component='{' '.join(comps)}'"
+            + (f" data-conn='{e(' '.join(conns))}'" if conns else "") + (f" data-t='{min(times)}'" if times else ""))
+
+
+def cfk_findings(bundles: List[dict]) -> List[dict]:
+    """☸️ one finding card per category of the issues of the CFK bundles (Pod Failures, Resource Issues, TLS…), at the
+    severity of its worst issue: what to do (the recommendation of the category) and each issue with its file page;
+    follows the filter bar. The only place of the issues of a bundle in the HTML report"""
+    out = []
+    for n, b in enumerate(bundles):
+        titles = {r.get("name"): r.get("title") for r in b.get("runbooks") or []}
+        cats: "OrderedDict[str, List[dict]]" = OrderedDict()
+        for i in b.get("issues") or []:
+            cats.setdefault(i.get("category") or "Other", []).append(i)
+        for k, (cat, items) in enumerate(cats.items()):
+            items.sort(key=lambda i: (not i.get("problem_match"), CFK_SEV_ORDER.get(i.get("severity"), 9)))
+            worst = min((i.get("severity") or "low" for i in items), key=lambda x: CFK_SEV_ORDER.get(x, 9)).upper()
+            rec = items[0].get("recommendation") or {}
+            occ = sum(i.get("count") or 1 for i in items)
+            comps = sorted({i.get("component") for i in items if i.get("component")})
+            steps = " · ".join(rec.get("steps") or [])
+            head = (f"<span class='cfk-f' data-bundle='{n}'{cfk_filter_attrs(items)}></span><span class='fi-title'>☸️ {e(cat)}</span>"
+                    f"<span class='fi-count {worst.lower()}'>{len(items)} issue(s), {occ:,}×</span>{component_chips(comps)}"
+                    + (f"<div class='fi-advice'>👉 {e(rec.get('summary') or '')}" + (f" {e(steps)}" if steps else "")
+                       + (f" <a href='{e(rec['docs'])}' target='_blank' rel='noopener'>📘 Docs</a>" if rec.get("docs") else "") + "</div>"
+                       if rec.get("summary") or steps else ""))
+            details = []
+            for i in items[:12]:
+                loc = e(i.get("file") or "") + (f":{i['line_number']}" if i.get("line_number") else "")
+                if i.get("viewer"):
+                    loc = f"<a href='{e(i['viewer'])}' target='_blank' rel='noopener'>{loc}</a>"
+                books = "".join(f" 📕 <strong>{e(titles.get(r, r))}</strong>" for r in i.get("runbooks") or [])
+                details.append(f"<span class='st {CFK_SEV_PILL.get(i.get('severity'), '')}'>{e(i.get('severity'))}</span> "
+                               + ("<span class='st warn' title='matches the problem'>🎯</span> " if i.get("problem_match") else "")
+                               + 
+                               f"<span class='mono'>{e((i.get('message') or '')[:300])}</span>{books} <span class='fi-meta'>{loc}"
+                               + (f" ×{i['count']:,}" if (i.get("count") or 1) > 1 else "") + "</span>")
+            if len(items) > 12:
+                details.append(f"<span class='fi-meta'>… {len(items) - 12} more in --json (.issues of the bundle)</span>")
+            out.append({"severity": worst, "text": f"☸️ {cat}: {len(items)} issue(s) of the CFK bundle",
+                        "_view": {"kind": "cfk", "id": f"finding-cfk-{n}-{k}", "html": head, "details": details}})
+    return out
+CFK_SEV_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+
+
+def cfk_sections_html(bundles: List[dict], unit: str = "file") -> str:
+    """☸️ the sections of each CFK support bundle (cfk-analysis --json) in the log report, in its styles: the issues by
+    severity, 🎯 --problem, 📕 the known CFK issues, the environment and the recent changes of the cluster (its issues are
+    the ☸️ cards of 🔎 Findings, cfk_findings). Not the configuration and the data to request (in
+    ⚙️ Configuration and 📥 already), nor the log coverage (🕰️ Log coverage of the pod logs below)"""
+    out = []
+    for n, b in enumerate(bundles):
+        s = b.get("summary") or {}
+        env = b.get("environment") or {}
+        label = (b.get("label") or "").split("/")[-1]
+        def tile(sev, label, unit, cls=""):
+            # a click shows the ☸️ cards of 🔎 Findings of this bundle at this severity (all of them for 🔎 Issues)
+            count = s.get("total_issues", 0) if not sev else s.get(sev, 0)
+            t = kpi(label, count, unit, cls, f"show the ☸️ cards of {('the ' + sev + ' issues') if sev else 'every issue'} of this bundle in 🔎 Findings")
+            return (f"<a class='cfk-kpi' href='#findings' data-bundle='{n}' data-sev='{sev}'>{t}</a>" if count else t)
+        tiles = [tile("", "🔎 Issues", "pods, CRs, events, logs · click: in 🔎 Findings", "danger" if s.get("critical") else "warn" if s.get("total_issues") else "ok"),
+                 tile("critical", "🔴 Critical", "issues", "danger" if s.get("critical") else "ok"),
+                 tile("high", "🟠 High", "issues", "warn" if s.get("high") else "ok"),
+                 tile("medium", "🟡 Medium", "issues"), tile("low", "🟢 Low", "issues")]
+        if env.get("kubernetes_version"):
+            tiles.append(kpi("☸️ Kubernetes", env["kubernetes_version"], "cluster"))
+        if env.get("cfk_version"):
+            tiles.append(kpi("🛠️ CFK", env["cfk_version"], f"operator {env.get('operator_image_tag') or ''}".strip()))
+        parts = [kpis_html(tiles)]
+        pb = b.get("problem") or {}
+        if pb.get("verdict_text") or pb.get("verdict"):
+            parts.append(f"<p class='cfk-problem'>🎯 <strong>Problem:</strong> {e(pb.get('verdict_text') or pb.get('verdict'))}"
+                         + (f" · {pb['nb_matching_issues']} matching issue(s), marked 🎯 in their ☸️ cards of 🔎 Findings" if pb.get("nb_matching_issues") else "") + "</p>")
+        books = b.get("runbooks") or []
+        if books:
+            rows = "".join(
+                f"<tr><td><span class='st {CFK_SEV_PILL.get(r.get('severity') or 'low', '')}'>{e(r.get('severity') or '')}</span></td>"
+                f"<td><strong>{e(r.get('title') or r.get('name') or '')}</strong> <span class='fi-meta'>×{r.get('occurrences', '')}</span>"
+                f"<div>{e(r.get('advice') or '')}</div>"
+                + "".join(f" <a href='{e(l['url'])}' target='_blank' rel='noopener'>📚 {e(l.get('title') or 'doc')}</a>" for l in r.get("links") or [] if l.get("url"))
+                + "".join(f" <a href='{e(l['url'])}' target='_blank' rel='noopener'>🔒 {e(l.get('title') or 'runbook')}</a>" for l in r.get("internal_links") or [] if l.get("url"))
+                + "</td></tr>" for r in books)
+            parts.append(f"<h3>📕 Known CFK issues ({len(books)})</h3><table>{rows}</table>")
+        comps = env.get("components") or {}
+        changes = b.get("timeline") or []
+        if comps or changes:
+            rows = "".join(f"<tr><td class='mono'>{e(k)}</td><td class='mono'>{e(v.get('image') or '')}</td>"
+                           f"<td class='mono'>{e(v.get('init_image') or '')}</td></tr>" for k, v in comps.items() if isinstance(v, dict))
+            ch = "".join(f"<tr><td class='mono'>{e((c.get('time') or '').replace('T', ' ').replace('Z', ''))}</td>"
+                         f"<td class='mono'>{e(c.get('kind') or '')}/{e(c.get('name') or '')}</td><td>{e(c.get('what') or '')}"
+                         + (f" <span class='st warn'>{e(c['before_failure'])}</span>" if c.get("before_failure") else "") + "</td></tr>"
+                         for c in changes[:40])
+            parts.append("<details class='cfk-cat'><summary><strong>🧱 Environment and recent changes</strong></summary>"
+                         + (f"<table><tr><th>Component</th><th>Image</th><th>Init container</th></tr>{rows}</table>" if rows else "")
+                         + (f"<table><tr><th>Time (UTC)</th><th>Resource</th><th>Change</th></tr>{ch}</table>" if ch else "")
+                         + "</details>")
+        out.append(f"<div class='table-card cfk-card' data-cfk='{n}'><h2>☸️ CFK support bundle{(': ' + e(label)) if label else ''} "
+                   "<span class='fi-meta'>· pods, custom resources, events, versions, recent changes; its issues are the ☸️ "
+                   f"cards of <a class='cfk-kpi' href='#findings' data-bundle='{n}' data-sev=''>🔎 Findings</a></span></h2>"
+                   + "".join(parts) + "</div>")
+    if not out:
+        return ""
+    return CFK_CSS + "".join(out) + CFK_SCRIPT
+
+
+CFK_CSS = ("<style>.cfk-card h3{margin:14px 0 6px;font-size:.95rem}.cfk-cat{margin:6px 0;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px}"
+           ".cfk-cat>summary{cursor:pointer}.cfk-rec{font-size:.82rem;margin:6px 0}.cfk-rec ol{margin:4px 0 4px 18px}"
+           ".cfk-issues td{vertical-align:top;font-size:.82rem}.cfk-next{margin-top:6px;font-size:.8rem;border-left:3px solid #2563eb;padding-left:8px}"
+           ".cfk-filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 8px}.cfk-search{flex:1;min-width:220px;padding:4px 8px}"
+           ".cfk-problem{font-size:.9rem}.cfk-out,.cfk-sevout{display:none!important}"
+           "a.cfk-kpi{color:inherit;text-decoration:none;display:block}a.cfk-kpi .kpi-card{cursor:pointer;transition:transform .1s}"
+           "a.cfk-kpi:hover .kpi-card{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.15)}"
+           "a.cfk-kpi.active .kpi-card{outline:3px solid #2563eb;outline-offset:2px}h2 a.cfk-kpi{display:inline;text-decoration:underline}@keyframes cfkflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}.rec-card.tl-flash{animation:cfkflash 1.6s ease-out}"
+           "html[data-theme=dark] .cfk-cat{border-color:#334155}</style>")
+CFK_SCRIPT = """<script>
+// ☸️ the issues of the CFK bundles (their cards in 🔎 Findings) follow the filter bar of the report: levels,
+// component, connector, search, period (pgApply calls it)
+function pgCfk() {
+  function keeps(el, text) {
+    const d = el.dataset;
+    const levels = (d.level || "").split(" ").filter(Boolean).map(Number);
+    if (pgLevelsOff && levels.length && levels.every(l => pgLevelsOff.has(l))) return false;
+    if (pgComponent && !(d.component || "").split(" ").includes(pgComponent)) return false;
+    const conns = (d.conn || "").split(" ").filter(Boolean);
+    if (pgConnector === "-" && conns.length) return false;
+    if (pgConnector !== "" && pgConnector !== "-" && !conns.includes(pgConnector)) return false;
+    if (pgWindow && d.t && (+d.t < pgWindow[0] || +d.t >= pgWindow[1])) return false;
+    if (pgTest && !pgTest(text)) return false;
+    return true;
+  }
+  document.querySelectorAll(".rec-card .cfk-f").forEach(function (f) {
+    const c = f.closest(".rec-card");
+    c.classList.toggle("cfk-out", !keeps(f, c.textContent));
+  });
+}
+// a click on a tile of a ☸️ card: only the ☸️ cards of 🔎 Findings of that bundle at that severity (🔎 Issues: all of
+// them), and the page goes there; the same tile again shows them all
+document.addEventListener("click", function (ev) {
+  const a = ev.target.closest("a.cfk-kpi");
+  if (!a) return;
+  ev.preventDefault();
+  const same = a.classList.contains("active");
+  const sev = same ? "" : a.dataset.sev;
+  document.querySelectorAll("a.cfk-kpi").forEach(x => x.classList.remove("active"));
+  if (!same && sev) a.classList.add("active");
+  let first = null;
+  document.querySelectorAll(".rec-card .cfk-f").forEach(function (f) {
+    const c = f.closest(".rec-card");
+    const mine = f.dataset.bundle === a.dataset.bundle;
+    const out = sev !== "" && (!mine || c.dataset.sev !== sev.toUpperCase());
+    c.classList.toggle("cfk-sevout", out);
+    if (!out && mine && !first && !c.classList.contains("cfk-out")) first = c;
+  });
+  const target = first || document.querySelector(".findings");
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (first) { first.classList.remove("tl-flash"); void first.offsetWidth; first.classList.add("tl-flash"); }
+  }
+});
+</script>"""
+
+
 def cfk_ticket_lines(b: dict) -> List[str]:
     """☸️ the section of a CFK support bundle in the summary for a ticket: environment, issues by severity, the known CFK
     issues with their public links (never the 🔒 internal ones: a ticket can leave Confluent), the critical / high issues"""
@@ -2520,7 +2715,8 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
     covered = period_text(s.get("log_first_timestamp"), s.get("log_last_timestamp"))
     dur = s.get("log_duration_seconds")
     out.append(f"**Period covered:** {covered}" + (f" ({human_duration(dur)})" if dur is not None else "")
-               + f" · {s['files_scanned']} {unit}(s), {s['occurrences']} occurrence(s) of {s['distinct']} distinct record(s)"
+               + f" · {s['files_scanned']} {unit}(s)" + (f" ({human_size(s['bytes_read'])})" if s.get("bytes_read") is not None else "")
+               + f", {s['occurrences']} occurrence(s) of {s['distinct']} distinct record(s)"
                + f" (FATAL {s['by_level']['FATAL']} · ERROR {s['by_level']['ERROR']} · WARN {s['by_level']['WARN']})")
     if s.get("kafka_versions"):
         out.append(f"**Kafka version:** {' → '.join(s['kafka_versions'])}")
@@ -2723,6 +2919,32 @@ document.addEventListener("DOMContentLoaded", function () {
 # every section of the report folds by a click on its title (▾ / ▸): the findings, the root causes, the files, each
 # file card, the configuration, the sections of other tools; the buttons, links and pickers of a title keep working.
 # "Fold all" / "Unfold all" at the top of the findings
+# the tiles at the top of the report open their section: unfolded if folded, scrolled to, flashed; a tile whose section
+# is not in the report (no file with findings…) stays a plain tile
+KPI_LINKS = """<style>a.kpi-link{color:inherit;text-decoration:none;display:block}a.kpi-link .kpi-card{cursor:pointer;transition:transform .1s}
+a.kpi-link:hover .kpi-card{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.15)}a.kpi-link.kpi-dead .kpi-card{cursor:default;transform:none;box-shadow:none}
+@keyframes kpiflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}.kpi-flash{animation:kpiflash 1.6s ease-out}</style>
+<script>
+document.querySelectorAll("a.kpi-link").forEach(function (a) {
+  if (!document.getElementById(a.getAttribute("href").slice(1))) a.classList.add("kpi-dead");
+});
+document.addEventListener("click", function (ev) {
+  const a = ev.target.closest("a.kpi-link");
+  if (!a) return;
+  ev.preventDefault();
+  const el = document.getElementById(a.getAttribute("href").slice(1));
+  if (!el) return;
+  const card = el.closest(".table-card, .chart-card") || el;
+  if (card.classList.contains("sec-collapsed")) {
+    const h = card.querySelector(":scope > h2, :scope > .section-title");
+    if (h) h.click();
+  }
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+  card.classList.remove("kpi-flash"); void card.offsetWidth; card.classList.add("kpi-flash");
+});
+</script>"""
+
+
 SECTION_TOGGLE = """<style>
 .sec-toggle{cursor:pointer;user-select:none}.sec-caret{display:inline-block;width:1.1em;color:#64748b;font-size:.85em}
 .sec-collapsed>:not(h2):not(.section-title):not(style):not(script){display:none!important}
@@ -3475,6 +3697,7 @@ function pgApply() {
   pgSearch();
   pgTimeline();
   pgLifecycle();
+  if (typeof pgCfk === "function") pgCfk();
   pgConnCards();
   pgHighlight();
   pgAria();
@@ -4123,6 +4346,28 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
 
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
+    """the verdict of the logs, and of the CFK support bundles of the input in the same line (☸️, the worse of both)"""
+    cls, text = logs_verdict(res, levels, unit)
+    bundles = res.get("_cfk_bundles") or []
+    if not bundles:
+        return cls, text
+    crit = sum((b.get("summary") or {}).get("critical", 0) for b in bundles)
+    high = sum((b.get("summary") or {}).get("high", 0) for b in bundles)
+    total = sum((b.get("summary") or {}).get("total_issues", 0) for b in bundles)
+    worst = [i for b in bundles for i in b.get("issues") or [] if i.get("severity") in ("critical", "high")]
+    cats = list(OrderedDict((i.get("category"), True) for i in sorted(worst, key=lambda i: i.get("severity") != "critical")))
+    where = f"{len(bundles)} CFK bundles" if len(bundles) > 1 else "CFK bundle"
+    if crit or high:
+        clause = (f"☸️ {where}: {crit} critical, {high} high issue(s) of {total}"
+                  + (f", start with {', '.join(c for c in cats[:2] if c)}" if cats else "") + ".")
+    else:
+        clause = f"☸️ {where}: {total} issue(s), none critical or high."
+    rank = {"ok": 0, "warn": 1, "danger": 2}
+    kcls = "danger" if crit else "warn" if high or total else "ok"
+    return (cls if rank.get(cls, 0) >= rank[kcls] else kcls), f"{text} {clause}"
+
+
+def logs_verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
     s = res["summary"]
     incomplete = s.get("incomplete_inputs") or []
     if not s["files_with_findings"] and incomplete:
@@ -4280,6 +4525,8 @@ def finding_view(f: dict, viewers: Dict[str, str], unit: str) -> dict:
     v = f.get("_view")
     if not v:
         return f
+    if v["kind"] == "cfk":
+        return dict(f, id=v["id"], html=v["html"], html_details=v["details"])
     f = dict(f, id=finding_id(v["title"]) if v["kind"] == "known" else f"finding-root-{v['cause_index']}")
     sev = f["severity"].lower()
     files = v.get("files") or []
@@ -4422,19 +4669,23 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     if time_zone_note(s):
         detail.append("🌐 UTC")
         hover += " — " + time_zone_note(s)
+    def go(target: str, tile: str) -> str:
+        """a tile that opens its section (unfolded) when clicked"""
+        return f"<a class='kpi-link' href='#{target}' title='go to its section'>{tile}</a>"
+    occ_unit = (f"💀 {s['by_level']['FATAL']:,} FATAL · 🔴 {s['by_level']['ERROR']:,} ERROR · "
+                + (f"🟠 {s['by_level']['WARN']:,} WARN" if "WARN" in levels else "WARN not included (--errors-only)"))
     kpis = "".join([
-        kpi("🕐 Period covered", human_duration(covered_seconds), " · ".join(detail) if covered_seconds is not None
-            else "no timestamped line in the logs", "warn" if short_window else "", hover),
-        kpi(f"🗂️ {Unit}s scanned", s["files_scanned"], f"{s['lines']} lines" + (f", {skipped} binary skipped" if unit == "file" else "")),
+        go("log-coverage", kpi("🕐 Period covered", human_duration(covered_seconds), " · ".join(detail) if covered_seconds is not None
+            else "no timestamped line in the logs", "warn" if short_window else "", hover)),
+        go("files-with-findings", kpi(f"🗂️ {Unit}s scanned", s["files_scanned"], f"{s['lines']:,} lines"
+                                      + (f", {human_size(s['bytes_read'])}" if s.get("bytes_read") is not None else "")
+                                      + (f", {skipped} binary skipped" if unit == "file" else ""))),
         (kpi("🏷️ Kafka version", s["kafka_versions"][-1], " → ".join(s["kafka_versions"]) if len(s["kafka_versions"]) > 1 else "logged at startup",
              "", "the version the components log at startup (AppInfoParser): -ce is Confluent Platform") if s.get("kafka_versions") else ""),
-        kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok"),
-        kpi("🧬 Distinct records", s["distinct"], "after de-duplication"),
-        kpi("🔁 Occurrences", s["occurrences"], "all levels reported"),
-        kpi("💀 FATAL", s["by_level"]["FATAL"], "occurrences", "danger" if s["by_level"]["FATAL"] else "ok"),
-        kpi("🔴 ERROR", s["by_level"]["ERROR"], "occurrences", "danger" if s["by_level"]["ERROR"] else "ok"),
-        kpi("🟠 WARN", s["by_level"]["WARN"], "occurrences" if "WARN" in levels else "not included (--errors-only)",
-            "warn" if s["by_level"]["WARN"] else ""),
+        go("files-with-findings", kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok")),
+        go("all-root-causes", kpi("🧬 Distinct records", s["distinct"], "after de-duplication")),
+        # the counts by level: the level chips of the filter bar have them too, one tile instead of three
+        go(TIME_CHART_ID, kpi("🔁 Occurrences", s["occurrences"], occ_unit, "danger" if errors else "warn" if s["occurrences"] else "ok")),
     ])
     # the most frequent first within a severity (the text summary and --json keep the order of the known causes)
     findings_view = sorted((finding_view(f, viewers, unit) for f in res["findings"]),
@@ -4442,7 +4693,10 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     # an exception chain of a killed task is a card of its own inside the finding
     # the filter bar above the findings: a component picked (🔌 Connect) keeps its findings right below
     without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
-    body = [verdict_html(*verdict(res, levels, unit)), incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
+    # the ☸️ sections of the CFK support bundles (cfk-analysis --json, --cluster-events): the Kubernetes view right after
+    # the verdict
+    body = [verdict_html(*verdict(res, levels, unit)), cfk_sections_html(res.get("_cfk_bundles") or [], unit),
+            incomplete_html(s.get("incomplete_inputs") or []), kpis_html([kpis]),
             compare_html(res.get("comparison")), trend_html(res.get("trend")),
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
@@ -4487,7 +4741,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                       "occurrences kept per record): they are not counted in a period, and a root cause that has only "
                       "those stays shown." if untimed else "")
                    + "</p>")
-        body.append("<div class='table-card'><h2>🌳 All root causes (every distinct error, by deepest exception)"
+        body.append("<div class='table-card' id='all-root-causes'><h2>🌳 All root causes (every distinct error, by deepest exception)"
                     "<span class='rc-range'></span><button type='button' class='rc-reset' hidden>⤺ whole period</button>"
                     f"</h2>{follows}<table><tr><th>Level</th><th>Component</th>"
                     "<th>Root cause</th><th>Message</th><th class='num'>Occurrences</th><th class='num'>Records</th>"
@@ -4512,7 +4766,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                             + "".join(f"<td class='num fr-{lvl.lower()}'>{sum(r['count'] for r in f['records'] if r['level'] == lvl) or ''}</td>"
                                       for lvl in ("FATAL", "ERROR", "WARN"))
                             + "</tr>" for i, f in items)
-        body.append(f"<div class='table-card'><h2>🗂️ {Unit}s with findings</h2><table><tr><th>{Unit}</th><th class='num'>Lines</th>"
+        body.append(f"<div class='table-card' id='files-with-findings'><h2>🗂️ {Unit}s with findings</h2><table><tr><th>{Unit}</th><th class='num'>Lines</th>"
                     "<th class='num'>Distinct</th><th class='num'>Occurrences</th><th class='num'>FATAL</th><th class='num'>ERROR</th>"
                     f"<th class='num'>WARN</th></tr>{rows}</table>"
                     + (f"<details><summary>✅ {len(res['files_without_findings'])} {unit}(s) without findings</summary><p class='mono'>"
@@ -4532,6 +4786,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                 + occurrences_json(res["root_causes"], res["files"]).replace("<", "\\u003c") + "</script>")
     body.append(FILTER_SCRIPT)
     body.append(SECTION_TOGGLE)
+    body.append(KPI_LINKS)
     sanitized = any(t.startswith("🔒") for t, _ in sections)
     body.append(share_html(text_summary(res, []), share_zip, sanitized, title, ticket_markdown(res, title, levels, unit)))
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
@@ -4576,6 +4831,7 @@ def main() -> int:
     ap.add_argument("--title", default="logs", help="what was analyzed, for the report header")
     ap.add_argument("--levels", default="ERROR/FATAL", help="levels reported, for the report")
     ap.add_argument("--skipped", type=int, default=0, help="number of binary files skipped")
+    ap.add_argument("--bytes-read", type=int, default=None, help="the size of the input read, in bytes (the 🗂️ tile)")
     ap.add_argument("--incomplete", metavar="FILE", help="label<tab>reason of each input not fully read")
     ap.add_argument("--compare", metavar="JSON", action="append", default=[],
                     help="the JSON of analyze logs of another input, to compare with (repeatable, oldest first: a trend)")
@@ -4645,6 +4901,8 @@ def main() -> int:
     if args.connector:
         res["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
     res["summary"]["binary_files_skipped"] = args.skipped
+    if args.bytes_read is not None:
+        res["summary"]["bytes_read"] = args.bytes_read
     res["summary"]["incomplete_inputs"] = read_incomplete(args.incomplete)
     if args.compare:
         prevs, labels = [], []

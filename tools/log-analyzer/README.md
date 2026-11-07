@@ -122,6 +122,28 @@ over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 car
 summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
 `--json` and a line of the summary for a ticket.
 
+## Tiles
+
+The tiles at the top of the report (`html_report()`) link to their section (`KPI_LINKS`): 🕐 Period covered to 🕰️ Log
+coverage (`#log-coverage`), 🗂️ Files scanned (with the lines and the size read, `--bytes-read`, `.summary.bytes_read`) and 🔥 Files with findings to the files table (`#files-with-findings`), 🧬
+Distinct records to 🌳 All root causes (`#all-root-causes`), 🔁 Occurrences (with the count of each level, the level chips
+of the filter bar have them too) to 📈 Occurrences over time. A folded section is unfolded; a tile whose section is not in
+the report stays a plain tile.
+
+## Sections of a CFK support bundle
+
+The log report of a CFK support bundle is its only report: `cfk_sections_html()` draws a ☸️ card per bundle (the JSON
+of `--cluster-events`) right after the verdict, in the styles of the log report: KPI tiles of the issues by severity and
+the Kubernetes / CFK versions, 🎯 `--problem`, 📕 the known CFK issues (📚 and 🔒 links), and the environment with the
+recent changes. Its issues are cards of 🔎 Findings, one per category at the severity of its worst issue
+(`cfk_findings()`, kind `cfk`): the recommendation of the category, then each issue with its file page
+(`<bundle>-cfk-files/`). The cards follow the filter bar of the report (`pgCfk()` in `pgApply()`, `cfk_filter_attrs()`):
+level (critical FATAL, high ERROR, medium / low WARN), component (`cfk_component()`: `kraftcontroller` is `kafka`),
+connector, search and period. A click on a tile of the ☸️ card (🔎 Issues, 🔴 Critical…) or on 🔎 Findings in its title shows only
+the ☸️ cards of that bundle at that severity (`cfk-sevout`) and scrolls to the first one; the same tile again shows them all. `verdict()` adds one ☸️ clause (critical and high issues, the categories to
+start with) to the verdict of the logs, the worse class of both. Not drawn: the configuration (⚙️), the data to request
+(📥) and the log coverage (🕰️), the log report has them.
+
 ## Records of a CFK support bundle
 
 `log_report.py --records <file> --records-under <prefix>` (repeatable) prints, one JSON per line and per prefix, the

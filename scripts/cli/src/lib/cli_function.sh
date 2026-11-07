@@ -7710,6 +7710,13 @@ function analyze_cfk_bundle() {
         bundle_basename="${bundle_basename%.zip}"
         # CFK_ANALYSIS_REPORT_SUFFIX: set by playground analyze logs when bundles analyzed in parallel share a name
         html_out="${output_dir_abs}/${bundle_basename}${CFK_ANALYSIS_REPORT_SUFFIX:-}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
+        # CFK_ANALYSIS_EMBEDDED (playground analyze logs): no page of its own, the log report shows the bundle from the JSON
+        # (one report); the file pages of its issues in <bundle>-cfk-files/ next to it
+        if [[ -n "${CFK_ANALYSIS_EMBEDDED:-}" ]]
+        then
+            html_out="${output_dir_abs}/${bundle_basename}${CFK_ANALYSIS_REPORT_SUFFIX:-}-cfk.html"
+            docker_args+=(-e CFK_ANALYSIS_EMBEDDED=1)
+        fi
         cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
         # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
         CFK_ANALYSIS_JSON="${html_out%.html}.json"
@@ -7754,8 +7761,11 @@ function analyze_cfk_bundle() {
     if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]
     then
         CFK_ANALYSIS_HTML="$html_out"
-        log ""
-        open_html_report "$html_out" "${CFK_ANALYSIS_NO_OPEN:-}"
+        if [[ -z "${CFK_ANALYSIS_EMBEDDED:-}" ]]
+        then
+            log ""
+            open_html_report "$html_out" "${CFK_ANALYSIS_NO_OPEN:-}"
+        fi
     fi
     return $exit_code
 }
