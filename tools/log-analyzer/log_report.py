@@ -1255,6 +1255,157 @@ def task_workers_html(tw: Optional[dict]) -> str:
             "on this worker</th><th class='num'>Warnings</th></tr>" + "".join(rows) + "</table></div>")
 
 
+# the logs or data that explain a known cause better, asked when the input does not have them: (known cause titles,
+# component whose logs are needed or None, what, why[, regex the records of the known cause must match: the 🔑 of a
+# database login (ORA-01017) does not need the broker logs])
+ASK_FOR_CAUSES = [
+    (("💥 OutOfMemoryError",), None, "a heap dump of the JVM that ran out of memory (-XX:+HeapDumpOnOutOfMemoryError "
+     "-XX:HeapDumpPath=…) and its GC logs (-Xlog:gc*:file=gc.log)", "what fills the heap: playground analyze heap-dump, "
+     "playground analyze gc-logs"),
+    (("🐢 Consumer left its group: max.poll.interval.ms exceeded", "🔁 Group rebalances or coordinator lost"), None,
+     "the GC logs of the workers (-Xlog:gc*:file=gc.log) and 3 thread dumps 10 s apart while it happens (jstack <pid>, or kill -3)",
+     "a long GC pause or a slow / stuck poll loop explains most of them: playground analyze gc-logs, playground analyze thread-dump"),
+    (("🔐 TLS handshake failure", "🗝️ Empty or unreadable truststore"), None,
+     "the output of -Djavax.net.debug=ssl:handshake on the client (KAFKA_OPTS) and the content of its truststore "
+     "(keytool -list -v -keystore <truststore>)", "which certificate the server sends and which ones the client trusts: "
+     "playground tools cert inspect"),
+    (("🔑 Authentication failure", "🚫 Authorization failure", "🛂 Wrong security.protocol or SASL mechanism", "🪪 MDS / RBAC token error"),
+     "kafka", "the broker logs over the same period (server.log, and kafka-authorizer.log for the authorization denials)",
+     "the broker logs the reason of an authentication failure and the principal, operation and resource of a denied request",
+     r"SaslAuthenticationException|Authentication failed during authentication|\w+AuthorizationException|SslAuthenticationException"
+     r"|Unexpected Kafka request|UNSUPPORTED_SASL_MECHANISM|security\.protocol"),
+    (("👑 Partition leadership changed", "🧬 Not enough replicas", "🗳️ KRaft quorum error"), "kafka", "the broker and controller logs over the same period (server.log, controller.log, "
+     "state-change.log)", "leaders moving, brokers restarting or a quorum issue are logged there"),
+    (("🔍 Schema id not found", "📛 Subject not found", "📐 Schema Registry error", "🛡️ Incompatible schema refused"), "schemaregistry",
+     "the Schema Registry logs over the same period, and the subject: playground schema describe / history on an export",
+     "the request refused, its subject and the compatibility level"),
+]
+# the loggers to set to DEBUG for an error no known cause explains: the package of the deepest frame of the plugin
+GENERIC_FRAME = re.compile(r"^(?:java|javax|jdk|sun|com\.sun|kotlin|scala|org\.apache\.kafka\.(?:connect\.runtime|clients|common))\.")
+
+
+def debug_logger(r: dict) -> Optional[str]:
+    """the package to log at DEBUG for a record: of the first frame of the plugin (not the JDK, not the Connect runtime
+    or the Kafka clients), else of its logger, 4 parts at most (io.confluent.connect.jdbc)"""
+    candidates = re.findall(r"\bat ([\w$]+(?:\.[\w$]+)+)\.[\w$<>]+\(", r.get("text", "") + "\n" + (r.get("context") or ""))
+    m = re.search(r"\(([a-z][\w$]*(?:\.[\w$]+)+?)(?::\d+)?\)\s*$", r.get("message") or "")
+    if m:
+        candidates.append(m.group(1))
+    for cls in candidates:
+        if not GENERIC_FRAME.match(cls):
+            parts = [p for p in cls.split(".") if p and not p[0].isupper()]
+            if len(parts) >= 2:
+                return ".".join(parts[:4])
+    return None
+
+
+def data_to_request(res: dict, files: List[dict]) -> List[dict]:
+    """📥 what to ask the customer for next, each with why and how: the inputs not fully read, a window too short, workers
+    whose logs miss their startup (no config dump, no version: the logs since the last (re)start), the logs of a component
+    the findings point at but the input does not have, the data that explains a known cause (heap dump, GC logs, thread
+    dumps, TLS debug), and the DEBUG loggers for the most frequent errors no known cause explains"""
+    out: List[dict] = []
+    s = res["summary"]
+
+    def ask(what, why, how=""):
+        if not any(x["what"] == what for x in out):
+            out.append({"what": what, "why": why, "how": how})
+    for i in s.get("incomplete_inputs") or []:
+        ask(f"a complete copy of {i['file']}", f"it was not fully read ({i['reason']}): the missing part may hold the errors")
+    dur = s.get("log_duration_seconds")
+    if dur is not None and dur < SHORT_PERIOD_SECONDS:
+        ask("logs over a longer window, starting well before the incident",
+            f"the logs only cover {human_duration(dur)}: the beginning of the incident (the first error, a restart, a "
+            "config change) is probably not in them")
+    # the workers / brokers whose logs miss their startup: no config logged at startup, no "Instantiated connector … with
+    # version" line, while they have errors
+    with_start = {worker_of(c["file"]) for c in res["configuration"] if c.get("source") == "log" and c["title"] in START_CONFIGS}
+    with_start |= {worker_of(f["label"]) for f in files for ev in f.get("events") or [] if ev["kind"] == "process_start"}
+    # only Connect workers and brokers: they log their config at startup (the clients of other languages, a Kafka
+    # Streams application do not)
+    no_start = sorted({worker_of(f["label"]) for f in res["files"] if file_component(f["label"]) in ("connect", "kafka")
+                       and any(r["level"] in ("ERROR", "FATAL") for r in f["records"])} - with_start)
+    if no_start:
+        ask("the logs since the last (re)start of " + ", ".join(no_start[:4]) + (" …" if len(no_start) > 4 else "")
+            + " (the rotated files before these: connect.log.1, server.log.1…)",
+            "they do not include its startup: the configuration it runs with (config dumps), the version of the plugins, "
+            "and what happened before the first error are missing")
+    unversioned = [c["connector"] for c in res["connectors"] if (c["by_level"]["ERROR"] + c["by_level"]["FATAL"]) and not c.get("versions")]
+    if unversioned and not no_start:
+        ask("the version of the connector plugin of " + ", ".join(unversioned[:4]) + (" …" if len(unversioned) > 4 else ""),
+            "the logs do not say it (no \"Instantiated connector … with version\" line): needed to tell whether a known "
+            "bug is fixed in it", "the startup logs of the worker, or GET /connector-plugins on the worker")
+    components = {file_component(f["label"]) for f in files}
+    titles = {h["title"] for h in res["known_causes"]}
+    has_gc = any(c["kind"] == "gc_log" for c in (res.get("other_files") or {}).get("commands") or [])
+    has_dump = {c["kind"] for c in (res.get("other_files") or {}).get("commands") or []}
+    by_index_all = {r.get("index"): r for f in res["files"] for r in f["records"]}
+    for entry in ASK_FOR_CAUSES:
+        causes, component, what, why = entry[:4]
+        hit = [t for t in causes if t in titles]
+        if not hit:
+            continue
+        if len(entry) > 4:
+            rx = re.compile(entry[4])
+            texts = [by_index_all[i]["text"] for h in res["known_causes"] if h["title"] in hit
+                     for i in h.get("records") or [] if i in by_index_all]
+            if not any(rx.search(t) for t in texts):
+                continue
+        if component and component in components:
+            continue
+        if "GC logs" in what and has_gc and ("heap dump" not in what or "heap_dump" in has_dump) \
+                and ("thread dumps" not in what or "thread_dump" in has_dump):
+            continue
+        ask(what, f"{hit[0]}: {why}")
+    # 💥 bursts right after a broker event, without the broker logs
+    if "kafka" not in components and any(ev.get("effects") for ev in res.get("timeline") or []):
+        ask("the broker logs over the same period", "errors pile up right after an event of the cluster: the broker logs say what happened")
+    # DEBUG for the most frequent errors no known cause explains
+    by_index = {r.get("index"): r for f in res["files"] for r in f["records"]}
+    loggers: "OrderedDict[str, str]" = OrderedDict()
+    for c in [c for c in res["root_causes"] if not c.get("explained_by") and c["level"] in ("ERROR", "FATAL")][:3]:
+        for meta in c["records_meta"][:3]:
+            r = by_index.get(meta[4])
+            pkg = debug_logger(r) if r else None
+            if pkg and pkg not in loggers:
+                ex = c["example"]
+                loggers[pkg] = (c.get("root_cause") or "").split(".")[-1] or f"\"{ex[:70]}{'…' if len(ex) > 70 else ''}\""
+                break
+    for pkg, what in list(loggers.items())[:2]:
+        ask(f"the logs with {pkg} at DEBUG while the error happens",
+            f"{what} is not a known cause: the DEBUG lines of that package say what the plugin was doing",
+            f"on a running worker, no restart: curl -s -X PUT -H \"Content-Type: application/json\" "
+            f"http://<worker>:8083/admin/loggers/{pkg} -d '{{\"level\": \"DEBUG\"}}' (back to INFO after); "
+            f"or log4j.logger.{pkg}=DEBUG in connect-log4j.properties")
+    return out
+
+
+def data_to_request_text(items: List[dict], top: int = 6) -> List[str]:
+    if not items:
+        return []
+    out = ["📥 Data to request (ask the customer next; .data_to_request of --json, also in the summary for a ticket)"]
+    for x in items[:top]:
+        out.append(f"   • {x['what']}")
+        out.append(f"     why: {x['why']}")
+        if x.get("how"):
+            out.append(f"     how: {x['how']}")
+    if len(items) > top:
+        out.append(f"   … {len(items) - top} more in the HTML report")
+    return out
+
+
+def data_to_request_html(items: List[dict]) -> str:
+    if not items:
+        return ""
+    rows = "".join(f"<tr><td>{e(x['what'])}</td><td>{e(x['why'])}</td><td class='mono dr-how'>{e(x.get('how') or '')}</td></tr>" for x in items)
+    return ("<style>.dr-how{font-size:.76rem;word-break:break-word}</style>"
+            "<div class='table-card'><h2>📥 Data to request</h2><p class='legend'>What to ask the customer for next, from the "
+            "gaps of the input (not fully read, a short window, logs without the startup of a worker, a component whose "
+            "logs are missing) and from the findings (the data that explains a known cause, DEBUG loggers for the errors "
+            "no known cause explains). Also in the summary for a ticket.</p>"
+            f"<table><tr><th>What</th><th>Why</th><th>How</th></tr>{rows}</table></div>")
+
+
 VERDICT_ICONS = {"affected": "⛔", "fixed": "✅", "unknown": "❔"}
 
 
@@ -1995,6 +2146,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += lifecycle_text(res.get("lifecycle"))
     # risky values of the configuration logged (🧪 on the 🔌 cards, .config_lint of --json)
     out += config_lint_text(res.get("config_lint") or [])
+    # what to ask the customer for next (📥 of the HTML report, .data_to_request of --json)
+    out += data_to_request_text(res.get("data_to_request") or [])
     # which worker ran which task, a connector failing on one worker only (🖥️ of the HTML report, .task_workers of --json)
     out += task_workers_text(res.get("task_workers"))
     # the known bugs fixed in a later version (🩹 of the HTML report, .fixed_bugs of --json)
@@ -2229,6 +2382,11 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             where = f"{first.get('file', '').split('/')[-1]}:{first.get('line', '')}" + (f" {first['timestamp'].replace('T', ' ')}" if first.get("timestamp") else "")
             reads = "".join(f" · 📚 [{md_cell(label)}]({url})" for label, url in reading_links(h))
             out.append(f"| {h['severity']} | {md_cell(h['title'])} | {h['occurrences']:,} | {md_cell(where)} | {md_cell(h['advice'])}{reads} |")
+    asks = res.get("data_to_request") or []
+    if asks:
+        out += ["", "### Data to request", ""]
+        for x in asks[:8]:
+            out.append(f"- **{md_cell(x['what'])}**: {md_cell(x['why'])}" + (f" — {md_cell(x['how'])}" if x.get("how") else ""))
     only = [c for c in (res.get("task_workers") or {}).get("connectors") or [] if c["only_on"]]
     if only:
         out += ["", "### Errors on one worker only", ""]
@@ -4023,7 +4181,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
             .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
-            fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
+            fixed_bugs_html(res.get("fixed_bugs") or [], viewers), data_to_request_html(res.get("data_to_request") or []),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
             lifecycle_html(res.get("lifecycle")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files"))]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
@@ -4180,7 +4338,7 @@ def main() -> int:
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
                          "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint,"
-                         "other_files,fixed_bugs,task_workers (default: all)")
+                         "other_files,fixed_bugs,task_workers,data_to_request (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
@@ -4211,6 +4369,8 @@ def main() -> int:
                 res["other_files"] = json.load(fh)
         except (OSError, ValueError) as ex:
             print(f"⚠️ --other-files: cannot read {args.other_files}: {ex}", file=sys.stderr)
+    # what to ask the customer for next: from the gaps of the input and its findings (📥, .data_to_request of --json)
+    res["data_to_request"] = data_to_request(res, files)
     res["summary"]["time_zone"] = getattr(files, "time_zone", None) or {"offsets": [], "converted_to_utc": False, "without_offset": False}
     res["summary"]["levels"] = args.levels
     if args.json:

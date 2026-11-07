@@ -296,6 +296,31 @@ def test_task_workers():
     check("one worker: nothing", one["tasks"] == [] and one["connectors"] == [], one)
 
 
+def test_data_to_request():
+    """📥 the startup logs of a worker without one, the DEBUG logger of the plugin for an error no known cause explains
+    (the package of its first frame, not the Connect runtime), nothing about the broker for a database login failure"""
+    text = ("@@PGFILE@@|w1/connect.log|900|2|2|2026-11-07T10:00:00|2026-11-07T11:00:00\n"
+            "@@PGREC@@|ERROR|1|3|8|2026-11-07T10:05:00|2026-11-07T10:05:00\n"
+            "[2026-11-07 10:05:00,000] ERROR [jdbc|task-0] Failed to write the batch (org.apache.kafka.connect.runtime.WorkerSinkTask:1)\n"
+            "    org.apache.kafka.connect.errors.ConnectException: weird state\n"
+            "@@PGTS@@|2026-11-07T10:05:00\n"
+            "@@PGCTX@@|[2026-11-07 10:05:00,000] ERROR [jdbc|task-0] Failed to write the batch (org.apache.kafka.connect.runtime.WorkerSinkTask:1)\n"
+            "@@PGCTX@@|\tat org.apache.kafka.connect.runtime.WorkerSinkTask.put(WorkerSinkTask.java:1)\n"
+            "@@PGCTX@@|\tat io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:69)\n"
+            "@@PGREC@@|ERROR|1|9|9|2026-11-07T10:06:00|2026-11-07T10:06:00\n"
+            "[2026-11-07 10:06:00,000] ERROR [jdbc|task-0] java.sql.SQLException: ORA-01017: invalid username/password; logon denied (x:1)\n"
+            "@@PGTS@@|2026-11-07T10:06:00\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        res = log_report.analyze(files)
+        asks = log_report.data_to_request(res, files)
+    whats = [x["what"] for x in asks]
+    check("startup logs", any(w.startswith("the logs since the last (re)start of connect.log") for w in whats), whats)
+    check("debug logger", any("io.confluent.connect.jdbc at DEBUG" in w for w in whats), whats)
+    check("no broker logs for ORA-01017", not any("broker" in w for w in whats), whats)
+    check("in the ticket", "### Data to request" in log_report.ticket_markdown(dict(res, data_to_request=asks), "t", "ERROR/FATAL/WARN"))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
