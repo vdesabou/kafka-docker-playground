@@ -121,6 +121,10 @@ input then this one, per hour when the periods differ (📈 Trend section, termi
 kills (records of the 🧨 known cause), the known causes of its records, its configuration dumps, the clients it owns
 (`connector-producer-<name>-0`…) and the keys changed between restarts. The HTML report shows them in 🔌 **Connectors**
 (▶ only this connector sets the connector filter and keeps its card only, ⤺ goes back to all, the search filters the cards, the first `CONN_CARDS_SHOWN` = 30 then "show the other N connectors"), the terminal summary one line per connector.
+Each card has the icon of the examples of its class on the website (`tools/report-common/connector_icons.py`: class → icon
+and, for the classes shared by several databases like `JdbcSinkConnector`, the scheme of the `connection.url` of its
+configuration dump → icon, in the committed `connector_icons.json`, linked from GitHub as `docs/content.md` does, 🔌 when
+unknown or offline). Run `python3 -I tools/report-common/connector_icons.py` again when an example or an icon is added.
 
 ## Versions
 
@@ -251,6 +255,10 @@ of 1 s or more of a GC log (`gc_pause`, detail `<ms> <what>`: unified `GC(12) Pa
 marks a 🌀 storm (`STORM_MIN` = 10 at `STORM_PER_HOUR` = 6 or more, a consumer leaving on purpose excluded): the 🔄 Restarts
 and rebalances section, a line on the 🔌 card of a connector, the (re)starts and the first 20 worker group rebalances in
 the 🗓️ timeline, the terminal summary, the summary for a ticket and `.lifecycle` of `--json`.
+The 🔄 section draws them over time (a zoomable chart, one series per kind) and each row has a swimlane of its
+occurrences on the period of the table (`LC_BINS` = 120 buckets, a tick per bucket with occurrences, darker with more),
+from the times noted (`_times` of each row, left out of `--json`). Logs that cover less than an hour (`.lifecycle.hours`) show
+the count over that period (`10 in 5 min`) instead of an extrapolated rate per hour; only a 🌀 storm is red.
 The 🔄 section follows the connector filter (`pgLifecycle()`): each row carries the connector it belongs to
 (`lifecycle_connector()`: the connector or task started, the sink connector of a consumer group, as `data-conn`), the rows of
 the other connectors are hidden and the worker group rebalances and process starts, which concern every connector of the
@@ -380,6 +388,8 @@ dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys cha
 config from the `@@PGCFGCHG@@` lines, and the `.properties` / connector JSON files that `analyze logs` appends), with a
 level and connector filter (connector taken from the
 `[connector|task-0]` / `[connector|worker]` context of the line, also with a scope like `[connector|task-0|redoLog]`, or `WorkerSinkTask{id=connector-0}`)
+every connector name of the report (a `.fi-conn` chip: root causes, records, cards, 🔄 rows) that the Connector filter
+lists sets it on click, again goes back to all (`pgMarkConnChips()`, the chips of the connector picked are highlighted),
 a period filter (drag over the 📈 occurrences chart, `[from, to)` as its buckets), the Component chips (the component of
 each file from the deepest part of its label: the file name `server.log` / `connect.log` first, then its folders, then the
 archive; counted in occurrences, like the level pills; the one picked is remembered in `localStorage` and the chart is
