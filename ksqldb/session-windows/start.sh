@@ -11,6 +11,8 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB stream"
+# RETENTION_MS=-1: the records are from 2019/2020 and the topics of the persistent queries keep these timestamps, so with
+# the default retention.ms (7 days) the broker deletes them a few seconds after they are written (empty query results)
 playground ksqldb sql << EOF
 
 CREATE STREAM clicks (ip VARCHAR, url VARCHAR, timestamp VARCHAR)
@@ -18,6 +20,7 @@ WITH (KAFKA_TOPIC='clicks',
       TIMESTAMP='timestamp',
       TIMESTAMP_FORMAT='yyyy-MM-dd''T''HH:mm:ssX',
       PARTITIONS=1,
+      RETENTION_MS=-1,
       VALUE_FORMAT='Avro');
 EOF
 

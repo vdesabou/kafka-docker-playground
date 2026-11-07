@@ -11,6 +11,8 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}"
 
 log "Create the ksqlDB stream"
+# RETENTION_MS=-1: the records are from 2019/2020 and the topics of the persistent queries keep these timestamps, so with
+# the default retention.ms (7 days) the broker deletes them a few seconds after they are written (empty query results)
 playground ksqldb sql << EOF
 
 CREATE STREAM ratings (title VARCHAR, release_year INT, rating DOUBLE, timestamp VARCHAR)
@@ -18,6 +20,7 @@ CREATE STREAM ratings (title VARCHAR, release_year INT, rating DOUBLE, timestamp
           timestamp='timestamp',
           timestamp_format='yyyy-MM-dd HH:mm:ss',
           partitions=1,
+          retention_ms=-1,
           value_format='avro');
 EOF
 
@@ -128,12 +131,15 @@ EOF
 
 log "Create a new example with out-of-order records"
 log "Create a new stream ratings-out-of-order"
+# RETENTION_MS=-1: the records are from 2019/2020 and the topics of the persistent queries keep these timestamps, so with
+# the default retention.ms (7 days) the broker deletes them a few seconds after they are written (empty query results)
 playground ksqldb sql << EOF
 CREATE STREAM ratings_out_of_order (title VARCHAR, release_year INT, rating DOUBLE, timestamp VARCHAR)
     WITH (kafka_topic='ratings-outoforder',
           timestamp='timestamp',
           timestamp_format='yyyy-MM-dd HH:mm:ss',
           partitions=1,
+          retention_ms=-1,
           value_format='avro');
 EOF
 playground ksqldb wait
