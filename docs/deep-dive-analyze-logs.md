@@ -222,6 +222,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🔁 comparison | with `--compare`: what is new, gone, growing or shrinking (section 6) |
 | 🎚️ filter bar | levels, components, connector, search, period: everything below follows it, and the URL keeps it |
 | 🔎 findings | the known causes with what to do and their exception chains, then the most frequent errors no known cause explains; each card says how much of it is in the current selection |
+| 🩹 known bugs fixed in a later version | an error of the logs that matches a bug of the connector plugin fixed in a later version (`tools/report-common/fixed_bugs.py`: from the changelog and the pull request of the fix), with a verdict from the version each connector runs: ⛔ affected (upgrade to the first fixed version of its line), ✅ it runs a version with the fix (another cause, or a regression), ❔ the logs do not give its version. Also on the 🔌 card of the connector and in the summary for a ticket |
 | 🗓️ incident timeline | *what happened first?*: all files merged, the first occurrence of each error and known cause, restarts, connectors reconfigured, config changed between restarts, ✕ processes stopped (`shutting down`, `SHUTTING_DOWN`, `Kafka Connect stopping`), active controller changes and the 20 longest GC pauses of 1 s or more (from the GC logs of the input, unified or legacy format). 💥 under one of them: the ERROR / WARN of every file in the next 60 s, when they are 3 times the usual rate of the logs (5 at least), by known cause or exception. A chart above the table places them in time, one lane per component (the long gaps cut ⫽, hover a mark for its time and Δ, click it for its row), and the Δ column gives the time since the previous event (the biggest gaps in bold) |
 | 🔄 restarts and rebalances | from the INFO lines (the digest only keeps ERROR / WARN): the rebalances of the worker groups, the rejoins of the consumer groups with their reason, the connectors and tasks started, the workers and brokers (re)started and stopped, the active controller changes, the GC pauses of 1 s or more, each counted with its rate per hour. 🌀 **storm**: 10 or more at 6 or more per hour (a consumer that leaves on purpose, `pro-actively leaving the group`, is not one); also on the 🔌 cards and in the 🗓️ timeline. A connector picked in the filter keeps its rows, the worker group rebalances and process starts (every connector of the worker) stay |
 | 🧰 other files of the input | the GC logs, thread dumps, heap dumps, flight recordings, network captures and XStream reports of the input, with the command of the analyzer to run on each (section 3) |
@@ -473,6 +474,7 @@ playground analyze logs --sample support_bundle --json 2>/dev/null | jq -c '.con
 | `.timeline[]` | the incident timeline |
 | `.connectors[]` | the card of each connector |
 | `.comparison` | with `--compare` |
+| `.fixed_bugs[]` | title, ref, plugin, fixed_in, occurrences, first, and `connectors[]` with version, verdict (`affected`, `fixed`, `unknown`) and `upgrade_to` |
 | `.other_files` | `files[]` (label, kind, path, kept) and `commands[]` of the 🧰 files for another analyzer |
 | `.configuration[]` | the configs logged (89 % of the JSON on a big bundle: `--json-sections` leaves it out) |
 | `.files[].records[]` | every record, its context, its connector |
@@ -559,6 +561,7 @@ The error is in the part that was not received. Without the warning, it would ha
 | "the logs are clean" | check 🕐 the period covered and ⚠️ not fully read, then the 🔭 overview of what the logs contain and what to ask for |
 | point engineering at one burst | filter the report (connector, level, drag over the burst), 🔗 Link to this view, 📤 Share the `.zip` |
 | only the incident, in a day of logs | `playground analyze logs -f <bundle> --since "2026-11-06 10:00" --until "2026-11-06 11:00"` (the line numbers stay those of the files) |
+| "is it fixed in a newer version?" | `playground analyze logs -f <bundle>`: 🩹 when the error is a known bug of the plugin, the verdict for the version each connector runs; otherwise the 📋 changelog command of its 🔌 card, with `--grep <exception>` |
 | the configuration a connector really ran with (defaults included) | `playground analyze logs -f <bundle> --show-config <connector>` |
 | a JSON for a script or an agent | `playground analyze logs -f <bundle> --json --json-sections summary,known_causes,timeline,connectors` |
 | a report to send outside Confluent | `playground analyze logs -f <bundle> --sanitize`, review it, 📤 Share |

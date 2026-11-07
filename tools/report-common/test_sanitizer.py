@@ -15,6 +15,7 @@ import time
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import fixed_bugs  # noqa: E402
 import known_causes  # noqa: E402
 from sanitizer import DataSanitizer, sanitize_stream  # noqa: E402
 
@@ -163,6 +164,30 @@ def test_known_causes_internal_links():
             os.environ.pop("PLAYGROUND_LOG_RUNBOOKS_FILE", None)
         else:
             os.environ["PLAYGROUND_LOG_RUNBOOKS_FILE"] = saved
+
+
+def test_fixed_bugs_verdict():
+    """🩹 the first fixed version of the minor line decides; a line older than every fixed line is affected (upgrade to
+    the first fixed version above it), a newer one has the fix"""
+    fixed = ["2.13.11", "2.14.12", "2.15.1"]
+    for version, expected in [("2.14.3", ("affected", "2.14.12")), ("2.14.12", ("fixed", None)), ("2.14.20", ("fixed", None)),
+                              ("2.12.9", ("affected", "2.13.11")), ("2.16.0", ("fixed", None)), ("3.0.0", ("fixed", None)),
+                              ("2.15.0", ("affected", "2.15.1")), ("2.15.1-SNAPSHOT", ("fixed", None)), ("latest", ("unknown", None))]:
+        got = fixed_bugs.verdict(version, fixed)
+        check("verdict", got == expected, f"{version}: {got} instead of {expected}")
+
+
+def test_fixed_bugs_patterns_and_speed():
+    import re
+    for b in fixed_bugs.FIXED_BUGS:
+        check("fields", {"title", "plugin", "classes", "pattern", "fixed_in", "ref", "advice"} <= set(b), b.get("title"))
+        check("fixed_in parse", all(fixed_bugs.parse_version(v) for v in b["fixed_in"]), b["title"])
+        regex = re.compile(b["pattern"])
+        for line in ADVERSARIAL + ["java.lang.NullPointerException\n" * 3000]:
+            start = time.time()
+            regex.search(line)
+            took = time.time() - start
+            check("fixed bug speed", took < 0.5, f"{took:.1f} s for {b['title']!r} on {line[:12]!r}…")
 
 
 if __name__ == "__main__":
