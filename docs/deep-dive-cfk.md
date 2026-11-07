@@ -220,6 +220,11 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   with their reason, custom resources edited, StatefulSet rollouts) are events of the 🗓️ incident timeline of the log
   report: 🔗 links a first error to the edit of a CR 10 minutes before it at most, 💥 the burst of errors right after a
   pod restart.
+- One output for the case: the summary for a ticket (`<input>-ticket.md`, 📤 Copy for a ticket) has a ☸️ section per
+  bundle (environment, issues by severity, the known CFK issues with their public links, never the 🔒 internal ones, the
+  critical and high issues), and the 📥 data to request of the bundle joins the one of the logs. `analyze logs -f
+  <after bundle> --compare <before bundle>` compares the bundles (the comparison report, opened) and the pod logs (🔁 in
+  the log report, `.log_analysis.comparison` and `.cfk_comparison` with `--json`).
   **📕 Known CFK issues**: the log messages and events of the CFK triage table of Confluent support (roll blocked by
   the pre-roll checks, expired certificate, `INCONSISTENT_CLUSTER_ID`, ZooKeeper to KRaft migration, authorizer that
   doesn't start, license secret, `Could not obtain JAAS context`…) are matched on every issue, and on the INFO lines of

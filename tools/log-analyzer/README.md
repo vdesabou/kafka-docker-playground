@@ -268,7 +268,10 @@ as changes for the 🔗 errors that follow, within `INFRA_CAUSE_WINDOW_SECONDS` 
 With `--cluster-events <cfk-analysis JSON>` (repeatable, `analyze logs` passes the JSON of each CFK bundle), the
 `.timeline` of the bundle joins too, its times read as UTC: a `Pod` entry (terminated, restarted, with its reason) is an
 infra event, a custom resource edited or a StatefulSet rolled out a `config_change` (🔗, 10 minutes), both `cluster: true`
-(💥 counted after them too). Their location is `☸️ <component>/<kind>/<name>`, without a line.
+(💥 counted after them too). Their location is `☸️ <component>/<kind>/<name>`, without a line. The whole analysis of each bundle is kept too: the
+summary for a ticket gets its ☸️ section (`cfk_ticket_lines()`: environment, issues by severity, known CFK issues with
+their public links only, critical and high issues) and `data_to_request()` adds its data to request (`☸️ <what>`, its
+`command` as how).
 `after_effects()` counts the ERROR / WARN occurrences of every file (their kept timestamps, weighted by their stride) in
 the `EFFECT_WINDOW_SECONDS` = 60 s after each infra event and each process (re)start: when they reach `EFFECT_RATIO` = 3
 times the average per 60 s of the logs (`EFFECT_MIN` = 5 at least), the event gets `effects` (occurrences, usual rate, the

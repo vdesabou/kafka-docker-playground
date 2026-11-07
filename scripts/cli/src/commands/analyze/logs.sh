@@ -1159,18 +1159,52 @@ done
 # drawn as a trend (all of them)
 compare_json=""
 compare_index=0
+# the CFK support bundles of the inputs of --compare: compared with the bundles of this run (cfk-analysis/compare.py)
+compare_cfk_files=()
+# the JSON of analyze logs of an input of --compare as a log analysis: a CFK bundle gives "type": "cfk-bundle" (or
+# cfk-bundles) with the log analysis of its pod logs in .log_analysis, its analysis is kept for the bundle comparison.
+# $1: JSON, $2: label, $3: where to write the log analysis
+function compare_input_logs () {
+    local type n k
+    type=$(jq -r '.type // ""' "$1" 2> /dev/null)
+    case "$type" in
+        logs)
+            cp "$1" "$3"
+            n=$(jq '.cfk_bundles // [] | length' "$1")
+            ;;
+        cfk-bundle)
+            jq '.log_analysis // empty' "$1" > "$3" || return 1
+            jq --arg label "$2" 'del(.log_analysis) + {label: ("before: " + $label)}' "$1" > "$3.cfk-0.json" && compare_cfk_files+=("$3.cfk-0.json")
+            n=0
+            ;;
+        cfk-bundles)
+            jq '.log_analysis // empty' "$1" > "$3" || return 1
+            n=$(jq '.cfk_bundles | length' "$1")
+            ;;
+        *) return 1 ;;
+    esac
+    for (( k=0; k<${n:-0}; k++ ))
+    do
+        jq --argjson k "$k" --arg label "$2" '.cfk_bundles[$k] | . + {label: ("before: " + (.label // $label))}' "$1" > "$3.cfk-$k.json" \
+            && compare_cfk_files+=("$3.cfk-$k.json")
+    done
+    jq -e '.type == "logs"' "$3" > /dev/null 2>&1
+}
 for compare in "${compare_array[@]}"
 do
     compare_index=$((compare_index+1))
     one_json="$tmp_dir/compare-$compare_index.json"
-    if [[ "$compare" == *.json ]] && jq -e '.type == "logs"' "$compare" > /dev/null 2>&1
+    if [[ "$compare" == *.json ]] && compare_input_logs "$compare" "${compare#"$root_folder"/}" "$one_json"
     then
-        cp "$compare" "$one_json"
+        :
     elif [ -e "$compare" ]
     then
         progress_step "🔁 analyzing $compare for the comparison"
         log "🔁 Analyzing $compare for the comparison (same filters)"
-        compare_cmd=("$root_folder/scripts/cli/playground" analyze logs -f "$compare" --json --logs-only --max-findings "$max_findings")
+        # the same mode as this run: a CFK bundle is analyzed as a bundle (its pod logs only in the log analysis, like
+        # here), with --logs-only every file of it
+        compare_cmd=("$root_folder/scripts/cli/playground" analyze logs -f "$compare" --json --max-findings "$max_findings")
+        [[ -n "$logs_only" ]] && compare_cmd+=(--logs-only)
         [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
         [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
         [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
@@ -1179,8 +1213,8 @@ do
             compare_cmd+=(--connector "$connector")
         done
         # no progress page of its own, the sanitizer state of this run
-        if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json" 2> "$tmp_dir/compare.log" \
-            || ! jq -e '.type == "logs"' "$one_json" > /dev/null 2>&1
+        if ! PG_PROGRESS_HTML="" PG_SANITIZE_STATE="$sanitize_state" "${compare_cmd[@]}" > "$one_json.raw" 2> "$tmp_dir/compare.log" \
+            || ! compare_input_logs "$one_json.raw" "${compare#"$root_folder"/}" "$one_json"
         then
             logwarn "⚠️ --compare: no log analysis of $compare (the last lines of its run below), left out of the comparison"
             tail -n 5 "$tmp_dir/compare.log" | sed 's/^/   /' >&2
@@ -1194,6 +1228,20 @@ do
     # a sample of the repository by its path in it (the same on every machine, no user folder in the report)
     report_args+=(--compare "$one_json" --compare-label "${compare#"$root_folder"/}")
 done
+# the CFK bundles of --compare and of this run: one bundle comparison (versions, changes of the CRs, issues fixed / new /
+# still there), sorted by collection time, next to the log comparison
+current_cfk_files=("${cfk_compare_files[@]}" "${cfk_json_files[@]}")
+if [ ${#compare_cfk_files[@]} -gt 0 ] && [ ${#current_cfk_files[@]} -gt 0 ]
+then
+    log "🔁 Comparing the CFK support bundles of --compare with the ones of this run (sorted by collection time)"
+    if [[ -n "$json_out" ]]
+    then
+        compare_cfk_bundles "1" "" "${compare_cfk_files[@]}" "${current_cfk_files[@]}" > "$cfk_comparison" 2> /dev/null || echo "[]" > "$cfk_comparison"
+    else
+        CFK_COMPARISON_HTML=""
+        compare_cfk_bundles "" "$output_dir" "${compare_cfk_files[@]}" "${current_cfk_files[@]}"
+    fi
+fi
 for connector in "${connector_array[@]}"
 do
     report_args+=(--connector "$connector")
@@ -1251,7 +1299,9 @@ then
     if [ -n "$cfk_only" ] && [ ${#cfk_json_files[@]} -eq 1 ] && [ ${#cfk_bundles[@]} -eq 1 ]
     then
         # one CFK bundle: its JSON as before, the log analysis of its pod logs in .log_analysis
-        jq --slurpfile logs "$tmp_dir/logs-redacted.json" 'del(.label) + {log_analysis: ($logs[0] | del(.redaction_summary))}' "${cfk_json_files[0]}" >&3
+        jq --slurpfile logs "$tmp_dir/logs-redacted.json" --slurpfile comparison "$cfk_comparison" \
+            'del(.label) + {log_analysis: ($logs[0] | del(.redaction_summary))} + (if ($comparison[0] | length) > 0 then {cfk_comparison: $comparison[0]} else {} end)' \
+            "${cfk_json_files[0]}" >&3
     elif [ -n "$cfk_only" ] && [ ${#cfk_json_files[@]} -gt 0 ]
     then
         jq -s --slurpfile comparison "$cfk_comparison" --slurpfile logs "$tmp_dir/logs-redacted.json" \
