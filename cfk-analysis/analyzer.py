@@ -210,9 +210,13 @@ _POD_SUFFIX_RES = (re.compile(r'-\d+$'), re.compile(r'-[a-z0-9]{6,10}-[a-z0-9]{5
 class CFKBundleAnalyzer:
     """Main analyzer class for CFK support bundles"""
 
-    def __init__(self, bundle_path: str, include_warnings: bool = False):
+    def __init__(self, bundle_path: str, include_warnings: bool = False, log_records: Optional[Dict[str, List[Dict]]] = None):
         self.bundle_path = bundle_path
         self.include_warnings = include_warnings
+        # the ERROR / WARN records of the *.log files, from the log digest of playground analyze logs (path in the bundle
+        # -> its records, with their occurrence count and exception chain): their issues come from them instead of the
+        # record parser of _analyze_text_file, the same records as the log report linked by the 🔥 banner
+        self.log_records = log_records or {}
         self.issues = []
         self.issue_index = {}  # signature -> issue, for deduplication with occurrence counts
         self.component_index = {}  # pod / CR name -> (component, instance), filled while walking the bundle
@@ -727,12 +731,16 @@ class CFKBundleAnalyzer:
         self.coverage['log_files'] += 1
         self.coverage['log_lines'] += len(lines)
         rel = self._rel(file_path)
+        # a log file the log digest read: its records come from it (after the loop), the loop still follows the records
+        # to leave their stack traces out of the Kubernetes and operator checks
+        # (not the operator log: JSON lines that the digest converts, its line numbers would not be those of the file)
+        digest = None if _is_operator_log(rel) else self.log_records.get(rel)
 
         record = None  # (line_number, level, head, caused_by)
 
         def flush():
             # INFO / DEBUG / TRACE records are only followed, to keep the exception printed after them
-            if record is not None and record[1] != 'INFO':
+            if record is not None and record[1] != 'INFO' and digest is None:
                 self._handle_record(rel, lines, *record)
 
         k8s_screen = self._k8s_screen
@@ -801,6 +809,8 @@ class CFKBundleAnalyzer:
                 record = (line_num, 'INFO', line, [])
 
         flush()
+        for rec in digest or []:
+            self._handle_digest_record(rel, rec)
         self._record_log_window(rel, lines)
         component = self._component_from_path(rel)
         if component and component[0] in _CONFIG_COMPONENTS:
@@ -919,8 +929,21 @@ class CFKBundleAnalyzer:
             if state:
                 conn['state'] = str(state)
 
-    def _handle_record(self, rel: str, lines: List[str], line_num: int, level: str,
-                       head: str, caused_by: List[str]):
+    def _handle_digest_record(self, rel: str, rec: Dict):
+        """an ERROR / WARN record of the log digest (tools/log-analyzer/log_report.py --json, files[].records[]): its first
+        line, its exception chain (without "Caused by:"), its occurrence count and its raw context lines"""
+        head = rec.get('message') or ''
+        level = rec.get('level') or 'ERROR'
+        if not head or level not in ('FATAL', 'ERROR', 'WARN'):
+            return
+        caused_by = [re.sub(r'^Caused by:\s*', '', c).strip()[:300] for c in rec.get('chain') or []][:5]
+        line_num = rec.get('first_line') or 0
+        context = rec.get('context') or ''
+        self._handle_record(rel, None, line_num, level, head, caused_by, count=max(1, int(rec.get('count') or 1)),
+                            context='\n'.join(context.split('\n')[:5]) if context else None)
+
+    def _handle_record(self, rel: str, lines: Optional[List[str]], line_num: int, level: str,
+                       head: str, caused_by: List[str], count: int = 1, context: Optional[str] = None):
         text = head + ' ' + ' '.join(caused_by)
         # The root cause (last Caused by) wins over the symptom when both match. A WARN record counts only when it
         # matches a known cause, not a catch-all (any Kafka exception…): WARN storms of retriable errors are noise.
@@ -955,7 +978,8 @@ class CFKBundleAnalyzer:
 
         task = _TASK_RE.search(head + ' ')
         connector = _CONNECTOR_RE.search(head)
-        context_lines = lines[max(0, line_num - 3):min(len(lines), line_num + 2)]
+        if context is None:
+            context = '\n'.join(lines[max(0, line_num - 3):min(len(lines), line_num + 2)]) if lines else None
         self._add_issue(
             severity=severity,
             category=category,
@@ -964,8 +988,9 @@ class CFKBundleAnalyzer:
             message=f"{label}: {head.strip()[:300]}",
             file_path=rel,
             line_number=line_num,
-            context='\n'.join(context_lines),
+            context=context,
             caused_by=caused_by,
+            count=count,
             dedupe_key=self._normalize_signature(head + ' '.join(caused_by[-1:])),
         )
 

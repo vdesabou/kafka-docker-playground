@@ -857,6 +857,27 @@ fi
 if [ ${#cfk_bundles[@]} -gt 0 ]
 then
     progress_step "☸️ analyzing ${#cfk_bundles[@]} CFK support bundle(s)"
+    # the records of the pod and operator logs of each bundle, from the log digest (walk_cfk_bundle_logs): the CFK
+    # analyzer makes its issues of the log records from them (CFK_ANALYSIS_LOG_RECORDS), the same records as the log
+    # report. {path in the bundle: [records]}, raw (the CFK analyzer sanitizes its own output)
+    if [ "$nb_cfk_log_files" -gt 0 ]
+    then
+        under_args=()
+        for i in "${!cfk_bundles[@]}"
+        do
+            under_args+=(--records-under "${cfk_labels[$i]}")
+        done
+        # without the files converted from an export of log events (JSON lines): their line numbers are not those of the file
+        exported=$(cut -f1 "$exports_file" | jq -R . | jq -s . 2> /dev/null || echo "[]")
+        i=0
+        while IFS= read -r line
+        do
+            printf '%s\n' "$line" | jq --argjson exported "$exported" --arg p "${cfk_labels[$i]}" \
+                'with_entries(select(([$p + "/" + .key, $p + ":" + .key] - $exported | length) == 2))' > "$tmp_dir/cfk-records-$i.json" 2> /dev/null \
+                || rm -f "$tmp_dir/cfk-records-$i.json"
+            i=$((i+1))
+        done < <(python3 -I "$root_folder/tools/log-analyzer/log_report.py" --records "$records_file" "${under_args[@]}" 2> /dev/null)
+    fi
 fi
 # bundles of the same name (two "bundle" folders): their reports get a -<n> suffix, written in the same second
 declare -A cfk_name_count=()
@@ -925,6 +946,11 @@ do
         fi
         CFK_ANALYSIS_JSON=""
         CFK_ANALYSIS_HTML=""
+        CFK_ANALYSIS_LOG_RECORDS=""
+        if [ -s "$tmp_dir/cfk-records-$i.json" ]
+        then
+            CFK_ANALYSIS_LOG_RECORDS="$tmp_dir/cfk-records-$i.json"
+        fi
         if [[ -n "$json_out" ]]
         then
             analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"

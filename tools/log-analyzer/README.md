@@ -122,6 +122,14 @@ over the one of its task) and `Kafka version: <v>` (AppInfoParser). The 🔌 car
 summary for a connector with errors; the Kafka version is a 🏷️ tile, a line of the summary, `.summary.kafka_versions` of
 `--json` and a line of the summary for a ticket.
 
+## Records of a CFK support bundle
+
+`log_report.py --records <file> --records-under <prefix>` (repeatable) prints, one JSON per line and per prefix, the
+records of the files whose label starts with `<prefix>/` or `<prefix>:`, keyed by the path after it (labels as written
+by `analyze logs`, not shortened), with level, count, lines, times, message, chain, connector and context. `analyze logs`
+passes them to the CFK analyzer (`--log-records`), so the issues of the pod logs of a bundle come from the same records
+as the log report.
+
 ## Data to request (📥)
 
 `data_to_request()` (in `main()`, once `--incomplete` and `--other-files` are read) lists what to ask the customer for
