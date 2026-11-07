@@ -405,6 +405,72 @@ HINT_ORDER = [
 ]
 
 
+# what to read about a known cause, by title: a Confluent support knowledge-base article ("kb": url, "kb_title") and / or
+# a docs.confluent.io page ("docs"). Only URLs found in the knowledge base (support.confluent.io articles for signed-in
+# users), never built by hand: a cause without a good article has no entry
+KB = "https://support.confluent.io/hc/en-us/articles/"
+LINKS = {
+    "📜 License error": {"kb": KB + "16805773531284-What-s-causing-Invalid-License-Failed-to-start-Error-during-startup-of-an-commercial-Confluent-Platform-component",
+        "kb_title": "\"Invalid License! - Failed to start\" at startup"},
+    "💾 Storage failure": {"kb": KB + "30001064019092-How-to-bypass-LogDirFailureHandler-all-log-dirs-in-logs-have-failed-error-on-broker-startup",
+        "kb_title": "\"all log dirs have failed\" on broker startup"},
+    "🗝️ Empty or unreadable truststore": {"kb": KB + "19234809054484-How-to-investigate-trustAnchors-parameter-must-be-non-empty-Error-on-Kafka-Clients",
+        "kb_title": "\"trustAnchors parameter must be non-empty\""},
+    "🔐 TLS handshake failure": {"kb": KB + "360039950551-How-to-investigate-no-subject-alternative-names-matching-IP-address-during-SSL-Connection",
+        "kb_title": "\"no subject alternative names matching IP address\""},
+    "☁️ Cloud credentials or permission refused": {"kb": KB + "34060762750868-What-s-causing-AWS-S3-Source-Sink-connectors-to-fail-with-Your-AWS-Access-Key-API-key-is-invalid-It-might-have-been-deleted-or-its-associated-IAM-role-or-user-is-deleted-Message",
+        "kb_title": "AWS S3 connectors: \"Your AWS Access Key API key is invalid\""},
+    "🪪 MDS / RBAC token error": {"kb": KB + "360039432052-How-to-handle-JWT-rejected-due-to-invalid-signature-messages-with-RBAC",
+        "kb_title": "JWT rejected due to invalid signature with RBAC"},
+    "🚫 Authorization failure": {"kb": KB + "29997697793684-What-ACLs-are-required-for-a-Kafka-Connect-Cluster-connecting-to-Confluent-Cloud",
+        "kb_title": "ACLs required by a Connect cluster on Confluent Cloud"},
+    "🧬 Not enough replicas": {"kb": KB + "360046772492-How-to-interpret-NotEnoughReplicasException-within-Kafka-Broker-Logfile",
+        "kb_title": "How to interpret NotEnoughReplicasException"},
+    "🦓 ZooKeeper session error": {"kb": KB + "45279338995348-Why-does-a-Kafka-broker-log-Client-session-timed-out-have-not-heard-from-server-in-XXms-and-what-causes-ZooKeeper-session-timeouts",
+        "kb_title": "What causes ZooKeeper session timeouts"},
+    "🧩 Plugin not found": {"kb": KB + "360023070471-How-to-bypass-a-missing-class-error-while-starting-up-a-connector",
+        "kb_title": "A missing class error while starting a connector"},
+    "📦 Class loading error": {"kb": KB + "17808375385876-How-to-troubleshoot-ClassNotFoundException-NoClassDefFoundError-or-ClassCastException-exceptions-with-verbose-class",
+        "kb_title": "ClassNotFoundException / NoClassDefFoundError with -verbose:class"},
+    "🧟 Kafka Streams: producer fenced (exactly-once)": {"kb": KB + "360058606991-How-to-avoid-ProducerFencedException-within-kafka-streams",
+        "kb_title": "How to avoid ProducerFencedException in Kafka Streams"},
+    "💀 Kafka Streams: stream thread died": {"kb": KB + "360039499492-How-to-detect-failed-threads-in-Kafka-Streams",
+        "kb_title": "How to detect failed threads in Kafka Streams"},
+    "🧲 Unknown magic byte": {"kb": KB + "360042865291-What-s-causing-Unknown-magic-byte-error-when-consuming-avro-data",
+        "kb_title": "What's causing \"Unknown magic byte\"",
+        "docs": "https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html"},
+    "🔍 Schema id not found": {"kb": KB + "29396031747604-How-to-recover-Hard-Deleted-Schemas-in-Schema-Registry",
+        "kb_title": "How to recover hard-deleted schemas"},
+    "🛡️ Incompatible schema refused": {"kb": KB + "360057560832-How-to-fix-Schema-is-incompatible-with-an-earlier-schema-for-subject",
+        "kb_title": "\"Schema is incompatible with an earlier schema\""},
+    "📏 Record too large": {"kb": KB + "360024032811-How-to-handle-large-messages-with-Kafka",
+        "kb_title": "How to handle large messages with Kafka"},
+    "⏮️ Offset out of range": {"kb": KB + "23123974254996-What-does-Error-Broker-Offset-out-of-range-mean",
+        "kb_title": "What \"Offset out of range\" means"},
+    "💤 Idle connection closed by the broker": {"kb": KB + "360041071431-How-to-fix-X-X-brokers-are-down-on-idle-consumer-producer",
+        "kb_title": "\"X/X brokers are down\" on an idle client"},
+    "🛂 Wrong security.protocol or SASL mechanism": {"kb": KB + "360052182012-What-can-cause-Timed-out-waiting-for-a-node-assignment-Java-Client-and-CLI-Exceptions",
+        "kb_title": "\"Timed out waiting for a node assignment\""},
+    "⌛ Records not delivered in time": {"kb": KB + "32304589191444-How-to-resolve-the-TimeoutException-expiring-records-for-topic-producer-error",
+        "kb_title": "\"TimeoutException: expiring records for topic\""},
+    "📥 Producer buffer full": {"kb": KB + "360053146092-How-to-bypass-BufferError-Local-Queue-full-in-librdkafka-producers",
+        "kb_title": "\"Local: Queue full\" in librdkafka producers"},
+    "🐢 Consumer left its group: max.poll.interval.ms exceeded": {"kb": KB + "38115693778068-What-s-causing-Consumer-lag-and-or-Commit-of-offsets-timing-out-with-Consumers-or-Sink-Connectors",
+        "kb_title": "Consumer lag and offset commits timing out (sink connectors)"},
+    "⏳ Source offsets not committed in time": {"kb": KB + "360039220372-How-to-deal-with-failed-to-flush-timeouts-in-Kafka-Connect-Source-Connector",
+        "kb_title": "\"failed to flush\" timeouts of source connectors"},
+    "🔁 Group rebalances or coordinator lost": {"kb": KB + "15522504533652-What-s-causing-Consumer-Rebalance-taking-a-long-time-to-complete",
+        "kb_title": "Consumer rebalances taking a long time"},
+    "👑 Partition leadership changed": {"kb": KB + "4411550541716-How-to-diagnose-NotLeaderOrFollowerException",
+        "kb_title": "How to diagnose NotLeaderOrFollowerException"},
+}
+
+
+def links(title):
+    """What to read about the known cause `title`: {"kb", "kb_title", "docs"} (the keys it has), or {}"""
+    return dict(LINKS.get(title) or {})
+
+
 def hints():
     """Known causes of the log report: (case-insensitive regex, SEVERITY, title, advice), one per title (the patterns of
     the entries sharing a title are joined, the highest severity wins), in the order of their first entry"""
