@@ -225,6 +225,12 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   critical and high issues), and the 📥 data to request of the bundle joins the one of the logs. `analyze logs -f
   <after bundle> --compare <before bundle>` compares the bundles (the comparison report, opened) and the pod logs (🔁 in
   the log report, `.log_analysis.comparison` and `.cfk_comparison` with `--json`).
+- The ⚙️ configuration of the log report has the ☸️ configuration of the bundle too: the properties rendered by CFK
+  (`kafka.properties`, `connect.properties`, `jvm.config`… of the `<cr>-shared-config` ConfigMaps), the
+  `configOverrides` of each CR, and the Connector CRs next to the config the worker logged for that connector
+  (`--show-config <connector>`, 🧪 config lint). 🔀 lists the keys of a Connector CR whose value differs from the
+  config logged when the worker started the connector (`taskMax: 4` in the CR, `tasks.max=2` logged): the operator did
+  not apply the change, or the connector runs an older config (passwords and `${…}` placeholders are skipped).
   **📕 Known CFK issues**: the log messages and events of the CFK triage table of Confluent support (roll blocked by
   the pre-roll checks, expired certificate, `INCONSISTENT_CLUSTER_ID`, ZooKeeper to KRaft migration, authorizer that
   doesn't start, license secret, `Could not obtain JAAS context`…) are matched on every issue, and on the INFO lines of

@@ -4577,74 +4577,80 @@ subcommands:
       with their public links, critical and high issues), the \U0001F4E5 data to request
       of the bundle joins the one of the logs, and --compare <before bundle> compares
       both the bundles (versions, CR changes, issues fixed / new / still there) and
-      their pod logs. --logs-only gives only the log report, of every file of the
-      bundle. \U0001F3AF --problem \"<component, symptom, since when>\" matches the
-      bundle against what the customer reports: the issues that explain it first,
-      a verdict (explained, not explained, not covered by the logs), the changes before
-      the date. \U0001F4E5 A Data to request section says what to ask the customer
-      for next, with why and the command: from the gaps of the bundle (logs that start
-      too late, previous logs of restarted containers, no events, no operator log),
-      from its findings (OOMKilled, Pending pods, TLS, failed connectors) and from
-      the symptoms of --problem.\n\n\U0001F512 With --sanitize, passwords and other
-      secrets (password=…, JAAS configs, tokens, keys, credentials in URLs), IPs,
-      hostnames, emails and LDAP DNs are replaced by placeholders (<REDACTED>, <IP-1>,
-      <HOST-1>…, the same in the digest, the report and the JSON). Off by default:
-      use it before sharing the output outside Confluent, and review it anyway (best
-      effort).\n\n\U0001F9ED After the digest of each file, a short summary: time
-      range, occurrences by connector, known causes with what to do (\U0001F4DA and
-      a Confluent knowledge-base article for many of them, \U0001F512 the internal
-      runbooks of Confluent support when the private reproduction-models repository
-      is there), root causes no known cause explains, and the configuration logged
-      at startup (connectors, components, clients) with the keys changed between restarts.
-      Also: \U0001F3F7️ the version of each connector plugin (with the playground
-      connector-plugin changelog command since that version) and of Kafka, \U0001F4E5
-      the data to request next from the customer, each with why and how (a complete
-      copy of a file not fully read, a longer window, the logs since the last restart
-      of a worker whose startup is missing, the broker or Schema Registry logs when
-      the findings point there, a heap dump, GC logs, thread dumps or the TLS debug
-      output for the known causes they explain, and the exact DEBUG logger to set
-      for the errors no known cause explains), also in <input>-ticket.md, \U0001F5A5️
-      which worker ran which task and when (from the \"Starting task\" lines of each
-      worker's logs), with \U0001F3AF a connector whose errors all come from one worker
-      while its tasks also ran on others (a DNS, truststore, plugin path or network
-      difference of that host), \U0001FA79 the known bugs of a plugin fixed in a later
-      version whose error is in the logs, with a verdict from the version each connector
-      runs (affected: upgrade to …; it has the fix: another cause; version unknown),
-      \U0001F504 the restarts, stops, worker rebalances, consumer rejoins, active
-      controller changes and GC pauses of 1 s or more counted from the INFO lines
-      and the GC logs (\U0001F300 a storm when the rebalances repeat), \U0001F4A5
-      the bursts of errors right after a GC pause, a stop, a restart or a controller
-      change, \U0001F517 the errors that came right after a change (config key, restart)
-      of the same connector, and \U0001F9EA a config lint of each connector (errors.tolerance=all
-      without a DLQ, a DLQ with replication factor 1, max.poll.records too high for
-      max.poll.interval.ms, acks not all…). --connector keeps one connector, --show-config
-      prints a configuration, --since / --until keep a window of time. \U0001F4CB
-      <input>-ticket.md, next to the report: the same summary in Markdown, always
-      sanitized, to paste in a ticket (also in \U0001F4E4 Share of the report). \U0001F4C8
-      With --compare repeated (oldest first), a trend over every input.\n\n\U0001F310
-      Also writes a self-contained HTML report in --output-dir, opened in the browser
-      in an interactive terminal: verdict, known causes (task killed, errors.tolerance
-      exceeded, authentication, TLS, wrong security.protocol, unknown magic byte,
-      OutOfMemoryError, fenced producer, rebalances, throttling, offsets not committed
-      in time, task not stopped in time...), an incident timeline (all files merged:
-      first occurrence of each error and known cause, restarts, connectors reconfigured,
-      config changes, processes stopped, active controller changes and GC pauses of
-      1 s or more read from the GC logs of the input, \U0001F4A5 with the burst of
-      ERROR / WARN of every file in the 60 s after one of them when it is well above
-      the usual rate (\"39 Partition leadership changed right after broker 2 shut
-      down\"); a chart places them in time, one lane per component, long gaps cut,
-      and a Δ column gives the time between them), a card per connector (errors, task
-      killed, known causes, config changes), occurrences over time, root causes (deepest
-      exception of each record), files with findings, and every distinct record. Everything
-      below the filter bar is one view of the same records: the level chips, the component
-      chips, the connector picker, the search box and the period selected by dragging
-      over the occurrences chart (all kept in the URL: \U0001F517 Link to this view
-      opens the report on the same view) all recount the two charts, the root causes,
-      the files with findings and the record cards (double-click the chart, or ⤺ whole
-      period, to go back). The findings keep the figures of the whole report, say
-      how much of each of them is in the selection, and the ones with nothing in it
-      are hidden (show them brings them back). With a connector picked, the \U0001F50C
-      Connectors section keeps its card only.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n\U0001F3AC
+      their pod logs. The ⚙️ configuration of the log report also has what only the
+      bundle has: the properties rendered by CFK (ConfigMap <cr>-shared-config), the
+      configOverrides of each CR and the Connector CRs (--show-config <connector>
+      prints the CR with the config logged, config lint checks it), and \U0001F500
+      the keys of a Connector CR whose value differs from the config the worker logged
+      when it started the connector (the operator did not apply a change). --logs-only
+      gives only the log report, of every file of the bundle. \U0001F3AF --problem
+      \"<component, symptom, since when>\" matches the bundle against what the customer
+      reports: the issues that explain it first, a verdict (explained, not explained,
+      not covered by the logs), the changes before the date. \U0001F4E5 A Data to
+      request section says what to ask the customer for next, with why and the command:
+      from the gaps of the bundle (logs that start too late, previous logs of restarted
+      containers, no events, no operator log), from its findings (OOMKilled, Pending
+      pods, TLS, failed connectors) and from the symptoms of --problem.\n\n\U0001F512
+      With --sanitize, passwords and other secrets (password=…, JAAS configs, tokens,
+      keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced
+      by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the
+      report and the JSON). Off by default: use it before sharing the output outside
+      Confluent, and review it anyway (best effort).\n\n\U0001F9ED After the digest
+      of each file, a short summary: time range, occurrences by connector, known causes
+      with what to do (\U0001F4DA and a Confluent knowledge-base article for many
+      of them, \U0001F512 the internal runbooks of Confluent support when the private
+      reproduction-models repository is there), root causes no known cause explains,
+      and the configuration logged at startup (connectors, components, clients) with
+      the keys changed between restarts. Also: \U0001F3F7️ the version of each connector
+      plugin (with the playground connector-plugin changelog command since that version)
+      and of Kafka, \U0001F4E5 the data to request next from the customer, each with
+      why and how (a complete copy of a file not fully read, a longer window, the
+      logs since the last restart of a worker whose startup is missing, the broker
+      or Schema Registry logs when the findings point there, a heap dump, GC logs,
+      thread dumps or the TLS debug output for the known causes they explain, and
+      the exact DEBUG logger to set for the errors no known cause explains), also
+      in <input>-ticket.md, \U0001F5A5️ which worker ran which task and when (from
+      the \"Starting task\" lines of each worker's logs), with \U0001F3AF a connector
+      whose errors all come from one worker while its tasks also ran on others (a
+      DNS, truststore, plugin path or network difference of that host), \U0001FA79
+      the known bugs of a plugin fixed in a later version whose error is in the logs,
+      with a verdict from the version each connector runs (affected: upgrade to …;
+      it has the fix: another cause; version unknown), \U0001F504 the restarts, stops,
+      worker rebalances, consumer rejoins, active controller changes and GC pauses
+      of 1 s or more counted from the INFO lines and the GC logs (\U0001F300 a storm
+      when the rebalances repeat), \U0001F4A5 the bursts of errors right after a GC
+      pause, a stop, a restart or a controller change, \U0001F517 the errors that
+      came right after a change (config key, restart) of the same connector, and \U0001F9EA
+      a config lint of each connector (errors.tolerance=all without a DLQ, a DLQ with
+      replication factor 1, max.poll.records too high for max.poll.interval.ms, acks
+      not all…). --connector keeps one connector, --show-config prints a configuration,
+      --since / --until keep a window of time. \U0001F4CB <input>-ticket.md, next
+      to the report: the same summary in Markdown, always sanitized, to paste in a
+      ticket (also in \U0001F4E4 Share of the report). \U0001F4C8 With --compare repeated
+      (oldest first), a trend over every input.\n\n\U0001F310 Also writes a self-contained
+      HTML report in --output-dir, opened in the browser in an interactive terminal:
+      verdict, known causes (task killed, errors.tolerance exceeded, authentication,
+      TLS, wrong security.protocol, unknown magic byte, OutOfMemoryError, fenced producer,
+      rebalances, throttling, offsets not committed in time, task not stopped in time...),
+      an incident timeline (all files merged: first occurrence of each error and known
+      cause, restarts, connectors reconfigured, config changes, processes stopped,
+      active controller changes and GC pauses of 1 s or more read from the GC logs
+      of the input, \U0001F4A5 with the burst of ERROR / WARN of every file in the
+      60 s after one of them when it is well above the usual rate (\"39 Partition
+      leadership changed right after broker 2 shut down\"); a chart places them in
+      time, one lane per component, long gaps cut, and a Δ column gives the time between
+      them), a card per connector (errors, task killed, known causes, config changes),
+      occurrences over time, root causes (deepest exception of each record), files
+      with findings, and every distinct record. Everything below the filter bar is
+      one view of the same records: the level chips, the component chips, the connector
+      picker, the search box and the period selected by dragging over the occurrences
+      chart (all kept in the URL: \U0001F517 Link to this view opens the report on
+      the same view) all recount the two charts, the root causes, the files with findings
+      and the record cards (double-click the chart, or ⤺ whole period, to go back).
+      The findings keep the figures of the whole report, say how much of each of them
+      is in the selection, and the ones with nothing in it are hidden (show them brings
+      them back). With a connector picked, the \U0001F50C Connectors section keeps
+      its card only.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\U0001F3AC
       Bite size session (--compare): https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%81-did-the-fix-work-analyze-the-logs-before-and-after-it"
     usage: playground analyze logs [OPTIONS]
@@ -4787,8 +4793,8 @@ subcommands:
       description: "\U0001F5C2️ With --json, only these sections, comma separated:
         summary, findings, known_causes, root_causes, files, files_without_findings,
         coverage, configuration, timeline, connectors, comparison, trend, lifecycle,
-        config_lint, other_files, fixed_bugs, task_workers, data_to_request (default:
-        all). For example --json-sections summary,findings,root_causes"
+        config_lint, other_files, fixed_bugs, task_workers, data_to_request, config_drift
+        (default: all). For example --json-sections summary,findings,root_causes"
     - names:
       - "--component"
       argument: COMPONENT

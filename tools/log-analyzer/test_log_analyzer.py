@@ -8,6 +8,7 @@ import csv
 import io
 import json
 import os
+import re
 import sys
 import tempfile
 
@@ -202,7 +203,8 @@ def records_file(tmp, text):
         if line.startswith("@@PGCTX@@"):
             line = line.replace("|", "\t", 1)
         elif line.startswith("@@"):
-            line = line.replace("|", "\t")
+            # not the | of a [connector|task-0] context
+            line = re.sub(r"\|(?![^\[]*\])", "\t", line)
         out.append(line)
     with open(path, "w") as fh:
         fh.write("\n".join(out))
@@ -408,6 +410,34 @@ def test_cfk_bundle_in_ticket_and_data_to_request():
               "kubectl describe nodes"):
         check(x, x in md, md)
     check("no internal link", "atlassian" not in md and "meh" not in md, md)
+
+
+def test_cfk_configuration_and_drift():
+    """⚙️ the properties rendered by CFK, the configOverrides and the Connector CRs in the configuration of the logs; 🔀 a key
+    of the CR whose value differs from the config the worker logged (formats normalized, [hidden] and ${…} skipped)"""
+    bundle = {"configuration": {
+        "components": {"connect": {"connect": {"source": "confluent/connect/cm/configmaps.yaml",
+                                               "files": {"connect.properties": "group.id=connect\nkey.converter=x"},
+                                               "overrides": {"server": "consumer.max.poll.records=2000"}}}},
+        "connectors": {"orders-sink": {"cr": {"file": "confluent/connect/connector-orders-sink.yaml",
+                                              "text": "tasks.max=4\ntopics=orders, refunds\nconnection.password=s3cr3t\n"
+                                                      "connection.user=${file:/s/x:user}\nkey.converter=io.confluent.connect.avro.AvroConverter"}}}}}
+    text = ("@@PGFILE@@|bundle:confluent/connect/logs/connect-0.log|10|0|0|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            "@@PGCFG@@|SinkConnectorConfig|[orders-sink|worker]|10|2026-11-07T10:01:10|orders-sink\n"
+            "@@PGCFGL@@|tasks.max=2\n@@PGCFGL@@|topics=[orders, refunds]\n@@PGCFGL@@|key.converter=class io.confluent.connect.avro.AvroConverter\n"
+            "@@PGCFG@@|JdbcSinkConfig|[orders-sink|task-0]|11|2026-11-07T10:01:11|\n"
+            "@@PGCFGL@@|connection.password=[hidden]\n@@PGCFGL@@|connection.user=connect\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        files.cfk_bundles = [bundle]
+        res = log_report.analyze(files)
+    cfk = [c["title"] for c in res["configuration"] if c["source"] == "cfk"]
+    check("cfk configs", cfk == ["connect.properties (rendered by CFK, ConfigMap connect-shared-config)",
+                                 "configOverrides.server of the connect CR connect", "Connector CR"], cfk)
+    check("drift", [(x["key"], x["cr"], x["logged"]) for x in res["config_drift"]] == [("tasks.max", "4", "2")], res["config_drift"])
+    card = next(c for c in res["connectors"] if c["connector"] == "orders-sink") if res["connectors"] else None
+    check("text", "🔀 Connector CR and config logged differ (1 key(s)" in log_report.text_summary(res, []))
+    check("show-config", "Connector CR" in log_report.show_config(res, "orders-sink"))
 
 
 if __name__ == "__main__":
