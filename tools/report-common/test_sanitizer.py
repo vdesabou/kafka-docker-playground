@@ -206,6 +206,27 @@ def test_support_dates():
     check("rows", all(len(v) == 4 for v in support_dates.CP_SUPPORT.values()) and all(len(v) == 2 for v in support_dates.CFK_SUPPORT.values()))
 
 
+def test_support_clients_community_connectors():
+    """📡 Java client and librdkafka support, 🏷️ Confluent Community (-ccs) end of support, 🛟 minimum connector versions"""
+    from datetime import date
+    today = date(2026, 11, 7)
+    cases = [(support_dates.java_client_status("3.5.1", today), "ended"), (support_dates.java_client_status("3.8.0", today), "standard_ended"),
+             (support_dates.java_client_status("4.1.0", today), "supported"), (support_dates.librdkafka_status("2.4.0", today), "standard_ended"),
+             (support_dates.librdkafka_status("2.16.0", today), "supported"), (support_dates.librdkafka_status("2.2.0", today), "ended"),
+             # Community: its own end of support (8.0: 2026-06-11), Enterprise 8.0 still supported
+             (support_dates.cp_community_status("8.0.1", today), "ended"), (support_dates.cp_status("8.0.1", today), "supported")]
+    for st, want in cases:
+        check("support state", st["state"] == want, f"{st} instead of {want}")
+    jdbc = "io.confluent.connect.jdbc.JdbcSinkConnector"
+    check("connector below the minimum", support_dates.connector_status(jdbc, "10.7.4", "8.4.0")["state"] == "unsupported")
+    check("connector at the minimum", support_dates.connector_status(jdbc, "10.9.9", "8.4.2")["state"] == "supported")
+    check("Debezium 3.2.6.Final vs 3.2.6-3", support_dates.connector_status("io.debezium.connector.mysql.MySqlConnector", "3.2.6.Final", "8.4.0")["state"] == "supported")
+    check("no table for the release", support_dates.connector_status(jdbc, "10.0.0", "7.4.0")["state"] == "unknown")
+    check("class not in the tables", support_dates.connector_status("com.acme.MyConnector", "1.0.0", "8.4.0")["state"] == "unknown")
+    check("every row of the class map in every table from 8.1",
+          all(row in support_dates.CONNECTOR_MIN[cp] for row in set(support_dates.CONNECTOR_ROWS.values()) for cp in ("8.1", "8.2", "8.3", "8.4")))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

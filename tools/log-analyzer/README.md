@@ -151,9 +151,20 @@ included: a click keeps only those cards (the severity chips of the section foll
 The tiles of the CFK bundles join the same row (`cfk_kpi_tiles()`: ☸️ CFK issues, clickable, the Kubernetes and CFK
 versions). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
-The 🏷️ CP and 🛠️ CFK tiles are marked when the version is out of support (`tools/report-common/support_dates.py`, the
-tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support): ⛔ end of support
-(red), ⚠️ Standard support ended but Platinum still running, ⏳ support ends within 6 months (orange). The summary and the
+The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
+tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅
+supported (green), ⏳ support ends within 6 months, with the days left, and ⚠️ Standard support ended but Platinum still
+running (amber), ⛔ end of support (red, pulsing, and a ⛔ banner right under the verdict, `support_banner_html()`, which
+says that Confluent Support refuses cases on a version past its end of support). A `-ccs` version in the logs is Confluent
+Community (🏷️ CP Community, `cp_community_status()`: the "Confluent Community Software End of Support" column, no
+Standard / Platinum extension). 📡 Clients (`clients_tile()`): the Apache Kafka Java clients ("Kafka version: x.y.z"
+without `-ce` / `-ccs`) and librdkafka (`librdkafka_version` events of the digest: `librdkafka v2.3.0 … initialized`,
+`confluent-kafka 2.16.1, librdkafka 2.16.0`), against the client support tables of the docs (`JAVA_CLIENT_SUPPORT`,
+`LIBRDKAFKA_SUPPORT`). 🛟 Connector versions (`connector_versions_tile()`, and a line on each 🔌 card): the plugin version
+of each connector against the minimum supported on the CP release of its worker (the "Kafka version" of the same file),
+from the supported-connector-version page of each release (`CONNECTOR_MIN`, 7.9 and 8.0 to 8.4, `CONNECTOR_ROWS` maps
+the classes to its rows; copy the table of each new release). Ended versions and unsupported connectors are in the
+banner, the terminal summary and the summary for a ticket. The summary and the
 summary for a ticket say it too. Update the tables with each release (skill `kdp-bump-cp-version`).
 On a wide screen (1400 px or more), the same links are a 🧭 Sections panel on the left (the section on screen
 highlighted, ⟨ hides it, ☰ Sections brings it back, remembered in `localStorage` as `pg-side-nav`); a ⬆️ Top button shows
@@ -381,7 +392,9 @@ back to the span of the records.
 (task killed, with one line per distinct exception chain of the killed tasks, authentication, cloud credentials (an AWS
 `SignatureDoesNotMatch` or `(Service: S3, Status Code: 403`), TLS, unknown magic byte,
 `OutOfMemoryError`…, each pointing at its earliest occurrence; the list is shared with the CFK analyzer, in
-`tools/report-common/known_causes.py`), occurrences over time, root causes
+`tools/report-common/known_causes.py`), occurrences over time, 🗂️ the files with findings (a 📁 header per folder, a card
+per file with its component, the occurrences with a bar split by level, the levels as pills, also in the title of the card of each
+file; `pgFilesTable()` counts them again for the filters), root causes
 (deepest exception of each record) and every record (with a 📋 Show context block: the raw lines around its first
 occurrence, from the `@@PGCTX@@` lines of the records file) and the ⚙️ configuration (the `<Class>Config values:`
 dumps of the logs, from the `@@PGCFG@@` / `@@PGCFGL@@` blocks, with the keys changed between two dumps of the same

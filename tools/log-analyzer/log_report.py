@@ -816,6 +816,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["timeline"] = incident_timeline(res, files)
     res["connectors"] = connector_health(res, files)
     res["summary"]["kafka_versions"] = kafka_versions(files)
+    res["summary"]["librdkafka_versions"] = kafka_versions(files, "librdkafka_version")
     res["lifecycle"] = lifecycle(res, files)
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
@@ -1132,10 +1133,17 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
                                         "previous": ch["previous"], "value": ch["value"]})
     # the version of each connector, from "Instantiated connector|task <name> with version <v> of type <class>" (oldest
     # first: an upgrade during the logs shows both)
+    # the Confluent Platform release of the worker that runs a connector: the "Kafka version: x.y.z-ce" of the same file,
+    # else the only one of the input (for the minimum connector version supported on that release)
+    every_cp = [v for v in kafka_versions(files) if re.search(r"-(ce|ccs)$", v)]
     for f in files:
+        file_cp = next((ev["detail"] for ev in f.get("events") or [] if ev["kind"] == "kafka_version" and re.search(r"-(ce|ccs)$", ev["detail"] or "")),
+                       every_cp[0] if len(every_cp) == 1 else None)
         for ev in sorted(f.get("events") or [], key=lambda x: (x.get("time") or "", x.get("line") or 0)):
             if ev["kind"] != "plugin_version" or ev.get("connector") not in cards:
                 continue
+            if file_cp:
+                cards[ev["connector"]]["cp"] = re.sub(r"-(ce|ccs)$", "", file_cp)
             version, _, cls = ev["detail"].partition(" ")
             c = cards[ev["connector"]]
             c.setdefault("versions", [])
@@ -1144,6 +1152,11 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
             # the class of the connector, not of its task (Instantiated task … of type …SourceTask): the one of the plugin
             if not c.get("class") or not cls.endswith("Task"):
                 c["class"] = cls
+    for c in cards.values():
+        if c.get("versions") and c.get("class") and c.get("cp"):
+            st = support_dates.connector_status(c["class"], c["versions"][-1], c["cp"])
+            if st["state"] != "unknown":
+                c["support"] = st
     out = list(cards.values())
     out.sort(key=lambda c: (-(c["by_level"]["FATAL"] + c["by_level"]["ERROR"]), -c["by_level"]["WARN"], c["connector"]))
     return out
@@ -1897,12 +1910,13 @@ def config_lint_text(items: List[dict], top: int = 8) -> List[str]:
     return out
 
 
-def kafka_versions(files: List[dict]) -> List[str]:
-    """the Kafka / Confluent Platform versions of the logs ("Kafka version: 8.3.2-ce" of AppInfoParser), in order"""
+def kafka_versions(files: List[dict], kind: str = "kafka_version") -> List[str]:
+    """the Kafka / Confluent Platform versions of the logs ("Kafka version: 8.3.2-ce" of AppInfoParser), in order; kind
+    librdkafka_version: the librdkafka versions of the non-Java clients"""
     out: List[str] = []
     for f in files:
         for ev in f.get("events") or []:
-            if ev["kind"] == "kafka_version" and ev["detail"] and ev["detail"] not in out:
+            if ev["kind"] == kind and ev["detail"] and ev["detail"] not in out:
                 out.append(ev["detail"])
     return out
 
@@ -1952,6 +1966,10 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"data-cmd='{e(changelog_command(c))}' title='copy the command that lists what changed in the plugin since "
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else "")
+            # 🛟 the plugin version against the minimum supported on the CP release of the worker (supported-connector-version)
+            + (f"<div class='conn-support {'bad' if c['support']['state'] == 'unsupported' else 'good'}'>🛟 "
+               f"<a href='{e(c['support']['doc'])}' title='the minimum {e(c['support']['row'])} version supported on Confluent Platform "
+               f"{e(c['support']['cp'])} (Connector lifecycle support policy)'>{e(c['support']['text'])}</a></div>" if c.get("support") else "")
             + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
             + (f"<div class='fi-meta'>🖥️ tasks ran on {len(c['workers'])} worker(s): "
                + e(", ".join(f"{x['worker']} ({x['errors']:,} error(s))" for x in c["workers"][:4]))
@@ -1985,10 +2003,15 @@ def connectors_health_html(cards: List[dict]) -> str:
             ".conn-icon{width:22px;height:22px;object-fit:contain;flex:none;border-radius:5px;background:#fff;padding:2px;box-shadow:0 0 0 1px #e2e8f0}"
             ".conn-icon.none{display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;background:none;box-shadow:none;padding:0}"
             "html[data-theme=dark] .conn-icon{box-shadow:0 0 0 1px #334155}"
+            ".conn-support{display:inline-block;margin:3px 0;padding:2px 10px;border-radius:8px;font-size:.78rem;font-weight:600}"
+            ".conn-support a{color:inherit;text-decoration:none}.conn-support a:hover{text-decoration:underline}"
+            ".conn-support.good{background:#dcfce7;color:#15803d}.conn-support.bad{background:#fee2e2;color:#b91c1c;box-shadow:0 0 0 1px #fca5a5}"
+            "html[data-theme=dark] .conn-support.good{background:#052e16;color:#86efac}html[data-theme=dark] .conn-support a{color:inherit}"
+            "html[data-theme=dark] .conn-support.bad{background:#450a0a;color:#fca5a5;box-shadow:0 0 0 1px #7f1d1d}"
             ".conn-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}.conn-only{margin-left:auto;font-size:.72rem}"
             "html[data-theme=dark] .conn-card{border-color:#334155}.conn-card[hidden]{display:none}"
             ".conn-note{font-weight:600}.conn-note[hidden],.conn-more[hidden]{display:none}.conn-more{margin-top:10px}</style>"
-            f"<div class='table-card'><h2>🔌 Connectors ({len(cards)})</h2><p class='legend'>One card per connector of the logs "
+            f"<div class='table-card' id='connectors'><h2>🔌 Connectors ({len(cards)})</h2><p class='legend'>One card per connector of the logs "
             "(the [connector|task-0] context of the lines): its errors and warnings, the known causes of its records, a task "
             "killed, its configuration and the keys changed between restarts. ▶ only this connector filters the report on it (and "
             f"hides the other cards), ⤺ goes back to all of them; the search box filters the cards too. The {CONN_CARDS_SHOWN} "
@@ -2407,9 +2430,22 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     if s.get("kafka_versions"):
         out.append(f"   🏷️ Kafka {' → '.join(s['kafka_versions'])} (the version the components log at startup)")
     for v in cp_versions(s, res.get("_cfk_bundles") or []):
-        st = support_dates.cp_status(v)
+        st = cp_support(s, v)
+        if is_community(s, v):
+            out.append(f"   🏷️ CP {v} is Confluent Community (-ccs): no Enterprise support, Community end of support")
         if st["state"] in ("ended", "standard_ended", "ending"):
             out.append(f"   🏷️ CP {v}: {st['text']} ({support_dates.CP_DOC})")
+    for what, v, st in client_versions(s):
+        if st["state"] in ("ended", "standard_ended", "ending"):
+            out.append(f"   📡 {what} {v}: {st['text']} ({support_dates.CLIENTS_DOC})")
+    bad = [c for c in res.get("connectors") or [] if (c.get("support") or {}).get("state") == "unsupported"]
+    if bad:
+        out.append(f"   🛟 {len(bad)} connector(s) below the minimum version supported on CP {bad[0]['support']['cp']}: "
+                   + ", ".join(f"{c['connector']} {c['versions'][-1]} < {c['support']['minimum']}" for c in bad[:5])
+                   + (" …" if len(bad) > 5 else "") + f" ({bad[0]['support']['doc']})")
+    if any(st["state"] == "ended" for v in cp_versions(s, res.get("_cfk_bundles") or []) for st in [cp_support(s, v)]) or bad \
+            or any(st["state"] == "ended" for _, _, st in client_versions(s)):
+        out.append("   ⛔ Confluent Support refuses cases on a version past its end of support: upgrade first")
     gaps = (res.get("coverage") or {}).get("gaps") or []
     if gaps:
         biggest = max(gaps, key=lambda g: g["seconds"])
@@ -2800,16 +2836,121 @@ def version_tile(s: dict, bundles: List[dict]) -> str:
     versions = cp_versions(s, bundles)
     if versions:
         # the oldest version of the input decides: the one out of support first
-        worst = max((support_dates.cp_status(v) for v in versions),
-                    key=lambda st: ["unknown", "supported", "ending", "standard_ended", "ended"].index(st["state"]))
-        unit = (" → ".join(versions) if len(versions) > 1 else "Confluent Platform") + (f" · {worst['text']}" if worst["text"] else "")
-        return kpi("🏷️ CP", versions[-1], unit, support_dates.TILE_CLASS[worst["state"]],
-                   "the Confluent Platform version: the components log it at startup (Kafka version: x.y.z-ce), the images of a "
-                   f"CFK bundle carry it; end of support from {support_dates.CP_DOC}")
+        worst = worst_status(cp_support(s, v) for v in versions)
+        community = any(is_community(s, v) for v in versions)
+        edition = "Confluent Community (-ccs)" if community else "Confluent Platform"
+        unit = (" → ".join(versions) if len(versions) > 1 else edition) + (f" · {worst['text']}" if worst["text"] else "")
+        return kpi("🏷️ CP" + (" Community" if community else ""), versions[-1], unit, support_dates.TILE_CLASS[worst["state"]],
+                   "the Confluent Platform version: the components log it at startup (Kafka version: x.y.z-ce for Enterprise, "
+                   "x.y.z-ccs for Confluent Community, which has no Enterprise support and a shorter end of support), the images "
+                   f"of a CFK bundle carry it; end of support from {support_dates.CP_DOC}")
     if logged:
         return kpi("🏷️ Kafka", logged[-1], " → ".join(logged) if len(logged) > 1 else "logged at startup", "",
                    "the Apache Kafka version the components log at startup (AppInfoParser)")
     return ""
+
+
+STATE_ORDER = ["unknown", "supported", "ending", "standard_ended", "ended"]
+
+
+def worst_status(statuses) -> dict:
+    return max(statuses, key=lambda st: STATE_ORDER.index(st["state"]), default={"state": "unknown", "text": ""})
+
+
+def is_community(s: dict, v: str) -> bool:
+    """x.y.z-ccs in the logs (Confluent Community Software), not x.y.z-ce (Enterprise)"""
+    logged = s.get("kafka_versions") or []
+    return f"{v}-ccs" in logged and f"{v}-ce" not in logged
+
+
+def cp_support(s: dict, v: str) -> dict:
+    """the support of a CP version: the Community dates for a -ccs one"""
+    return support_dates.cp_community_status(v) if is_community(s, v) else support_dates.cp_status(v)
+
+
+def client_versions(s: dict) -> List[Tuple[str, str, dict]]:
+    """📡 the clients of the logs: (what, version, support) of the Apache Kafka Java clients ("Kafka version: 3.6.1" without
+    -ce / -ccs: a client application, not a Confluent Platform component) and of librdkafka"""
+    out = [("Kafka Java client", v, support_dates.java_client_status(v)) for v in s.get("kafka_versions") or []
+           if not re.search(r"-(ce|ccs)$", v) and re.match(r"^\d+\.\d+", v)]
+    out += [("librdkafka", v, support_dates.librdkafka_status(v)) for v in s.get("librdkafka_versions") or []]
+    return out
+
+
+def clients_tile(s: dict) -> str:
+    clients = client_versions(s)
+    if not clients:
+        return ""
+    worst = worst_status(st for _, _, st in clients)
+    names = ", ".join(f"{what} {v}" for what, v, _ in clients[:4]) + (f" +{len(clients) - 4}" if len(clients) > 4 else "")
+    return kpi("📡 Clients", clients[-1][1] if len(clients) == 1 else f"{len(clients)} versions",
+               names + (f" · {worst['text']}" if worst["text"] else ""), support_dates.TILE_CLASS[worst["state"]],
+               "the Apache Kafka Java client versions (Kafka version: x.y.z of AppInfoParser, without -ce / -ccs) and the "
+               f"librdkafka versions of the logs; end of support from {support_dates.CLIENTS_DOC}")
+
+
+def connector_versions_tile(cards: List[dict]) -> str:
+    """🔌 the connector plugin versions against the minimum supported on the CP release of their worker"""
+    checked = [c for c in cards if c.get("support")]
+    if not checked:
+        return ""
+    bad = [c for c in checked if c["support"]["state"] == "unsupported"]
+    cls = "danger support-ended" if bad else "ok support-ok"
+    unit = (f"⛔ {len(bad)} of {len(checked)} below the minimum supported on CP {bad[0]['support']['cp']}" if bad
+            else f"✅ the {len(checked)} checked are supported on CP {checked[0]['support']['cp']}")
+    return (f"<a class='kpi-link' href='#connectors' title='go to its section'>"
+            + kpi("🛟 Connector versions", f"{len(checked) - len(bad)} / {len(checked)}", unit, cls,
+                  "the plugin version of each connector against the minimum version supported on the Confluent Platform "
+                  "release of its worker (supported-connector-version page of the docs, Connector lifecycle support policy)")
+            + "</a>")
+
+
+SUPPORT_CSS = """<style>
+.kpi-card.support-ok{background:linear-gradient(135deg,#f0fdf4,#fff 70%)}
+.kpi-card.support-warn{background:linear-gradient(135deg,#fffbeb,#fff 70%);box-shadow:0 0 0 1px #fcd34d}
+.kpi-card.support-ended{background:linear-gradient(135deg,#fef2f2,#fff 70%);box-shadow:0 0 0 2px #dc2626;animation:pg-eos 2s ease-in-out infinite}
+.kpi-card.support-ended .kpi-unit{color:#b91c1c;font-weight:700}.kpi-card.support-warn .kpi-unit{color:#b45309;font-weight:600}
+.kpi-card.support-ok .kpi-unit{color:#15803d}
+@keyframes pg-eos{50%{box-shadow:0 0 0 2px #dc2626,0 0 18px rgba(220,38,38,.45)}}
+.eos-banner{display:flex;align-items:center;gap:16px;margin:0 0 18px;padding:16px 20px;border-radius:14px;color:#fff;
+background:linear-gradient(120deg,#7f1d1d,#dc2626 55%,#ea580c);box-shadow:0 12px 30px -14px rgba(220,38,38,.7)}
+.eos-banner .eos-icon{font-size:2.2rem;line-height:1}
+.eos-banner b{display:block;font-size:1.1rem;margin-bottom:2px}
+.eos-banner b.eos-refused{display:inline;font-size:inherit;padding:1px 6px;border-radius:5px;background:rgba(0,0,0,.25)}
+.eos-banner p{font-size:.86rem;opacity:.95}
+.eos-banner a{color:#fff;font-weight:600}
+@media (prefers-reduced-motion:reduce){.kpi-card.support-ended{animation:none}}
+</style>""" + "<style>" + dark("""
+.kpi-card.support-ok{background:linear-gradient(135deg,#052e16,#1e293b 70%)}
+.kpi-card.support-warn{background:linear-gradient(135deg,#3a2406,#1e293b 70%);box-shadow:0 0 0 1px #b45309}
+.kpi-card.support-ended{background:linear-gradient(135deg,#450a0a,#1e293b 70%);box-shadow:0 0 0 2px #dc2626}
+.eos-banner a{color:#fff}
+.kpi-card.support-ended .kpi-unit{color:#fca5a5}.kpi-card.support-warn .kpi-unit{color:#fcd34d}.kpi-card.support-ok .kpi-unit{color:#86efac}
+""") + "</style>"
+
+
+def support_banner_html(s: dict, bundles: List[dict], cards: Optional[List[dict]] = None) -> str:
+    """⛔ a Confluent Platform or CFK version of the input past its end of support: a banner at the top of the report (the
+    tile is red too); the support ending soon is only the color of the tile"""
+    ended = [(f"Confluent {'Community' if is_community(s, v) else 'Platform'} {v}", st, support_dates.CP_DOC) for v in cp_versions(s, bundles)
+             for st in [cp_support(s, v)] if st["state"] == "ended"]
+    ended += [(f"{what} {v}", st, support_dates.CLIENTS_DOC) for what, v, st in client_versions(s) if st["state"] == "ended"]
+    cfk = list(OrderedDict((b["environment"]["cfk_version"], True) for b in bundles if (b.get("environment") or {}).get("cfk_version")))
+    ended += [(f"Confluent for Kubernetes {v}", st, support_dates.CFK_DOC) for v in cfk[-1:]
+              for st in [support_dates.cfk_status(v)] if st["state"] == "ended"]
+    bad_conns = [c for c in cards or [] if (c.get("support") or {}).get("state") == "unsupported"]
+    if not ended and not bad_conns:
+        return ""
+    title = ([" and ".join(x[0] for x in ended) + (" is" if len(ended) == 1 else " are") + " past end of support"] if ended else []) \
+        + ([f"{len(bad_conns)} connector(s) on an unsupported plugin version"] if bad_conns else [])
+    lines = "".join(f"<p>{e(x[0])}: {e(x[1]['text'].lstrip('⛔ '))} · <a href='{e(x[2])}'>supported versions</a></p>" for x in ended)
+    if bad_conns:
+        names = ", ".join(f"{c['connector']} ({c['versions'][-1]} < {c['support']['minimum']})" for c in bad_conns[:4])
+        lines += (f"<p>{len(bad_conns)} connector(s) run a plugin version older than the minimum supported on CP {e(bad_conns[0]['support']['cp'])}: "
+                  f"{e(names)}{' …' if len(bad_conns) > 4 else ''} · <a href='{e(bad_conns[0]['support']['doc'])}'>supported connector versions</a></p>")
+    return (f"<div class='eos-banner' role='alert'><span class='eos-icon'>⛔</span><div><b>{e(' · '.join(title))}</b>" + lines +
+            "<p><b class='eos-refused'>Confluent Support refuses cases on a version past its end of support:</b> upgrade to a "
+            "supported version first (no more fixes nor security patches; the fix of the issue may already be in it).</p></div></div>")
 
 
 def cfk_sections_html(bundles: List[dict], unit: str = "file") -> str:
@@ -2961,9 +3102,19 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
     if s.get("kafka_versions"):
         out.append(f"**Kafka version:** {' → '.join(s['kafka_versions'])}")
     for v in cp_versions(s, res.get("_cfk_bundles") or []):
-        st = support_dates.cp_status(v)
+        st = cp_support(s, v)
+        if is_community(s, v):
+            out.append(f"**Confluent Platform {v}:** Confluent Community (-ccs): no Enterprise support, Community end of support")
         if st["state"] in ("ended", "standard_ended", "ending"):
             out.append(f"**Confluent Platform {v}:** {st['text']} ([supported versions]({support_dates.CP_DOC}))")
+    for what, v, st in client_versions(s):
+        if st["state"] in ("ended", "standard_ended", "ending"):
+            out.append(f"**{what} {v}:** {st['text']} ([client support]({support_dates.CLIENTS_DOC}))")
+    bad = [c for c in res.get("connectors") or [] if (c.get("support") or {}).get("state") == "unsupported"]
+    if bad:
+        out.append(f"**Connector versions:** {len(bad)} below the minimum supported on CP {bad[0]['support']['cp']}: "
+                   + ", ".join(f"`{md_cell(c['connector'])}` {c['versions'][-1]} < {c['support']['minimum']}" for c in bad[:5])
+                   + (" …" if len(bad) > 5 else "") + f" ([supported connector versions]({bad[0]['support']['doc']}))")
     for i in s.get("incomplete_inputs") or []:
         out.append(f"**⚠️ Not fully read:** `{i['file']}`: {i['reason']}")
     if res["known_causes"]:
@@ -3735,6 +3886,8 @@ function pgFilesTable() {
     slot.occ += n[0];
     slot[rec[1]] += n[0];
   }
+  let most = 1;
+  for (const k in by) if (by[k].occ > most) most = by[k].occ;
   rows.forEach(function (tr) {
     const n = by[+tr.dataset.file];
     tr.hidden = !n;
@@ -3744,6 +3897,13 @@ function pgFilesTable() {
     tr.querySelector(".fr-fatal").textContent = n[0] || "";
     tr.querySelector(".fr-error").textContent = n[1] || "";
     tr.querySelector(".fr-warn").textContent = n[2] || "";
+    // the bar under the occurrences: against the file with the most of them in the selection, split by level
+    const split = tr.querySelector(".fr-split");
+    if (split) {
+      split.style.width = Math.max(4, 100 * n.occ / most).toFixed(1) + "%";
+      split.innerHTML = [[0, "fatal"], [1, "error"], [2, "warn"]].filter(x => n[x[0]])
+        .map(x => "<i class='fr-" + x[1] + "-part' style='width:" + (100 * n[x[0]] / (n.occ || 1)).toFixed(1) + "%'></i>").join("");
+    }
   });
   // a folder row whose files are all hidden by the filters
   document.querySelectorAll("tr.file-folder").forEach(function (tr) {
@@ -4897,6 +5057,51 @@ def incomplete_html(items: List[dict]) -> str:
             f"could be read; ask for a complete copy.<ul style='margin:6px 0 0 18px;font-weight:400'>{rows}</ul></div>")
 
 
+# 🗂️ Files with findings: a header per folder, a card per file, the occurrences split by level, the levels as pills (also
+# in the title of the card of each file)
+FILES_CSS = """<style>
+.fr-table{border-collapse:separate;border-spacing:0 6px;margin-top:-6px}
+.fr-table th{background:none;border:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:4px 12px}
+.fr-table td{border:0;padding:10px 12px;vertical-align:middle}
+.fr-table tr.file-row td{background:#f8fafc}
+.fr-table tr.file-row td:first-child{border-radius:10px 0 0 10px;border-left:4px solid #6366f1}
+.fr-table tr.file-row td:last-child{border-radius:0 10px 10px 0}
+.fr-table tr.file-row{transition:transform .15s}
+.fr-table tr.file-row:hover td{background:#eef2ff}
+.fr-table tr.file-row:hover{transform:translateX(2px)}
+.fr-table tr.file-folder td{background:linear-gradient(90deg,rgba(99,102,241,.14),transparent 70%);border-radius:10px;padding:8px 12px;font-size:.84rem;font-weight:600;color:#334155}
+.ff-icon{margin-right:8px}
+.ff-chip{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:999px;font-size:.72rem;font-weight:600;background:rgba(99,102,241,.14);color:#4338ca}
+.fr-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84rem;overflow-wrap:anywhere}
+.fr-name a{font-weight:600;text-decoration:none;color:#4338ca}.fr-name a:hover{text-decoration:underline}
+.fr-doc{margin-right:6px}
+.fr-comp{margin-top:4px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.fr-lines{color:#64748b;font-variant-numeric:tabular-nums}
+.fr-distinct{display:inline-block;min-width:28px;text-align:center;font-size:.78rem;font-weight:600;padding:1px 9px;border-radius:999px;background:#e2e8f0;color:#475569}
+.fr-occ{font-size:1.05rem;font-variant-numeric:tabular-nums}
+.fr-split{display:flex;height:6px;margin:6px 0 0 auto;border-radius:999px;overflow:hidden;background:#e2e8f0;min-width:6px;max-width:160px}
+.fr-split i{display:block;height:100%}
+.fr-fatal-part{background:#dc2626}.fr-error-part{background:#ea580c}.fr-warn-part{background:#f59e0b}
+.fr-pill:empty{display:none}
+.fr-pill{display:inline-block;min-width:30px;text-align:center;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;padding:2px 10px;border-radius:999px}
+.fr-pill.fr-fatal{background:#fee2e2;color:#b91c1c}.fr-pill.fr-error{background:#ffedd5;color:#c2410c}.fr-pill.fr-warn{background:#fef3c7;color:#b45309}
+.fr-head-pills{display:inline-flex;gap:6px;margin-left:12px;vertical-align:middle}
+.file-records>h2 a{text-decoration:none;color:#4338ca}.file-records>h2 a:hover{text-decoration:underline}
+.fr-head-pills .fr-pill{font-size:.72rem}
+</style>""" + "<style>" + dark("""
+.fr-table th{color:#94a3b8}
+.fr-table tr.file-row td{background:#0f172a}
+.fr-table tr.file-row:hover td{background:#1e1b4b}
+.fr-table tr.file-folder td{background:linear-gradient(90deg,rgba(99,102,241,.25),transparent 70%);color:#e2e8f0}
+.ff-chip{background:rgba(129,140,248,.2);color:#c7d2fe}
+.fr-name a,.file-records>h2 a{color:#a5b4fc}
+.fr-lines{color:#94a3b8}
+.fr-distinct{background:#273449;color:#cbd5e1}
+.fr-split{background:#273449}
+.fr-pill.fr-fatal{background:#450a0a;color:#fca5a5}.fr-pill.fr-error{background:#431407;color:#fdba74}.fr-pill.fr-warn{background:#422006;color:#fcd34d}
+""") + "</style>"
+
+
 # 🌳 All root causes: a card per row with the color of its level, the exception in color, a bar under the occurrences
 RC_CSS = """<style>
 .rc-table{border-collapse:separate;border-spacing:0 6px;margin-top:-6px}
@@ -4950,7 +5155,20 @@ def first_names(names: List[str], top: int = 3) -> str:
 FINDINGS_CSS = """<style>
 .fi-title{font-weight:600}
 details.rec>summary{padding:6px 0;line-height:1.7}.rec-when{margin-left:6px}
-.rec-line{display:block;margin:4px 0 0 18px;padding:5px 10px;border-radius:6px;background:#f8fafc;color:#1e293b;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.rec{margin:0 0 10px;padding:6px 14px 8px;border:1px solid #e2e8f0;border-left:4px solid #94a3b8;border-radius:12px;background:#fff;
+transition:box-shadow .15s,transform .15s}
+details.rec+details.rec{border-top:1px solid #e2e8f0}
+details.rec[data-level=FATAL]{border-left-color:#dc2626}details.rec[data-level=ERROR]{border-left-color:#ea580c}details.rec[data-level=WARN]{border-left-color:#f59e0b}
+details.rec:hover{box-shadow:0 8px 22px -14px rgba(37,99,235,.45);transform:translateX(2px)}
+details.rec>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+details.rec>summary::-webkit-details-marker{display:none}
+details.rec>summary::before{content:"›";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-right:4px;border-radius:6px;
+font-size:1.05rem;font-weight:700;color:#64748b;background:#f1f5f9;transition:transform .2s}
+details.rec[open]>summary::before{transform:rotate(90deg)}
+details.rec>summary .rec-line{flex-basis:100%}
+.rec-when .fi-meta{display:inline-block;padding:1px 9px;border-radius:999px;background:#f1f5f9}
+details.rec>pre{margin:6px 0 2px;padding:12px 14px;border-radius:10px;border:1px solid #e2e8f0;word-break:normal;overflow-wrap:anywhere;line-height:1.6}
+.rec-line{display:block;margin:4px 0 0 24px;padding:5px 10px;border-radius:6px;background:#f8fafc;color:#1e293b;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 details.rec[open]>summary .rec-line{display:none}
 .fi-count{display:inline-block;font-size:.78rem;font-weight:700;padding:1px 8px;border-radius:12px;margin:0 4px;font-variant-numeric:tabular-nums;background:#e2e8f0;color:#334155}
 .fi-count.critical{background:#fee2e2;color:#b91c1c}.fi-count.high{background:#ffedd5;color:#c2410c}.fi-count.medium{background:#fef3c7;color:#b45309}
@@ -4977,6 +5195,13 @@ details.rec[open]>summary .rec-line{display:none}
 .fi-read a{color:#93c5fd}
 .rec-details li.fi-chain{background:#0f172a}
 .rec-line{background:#0b1220;color:#e2e8f0}
+details.rec{background:#0f172a;border-color:#273449}
+details.rec+details.rec{border-top-color:#273449}
+details.rec[data-level=FATAL]{border-left-color:#dc2626}details.rec[data-level=ERROR]{border-left-color:#ea580c}details.rec[data-level=WARN]{border-left-color:#f59e0b}
+details.rec:hover{box-shadow:0 8px 22px -14px rgba(0,0,0,.8)}
+details.rec>summary::before{color:#94a3b8;background:#1e293b}
+.rec-when .fi-meta{background:#1e293b}
+details.rec>pre{background:#0b1220;border-color:#1e293b}
 .fi-exc{color:#fdba74}.fi-exc.error{color:#fca5a5}
 .fi-msg{color:#cbd5e1}
 .fi-conn{background:#334155;color:#cbd5e1}
@@ -5208,7 +5433,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         go("files-with-findings", kpi(f"🗂️ {Unit}s scanned", s["files_scanned"], f"{s['lines']:,} lines"
                                       + (f", {human_size(s['bytes_read'])}" if s.get("bytes_read") is not None else "")
                                       + (f", {skipped} binary skipped" if unit == "file" else ""))),
-        version_tile(s, res.get("_cfk_bundles") or []),
+        version_tile(s, res.get("_cfk_bundles") or []), clients_tile(s), connector_versions_tile(res.get("connectors") or []),
         go("files-with-findings", kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok")),
         go("all-root-causes", kpi("🧬 Distinct records", s["distinct"], "after de-duplication")),
         # the counts by level: the level chips of the filter bar have them too, one tile instead of three
@@ -5243,6 +5468,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        ".san-note.warn{border-left-color:#d97706;background:#fffbeb;color:#92400e}.san-note.ok{border-left-color:#16a34a;background:#f0fdf4;color:#166534}"
                        "html[data-theme=dark] .san-note.warn{background:#3a2406;color:#fcd34d}html[data-theme=dark] .san-note.ok{background:#052e16;color:#86efac}</style>"
                        f"<p class='san-note {cls}'>{e(icon)} {e(text.strip())}</p>")
+    # ⛔ end of support: right under the verdict, above everything else
+    body.insert(1, SUPPORT_CSS + support_banner_html(s, res.get("_cfk_bundles") or [], res.get("connectors") or []))
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections if (t, text) not in notes]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -5307,18 +5534,31 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             by_folder.setdefault(f["label"].rsplit("/", 1)[0] if "/" in f["label"] else "", []).append((i, f))
         grouped = len(by_folder) > 1 or next(iter(by_folder)) != ""
         rows = ""
+        max_occ = max(f["occurrences"] for f in res["files"]) or 1
+
+        def levels_of(f: dict) -> Dict[str, int]:
+            return {lvl: sum(r["count"] for r in f["records"] if r["level"] == lvl) for lvl in ("FATAL", "ERROR", "WARN")}
+
+        def level_split(by: Dict[str, int], total: int) -> str:
+            # the bar under the occurrences: its length against the file with the most of them, split by level
+            parts = "".join(f"<i class='fr-{lvl.lower()}-part' style='width:{100 * by[lvl] / total:.1f}%'></i>" for lvl in by if by[lvl]) if total else ""
+            return f"<div class='fr-split' style='width:{max(4.0, 100 * total / max_occ):.1f}%'>{parts}</div>"
+
         for folder, items in by_folder.items():
             if grouped:
-                rows += (f"<tr class='file-folder'><td colspan='7'>📁 {e(folder or '.')} <span class='fi-meta'>· "
-                         f"{len(items)} {unit}(s), {sum(f['occurrences'] for _, f in items):,} occurrence(s)</span></td></tr>")
-            rows += "".join(f"<tr class='file-row' data-file='{i}'><td class='mono' title='{e(f['label'])}'>"
-                            f"{log_viewer.link(viewers, f['label'], e(f['label'].rsplit('/', 1)[-1] if grouped else f['label']))}</td>"
-                            f"<td class='num'>{f['lines']}</td><td class='num fr-distinct'>{f['distinct']}</td>"
-                            f"<td class='num fr-occ'>{f['occurrences']}</td>"
-                            + "".join(f"<td class='num fr-{lvl.lower()}'>{sum(r['count'] for r in f['records'] if r['level'] == lvl) or ''}</td>"
-                                      for lvl in ("FATAL", "ERROR", "WARN"))
-                            + "</tr>" for i, f in items)
-        body.append(f"<div class='table-card' id='files-with-findings'><h2>🗂️ {Unit}s with findings</h2><table><tr><th>{Unit}</th><th class='num'>Lines</th>"
+                rows += (f"<tr class='file-folder'><td colspan='7'><span class='ff-icon'>📁</span>{e(folder or '.')}"
+                         f"<span class='ff-chip'>{len(items)} {unit}(s)</span><span class='ff-chip'>{sum(f['occurrences'] for _, f in items):,} occurrence(s)</span></td></tr>")
+            for i, f in items:
+                by = levels_of(f)
+                # the cells keep their classes: pgFilesTable() counts them again for the filters (fr-* pills)
+                rows += (f"<tr class='file-row' data-file='{i}'><td class='fr-name' title='{e(f['label'])}'>"
+                         f"<span class='fr-doc'>📄</span>{log_viewer.link(viewers, f['label'], e(f['label'].rsplit('/', 1)[-1] if grouped else f['label']))}"
+                         f"<div class='fr-comp'>{component_chips([f['label']])}</div></td>"
+                         f"<td class='num fr-lines'>{f['lines']:,}</td><td class='num'><span class='fr-distinct'>{f['distinct']}</span></td>"
+                         f"<td class='num'><b class='fr-occ'>{f['occurrences']}</b>{level_split(by, f['occurrences'])}</td>"
+                         + "".join(f"<td class='num'><span class='fr-pill fr-{lvl.lower()}'>{by[lvl] or ''}</span></td>" for lvl in by)
+                         + "</tr>")
+        body.append(FILES_CSS + f"<div class='table-card' id='files-with-findings'><h2>🗂️ {Unit}s with findings</h2><table class='fr-table'><tr><th>{Unit}</th><th class='num'>Lines</th>"
                     "<th class='num'>Distinct</th><th class='num'>Occurrences</th><th class='num'>FATAL</th><th class='num'>ERROR</th>"
                     f"<th class='num'>WARN</th></tr>{rows}</table>"
                     + (f"<details><summary>✅ {len(res['files_without_findings'])} {unit}(s) without findings</summary><p class='mono'>"
@@ -5329,7 +5569,9 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             folder, _, name = f["label"].rpartition("/")
             file_title = ((f"<span class='ff-dir'>📁 {e(folder)}/</span>" if folder else "")
                           + log_viewer.link(viewers, f["label"], e(name)))
-            body.append(f"<div class='table-card file-records'><h2>📄 {file_title}</h2>"
+            by = {lvl: sum(r["count"] for r in f["records"] if r["level"] == lvl) for lvl in ("FATAL", "ERROR", "WARN")}
+            pills = "".join(f"<span class='fr-pill fr-{lvl.lower()}' title='{lvl} occurrences in this {unit}'>{by[lvl]:,} {lvl}</span>" for lvl in by if by[lvl])
+            body.append(f"<div class='table-card file-records'><h2>📄 {file_title}<span class='fr-head-pills'>{pills}</span></h2>"
                         f"{records_html(f['records'], viewers=viewers, label=f['label'])}</div>")
     # 📥 last: what to ask the customer for, once everything above was read
     body_end_data = data_to_request_html(res.get("data_to_request") or [])

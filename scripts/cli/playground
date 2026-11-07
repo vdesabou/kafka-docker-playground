@@ -30177,6 +30177,7 @@ function install_confluent_plugin() {
 # then the events read from the INFO lines (each distinct one once):
 #   @@PGEVT@@<tab>plugin_version<tab>line<tab>timestamp<tab>connector<tab>version class ("Instantiated connector|task …")
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
+#   @@PGEVT@@<tab>librdkafka_version<tab>line<tab>timestamp<tab><tab>version ("librdkafka v2.3.0" of a non-Java client)
 #   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
 #              line<tab>timestamp<tab>connector<tab>group, reason or what started / stopped: the lifecycle of the INFO lines,
 #              300 of each kind at most
@@ -30662,6 +30663,17 @@ function summarize_log_errors() {
             if (!(ev_key in ev_seen)) {
                 ev_seen[ev_key] = 1
                 ev[++nev] = "kafka_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version
+            }
+        }
+        # the librdkafka version of a non-Java client: "librdkafka v2.3.0 (0x20300ff) rdkafka#producer-1 initialized"
+        # (debug INIT line), "confluent-kafka 2.16.1, librdkafka 2.16.0" (the startup line of a client)
+        if (records_file != "" && index($0, "librdkafka ") && match($0, /librdkafka v?[0-9]+\.[0-9]+\.[0-9]+/)) {
+            ev_version = substr($0, RSTART + 11, RLENGTH - 11)
+            sub(/^v/, "", ev_version)
+            ev_key = "librdkafka_version|" ev_version
+            if (!(ev_key in ev_seen)) {
+                ev_seen[ev_key] = 1
+                ev[++nev] = "librdkafka_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version
             }
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and

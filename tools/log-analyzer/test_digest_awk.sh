@@ -19,6 +19,7 @@ cat > "$tmp/events.log" << 'EOF'
 [2026-11-07 10:10:01,000] INFO [BrokerServer id=1] Transition from STARTED to SHUTTING_DOWN (kafka.server.BrokerServer)
 [2026-11-07 10:20:00,000] INFO [QuorumController id=3] Becoming the active controller at epoch 7, next write offset 1. (org.apache.kafka.controller.QuorumController)
 [2026-11-07 10:21:00,000] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect)
+%7|1762509600.000|INIT|rdkafka#producer-1| [thrd:app]: librdkafka v2.3.0 (0x20300ff) rdkafka#producer-1 initialized (builtin.features gzip,snappy)
 [2026-11-07T10:25:00.000+0000][gc] GC(2) Pause Full (G1 Compaction Pause) 990M->950M(1G) 2512.789ms
 [2026-11-07T10:25:01.000+0000][gc] GC(3) Pause Young (Normal) (G1 Evacuation Pause) 100M->50M(1G) 12.3ms
 2026-11-07T10:26:00.000+0000: 12.3: [Full GC (Allocation Failure) [PSYoungGen: 1K->0K(2K)] 900K->800K(1000K), 1.8234560 secs] [Times: user=1 sys=0, real=1.82 secs]
