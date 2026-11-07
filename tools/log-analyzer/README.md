@@ -133,6 +133,10 @@ STARTING to STARTED`. `lifecycle()` counts them per group / connector with the r
 marks a 🌀 storm (`STORM_MIN` = 10 at `STORM_PER_HOUR` = 6 or more, a consumer leaving on purpose excluded): the 🔄 Restarts
 and rebalances section, a line on the 🔌 card of a connector, the (re)starts and the first 20 worker group rebalances in
 the 🗓️ timeline, the terminal summary, the summary for a ticket and `.lifecycle` of `--json`.
+The 🔄 section follows the connector filter (`pgLifecycle()`): each row carries the connector it belongs to
+(`lifecycle_connector()`: the connector or task started, the sink connector of a consumer group, as `data-conn`), the rows of
+the other connectors are hidden and the worker group rebalances and process starts, which concern every connector of the
+worker, stay.
 
 ## Knowledge-base articles
 
