@@ -246,7 +246,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🗂️ files and 🕰️ log coverage | per file and per folder of rotated logs, with the hours a folder has no log |
 | 📄 records of each file | every distinct record, its exception chain colored, 📄 / ✏️ to the line |
 | ⚙️ configuration | the configs logged at startup (one block per config class, the keys that differ between dumps, the keys changed between restarts) and the `.properties` / connector JSON of the input |
-| 📤 Share | the `.zip` of the report and its pages, the summary to paste, **📋 Copy for a ticket** (Markdown, always sanitized), an email, the sanitization state |
+| 📤 Share | a card per action: the `.zip` of the report and its pages, 💬 the summary to paste, **🎫 Copy for a ticket** (Markdown, always sanitized), 🔗 the path, ✉️ an email, the sanitization state first |
 
 ### The filters, the search, and links to a view
 
