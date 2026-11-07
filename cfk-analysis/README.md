@@ -161,11 +161,16 @@ playground analyze logs -f ./bundle.tar --component connect          # only the 
 playground analyze logs -f ./bundle.tgz -p "kafka roll stuck after the upgrade yesterday"   # matched against the problem
 ```
 
-See `playground analyze logs --help` for all flags. The pod and operator logs (`*.log`) of the bundle also go through the
-regular log digest of `analyze logs`, which writes its log report next to this one; once both are written,
-`log_banner.py` puts its key lines (known causes, 🩹 known bugs, 🎯 errors on one pod, 💥 bursts, 🔗) and a link at the
-`<!--pg-log-analysis-->` marker of this report (stdlib only, run on the host). With `--json`, the log analysis is
-`.log_analysis` of the bundle JSON. `--logs-only` gives only the log report, of every file of the bundle.
+See `playground analyze logs --help` for all flags. `analyze logs` writes **one report**: the pod and operator logs
+(`*.log`) of the bundle go through its regular log digest, and this analyzer only writes the JSON of the bundle and the
+file pages of its issues (`CFK_ANALYSIS_EMBEDDED`: no HTML page, `<bundle>-cfk.json` keeps the links to the pages of
+`<bundle>-cfk-files/`). The log report draws the ☸️ sections of the bundle from that JSON, in its own styles, right after
+its verdict (one verdict for both): the issue counts, 🎯 `--problem`, the known CFK issues, the environment and the
+recent changes; its issues are cards of 🔎 Findings, one per category with what to do, and follow the filter bar of the
+report (levels, component, connector, search, period). The configuration and the data to request
+are in the ⚙️ and 📥 sections of the log report, the log coverage is its 🕰️ Log coverage. Run alone (`--html-out`
+without the variable), this analyzer still writes its own page. With `--json`, the log analysis is `.log_analysis` of
+the bundle JSON (without the file page links). `--logs-only` gives only the log report, of every file of the bundle.
 
 The issues of the log records of those files come from the same digest: `analyze logs` passes the records of each
 bundle (`log_report.py --records-under <bundle label>`: `{path in the bundle: [records]}`, raw) with `--log-records`

@@ -210,12 +210,14 @@ playground analyze logs -f /tmp/cfk-support-bundle/<bundle>.tar.gz --output-dir 
   properties CFK renders (`kafka.properties`, `connect.properties`… of the `<cr>-shared-config` ConfigMaps,
   `configOverrides`, `jvm.config`, `log4j.properties`, the effective config logged at startup) and the config of each
   connector (`Connector` CRs, `…ConnectorConfig values:` dumps of the Connect logs), with a key / value filter.
-- The pod and operator logs of the bundle also go through the regular log digest of `analyze logs`: its log report
-  (`<input>-log-report.html`, next to the report of the bundle) has every distinct error with its root cause, the
-  incident timeline, a card per connector with its plugin version, restarts and rebalances, known bugs fixed in a later
-  version, which pod ran which task (`connect-0`, `connect-1`… are the workers), the data to request and a summary for a
-  ticket. A 🔥 **Log analysis** banner at the top of the report of the bundle gives its key lines and links it; with
-  `--json`, it is `.log_analysis` of the bundle JSON. The issues of the log records of the bundle report come from the
+- **One report**, `<input>-log-report.html`: the ☸️ sections of the bundle (its verdict, pods, custom resources,
+  events, versions, recent changes, one verdict for both; its issues are cards of 🔎 Findings, one per category with
+  what to do, and follow the filter bar of the report: levels, component, connector, search) come right after the
+  verdict of the logs, then the regular log report of its pod and operator logs: every distinct error with its root
+  cause, the incident timeline, a card per connector with its plugin version, restarts and rebalances, known bugs fixed
+  in a later version, which pod ran which task (`connect-0`, `connect-1`… are the workers), the data to request and a
+  summary for a ticket. The file pages of the issues are in `<bundle>-cfk-files/` next to it (in the 📤 Share zip too).
+  With `--json`, the bundle JSON, with the log analysis in `.log_analysis`. The issues of the log records of the bundle report come from the
   same records (the digest passes them to the CFK analyzer). The ☸️ changes of the cluster (pods terminated or restarted
   with their reason, custom resources edited, StatefulSet rollouts) are events of the 🗓️ incident timeline of the log
   report: 🔗 links a first error to the edit of a CR 10 minutes before it at most, 💥 the burst of errors right after a

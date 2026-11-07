@@ -581,10 +581,10 @@ function progress_add_extracted () {
 
 # the pod and operator logs of a CFK support bundle (its *.log files) also go through the log digest: the regular log
 # report (root causes, timeline, connectors, versions, tasks by worker, known bugs, data to request, summary for a
-# ticket) next to the report of the bundle (pods, custom resources, events, versions, recent changes), which links it
-# with a 🔥 Log analysis banner (cfk-analysis/log_banner.py). $1: bundle folder, $2: its label
+# ticket), with the sections of the bundle (pods, custom resources, events, versions, recent changes) right after its
+# verdict: one report. $1: bundle folder, $2: its label
 in_cfk_walk=""
-# a file of the input outside the CFK bundles: the log report is then the entry point, else the report of the bundle
+# a file of the input outside the CFK bundles: with only bundles, --json keeps the shape of cfk-analysis
 other_inputs=""
 nb_cfk_log_files=0
 function walk_cfk_bundle_logs () {
@@ -835,6 +835,9 @@ cfk_compare_files=()
 # the reports of the bundles and of their comparison are not opened one by one (6 bundles: 8 tabs): the log report links
 # them, or the one entry point (the report of a single bundle, the comparison of several) is opened at the end
 CFK_ANALYSIS_NO_OPEN=1
+# one report: each bundle writes only its JSON and the file pages of its issues (CFK_ANALYSIS_EMBEDDED, <bundle>-cfk-files/
+# next to the report), the log report shows its ☸️ sections right after its verdict (from --cluster-events)
+CFK_ANALYSIS_EMBEDDED=1
 cfk_reports=()
 cfk_report_labels=()
 # the bundles are analyzed in parallel (a container each, PLAYGROUND_CFK_PARALLELISM at a time, 4 by default): the output of
@@ -997,7 +1000,7 @@ if [ ${#cfk_bundles[@]} -gt 0 ] && [ -z "$other_inputs" ]
 then
     cfk_only=1
 fi
-if [ -n "$cfk_only" ] && [ $nb_files -eq 0 ]
+if [ -n "$cfk_only" ] && [ $nb_files -eq 0 ] && [[ -n "$json_out" ]]
 then
     if [[ -n "$json_out" ]]
     then
@@ -1007,18 +1010,6 @@ then
         else
             jq -s --slurpfile comparison "$cfk_comparison" '{type: "cfk-bundles", cfk_bundles: ., comparison: $comparison[0]}' \
                 "${cfk_json_files[@]}" >&3
-        fi
-    else
-        # one tab: the report of the bundle, or the comparison of several (it lists the bundles), the others are in the
-        # log lines above
-        entry_report="${CFK_COMPARISON_HTML:-}"
-        if [ -z "$entry_report" ] && [ ${#cfk_reports[@]} -gt 0 ]
-        then
-            entry_report="${cfk_reports[$((${#cfk_reports[@]}-1))]}"
-        fi
-        if [ -n "$entry_report" ]
-        then
-            show_report "$entry_report"
         fi
     fi
     exit $cfk_exit
@@ -1144,7 +1135,7 @@ if [[ ${#sample_array[@]} -gt 0 ]]
 then
     title="sample ${sample_array[*]}"
 fi
-report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file")
+report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file" --bytes-read "$nb_bytes")
 # the changes of the cluster of each CFK bundle (pods terminated or restarted, custom resources edited, rollouts) join the
 # incident timeline of the log report: 🔗 and 💥 link the errors of the pod logs to them
 for cfk_events_json in "${cfk_json_files[@]}" "${cfk_compare_files[@]}"
@@ -1338,24 +1329,20 @@ if [ -f "$overview_text_file" ]
 then
     report_args+=(--section "🔭 Overview" "$overview_text_file")
 fi
-# the reports of the CFK support bundles of the input (not opened one by one): linked from the log report
-if [ ${#cfk_reports[@]} -gt 0 ]
+# the comparison of several bundles: its own page, linked
+if [ -n "${CFK_COMPARISON_HTML:-}" ]
 then
     {
-        printf '%s\t%s\n' "${CFK_COMPARISON_HTML:+🔁 comparison of the ${#cfk_reports[@]} bundles}" "${CFK_COMPARISON_HTML:-}"
-        for i in "${!cfk_reports[@]}"
-        do
-            printf '%s\t%s\n' "${cfk_report_labels[$i]}" "${cfk_reports[$i]}"
-        done
+        printf '%s\t%s\n' "🔁 comparison of the ${#cfk_compare_files[@]} bundles" "$CFK_COMPARISON_HTML"
     } | python3 -I -c '
 import html, sys, urllib.parse
 rows = [l.rstrip("\n").split("\t", 1) for l in sys.stdin if l.strip()]
-print("<p>Each CFK support bundle of the input has its own report (pods, custom resources, events, versions, recent changes):</p><ul>")
+print("<p>The comparison of the CFK support bundles of the input (same cluster?, versions, changes of the CRs, issues fixed / new / still there):</p><ul>")
 for label, path in rows:
     if path:
         href = html.escape("file://" + urllib.parse.quote(path))
         print(f"<li><a href=\"{href}\" target=\"_blank\" rel=\"noopener\">{html.escape(label)}</a></li>")
-print("</ul>")' > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "☸️ CFK support bundles" "$tmp_dir/cfk-reports.html")
+print("</ul>")' > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "🔁 CFK support bundles compared" "$tmp_dir/cfk-reports.html")
 fi
 # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
 if [ -f "$tmp_dir/kafka-streams.html" ]
@@ -1376,11 +1363,6 @@ then
 fi
 # the progress page already open in the browser becomes the report (same path): not opened a second time
 report_no_open=""
-# only CFK bundles: the report of the bundle is the one opened (below), it links this one
-if [ -n "$cfk_only" ]
-then
-    report_no_open=1
-fi
 if [ -n "$progress_page" ] && [ "$progress_page" == "$output_dir/${stem}-log-report.html" ]
 then
     report_no_open=1
@@ -1410,40 +1392,20 @@ then
         then
             ln -s "$output_dir/$share_files" "$share_stage/$share_files"
         fi
+        # the file pages of the issues of the CFK bundles (their sections are in the report)
+        for cfk_json in "${cfk_compare_files[@]}"
+        do
+            if [ -d "${cfk_json%.json}-files" ]
+            then
+                ln -s "${cfk_json%.json}-files" "$share_stage/$(basename "${cfk_json%.json}-files")"
+            fi
+        done
         if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
         then
             log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"
         fi
     else
         log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$output_dir\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
-    fi
-fi
-# the reports of the CFK bundles: a 🔥 Log analysis banner with the key lines of this log report and a link to it
-if [ ${#cfk_reports[@]} -gt 0 ] && [ -f "$output_dir/${stem}-log-report.html" ]
-then
-    banner_args=()
-    for cfk_report in "${cfk_reports[@]}"
-    do
-        banner_args+=(--report "$cfk_report")
-    done
-    if python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json \
-            --json-sections summary,known_causes,fixed_bugs,task_workers,timeline,connectors,data_to_request > "$tmp_dir/banner.json" 2>/dev/null
-    then
-        python3 -I "$root_folder/cfk-analysis/log_banner.py" "${banner_args[@]}" --logs-json "$tmp_dir/banner.json" \
-            --log-report "$output_dir/${stem}-log-report.html" || true
-    fi
-fi
-if [ -n "$cfk_only" ]
-then
-    log "🔥 The pod logs of the CFK bundle(s), in the regular log report: $output_dir/${stem}-log-report.html (linked from the report of the bundle)"
-    entry_report="${CFK_COMPARISON_HTML:-}"
-    if [ -z "$entry_report" ] && [ ${#cfk_reports[@]} -gt 0 ]
-    then
-        entry_report="${cfk_reports[$((${#cfk_reports[@]}-1))]}"
-    fi
-    if [ -n "$entry_report" ]
-    then
-        show_report "$entry_report"
     fi
 fi
 exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))

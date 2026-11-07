@@ -323,43 +323,6 @@ def test_data_to_request():
     check("in the ticket", "### Data to request" in log_report.ticket_markdown(dict(res, data_to_request=asks), "t", "ERROR/FATAL/WARN"))
 
 
-def test_cfk_log_banner():
-    """🔥 the banner of a CFK bundle report: the key lines of the log analysis at the marker, a link to the log report
-    relative to the CFK report, nothing changed in a report without the marker"""
-    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "cfk-analysis"))
-    import log_banner
-    logs = {"summary": {"occurrences": 8, "distinct": 6, "files_with_findings": 4, "files_scanned": 4},
-            "known_causes": [{"title": "💥 OutOfMemoryError", "occurrences": 2, "first": {"timestamp": "2026-10-14T09:00:03"}}],
-            "fixed_bugs": [{"title": "🩹 S3 sink NullPointerException", "ref": "CC-35613", "connectors": [
-                {"connector": "s3", "version": "10.6.1", "verdict": "affected", "upgrade_to": "10.6.11"}]}],
-            "task_workers": {"connectors": [{"connector": "jdbc", "only_on": "connect-1"}]},
-            "timeline": [{"time": "2026-10-14T09:01:00", "text": "🛑 Kafka broker shutting down",
-                          "effects": {"occurrences": 39, "seconds": 60}}],
-            "connectors": [{}], "data_to_request": [{}]}
-    with tempfile.TemporaryDirectory() as tmp:
-        report, other = os.path.join(tmp, "b-cfk-report.html"), os.path.join(tmp, "x.html")
-        for p in (report, other):
-            with open(p, "w") as fh:
-                fh.write("<main><div>verdict</div><!--pg-log-analysis--></main>" if p == report else "<main></main>")
-        js = os.path.join(tmp, "logs.json")
-        with open(js, "w") as fh:
-            json.dump(logs, fh)
-        saved = sys.argv
-        sys.argv = ["log_banner.py", "--report", report, "--report", other, "--logs-json", js,
-                    "--log-report", os.path.join(tmp, "case #1-log-report.html")]
-        try:
-            rc = log_banner.main()
-        finally:
-            sys.argv = saved
-        page = open(report).read()
-        check("rc", rc == 0)
-        check("marker replaced", "<!--pg-log-analysis-->" not in page and "🔥 Log analysis of the pod logs: 8 occurrence(s)" in page, page[:300])
-        check("link", "href='case%20%231-log-report.html'" in page, page)
-        for x in ("💥 OutOfMemoryError ×2", "🩹 s3 runs 10.6.1", "🎯 jdbc", "💥 39 errors"):
-            check(x, x in page, page)
-        check("other untouched", open(other).read() == "<main></main>")
-
-
 def test_cluster_events_in_timeline():
     """☸️ the changes of a CFK bundle in the incident timeline: a CR edit links the first ERROR that follows (🔗), a pod
     restart followed by a burst of errors gets 💥"""
@@ -438,6 +401,43 @@ def test_cfk_configuration_and_drift():
     card = next(c for c in res["connectors"] if c["connector"] == "orders-sink") if res["connectors"] else None
     check("text", "🔀 Connector CR and config logged differ (1 key(s)" in log_report.text_summary(res, []))
     check("show-config", "Connector CR" in log_report.show_config(res, "orders-sink"))
+
+
+def test_cfk_sections_and_verdict():
+    """☸️ the sections of a CFK bundle drawn by the log report (one report): KPI tiles, known CFK issues, the issues by
+    category with their file page link, the environment; no log coverage (🕰️ of the logs); one verdict for both"""
+    bundle = {"label": "/x/case.tgz:bundle", "summary": {"total_issues": 2, "critical": 1, "high": 1, "medium": 0, "low": 0},
+              "environment": {"kubernetes_version": "v1.33.4", "cfk_version": "3.1.0", "components": {"kafka": {"image": "cp-server:8.1.0"}}},
+              "runbooks": [{"name": "cert", "title": "Expired certificate", "severity": "high", "occurrences": 2, "advice": "renew it", "links": []}],
+              "issues": [{"severity": "critical", "category": "Pod Failures", "message": "CrashLoopBackOff", "component": "kafka",
+                          "file": "pods.yaml", "viewer": "bundle-cfk-files/001-pods.yaml.html#L3", "line_number": 3,
+                          "recommendation": {"summary": "Pod is crashing", "steps": ["kubectl describe pod"]}},
+                         {"severity": "high", "category": "Certificate/TLS Issues", "message": "PKIX", "runbooks": ["cert"]}],
+              "coverage": {"log_windows": [{"file": "x.log", "pod": "kafka-0"}]},
+              "timeline": [{"time": "2026-11-07T10:00:00Z", "kind": "Kafka", "name": "kafka", "what": "Update by kubectl-edit: spec.image"}]}
+    text = "@@PGFILE@@|bundle:confluent/kafka/logs/kafka-0.log|10|0|0|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        res = log_report.analyze(files)
+    res["_cfk_bundles"] = [bundle]
+    html = log_report.cfk_sections_html([bundle])
+    for x in ("☸️ CFK support bundle: case.tgz:bundle", "kpi-card", "Expired certificate", "cp-server:8.1.0",
+              "Update by kubectl-edit: spec.image"):
+        check(x, x in html, x)
+    check("clickable tiles", "<a class='cfk-kpi' href='#findings' data-bundle='0' data-sev='critical'>" in html
+          and "data-sev='medium'>" not in html, html)
+    check("no issue list, no log coverage", "Pod Failures" not in html and "kafka-0" not in html and "Log coverage" not in html)
+    cards = log_report.cfk_findings([bundle])
+    check("cards", [c["severity"] for c in cards] == ["CRITICAL", "HIGH"], cards)
+    pod = cards[0]["_view"]
+    check("card content", "☸️ Pod Failures" in pod["html"] and "Pod is crashing" in pod["html"]
+          and "data-level='0' data-component='kafka'" in pod["html"]
+          and "href='bundle-cfk-files/001-pods.yaml.html#L3'" in pod["details"][0], pod)
+    check("runbook in card", "📕 <strong>Expired certificate</strong>" in cards[1]["_view"]["details"][0], cards[1])
+    check("in findings", any(f.get("_view", {}).get("kind") == "cfk" for f in log_report.analyze(
+        (lambda fs: (setattr(fs, "cfk_bundles", [bundle]), fs)[1])(log_report.parse_records(records_file(tempfile.mkdtemp(), text))))["findings"]))
+    cls, text = log_report.verdict(res, "ERROR/FATAL/WARN")
+    check("one verdict", cls == "danger" and text.startswith("✅ No") and "☸️ CFK bundle: 1 critical, 1 high issue(s) of 2, start with Pod Failures" in text, (cls, text))
 
 
 if __name__ == "__main__":
