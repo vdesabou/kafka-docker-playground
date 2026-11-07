@@ -6836,8 +6836,10 @@ function install_confluent_plugin() {
 # then the events read from the INFO lines (each distinct one once):
 #   @@PGEVT@@<tab>plugin_version<tab>line<tab>timestamp<tab>connector<tab>version class ("Instantiated connector|task …")
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
-#   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start<tab>line<tab>timestamp<tab>
-#              connector<tab>group, reason or what started: the lifecycle of the INFO lines, 300 of each kind at most
+#   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
+#              line<tab>timestamp<tab>connector<tab>group, reason or what started / stopped: the lifecycle of the INFO lines,
+#              300 of each kind at most
+#   @@PGEVT@@<tab>gc_pause<tab>line<tab>timestamp<tab><tab><ms> <what>: a GC pause of 1 s or more (GC log, unified or legacy)
 #   @@PGEVTN@@<tab>kind<tab>connector or group<tab>count: how many of them in the whole file
 function summarize_log_errors() {
     local max_findings="${1:-40}"
@@ -7323,7 +7325,7 @@ function summarize_log_errors() {
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
         # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
-        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Becoming the active controller|elected as the controller|Pause |GC pause|Full GC|\[GC \(/) {
             lc_kind = ""; lc_who = ""; lc_detail = ""
             lc_conn = ""
             if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
@@ -7340,11 +7342,35 @@ function summarize_log_errors() {
                 lc_kind = "task_start"; lc_who = substr($0, RSTART + 14, RLENGTH - 14); lc_conn = lc_who; sub(/-[0-9]+$/, "", lc_conn)
             } else if ($0 ~ /Kafka Connect started|Kafka Connect (distributed )?worker initialization took/) {
                 lc_kind = "process_start"; lc_who = "connect"; lc_detail = "Kafka Connect worker started"
-            } else {
+            } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
                 lc_kind = "process_start"; lc_who = "broker"; lc_detail = "Kafka broker started"
+            } else if (index($0, "Kafka Connect stopping")) {
+                lc_kind = "process_stop"; lc_who = "connect"; lc_detail = "Kafka Connect worker stopping"
+            } else if ($0 ~ /\] shutting down \(kafka\.server|to SHUTTING_DOWN/) {
+                lc_kind = "process_stop"; lc_who = "broker"; lc_detail = "Kafka broker shutting down"
+            } else if ($0 ~ /Becoming the active controller|elected as the controller/) {
+                lc_kind = "controller_change"; lc_who = "controller"; lc_detail = "a new active controller"
+                if (match($0, /(QuorumController|KafkaController) id=[0-9]+/)) {
+                    lc_detail = substr($0, RSTART, RLENGTH); sub(/.* id=/, "", lc_detail)
+                    lc_detail = "node " lc_detail " became the active controller"
+                }
+                if (match($0, /epoch [0-9]+/)) lc_detail = lc_detail " (" substr($0, RSTART, RLENGTH) ")"
+            } else if ($0 ~ /GC\([0-9]+\) .*Pause .*[0-9]ms *$/ && match($0, /[0-9.]+ms *$/)) {
+                # unified JVM logging: "[2026-…+0000][gc] GC(12) Pause Full (G1 Compaction Pause) 900M->850M(1G) 2345.678ms"
+                gc_ms = substr($0, RSTART, RLENGTH); sub(/ms *$/, "", gc_ms); gc_ms = gc_ms + 0
+                gc_what = "Pause"
+                if (match($0, /Pause [A-Za-z][A-Za-z ]*/)) { gc_what = substr($0, RSTART, RLENGTH); sub(/ +$/, "", gc_what) }
+                if (gc_ms >= 1000) { lc_kind = "gc_pause"; lc_who = "jvm"; lc_detail = int(gc_ms) " " gc_what }
+            } else if ($0 ~ /\[(GC pause|Full GC|GC \()/) {
+                # legacy -XX:+PrintGCDetails: the total is the last ", 1.2345678 secs]" before [Times: …]
+                gc_line = $0; sub(/\[Times:.*/, "", gc_line); gc_ms = -1
+                while (match(gc_line, /[0-9]+\.[0-9]+ secs\]/)) { gc_ms = substr(gc_line, RSTART, RLENGTH - 6) * 1000; gc_line = substr(gc_line, RSTART + RLENGTH) }
+                gc_what = index($0, "Full GC") ? "Full GC" : (index($0, "GC pause") ? "GC pause (young)" : "GC (young)")
+                if (index($0, "(mixed)")) gc_what = "GC pause (mixed)"
+                if (gc_ms >= 1000) { lc_kind = "gc_pause"; lc_who = "jvm"; lc_detail = int(gc_ms) " " gc_what }
             }
             if (lc_kind != "") {
-                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind == "process_start" ? lc_who : lc_conn)
+                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_stop|controller_change|gc_pause)$/ ? lc_who : lc_conn)
                 if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
                 lc_count[lc_key]++
                 if (++lc_noted[lc_kind] <= 300) {
@@ -7413,8 +7439,10 @@ function summarize_log_errors() {
             close(records_file)
         }
         # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed
-        nshown_keys = nkeys
-        shown_occurrences = total_occurrences
+        # + 0: nkeys is unset in a file without records, and busybox awk compares the copy of an unset variable as the
+        # string "" (not 0): it printed "🔎 0 distinct record(s)" instead of "✅ no … record found"
+        nshown_keys = nkeys + 0
+        shown_occurrences = total_occurrences + 0
         if (connectors != "") {
             nshown_keys = 0
             shown_occurrences = 0
