@@ -6817,6 +6817,9 @@ function install_confluent_plugin() {
 #   @@PGCFG@@<tab>config class<tab>[connector|task-0] context<tab>line<tab>timestamp<tab>client.id or name
 #   @@PGCFGL@@<tab>key=value, one per line
 #   @@PGCFGCHG@@<tab>line<tab>timestamp<tab>key=previous<tab>key=new: a key that changed since the previous dump of the config
+# then the events read from the INFO lines (each distinct one once):
+#   @@PGEVT@@<tab>plugin_version<tab>line<tab>timestamp<tab>connector<tab>version class ("Instantiated connector|task …")
+#   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
@@ -7279,6 +7282,26 @@ function summarize_log_errors() {
                 if (line_ts > log_last_ts) log_last_ts = line_ts
             }
         }
+        # the version of each connector and of Kafka, from INFO lines the digest does not keep otherwise
+        if (records_file != "" && index($0, "Instantiated ") && match($0, /Instantiated (connector|task) [^ ]+ with version [^ ]+ of type (class )?[^ ]+/)) {
+            n_evp = split(substr($0, RSTART, RLENGTH), evp, " ")
+            ev_name = evp[3]
+            if (evp[2] == "task") sub(/-[0-9]+$/, "", ev_name)
+            ev_key = "plugin_version|" ev_name "|" evp[6] "|" evp[n_evp]
+            if (!(ev_key in ev_seen)) {
+                ev_seen[ev_key] = 1
+                ev[++nev] = "plugin_version\t" NR "\t" timestamp_of($0) "\t" ev_name "\t" evp[6] " " evp[n_evp]
+            }
+        }
+        if (records_file != "" && index($0, "Kafka version: ") && match($0, /Kafka version: [^ ]+/)) {
+            # read before timestamp_of(), whose match() changes RSTART / RLENGTH
+            ev_version = substr($0, RSTART + 15, RLENGTH - 15)
+            ev_key = "kafka_version|" ev_version
+            if (!(ev_key in ev_seen)) {
+                ev_seen[ev_key] = 1
+                ev[++nev] = "kafka_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version
+            }
+        }
         # most lines of a big log have no level or exception word and do not continue a record: one regex (a
         # single pass over the line) sets them aside, as the start of a level-less record, without the work below
         # (the clients: librdkafka "%3|", .NET "fail: ", Go "panic: ", Rust "panicked at ", Python "Traceback (", and
@@ -7333,6 +7356,7 @@ function summarize_log_errors() {
                 n = split(cfg_chg[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCFGCHG@@\t%s\n", cl[j] >> records_file
             }
+            for (i = 1; i <= nev; i++) printf "@@PGEVT@@\t%s\n", ev[i] >> records_file
             close(records_file)
         }
         # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed

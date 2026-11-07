@@ -93,6 +93,8 @@ def normalize_times(files: List[dict]) -> dict:
                 yield c.get("time")
                 for ch in c.get("changes") or []:
                     yield ch.get("time")
+            for ev in f.get("events") or []:
+                yield ev.get("time")
     offsets, naive = set(), False
     for t in stamps():
         if not t:
@@ -123,6 +125,8 @@ def normalize_times(files: List[dict]) -> dict:
             c["time"] = fix(c.get("time"))
             for ch in c.get("changes") or []:
                 ch["time"] = fix(ch.get("time"))
+        for ev in f.get("events") or []:
+            ev["time"] = fix(ev.get("time"))
     return {"offsets": sorted(offsets), "converted_to_utc": to_utc, "without_offset": naive and bool(offsets)}
 
 
@@ -148,7 +152,7 @@ def parse_records(path: str) -> List[dict]:
                 parts += [""] * (7 - len(parts))
                 current = {"label": parts[1], "lines": int(parts[2]), "distinct": int(parts[3]),
                            "occurrences": int(parts[4]), "log_first_ts": parts[5] or None,
-                           "log_last_ts": parts[6] or None, "records": [], "configs": []}
+                           "log_last_ts": parts[6] or None, "records": [], "configs": [], "events": []}
                 files.append(current)
                 rec = done = None
             elif line.startswith("@@PGREC@@\t") and current is not None:
@@ -176,6 +180,11 @@ def parse_records(path: str) -> List[dict]:
                 rec = done = None
             elif line.startswith("@@PGCFGL@@\t") and current is not None and current["configs"]:
                 current["configs"][-1]["lines"].append(line.split("\t", 1)[1])
+            elif line.startswith("@@PGEVT@@\t") and current is not None:
+                # an event of the INFO lines: kind, line, timestamp, connector, detail (summarize_log_errors)
+                parts = (line.rstrip("\n").split("\t") + [""] * 6)[1:6]
+                current["events"].append({"kind": parts[0], "line": int(parts[1]) if parts[1].isdigit() else None,
+                                          "time": parts[2] or None, "connector": parts[3] or None, "detail": parts[4]})
             elif line.startswith("@@PGCFGCHG@@\t") and current is not None and current["configs"]:
                 parts = (line.split("\t") + [""] * 5)[1:5]
                 key, _, previous = parts[2].partition("=")
@@ -675,6 +684,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
            "configuration": configuration}
     res["timeline"] = incident_timeline(res, files)
     res["connectors"] = connector_health(res, files)
+    res["summary"]["kafka_versions"] = kafka_versions(files)
     return res
 
 
@@ -798,9 +808,39 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
         for ch in cfg.get("changes") or []:
             c["config_changes"].append({"time": ch.get("time"), "config": cfg["title"], "key": ch["key"],
                                         "previous": ch["previous"], "value": ch["value"]})
+    # the version of each connector, from "Instantiated connector|task <name> with version <v> of type <class>" (oldest
+    # first: an upgrade during the logs shows both)
+    for f in files:
+        for ev in sorted(f.get("events") or [], key=lambda x: (x.get("time") or "", x.get("line") or 0)):
+            if ev["kind"] != "plugin_version" or ev.get("connector") not in cards:
+                continue
+            version, _, cls = ev["detail"].partition(" ")
+            c = cards[ev["connector"]]
+            c.setdefault("versions", [])
+            if version not in c["versions"]:
+                c["versions"].append(version)
+            # the class of the connector, not of its task (Instantiated task … of type …SourceTask): the one of the plugin
+            if not c.get("class") or not cls.endswith("Task"):
+                c["class"] = cls
     out = list(cards.values())
     out.sort(key=lambda c: (-(c["by_level"]["FATAL"] + c["by_level"]["ERROR"]), -c["by_level"]["WARN"], c["connector"]))
     return out
+
+
+def kafka_versions(files: List[dict]) -> List[str]:
+    """the Kafka / Confluent Platform versions of the logs ("Kafka version: 8.3.2-ce" of AppInfoParser), in order"""
+    out: List[str] = []
+    for f in files:
+        for ev in f.get("events") or []:
+            if ev["kind"] == "kafka_version" and ev["detail"] and ev["detail"] not in out:
+                out.append(ev["detail"])
+    return out
+
+
+def changelog_command(c: dict) -> str:
+    """what changed in the connector plugin since the version it runs (is it fixed in a newer version?)"""
+    return (f"playground connector-plugin changelog --connector-plugin {c['class']} --from {c['versions'][-1]}"
+            if c.get("class") and c.get("versions") else "")
 
 
 # connector cards shown before "show the other N connectors" (a worker with 485 connectors: a wall of cards)
@@ -827,6 +867,11 @@ def connectors_health_html(cards: List[dict]) -> str:
             f"title='show only the records, root causes, timeline and chart of this connector'>▶ only this connector</button></div>"
             f"<div class='fi-meta'>{counts} in {c['records']} distinct record(s) · {e(period)}"
             + (f" · 🧨 {c['task_killed']} task kill(s)" if c["task_killed"] else "") + "</div>"
+            + (f"<div class='fi-meta'>🏷️ {e(' → '.join(c['versions']))} · <span class='mono' title='{e(c.get('class', ''))}'>"
+               f"{e(c.get('class', '').split('.')[-1])}</span> · <button type='button' class='pill conn-changelog' "
+               f"data-cmd='{e(changelog_command(c))}' title='copy the command that lists what changed in the plugin since "
+               f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
+               if c.get("versions") else "")
             + (f"<div>🧠 {e(' · '.join(c['known_causes'][:6]))}</div>" if c["known_causes"] else "")
             + (f"<div class='fi-meta'>⚙️ {c['config_dumps']} configuration dump(s)"
                + (f", clients: <span class='mono'>{e(', '.join(c['clients'][:6]))}</span>" if c["clients"] else "") + "</div>"
@@ -860,7 +905,11 @@ def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
             bits.append(f"🧨 {c['task_killed']} task kill(s)")
         if c["config_changes"]:
             bits.append(f"🔁 {len(c['config_changes'])} config key(s) changed")
+        if c.get("versions"):
+            bits.append(f"🏷️ {' → '.join(c['versions'])} ({c.get('class', '').split('.')[-1]})")
         out.append(f"   {c['connector']}: {', '.join(bits)}" + (f" · {', '.join(c['known_causes'][:3])}" if c["known_causes"] else ""))
+        if changelog_command(c) and (lv["FATAL"] + lv["ERROR"]):
+            out.append(f"      👉 fixed in a newer version? {changelog_command(c)}")
     return out
 
 
@@ -1133,6 +1182,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append(covered)
     if time_zone_note(s):
         out.append("   " + time_zone_note(s))
+    if s.get("kafka_versions"):
+        out.append(f"   🏷️ Kafka {' → '.join(s['kafka_versions'])} (the version the components log at startup)")
     gaps = (res.get("coverage") or {}).get("gaps") or []
     if gaps:
         biggest = max(gaps, key=lambda g: g["seconds"])
@@ -1382,6 +1433,8 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
     out.append(f"**Period covered:** {covered}" + (f" ({human_duration(dur)})" if dur is not None else "")
                + f" · {s['files_scanned']} {unit}(s), {s['occurrences']} occurrence(s) of {s['distinct']} distinct record(s)"
                + f" (FATAL {s['by_level']['FATAL']} · ERROR {s['by_level']['ERROR']} · WARN {s['by_level']['WARN']})")
+    if s.get("kafka_versions"):
+        out.append(f"**Kafka version:** {' → '.join(s['kafka_versions'])}")
     for i in s.get("incomplete_inputs") or []:
         out.append(f"**⚠️ Not fully read:** `{i['file']}`: {i['reason']}")
     if res["known_causes"]:
@@ -1412,10 +1465,11 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
             out.append(f"| {ev['time'].replace('T', ' ')} | {md_cell(timeline_what(ev)[:200])} | {md_cell(ev['file'].split('/')[-1])}:{ev['line']} |")
     conns = res.get("connectors") or []
     if conns:
-        out += ["", f"### Connectors ({len(conns)}, most errors first)", "", "| Connector | ERROR/FATAL | WARN | Task kills | Known causes |", "| --- | --- | --- | --- | --- |"]
+        out += ["", f"### Connectors ({len(conns)}, most errors first)", "", "| Connector | Version | ERROR/FATAL | WARN | Task kills | Known causes |", "| --- | --- | --- | --- | --- | --- |"]
         for c in conns[:8]:
             lv = c["by_level"]
-            out.append(f"| `{md_cell(c['connector'])}` | {lv['FATAL'] + lv['ERROR']:,} | {lv['WARN']:,} | {c['task_killed'] or ''} | {md_cell(', '.join(c['known_causes'][:3]))} |")
+            version = (" → ".join(c["versions"]) + f" ({c.get('class', '').split('.')[-1]})") if c.get("versions") else ""
+            out.append(f"| `{md_cell(c['connector'])}` | {md_cell(version)} | {lv['FATAL'] + lv['ERROR']:,} | {lv['WARN']:,} | {c['task_killed'] or ''} | {md_cell(', '.join(c['known_causes'][:3]))} |")
     out += ["", "_Generated by `playground analyze logs` (kafka-docker-playground). Secrets, IPs and hostnames replaced by "
             "placeholders (best effort): review before sending._"]
     text = "\n".join(out) + "\n"
@@ -2098,6 +2152,13 @@ document.addEventListener("click", function (ev) {
       pgApplyFilters();
       if (card) card.scrollIntoView({block: "nearest"});
     }
+    return;
+  }
+  if (ev.target.closest(".conn-changelog")) {
+    const btn = ev.target.closest(".conn-changelog"), cmd = btn.dataset.cmd, label = btn.textContent;
+    const done = () => { btn.textContent = "✅ copied: run it in a terminal"; setTimeout(() => { btn.textContent = label; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cmd).then(done, () => window.prompt("Command:", cmd));
+    else window.prompt("Command:", cmd);
     return;
   }
   if (ev.target.closest(".conn-more")) {
@@ -2870,6 +2931,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         kpi("🕐 Period covered", human_duration(covered_seconds), " · ".join(detail) if covered_seconds is not None
             else "no timestamped line in the logs", "warn" if short_window else "", hover),
         kpi(f"🗂️ {Unit}s scanned", s["files_scanned"], f"{s['lines']} lines" + (f", {skipped} binary skipped" if unit == "file" else "")),
+        (kpi("🏷️ Kafka version", s["kafka_versions"][-1], " → ".join(s["kafka_versions"]) if len(s["kafka_versions"]) > 1 else "logged at startup",
+             "", "the version the components log at startup (AppInfoParser): -ce is Confluent Platform") if s.get("kafka_versions") else ""),
         kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok"),
         kpi("🧬 Distinct records", s["distinct"], "after de-duplication"),
         kpi("🔁 Occurrences", s["occurrences"], "all levels reported"),
