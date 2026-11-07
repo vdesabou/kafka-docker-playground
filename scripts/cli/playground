@@ -62962,43 +62962,85 @@ playground_analyze_logs_command() {
       then
           log "🔄 $label: $export_format export of $nb_events log events ($(file_size_human "$path")), analyzed as log lines (oldest first)"
           printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
-          analyze_logs_digest "$label" "$converted" "$path" < "$converted"
+          analyze_logs_digest "$label" "$converted" "$path"
           return 0
       fi
       rm -f "$converted"
       return 1
   }
 
-  # prints the digest of one log, read on stdin, when it has findings
-  # $1: label to display, $2: path of the file read, $3: the file it comes from (a JSON / CSV export converted), for its size
+  # the digest of each file runs in the background, PLAYGROUND_LOG_PARALLELISM at a time (4 by default, 1: one at a time,
+  # with the progress bar of a large file), each into its own part files; collect_digests merges them in the order of the
+  # input: the records file, the counters and the output are the same as one at a time
+  log_parallelism="${PLAYGROUND_LOG_PARALLELISM:-4}"
+  [[ "$log_parallelism" =~ ^[1-9][0-9]*$ ]] || log_parallelism=4
+  digest_parts="$tmp_dir/digests"
+  mkdir -p "$digest_parts"
+  nb_digests=0
+
+  # the digest of one log
+  # $1: label to display, $2: path of the file read, $3: the file it comes from (a JSON / CSV export converted), for its
+  # size, $4: "gz" to decompress it (a truncated or corrupt .gz, a partial download, is read up to the error, and said so)
   function analyze_logs_digest () {
-      label="$1"
-      printf '%s\t%s\t%s\n' "$label" "$2" "$([[ "$2" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
-      local input_bytes
-      input_bytes=$(file_size "${3:-$2}")
-      # a progress bar in the terminal for a large file (and the progress page), stdin read through progress.py cat
-      if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+      local label="$1" path="$2" origin="${3:-$2}" gz="${4:-}"
+      printf '%s\t%s\t%s\n' "$label" "$path" "$([[ "$path" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
+      nb_digests=$((nb_digests+1))
+      local part="$digest_parts/$nb_digests"
+      printf '%s\t%s\n' "$label" "$(file_size "$origin")" > "$part.meta"
+      if [ "$log_parallelism" -gt 1 ]
+      then
+          while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$log_parallelism" ]
+          do
+              wait -n 2> /dev/null || true
+          done
+          digest_one "$label" "$path" "$origin" "$gz" "$part" "" &
+      else
+          digest_one "$label" "$path" "$origin" "$gz" "$part" 1
+          report_digest "$part"
+      fi
+  }
+
+  # $1: label, $2: path, $3: origin, $4: gz, $5: part (files written: .out, .rc, .records, .gzerr), $6: 1 in the foreground
+  function digest_one () {
+      local label="$1" path="$2" origin="$3" gz="$4" part="$5" foreground="$6"
+      local reader=(cat "$path")
+      [ -n "$gz" ] && reader=(gzip -dc "$path")
+      # a progress bar in the terminal for a large file (and the progress page), one file at a time only
+      if [ -n "$foreground" ] && [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
       then
           local size_args=()
-          if [[ "$2" != *.gz ]] && [ -f "$2" ]
+          if [ -z "$gz" ] && [ -f "$path" ]
           then
-              size_args=(--size "$(file_size "$2")")
+              size_args=(--size "$(file_size "$path")")
           fi
           # a converted export: the conversion moved the whole input bar (it reads the original), the digest of the
           # converted file only moves the bar of the file
           local counts=1
-          if [ -n "${3:-}" ] && [ "$3" != "$2" ]
-          then
-              counts=0
-          fi
-          output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          [ "$origin" != "$path" ] && counts=0
+          "${reader[@]}" 2> "$part.gzerr" | PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
       else
-          output=$(log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          "${reader[@]}" 2> "$part.gzerr" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
       fi
-      local digest_rc=$?
-      if [ $digest_rc -ne 0 ]
+      echo "${PIPESTATUS[-1]}" > "$part.rc"
+  }
+
+  # merges one digest: its records into the records file, its warnings, its counters, and prints it when it has findings
+  # $1: part
+  function report_digest () {
+      local part="$1" label input_bytes rc output
+      IFS=$'\t' read -r label input_bytes < "$part.meta"
+      rc=$(cat "$part.rc" 2> /dev/null || echo 1)
+      output=$(cat "$part.out" 2> /dev/null)
+      [ -f "$part.records" ] && cat "$part.records" >> "$records_file"
+      touch "$part.done"
+      if [ -s "$part.gzerr" ]
       then
-          note_incomplete "$label" "the digest failed (exit $digest_rc): records of this file may be missing"
+          # the first line that is not empty: GNU gzip starts its message with a new line
+          note_incomplete "$label" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$part.gzerr" | sed 's/^gzip: //'))"
+      fi
+      if [ "$rc" != "0" ]
+      then
+          note_incomplete "$label" "the digest failed (exit $rc): records of this file may be missing"
       fi
       nb_files=$((nb_files+1))
       nb_bytes=$((nb_bytes+${input_bytes:-0}))
@@ -63018,20 +63060,20 @@ playground_analyze_logs_command() {
       echo ""
   }
 
-  # digest of a .gz file: a truncated or corrupt one (a partial download) is read up to the error, and said so
+  # waits for the digests running in the background and merges them, in the order of the input
+  function collect_digests () {
+      wait
+      local i
+      for (( i = 1; i <= nb_digests; i++ ))
+      do
+          [ -f "$digest_parts/$i.done" ] || report_digest "$digest_parts/$i"
+      done
+  }
+
+  # digest of a .gz file: decompressed on the fly (a truncated or corrupt one is read up to the error, and said so)
   # $1: label, $2: path
   function analyze_logs_gzip () {
-      local gzip_err="$tmp_dir/gzip.err"
-      : > "$gzip_err"
-      analyze_logs_digest "$1" "$2" < <(gzip -dc "$2" 2> "$gzip_err")
-      # its error is complete once gzip has exited
-      wait $! 2> /dev/null || true
-      # the first line that is not empty: GNU gzip starts its message with a new line ("\ngzip: x.gz: unexpected end of
-      # file"), the message was empty on Linux
-      if [ -s "$gzip_err" ]
-      then
-          note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$gzip_err" | sed 's/^gzip: //'))"
-      fi
+      analyze_logs_digest "$1" "$2" "$2" gz
   }
 
   # config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
@@ -63274,7 +63316,7 @@ playground_analyze_logs_command() {
               then
                   analyze_logs_gzip "$label" "$path"
               else
-                  analyze_logs_digest "$label" "$path" < "$path"
+                  analyze_logs_digest "$label" "$path"
                   append_config_file "$path" "$label"
               fi
               ;;
@@ -63295,7 +63337,7 @@ playground_analyze_logs_command() {
                       then
                           return
                       fi
-                      analyze_logs_digest "$label" "$path" < "$path"
+                      analyze_logs_digest "$label" "$path"
                       append_config_file "$path" "$label"
                   fi
               else
@@ -63314,6 +63356,7 @@ playground_analyze_logs_command() {
   do
       analyze_logs_path "${file%/}" "${file%/}"
   done
+  collect_digests
   set -e
 
   if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 || -n "$problem" ]]
@@ -65526,43 +65569,85 @@ playground_debug_analyze_logs_command() {
       then
           log "🔄 $label: $export_format export of $nb_events log events ($(file_size_human "$path")), analyzed as log lines (oldest first)"
           printf '%s\t%s\t%s\n' "$label" "$export_format" "$nb_events" >> "$exports_file"
-          analyze_logs_digest "$label" "$converted" "$path" < "$converted"
+          analyze_logs_digest "$label" "$converted" "$path"
           return 0
       fi
       rm -f "$converted"
       return 1
   }
 
-  # prints the digest of one log, read on stdin, when it has findings
-  # $1: label to display, $2: path of the file read, $3: the file it comes from (a JSON / CSV export converted), for its size
+  # the digest of each file runs in the background, PLAYGROUND_LOG_PARALLELISM at a time (4 by default, 1: one at a time,
+  # with the progress bar of a large file), each into its own part files; collect_digests merges them in the order of the
+  # input: the records file, the counters and the output are the same as one at a time
+  log_parallelism="${PLAYGROUND_LOG_PARALLELISM:-4}"
+  [[ "$log_parallelism" =~ ^[1-9][0-9]*$ ]] || log_parallelism=4
+  digest_parts="$tmp_dir/digests"
+  mkdir -p "$digest_parts"
+  nb_digests=0
+
+  # the digest of one log
+  # $1: label to display, $2: path of the file read, $3: the file it comes from (a JSON / CSV export converted), for its
+  # size, $4: "gz" to decompress it (a truncated or corrupt .gz, a partial download, is read up to the error, and said so)
   function analyze_logs_digest () {
-      label="$1"
-      printf '%s\t%s\t%s\n' "$label" "$2" "$([[ "$2" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
-      local input_bytes
-      input_bytes=$(file_size "${3:-$2}")
-      # a progress bar in the terminal for a large file (and the progress page), stdin read through progress.py cat
-      if [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
+      local label="$1" path="$2" origin="${3:-$2}" gz="${4:-}"
+      printf '%s\t%s\t%s\n' "$label" "$path" "$([[ "$path" == "$tmp_dir/"* ]] || echo 1)" >> "$sources_file"
+      nb_digests=$((nb_digests+1))
+      local part="$digest_parts/$nb_digests"
+      printf '%s\t%s\n' "$label" "$(file_size "$origin")" > "$part.meta"
+      if [ "$log_parallelism" -gt 1 ]
+      then
+          while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$log_parallelism" ]
+          do
+              wait -n 2> /dev/null || true
+          done
+          digest_one "$label" "$path" "$origin" "$gz" "$part" "" &
+      else
+          digest_one "$label" "$path" "$origin" "$gz" "$part" 1
+          report_digest "$part"
+      fi
+  }
+
+  # $1: label, $2: path, $3: origin, $4: gz, $5: part (files written: .out, .rc, .records, .gzerr), $6: 1 in the foreground
+  function digest_one () {
+      local label="$1" path="$2" origin="$3" gz="$4" part="$5" foreground="$6"
+      local reader=(cat "$path")
+      [ -n "$gz" ] && reader=(gzip -dc "$path")
+      # a progress bar in the terminal for a large file (and the progress page), one file at a time only
+      if [ -n "$foreground" ] && [[ -t 2 || -n "${PG_PROGRESS_HTML:-}" ]] && command -v python3 > /dev/null 2>&1
       then
           local size_args=()
-          if [[ "$2" != *.gz ]] && [ -f "$2" ]
+          if [ -z "$gz" ] && [ -f "$path" ]
           then
-              size_args=(--size "$(file_size "$2")")
+              size_args=(--size "$(file_size "$path")")
           fi
           # a converted export: the conversion moved the whole input bar (it reads the original), the digest of the
           # converted file only moves the bar of the file
           local counts=1
-          if [ -n "${3:-}" ] && [ "$3" != "$2" ]
-          then
-              counts=0
-          fi
-          output=$(PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          [ "$origin" != "$path" ] && counts=0
+          "${reader[@]}" 2> "$part.gzerr" | PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
       else
-          output=$(log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
+          "${reader[@]}" 2> "$part.gzerr" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
       fi
-      local digest_rc=$?
-      if [ $digest_rc -ne 0 ]
+      echo "${PIPESTATUS[-1]}" > "$part.rc"
+  }
+
+  # merges one digest: its records into the records file, its warnings, its counters, and prints it when it has findings
+  # $1: part
+  function report_digest () {
+      local part="$1" label input_bytes rc output
+      IFS=$'\t' read -r label input_bytes < "$part.meta"
+      rc=$(cat "$part.rc" 2> /dev/null || echo 1)
+      output=$(cat "$part.out" 2> /dev/null)
+      [ -f "$part.records" ] && cat "$part.records" >> "$records_file"
+      touch "$part.done"
+      if [ -s "$part.gzerr" ]
       then
-          note_incomplete "$label" "the digest failed (exit $digest_rc): records of this file may be missing"
+          # the first line that is not empty: GNU gzip starts its message with a new line
+          note_incomplete "$label" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$part.gzerr" | sed 's/^gzip: //'))"
+      fi
+      if [ "$rc" != "0" ]
+      then
+          note_incomplete "$label" "the digest failed (exit $rc): records of this file may be missing"
       fi
       nb_files=$((nb_files+1))
       nb_bytes=$((nb_bytes+${input_bytes:-0}))
@@ -65582,20 +65667,20 @@ playground_debug_analyze_logs_command() {
       echo ""
   }
 
-  # digest of a .gz file: a truncated or corrupt one (a partial download) is read up to the error, and said so
+  # waits for the digests running in the background and merges them, in the order of the input
+  function collect_digests () {
+      wait
+      local i
+      for (( i = 1; i <= nb_digests; i++ ))
+      do
+          [ -f "$digest_parts/$i.done" ] || report_digest "$digest_parts/$i"
+      done
+  }
+
+  # digest of a .gz file: decompressed on the fly (a truncated or corrupt one is read up to the error, and said so)
   # $1: label, $2: path
   function analyze_logs_gzip () {
-      local gzip_err="$tmp_dir/gzip.err"
-      : > "$gzip_err"
-      analyze_logs_digest "$1" "$2" < <(gzip -dc "$2" 2> "$gzip_err")
-      # its error is complete once gzip has exited
-      wait $! 2> /dev/null || true
-      # the first line that is not empty: GNU gzip starts its message with a new line ("\ngzip: x.gz: unexpected end of
-      # file"), the message was empty on Linux
-      if [ -s "$gzip_err" ]
-      then
-          note_incomplete "$1" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$gzip_err" | sed 's/^gzip: //'))"
-      fi
+      analyze_logs_digest "$1" "$2" "$2" gz
   }
 
   # config files of the input for the ⚙️ Configuration section of the report (see summarize_log_errors): a .properties
@@ -65838,7 +65923,7 @@ playground_debug_analyze_logs_command() {
               then
                   analyze_logs_gzip "$label" "$path"
               else
-                  analyze_logs_digest "$label" "$path" < "$path"
+                  analyze_logs_digest "$label" "$path"
                   append_config_file "$path" "$label"
               fi
               ;;
@@ -65859,7 +65944,7 @@ playground_debug_analyze_logs_command() {
                       then
                           return
                       fi
-                      analyze_logs_digest "$label" "$path" < "$path"
+                      analyze_logs_digest "$label" "$path"
                       append_config_file "$path" "$label"
                   fi
               else
@@ -65878,6 +65963,7 @@ playground_debug_analyze_logs_command() {
   do
       analyze_logs_path "${file%/}" "${file%/}"
   done
+  collect_digests
   set -e
 
   if [ ${#cfk_bundles[@]} -eq 0 ] && [[ -n "$severity" || ${#component_array[@]} -gt 0 || -n "$problem" ]]

@@ -32,6 +32,14 @@ a level word **and** a time near its start (`"Task failed: WARN threshold"` of a
 and stack trace). A CSV cell holding JSON is merged only when it is a log line (it has a message), and times with an
 offset are compared in UTC to detect a newest-first export. Tests: `python3 -I tools/log-analyzer/test_log_analyzer.py`, run with `tools/report-common/test_sanitizer.py` by the Tools tests workflow (`.github/workflows/tools-tests.yml`) on the pull requests that change `tools/log-analyzer/` or `tools/report-common/`.
 
+## Digests in parallel
+
+`analyze logs` runs the digest of each file in the background, `PLAYGROUND_LOG_PARALLELISM` at a time (4 by default; 1: one
+at a time, with the progress bar of a large file), each into its own part files in `$tmp_dir/digests/<n>.*` (output,
+exit code, records, gzip errors); `collect_digests` merges them in the order of the input, so the records file, the
+counters, the warnings and the terminal output are the same as one at a time (checked on the 4 samples). 40 files of 9 MB:
+31 s one at a time, 14 s with 4.
+
 ## Progress of large inputs
 
 `progress.py` shows the progress of a large input: `cat` copies stdin to the digest with a bar on stderr (terminal
