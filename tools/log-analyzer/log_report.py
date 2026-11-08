@@ -21,6 +21,7 @@ and imported by tools/connector-diagnose/diagnose_report.py for the errors secti
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -2220,6 +2221,88 @@ def conn_icon_html(c: dict) -> str:
             "onerror=\"this.outerHTML='<span class=&quot;conn-icon none&quot; aria-hidden=&quot;true&quot;>🔌</span>'\">")
 
 
+# 🟥 the heatmap above the connector cards: a cell per connector, grouped by plugin class (the group with the most errors
+# first), coloured by its ERROR/FATAL (log scale), amber with warnings only, green without; 🧨 a killed task outlined. A
+# click filters the report on the connector (the connector filter), again goes back to all
+HEATMAP_CSS = """<style>
+.hm{margin:4px 0 16px;padding:14px 16px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0}
+.hm-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.hm-title{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#475569}
+.hm-scale{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:#64748b}
+.hm-scale i{display:inline-block;width:70px;height:8px;border-radius:999px;background:linear-gradient(90deg,#fecaca,#ef4444,#7f1d1d)}
+.hm-key{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;color:#64748b}
+.hm-key b{display:inline-block;width:10px;height:10px;border-radius:3px}
+.hm-group{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:4px 12px;align-items:start;padding:6px 0;border-top:1px dashed #e2e8f0}
+.hm-group:first-of-type{border-top:0}
+.hm-name{font-size:.76rem;font-weight:700;color:#334155;overflow-wrap:anywhere}
+.hm-name small{display:block;font-weight:500;color:#64748b}
+.hm-cells{display:flex;flex-wrap:wrap;gap:3px}
+.hm-cell{width:14px;height:14px;border-radius:3px;background:var(--h);cursor:pointer;border:0;padding:0;transition:transform .12s,box-shadow .12s}
+.hm-cell:hover,.hm-cell:focus-visible{transform:scale(1.45);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--h);position:relative;z-index:2;outline:none}
+.hm-cell.killed{background-image:radial-gradient(circle,#0f172a 0 2.6px,transparent 3.2px)}
+.hm-cell.picked{box-shadow:0 0 0 2px #fff,0 0 0 4px #2563eb;transform:scale(1.3)}
+.hm-cell[hidden]{display:none}
+</style>""" + "<style>" + dark("""
+.hm{background:#0f172a;border-color:#273449}.hm-title,.hm-name{color:#cbd5e1}.hm-name small,.hm-scale,.hm-key{color:#94a3b8}
+.hm-group{border-top-color:#273449}
+.hm-cell:hover,.hm-cell:focus-visible{box-shadow:0 0 0 2px #0f172a,0 0 0 4px var(--h)}
+""") + """</style><script>
+document.addEventListener("click", function (ev) {
+  const cell = ev.target.closest && ev.target.closest(".hm-cell");
+  if (!cell) return;
+  const sel = document.querySelector(".conn-filter"), name = cell.dataset.conn;
+  if (!sel || ![...sel.options].some(o => o.value === name)) return;
+  sel.value = sel.value === name ? "" : name;
+  sel.dispatchEvent(new Event("change", {bubbles: true}));
+  document.querySelectorAll(".hm-cell").forEach(c => c.classList.toggle("picked", c.dataset.conn === sel.value));
+});
+// the connector picked elsewhere (the filter, a connector name clicked): its cell too
+document.addEventListener("change", function (ev) {
+  if (!ev.target.classList || !ev.target.classList.contains("conn-filter")) return;
+  document.querySelectorAll(".hm-cell").forEach(c => c.classList.toggle("picked", c.dataset.conn === ev.target.value));
+});
+</script>"""
+
+
+def heat_color(errors: int, warnings: int, top: int) -> str:
+    if not errors:
+        return "#f59e0b" if warnings else "#22c55e"
+    # log scale from a light red to a dark red
+    k = math.log10(errors + 1) / max(math.log10(top + 1), 1e-9)
+    stops = [(254, 202, 202), (239, 68, 68), (127, 29, 29)]
+    seg = min(1, int(k * 2)) if k < 1 else 1
+    t = k * 2 - seg if k < 1 else 1.0
+    a, b = stops[seg], stops[seg + 1]
+    return "#%02x%02x%02x" % tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
+
+
+def connectors_heatmap_html(cards: List[dict]) -> str:
+    if len(cards) < 6:
+        return ""
+    errs = {c["connector"]: c["by_level"]["FATAL"] + c["by_level"]["ERROR"] for c in cards}
+    top = max(errs.values()) or 1
+    groups: "OrderedDict[str, List[dict]]" = OrderedDict()
+    for c in sorted(cards, key=lambda c: -errs[c["connector"]]):
+        groups.setdefault((c.get("class") or "unknown class").split(".")[-1], []).append(c)
+    rows = []
+    for name, cs in sorted(groups.items(), key=lambda kv: (-sum(errs[c["connector"]] for c in kv[1]), kv[0])):
+        n_err = sum(1 for c in cs if errs[c["connector"]])
+        cells = "".join(
+            f"<button type='button' class='hm-cell{' killed' if c.get('task_killed') else ''}' data-conn='{e(c['connector'])}' "
+            f"style='--h:{heat_color(errs[c['connector']], c['by_level']['WARN'], top)}' "
+            f"title='{e(c['connector'])}: {errs[c['connector']]:,} ERROR/FATAL, {c['by_level']['WARN']:,} WARN"
+            f"{' · 🧨 task killed' if c.get('task_killed') else ''} · click: filter the report on it'></button>" for c in cs)
+        rows.append(f"<div class='hm-group'><span class='hm-name'>{e(name)}<small>{len(cs)} connector(s), {n_err} with errors · "
+                    f"{sum(errs[c['connector']] for c in cs):,} errors</small></span><div class='hm-cells'>{cells}</div></div>")
+    return (HEATMAP_CSS + "<div class='hm'><div class='hm-head'><span class='hm-title'>🟥 Every connector at a glance</span>"
+            "<span class='hm-scale'>errors 1 <i></i> " + f"{top:,}</span>"
+            "<span class='hm-key'><b style='background:#f59e0b'></b>warnings only</span>"
+            "<span class='hm-key'><b style='background:#22c55e'></b>no error</span>"
+            "<span class='hm-key'><b style='background:#ef4444 radial-gradient(circle,#0f172a 0 2.2px,transparent 2.8px)'></b>🧨 task killed</span>"
+            "<span class='hm-key'>hover a cell for its name, click it to filter the report</span></div>"
+            + "".join(rows) + "</div>")
+
+
 def connectors_health_html(cards: List[dict]) -> str:
     """the 🔌 Connectors section: a card per connector, ▶ only this connector sets the connector filter"""
     if not cards:
@@ -2294,7 +2377,7 @@ def connectors_health_html(cards: List[dict]) -> str:
             "(the [connector|task-0] context of the lines): its errors and warnings, the known causes of its records, a task "
             "killed, its configuration and the keys changed between restarts. ▶ only this connector filters the report on it (and "
             f"hides the other cards), ⤺ goes back to all of them; the search box filters the cards too. The {CONN_CARDS_SHOWN} "
-            "with the most errors are shown first.</p><p class='legend conn-note' hidden></p>"
+            "with the most errors are shown first.</p>" + connectors_heatmap_html(cards) + "<p class='legend conn-note' hidden></p>"
             f"<div class='conn-cards'>{''.join(items)}</div>"
             "<button type='button' class='pill conn-more' hidden></button></div>")
 

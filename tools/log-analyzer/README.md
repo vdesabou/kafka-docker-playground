@@ -162,7 +162,11 @@ tenth of the average rate or more, 📉 fading out, ✅ stopped), each step a li
 the tiles get thousands separators and count up when the page opens (`KPI_JS`, not on the 🔄 progress page).
 🔎 Findings opens with 🏆 Top causes (`findings_overview_html()`): a ring with the share of the occurrences of the first
 cause, the first `FINDINGS_TOP` ranked with a bar each (their share of all the occurrences, coloured by severity, a link to
-their card). A record can match several known causes: the shares do not add up to 100%, so no pie. Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
+their card). A record can match several known causes: the shares do not add up to 100%, so no pie.
+🔌 Connectors opens with 🟥 Every connector at a glance (`connectors_heatmap_html()`, 6 connectors or more): a cell per
+connector grouped by plugin class (the group with the most errors first), coloured by its ERROR/FATAL on a log scale
+(`heat_color()`), amber with warnings only, green without, a dot for a killed task; hover for its name and counts, a click
+sets the connector filter (again: back to all), the cell of the connector picked is ringed. Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
 The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
 tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅
