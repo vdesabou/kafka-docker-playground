@@ -801,8 +801,8 @@ def html_report(res: dict, title: str) -> str:
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
     return ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>Thread dump report — {_e(title)}</title>{_HTML_CSS}</head><body><div class='page'>"
-            "<div class='header'><h1>🧵 JVM Thread Dump Analysis</h1><div class='header-meta'>"
-            + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>"
+            # the header of every report: the verdict as its status pill
+            + report_html.header_html("🧵 JVM Thread Dump Analysis", meta, (v_cls, report_html.status_of(f"<div class='verdict {v_cls}'>{_e(v_text)}</div>")[1]))
             + f"<div class='verdict {v_cls}'>{_e(v_text)}</div>"
             + f"<div class='kpi-grid'>{kpis}</div>" + charts
             + "<div class='section-title'>🔎 Findings</div>" + f"<div class='recs-list'>{recs}</div>"

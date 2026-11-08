@@ -865,6 +865,12 @@ def _configuration_html(results: Dict) -> str:
 
 
 def render(results: Dict, bundle_label: str = "") -> str:
+    """the page, with the banner of the other playground reports when report_html is there (brand_page)"""
+    page = _render(results, bundle_label)
+    return report_html.brand_page(page) if report_html is not None and hasattr(report_html, "brand_page") else page
+
+
+def _render(results: Dict, bundle_label: str = "") -> str:
     summary = results.get("summary", {})
     issues = results.get("issues", [])
 

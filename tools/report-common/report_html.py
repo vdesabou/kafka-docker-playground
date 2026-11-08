@@ -15,9 +15,17 @@ Imported, after adding this folder to sys.path, by:
     and THEME_SCRIPT (playground analyze cfk-bundle mounts this folder in its container, in /tmp/report-common)
   - log_viewer.py: the pages of the files of the analyze logs and CFK reports, linked from their locations
 The benchmark, flight recorder and SMT test reports have their own layout (charts drawn by a script, filters) and their
-own "Toggle theme" button, with the same blue header and the same light / dark palette (slate) as these.
+own "Toggle theme" button, with the same light / dark palette (slate) as these.
+
+One header for all of them: the 🐳 kafka-docker-playground badge, the title on a gradient, the verdict as a status pill
+that tints the gradient (red, amber, green: TINTS maps the verdict classes of each report). page() builds it
+(header_html(), the status from the verdict of the body: status_of()), the older reports call header_html() themselves,
+and the reports with a <header> of their own (benchmark, flight recorder, SMT test, CFK bundle) pass their page through
+brand_page() (banner_css(): the same gradients). style() also brings the polish of every report (POLISH_CSS: rounder
+cards, an accent under the titles; PROGRESS_SCRIPT: a reading-progress bar at the top of the window).
 """
 
+import html
 import json
 import calendar
 import os
@@ -273,11 +281,53 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "zoom_chart.j
     ZOOM_SCRIPT = "<script>" + _f.read() + "</script>"
 
 
+# ✨ shared by every report: rounder section cards with a hairline border and a shadow that lifts on hover, an accent under
+# the titles, the counts in the section links of the log report, a reading-progress bar at the top of the window
+POLISH_CSS = """/* ✨ the section cards: rounder, a hairline border, a soft shadow that lifts on hover, an accent under the title */
+.table-card,.chart-card{border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -16px rgba(15,23,42,.18);
+transition:box-shadow .2s,border-color .2s}
+.table-card:hover,.chart-card:hover{box-shadow:0 1px 2px rgba(15,23,42,.05),0 14px 34px -18px rgba(79,70,229,.35);border-color:#c7d2fe}
+.table-card>h2,.chart-card>h2{position:relative;padding-bottom:10px;margin-bottom:12px}
+.table-card>h2::after,.chart-card>h2::after{content:"";position:absolute;left:0;bottom:0;width:56px;height:3px;border-radius:3px;
+background:linear-gradient(90deg,#6366f1,#ec4899)}
+.sec-collapsed>h2::after{width:28px;opacity:.5}
+.kpi-card{border-radius:14px;transition:transform .15s,box-shadow .15s}
+html[data-theme=dark] .table-card,html[data-theme=dark] .chart-card{border-color:#273449;box-shadow:0 8px 24px -16px rgba(0,0,0,.7)}
+html[data-theme=dark] .table-card:hover,html[data-theme=dark] .chart-card:hover{border-color:#3730a3;box-shadow:0 14px 34px -18px rgba(99,102,241,.45)}
+/* the counts of the sections in their links */
+.quick-links a[data-count]::after,.side-nav a[data-count]::after{content:attr(data-count);margin-left:6px;font-size:.68rem;font-weight:700;
+padding:0 6px;border-radius:999px;background:#eef2ff;color:#4338ca;font-variant-numeric:tabular-nums}
+.side-nav a[data-count]{display:flex;align-items:center}.side-nav a[data-count]::after{margin-left:auto}
+html[data-theme=dark] .quick-links a[data-count]::after,html[data-theme=dark] .side-nav a[data-count]::after{background:#1e1b4b;color:#c7d2fe}
+/* how far down the report: a thin bar at the top of the window */
+.pg-progress{position:fixed;left:0;top:0;height:3px;width:0;z-index:40;background:linear-gradient(90deg,#6366f1,#ec4899,#f59e0b);
+box-shadow:0 0 8px rgba(236,72,153,.6);pointer-events:none}"""
+
+PROGRESS_SCRIPT = """<script>
+(function () {
+  const bar = document.createElement("div");
+  bar.className = "pg-progress";
+  bar.setAttribute("aria-hidden", "true");
+  document.addEventListener("DOMContentLoaded", function () { document.body.appendChild(bar); });
+  let ticking = false;
+  window.addEventListener("scroll", function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (h > 0 ? Math.min(100, 100 * window.scrollY / h) : 0) + "%";
+      ticking = false;
+    });
+  }, {passive: true});
+})();
+</script>"""
+
+
 def style(extra: str = "") -> str:
     """<style> element: the shared look, then the rules of one report (they win over the shared ones), then the dark theme
     (a report adds its own dark rules to extra with dark()); followed by the scripts of the "Toggle theme" button and of
     the zoomable charts"""
-    return f"<style>{BASE_CSS}{LOG_CSS}{ZOOM_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}{ZOOM_SCRIPT}"
+    return f"<style>{BASE_CSS}{LOG_CSS}{ZOOM_CSS}{POLISH_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}{ZOOM_SCRIPT}{PROGRESS_SCRIPT}"
 
 
 HTML_CSS = style(NEWER_REPORTS_CSS)
@@ -641,14 +691,78 @@ def kdp_brand() -> str:
             "<span class='lr-whale'>🐳</span> kafka-docker-playground</a>")
 
 
+def banner_css(sel: str = "header") -> str:
+    """the gradient banner and the 🐳 badge of HEADER_CSS for a report with a header of its own (<header>: jfr, benchmark,
+    smt tester, cfk-analysis): the same gradients from the same rules, tinted with a danger / warn / ok class on it"""
+    body = HEADER_CSS[len("<style>"):HEADER_CSS.index(".header:has(.lr-title) h1{")]
+    body = (body.replace(".header:has(.lr-status.danger)", f"{sel}.danger").replace(".header:has(.lr-status.warn)", f"{sel}.warn")
+            .replace(".header:has(.lr-status.ok)", f"{sel}.ok").replace(".header:has(.lr-title)", sel))
+    brand = HEADER_CSS[HEADER_CSS.index(".lr-brand{"):HEADER_CSS.index(".header:has(.lr-title) .header-meta span:has(.lr-howto)")]
+    return (f"<style>{body}{sel}{{color:#fff}}{brand}{sel} .lr-brand{{margin-bottom:10px}}"
+            f"{sel} a.lr-brand,{sel} a.lr-brand:visited{{color:#fff;text-decoration:none}}"
+            f"{sel} h1{{font-weight:800;letter-spacing:-.01em}}</style>")
+
+
+# the verdict classes of the reports with a page of their own, as the tints of the banner
+TINTS = {"danger": "danger", "critical": "danger", "bad": "danger", "error": "danger", "warn": "warn", "warning": "warn",
+         "high": "warn", "medium": "warn", "ok": "ok", "good": "ok", "success": "ok", "low": "ok", "info": "ok"}
+
+
+def brand_page(page_html: str) -> str:
+    """a report with a <header> of its own (jfr, benchmark, smt tester, cfk-analysis): the gradient banner (banner_css), the
+    🐳 badge at the top of the header, tinted from the class of its first verdict (TINTS); the page as it is without a
+    <header>"""
+    m = re.search(r"<header(\s[^>]*)?>", page_html)
+    if not m or "</head>" not in page_html:
+        return page_html
+    # the verdict: class='verdict danger', or the severity of the verdict card of the JFR digest (--sev: var(--critical))
+    v = (re.search(r"class=['\"]verdict\s+(\w+)['\"]", page_html)
+         or re.search(r"jfr-verdict['\"][^>]*--sev:\s*var\(--(\w+)\)", page_html))
+    tint = TINTS.get(v.group(1).lower(), "") if v else ""
+    attrs = m.group(1) or ""
+    if tint:
+        attrs = (re.sub(r"class=(['\"])", lambda c: f"class={c.group(1)}{tint} ", attrs, count=1) if "class=" in attrs
+                 else f"{attrs} class='{tint}'")
+    page_html = page_html[:m.start()] + f"<header{attrs}>" + page_html[m.end():]
+    # the badge before the title: in the first element of the header that holds the <h1>, else first in the header
+    h1 = page_html.find("<h1", m.start())
+    page_html = page_html[:h1] + f"<div>{kdp_brand()}</div>" + page_html[h1:] if h1 >= 0 else page_html
+    return page_html.replace("</head>", banner_css("header") + "</head>", 1)
+
+
+def status_of(body: str) -> Tuple[str, str]:
+    """the verdict of a report (verdict_html(): <div class='verdict danger'>…), shortened for the status pill of its
+    header: its first clause, 64 characters at most; ("", "") without a verdict"""
+    m = re.search(r"<div class=['\"]verdict (\w+)['\"]>(.*?)</div>", body, re.S)
+    if not m or m.group(1).lower() not in TINTS:
+        return "", ""
+    text = re.sub(r"<[^>]+>", "", m.group(2))
+    text = html.unescape(re.split(r": | — |\. ", text.strip(), maxsplit=1)[0]).strip().rstrip(".")
+    return TINTS[m.group(1).lower()], (text[:62] + "…" if len(text) > 64 else text)
+
+
+def header_html(h1: str, meta: List[str], status: Tuple[str, str] = ("", ""), sub: str = "") -> str:
+    """the header of every report: the 🐳 kafka-docker-playground badge, the title, a status pill (danger / warn / ok: the
+    gradient follows it, HEADER_CSS), a line under the title (sub, trusted HTML) and the meta pills (trusted HTML)"""
+    cls, text = status
+    pill = f"<span class='lr-status {e(cls)}'>{e(text)}</span>" if text else ""
+    return (f"<div class='header'><h1>{kdp_brand()}<span class='lr-title'>{h1}</span>{pill}"
+            + (f"<span class='lr-sub'>{sub}</span>" if sub else "") + "</h1><div class='header-meta'>"
+            + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>" + HEADER_CSS)
+
+
 def page(title: str, h1: str, meta: List[str], body: str, footer: str) -> str:
-    """meta: HTML snippets of the header line (escape them with e())"""
+    """meta: HTML snippets of the header line (escape them with e()); h1: the title (trusted HTML), in the header of
+    header_html() with the status pill of the verdict of the body, or a whole header already (.lr-title: the log report)"""
     meta = meta + [f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
+    if "lr-title" in h1:
+        header = (f"<div class='header'><h1>{h1}</h1><div class='header-meta'>"
+                  + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>")
+    else:
+        header = header_html(h1, meta, status_of(body))
     return ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>{e(title)}</title>{HTML_CSS}</head><body><div class='page'>"
-            f"<div class='header'><h1>{h1}</h1><div class='header-meta'>"
-            + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>"
-            + body + f"<div class='footer'>{footer}</div></div></body></html>")
+            + header + body + f"<div class='footer'>{footer}</div></div></body></html>")
 
 
 # connector config keys holding a secret, and the ones that only look like it

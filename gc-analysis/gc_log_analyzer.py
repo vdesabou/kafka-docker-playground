@@ -117,11 +117,6 @@ _NOT_CAUSES = _G1_KIND_TAGS | {"Major", "Minor", "process weakrefs", "unload cla
 # ── HTML/CSS template (regular string — braces are literal CSS, not f-string) ──
 
 _HTML_CSS = report_html.style("""
-.header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px}
-.health-badge{text-align:center;background:rgba(255,255,255,.92);border-radius:12px;padding:14px 22px;min-width:110px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.health-score{font-size:2.6rem;font-weight:800;line-height:1}
-.health-label{font-size:.78rem;color:#475569;margin-top:3px}
-.health-name{font-size:.85rem;font-weight:700;margin-top:2px}
 .chart-card svg{font-family:inherit}
 .rec-flag{display:block;margin-top:4px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;color:#1e293b}
 .verdict.critical{border-left-color:#dc2626}
@@ -131,7 +126,6 @@ td{vertical-align:inherit}
 .full-gc-row td{background:#fff1f2!important}
 .flag-cell{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.8rem;color:#1e293b;word-break:break-all}
 """ + report_html.dark("""
-.health-badge{background:#1e293b}.health-label{color:#94a3b8}
 .rec-flag,.flag-cell{color:#e2e8f0}
 .warn-box{background:#431407}
 .pause-hi{color:#f87171}
@@ -1350,7 +1344,6 @@ def html_report(stats: dict, runs_summary: List[dict], warnings: List[str], run:
     span = stats.get("time_span_sec", 0)
     x_unit, x_label = (60000, "minutes since start") if span > 600 else (1000, "seconds since start")
     health = stats.get("health_score")
-    hcolor = "#64748b" if health is None else "#16a34a" if health >= 80 else "#d97706" if health >= 60 else "#dc2626"
 
     def kpi(label, val, unit, cls=""):
         return (f'<div class="kpi-card {cls}"><div class="kpi-label">{_e(label)}</div>'
@@ -1430,10 +1423,9 @@ def html_report(stats: dict, runs_summary: List[dict], warnings: List[str], run:
             f"Collector: {_e(stats['collector'])}", f"-Xmx: {_e(str(stats['xmx_mb']) + 'M' if stats.get('xmx_mb') else 'unknown')}",
             f"Span: {span}s", f"Coverage: {cov['parsed']}/{cov['candidates']}",
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
-    header = ("<div class='header'><div><h1>♻️ JVM GC Log Analysis</h1><div class='header-meta'>"
-              + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>"
-              f"<div class='health-badge'><div class='health-score' style='color:{hcolor}'>{_e(health if health is not None else '-')}</div>"
-              f"<div class='health-label'>🩺 health</div><div class='health-name' style='color:{hcolor}'>{_e(stats.get('health_label', ''))}</div></div></div>")
+    # the header of every report (report_html.header_html): the verdict as its status pill, the 🩺 health score a pill
+    meta.insert(0, f"🩺 health <b>{_e(health if health is not None else '-')}</b> {_e(stats.get('health_label', ''))}")
+    header = report_html.header_html("♻️ JVM GC Log Analysis", meta, report_html.status_of(verdict_html))
 
     return ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"

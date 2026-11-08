@@ -3799,42 +3799,8 @@ a.kpi-link,a.sev-kpi{color:inherit;text-decoration:none;display:block}a.sev-kpi 
 a.sev-kpi:hover .kpi-card{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.15)}a.sev-kpi.active .kpi-card{outline:3px solid #2563eb;outline-offset:2px}a.kpi-link .kpi-card{cursor:pointer;transition:transform .1s}
 a.kpi-link:hover .kpi-card{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.15)}a.kpi-link.kpi-dead .kpi-card{cursor:default;transform:none;box-shadow:none}
 @keyframes kpiflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}.kpi-flash{animation:kpiflash 1.6s ease-out}
-/* ✨ the section cards: rounder, a hairline border, a soft shadow that lifts on hover, an accent under the title */
-.table-card,.chart-card{border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -16px rgba(15,23,42,.18);
-transition:box-shadow .2s,border-color .2s}
-.table-card:hover,.chart-card:hover{box-shadow:0 1px 2px rgba(15,23,42,.05),0 14px 34px -18px rgba(79,70,229,.35);border-color:#c7d2fe}
-.table-card>h2,.chart-card>h2{position:relative;padding-bottom:10px;margin-bottom:12px}
-.table-card>h2::after,.chart-card>h2::after{content:"";position:absolute;left:0;bottom:0;width:56px;height:3px;border-radius:3px;
-background:linear-gradient(90deg,#6366f1,#ec4899)}
-.sec-collapsed>h2::after{width:28px;opacity:.5}
-.kpi-card{border-radius:14px;transition:transform .15s,box-shadow .15s}
-html[data-theme=dark] .table-card,html[data-theme=dark] .chart-card{border-color:#273449;box-shadow:0 8px 24px -16px rgba(0,0,0,.7)}
-html[data-theme=dark] .table-card:hover,html[data-theme=dark] .chart-card:hover{border-color:#3730a3;box-shadow:0 14px 34px -18px rgba(99,102,241,.45)}
-/* the counts of the sections in their links */
-.quick-links a[data-count]::after,.side-nav a[data-count]::after{content:attr(data-count);margin-left:6px;font-size:.68rem;font-weight:700;
-padding:0 6px;border-radius:999px;background:#eef2ff;color:#4338ca;font-variant-numeric:tabular-nums}
-.side-nav a[data-count]{display:flex;align-items:center}.side-nav a[data-count]::after{margin-left:auto}
-html[data-theme=dark] .quick-links a[data-count]::after,html[data-theme=dark] .side-nav a[data-count]::after{background:#1e1b4b;color:#c7d2fe}
-/* how far down the report: a thin bar at the top of the window */
-.pg-progress{position:fixed;left:0;top:0;height:3px;width:0;z-index:40;background:linear-gradient(90deg,#6366f1,#ec4899,#f59e0b);
-box-shadow:0 0 8px rgba(236,72,153,.6);pointer-events:none}</style>
+</style>
 <script>
-(function () {
-  const bar = document.createElement("div");
-  bar.className = "pg-progress";
-  bar.setAttribute("aria-hidden", "true");
-  document.addEventListener("DOMContentLoaded", function () { document.body.appendChild(bar); });
-  let ticking = false;
-  window.addEventListener("scroll", function () {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function () {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      bar.style.width = (h > 0 ? Math.min(100, 100 * window.scrollY / h) : 0) + "%";
-      ticking = false;
-    });
-  }, {passive: true});
-})();
 document.querySelectorAll("a.kpi-link").forEach(function (a) {
   if (!document.getElementById(a.getAttribute("href").slice(1))) a.classList.add("kpi-dead");
 });

@@ -24,6 +24,15 @@ import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "jfr-analyzer"))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# the banner of the other playground reports (tools/report-common/report_html.py: brand_page); the page stays as it is
+# without it
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
+try:
+    import report_html  # noqa: E402
+except ImportError:
+    report_html = None
 import jfr_analyzer  # noqa: E402
 import benchmark_latency  # noqa: E402
 
@@ -865,7 +874,7 @@ def main():
             .replace("__JFR__", jfr_html)
             .replace("__DATA__", payload))
     with open(args.output, "w") as f:
-        f.write(page)
+        f.write((report_html.brand_page(page) if report_html else page))
     print(args.output)
 
 

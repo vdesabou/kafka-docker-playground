@@ -1286,14 +1286,17 @@ def _html_one(a: "Analysis") -> str:
                     [[t["session"], t["xid"], t["status"], _fmt_seconds((t["minutes"] or 0) * 60), t["username"], t["program"]]
                      for t in tx.get("database_long_running", [])[:a.top]]) if tx else ""
     patterns = "".join(f"<li><b>{_e(k)}</b>. {_e(PATTERNS[k])} ({len(v)} finding(s))</li>" for k, v in sorted(a.patterns.items()))
-    meta = " ".join(f"<span>{_e(k)}: {_e(v)}</span>" for k, v in (
+    meta = [f"🩺 Overall health: <b>{_e(d['health'])}</b>"] + [f"{_e(k)}: {_e(v)}" for k, v in (
         ("Role", db.get("role")), ("Open mode", db.get("open_mode")), ("CDB", db.get("cdb")), ("Platform", db.get("platform")),
-        ("Current SCN", _fmt_num(db.get("current_scn"))), ("Generated", d["generated"] or "NOT PRESENT IN REPORT")) if v)
-    return (f"<div class='header'><h1>🅾️ {_e(db.get('global_name') or db.get('name') or 'Oracle XStream')} — {_e(os.path.basename(a.r.path))}</h1>"
-            f"<div class='header-meta'>{meta}</div>"
-            + (f"<div class='header-meta'>{_e(db['version'])}</div>" if db.get("version") else "")
-            + f"<div class='health {_e(d['health'].replace(' ', '-'))}'>🩺 Overall health: {_e(d['health'])}</div></div>"
-            + _verdict(a, d["counts"]) + f"<div class='kpi-grid'>{kpis}</div>{problem}"
+        ("Current SCN", _fmt_num(db.get("current_scn"))), ("Generated", d["generated"] or "NOT PRESENT IN REPORT")) if v]
+    verdict = _verdict(a, d["counts"])
+    # the header of every report (report_html.header_html): the verdict as its status pill, its severity as the tint
+    m = re.search(r"<div class='verdict (\w+)'>(.*?)</div>", verdict, re.S)
+    tint = {"critical": "danger", "high": "warn", "medium": "warn", "good": "ok"}.get(m.group(1) if m else "", "")
+    status = report_html.status_of(f"<div class='verdict {tint}'>{m.group(2)}</div>") if m and tint else ("", "")
+    title = f"🅾️ {_e(db.get('global_name') or db.get('name') or 'Oracle XStream')} — {_e(os.path.basename(a.r.path))}"
+    return (report_html.header_html(title, meta, status, _e(db["version"]) if db.get("version") else "")
+            + verdict + f"<div class='kpi-grid'>{kpis}</div>{problem}"
             f"<div class='section-title'>🔎 Findings</div><div class='recs-list'>{findings}</div>"
             + (f"<div class='table-card'><h2>🧩 Matched patterns</h2><ul style='margin-left:18px'>{patterns}</ul></div>" if patterns else "")
             + prereq + capture_t + lm_t + out_t + apply_t + queue_t + pool + rules_t + long_t)

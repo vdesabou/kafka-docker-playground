@@ -11,6 +11,7 @@ several versions, a comparison of the steps.
 import argparse
 import html
 import json
+import os
 import sys
 
 STATUS = {
@@ -21,6 +22,16 @@ STATUS = {
     "error": ("❌", "failed", "critical"),
     "input": ("🧾", "input", "neutral"),
 }
+
+# the banner of the other playground reports (tools/report-common/report_html.py: brand_page); the page stays as it is
+# without it
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
+try:
+    import report_html  # noqa: E402
+except ImportError:
+    report_html = None
+
 
 
 def esc(value):
@@ -545,7 +556,7 @@ def main():
                                                        " · ".join("%s (Kafka %s)" % (r.get("label") or "run", r.get("kafka_version")) for r in results))
     page = PAGE.replace("__TITLE__", esc(args.title)).replace("__SUBTITLE__", esc(subtitle)).replace("__BANNER__", banner(results)).replace("__BODY__", "\n".join(body))
     with open(args.output, "w") as f:
-        f.write(page)
+        f.write((report_html.brand_page(page) if report_html else page))
     print(args.output)
 
 

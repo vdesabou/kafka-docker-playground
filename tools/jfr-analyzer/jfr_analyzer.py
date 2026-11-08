@@ -22,6 +22,17 @@ import os
 import sys
 from collections import Counter, defaultdict
 
+
+# the banner of the other playground reports (tools/report-common/report_html.py: brand_page); the page stays as it is
+# without it
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
+try:
+    import report_html  # noqa: E402
+except ImportError:
+    report_html = None
+
+
 # ── classification of the frames ──────────────────────────────────────────────────────────────────────────────────
 
 # frames that say nothing about who does the work: the time goes to the first frame below them
@@ -1122,7 +1133,7 @@ def main():
             json.dump(a, f)
     if args.html_out:
         with open(args.html_out, "w") as f:
-            f.write(standalone_html(a, args.recording_link))
+            f.write((report_html.brand_page(standalone_html(a, args.recording_link)) if report_html else standalone_html(a, args.recording_link)))
     if args.json:
         print(json.dumps(a, indent=2))
     else:
