@@ -5848,6 +5848,94 @@ def chain_rows(chains: List[dict], limit: int, sev: str, viewers: Dict[str, str]
     return rows
 
 
+# 🏆 the overview at the top of 🔎 Findings: a ring with the share of the top cause, the top 5 ranked with a bar each (their
+# share of all the occurrences: a record can be in several known causes, the shares do not add up to 100%), a link to
+# each card
+FINDINGS_TOP = 5
+SEV_COLORS = {"CRITICAL": "#dc2626", "HIGH": "#ea580c", "MEDIUM": "#ca8a04", "LOW": "#16a34a", "INFO": "#2563eb"}
+
+FINDINGS_OVERVIEW_CSS = """<style>
+.fo{display:grid;grid-template-columns:200px 1fr;gap:22px;align-items:center;margin:4px 0 18px;padding:16px 20px;border-radius:16px;
+background:linear-gradient(135deg,#fff7ed,#fef2f2);border:1px solid #fed7aa}
+.fo-ring{position:relative;width:170px;height:170px;margin:auto}
+.fo-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.fo-ring .trk{stroke:#fde2cf}.fo-ring .arc{stroke:var(--c);stroke-linecap:round;stroke-dasharray:var(--len) 999;animation:fo-draw 1.1s ease-out}
+@keyframes fo-draw{from{stroke-dasharray:0 999}}
+@media (prefers-reduced-motion:reduce){.fo-ring .arc{animation:none}}
+.fo-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 22px}
+.fo-pct{font-size:2rem;font-weight:800;line-height:1;color:var(--c)}
+.fo-what{font-size:.72rem;font-weight:600;color:#7c2d12;margin-top:4px;line-height:1.25}
+.fo-list{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fo-head{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#c2410c}
+.fo-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;text-decoration:none;color:inherit;
+padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.65);transition:transform .15s,background .15s}
+.fo-row:hover{transform:translateX(3px);background:#fff}
+.fo-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;
+background:var(--c);box-shadow:0 2px 8px color-mix(in srgb,var(--c) 45%,transparent)}
+.fo-row:first-of-type .fo-rank{width:30px;height:30px;font-size:.9rem;background:linear-gradient(135deg,#f59e0b,#dc2626)}
+.fo-row,.fo-row .fo-title,.fo-row .fo-num{color:#0f172a}
+.fo-title{font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fo-bar{height:6px;border-radius:999px;background:#fde2cf;margin-top:4px;overflow:hidden}
+.fo-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 55%,#fff),var(--c));
+transform-origin:left;animation:fo-grow .9s ease-out}
+@keyframes fo-grow{from{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.fo-bar i{animation:none}}
+.fo-num{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;font-size:.86rem;white-space:nowrap}
+.fo-num small{display:block;font-weight:600;font-size:.7rem;color:#9a3412}
+.fo-more{font-size:.74rem;color:#9a3412}
+@media (max-width:800px){.fo{grid-template-columns:1fr}}
+</style>""" + "<style>" + dark("""
+.fo{background:linear-gradient(135deg,#1c1310,#2a1215);border-color:#7c2d12}
+.fo-ring .trk{stroke:#3b1d14}.fo-what{color:#fed7aa}.fo-head{color:#fdba74}
+.fo-row,.fo-row .fo-title,.fo-row .fo-num{color:#f1f5f9}.fo-row{background:rgba(15,23,42,.55)}.fo-row:hover{background:#0f172a}.fo-bar{background:#3b1d14}.fo-num small,.fo-more{color:#fdba74}
+""") + "</style>"
+
+
+def fo_pct(p: float) -> str:
+    """99.7%, not 100%; 0.4%, not 0%"""
+    if 0 < p < 0.1:
+        return "<0.1%"
+    return f"{p:.1f}%" if p >= 99.5 or p < 10 else f"{p:.0f}%"
+
+
+def fo_title(v: dict) -> str:
+    """the name of a finding: the title of a known cause, 🌳 the exception of a root cause no known cause explains"""
+    if v.get("title"):
+        return v["title"]
+    return "🌳 " + ((v.get("root_cause") or "").split(".")[-1] or (v.get("example") or "")[:60])
+
+
+def findings_overview_html(items: List[dict], total: int) -> str:
+    rows = [f for f in items if (f.get("_view") or {}).get("occurrences") and f.get("id")]
+    if len(rows) < 2 or not total:
+        return ""
+    rows.sort(key=lambda f: -f["_view"]["occurrences"])
+    top = rows[0]
+    pct = min(100.0, 100 * top["_view"]["occurrences"] / total)
+    color = SEV_COLORS.get(top["severity"], "#ea580c")
+    circ = 2 * 3.14159 * 70
+    ring = (f"<div class='fo-ring' style='--c:{color};--len:{circ * pct / 100:.1f}' title='{e(fo_title(top['_view']))}: "
+            f"{top['_view']['occurrences']:,} of the {total:,} occurrences'><svg viewBox='0 0 170 170' aria-hidden='true'>"
+            "<circle class='trk' cx='85' cy='85' r='70' fill='none' stroke-width='16'/>"
+            "<circle class='arc' cx='85' cy='85' r='70' fill='none' stroke-width='16'/></svg>"
+            f"<div class='fo-center'><span class='fo-pct'>{fo_pct(pct)}</span><span class='fo-what'>of all occurrences: "
+            f"{e(fo_title(top['_view']))}</span></div></div>")
+    lis = []
+    for i, f in enumerate(rows[:FINDINGS_TOP]):
+        v = f["_view"]
+        share = 100 * v["occurrences"] / total
+        c = SEV_COLORS.get(f["severity"], "#ea580c")
+        lis.append(f"<a class='fo-row' href='#{e(f['id'])}' style='--c:{c}' title='{e(f['severity'])} · open its card'>"
+                   f"<span class='fo-rank'>{i + 1}</span><span style='min-width:0'><span class='fo-title' style='display:block'>{e(fo_title(v))}</span>"
+                   f"<span class='fo-bar' style='display:block'><i style='width:{max(1.5, min(100.0, share)):.1f}%'></i></span></span>"
+                   f"<span class='fo-num'>{v['occurrences']:,}<small>{fo_pct(share)} · {e(f['severity'])}</small></span></a>")
+    more = (f"<span class='fo-more'>+ {len(rows) - FINDINGS_TOP} more finding(s) below · a record can match several known causes: "
+            "the shares do not add up to 100%</span>" if len(rows) > FINDINGS_TOP else
+            "<span class='fo-more'>a record can match several known causes: the shares do not add up to 100%</span>")
+    return (FINDINGS_OVERVIEW_CSS + f"<div class='fo'>{ring}<div class='fo-list'><span class='fo-head'>🏆 Top causes, by occurrences</span>"
+            + "".join(lis) + more + "</div></div>")
+
+
 def finding_id(title: str) -> str:
     """anchor of the card of a known cause: the 🌳 Root causes table links to it"""
     return "finding-" + (re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or "x")
@@ -6038,7 +6126,9 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             filter_html(s["by_level"], s["by_connector"], without_connector, res["files"]), FINDINGS_CSS,
             findings_html(findings_view, intro="What to look at first: the known causes, with what to do, then the most "
                           "frequent errors no known cause explains (🌳). Every distinct error is in 🌳 All root causes below.")
-            .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count"),
+            .replace("<li><span class='fi-count", "<li class='fi-chain'><span class='fi-count")
+            # 🏆 the overview of the causes above the cards
+            .replace("<div class='recs-list'>", findings_overview_html(findings_view, s["occurrences"]) + "<div class='recs-list'>", 1),
             fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
             lifecycle_html(res.get("lifecycle")), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files"))]

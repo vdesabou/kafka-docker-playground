@@ -159,7 +159,10 @@ green without error. Right under it, 📖 What happened (`story_html()`): logs s
 `STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing at a
 tenth of the average rate or more, 📉 fading out, ✅ stopped), each step a link to its section, over an area sparkline
 (square-root scale). The 🔁 Occurrences tile has the same sparkline (`spark_svg()` of `report_html.py`); the numbers of
-the tiles get thousands separators and count up when the page opens (`KPI_JS`, not on the 🔄 progress page). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
+the tiles get thousands separators and count up when the page opens (`KPI_JS`, not on the 🔄 progress page).
+🔎 Findings opens with 🏆 Top causes (`findings_overview_html()`): a ring with the share of the occurrences of the first
+cause, the first `FINDINGS_TOP` ranked with a bar each (their share of all the occurrences, coloured by severity, a link to
+their card). A record can match several known causes: the shares do not add up to 100%, so no pie. Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
 The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
 tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅
