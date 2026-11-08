@@ -273,6 +273,26 @@ def test_fixed_bugs_found():
     check("on the card", card.get("fixed_bugs") and card["fixed_bugs"][0]["verdict"] == "affected", card.get("fixed_bugs"))
 
 
+def test_cp_version_not_control_center():
+    """the images of Control Center next-gen, Prometheus and Alertmanager (2.3.0) are not a Confluent Platform version"""
+    comps = {"kafka": {"image": "acr.io/confluentinc/cp-server:8.1.4"},
+             "controlcenter": {"image": "acr.io/confluentinc/cp-enterprise-control-center-next-gen:2.3.0"},
+             "prometheus": {"image": "acr.io/confluentinc/cp-enterprise-prometheus:2.3.0"},
+             "alertmanager": {"image": "acr.io/confluentinc/cp-enterprise-alertmanager:2.3.0"}}
+    got = log_report.cp_versions({"kafka_versions": ["8.1.4-ce"]}, [{"environment": {"components": comps}}])
+    check("CP 8.1.4 only", got == ["8.1.4"], got)
+
+
+def test_short_message_level_first():
+    """[LEVEL] timestamp [thread] logger method - message (log4j2): the message; the usual layouts unchanged"""
+    got = log_report.short_message("[ERROR] 2026-10-09 03:01:46,058 [MultiLicenseBrokerHandler RUNNING] "
+                                   "io.confluent.telemetry.events.exporter.http.HttpExporter emit - app=kafka failed")
+    check("level first", got == "app=kafka failed", got)
+    got = log_report.short_message("[2026-11-02 20:18:21,286] ERROR [etb|task-0] Connection to node 2 failed (org.apache.kafka.clients.NetworkClient:941)")
+    check("usual layout", got == "Connection to node 2 failed", got)
+    check("plural", (log_report.plural(1, "error"), log_report.plural(1234, "error")) == ("1 error", "1,234 errors"))
+
+
 def test_task_workers():
     """🖥️ the task runs per worker (rotated files are one worker, shown by their folder), and 🎯 a connector whose errors
     all come from one worker while its tasks also ran elsewhere"""

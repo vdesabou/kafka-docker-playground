@@ -490,8 +490,16 @@ def short_message(message: str) -> str:
     j = re.match(r'^\{.*?"(?:message|msg)"\s*:\s*"((?:[^"\\]|\\.)*)"', m)
     if j:
         m = j.group(1).replace('\\"', '"')
+    # the level first, in brackets ("[ERROR] 2026-10-09 03:01:46,058 [thread] io.confluent.x.HttpExporter emit - msg", a
+    # log4j2 layout): the level, the timestamp, the [thread] and the "logger method - " before the message
+    lvl_first = re.match(r"^\[(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)\]\s+(?=\[?\d{4}-\d{2}-\d{2}[ T])", m)
+    if lvl_first:
+        m = m[lvl_first.end():]
     # (UTC timestamps end with Z: "2026-11-05T16:30:02.123456Z ERROR …" of the tracing logs of the Rust client)
     m = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[ T][\d:,.]*(?:Z|[+-]\d\d:?\d\d)?\]?\s*", "", m)
+    if lvl_first:
+        m = re.sub(r"^\[[^\]|]*\]\s*", "", m)
+        m = re.sub(r"^[a-z][\w$]*(?:\.[\w$]+)+(?:\s+[\w$<>]+)?\s+-\s+", "", m)
     m = re.sub(r"^(\[[^]]*\]\s*)?(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)\b:?\s*", "", m)
     # librdkafka (C/C++, Python, Go, .NET, JavaScript clients): "%3|1793896102.923|FAIL|rdkafka#producer-1| [thrd:…]: msg"
     # -> "FAIL [rdkafka#producer-1] msg"; .NET console logger: "fail: Program[0] msg" -> "msg"
@@ -3186,12 +3194,20 @@ def findings_severity_tiles(findings: List[dict]) -> List[str]:
     return tiles
 
 
+C3_IMAGE_RE = re.compile(r"(?:^|/)cp-enterprise-(?:control-center-next-gen|prometheus|alertmanager)(?::|@|$)|next-gen")
+
+
 def cp_versions(s: dict, bundles: List[dict]) -> List[str]:
     """the Confluent Platform versions of the input: logged at startup (x.y.z-ce / -ccs), the images of a CFK bundle"""
     cp = [re.sub(r"-(ce|ccs)$", "", v) for v in s.get("kafka_versions") or [] if re.search(r"-(ce|ccs)$", v)]
     for b in bundles:
-        for comp in ((b.get("environment") or {}).get("components") or {}).values():
-            m = re.search(r"(?:^|/)cp-[\w-]+:(\d+\.\d+\.\d+)", (comp or {}).get("image") or "") if isinstance(comp, dict) else None
+        for name, comp in ((b.get("environment") or {}).get("components") or {}).items():
+            image = (comp or {}).get("image") or "" if isinstance(comp, dict) else ""
+            # Control Center (next-gen) and its Prometheus / Alertmanager have their own versions (2.3.0): not the CP
+            # version (as is_c3_next_gen of cfk-analysis/environment.py)
+            if C3_IMAGE_RE.search(image) or str(name).endswith("nextgen"):
+                continue
+            m = re.search(r"(?:^|/)cp-[\w-]+:(\d+\.\d+\.\d+)", image)
             if m:
                 cp.append(m.group(1))
     return list(OrderedDict((v, True) for v in cp))
@@ -5565,6 +5581,12 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
 # 📖 the story of the logs, right under the header: logs start → first error → peak → main cause → connectors hit → end,
 # each step a link to its section, over an area sparkline of the errors of the whole period (the peak marked)
 STORY_BINS = 96
+STORY_STILL_MIN = 5
+
+
+def plural(n: int, word: str) -> str:
+    """1 error, 2 errors, 1,234 warnings"""
+    return f"{n:,} {word}{'' if n == 1 else 's'}"
 
 STORY_CSS = """<style>
 .story{position:relative;margin:0 0 18px;padding:16px 18px 12px;border-radius:16px;background:linear-gradient(135deg,#f8fafc,#eef2ff);
@@ -5651,7 +5673,7 @@ def story_html(res: dict, levels: str) -> str:
              "#incident-timeline", title=f"the first {what} of the logs: {first.get('text') or ''}")
     width = span / STORY_BINS
     share = 100 * peak / max(1, sum(bins))
-    step("📈", "#ef4444", "Peak", f"{peak:,} {what}s", f"in {human_duration(int(round(width / 60)) * 60)} around {at(t0 + peak_i * width)}, {share:.0f}% of all",
+    step("📈", "#ef4444", "Peak", plural(peak, what), f"in {human_duration(int(round(width / 60)) * 60)} around {at(t0 + peak_i * width)}, {share:.0f}% of all",
          "#" + TIME_CHART_ID, hot=True, title=f"the busiest {human_duration(int(width))} of the logs: zoom on it in 📈 Occurrences over time")
     views = sorted(((f.get("_view") or {}) for f in res.get("findings") or []), key=lambda v: -v.get("occurrences", 0))
     main = next((v for v in views if v.get("title") and not v["title"].startswith("🌳")), None)
@@ -5669,14 +5691,17 @@ def story_html(res: dict, levels: str) -> str:
     # the end of the logs: still failing at a tenth of the average rate or more, fading out below, stopped without any
     n_tail = max(1, STORY_BINS // 24)
     tail = sum(bins[-n_tail:])
-    tail_text = f"{tail:,} {what}s in the last {human_duration(int(round(width * n_tail / 60)) * 60)}"
-    if tail and tail / n_tail >= 0.1 * sum(bins) / STORY_BINS:
+    tail_text = f"{plural(tail, what)} in the last {human_duration(int(round(width * n_tail / 60)) * 60)}"
+    # still failing: STORY_STILL_MIN errors at least at the end (1 error in a quiet log is not an ongoing failure), at a
+    # tenth of the average rate or more
+    if tail >= STORY_STILL_MIN and tail / n_tail >= 0.1 * sum(bins) / STORY_BINS:
         step("🔥", "#dc2626", "At the end", "still failing", tail_text, hot=True,
              title="the errors go on at the end of the logs: the issue was not over when they were collected")
         end_color = "#dc2626"
     elif tail:
-        step("📉", "#f59e0b", "At the end", "fading out", tail_text,
-             title="a few errors at the end of the logs, far below their average rate: mostly over, not entirely")
+        step("📉", "#f59e0b", "At the end", "fading out" if tail >= STORY_STILL_MIN else "a few left", tail_text,
+             title="a few errors at the end of the logs, far below their average rate or too few to call it a failure "
+                   "that goes on: mostly over, not entirely")
         end_color = "#f59e0b"
     else:
         last = lifecycle_time(s.get("last_timestamp"))

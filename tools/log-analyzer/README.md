@@ -156,8 +156,9 @@ versions). The header (`HEADER_CSS` and `kdp_brand()` of `report_html.py`, share
 kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report link to the deep dive page
 (`ANALYZE_LOGS_DOC`); its gradient follows the verdict of the status pill: red with ERROR/FATAL, amber with WARN only,
 green without error. Right under it, 📖 What happened (`story_html()`): logs start → first error → peak (the busiest of
-`STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing at a
-tenth of the average rate or more, 📉 fading out, ✅ stopped), each step a link to its section, over an area sparkline
+`STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing with
+`STORY_STILL_MIN` errors or more at a tenth of the average rate or more, 📉 fading out below it, a few left under
+`STORY_STILL_MIN`, ✅ stopped), each step a link to its section, over an area sparkline
 (square-root scale). The 🔁 Occurrences tile has the same sparkline (`spark_svg()` of `report_html.py`); the numbers of
 the tiles get thousands separators and count up when the page opens (`KPI_JS`, not on the 🔄 progress page).
 🔎 Findings opens with 🏆 Top causes (`findings_overview_html()`): a ring with the share of the occurrences of the first
