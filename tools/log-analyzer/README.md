@@ -166,7 +166,11 @@ their card). A record can match several known causes: the shares do not add up t
 🔌 Connectors opens with 🟥 Every connector at a glance (`connectors_heatmap_html()`, 6 connectors or more): a cell per
 connector grouped by plugin class (the group with the most errors first), coloured by its ERROR/FATAL on a log scale
 (`heat_color()`), amber with warnings only, green without, a dot for a killed task; hover for its name and counts, a click
-sets the connector filter (again: back to all), the cell of the connector picked is ringed. Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
+sets the connector filter (again: back to all), the cell of the connector picked is ringed.
+Polish shared by every section (`KPI_LINKS`, `SECTION_TOGGLE`): rounder cards with a hairline border and a shadow that
+lifts on hover, a gradient accent under each title, the content of a section fading in when it is unfolded
+(`sec-opening`), the count of a section title (🔌 Connectors (485)) as a badge in its quick link and in 🧭 Sections, and a
+thin bar at the top of the window showing how far down the report you are (`pg-progress`). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
 The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
 tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅
