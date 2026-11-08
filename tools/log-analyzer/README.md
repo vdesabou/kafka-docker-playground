@@ -57,7 +57,10 @@ only, 20 MB or more), `page` writes the 🔄 progress page opened in the browser
 `report_html.py`: a bar for the file being read, as in the terminal, one for the whole input, where an archive counts for its
 content once extracted, and tiles; reloaded every 2 s; `log_report.py` writes the report next to it then renames it), `size` and `human` give the size of the
 input. The page and the overall progress come from `PG_PROGRESS_*` variables exported by `analyze logs`; the
-`Progress` class is also used by `json_log_export.py` while it converts a large file.
+`Progress` class is also used by `json_log_export.py` while it converts a large file. While the digests run in the background (4 at a
+time, no bar of their own), `progress_digests` of `analyze logs` writes the page as they end: the files digested out of
+those queued, and the whole input without the files queued but not digested yet. The ⏱️ Elapsed tile ticks from
+`PG_PROGRESS_STARTED` as soon as the page loads (not the time of the last step written).
 
 ## Overview of logs without findings
 
@@ -149,8 +152,10 @@ logs, or the image tags of the CRs of a CFK bundle (`cp-server:8.1.0`); 🏷️ 
 🟠 High, 🟡 Medium, 🟢 Low (`findings_severity_tiles()`) count the cards of 🔎 Findings at each severity, the ☸️ CFK ones
 included: a click keeps only those cards (the severity chips of the section follow) and goes there, again shows them all.
 The tiles of the CFK bundles join the same row (`cfk_kpi_tiles()`: ☸️ CFK issues, clickable, the Kubernetes and CFK
-versions). The header has a 🐳 kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report link to
-the deep dive page (`ANALYZE_LOGS_DOC`). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
+versions). The header (`HEADER_CSS` and `kdp_brand()` of `report_html.py`, shared with the 🔄 progress page) has a 🐳
+kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report link to the deep dive page
+(`ANALYZE_LOGS_DOC`); its gradient follows the verdict of the status pill: red with ERROR/FATAL, amber with WARN only,
+green without error. Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
 The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
 tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅
@@ -219,9 +224,19 @@ cooperative protocol) of each file. A worker is a file without its rotation suff
 `connect.log.2026-11-06-10`, `.gz`), shown by its folder when the folders tell the workers apart. With 2 workers or more:
 `tasks[]` (the runs of each task: worker, from, to, starts), `connectors[]` (the workers of its tasks with their starts
 and the ERROR / WARN of the connector in that worker's logs) and `only_on` when the errors (`ONLY_ON_MIN_ERRORS` = 3 or
-more) all come from one worker while its tasks also ran on others. Shown in the summary, the 🖥️ section of the HTML
-report (follows the connector filter, `pgLifecycle()`), the 🔌 card, the summary for a ticket and `.task_workers` of
-`--json`.
+more) all come from one worker while a task of the connector ran on another worker during those errors, its logs covering
+that time (`clean_overlap`: an incident that ended before the tasks moved, or the logs of a worker that start later, is not
+a difference of the host); `start` / `end` the period of the swimlanes (first
+task start, last line of the logs of the workers). Shown in the summary, the 🖥️ section of the HTML report, the 🔌 card,
+the summary for a ticket and `.task_workers` of `--json`.
+
+The 🖥️ section (`task_workers_html()`): a tile per worker (tasks it runs at the end of the logs, tasks ran, starts,
+errors and warnings of the connectors whose tasks moved, 🎯 count), one 🎯 block per worker the errors come from (the
+advice once, a chip per connector with its errors, the first `TW_TOP_ONLY` shown), then a row per connector (the first
+`TW_TOP`, ▾ Show all for the rest): a lane per task (`TW_LANES` at most) with a segment per run coloured by its worker
+(`TW_COLORS`, hover for the period and starts), and the errors and warnings of the connector on each worker. It follows
+the connector filter (`pgLifecycle()`: the rows and chips of the other connectors are hidden, a picked one shows even
+past the first ones).
 
 ## Known bugs fixed in a later version (🩹)
 

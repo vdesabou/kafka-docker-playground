@@ -11,6 +11,9 @@ examples nor the icons: the report points to the icons on GitHub, like the websi
 
   classes  short class name -> icon, when most of the examples of that class have the same icon (S3SinkConnector: s3.png)
   jdbc     scheme of a jdbc: connection.url -> icon, for the classes shared by many databases (JdbcSinkConnector…)
+
+A JDBC class without a majority icon (JdbcSinkConnector: oracle, mysql, postgresql… examples) gets the generic jdbc.png,
+replaced by the icon of the database when the logs show its connection.url.
 """
 import collections
 import glob
@@ -23,7 +26,9 @@ from typing import Optional
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 MAP_FILE = os.path.join(HERE, "connector_icons.json")
-ICON_URL = "https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/"
+# raw.githubusercontent.com directly: github.com/<repo>/raw/ is only a redirect to it (and answered 504 on 2026-11-08)
+ICON_URL = "https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/images/icons/"
+JDBC_ICON = "jdbc.png"
 
 _MAP = None
 
@@ -49,7 +54,11 @@ def icon_url(cls: Optional[str], url: Optional[str] = None) -> Optional[str]:
     """the URL of the icon of a connector (its class, short or full, and its connection.url), None when unknown"""
     m = _load()
     scheme = jdbc_scheme(url)
-    name = (m["jdbc"].get(scheme) if scheme else None) or m["classes"].get((cls or "").split(".")[-1])
+    short = (cls or "").split(".")[-1]
+    name = (m["jdbc"].get(scheme) if scheme else None) or m["classes"].get(short)
+    # a JDBC class unknown to the examples (another vendor's, a newer one): the generic JDBC icon
+    if not name and "jdbc" in short.lower():
+        name = JDBC_ICON
     return ICON_URL + name if name else None
 
 
@@ -80,6 +89,8 @@ def build() -> dict:
     for cls, counter in sorted(classes.items()):
         if majority(counter):
             out["classes"][cls] = majority(counter)
+        elif "jdbc" in cls.lower():
+            out["classes"][cls] = JDBC_ICON
     for scheme, counter in sorted(schemes.items()):
         if majority(counter):
             out["jdbc"][scheme] = majority(counter)

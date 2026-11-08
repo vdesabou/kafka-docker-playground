@@ -425,8 +425,10 @@ function analyze_logs_digest () {
         while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge "$log_parallelism" ]
         do
             wait -n 2> /dev/null || true
+            progress_digests
         done
         digest_one "$label" "$path" "$origin" "$gz" "$part" "" &
+        progress_digests "$label"
     else
         digest_one "$label" "$path" "$origin" "$gz" "$part" 1
         report_digest "$part"
@@ -493,9 +495,43 @@ function report_digest () {
     echo ""
 }
 
+# the 🔄 progress page while the digests run in the background (they have no progress bar of their own): the files
+# digested out of those queued, and the whole input bar without the files queued but not digested yet (analyze_logs_path
+# counts a file as done once its digest is started). At most every 2 s, or $2=force. $1: the file just started
+progress_digests_last=-1
+progress_digests_current=""
+function progress_digests () {
+    [ -n "${PG_PROGRESS_HTML:-}" ] && [ "$log_parallelism" -gt 1 ] || return 0
+    [ -n "${1:-}" ] && progress_digests_current="$1"
+    [ "${2:-}" == "force" ] || [ $((SECONDS - progress_digests_last)) -ge 2 ] || return 0
+    progress_digests_last=$SECONDS
+    local i finished=0 pending_bytes=0 pending_files=0 label input_bytes
+    for (( i = 1; i <= nb_digests; i++ ))
+    do
+        if [ -f "$digest_parts/$i.rc" ]
+        then
+            finished=$((finished+1))
+        else
+            IFS=$'\t' read -r label input_bytes < "$digest_parts/$i.meta"
+            pending_bytes=$((pending_bytes+${input_bytes:-0}))
+            pending_files=$((pending_files+1))
+        fi
+    done
+    local done_bytes=$(( ${PG_PROGRESS_BYTES:-0} - pending_bytes )) done_files=$(( ${PG_PROGRESS_DONE:-0} - pending_files ))
+    [ $done_bytes -ge 0 ] || done_bytes=0
+    [ $done_files -ge 0 ] || done_files=0
+    PG_PROGRESS_BYTES=$done_bytes PG_PROGRESS_DONE=$done_files progress_step "🔎 ERROR/FATAL digest: $finished of $nb_digests file(s) done, $log_parallelism at a time${progress_digests_current:+ (last started: $progress_digests_current)}"
+}
+
 # waits for the digests running in the background and merges them, in the order of the input
 function collect_digests () {
+    while [ -n "$(jobs -rp)" ]
+    do
+        wait -n 2> /dev/null || true
+        progress_digests
+    done
     wait
+    [ "$nb_digests" -gt 0 ] && progress_digests "" force
     local i
     for (( i = 1; i <= nb_digests; i++ ))
     do

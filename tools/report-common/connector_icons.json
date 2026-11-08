@@ -98,6 +98,8 @@
   "InfluxDBSinkConnector": "influxdb.svg",
   "InfluxdbSourceConnector": "influxdb.svg",
   "JMSSourceConnector": "lensesio.png",
+  "JdbcSinkConnector": "jdbc.png",
+  "JdbcSourceConnector": "jdbc.png",
   "JiraSource": "jira.png",
   "JiraSourceConnector": "jira.png",
   "KinesisSource": "kinesis.svg",

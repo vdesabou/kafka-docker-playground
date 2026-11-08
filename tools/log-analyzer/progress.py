@@ -71,9 +71,7 @@ BAR_CSS = """
 @keyframes pg-shine{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 @keyframes pg-spin{to{transform:rotate(360deg)}}
 @keyframes pg-glow{0%,100%{filter:drop-shadow(0 0 4px rgba(56,189,248,.45))}50%{filter:drop-shadow(0 0 12px rgba(139,92,246,.75))}}
-.header{background:linear-gradient(120deg,#0f172a,#1e3a8a,#4f46e5,#0ea5e9,#1e3a8a);background-size:300% 300%;animation:pg-shift 20s ease infinite;animation-delay:var(--t);position:relative;overflow:hidden}
-.header h1{display:flex;align-items:center;gap:12px}
-.live{display:inline-flex;align-items:center;gap:7px;font-size:.68rem;font-weight:700;letter-spacing:.14em;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:3px 10px 3px 8px;border-radius:999px;backdrop-filter:blur(6px)}
+.live{display:inline-flex;align-items:center;gap:7px;letter-spacing:.14em}
 .live i{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pg-pulse 2s infinite;animation-delay:var(--t)}
 .hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;background:#fff;border-radius:16px;padding:24px 28px;margin-bottom:22px;box-shadow:0 10px 30px -12px rgba(30,58,138,.25);border:1px solid #e2e8f0;position:relative;overflow:hidden}
 .hero:before{content:"";position:absolute;inset:-40% -10% auto auto;width:420px;height:420px;background:radial-gradient(circle,rgba(99,102,241,.16),transparent 65%);pointer-events:none}
@@ -152,10 +150,12 @@ document.addEventListener("DOMContentLoaded", function () {
     try { store && store.setItem(key, pct); } catch (e) {}
   });
   var tile = document.querySelector("[data-started] .kpi-value"), started = parseFloat((tile && tile.parentNode.dataset.started) || 0);
-  if (tile && started) setInterval(function () {
+  // right away: the page reloads every 2 s, its elapsed time is the one of the last step written
+  var tick = function () {
     var s = Math.max(0, Math.floor(Date.now() / 1000 - started));
     tile.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
-  }, 1000);
+  };
+  if (tile && started) { tick(); setInterval(tick, 1000); }
 });
 </script>"""
 
@@ -267,8 +267,11 @@ def write_page(step: str, read_bytes: int = 0, file_size=None, speed: float = 0)
                 + rh.kpis_html(cards)
                 + (f"<div class='bars'>{''.join(bars)}</div>" if bars else "")
                 + f"<p class='note'><i></i>{e(note)}</p>")
-        page = rh.page(f"🔄 {title}", "🔥 Log Analysis in progress <span class='live'><i></i>LIVE</span>", [e(title)], body,
-                       "playground analyze logs")
+        # the header of the report it becomes (HEADER_CSS of report_html): 🐳 badge, title, LIVE where the status goes
+        what = title[len("playground analyze logs "):] if title.startswith("playground analyze logs ") else title
+        h1 = (f"{rh.kdp_brand()}<span class='lr-title'>🔥 Log Analysis in progress</span>"
+              f"<span class='lr-status live'><i></i>LIVE</span><span class='lr-sub'>📄 {e(what)}</span>" + rh.HEADER_CSS)
+        page = rh.page(f"🔄 {title}", h1, [], body, "playground analyze logs")
         style = f"<style>{BAR_CSS}" + rh.dark(DARK_BAR_CSS) + "</style>"
         # reloaded every 2 s; the stylesheet of the page after the shared one
         page = page.replace("<head>", "<head><meta http-equiv='refresh' content='2'>", 1).replace("</head>", style + PAGE_SCRIPT + "</head>", 1)

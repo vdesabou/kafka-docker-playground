@@ -544,6 +544,55 @@ def svg_hbars(rows: Sequence[Tuple[str, float, str]], fmt: Optional[Callable[[fl
     return "".join(out)
 
 
+KDP_SITE = "https://kafka-docker-playground.io/"
+
+# the header of the log report (page() of report_html is shared by every report: styled only when it holds .lr-title)
+HEADER_CSS = """<style>
+.header:has(.lr-title){position:relative;overflow:hidden;border-radius:18px;padding:26px 32px 22px;
+background:radial-gradient(1200px 300px at 0% 0%,rgba(56,189,248,.35),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(236,72,153,.35),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#312e81 45%,#6d28d9 75%,#a21caf 100%);box-shadow:0 10px 30px rgba(49,46,129,.35)}
+/* the verdict tints the header: red with ERROR/FATAL, amber with WARN only, green without error (the progress page keeps the default) */
+.header:has(.lr-status.danger){background:radial-gradient(1200px 300px at 0% 0%,rgba(251,113,133,.30),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(249,115,22,.40),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#4c0519 45%,#9f1239 75%,#c2410c 100%);box-shadow:0 10px 30px rgba(159,18,57,.35)}
+.header:has(.lr-status.warn){background:radial-gradient(1200px 300px at 0% 0%,rgba(253,224,71,.22),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(251,191,36,.35),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#422006 45%,#92400e 75%,#d97706 100%);box-shadow:0 10px 30px rgba(146,64,14,.35)}
+.header:has(.lr-status.ok){background:radial-gradient(1200px 300px at 0% 0%,rgba(110,231,183,.25),transparent 60%),
+radial-gradient(800px 260px at 100% 100%,rgba(45,212,191,.35),transparent 60%),
+linear-gradient(120deg,#0f172a 0%,#064e3b 45%,#047857 75%,#0d9488 100%);box-shadow:0 10px 30px rgba(4,120,87,.35)}
+.header:has(.lr-title) h1{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 18px;margin:0 0 12px}
+.lr-title{font-size:1.75rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.lr-plus{opacity:.55;margin:0 4px}
+.lr-sub{grid-column:1 / -1;font-size:.86rem;font-weight:500;opacity:.82}
+.lr-status{justify-self:end;font-size:.85rem;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap;
+background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(4px)}
+.lr-status.danger{background:rgba(239,68,68,.28);border-color:rgba(254,202,202,.6)}
+.lr-status.warn{background:rgba(245,158,11,.28);border-color:rgba(253,230,138,.6)}
+.lr-status.ok{background:rgba(34,197,94,.28);border-color:rgba(187,247,208,.6)}
+.header:has(.lr-title) .header-meta{display:flex;flex-wrap:wrap;gap:8px}
+.header:has(.lr-title) .header-meta span{font-size:.78rem;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.12);
+border:1px solid rgba(255,255,255,.2);margin:0}
+.header:has(.lr-title) .header-meta a{color:#fff}
+.lr-brand{grid-column:1 / -1;justify-self:start;display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;
+letter-spacing:.04em;color:#fff;text-decoration:none;padding:3px 12px 3px 6px;border-radius:999px;background:rgba(255,255,255,.12);
+border:1px solid rgba(255,255,255,.22);transition:background .15s}
+.lr-brand:hover{background:rgba(255,255,255,.22)}
+.lr-whale{font-size:1.25rem;line-height:1;display:inline-block;animation:lr-swim 4s ease-in-out infinite}
+@keyframes lr-swim{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-6deg)}}
+@media (prefers-reduced-motion:reduce){.lr-whale{animation:none}}
+.header:has(.lr-title) .header-meta span:has(.lr-howto){background:rgba(56,189,248,.22);border-color:rgba(125,211,252,.55)}
+.lr-howto{text-decoration:none;font-weight:600}.lr-howto:hover{text-decoration:underline}
+</style>"""
+
+
+def kdp_brand() -> str:
+    """🐳 the kafka-docker-playground badge of the header (with HEADER_CSS): where the report comes from"""
+    return (f"<a class='lr-brand' href='{KDP_SITE}' title='kafka-docker-playground: the playground CLI that generated this report'>"
+            "<span class='lr-whale'>🐳</span> kafka-docker-playground</a>")
+
+
 def page(title: str, h1: str, meta: List[str], body: str, footer: str) -> str:
     """meta: HTML snippets of the header line (escape them with e())"""
     meta = meta + [f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]

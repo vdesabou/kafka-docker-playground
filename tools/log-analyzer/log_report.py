@@ -33,7 +33,7 @@ from urllib.parse import quote
 # no __pycache__ left in the repository
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
-from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
+from report_html import (HEADER_CSS, kdp_brand, SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, time_chart, verdict_html, dark, wall_epoch)
 import fixed_bugs  # noqa: E402
 import support_dates  # noqa: E402
@@ -1470,15 +1470,30 @@ def task_workers(res: dict, files: List[dict]) -> dict:
             if runs:
                 runs[-1]["to"] = t
             runs.append({"worker": w, "from": t, "to": None, "starts": 1, "last_start": t})
+    def iso(t: Optional[str]) -> Optional[str]:
+        return t.replace(" ", "T")[:19] if t else None
+
     errors: Dict[Tuple[str, str], Counter] = {}
+    # the period of the ERROR/FATAL of a connector in the logs of a worker, and the period the logs of each worker cover
+    windows: Dict[Tuple[str, str], List[str]] = {}
+    cover: Dict[str, List[str]] = {}
     for f in files:
         w = folders.get(worker_of(f["label"]), worker_of(f["label"]))
+        a, b = iso(f.get("log_first_ts")), iso(f.get("log_last_ts"))
+        if a and b:
+            c = cover.setdefault(w, [a, b])
+            c[0], c[1] = min(c[0], a), max(c[1], b)
         for r in f["records"]:
             if r.get("connector"):
                 errors.setdefault((r["connector"], w), Counter())[r["level"]] += r["count"]
+                a, b = iso(r.get("first_ts")), iso(r.get("last_ts") or r.get("first_ts"))
+                if r["level"] in ("ERROR", "FATAL") and a and b:
+                    x = windows.setdefault((r["connector"], w), [a, b])
+                    x[0], x[1] = min(x[0], a), max(x[1], b)
+    end = max([v[1] for v in cover.values()] + [starts[-1][0]])
     conns: "OrderedDict[str, dict]" = OrderedDict()
     for entry in tasks.values():
-        c = conns.setdefault(entry["connector"], {"connector": entry["connector"], "workers": OrderedDict(), "only_on": None})
+        c = conns.setdefault(entry["connector"], {"connector": entry["connector"], "workers": OrderedDict(), "only_on": None, "clean_overlap": []})
         for run in entry["runs"]:
             x = c["workers"].setdefault(run["worker"], {"worker": run["worker"], "task_starts": 0, "errors": 0, "warnings": 0})
             x["task_starts"] += run["starts"]
@@ -1488,7 +1503,26 @@ def task_workers(res: dict, files: List[dict]) -> dict:
             x["errors"], x["warnings"] = lv["FATAL"] + lv["ERROR"], lv["WARN"]
         with_errors = [x for x in c["workers"].values() if x["errors"]]
         if len(c["workers"]) > 1 and len(with_errors) == 1 and with_errors[0]["errors"] >= ONLY_ON_MIN_ERRORS:
-            c["only_on"] = with_errors[0]["worker"]
+            # 🎯 only when another worker ran a task of the connector WHILE the errors happened on this one, and its logs
+            # cover that time: errors before the tasks moved there (an incident that ended, logs that start later) say
+            # nothing of the host
+            bad = with_errors[0]["worker"]
+            win = windows.get((c["connector"], bad))
+            clean = []
+            for t in tasks.values():
+                if t["connector"] != c["connector"] or not win:
+                    continue
+                for run in t["runs"]:
+                    v = run["worker"]
+                    if v == bad or v not in cover:
+                        continue
+                    a = max(run["from"], win[0], cover[v][0])
+                    b = min(run["to"] or end, win[1], cover[v][1])
+                    if a < b:
+                        clean.append({"worker": v, "task": t["task"], "from": a, "to": b})
+            if clean:
+                c["only_on"] = bad
+                c["clean_overlap"] = clean
         c["workers"] = list(c["workers"].values())
     cards = {c["connector"]: c for c in res["connectors"]}
     for c in conns.values():
@@ -1497,15 +1531,18 @@ def task_workers(res: dict, files: List[dict]) -> dict:
             if c["only_on"]:
                 cards[c["connector"]]["only_on"] = c["only_on"]
     out = sorted(conns.values(), key=lambda c: (c["only_on"] is None, -sum(x["errors"] for x in c["workers"]), c["connector"]))
-    return {"workers": workers, "tasks": list(tasks.values()), "connectors": out}
+    # the period of the swimlanes: the first task start to the last line of the logs of the workers
+    return {"workers": workers, "start": starts[0][0], "end": end, "tasks": list(tasks.values()), "connectors": out}
 
 
 def only_on_text(c: dict) -> str:
-    others = [x["worker"] for x in c["workers"] if x["worker"] != c["only_on"]]
+    clean = c.get("clean_overlap") or []
+    others = list(OrderedDict.fromkeys(x["worker"] for x in clean))
     errs = next(x["errors"] for x in c["workers"] if x["worker"] == c["only_on"])
-    return (f"🎯 {c['connector']}: its {errs:,} ERROR/FATAL all come from {c['only_on']}, while its tasks also ran on "
-            f"{', '.join(others[:3])}{' …' if len(others) > 3 else ''} without error: compare that host (DNS, truststore, "
-            "plugin path, network, worker config)")
+    when = f" (e.g. {clean[0]['task']} on {clean[0]['worker']} {clean[0]['from'].replace('T', ' ')} → {clean[0]['to'].replace('T', ' ')})" if clean else ""
+    return (f"🎯 {c['connector']}: its {errs:,} ERROR/FATAL all come from {c['only_on']}, while its tasks ran on "
+            f"{', '.join(others[:3])}{' …' if len(others) > 3 else ''} at the same time without error{when}: compare that host "
+            "(DNS, truststore, plugin path, network, worker config)")
 
 
 def task_workers_text(tw: Optional[dict], top: int = 6) -> List[str]:
@@ -1523,28 +1560,209 @@ def task_workers_text(tw: Optional[dict], top: int = 6) -> List[str]:
     return out
 
 
+# the colours of the workers in 🖥️ Tasks by worker (cycled past 8 workers), the rows shown before ▾ Show all
+TW_COLORS = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#14b8a6", "#f97316"]
+TW_TOP = 25
+TW_TOP_ONLY = 12
+TW_LANES = 12
+
+TASK_WORKERS_CSS = """<style>
+.tw-card .tw-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:6px 0 14px}
+.tw-tile{position:relative;border-radius:12px;padding:12px 14px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-top:4px solid var(--tw);overflow:hidden}
+.tw-tile.tw-suspect{border-color:#fca5a5;border-top-color:var(--tw);box-shadow:0 0 0 1px #fca5a5,0 6px 18px -8px rgba(220,38,38,.45)}
+.tw-tile-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem;font-weight:700;overflow-wrap:anywhere;color:#1e293b}
+.tw-tile-big{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;margin-top:4px;color:#0f172a}
+.tw-tile-big small{font-size:.72rem;font-weight:500;color:#64748b;margin-left:4px}
+.tw-tile-stats{font-size:.74rem;color:#64748b;margin-top:2px}
+.tw-tile-err{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tw-pill{display:inline-block;cursor:help;font-size:.72rem;font-weight:700;font-variant-numeric:tabular-nums;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#64748b;white-space:nowrap}
+.tw-pill.err{background:#fee2e2;color:#b91c1c}.tw-pill.warn{background:#fef3c7;color:#b45309}.tw-pill.ok{background:#dcfce7;color:#15803d}
+.tw-pill.target{background:linear-gradient(90deg,#dc2626,#f97316);color:#fff}
+.tw-share{height:4px;border-radius:999px;background:#e2e8f0;margin-top:9px;overflow:hidden}
+.tw-share i{display:block;height:100%;background:var(--tw)}
+.tw-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--tw);margin-right:5px;vertical-align:baseline;flex:none}
+.tw-group{border-radius:12px;padding:10px 14px 12px;margin:0 0 12px;background:linear-gradient(90deg,#fef2f2,#fff7ed);border:1px solid #fecaca;border-left:4px solid #dc2626}
+.tw-group-head{font-size:.86rem;color:#7f1d1d;line-height:1.5}
+.tw-group-head .tw-hint{display:block;font-size:.76rem;color:#9a3412;margin-top:2px}
+.tw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.tw-chip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:3px 9px 5px;border-radius:8px;background:#fff;border:1px solid #fecaca;overflow:hidden}
+.tw-chip .fi-conn{font-size:.74rem}
+.tw-chip b{font-size:.74rem;color:#b91c1c;font-variant-numeric:tabular-nums}
+.tw-chip i{position:absolute;left:0;bottom:0;height:2px;background:#dc2626}
+.tw-table{border-collapse:separate;border-spacing:0 4px;margin-top:-4px;width:100%}
+.tw-table th{background:none;border:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:4px 10px;vertical-align:bottom}
+.tw-table td{border:0;padding:6px 10px;vertical-align:middle;background:#f8fafc}
+.tw-table tr.tw-row td:first-child{border-radius:10px 0 0 10px;border-left:4px solid #cbd5e1;width:30%}
+.tw-table tr.tw-row.tw-suspect td:first-child{border-left-color:#dc2626}
+.tw-table tr.tw-row td:last-child{border-radius:0 10px 10px 0;width:1%}
+.tw-table tr.tw-row:hover td{background:#eef2ff}
+.tw-table .fi-conn{overflow-wrap:anywhere}
+.tw-sub{font-size:.7rem;color:#64748b;margin-top:3px}
+.tw-axis{display:flex;justify-content:space-between;gap:8px;font-weight:400;text-transform:none;letter-spacing:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.66rem;color:#94a3b8;margin-top:3px}
+.tw-legend{display:flex;flex-wrap:wrap;gap:10px;font-weight:600;text-transform:none;letter-spacing:0;font-size:.7rem;color:#475569}
+.tw-lanes{display:flex;flex-direction:column;gap:3px;min-width:220px}
+.tw-lane{display:flex;align-items:center;gap:6px}
+.tw-lane>span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.6rem;color:#94a3b8;width:24px;text-align:right;flex:none}
+.tw-track{position:relative;flex:1;height:7px;border-radius:999px;background:#e2e8f0}
+.tw-track i{position:absolute;top:0;height:100%;border-radius:999px;background:var(--tw);min-width:3px;box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+.tw-track i:hover{filter:brightness(1.15);transform:scaleY(1.5)}
+.tw-ews{display:grid;grid-template-columns:minmax(70px,120px) 11.5em 11em 6.5em;font-size:.72rem;gap:5px 6px;align-items:center;justify-items:start}
+.tw-ew{display:contents;font-size:.72rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#334155}
+.tw-ews>*>*{font-size:.72rem}.tw-ews .tw-pill{white-space:nowrap}
+.tw-ew .tw-w{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600}
+.tw-legend{margin-top:6px}
+.tw-toggle{margin-top:8px;font:inherit;font-size:.78rem;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;cursor:pointer}
+.tw-toggle:hover{background:#e0e7ff}
+.tw-card:not(.tw-picked) .tw-block:not(.tw-all) .tw-more{display:none}
+.tw-card.tw-picked .tw-toggle{display:none}
+.tw-row[hidden],.tw-only[hidden],.tw-group[hidden]{display:none}
+</style>""" + "<style>" + dark("""
+.tw-tile{background:#0f172a;border-color:#273449}
+.tw-tile.tw-suspect{border-color:#7f1d1d;box-shadow:0 0 0 1px #7f1d1d,0 6px 18px -8px rgba(248,113,113,.5)}
+.tw-tile-name{color:#e2e8f0}.tw-tile-big{color:#f8fafc}.tw-tile-big small,.tw-tile-stats,.tw-sub{color:#94a3b8}
+.tw-pill{background:#273449;color:#94a3b8}.tw-pill.err{background:#450a0a;color:#fca5a5}.tw-pill.warn{background:#422006;color:#fcd34d}.tw-pill.ok{background:#052e16;color:#86efac}
+.tw-share,.tw-track{background:#273449}
+.tw-track i{box-shadow:0 0 0 1px rgba(15,23,42,.8)}
+.tw-group{background:linear-gradient(90deg,#2a1215,#1c1310);border-color:#7f1d1d;border-left-color:#ef4444}
+.tw-group-head{color:#fecaca}.tw-group-head .tw-hint{color:#fdba74}
+.tw-chip{background:#0f172a;border-color:#7f1d1d}.tw-chip b{color:#fca5a5}.tw-chip i{background:#ef4444}
+.tw-table th{color:#94a3b8}.tw-legend{color:#cbd5e1}
+.tw-table td{background:#0f172a}
+.tw-table tr.tw-row td:first-child{border-left-color:#334155}
+.tw-table tr.tw-row.tw-suspect td:first-child{border-left-color:#ef4444}
+.tw-table tr.tw-row:hover td{background:#1e1b4b}
+.tw-ew{color:#cbd5e1}
+.tw-toggle{background:#1e1b4b;border-color:#4338ca;color:#c7d2fe}.tw-toggle:hover{background:#312e81}
+""") + """</style><script>
+document.addEventListener("click", function (ev) {
+  const b = ev.target.closest && ev.target.closest(".tw-toggle");
+  if (!b) return;
+  const all = b.closest(".tw-block").classList.toggle("tw-all");
+  b.textContent = all ? "▴ Show fewer" : b.dataset.label;
+});
+</script>"""
+
+
 def task_workers_html(tw: Optional[dict]) -> str:
+    """🖥️ the tiles of the workers (tasks at the end of the logs, errors, 🎯), the connectors failing on one worker only
+    grouped by that worker, then a row per connector: a lane per task coloured by the worker that ran it, over time"""
     tasks = (tw or {}).get("tasks") or []
     if not tasks:
         return ""
-    notes = "".join(f"<p class='tw-only' data-conn='{e(c['connector'])}'>{e(only_on_text(c))}</p>" for c in tw["connectors"] if c["only_on"])
-    errs = {(c["connector"], x["worker"]): x for c in tw["connectors"] for x in c["workers"]}
-    rows = []
+    workers, conns = tw["workers"], tw["connectors"]
+    color = {w: TW_COLORS[i % len(TW_COLORS)] for i, w in enumerate(workers)}
+    times = [x for t in tasks for r in t["runs"] for x in (lifecycle_time(r["from"]), lifecycle_time(r["to"])) if x is not None]
+    times += [x for x in (lifecycle_time(tw.get("start")), lifecycle_time(tw.get("end"))) if x is not None]
+    t0, t1 = min(times), max(times)
+    span = (t1 - t0) or 1.0
+
+    def dot(w: str) -> str:
+        return f"<i class='tw-dot' style='--tw:{color.get(w, '#64748b')}'></i>"
+
+    def stamp(t: Optional[str]) -> str:
+        return t.replace("T", " ")[:19] if t else "end of the logs"
+
+    by_conn: Dict[str, List[dict]] = {}
     for t in tasks:
-        for i, run in enumerate(t["runs"]):
-            x = errs.get((t["connector"], run["worker"])) or {}
-            rows.append(f"<tr class='tw-row' data-conn='{e(t['connector'])}'><td class='mono'>{e(t['task']) if i == 0 else ''}</td>"
-                        f"<td class='mono'>{e(run['worker'])}</td><td class='mono'>{e(run['from'].replace('T', ' '))} → "
-                        f"{e(run['to'].replace('T', ' ')) if run['to'] else 'end of the logs'}</td><td class='num'>{run['starts']}</td>"
-                        f"<td class='num'>{x.get('errors', 0) or ''}</td><td class='num'>{x.get('warnings', 0) or ''}</td></tr>")
-    return ("<style>.tw-only{font-weight:600;color:#b91c1c}html[data-theme=dark] .tw-only{color:#fca5a5}tr.tw-row[hidden],p.tw-only[hidden]{display:none}</style>"
-            f"<div class='table-card'><h2>🖥️ Tasks by worker ({len(tw['workers'])} workers)</h2><p class='legend'>Which worker "
-            "ran each task, and when, from the \"Starting task\" INFO lines that the worker running it logs (the rotated files "
-            "of a worker are one worker). The errors and warnings are those of the connector in the logs of that worker. "
-            f"🎯 a connector whose errors ({ONLY_ON_MIN_ERRORS} or more) all come from one worker while its tasks also ran on "
-            "others: that host differs (DNS, truststore, plugin path, network, worker config).</p>" + notes
-            + "<table><tr><th>Task</th><th>Worker</th><th>Ran</th><th class='num'>Starts</th><th class='num'>Errors of the connector "
-            "on this worker</th><th class='num'>Warnings</th></tr>" + "".join(rows) + "</table></div>")
+        by_conn.setdefault(t["connector"], []).append(t)
+    total_errors = sum(x["errors"] for c in conns for x in c["workers"]) or 1
+
+    # the tiles: one per worker
+    tiles = []
+    for w in workers:
+        now = sum(1 for t in tasks if t["runs"][-1]["worker"] == w)
+        ran = sum(1 for t in tasks if any(r["worker"] == w for r in t["runs"]))
+        starts = sum(r["starts"] for t in tasks for r in t["runs"] if r["worker"] == w)
+        on = [x for c in conns for x in c["workers"] if x["worker"] == w]
+        errs, warns = sum(x["errors"] for x in on), sum(x["warnings"] for x in on)
+        only = sum(1 for c in conns if c["only_on"] == w)
+        pills = (f"<span class='tw-pill {'err' if errs else 'ok'}'>{errs:,} error(s)</span>"
+                 + (f"<span class='tw-pill warn'>{warns:,} warning(s)</span>" if warns else "")
+                 + (f"<span class='tw-pill target'>🎯 {only} connector(s) fail only here</span>" if only else ""))
+        tiles.append(f"<div class='tw-tile{' tw-suspect' if only else ''}' style='--tw:{color[w]}'>"
+                     f"<div class='tw-tile-name'>{dot(w)}{e(w)}</div>"
+                     f"<div class='tw-tile-big'>{now:,}<small>task(s) running at the end</small></div>"
+                     f"<div class='tw-tile-stats'>{ran:,} task(s) ran here · {starts:,} start(s) · {len(on):,} connector(s)</div>"
+                     f"<div class='tw-tile-err'>{pills}</div>"
+                     f"<div class='tw-share' title='{100 * errs / total_errors:.0f}% of the errors of the connectors whose tasks moved'>"
+                     f"<i style='width:{100 * errs / total_errors:.1f}%'></i></div></div>")
+
+    # 🎯 grouped by the worker the errors come from: the advice once, a chip per connector
+    groups: "OrderedDict[str, List[dict]]" = OrderedDict()
+    for c in conns:
+        if c["only_on"]:
+            groups.setdefault(c["only_on"], []).append(c)
+    blocks = []
+    for w, cs in sorted(groups.items(), key=lambda kv: -len(kv[1])):
+        errs = {c["connector"]: next(x["errors"] for x in c["workers"] if x["worker"] == w) for c in cs}
+        top = max(errs.values()) or 1
+        others = sorted({x["worker"] for c in cs for x in c["workers"] if x["worker"] != w})
+        chips = "".join(f"<span class='tw-chip tw-only{' tw-more' if i >= TW_TOP_ONLY else ''}' data-conn='{e(c['connector'])}' "
+                        f"title='{e(only_on_text(c))}'><span class='fi-conn'>{e(c['connector'])}</span><b>{errs[c['connector']]:,}</b>"
+                        f"<i style='width:{100 * errs[c['connector']] / top:.1f}%'></i></span>" for i, c in enumerate(cs))
+        more = len(cs) - TW_TOP_ONLY
+        label = f"▾ Show the {more} other connector(s)"
+        toggle = f"<button type='button' class='tw-toggle' data-label='{e(label)}'>{e(label)}</button>" if more > 0 else ""
+        blocks.append(f"<div class='tw-group'><div class='tw-group-head'>🎯 <b>{len(cs)} connector(s)</b> fail on {dot(w)}<b>{e(w)}</b> only: "
+                      f"{sum(errs.values()):,} ERROR/FATAL there, none on {', '.join(dot(o) + e(o) for o in others[:4])}"
+                      f"{' …' if len(others) > 4 else ''}, where their tasks ran at the same time."
+                      "<span class='tw-hint'>👉 That host differs: compare its DNS, truststore, plugin path, network and worker config "
+                      "with the others.</span></div>"
+                      f"<div class='tw-block'><div class='tw-chips'>{chips}</div>{toggle}</div></div>")
+
+    # a row per connector: a lane per task, a segment per run coloured by its worker
+    rows = []
+    for i, c in enumerate(conns):
+        ts = by_conn.get(c["connector"]) or []
+        moves = sum(len(t["runs"]) - 1 for t in ts)
+        lanes = []
+        for t in ts[:TW_LANES]:
+            segs = []
+            for r in t["runs"]:
+                a = lifecycle_time(r["from"]) or t0
+                b = lifecycle_time(r["to"]) if r["to"] else t1
+                left, width = 100 * (a - t0) / span, max(0.0, 100 * ((b or a) - a) / span)
+                segs.append(f"<i style='--tw:{color.get(r['worker'], '#64748b')};left:{left:.2f}%;width:{width:.2f}%' "
+                            f"title='{e(t['task'])} on {e(r['worker'])}: {e(stamp(r['from']))} → {e(stamp(r['to']))}, "
+                            f"{r['starts']} start(s)'></i>")
+            n = t["task"][len(t["connector"]):] if t["task"].startswith(t["connector"]) else t["task"]
+            lanes.append(f"<div class='tw-lane'><span title='task {e(t["task"])}'>{e(n)}</span><div class='tw-track'>{''.join(segs)}</div></div>")
+        if len(ts) > TW_LANES:
+            lanes.append(f"<div class='tw-sub'>+ {len(ts) - TW_LANES} more task(s)</div>")
+        ews = []
+        for x in sorted(c["workers"], key=lambda x: workers.index(x["worker"]) if x["worker"] in workers else 99):
+            w, cn = e(x["worker"]), e(c["connector"])
+            pill = (f"<span class='tw-pill err' title='{x['errors']:,} ERROR/FATAL of {cn} in the logs of {w}'>🔥 {x['errors']:,} error{'s' if x['errors'] > 1 else ''}</span>"
+                    if x["errors"] else f"<span class='tw-pill ok' title='no ERROR/FATAL of {cn} in the logs of {w}'>✓ no error</span>")
+            warn = (f"<span class='tw-pill warn' title='{x['warnings']:,} WARN of {cn} in the logs of {w}'>⚠ {x['warnings']:,} warning{'s' if x['warnings'] > 1 else ''}</span>"
+                    if x["warnings"] else "<span></span>")
+            st = (f"<span class='tw-pill' title='the tasks of {cn} were started {x['task_starts']} time(s) on {w} (Starting task lines)'>"
+                  f"▶ {x['task_starts']} start{'s' if x['task_starts'] > 1 else ''}</span>")
+            ews.append(f"<div class='tw-ew'><span class='tw-w' title='worker {w}: its colour in the lanes'>{dot(x['worker'])}{w}</span>{pill}{warn}{st}</div>")
+        target = f" · <b>🎯 errors on {e(c['only_on'])} only</b>" if c["only_on"] else ""
+        rows.append(f"<tr class='tw-row{' tw-suspect' if c['only_on'] else ''}{' tw-more' if i >= TW_TOP else ''}' data-conn='{e(c['connector'])}'>"
+                    f"<td><span class='fi-conn'>{e(c['connector'])}</span><div class='tw-sub'>{len(ts)} task(s) · {moves} move(s){target}</div></td>"
+                    f"<td><div class='tw-lanes'>{''.join(lanes)}</div></td><td><div class='tw-ews'>{''.join(ews)}</div></td></tr>")
+    more = len(conns) - TW_TOP
+    label = f"▾ Show the {more} other connector(s)"
+    toggle = f"<button type='button' class='tw-toggle' data-label='{e(label)}'>{e(label)}</button>" if more > 0 else ""
+    legend = "".join(f"<span title='worker {e(w)}'>{dot(w)}{e(w)}</span>" for w in workers)
+    axis = f"<div class='tw-axis'><span title='the first task start'>{e(datetime.fromtimestamp(t0, timezone.utc).strftime('%Y-%m-%d %H:%M'))}</span><span title='the last line of the logs of the workers'>{e(datetime.fromtimestamp(t1, timezone.utc).strftime('%Y-%m-%d %H:%M'))}</span></div>"
+    return (TASK_WORKERS_CSS
+            + f"<div class='table-card tw-card'><h2>🖥️ Tasks by worker ({len(workers)} workers, {len(conns):,} connector(s), {len(tasks):,} task(s))</h2>"
+            "<p class='legend'>Which worker ran each task, and when, from the \"Starting task\" INFO lines that the worker running it "
+            "logs (the rotated files of a worker are one worker). A lane per task, coloured by the worker that ran it until its next "
+            "start elsewhere (hover a segment). The errors and warnings are those of the connector in the logs of each worker. 🎯 a "
+            f"connector whose errors ({ONLY_ON_MIN_ERRORS} or more) all come from one worker while its tasks ran on another one at the same time, without error. "
+            "It follows the connector filter (click a connector name to set it).</p>"
+            f"<div class='tw-tiles'>{''.join(tiles)}</div>" + "".join(blocks)
+            + "<div class='tw-block'><table class='tw-table'><tr><th title='the connector, the number of its tasks and how many times one moved to another worker'>Connector · tasks · moves</th>"
+            "<th title='a lane per task (-0, -1…), a segment per worker that ran it, from its start there to its next start on another worker: hover a segment'>"
+            f"Tasks over time: which worker ran each task<div class='tw-legend'>{legend}</div>{axis}</th>"
+            "<th title='for each worker that ran a task of the connector: the ERROR/FATAL and WARN of that connector in the logs of the worker, and the task starts there'>"
+            "Errors and warnings of the connector, per worker</th></tr>"
+            + "".join(rows) + f"</table>{toggle}</div></div>")
+
 
 
 # the logs or data that explain a known cause better, asked when the input does not have them: (known cause titles,
@@ -2343,7 +2561,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
     first = "".join(row(ev) for ev in events[:shown])
     more = ""
     if len(events) > shown:
-        more = (f"<details><summary>{len(events) - shown} more event(s)</summary><table>{head}"
+        more = (f"<details class='tl-more'><summary data-total='{len(events) - shown}'>{len(events) - shown} more event(s)</summary><table>{head}"
                 + "".join(row(ev) for ev in events[shown:]) + "</table></details>")
     return ("<style>.tl-after{font-size:.8rem;font-weight:600;color:#b45309}html[data-theme=dark] .tl-after{color:#fcd34d}"
             ".tl-effects{font-size:.8rem;font-weight:600;color:#b91c1c}html[data-theme=dark] .tl-effects{color:#fca5a5}"
@@ -2362,6 +2580,12 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "html[data-theme=dark] .tl-lane-label{fill:#cbd5e1}html[data-theme=dark] .tl-tick,html[data-theme=dark] .tl-break-label{fill:#94a3b8}"
             "html[data-theme=dark] .tl-grid{stroke:#334155}html[data-theme=dark] .tl-break{fill:#334155}"
             "html[data-theme=dark] .tl-ev:hover>*,html[data-theme=dark] .tl-ev:focus>*{stroke:#f8fafc}"
+            ".tl-chart svg{cursor:crosshair;user-select:none}.tl-sel{fill:rgba(99,102,241,.18);stroke:#6366f1;stroke-dasharray:4 3}"
+            ".tl-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.tl-head .legend{margin:0}.tl-tools{display:inline-flex;gap:6px}"
+            ".tl-tools button{font:inherit;font-size:.76rem;font-weight:600;padding:3px 11px;border-radius:999px;border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;cursor:pointer}"
+            ".tl-tools button:hover{background:#e0e7ff}.tl-tools button[hidden]{display:none}"
+            "html[data-theme=dark] .tl-tools button{background:#1e1b4b;border-color:#4338ca;color:#c7d2fe}html[data-theme=dark] .tl-tools button:hover{background:#312e81}"
+            "table.tl-first[hidden],details.tl-more[hidden]{display:none}"
             ".tl-legend span{margin-right:12px;white-space:nowrap}.tl-legend span[hidden]{display:none}"
             "@keyframes tlflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}tr.tl-flash td{animation:tlflash 1.6s ease-out}"
             "</style>"
@@ -2372,15 +2596,18 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             f"every file in the {EFFECT_WINDOW_SECONDS} s after one of them. It follows the "
             "filters above (levels, component, connector, search, period): the rows of the other connectors are hidden, "
             "the restarts and configurations without connector stay.</p><p class='legend tl-none' hidden>No event in this selection.</p>"
-            "<p class='legend tl-chart-caption' hidden></p><div class='tl-chart' hidden></div>"
+            "<div class='tl-head'><p class='legend tl-chart-caption' hidden></p><span class='tl-tools' hidden>"
+            "<button type='button' class='tl-zoom-out' hidden title='zoom out: the whole timeline (or double-click the chart)'>⟲ All</button>"
+            "<button type='button' class='tl-zoom-apply' hidden title='filter the whole report (records, root causes, chart, timeline table) on this period'>"
+            "⤢ Use as the period of the report</button></span></div><div class='tl-chart' hidden></div>"
             "<p class='legend tl-legend' hidden><span data-kind='fatal' style='color:#991b1b'>● first FATAL</span>"
             "<span data-kind='error' style='color:#dc2626'>● first ERROR</span><span data-kind='warn' style='color:#f59e0b'>● first WARN</span>"
             "<span data-kind='known' style='color:#ea580c'>◆ known cause</span><span data-kind='start' style='color:#2563eb'>▲ (re)start</span>"
             "<span data-kind='lifecycle' style='color:#7c3aed'>○ rebalance / process start</span>"
             "<span data-kind='infra' style='color:#a21caf'>✕ GC pause / stop / controller change</span>"
             "<span data-kind='config' style='color:#0d9488'>■ connector (re)configured / config changed</span>"
-            "<span data-kind='break'>⫽ long gap cut</span><span>hover a mark for its time and Δ, click it for its row</span></p>"
-            f"<table>{head}{first}</table>{more}</div>")
+            "<span data-kind='break'>⫽ long gap cut</span><span>hover a mark for its time and Δ, click it for its row, 🔍 drag over the chart to zoom, double-click to zoom out</span></p>"
+            f"<table class='tl-first'>{head}{first}</table>{more}</div>")
 
 
 def causes_text(events: List[dict], top: int = 5) -> List[str]:
@@ -3441,38 +3668,9 @@ document.addEventListener("DOMContentLoaded", function () {
 # "Fold all" / "Unfold all" at the top of the findings
 # the tiles at the top of the report open their section: unfolded if folded, scrolled to, flashed; a tile whose section
 # is not in the report (no file with findings…) stays a plain tile
-KDP_SITE = "https://kafka-docker-playground.io/"
 ANALYZE_LOGS_DOC = "https://kafka-docker-playground.io/#/deep-dive-analyze-logs"
 
-# the header of the log report (page() of report_html is shared by every report: styled only when it holds .lr-title)
-HEADER_CSS = """<style>
-.header:has(.lr-title){position:relative;overflow:hidden;border-radius:18px;padding:26px 32px 22px;
-background:radial-gradient(1200px 300px at 0% 0%,rgba(56,189,248,.35),transparent 60%),
-radial-gradient(800px 260px at 100% 100%,rgba(236,72,153,.35),transparent 60%),
-linear-gradient(120deg,#0f172a 0%,#312e81 45%,#6d28d9 75%,#a21caf 100%);box-shadow:0 10px 30px rgba(49,46,129,.35)}
-.header:has(.lr-title) h1{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 18px;margin:0 0 12px}
-.lr-title{font-size:1.75rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
-.lr-plus{opacity:.55;margin:0 4px}
-.lr-sub{grid-column:1 / -1;font-size:.86rem;font-weight:500;opacity:.82}
-.lr-status{justify-self:end;font-size:.85rem;font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap;
-background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(4px)}
-.lr-status.danger{background:rgba(239,68,68,.28);border-color:rgba(254,202,202,.6)}
-.lr-status.warn{background:rgba(245,158,11,.28);border-color:rgba(253,230,138,.6)}
-.lr-status.ok{background:rgba(34,197,94,.28);border-color:rgba(187,247,208,.6)}
-.header:has(.lr-title) .header-meta{display:flex;flex-wrap:wrap;gap:8px}
-.header:has(.lr-title) .header-meta span{font-size:.78rem;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.12);
-border:1px solid rgba(255,255,255,.2);margin:0}
-.header:has(.lr-title) .header-meta a{color:#fff}
-.lr-brand{grid-column:1 / -1;justify-self:start;display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;
-letter-spacing:.04em;color:#fff;text-decoration:none;padding:3px 12px 3px 6px;border-radius:999px;background:rgba(255,255,255,.12);
-border:1px solid rgba(255,255,255,.22);transition:background .15s}
-.lr-brand:hover{background:rgba(255,255,255,.22)}
-.lr-whale{font-size:1.25rem;line-height:1;display:inline-block;animation:lr-swim 4s ease-in-out infinite}
-@keyframes lr-swim{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-6deg)}}
-@media (prefers-reduced-motion:reduce){.lr-whale{animation:none}}
-.header:has(.lr-title) .header-meta span:has(.lr-howto){background:rgba(56,189,248,.22);border-color:rgba(125,211,252,.55)}
-.lr-howto{text-decoration:none;font-weight:600}.lr-howto:hover{text-decoration:underline}
-</style>"""
+
 
 QUICK_LINKS = "<nav class='quick-links' aria-label='sections of the report'></nav>"
 KPI_LINKS = """<style>.quick-links{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}.quick-links:empty{display:none}
@@ -4165,9 +4363,13 @@ function pgTimelineKind(tr) {
   if (c.contains("tl-connector_config") || c.contains("tl-config_change")) return "config";
   return "error";
 }
+// 🔍 the zoom of the chart (drag over it, double-click or ⟲ All to zoom out): [from, to] in epoch seconds, or null.
+// The chart only: ⤢ makes it the period of the whole report (the zoom of the occurrences chart)
+var pgTlZoom = null, pgTlRows = [], pgTlTotal = 0;
 function pgTimelineChart(rows) {
   const box = document.querySelector(".tl-chart");
   if (!box) return;
+  pgTlRows = rows;
   const ns = "http://www.w3.org/2000/svg";
   const evs = [];
   rows.forEach(function (tr) {
@@ -4178,11 +4380,18 @@ function pgTimelineChart(rows) {
   });
   box.textContent = "";
   const caption = document.querySelector(".tl-chart-caption"), legend = document.querySelector(".tl-legend");
-  if (evs.length < 2) { box.hidden = true; if (caption) caption.hidden = true; if (legend) legend.hidden = true; return; }
+  const tools = document.querySelector(".tl-tools");
+  if (evs.length < (pgTlZoom ? 1 : 2)) { box.hidden = true; if (caption) caption.hidden = true; if (legend) legend.hidden = true; if (tools) tools.hidden = true; return; }
+  // zoomed: pgTimeline kept the rows of its period only, drawn on its whole width
+  const nbAll = pgTlZoom ? pgTlTotal : evs.length;
   box.hidden = false;
   if (legend) legend.hidden = false;
+  if (tools) {
+    tools.hidden = false;
+    tools.querySelectorAll(".tl-zoom-out, .tl-zoom-apply").forEach(function (b) { b.hidden = !pgTlZoom; });
+  }
   evs.sort(function (a, b) { return a.t - b.t; });
-  const t0 = evs[0].t, t1 = evs[evs.length - 1].t, span = t1 - t0;
+  const t0 = pgTlZoom ? pgTlZoom[0] : evs[0].t, t1 = pgTlZoom ? pgTlZoom[1] : evs[evs.length - 1].t, span = t1 - t0;
   // the lanes: one per component, in the order of their first event
   const lanes = [];
   evs.forEach(function (ev) {
@@ -4302,6 +4511,26 @@ function pgTimelineChart(rows) {
     g.addEventListener("click", go);
     g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
   });
+  // 🔍 drag over the chart: a band follows the mouse, the period selected becomes the zoom (a click stays a click)
+  const sel = el("rect", { x: 0, y: top, width: 0, height: lanes.length * laneH, "class": "tl-sel", visibility: "hidden" });
+  function svgX(ev) {
+    const r = svg.getBoundingClientRect();
+    return (ev.clientX - r.left) * W / r.width;
+  }
+  function timeAt(px) {
+    // x() is monotonic (the cuts included): a binary search gives the time under the mouse
+    let lo = t0, hi = t1;
+    for (let i = 0; i < 50; i++) { const mid = (lo + hi) / 2; if (x(mid) < px) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+  }
+  const ctx = { sel: sel, timeAt: timeAt, from: null, x: function (ev) { return Math.min(Math.max(svgX(ev), labelW + pad), W - right); } };
+  svg.addEventListener("mousedown", function (ev) {
+    if (ev.button !== 0 || span <= 0 || svgX(ev) < labelW) return;
+    ctx.from = ctx.x(ev);
+    pgTlDrag = ctx;
+    ev.preventDefault();
+  });
+  svg.addEventListener("dblclick", function () { if (pgTlZoom) { pgTlZoom = null; pgTimeline(); } });
   box.appendChild(svg);
   if (legend) {
     const present = {};
@@ -4315,9 +4544,41 @@ function pgTimelineChart(rows) {
     for (let i = 1; i < evs.length; i++) if (evs[i].t - evs[i - 1].t > biggest) { biggest = evs[i].t - evs[i - 1].t; at = i; }
     caption.textContent = evs.length + " events over " + pgDur(span) + " (" + pgStamp(t0) + " → " + pgStamp(t1) + ")"
       + (biggest ? " · biggest gap: " + pgDur(biggest) + " before " + pgStamp(evs[at].t).slice(11) : "")
-      + (breaks.length ? " · ⫽ " + breaks.length + " long gap(s) cut" : "");
+      + (breaks.length ? " · ⫽ " + breaks.length + " long gap(s) cut" : "")
+      + (pgTlZoom ? " · 🔍 zoomed: " + evs.length + " of " + nbAll + " events" : "");
   }
 }
+// the drag of the chart being drawn (the listeners of the window are registered once, not at each redraw)
+var pgTlDrag = null;
+window.addEventListener("mousemove", function (ev) {
+  const d = pgTlDrag;
+  if (!d) return;
+  const px = d.x(ev);
+  d.sel.setAttribute("x", Math.min(px, d.from));
+  d.sel.setAttribute("width", Math.abs(px - d.from));
+  d.sel.setAttribute("visibility", Math.abs(px - d.from) > 6 ? "visible" : "hidden");
+});
+window.addEventListener("mouseup", function (ev) {
+  const d = pgTlDrag;
+  if (!d) return;
+  pgTlDrag = null;
+  const px = d.x(ev);
+  d.sel.setAttribute("visibility", "hidden");
+  if (Math.abs(px - d.from) <= 6) return;
+  const a = d.timeAt(Math.min(px, d.from)), b = d.timeAt(Math.max(px, d.from));
+  if (b - a < 1) return;
+  pgTlZoom = [Math.floor(a), Math.ceil(b)];
+  pgTimeline();
+});
+// ⟲ All: the whole chart again; ⤢: the period zoomed becomes the period of the report (every section follows)
+document.addEventListener("click", function (ev) {
+  if (ev.target.closest(".tl-zoom-out")) { pgTlZoom = null; pgTimeline(); return; }
+  if (ev.target.closest(".tl-zoom-apply") && pgTlZoom) {
+    const chart = document.getElementById("@@CHART@@"), z = pgTlZoom;
+    pgTlZoom = null;
+    if (!(chart && chart.zoomTo && chart.zoomTo(z[0], z[1] + 1))) { pgWindow = [z[0], z[1] + 1]; pgApplyFilters(); }
+  }
+});
 var pgTimelineResize = null;
 window.addEventListener("resize", function () {
   clearTimeout(pgTimelineResize);
@@ -4330,7 +4591,9 @@ window.addEventListener("resize", function () {
 function pgTimeline() {
   const rows = document.querySelectorAll("tr.tl-row");
   if (!rows.length) return;
-  let shown = 0;
+  let shown = 0, inZoom = 0;
+  pgTlTotal = 0;
+  const z = pgTlZoom;
   rows.forEach(function (tr) {
     const d = tr.dataset;
     let keep = true;
@@ -4340,11 +4603,31 @@ function pgTimeline() {
     if (keep && pgConnector !== "" && pgConnector !== "-" && d.conn && d.conn !== pgConnector) keep = false;
     if (keep && pgWindow && d.t && (+d.t < pgWindow[0] || +d.t >= pgWindow[1])) keep = false;
     if (keep && pgTest) keep = d.rec !== undefined ? (pgMatch && pgMatch.has(+d.rec)) : pgTest(tr.textContent);
+    // 🔍 the zoom of the chart: the rows of its period only (the table follows the chart)
+    if (keep && d.t) pgTlTotal++;
+    if (keep && z && d.t && (+d.t < z[0] || +d.t > z[1])) keep = false;
+    else if (keep && z && d.t) inZoom++;
     tr.hidden = !keep;
     if (keep) shown++;
   });
+  // nothing of the filters left in the zoom: the whole timeline again
+  if (z && !inZoom) { pgTlZoom = null; pgTimeline(); return; }
   const none = document.querySelector(".tl-none");
   if (none) none.hidden = shown > 0;
+  // the first rows and the "N more event(s)": their counts follow the filters, the table without a row shown is hidden,
+  // and the collapsed rows open by themselves when they hold every row shown (closed again once the filters are cleared)
+  const firstTable = document.querySelector("table.tl-first"), more = document.querySelector("details.tl-more");
+  const firstShown = firstTable ? firstTable.querySelectorAll("tr.tl-row:not([hidden])").length : 0;
+  if (firstTable) firstTable.hidden = firstShown === 0 && shown > 0;
+  if (more) {
+    const sum = more.querySelector("summary"), total = +sum.dataset.total;
+    const moreShown = more.querySelectorAll("tr.tl-row:not([hidden])").length;
+    const filtered = moreShown !== total;
+    sum.textContent = moreShown + " more event(s)" + (filtered ? " of " + total + " (filtered)" : "");
+    more.hidden = moreShown === 0;
+    if (filtered && firstShown === 0 && moreShown && !more.open) { more.open = true; more.dataset.auto = "1"; }
+    if (!filtered && more.dataset.auto) { more.open = false; delete more.dataset.auto; }
+  }
   const visible = Array.prototype.filter.call(rows, function (tr) { return !tr.hidden; });
   pgTimelineDeltas(visible);
   pgTimelineChart(visible);
@@ -4401,10 +4684,13 @@ function pgStateRead() {
 // "no connector context" is; the worker group rebalances and the process starts (no data-conn) stay
 function pgLifecycle() {
   // the 🖥️ Tasks by worker rows and 🎯 notes too: those of the connector picked
-  document.querySelectorAll("tr.tw-row, p.tw-only").forEach(function (el) {
+  document.querySelectorAll(".tw-row, .tw-only").forEach(function (el) {
     const conn = el.dataset.conn;
     el.hidden = !(!conn || pgConnector === "" || (pgConnector !== "-" && conn === pgConnector));
   });
+  // a connector picked: its row and 🎯 chip show, even past the first ones of a list (▾ Show all)
+  document.querySelectorAll(".tw-card").forEach(c => c.classList.toggle("tw-picked", pgConnector !== ""));
+  document.querySelectorAll(".tw-group").forEach(g => { g.hidden = !g.querySelector(".tw-only:not([hidden])"); });
   const rows = document.querySelectorAll("tr.lc-row");
   if (!rows.length) return;
   let shown = 0;
@@ -5771,8 +6057,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         sub = e(title)
         page_title = f"{heading[2:].strip()} report — {title}"
     # 🐳 where the report comes from, and how to generate one (the deep dive page of analyze logs)
-    brand = (f"<a class='lr-brand' href='{KDP_SITE}' title='kafka-docker-playground: the playground CLI that generated this report'>"
-             "<span class='lr-whale'>🐳</span> kafka-docker-playground</a>")
+    brand = kdp_brand()
     meta.append(f"<a class='lr-howto' href='{ANALYZE_LOGS_DOC}' title='how to generate this report: playground analyze logs, "
                 "also offline without the playground (deep dive page)'>❓ How to generate this report</a>")
     h1 = (f"{brand}{what}<span class='lr-status {vcls}' title='{e(vtext)}'>{e(status)}</span><span class='lr-sub'>📄 {sub}</span>"

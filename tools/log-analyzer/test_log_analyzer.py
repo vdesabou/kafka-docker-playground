@@ -294,6 +294,24 @@ def test_task_workers():
     jdbc = next(c for c in tw["connectors"] if c["connector"] == "jdbc")
     check("only on w2", jdbc["only_on"] == "w2", jdbc)
     check("card", next(c for c in res["connectors"] if c["connector"] == "jdbc").get("only_on") == "w2")
+    check("period", (tw["start"], tw["end"]) == ("2026-11-07T09:00:00", "2026-11-07T10:20:00"), (tw["start"], tw["end"]))
+    html = log_report.task_workers_html(tw)
+    check("html: a lane per task, a 🎯 block", html.count("class='tw-lane'") == 3 and "class='tw-group'" in html and "tw-tile tw-suspect" in html, html[-600:])
+    # an incident that ended before the task moved (and logs of the other worker that start later): no 🎯
+    def ev(t, task):
+        return {"kind": "task_start", "time": t, "detail": task, "connector": task.rsplit("-", 1)[0]}
+    def rec(conn, n, a, b):
+        return {"connector": conn, "level": "ERROR", "count": n, "first_ts": a, "last_ts": b}
+    files = [{"label": "w1/connect.log", "log_first_ts": "2026-11-02T20:00:00", "log_last_ts": "2026-11-03T16:00:00",
+              "records": [rec("etb", 15000, "2026-11-02T20:18:21", "2026-11-02T21:07:19"), rec("both", 50, "2026-11-03T10:00:00", "2026-11-03T11:00:00")],
+              "events": [ev("2026-11-02T21:15:07", "etb-0"), ev("2026-11-02T21:15:07", "both-0")]},
+             {"label": "w2/connect.log", "log_first_ts": "2026-11-02T21:00:00", "log_last_ts": "2026-11-03T16:00:00", "records": [],
+              "events": [ev("2026-11-03T12:19:32", "etb-0"), ev("2026-11-02T21:15:08", "both-1")]}]
+    tw2 = log_report.task_workers({"connectors": []}, files)
+    only = {c["connector"]: c["only_on"] for c in tw2["connectors"]}
+    check("no 🎯 when the task ran elsewhere only after the errors", only == {"etb": None, "both": "w1"}, only)
+    both = next(c for c in tw2["connectors"] if c["connector"] == "both")
+    check("the overlap is named", "at the same time" in log_report.only_on_text(both) and "both-1 on w2" in log_report.only_on_text(both), log_report.only_on_text(both))
     one = log_report.task_workers({"connectors": []}, [{"label": "a.log", "records": [], "events": [{"kind": "task_start", "time": "2026-11-07T10:00:00", "detail": "a-0", "connector": "a"}]}])
     check("one worker: nothing", one["tasks"] == [] and one["connectors"] == [], one)
 
