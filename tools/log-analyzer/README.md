@@ -155,7 +155,11 @@ The tiles of the CFK bundles join the same row (`cfk_kpi_tiles()`: ☸️ CFK is
 versions). The header (`HEADER_CSS` and `kdp_brand()` of `report_html.py`, shared with the 🔄 progress page) has a 🐳
 kafka-docker-playground badge (`KDP_SITE`) and a ❓ How to generate this report link to the deep dive page
 (`ANALYZE_LOGS_DOC`); its gradient follows the verdict of the status pill: red with ERROR/FATAL, amber with WARN only,
-green without error. Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
+green without error. Right under it, 📖 What happened (`story_html()`): logs start → first error → peak (the busiest of
+`STORY_BINS` buckets of `error_bins()`) → main known cause → connectors hit → the end of the logs (🔥 still failing at a
+tenth of the average rate or more, 📉 fading out, ✅ stopped), each step a link to its section, over an area sparkline
+(square-root scale). The 🔁 Occurrences tile has the same sparkline (`spark_svg()` of `report_html.py`); the numbers of
+the tiles get thousands separators and count up when the page opens (`KPI_JS`, not on the 🔄 progress page). Under the verdict, the quick links (`QUICK_LINKS`, filled by `KPI_LINKS` from the titles of
 the sections, the record cards of each file left out) open each section the same way.
 The 🏷️ CP and 🛠️ CFK tiles show the support of the version (`tools/report-common/support_dates.py`, the
 tables of the docs: CP Enterprise Standard then Platinum end of support, CFK Standard end of support; `TILE_CLASS`): ✅

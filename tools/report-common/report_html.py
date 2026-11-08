@@ -49,6 +49,7 @@ h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .kpi-card.warn{border-left-color:#d97706}.kpi-card.danger{border-left-color:#dc2626}.kpi-card.ok{border-left-color:#16a34a}
 .kpi-label{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
 .kpi-value{font-size:1.75rem;font-weight:700;margin:3px 0 2px}
+.kpi-spark{display:block;width:100%;height:26px;margin-top:6px}
 .kpi-unit{font-size:.73rem;color:#94a3b8}
 .charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:18px;margin-bottom:22px}
 .chart-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
@@ -290,14 +291,61 @@ def e(s) -> str:
 
 
 def kpi(label, val, unit, cls="", title="") -> str:
-    """title: what the tile means in full, on hover, when the unit line has to stay short"""
+    """title: what the tile means in full, on hover, when the unit line has to stay short; an int is shown with thousands
+    separators (1,216,800) and counts up when the page opens (KPI_JS)"""
+    if isinstance(val, int) and not isinstance(val, bool):
+        val = f"{val:,}"
     return (f'<div class="kpi-card {cls}"' + (f' title="{e(title)}"' if title else "")
             + f'><div class="kpi-label">{e(label)}</div>'
             f'<div class="kpi-value">{e(val)}</div><div class="kpi-unit">{e(unit)}</div></div>')
 
 
+# the numbers of the tiles count up from 0 when the page opens (once, not with prefers-reduced-motion): 1,216,800 or
+# 7.9.5 (not a number: left as it is), with its separators, its prefix and suffix (~2:23, 42%)
+KPI_JS = """<script>
+(function () {
+  if (window.pgKpiCount) return;
+  window.pgKpiCount = true;
+  document.addEventListener("DOMContentLoaded", function () {
+    // not on a page that reloads itself (the 🔄 progress page of analyze logs): it would count up every 2 s
+    if (document.querySelector("meta[http-equiv=refresh]")) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    document.querySelectorAll(".kpi-grid .kpi-value").forEach(function (el) {
+      const m = el.textContent.trim().match(/^([^0-9]*)([0-9][0-9,]*)([^0-9.,:\\/]*)$/);
+      if (!m) return;
+      const target = parseInt(m[2].replace(/,/g, ""), 10);
+      if (!(target > 9)) return;
+      const t0 = performance.now(), dur = 900;
+      function frame(now) {
+        const k = Math.min(1, (now - t0) / dur), v = Math.round(target * (1 - Math.pow(1 - k, 3)));
+        el.textContent = m[1] + v.toLocaleString("en-US") + m[3];
+        if (k < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    });
+  });
+})();
+</script>"""
+
+
 def kpis_html(cards: Sequence[str]) -> str:
-    return f"<div class='kpi-grid'>{''.join(cards)}</div>"
+    return f"<div class='kpi-grid'>{''.join(cards)}</div>" + KPI_JS
+
+
+def spark_svg(values: Sequence[float], color: str = "#ef4444", title: str = "") -> str:
+    """a small area sparkline (square-root scale: the quiet periods stay visible), for a tile"""
+    if not values or not max(values):
+        return ""
+    top = max(values) ** .5
+    n = len(values)
+    pts = " ".join(f"{i + .5:.1f},{24 - 22 * v ** .5 / top:.1f}" for i, v in enumerate(values))
+    gid = f"spark-{abs(hash((tuple(values), color))) % 100000}"
+    return (f"<svg class='kpi-spark' viewBox='0 0 {n} 24' preserveAspectRatio='none' role='img' aria-label='{e(title)}'>"
+            + (f"<title>{e(title)}</title>" if title else "")
+            + f"<defs><linearGradient id='{gid}' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='{color}' stop-opacity='.5'/>"
+            f"<stop offset='1' stop-color='{color}' stop-opacity='0'/></linearGradient></defs>"
+            f"<polygon points='0,24 {pts} {n},24' fill='url(#{gid})'/>"
+            f"<polyline points='{pts}' fill='none' stroke='{color}' stroke-width='1.3' vector-effect='non-scaling-stroke'/></svg>")
 
 
 def verdict_html(cls: str, text: str) -> str:

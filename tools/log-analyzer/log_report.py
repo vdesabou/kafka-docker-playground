@@ -33,7 +33,7 @@ from urllib.parse import quote
 # no __pycache__ left in the repository
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
-from report_html import (HEADER_CSS, kdp_brand, SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
+from report_html import (HEADER_CSS, kdp_brand, spark_svg, SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html, log_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, time_chart, verdict_html, dark, wall_epoch)
 import fixed_bugs  # noqa: E402
 import support_dates  # noqa: E402
@@ -2589,7 +2589,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             ".tl-legend span{margin-right:12px;white-space:nowrap}.tl-legend span[hidden]{display:none}"
             "@keyframes tlflash{from{outline:3px solid #f59e0b}to{outline:3px solid transparent}}tr.tl-flash td{animation:tlflash 1.6s ease-out}"
             "</style>"
-            "<div class='table-card'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
+            "<div class='table-card' id='incident-timeline'><h2>🗓️ Incident timeline</h2><p class='legend'>What happened first, all files merged: "
             "the first occurrence of each error and of each known cause, the (re)starts of the components (their config "
             "logged at startup), the connectors (re)configured and the config keys changed between restarts, the processes "
             "stopped, the active controller changes and the longest GC pauses (1 s or more); 💥 the bursts of ERROR / WARN of "
@@ -5432,6 +5432,143 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
     return FILTER_CSS + "<div class='lvl-filter'>" + "".join(rows) + "</div>"
 
 
+# 📖 the story of the logs, right under the header: logs start → first error → peak → main cause → connectors hit → end,
+# each step a link to its section, over an area sparkline of the errors of the whole period (the peak marked)
+STORY_BINS = 96
+
+STORY_CSS = """<style>
+.story{position:relative;margin:0 0 18px;padding:16px 18px 12px;border-radius:16px;background:linear-gradient(135deg,#f8fafc,#eef2ff);
+border:1px solid #e0e7ff;box-shadow:0 8px 24px -12px rgba(79,70,229,.25);overflow:hidden}
+.story-title{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6366f1;margin-bottom:10px}
+.story-steps{position:relative;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px;z-index:1}
+.story-steps::before{content:"";position:absolute;left:4%;right:4%;top:17px;height:3px;border-radius:3px;
+background:linear-gradient(90deg,#22c55e,#f59e0b 30%,#ef4444 55%,#a855f7 80%,var(--end,#64748b))}
+.story-step{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;text-decoration:none;color:inherit;
+padding:0 4px;border-radius:12px;transition:transform .15s}
+a.story-step:hover{transform:translateY(-2px)}
+.story-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.05rem;background:#fff;
+border:3px solid var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent);opacity:0;transform:scale(.6);
+animation:story-in .45s cubic-bezier(.2,.9,.3,1.4) forwards;animation-delay:calc(var(--i) * 110ms)}
+.story-step.hot .story-dot{animation:story-in .45s cubic-bezier(.2,.9,.3,1.4) forwards,story-pulse 2.2s ease-in-out 1s infinite;animation-delay:calc(var(--i) * 110ms),1s}
+@keyframes story-in{to{opacity:1;transform:scale(1)}}
+@keyframes story-pulse{50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--c) 0%,transparent),0 0 18px color-mix(in srgb,var(--c) 55%,transparent)}}
+@media (prefers-reduced-motion:reduce){.story-dot{animation:none!important;opacity:1;transform:none}}
+.story-label{margin-top:7px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--c)}
+.story-value{font-size:.95rem;font-weight:800;color:#0f172a;margin-top:2px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.story-sub{font-size:.72rem;color:#64748b;margin-top:2px;line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.story-spark{display:block;width:100%;height:46px;margin-top:10px}
+.story-spark .area{fill:url(#story-grad)}.story-spark .line{fill:none;stroke:#ef4444;stroke-width:1.4;vector-effect:non-scaling-stroke}
+.story-axis{display:flex;justify-content:space-between;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.64rem;color:#94a3b8;margin-top:2px}
+.story-peak{position:absolute;top:2px;transform:translateX(-50%);font-size:.62rem;font-weight:800;color:#fff;background:#ef4444;padding:1px 7px;
+border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(239,68,68,.45)}
+@media (max-width:900px){.story-steps{grid-template-columns:repeat(3,minmax(0,1fr))}.story-steps::before{display:none}}
+</style>""" + "<style>" + dark("""
+.story{background:linear-gradient(135deg,#0f172a,#1e1b4b);border-color:#312e81;box-shadow:0 8px 24px -12px rgba(0,0,0,.6)}
+.story-title{color:#a5b4fc}.story-dot{background:#0f172a}.story-value{color:#f8fafc}.story-sub{color:#94a3b8}
+""") + "</style>"
+
+
+def error_bins(res: dict) -> Optional[Tuple[List[int], float, float]]:
+    """the ERROR/FATAL (the WARN without any) of the whole period of the logs in STORY_BINS buckets, with the first and
+    last time of the logs: the 📖 story and the sparkline of the 🔁 Occurrences tile. Cached on res"""
+    if "_error_bins" in res:
+        return res["_error_bins"]
+    s = res["summary"]
+    errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
+    points = [(t, w) for t, series, w in timeline(res["files"])[0] if series == "errors" or not errors]
+    t0, t1 = lifecycle_time(s.get("log_first_timestamp")), lifecycle_time(s.get("log_last_timestamp"))
+    out = None
+    if points and t0 is not None and t1 is not None and t1 > t0:
+        bins = [0] * STORY_BINS
+        for t, w in points:
+            bins[min(STORY_BINS - 1, max(0, int(STORY_BINS * (wall_epoch(t) - t0) / (t1 - t0))))] += w
+        out = (bins, t0, t1)
+    res["_error_bins"] = out
+    return out
+
+
+def story_html(res: dict, levels: str) -> str:
+    s = res["summary"]
+    errors = s["by_level"]["FATAL"] + s["by_level"]["ERROR"]
+    eb = error_bins(res)
+    if not eb:
+        return ""
+    bins, t0, t1 = eb
+    span = t1 - t0
+    peak_i = max(range(STORY_BINS), key=lambda i: bins[i])
+    peak = bins[peak_i]
+    if not peak:
+        return ""
+
+    def at(x: float) -> str:
+        return datetime.fromtimestamp(x, timezone.utc).strftime("%m-%d %H:%M")
+
+    what = "error" if errors else "warning"
+    steps = []
+
+    def step(icon: str, color: str, label: str, value: str, sub: str, href: str = "", hot: bool = False, title: str = "") -> None:
+        tag = "a" if href else "div"
+        steps.append(f"<{tag} class='story-step{' hot' if hot else ''}' style='--c:{color};--i:{len(steps)}'"
+                     + (f" href='{href}'" if href else "") + (f" title='{e(title)}'" if title else "")
+                     + f"><span class='story-dot'>{icon}</span><span class='story-label'>{e(label)}</span>"
+                     f"<span class='story-value'>{e(value)}</span><span class='story-sub'>{e(sub)}</span></{tag}>")
+
+    step("🟢", "#22c55e", "Logs start", at(t0), f"{s['files_scanned']} file(s), {human_duration(s['log_duration_seconds'])} covered",
+         "#log-coverage", title="the first timestamped line of the logs: open 🕰️ Log coverage")
+    first = next((ev for ev in res.get("timeline") or [] if ev.get("kind") == "first_error"), None)
+    if first:
+        step("🔴", "#f97316", f"First {what}", (first.get("time") or "").replace("T", " ")[5:16], first.get("text") or "",
+             "#incident-timeline", title=f"the first {what} of the logs: {first.get('text') or ''}")
+    width = span / STORY_BINS
+    share = 100 * peak / max(1, sum(bins))
+    step("📈", "#ef4444", "Peak", f"{peak:,} {what}s", f"in {human_duration(int(round(width / 60)) * 60)} around {at(t0 + peak_i * width)}, {share:.0f}% of all",
+         "#" + TIME_CHART_ID, hot=True, title=f"the busiest {human_duration(int(width))} of the logs: zoom on it in 📈 Occurrences over time")
+    views = sorted(((f.get("_view") or {}) for f in res.get("findings") or []), key=lambda v: -v.get("occurrences", 0))
+    main = next((v for v in views if v.get("title") and not v["title"].startswith("🌳")), None)
+    if main:
+        step(main["title"].split(" ", 1)[0], "#a855f7", "Main cause", main["title"].split(" ", 1)[-1],
+             f"{main.get('occurrences', 0):,} occurrence(s)", "#" + finding_id(main["title"]),
+             title="the known cause with the most occurrences: open its card in 🔎 Findings")
+    conns = res.get("connectors") or []
+    hit = [c for c in conns if c["by_level"]["FATAL"] + c["by_level"]["ERROR"]]
+    if conns:
+        top = max(conns, key=lambda c: c["by_level"]["FATAL"] + c["by_level"]["ERROR"])
+        step("🔌", "#6366f1", "Connectors hit", f"{len(hit):,} of {len(conns):,}",
+             f"most: {top['connector']}" if hit else "no connector with an error", "#connectors",
+             title="the connectors with ERROR/FATAL: open 🔌 Connectors")
+    # the end of the logs: still failing at a tenth of the average rate or more, fading out below, stopped without any
+    n_tail = max(1, STORY_BINS // 24)
+    tail = sum(bins[-n_tail:])
+    tail_text = f"{tail:,} {what}s in the last {human_duration(int(round(width * n_tail / 60)) * 60)}"
+    if tail and tail / n_tail >= 0.1 * sum(bins) / STORY_BINS:
+        step("🔥", "#dc2626", "At the end", "still failing", tail_text, hot=True,
+             title="the errors go on at the end of the logs: the issue was not over when they were collected")
+        end_color = "#dc2626"
+    elif tail:
+        step("📉", "#f59e0b", "At the end", "fading out", tail_text,
+             title="a few errors at the end of the logs, far below their average rate: mostly over, not entirely")
+        end_color = "#f59e0b"
+    else:
+        last = lifecycle_time(s.get("last_timestamp"))
+        step("✅", "#16a34a", "At the end", "stopped", f"last {what} {at(last)}" if last else "", title=f"no {what} at the end of the logs")
+        end_color = "#16a34a"
+    # the sparkline: an area of the bins, the peak marked
+    # a square-root scale: the hours far below the peak stay visible
+    top_v = peak ** .5 or 1
+    pts = " ".join(f"{i + .5:.1f},{40 - 38 * v ** .5 / top_v:.1f}" for i, v in enumerate(bins))
+    spark = (f"<svg class='story-spark' viewBox='0 0 {STORY_BINS} 40' preserveAspectRatio='none' role='img' "
+             f"aria-label='{levels} over time, square-root scale'><title>{levels} over time (square-root scale, so that the "
+             "quieter periods show), the peak marked</title>"
+             "<defs><linearGradient id='story-grad' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#ef4444' stop-opacity='.55'/>"
+             "<stop offset='1' stop-color='#ef4444' stop-opacity='.03'/></linearGradient></defs>"
+             f"<polygon class='area' points='0,40 {pts} {STORY_BINS},40'/><polyline class='line' points='{pts}'/></svg>")
+    peak_left = 100 * (peak_i + .5) / STORY_BINS
+    return (STORY_CSS + f"<div class='story' style='--end:{end_color}'><div class='story-title'>📖 What happened</div>"
+            f"<div class='story-steps' style='--n:{len(steps)}'>{''.join(steps)}</div>"
+            f"<div style='position:relative'>{spark}<span class='story-peak' style='left:{peak_left:.1f}%'>▲ peak</span></div>"
+            f"<div class='story-axis'><span>{e(at(t0))}</span><span>{levels} over time</span><span>{e(at(t1))}</span></div></div>")
+
+
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
     """the verdict of the logs, and of the CFK support bundles of the input in the same line (☸️, the worse of both)"""
     cls, text = logs_verdict(res, levels, unit)
@@ -5472,9 +5609,9 @@ def logs_verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
             c = res["root_causes"][0]
             what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["label"]
             start = f": start with {what[:160].rstrip('.')}"
-        return "danger", (f"🚨 {errors} ERROR/FATAL occurrence(s), {s['distinct']} distinct record(s) in "
+        return "danger", (f"🚨 {errors:,} ERROR/FATAL occurrence(s), {s['distinct']:,} distinct record(s) in "
                           f"{s['files_with_findings']} {unit}(s){start}.")
-    return "warn", f"⚠️ {s['by_level']['WARN']} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL."
+    return "warn", f"⚠️ {s['by_level']['WARN']:,} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL."
 
 
 def read_incomplete(path: Optional[str]) -> List[dict]:
@@ -5880,7 +6017,10 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         go("files-with-findings", kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok")),
         go("all-root-causes", kpi("🧬 Distinct records", s["distinct"], "after de-duplication")),
         # the counts by level: the level chips of the filter bar have them too, one tile instead of three
-        go(TIME_CHART_ID, kpi("🔁 Occurrences", s["occurrences"], occ_unit, "danger" if errors else "warn" if s["occurrences"] else "ok")),
+        go(TIME_CHART_ID, kpi("🔁 Occurrences", s["occurrences"], occ_unit, "danger" if errors else "warn" if s["occurrences"] else "ok")
+           .replace("</div></div>", "</div>" + spark_svg((error_bins(res) or ([],))[0], "#ef4444" if errors else "#f59e0b",
+                                                       f"{levels} over the period of the logs (square-root scale)") + "</div>", 1)
+           if error_bins(res) else kpi("🔁 Occurrences", s["occurrences"], occ_unit, "danger" if errors else "warn" if s["occurrences"] else "ok")),
     ])
     # the most frequent first within a severity (the text summary and --json keep the order of the known causes)
     findings_view = sorted((finding_view(f, viewers, unit) for f in res["findings"]),
@@ -5913,6 +6053,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        f"<p class='san-note {cls}'>{e(icon)} {e(text.strip())}</p>")
     # ⛔ end of support: right under the verdict, above everything else
     body.insert(1, SUPPORT_CSS + support_banner_html(s, res.get("_cfk_bundles") or [], res.get("connectors") or []))
+    # 📖 the story of the logs first, right under the header
+    body.insert(0, story_html(res, levels))
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections if (t, text) not in notes]
     # trusted HTML written by the playground itself (never text from the logs: the tools escape it)
     body += [f"<div class='table-card'><h2>{e(t)}</h2>{fragment}</div>" for t, fragment in html_sections]
@@ -6200,7 +6342,7 @@ def main() -> int:
     res["summary"]["levels"] = args.levels
     if args.json:
         # the timestamps of every occurrence are only for the timeline and the time filter of the HTML report
-        compact = dict({k: v for k, v in res.items() if k != "_cfk_bundles"}, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
+        compact = dict({k: v for k, v in res.items() if not k.startswith("_")}, files=[dict(f, records=[{k: v for k, v in r.items() if k not in ("timestamps", "index", "file_index")} for r in f["records"]])
                                    for f in res["files"]],
                        root_causes=[{k: v for k, v in c.items() if k != "records_meta"} for c in res["root_causes"]],
                        known_causes=[{k: v for k, v in h.items() if k not in ("records", "_chains")} for h in res["known_causes"]],
