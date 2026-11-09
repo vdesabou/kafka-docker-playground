@@ -939,6 +939,27 @@ def test_healthy_connector_card_and_jvm():
     check("tile", "☕ JDK" in log_report.jvm_tile(res["summary"]) and "25 / 21" in log_report.jvm_tile(res["summary"]), log_report.jvm_tile(res["summary"]))
 
 
+def test_confluent_connect_logs():
+    """the logs of a fully managed connector (confluent connect logs): --output-file keys of any case, the stacktrace of
+    an exception object (-o json), and the [connector|task-0] context with PG_LOG_CONNECTOR_NAME"""
+    out_file = {"Timestamp": "2026-11-09T10:00:05.456Z", "Level": "ERROR", "TaskId": "task-0", "Message": "Task is being killed",
+                "Exception": "org.x.ConnectException: boom\n\tat a.b(C.java:1)\nCaused by: java.sql.SQLException: ORA-00942"}
+    api = {"timestamp": "2026-11-09T10:00:06Z", "level": "WARN", "task_id": "", "message": "Retrying",
+           "exception": {"stacktrace": "java.lang.IllegalStateException: x\n\tat a.b(C.java:1)"}}
+    os.environ.pop("PG_LOG_CONNECTOR_NAME", None)
+    text = lines(out_file)
+    check("any case", text.startswith("[2026-11-09T10:00:05.456Z] ERROR Task is being killed") and "Caused by: java.sql.SQLException: ORA-00942" in text, text)
+    check("stacktrace of -o json", "java.lang.IllegalStateException: x" in lines(api), lines(api))
+    os.environ["PG_LOG_CONNECTOR_NAME"] = "OracleSink"
+    try:
+        check("task context", "ERROR [OracleSink|task-0] Task is being killed" in lines(out_file), lines(out_file))
+        check("worker context", "WARN [OracleSink|worker] Retrying" in lines(api), lines(api))
+        already = dict(out_file, Message="[other|task-3] Task is being killed")
+        check("context kept", "ERROR [other|task-3] Task is being killed" in lines(already), lines(already))
+    finally:
+        os.environ.pop("PG_LOG_CONNECTOR_NAME", None)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

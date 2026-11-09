@@ -205,6 +205,7 @@ Give it anything: `-f` takes files, folders and archives, repeated as many times
 | `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z` | extracted to a temporary folder, nested archives too (`.7z` needs `bsdtar` or 7-Zip). An archive that does not fully extract is reported ⚠️ |
 | `.gz` | decompressed on the fly; a truncated one (a partial download) is read up to the error and reported ⚠️ |
 | a JSON export of log events: CloudWatch Logs Insights, CloudWatch events, Elasticsearch / OpenSearch hits (`_source` or `fields`), the Loki query API, structured JSON logs (logback, pino, bunyan, GELF: numeric levels too) | converted back to log lines, **oldest first**, stack traces below their event, then digested like a log file |
+| the logs of a fully managed connector (`confluent connect logs --output-file`, keys `Timestamp`, `Level`, `TaskId`, `Message`, `Exception`; or `-o json`) | converted like a JSON export, the stack trace of `Exception` / `exception.stacktrace` kept; `playground connector logs -c <name> --analyze` fetches every page and adds the `[<name>\|task-0]` context, so the 🔌 card and `--connector` work as for a worker log |
 | a CSV export (Kibana / OpenSearch Discover, Splunk `_time,_raw`, Datadog, Grafana) | one event per row, converted the same way |
 | JSON lines whatever the extension (a fluentd / Kubernetes dump saved as `.log`) | detected and streamed: 2.4 GB in about 10 s |
 | `journalctl` exports | the `Nov 03 18:29:20 host connect[1080]:` prefix is skipped to find the log4j timestamp |

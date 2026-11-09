@@ -22,7 +22,8 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | forget the cached cluster details | `playground cleanup-cloud-details` (nothing is deleted in Confluent Cloud) |
 | create / update and wait for RUNNING | `playground connector create-or-update -c DatagenSource_$USER --wait << EOF … EOF` |
 | the state, the error, the fix Confluent Cloud suggests | `playground connector status`, `playground connector error-recommendations -c <name>` |
-| the logs of the connector | `playground connector logs -c <name>` (`--open`, `--wait-for-log "<text>"`) |
+| the logs of the connector | `playground connector logs -c <name>` (`--open`, `--wait-for-log "<text>"`): every page of the last 71 hours, as log lines with the `[<name>\|task-0]` context of a worker |
+| what is failing in those logs | `playground connector logs -c <name> --analyze` (`--errors` for the ERROR level only): the full report of `playground analyze logs`, known causes, timeline, connector card |
 | what it is doing (no JMX) | `playground connector display-metrics-api -c <name>` |
 | its offsets, change them | `playground connector offsets get\|alter\|reset -c <name>` (asynchronous) |
 | its page in the console | `playground connector open-ccloud-connector-in-browser -c <name>` |

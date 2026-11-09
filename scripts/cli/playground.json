@@ -11875,7 +11875,7 @@
         },
         {
           "name": "logs",
-          "description": "🕵️  Tail and follow connect logs\n\nThe logs of the worker running your connector. Combine it with\n'playground connector log-level' to get more than the stack trace, and\nwith --wait-for-log to block until a given line appears, which is how\nexamples assert that something happened.\n\nFor self managed connectors, this is a shortcut for \"playground container logs --container connect\"\n(connect-us / connect-europe in mdc environments): --no-follow, --errors, --since, --tail and --grep are passed through.\nWhen --connector is set (and none of --grep, --errors, --wait-for-log, --open), only the lines mentioning the\nconnector are kept.\n\nFor Fully Managed connectors, the logs come from the confluent CLI ('confluent connect logs', last 71 hours),\nlimitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n--errors keeps the ERROR level, --grep is a search text, and --wait-for-log polls until the text is found or --max-wait.\n\n🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or --wait-for-log, otherwise the command never returns for a self managed connector.\n\n☁️ Fully managed: supported, with the confluent CLI (see above)",
+          "description": "🕵️  Tail and follow connect logs\n\nThe logs of the worker running your connector. Combine it with\n'playground connector log-level' to get more than the stack trace, and\nwith --wait-for-log to block until a given line appears, which is how\nexamples assert that something happened.\n\nFor self managed connectors, this is a shortcut for \"playground container logs --container connect\"\n(connect-us / connect-europe in mdc environments): --no-follow, --errors, --since, --tail and --grep are passed through.\nWhen --connector is set (and none of --grep, --errors, --wait-for-log, --open), only the lines mentioning the\nconnector are kept.\n\nFor Fully Managed connectors, the logs come from the confluent CLI ('confluent connect logs', last 71 hours),\nlimitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n--errors keeps the ERROR level, --grep is a search text, and --wait-for-log polls until the text is found or --max-wait.\nEvery page is fetched (--output-file of the CLI, JSON lines, kept in /tmp/playground-connector-logs-<connector>-<date>.jsonl)\nand shown as log lines with the [connector|task-0] context of a Connect worker (the .log next to it).\n\n🔥 --analyze gives the full report of 'playground analyze logs' instead (known causes, timeline, connector card,\nrestarts, configs): the logs of the Connect worker (--from-containers, kept to --connector when it is given) for a\nself managed connector, the log lines above for a fully managed one.\n\n🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or --wait-for-log, otherwise the command never returns for a self managed connector.\n\n☁️ Fully managed: supported, with the confluent CLI (see above)",
           "usage": "playground connector logs [OPTIONS]",
           "options": [
             {
@@ -11891,7 +11891,7 @@
                 "--open"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log, --grep, --errors"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log, --grep, --errors, --analyze"
             },
             {
               "names": [
@@ -11899,7 +11899,7 @@
                 "-w"
               ],
               "argument": "LOG",
-              "description": "😴 Wait until log appears (exits 1 after --max-wait)\n\nConflicts with: --open, --grep, --errors"
+              "description": "😴 Wait until log appears (exits 1 after --max-wait)\n\nConflicts with: --open, --grep, --errors, --analyze"
             },
             {
               "names": [
@@ -11914,35 +11914,49 @@
                 "--grep"
               ],
               "argument": "GREP",
-              "description": "🎯 Grep pattern to filter logs (search text for fully managed connectors)\n\nConflicts with: --open, --wait-for-log, --errors"
+              "description": "🎯 Grep pattern to filter logs (search text for fully managed connectors)\n\nConflicts with: --open, --wait-for-log, --errors, --analyze"
             },
             {
               "names": [
                 "--since"
               ],
               "argument": "SINCE",
-              "description": "🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (self managed only)\n\nConflicts with: --open, --wait-for-log"
+              "description": "🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (self managed only)\n\nConflicts with: --open, --wait-for-log, --analyze"
             },
             {
               "names": [
                 "--tail"
               ],
               "argument": "LINES",
-              "description": "🔢 Number of lines to show from the end of the logs, or \"all\" (self managed only)\n\nConflicts with: --open, --wait-for-log"
+              "description": "🔢 Number of lines to show from the end of the logs, or \"all\" (self managed only)\n\nConflicts with: --open, --wait-for-log, --analyze"
             },
             {
               "names": [
                 "--no-follow"
               ],
               "argument": "",
-              "description": "🛑 Print the logs and exit instead of following them (self managed only, fully managed logs are never followed)\n\nConflicts with: --open, --wait-for-log"
+              "description": "🛑 Print the logs and exit instead of following them (self managed only, fully managed logs are never followed)\n\nConflicts with: --open, --wait-for-log, --analyze"
             },
             {
               "names": [
                 "--errors"
               ],
               "argument": "",
-              "description": "🔥 Only show a digest of ERROR/FATAL records, then exit (fully managed: only the ERROR level)\n\nConflicts with: --open, --wait-for-log, --grep"
+              "description": "🔥 Only show a digest of ERROR/FATAL records, then exit (fully managed: only the ERROR level). With --analyze: the report of the ERROR records only\n\nConflicts with: --open, --wait-for-log, --grep"
+            },
+            {
+              "names": [
+                "--analyze"
+              ],
+              "argument": "",
+              "description": "🔬 The full report of 'playground analyze logs' on the logs of the connector, self managed (the Connect worker) or fully managed (every page of the last 71 hours)\n\nConflicts with: --open, --wait-for-log, --grep, --since, --tail, --no-follow"
+            },
+            {
+              "names": [
+                "--output-dir"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📁 With --analyze, the folder of the HTML report (default: the one of playground analyze logs)"
             },
             {
               "names": [

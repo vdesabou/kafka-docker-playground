@@ -12130,10 +12130,16 @@ subcommands:
       the confluent CLI ('confluent connect logs', last 71 hours),\nlimitations apply
       (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n--errors
       keeps the ERROR level, --grep is a search text, and --wait-for-log polls until
-      the text is found or --max-wait.\n\n\U0001F393 Tip: from a script or an AI agent,
-      always pass --no-follow, --errors or --wait-for-log, otherwise the command never
-      returns for a self managed connector.\n\n☁️ Fully managed: supported, with the
-      confluent CLI (see above)"
+      the text is found or --max-wait.\nEvery page is fetched (--output-file of the
+      CLI, JSON lines, kept in /tmp/playground-connector-logs-<connector>-<date>.jsonl)\nand
+      shown as log lines with the [connector|task-0] context of a Connect worker (the
+      .log next to it).\n\n\U0001F525 --analyze gives the full report of 'playground
+      analyze logs' instead (known causes, timeline, connector card,\nrestarts, configs):
+      the logs of the Connect worker (--from-containers, kept to --connector when
+      it is given) for a\nself managed connector, the log lines above for a fully
+      managed one.\n\n\U0001F393 Tip: from a script or an AI agent, always pass --no-follow,
+      --errors or --wait-for-log, otherwise the command never returns for a self managed
+      connector.\n\n☁️ Fully managed: supported, with the confluent CLI (see above)"
     usage: playground connector logs [OPTIONS]
     options:
     - names:
@@ -12147,13 +12153,13 @@ subcommands:
       argument: ''
       description: "\U0001F516 Save output to a file and open with text editor set
         with playground config editor <editor> (default is code)\n\nConflicts with:
-        --wait-for-log, --grep, --errors"
+        --wait-for-log, --grep, --errors, --analyze"
     - names:
       - "--wait-for-log"
       - "-w"
       argument: LOG
       description: "\U0001F634 Wait until log appears (exits 1 after --max-wait)\n\nConflicts
-        with: --open, --grep, --errors"
+        with: --open, --grep, --errors, --analyze"
     - names:
       - "--max-wait"
       - "-m"
@@ -12166,29 +12172,42 @@ subcommands:
       - "--grep"
       argument: GREP
       description: "\U0001F3AF Grep pattern to filter logs (search text for fully
-        managed connectors)\n\nConflicts with: --open, --wait-for-log, --errors"
+        managed connectors)\n\nConflicts with: --open, --wait-for-log, --errors, --analyze"
     - names:
       - "--since"
       argument: SINCE
       description: "\U0001F550 Only show logs newer than a relative duration (10m,
-        1h) or a timestamp (self managed only)\n\nConflicts with: --open, --wait-for-log"
+        1h) or a timestamp (self managed only)\n\nConflicts with: --open, --wait-for-log,
+        --analyze"
     - names:
       - "--tail"
       argument: LINES
       description: "\U0001F522 Number of lines to show from the end of the logs, or
-        \"all\" (self managed only)\n\nConflicts with: --open, --wait-for-log"
+        \"all\" (self managed only)\n\nConflicts with: --open, --wait-for-log, --analyze"
     - names:
       - "--no-follow"
       argument: ''
       description: "\U0001F6D1 Print the logs and exit instead of following them (self
         managed only, fully managed logs are never followed)\n\nConflicts with: --open,
-        --wait-for-log"
+        --wait-for-log, --analyze"
     - names:
       - "--errors"
       argument: ''
       description: "\U0001F525 Only show a digest of ERROR/FATAL records, then exit
-        (fully managed: only the ERROR level)\n\nConflicts with: --open, --wait-for-log,
-        --grep"
+        (fully managed: only the ERROR level). With --analyze: the report of the ERROR
+        records only\n\nConflicts with: --open, --wait-for-log, --grep"
+    - names:
+      - "--analyze"
+      argument: ''
+      description: "\U0001F52C The full report of 'playground analyze logs' on the
+        logs of the connector, self managed (the Connect worker) or fully managed
+        (every page of the last 71 hours)\n\nConflicts with: --open, --wait-for-log,
+        --grep, --since, --tail, --no-follow"
+    - names:
+      - "--output-dir"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C1 With --analyze, the folder of the HTML report (default:
+        the one of playground analyze logs)"
     - names:
       - "--verbose"
       - "-v"

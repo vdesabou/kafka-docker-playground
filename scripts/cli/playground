@@ -21752,7 +21752,7 @@ playground_connector_log_level_usage() {
 playground_connector_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector logs\n\n"
-    printf "  🕵️  Tail and follow connect logs\n  \n  The logs of the worker running your connector. Combine it with\n  'playground connector log-level' to get more than the stack trace, and\n  with --wait-for-log to block until a given line appears, which is how\n  examples assert that something happened.\n  \n  For self managed connectors, this is a shortcut for \"playground container logs\n  --container connect\"\n  (connect-us / connect-europe in mdc environments): --no-follow, --errors,\n  --since, --tail and --grep are passed through.\n  When --connector is set (and none of --grep, --errors, --wait-for-log,\n  --open), only the lines mentioning the\n  connector are kept.\n  \n  For Fully Managed connectors, the logs come from the confluent CLI ('confluent\n  connect logs', last 71 hours),\n  limitations apply (see\n  https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n  --errors keeps the ERROR level, --grep is a search text, and --wait-for-log\n  polls until the text is found or --max-wait.\n  \n  🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or\n  --wait-for-log, otherwise the command never returns for a self managed\n  connector.\n  \n  ☁️ Fully managed: supported, with the confluent CLI (see above)\n\n"
+    printf "  🕵️  Tail and follow connect logs\n  \n  The logs of the worker running your connector. Combine it with\n  'playground connector log-level' to get more than the stack trace, and\n  with --wait-for-log to block until a given line appears, which is how\n  examples assert that something happened.\n  \n  For self managed connectors, this is a shortcut for \"playground container logs\n  --container connect\"\n  (connect-us / connect-europe in mdc environments): --no-follow, --errors,\n  --since, --tail and --grep are passed through.\n  When --connector is set (and none of --grep, --errors, --wait-for-log,\n  --open), only the lines mentioning the\n  connector are kept.\n  \n  For Fully Managed connectors, the logs come from the confluent CLI ('confluent\n  connect logs', last 71 hours),\n  limitations apply (see\n  https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli):\n  --errors keeps the ERROR level, --grep is a search text, and --wait-for-log\n  polls until the text is found or --max-wait.\n  Every page is fetched (--output-file of the CLI, JSON lines, kept in\n  /tmp/playground-connector-logs-<connector>-<date>.jsonl)\n  and shown as log lines with the [connector|task-0] context of a Connect worker\n  (the .log next to it).\n  \n  🔥 --analyze gives the full report of 'playground analyze logs' instead (known\n  causes, timeline, connector card,\n  restarts, configs): the logs of the Connect worker (--from-containers, kept to\n  --connector when it is given) for a\n  self managed connector, the log lines above for a fully managed one.\n  \n  🎓 Tip: from a script or an AI agent, always pass --no-follow, --errors or\n  --wait-for-log, otherwise the command never returns for a self managed\n  connector.\n  \n  ☁️ Fully managed: supported, with the confluent CLI (see above)\n\n"
   else
     printf "playground connector logs - 🕵️  Tail and follow connect logs\n\n"
   fi
@@ -21776,13 +21776,13 @@ playground_connector_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log, --grep, --errors"
+    printf "    %s\n" "Conflicts: --wait-for-log, --grep, --errors, --analyze"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
     printf "    😴 Wait until log appears (exits 1 after --max-wait)\n"
-    printf "    %s\n" "Conflicts: --open, --grep, --errors"
+    printf "    %s\n" "Conflicts: --open, --grep, --errors, --analyze"
     echo
 
     # :flag.usage
@@ -21794,31 +21794,43 @@ playground_connector_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--grep GREP")"
     printf "    🎯 Grep pattern to filter logs (search text for fully managed connectors)\n"
-    printf "    %s\n" "Conflicts: --open, --wait-for-log, --errors"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --errors, --analyze"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--since SINCE")"
     printf "    🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp\n    (self managed only)\n"
-    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --analyze"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tail LINES")"
     printf "    🔢 Number of lines to show from the end of the logs, or \"all\" (self managed\n    only)\n"
-    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --analyze"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--no-follow")"
     printf "    🛑 Print the logs and exit instead of following them (self managed only,\n    fully managed logs are never followed)\n"
-    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --analyze"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--errors")"
-    printf "    🔥 Only show a digest of ERROR/FATAL records, then exit (fully managed: only\n    the ERROR level)\n"
+    printf "    🔥 Only show a digest of ERROR/FATAL records, then exit (fully managed: only\n    the ERROR level). With --analyze: the report of the ERROR records only\n"
     printf "    %s\n" "Conflicts: --open, --wait-for-log, --grep"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--analyze")"
+    printf "    🔬 The full report of 'playground analyze logs' on the logs of the connector,\n    self managed (the Connect worker) or fully managed (every page of the last\n    71 hours)\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --grep, --since, --tail, --no-follow"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir OUTPUT_DIR")"
+    printf "    📁 With --analyze, the folder of the HTML report (default: the one of\n    playground analyze logs)\n"
+    printf "    %s\n" "Needs: --analyze"
     echo
 
     # :flag.usage
@@ -21843,6 +21855,8 @@ playground_connector_logs_usage() {
     printf "  playground connector logs --errors\n"
     printf "  playground connector logs --connector filestream-sink --since 10m --no-follow\n"
     printf "  playground connector logs --wait-for-log \"Started FileStreamSinkTask\"\n  --max-wait 120\n"
+    printf "  playground connector logs --connector my-sink --analyze\n"
+    printf "  playground connector logs --analyze --errors --output-dir /tmp/reports\n"
     echo
 
   fi
@@ -91505,6 +91519,9 @@ playground_connector_logs_command() {
   tail_lines="${args[--tail]}"
   no_follow="${args[--no-follow]}"
   errors="${args[--errors]}"
+  analyze="${args[--analyze]}"
+  output_dir="${args[--output-dir]}"
+  fm_logs_to_analyze=()
 
   connector_type=$(playground state get run.connector_type)
 
@@ -91600,60 +91617,112 @@ playground_connector_logs_command() {
                   cur_wait=$((cur_wait + 10))
               done
           else
+              # every page as JSON lines (--output-file: the human output of the CLI is a table, with wrapped cells), then
+              # turned into log lines with the [connector|task-0] context of a Connect worker (json_log_export.py): shown,
+              # opened, or analyzed with --analyze. The first page without --next (a new query), then --next until "No
+              # logs found for the current query"
+              fm_base="/tmp/playground-connector-logs-${connector}-$(date '+%Y%m%d-%H%M%S')"
+              fm_jsonl="${fm_base}.jsonl"
+              fm_log="${fm_base}.log"
+              : > "$fm_jsonl"
               if [[ -n "$verbose" ]]
               then
                   log "🐞 CLI command used"
-                  echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time \"$end_time\" ${maybe_search[*]} --next"
+                  echo "confluent connect logs \"$connectorId\" --level \"$levels\" --start-time \"$start_time\" --end-time \"$end_time\" ${maybe_search[*]} --output-file \"$fm_jsonl\" [--next]"
               fi
-
-              log "📄 Fetching connector logs for $connector (this may take a while for large log sets)..."
+              log "📄 Fetching the logs of fully managed connector $connector ($connectorId, $levels, last 71 hours)..."
               page_num=1
-              while true; do
-                  log "📖 Fetching page $page_num..."
-                  output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" "${maybe_search[@]}" --next 2>&1)
-
-                  # Check if no logs found
-                  if echo "$output" | grep -q "No logs found for the current query"; then
-                      log "✅ Finished fetching all log pages (total pages: $((page_num-1)))"
-                      break
-                  fi
-
-                  if [[ -n "$open" ]]
+              maybe_next=()
+              while true
+              do
+                  output=$(confluent connect logs "$connectorId" --level "$levels" --start-time "$start_time" --end-time "$end_time" "${maybe_search[@]}" "${maybe_next[@]}" --output-file "$fm_jsonl" 2>&1) && status=0 || status=$?
+                  if echo "$output" | grep -q "No logs found"
                   then
-                      # Save the logs to a file
-                      echo "$output" >> "$filename"
-                  else
-                      # Display the logs
-                      echo "$output"
-                  fi
-
-                  # Check if there are more pages by looking for log entries
-                  if [ -z "$(echo "$output" | grep -E '\[INFO\]|\[WARN\]|\[ERROR\]')" ]; then
-                      log "✅ No more log entries found (total pages: $page_num)"
                       break
                   fi
-
+                  if [[ $status -ne 0 ]]
+                  then
+                      logerror "❌ confluent connect logs failed on page $page_num: $(echo "$output" | head -3)"
+                      break
+                  fi
+                  nb_entries=$(echo "$output" | sed -n 's/^Appended \([0-9]*\) log entries.*/\1/p' | head -1)
+                  log "📖 page $page_num: ${nb_entries:-?} log entries"
+                  if [[ "${nb_entries:-0}" -eq 0 ]]
+                  then
+                      break
+                  fi
                   page_num=$((page_num + 1))
-
-                  # Safety limit to prevent infinite loops
-                  if [ $page_num -gt 100 ]; then
-                      logwarn "⚠️  Reached maximum page limit (100), stopping pagination"
+                  if [ $page_num -gt 100 ]
+                  then
+                      logwarn "⚠️ Reached maximum page limit (100), stopping pagination"
                       break
                   fi
-
-                  sleep 1  # Small delay between requests
+                  maybe_next=(--next)
+                  sleep 1
               done
+              nb_lines=$(wc -l < "$fm_jsonl" | tr -d ' ')
+              if [[ "$nb_lines" -eq 0 ]]
+              then
+                  log "💤 No log entry for fully managed connector $connector ($levels, last 71 hours)"
+                  rm -f "$fm_jsonl"
+                  continue
+              fi
+              if ! PG_LOG_CONNECTOR_NAME="$connector" python3 -I "$root_folder/tools/log-analyzer/json_log_export.py" "$fm_jsonl" "$fm_log" > /dev/null 2>&1
+              then
+                  logwarn "⚠️ could not turn the logs of $connector into log lines: the JSON lines are in $fm_jsonl"
+                  fm_log="$fm_jsonl"
+              fi
+              log "✅ $nb_lines log entries of $connector in $fm_log (JSON lines of the CLI: $fm_jsonl)"
+              if [[ -n "$analyze" ]]
+              then
+                  fm_logs_to_analyze+=("$fm_log")
+              elif [[ -n "$open" ]]
+              then
+                  cp "$fm_log" "$filename"
+              else
+                  cat "$fm_log"
+              fi
           fi
-          if [[ -n "$open" ]]
+          if [[ -n "$open" ]] && [[ -f "${filename}" ]]
           then
               playground open --file "${filename}"
           fi
       done
+      if [[ -n "$analyze" ]]
+      then
+          if [ ${#fm_logs_to_analyze[@]} -eq 0 ]
+          then
+              logerror "❌ --analyze: no log entry to analyze"
+              exit 1
+          fi
+          analyze_args=()
+          for fm_log in "${fm_logs_to_analyze[@]}"
+          do
+              analyze_args+=(--file "$fm_log")
+          done
+          [[ -n "$output_dir" ]] && analyze_args+=(--output-dir "$output_dir")
+          playground analyze logs "${analyze_args[@]}"
+      fi
   else
       connect_container="connect"
       if is_mdc_environment
       then
           get_connect_container
+      fi
+      if [[ -n "$analyze" ]]
+      then
+          # the full report of playground analyze logs on the logs of the worker, kept to this connector when one is given
+          analyze_args=(--from-containers --container "$connect_container")
+          [[ -n "$connector" ]] && analyze_args+=(--connector "$connector")
+          [[ -n "$errors" ]] && analyze_args+=(--errors-only)
+          [[ -n "$output_dir" ]] && analyze_args+=(--output-dir "$output_dir")
+          if [[ -n "$verbose" ]]
+          then
+              log "🐞 CLI command used"
+              echo "playground analyze logs ${analyze_args[*]}"
+          fi
+          playground analyze logs "${analyze_args[@]}"
+          exit $?
       fi
       # container logs resolves connect to connect-0 on cfk
       container_args=(--container "$connect_container")
@@ -145941,7 +146010,7 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --open)
         # :flag.conflicts
-        for conflict in --wait-for-log --grep --errors; do
+        for conflict in --wait-for-log --grep --errors --analyze; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -145956,7 +146025,7 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --wait-for-log | -w)
         # :flag.conflicts
-        for conflict in --open --grep --errors; do
+        for conflict in --open --grep --errors --analyze; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -145991,7 +146060,7 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --grep)
         # :flag.conflicts
-        for conflict in --open --wait-for-log --errors; do
+        for conflict in --open --wait-for-log --errors --analyze; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -146012,7 +146081,7 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --since)
         # :flag.conflicts
-        for conflict in --open --wait-for-log; do
+        for conflict in --open --wait-for-log --analyze; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -146033,7 +146102,7 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --tail)
         # :flag.conflicts
-        for conflict in --open --wait-for-log; do
+        for conflict in --open --wait-for-log --analyze; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -146054,7 +146123,7 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --no-follow)
         # :flag.conflicts
-        for conflict in --open --wait-for-log; do
+        for conflict in --open --wait-for-log --analyze; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -146079,6 +146148,35 @@ playground_connector_logs_parse_requirements() {
         # :flag.case_no_arg
         args['--errors']=1
         shift
+        ;;
+
+      # :flag.case
+      --analyze)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log --grep --since --tail --no-follow; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--analyze']=1
+        shift
+        ;;
+
+      # :flag.case
+      --output-dir)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir OUTPUT_DIR" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -146131,6 +146229,13 @@ playground_connector_logs_parse_requirements() {
 
     esac
   done
+
+  # :command.needy_flags_filter
+  # :flag.needs
+  if [[ -n ${args['--output-dir']+x} ]] && [[ -z "${args[--analyze]:-}" ]]; then
+    printf "%s\n" "--output-dir needs --analyze" >&2
+    exit 1
+  fi
 
   # :command.default_assignments
   [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="600"
@@ -176044,6 +176149,7 @@ playground_connector_logs_completion() {
         completion_blocked_flags["--wait-for-log"]=1
         completion_blocked_flags["--grep"]=1
         completion_blocked_flags["--errors"]=1
+        completion_blocked_flags["--analyze"]=1
 
         shift
         ;;
@@ -176058,6 +176164,7 @@ playground_connector_logs_completion() {
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--grep"]=1
         completion_blocked_flags["--errors"]=1
+        completion_blocked_flags["--analyze"]=1
 
         ;;
       --max-wait | -m)
@@ -176081,6 +176188,7 @@ playground_connector_logs_completion() {
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
         completion_blocked_flags["--errors"]=1
+        completion_blocked_flags["--analyze"]=1
 
         ;;
       --since)
@@ -176093,6 +176201,7 @@ playground_connector_logs_completion() {
         completion_blocked_flags["--since"]=1
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--analyze"]=1
 
         ;;
       --tail)
@@ -176105,12 +176214,14 @@ playground_connector_logs_completion() {
         completion_blocked_flags["--tail"]=1
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--analyze"]=1
 
         ;;
       --no-follow)
         completion_blocked_flags["--no-follow"]=1
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--analyze"]=1
 
         shift
         ;;
@@ -176121,6 +176232,27 @@ playground_connector_logs_completion() {
         completion_blocked_flags["--grep"]=1
 
         shift
+        ;;
+      --analyze)
+        completion_blocked_flags["--analyze"]=1
+        completion_blocked_flags["--open"]=1
+        completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--grep"]=1
+        completion_blocked_flags["--since"]=1
+        completion_blocked_flags["--tail"]=1
+        completion_blocked_flags["--no-follow"]=1
+
+        shift
+        ;;
+      --output-dir)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
         ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
@@ -176159,6 +176291,8 @@ playground_connector_logs_completion() {
     completion_flag_candidates --tail "$completion_current" --tail
     completion_flag_candidates --no-follow "$completion_current" --no-follow
     completion_flag_candidates --errors "$completion_current" --errors
+    completion_flag_candidates --analyze "$completion_current" --analyze
+    completion_flag_candidates --output-dir "$completion_current" --output-dir
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --cluster "$completion_current" --cluster
   fi

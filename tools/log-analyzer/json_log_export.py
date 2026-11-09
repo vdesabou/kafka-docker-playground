@@ -9,6 +9,10 @@ Exports recognized (a JSON array, JSON lines, or one object wrapping the events;
   - Kubernetes / fluentd / Loki style events: {"log": ...}, {"msg": ...}, {"line": ...}
   - structured JSON logs (logback / log4j2 JSON layout, ECS): {"@timestamp", "level", "logger_name", "message",
     "stack_trace"} become "[<ts>] <LEVEL> <message> (<logger>)" followed by the stack trace
+  - the logs of a fully managed connector, confluent connect logs: --output-file ({"Timestamp", "Level", "TaskId",
+    "Message", "Exception"}, keys of any case) and -o json ({"timestamp", "level", "task_id", "message", "exception":
+    {"stacktrace"}}); with PG_LOG_CONNECTOR_NAME, each line gets the context of the connector logs, [<name>|task-0]
+    (its task) or [<name>|worker], so that the report ties it to the connector
   - CSV exports (.csv, .csv.gz) with a header row: Kibana / OpenSearch Dashboards Discover ("Share > CSV report",
     "Oct 14, 2026 @ 19:13:28.977" timestamps, "-" for an empty cell), Splunk, Datadog, Grafana / Loki, CloudWatch
     Logs Insights: one event per row, the columns are its fields; a cell holding a JSON object (a "log" or "message"
@@ -35,6 +39,10 @@ TIME_KEYS = ("@timestamp", "timestamp", "time", "ts", "@t", "date", "eventTime",
 LEVEL_KEYS = ("level", "log.level", "severity", "loglevel", "@l")
 LOGGER_KEYS = ("logger_name", "logger", "loggerName", "log.logger", "class")
 STACK_KEYS = ("stack_trace", "exception", "error.stack_trace", "stacktrace", "throwable")
+# the task of an event of a fully managed connector (confluent connect logs): "task-0", or none for the connector itself
+TASK_KEYS = ("task_id", "taskId")
+# [connector|task-0] / [connector|worker] already in the message: the MDC context of Connect
+CONTEXT_RE = re.compile(r"\[[^\s|\]]+\|(?:task-\d+|worker)")
 
 
 def load(path: str) -> Any:
@@ -118,10 +126,24 @@ def load_csv(path: str) -> Any:
     return events or None
 
 
+# the keys of the last event in lower case (get() is called several times per event, on dumps of millions of them)
+_LOWER: List[Any] = [None, {}]
+
+
+def lower_keys(obj: dict) -> dict:
+    if _LOWER[0] is not obj:
+        _LOWER[0], _LOWER[1] = obj, {key.lower(): key for key in obj if isinstance(key, str)}
+    return _LOWER[1]
+
+
 def get(obj: dict, keys) -> Any:
     for k in keys:
         if k in obj and obj[k] not in (None, ""):
             return obj[k]
+        # any case: the --output-file of confluent connect logs writes "Timestamp", "Level", "Message", "TaskId"
+        key = lower_keys(obj).get(k.lower())
+        if key is not None and obj[key] not in (None, ""):
+            return obj[key]
         # dotted keys of ECS: {"log": {"level": ...}}
         if "." in k:
             cur: Any = obj
@@ -248,7 +270,7 @@ def to_lines(event: dict) -> Tuple[Any, List[str]]:
     ts = iso_ts(ts)
     stack = get(event, STACK_KEYS)
     if isinstance(stack, dict):
-        stack = stack.get("stack_trace") or stack.get("message")
+        stack = stack.get("stack_trace") or stack.get("stacktrace") or stack.get("message")
     if not (isinstance(level, str) and not looks_like_log_line(message)) and ts is not None \
             and not TS_NEAR_START.match(message):
         # a message without its time (the second part of a line split by docker at 16 KB, a GC log line with the JVM
@@ -261,6 +283,7 @@ def to_lines(event: dict) -> Tuple[Any, List[str]]:
         level = level.upper()
         level = {"WARNING": "WARN", "CRITICAL": "FATAL", "SEVERE": "ERROR"}.get(level, level)
         logger = get(event, LOGGER_KEYS)
+        message = connector_context(event) + message
         line = f"[{ts}] {level} {message}" if ts is not None else f"{level} {message}"
         if isinstance(logger, str):
             line += f" ({logger})"
@@ -268,6 +291,21 @@ def to_lines(event: dict) -> Tuple[Any, List[str]]:
         if isinstance(stack, str) and stack.strip():
             message += "\n" + stack.rstrip("\n")
     return ts, message.split("\n")
+
+
+def connector_context(event: dict) -> str:
+    """the [<connector>|task-0] / [<connector>|worker] context of an event of a fully managed connector, when
+    PG_LOG_CONNECTOR_NAME names it (playground connector logs) and the message has none"""
+    name = os.environ.get("PG_LOG_CONNECTOR_NAME", "")
+    if not name:
+        return ""
+    message = get(event, MESSAGE_KEYS)
+    if isinstance(message, str) and CONTEXT_RE.search(message[:300]):
+        return ""
+    task = get(event, TASK_KEYS)
+    if isinstance(task, int) or (isinstance(task, str) and task.isdigit()):
+        task = f"task-{task}"
+    return f"[{name}|{task}] " if isinstance(task, str) and re.match(r"^task-\d+$", task) else f"[{name}|worker] "
 
 
 def sortable(ts: Any) -> Any:
