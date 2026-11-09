@@ -287,7 +287,7 @@ in the terminal summary and the summary for a ticket.
 
 ## Restarts and rebalances
 
-The digest also notes the lifecycle of the INFO lines (`@@PGEVT@@` events, 300 per kind and file, and `@@PGEVTN@@` counts):
+The digest also notes the lifecycle of the INFO lines (`@@PGEVT@@` events, 300 per kind and file, and `@@PGEVTN@@` counts over the whole file, `kind, who, count, leaves`: `leaves` the consumer group rejoins due to `consumer pro-actively leaving the group`, a consumer closed on purpose; a group made of those is never a 🌀 storm and comes last, also when none of its events is among the 300 noted, the 100 groups of the short-lived consumers of an Oracle CDC connector):
 `Rebalance started` of a worker group, `Request joining group due to: <reason>` of a consumer group, `Starting connector`,
 `Starting task` (its task id as detail), `Kafka Connect started` / `worker initialization took`, `Kafka Server started` / `Transition from
 STARTING to STARTED`, the stops (`] shutting down (kafka.server`, `to SHUTTING_DOWN`, `Kafka Connect stopping`), the active

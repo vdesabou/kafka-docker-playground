@@ -202,9 +202,11 @@ def parse_records(path: str) -> List[dict]:
                 current["events"].append({"kind": parts[0], "line": int(parts[1]) if parts[1].isdigit() else None,
                                           "time": parts[2] or None, "connector": parts[3] or None, "detail": parts[4]})
             elif line.startswith("@@PGEVTN@@\t") and current is not None:
-                # how many events of a kind for a connector or a group in the whole file (only 300 are noted)
-                parts = (line.rstrip("\n").split("\t") + [""] * 4)[1:4]
-                current["event_counts"].append({"kind": parts[0], "who": parts[1], "count": int(parts[2]) if parts[2].isdigit() else 0})
+                # how many events of a kind for a connector or a group in the whole file (only 300 are noted), and how
+                # many of the consumer group rejoins are a consumer leaving on purpose ("pro-actively leaving the group")
+                parts = (line.rstrip("\n").split("\t") + [""] * 5)[1:5]
+                current["event_counts"].append({"kind": parts[0], "who": parts[1], "count": int(parts[2]) if parts[2].isdigit() else 0,
+                                                "leaves": int(parts[3]) if parts[3].isdigit() else 0})
             elif line.startswith("@@PGCFGCHG@@\t") and current is not None and current["configs"]:
                 parts = (line.split("\t") + [""] * 5)[1:5]
                 key, _, previous = parts[2].partition("=")
@@ -1193,8 +1195,10 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
     for f in files:
         for c in f.get("event_counts") or []:
             r = rows.setdefault((c["kind"], c["who"]), {"kind": c["kind"], "who": c["who"], "count": 0, "first": None,
-                                                       "last": None, "connectors": Counter(), "reasons": Counter(), "times": []})
+                                                       "last": None, "connectors": Counter(), "reasons": Counter(), "times": [],
+                                                       "leaves": 0})
             r["count"] += c["count"]
+            r["leaves"] += c.get("leaves") or 0
         for ev in f.get("events") or []:
             if ev["kind"] not in LIFECYCLE_KINDS:
                 continue
@@ -1216,18 +1220,26 @@ def lifecycle(res: dict, files: List[dict]) -> dict:
     out = []
     for r in rows.values():
         per_hour = round(r["count"] / hours, 1) if hours > 0 else None
+        reason = r["reasons"].most_common(1)[0][0] if r["reasons"] else None
+        # the rejoins of the group are mostly a consumer leaving on purpose, counted over the whole file: also when none
+        # of its events is among the 300 noted per kind and file (100 groups of an Oracle CDC connector, each with a
+        # consumer opened and closed every 30 s, the reason of most of them was unknown and every group was a storm)
+        leaving = r["kind"] == "consumer_rejoin" and r["leaves"] * 2 >= r["count"] > 0
+        if leaving and not reason:
+            reason = f"consumer pro-actively leaving the group ({r['leaves']:,} of {r['count']:,})"
         out.append({"kind": r["kind"], "who": r["who"], "count": r["count"], "first": r["first"], "last": r["last"],
                     "per_hour": per_hour, "connector": r["connectors"].most_common(1)[0][0] if r["connectors"] else None,
-                    "reason": r["reasons"].most_common(1)[0][0] if r["reasons"] else None,
+                    "reason": reason, "leaving": leaving,
                     # a consumer that leaves on purpose (closed: "pro-actively leaving the group", the schema history
-                    # consumer of Debezium every few seconds) is not a storm
+                    # consumer of Debezium every few seconds, the short-lived consumers of Oracle CDC) is not a storm
                     "storm": r["kind"] in ("worker_rebalance", "consumer_rejoin") and r["count"] >= STORM_MIN
-                             and per_hour is not None and per_hour >= STORM_PER_HOUR
-                             and "pro-actively leaving" not in (r["reasons"].most_common(1)[0][0] if r["reasons"] else ""),
+                             and per_hour is not None and per_hour >= STORM_PER_HOUR and not leaving
+                             and "pro-actively leaving" not in (reason or ""),
                     # the times noted (300 per kind and file): the timeline of the 🔄 section of the HTML report only
                     "_times": sorted(r["times"])})
     order = list(LIFECYCLE_KINDS)
-    out.sort(key=lambda r: (not r["storm"], order.index(r["kind"]), -r["count"]))
+    # the groups of consumers that leave on purpose last: thousands of them must not push the real rebalances down
+    out.sort(key=lambda r: (not r["storm"], r["leaving"], order.index(r["kind"]), -r["count"]))
     # the period the rates are computed on: under an hour, the HTML report shows the count over it instead of a rate
     return {"rows": out, "storms": [r for r in out if r["storm"]], "hours": round(hours, 3)}
 

@@ -7393,6 +7393,9 @@ function summarize_log_errors() {
                 lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_stop|controller_change|gc_pause)$/ ? lc_who : lc_conn)
                 if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
                 lc_count[lc_key]++
+                # a consumer closed on purpose (a short-lived consumer of a connector, opened and closed again and again):
+                # counted apart, so that a group made of those is not a storm even when none of its events is noted
+                if (lc_kind == "consumer_rejoin" && index(lc_detail, "pro-actively leaving")) lc_leave[lc_key]++
                 if (++lc_noted[lc_kind] <= 300) {
                     # read before timestamp_of(), whose match() changes RSTART / RLENGTH
                     lc_line = NR
@@ -7455,7 +7458,7 @@ function summarize_log_errors() {
                 for (j = 1; j < n; j++) printf "@@PGCFGCHG@@\t%s\n", cl[j] >> records_file
             }
             for (i = 1; i <= nev; i++) printf "@@PGEVT@@\t%s\n", ev[i] >> records_file
-            for (i = 1; i <= nlc_keys; i++) printf "@@PGEVTN@@\t%s\t%d\n", lc_keys[i], lc_count[lc_keys[i]] >> records_file
+            for (i = 1; i <= nlc_keys; i++) printf "@@PGEVTN@@\t%s\t%d\t%d\n", lc_keys[i], lc_count[lc_keys[i]], lc_leave[lc_keys[i]] + 0 >> records_file
             close(records_file)
         }
         # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed

@@ -572,6 +572,30 @@ def test_log_search_index():
         check("next record", time_of(4) == 1791968460, time_of(4))
 
 
+def test_consumer_leaving_not_a_storm():
+    """🔄 a group whose rejoins are a consumer closed on purpose (the short-lived consumers of Oracle CDC, every 30 s) is
+    not a storm, also when none of its events is among the 300 noted per kind and file: the digest counts those leaves
+    over the whole file (4th column of @@PGEVTN@@); a group with as many real rejoins still is one, and comes first"""
+    text = ("@@PGFILE@@|connect.log|1000|1|1|2026-10-22T14:16:00|2026-10-22T15:40:00\n"
+            "@@PGREC@@|ERROR|1|5|5|2026-10-22T14:20:00|2026-10-22T14:20:00\n"
+            "[2026-10-22 14:20:00,000] ERROR boom (x)\n"
+            "@@PGTS@@|2026-10-22T14:20:00\n"
+            "@@PGEVT@@|consumer_rejoin|9|2026-10-22T14:30:00|sink|connect-sink · rebalance failed due to 'The coordinator is not aware of this member.'\n"
+            "@@PGEVTN@@|consumer_rejoin|cdc-orcl-39-T24-FUSP|140|140\n"
+            "@@PGEVTN@@|consumer_rejoin|connect-sink|140|0\n"
+            "@@PGEVTN@@|consumer_rejoin|old-digest-group|20\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    rows = {r["who"]: r for r in res["lifecycle"]["rows"]}
+    cdc = rows["cdc-orcl-39-T24-FUSP"]
+    check("leaving: not a storm", not cdc["storm"] and cdc["leaving"], cdc)
+    check("leaving: its reason from the counts", cdc["reason"] == "consumer pro-actively leaving the group (140 of 140)", cdc["reason"])
+    check("real rejoins: a storm", rows["connect-sink"]["storm"], rows["connect-sink"])
+    check("a digest without the 4th column: a storm as before", rows["old-digest-group"]["storm"], rows["old-digest-group"])
+    order = [r["who"] for r in res["lifecycle"]["rows"]]
+    check("the leaving group last", order[-1] == "cdc-orcl-39-T24-FUSP", order)
+
+
 def test_connect_without_mdc():
     """⚠️ a Connect log whose task lines have no [connector|task-0] context is reported, not one that has it (also
     with a scope, [c|task-0|redoLog]), nor a broker log, nor a Connect log with too few task lines to tell"""
