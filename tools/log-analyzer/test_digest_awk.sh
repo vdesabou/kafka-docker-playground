@@ -23,8 +23,13 @@ cat > "$tmp/events.log" << 'EOF'
 [2026-11-07T10:25:00.000+0000][gc] GC(2) Pause Full (G1 Compaction Pause) 990M->950M(1G) 2512.789ms
 [2026-11-07T10:25:01.000+0000][gc] GC(3) Pause Young (Normal) (G1 Evacuation Pause) 100M->50M(1G) 12.3ms
 2026-11-07T10:26:00.000+0000: 12.3: [Full GC (Allocation Failure) [PSYoungGen: 1K->0K(2K)] 900K->800K(1000K), 1.8234560 secs] [Times: user=1 sys=0, real=1.82 secs]
+[2026-11-07 10:28:00,000] INFO [jdbc-sink|task-0] Initializing writer using SQL dialect: SqlServerDatabaseDialect (io.confluent.connect.jdbc.sink.JdbcSinkTask:72)
+[2026-11-07 10:28:00,001] INFO [jdbc-sink|task-0] Initializing writer using SQL dialect: SqlServerDatabaseDialect (io.confluent.connect.jdbc.sink.JdbcSinkTask:72)
+[2026-11-07 10:28:00,002] INFO [jdbc-sink|task-0] Committing offsets (org.apache.kafka.connect.runtime.WorkerSinkTask:330)
 2026-11-07T10:27:00.000+0000: 13.0: [GC (Allocation Failure) [ParNew: 26240K->1637K(29504K), 0.0053837 secs] 26240K->1637K(95040K), 0.0128474 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
 EOF
+# a line of a log written on Windows (CRLF)
+printf '%s\r\n' '[2026-11-07 10:28:00,003] INFO [hdfs-sink|task-1] Starting commit and rotation (io.confluent.connect.hdfs3.TopicPartitionWriter:298)' >> "$tmp/events.log"
 samples+=("$tmp/events.log")
 failed=0
 reference=""
@@ -52,6 +57,14 @@ do
     if [ "$got" != "$(printf '%s\n' "$expected" | sort -r -k1,1)" ]
     then
         echo "❌ $awk_cmd: events of events.log: $(printf '%s' "$got" | tr '\n' ',') instead of $(printf '%s' "$expected" | tr '\n' ',')"
+        failed=1
+    fi
+    # the loggers of the lines of the tasks (the plugin of a connector whose startup is not in the logs): each once, not the
+    # ones of the runtime, a CRLF line too
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "plugin_logger" && ($5 == "jdbc-sink" || $5 == "hdfs-sink") {print $5, $6}' "$out.records" | sort | tr '\n' ',')
+    if [ "$got" != "hdfs-sink io.confluent.connect.hdfs3.TopicPartitionWriter,jdbc-sink io.confluent.connect.jdbc.sink.JdbcSinkTask," ]
+    then
+        echo "❌ $awk_cmd: plugin_logger events of events.log: $got"
         failed=1
     fi
     if [ -z "$reference" ]

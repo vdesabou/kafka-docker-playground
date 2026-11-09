@@ -4647,32 +4647,34 @@ subcommands:
       the usual rate (\"39 Partition leadership changed right after broker 2 shut
       down\"); a chart places them in time, one lane per component, long gaps cut,
       and a Δ column gives the time between them), a card per connector (errors, task
-      killed, known causes, config changes), occurrences over time, root causes (deepest
-      exception of each record), files with findings, and every distinct record. Everything
-      below the filter bar is one view of the same records: the level chips, the component
-      chips, the connector picker, the search box and the period selected by dragging
-      over the occurrences chart (all kept in the URL: \U0001F517 Link to this view
-      opens the report on the same view) all recount the two charts, the root causes,
-      the files with findings and the record cards (double-click the chart, or ⤺ whole
-      period, to go back). The findings keep the figures of the whole report, say
-      how much of each of them is in the selection, and the ones with nothing in it
-      are hidden (show them brings them back). With a connector picked, the \U0001F50C
-      Connectors section keeps its card only. ⚠️ Connect logs whose task lines have
-      no connector context ([orders-sink|task-0], the MDC %X{connector.context} of
-      the log4j pattern) are reported, with the fix: their records cannot all be tied
-      to their connector. \U0001F550 Period, a row of the filter bar, picks the period
-      as the time picker of Grafana: quick ranges relative to the end of the logs
-      (last 15 min of the logs…) and the times of the analysis (around the first error,
-      the peak), from → to (paste \"09:02 → 09:08\"), around a time (± 5 min), ⊖ zoom
-      out, ◀ ▶ shift (t ← / t →), ⏱️ on a row of the incident timeline. \U0001F50E
-      Search every log line searches every line of every file, INFO and DEBUG included,
-      in the browser and offline (words, \"a phrase\", /regex/, -exclude, level:INFO,
-      file:connect-0, comp:connect): a histogram of the matches (drag: the period
-      of the report), the counts per level and file, the lines sorted by time, a click
-      for the lines around one. The lines are written compressed next to the report
-      (in the \U0001F4E4 Share .zip) within PLAYGROUND_LOG_SEARCH_MAX_MB (200 MB of
-      lines by default, the files with findings first, 0 to turn it off), not with
-      --sanitize.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n\U0001F3AC
+      killed, known causes, config changes, its plugin class: \U0001F50E inferred
+      from the loggers of the lines of its tasks when the logs miss its startup),
+      occurrences over time, root causes (deepest exception of each record), files
+      with findings, and every distinct record. Everything below the filter bar is
+      one view of the same records: the level chips, the component chips, the connector
+      picker, the search box and the period selected by dragging over the occurrences
+      chart (all kept in the URL: \U0001F517 Link to this view opens the report on
+      the same view) all recount the two charts, the root causes, the files with findings
+      and the record cards (double-click the chart, or ⤺ whole period, to go back).
+      The findings keep the figures of the whole report, say how much of each of them
+      is in the selection, and the ones with nothing in it are hidden (show them brings
+      them back). With a connector picked, the \U0001F50C Connectors section keeps
+      its card only. ⚠️ Connect logs whose task lines have no connector context ([orders-sink|task-0],
+      the MDC %X{connector.context} of the log4j pattern) are reported, with the fix:
+      their records cannot all be tied to their connector. \U0001F550 Period, a row
+      of the filter bar, picks the period as the time picker of Grafana: quick ranges
+      relative to the end of the logs (last 15 min of the logs…) and the times of
+      the analysis (around the first error, the peak), from → to (paste \"09:02 →
+      09:08\"), around a time (± 5 min), ⊖ zoom out, ◀ ▶ shift (t ← / t →), ⏱️ on
+      a row of the incident timeline. \U0001F50E Search every log line searches every
+      line of every file, INFO and DEBUG included, in the browser and offline (words,
+      \"a phrase\", /regex/, -exclude, level:INFO, file:connect-0, comp:connect):
+      a histogram of the matches (drag: the period of the report), the counts per
+      level and file, the lines sorted by time, a click for the lines around one.
+      The lines are written compressed next to the report (in the \U0001F4E4 Share
+      .zip) within PLAYGROUND_LOG_SEARCH_MAX_MB (200 MB of lines by default, the files
+      with findings first, 0 to turn it off), not with --sanitize.\n\n\U0001F36A Deep
+      dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\U0001F3AC
       Bite size session (--compare): https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%81-did-the-fix-work-analyze-the-logs-before-and-after-it"
     usage: playground analyze logs [OPTIONS]
