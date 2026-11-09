@@ -143,6 +143,7 @@ They are packaged as the `kdp-support` [Claude Code plugin](https://docs.claude.
 |---|---|---|
 | `kdp-case` | investigate a support case end to end: ticket context, customer log bundles, fully managed connector checks (read-only), connector code at the exact version, known issues, a minimal reproduction model, and a note with root cause, evidence and a draft customer reply | `/kdp-case <ticket number>`, "investigate ticket 368735" |
 | `kdp-kb-review` | review a knowledge-base article or draft claim by claim against the connector code, docs, release notes and the KB content standards, and propose a corrected article; or create a new standards-compliant article from a case, with a paste-ready HTML version | `/kdp-kb-review <KB url \| file>`, `/kdp-kb-review --find "<error message>"`, `/kdp-kb-review --create --ticket <n>` |
+| `kdp-runbook` | review or create an internal GTS troubleshooting runbook or triage page (Confluence): create-vs-improve decision against the existing runbooks, every log pattern, command and version branch verified, GTS runbook standards checked, a paste-ready Confluence body plus the triage page row, and (after you confirm) the Knowledge Task and an unpublished draft page | `/kdp-runbook <Confluence URL>`, `/kdp-runbook --find "<error message>"`, `/kdp-runbook --create <case note>` |
 
 The Confluent Claude Code policy only allows approved plugin marketplaces (`/plugin marketplace add` fails with
 `blocked by enterprise policy`), so link the skills into your personal skills folder instead, once, from the root of
@@ -151,7 +152,7 @@ your clone:
 ```bash
 git submodule update --init --remote reproduction-models
 mkdir -p ~/.claude/skills
-for s in kdp-case kdp-kb-review; do
+for s in kdp-case kdp-kb-review kdp-runbook; do
   ln -sfn "$PWD/reproduction-models/claude-plugins/kdp-support/skills/$s" ~/.claude/skills/$s
 done
 ```
