@@ -1009,6 +1009,19 @@ def test_ocr_rebuild():
     check("prose kept", ocr.fix_line("Node may not be available. Retrying.") == "Node may not be available. Retrying.")
 
 
+def test_other_files_copy_button():
+    """🧰 a 📋 copy button per command, with the command alone (not the note after it), none for a step"""
+    of = {"files": [], "commands": [
+        {"icon": "🧵", "what": "thread dumps", "files": ["a.txt"], "command": "playground analyze thread-dump -f /x/a.txt"},
+        {"icon": "🖼️", "what": "screenshot", "files": ["s.png"], "command": "playground analyze logs --ocr -f /x/s.png (or: open /x/s.png)"},
+        {"icon": "📄", "what": "document", "files": ["d.pdf"], "command": "pdftotext -layout /x/d.pdf /tmp/pdf.log && playground analyze logs -f /tmp/pdf.log (pdftotext: brew install poppler)"},
+        {"icon": "📄", "what": "document", "files": ["d.xls"], "command": "save /x/d.xls again as .docx / .xlsx"}]}
+    html = log_report.other_files_html(of)
+    cmds = re.findall(r"data-cmd='([^']*)'", html)
+    check("commands copied alone", cmds == ["playground analyze thread-dump -f /x/a.txt", "playground analyze logs --ocr -f /x/s.png",
+                                            "pdftotext -layout /x/d.pdf /tmp/pdf.log &amp;&amp; playground analyze logs -f /tmp/pdf.log"], cmds)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

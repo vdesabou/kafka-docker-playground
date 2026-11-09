@@ -2669,18 +2669,29 @@ def other_files_html(of: Optional[dict]) -> str:
     if not cmds:
         return ""
     kept = any(f.get("kept") for f in (of or {}).get("files") or [])
+
+    def copy_button(command: str) -> str:
+        # 📋 the command alone, without the note after it ("(or: open …)", "(pdftotext: brew install …)"); none for a
+        # step that is not a command ("save … again as .docx")
+        cmd = re.split(r" \((?:or|pdftotext): ", command, maxsplit=1)[0]
+        if not re.match(r"^(?:playground|pdftotext) ", cmd):
+            return ""
+        return (f"<button type='button' class='pill conn-changelog of-copy' data-cmd='{e(cmd)}' title='copy the command, "
+                "then run it in a terminal'>📋 copy</button>")
     rows = "".join(
         f"<tr><td>{e(c['icon'])} {e(c['what'])}</td><td class='mono'>{'<br>'.join(e(x) for x in c['files'][:10])}"
         f"{e(' … +' + str(len(c['files']) - 10)) if len(c['files']) > 10 else ''}</td>"
-        f"<td><code class='of-cmd'>{e(c['command'])}</code></td></tr>" for c in cmds)
-    return ("<style>.of-cmd{white-space:pre-wrap;word-break:break-all;font-size:.78rem}</style>"
+        f"<td>{copy_button(c['command'])}<code class='of-cmd'>{e(c['command'])}</code></td></tr>" for c in cmds)
+    return ("<style>.of-cmd{white-space:pre-wrap;word-break:break-all;font-size:.78rem}"
+            ".of-copy{float:right;margin:0 0 4px 8px;font-size:.72rem}</style>"
             "<div class='table-card'><h2>🧰 Other files of the input, for another analyzer</h2><p class='legend'>"
             "Files of the input that another playground analyzer reads better than this log digest: GC logs (pauses, "
             "Full GC, heap trend), thread dumps (deadlocks, stuck threads), heap dumps, flight recordings, network "
             "captures, Oracle XStream diagnostics reports. Run the command of each. 🖼️ Screenshots (also the pictures "
             "of a Word document) and 📄 documents analyze logs does not convert (PDF, .doc, .xls, .pptx) are not "
-            "analyzed: the lines they show are not in this report. Transcribe the screenshots to a .log file (a Claude "
-            "Code session reads pictures: /kdp-case) and run analyze logs on it; the documents: the command says how."
+            "analyzed: the lines they show are not in this report. The screenshots: read them with --ocr (approximate "
+            "lines, marked 📷), or transcribe them in a Claude Code session (/kdp-case); the documents: the command says "
+            "how. 📋 copy puts the command in the clipboard."
             + (" The ones extracted from an archive were kept next to this report (&lt;report&gt;-other-files/)." if kept else "")
             + "</p><table><tr><th>What</th><th>Files</th><th>Command</th></tr>" + rows + "</table></div>")
 
