@@ -4246,7 +4246,7 @@ function filter_docker_running() {
     # the offline analyzers read files: they work without a container engine (a customer bundle on a laptop without
     # Docker, a colleague who only wants the log report); the parts that need one say it themselves (the CFK analysis
     # of a support bundle is skipped, its pod logs are still read)
-    analyze\ logs|analyze\ gc-logs|analyze\ thread-dump|analyze\ oracle-xstream-report|find-command|find-example)
+    analyze\ logs|analyze\ cfk-bundle|analyze\ gc-logs|analyze\ thread-dump|analyze\ oracle-xstream-report|find-command|find-example)
       return 0
     ;;
   esac
@@ -7617,8 +7617,19 @@ function summarize_log_errors() {
 function open_html_report() {
     local report="$1"
     local no_open="$2"
-    log "✅ HTML report saved: $report"
-    if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+    log "✅ HTML report saved: $(shown_path "$report")"
+    if [ -n "${PLAYGROUND_HOST_PATH_MAP:-}" ]
+    then
+        # the kdp-analyze-logs image: no browser in it, the path on the host (a relative one when the host folder is not
+        # known: -e KDP_HOST_DIR="$PWD" gives the absolute one)
+        local shown
+        shown=$(shown_path "$report")
+        case "$shown" in
+            /*) log "🔗 Open in browser: file://$(python3 -I -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$shown" 2>/dev/null || echo "$shown")" ;;
+            [A-Za-z]:/*) log "🔗 Open in browser: file:///$(python3 -I -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe="/:"))' "$shown" 2>/dev/null || echo "$shown")" ;;
+            *) log "🔗 Open in browser: $shown, in the folder where docker run was started" ;;
+        esac
+    elif { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
     then
         log "🌐 Opening $report in browser..."
         if command -v open > /dev/null 2>&1
@@ -7740,10 +7751,65 @@ function write_ccloud_costs_range_report() {
     open_html_report "$report" "$no_open"
 }
 
+# A path for the messages of the CLI: inside the kdp-analyze-logs image (tools/analyze-logs-image), the folder mounted
+# in /data is shown as the folder of the host (PLAYGROUND_HOST_PATH_MAP=/data=<host folder>, from docker run -e
+# KDP_HOST_DIR="$PWD"), or as . when the host folder is not known. Unchanged outside the image. $1: path
+function shown_path() {
+    local path="$1"
+    local map="${PLAYGROUND_HOST_PATH_MAP:-}"
+    if [[ -z "$map" || "$map" != *=* ]]
+    then
+        echo "$path"
+        return
+    fi
+    local from="${map%%=*}"
+    local to="${map#*=}"
+    # a Windows folder (PowerShell ${PWD}): C:\Users\me -> C:/Users/me
+    to="${to//\\//}"
+    to="${to%/}"
+    if [[ "$path" == "$from" ]]
+    then
+        echo "${to:-/}"
+    elif [[ "$path" == "$from"/* ]]
+    then
+        echo "${to}${path#"$from"}"
+    else
+        echo "$path"
+    fi
+}
+
+# Whether cfk-analysis runs with the python3 of the machine instead of its Docker image. CFK_ANALYSIS_LOCAL=1: always
+# (the kdp-analyze-logs image, which has PyYAML), 0: never; unset: when there is no container engine and PyYAML is
+# installed (a laptop without Docker). The answer is kept in CFK_ANALYSIS_LOCAL for the next calls (docker info is slow).
+# Returns 1 with a message when it can run neither way
+function cfk_analysis_local() {
+    case "${CFK_ANALYSIS_LOCAL:-}" in
+        1) return 0 ;;
+        0) return 1 ;;
+    esac
+    if command -v docker > /dev/null 2>&1 && docker info > /dev/null 2>&1
+    then
+        export CFK_ANALYSIS_LOCAL=0
+        return 1
+    fi
+    if python3 -c 'import yaml' > /dev/null 2>&1
+    then
+        export CFK_ANALYSIS_LOCAL=1
+        return 0
+    fi
+    return 2
+}
+
 # Prints the image of cfk-analysis, built on first use: dependencies baked once, code mounted at run time. The tag changes
 # when the Dockerfile or requirements change, so the image is rebuilt only then. playground analyze logs calls it once
-# before analyzing several bundles in parallel (a single build). Messages on stderr: stdout is the image name
+# before analyzing several bundles in parallel (a single build). Messages on stderr: stdout is the image name.
+# With cfk_analysis_local, nothing to build: prints "local"
 function cfk_analyzer_image() {
+    if cfk_analysis_local
+    then
+        echo "local"
+        return 0
+    fi
     local analyzer_dir="$root_folder/cfk-analysis"
     local image_tag
     image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
@@ -7762,8 +7828,64 @@ function cfk_analyzer_image() {
     echo "$image"
 }
 
-# Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
-# HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
+# Runs a script of cfk-analysis: in its Docker image (code and files mounted read-only, as the current user), or with the
+# python3 of the machine (cfk_analysis_local). Reads the arrays cfk_mounts ("<host path>:<path in the container>", the
+# local run uses the host paths) and cfk_env ("NAME=value") of the caller (bash locals are visible to the functions it
+# calls; no nameref, bash 4.2 is supported). $1: image (cfk_analyzer_image), then the script (relative to cfk-analysis/)
+# and its arguments, which use the container paths (mapped back to the host paths for a local run)
+function run_cfk_analysis() {
+    local image="$1"
+    shift
+    local script="$1"
+    shift
+    local analyzer_dir="$root_folder/cfk-analysis"
+    local mount arg
+    if [[ "$image" == "local" ]]
+    then
+        local local_args=()
+        for arg in "$@"
+        do
+            for mount in "${cfk_mounts[@]}"
+            do
+                local host="${mount%:*}" container="${mount##*:}"
+                if [[ "$arg" == "$container" || "$arg" == "$container"/* ]]
+                then
+                    arg="${host}${arg#"$container"}"
+                    break
+                fi
+            done
+            local_args+=("$arg")
+        done
+        # -E -s as in the image: no PYTHONPATH nor user site-packages; not -I, the scripts import their neighbours.
+        # rc: playground analyze logs runs it under set -e, a failed analysis must not end the job silently
+        local rc=0
+        env "${cfk_env[@]}" python3 -E -s "$analyzer_dir/$script" "${local_args[@]}" || rc=$?
+        return $rc
+    fi
+    local docker_args=(--rm --user "$(id -u):$(id -g)" --entrypoint python
+        -v "$analyzer_dir:/tmp/cfk-analysis:ro" -v "$root_folder/tools/report-common:/tmp/report-common:ro")
+    for mount in "${cfk_mounts[@]}"
+    do
+        # the output folder is written, the rest is read-only
+        if [[ "${mount##*:}" == "/tmp/output" ]]
+        then
+            docker_args+=(-v "$mount")
+        else
+            docker_args+=(-v "$mount:ro")
+        fi
+    done
+    for arg in "${cfk_env[@]}"
+    do
+        docker_args+=(-e "$arg")
+    done
+    local rc=0
+    docker run "${docker_args[@]}" "$image" -E -s "/tmp/cfk-analysis/$script" "$@" || rc=$?
+    return $rc
+}
+
+# Runs cfk-analysis (Docker image built on first use, or the local python3: cfk_analysis_local) on a CFK support bundle:
+# prints the text digest and writes the HTML report in the output dir (opened in an interactive terminal), or prints the
+# JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
 # $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty to not sanitize (no --sanitize), $4: minimal severity,
 # $5: max issues per category in text mode, $6: output dir, $7: non-empty for --include-warnings, then the components
@@ -7818,19 +7940,20 @@ function analyze_cfk_bundle() {
     done
 
     # run as the current user: it can read the bundle and write the HTML report
-    local docker_args=(
-        --rm
-        --user "$(id -u):$(id -g)"
-        -v "$analyzer_dir:/tmp/cfk-analysis:ro"
-        -v "$root_folder/tools/report-common:/tmp/report-common:ro"
-        -v "$bundle_abs:$bundle_container:ro"
-    )
+    local cfk_mounts=("$bundle_abs:$bundle_container")
+    local cfk_env=()
     # internal links of the known CFK issues (cfk-analysis/runbooks.py), kept by Confluent support in the private
     # reproduction-models repository
     local runbooks_file="${PLAYGROUND_CFK_RUNBOOKS_FILE:-$root_folder/reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json}"
     if [[ -f "$runbooks_file" ]]
     then
-        docker_args+=(-v "$runbooks_file:/tmp/cfk-runbooks-private.json:ro" -e CFK_RUNBOOKS_PRIVATE=/tmp/cfk-runbooks-private.json)
+        if [[ "$image" == "local" ]]
+        then
+            cfk_env+=(CFK_RUNBOOKS_PRIVATE="$runbooks_file")
+        else
+            cfk_mounts+=("$runbooks_file:/tmp/cfk-runbooks-private.json")
+            cfk_env+=(CFK_RUNBOOKS_PRIVATE=/tmp/cfk-runbooks-private.json)
+        fi
     fi
 
     # the HTML report is always written (not with --json: stdout must stay JSON)
@@ -7854,7 +7977,7 @@ function analyze_cfk_bundle() {
         if [[ -n "${CFK_ANALYSIS_EMBEDDED:-}" ]]
         then
             html_out="${output_dir_abs}/${bundle_basename}${CFK_ANALYSIS_REPORT_SUFFIX:-}-cfk.html"
-            docker_args+=(-e CFK_ANALYSIS_EMBEDDED=1)
+            cfk_env+=(CFK_ANALYSIS_EMBEDDED=1)
         fi
         cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
         # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
@@ -7862,11 +7985,15 @@ function analyze_cfk_bundle() {
         cli_args+=(--json-out "/tmp/output/$(basename "$CFK_ANALYSIS_JSON")")
         # the ✏️ links of the report open the files in the editor, at their path on the host: the files of the bundle
         # folder, or copies next to the report for an archive or a folder extracted by playground analyze logs
-        docker_args+=(-v "$output_dir_abs:/tmp/output" -e PLAYGROUND_REPORT_HOST_DIR="$output_dir_abs"
-                      -e PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)")
+        cfk_mounts+=("$output_dir_abs:/tmp/output")
+        cfk_env+=(PLAYGROUND_REPORT_HOST_DIR="$output_dir_abs" PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)")
+        if [[ -n "${PLAYGROUND_HOST_PATH_MAP:-}" ]]
+        then
+            cfk_env+=(PLAYGROUND_HOST_PATH_MAP="$PLAYGROUND_HOST_PATH_MAP")
+        fi
         if [[ -d "$bundle" && -z "${CFK_ANALYSIS_TEMPORARY:-}" ]]
         then
-            docker_args+=(-e PLAYGROUND_BUNDLE_HOST_DIR="$bundle_abs")
+            cfk_env+=(PLAYGROUND_BUNDLE_HOST_DIR="$bundle_abs")
         fi
     fi
     if [[ -n "${CFK_ANALYSIS_LABEL:-}" ]]
@@ -7882,12 +8009,12 @@ function analyze_cfk_bundle() {
     # [records]}), the issues of these files come from them (the same records as the log report)
     if [[ -n "${CFK_ANALYSIS_LOG_RECORDS:-}" ]] && [[ -s "$CFK_ANALYSIS_LOG_RECORDS" ]]
     then
-        docker_args+=(-v "$CFK_ANALYSIS_LOG_RECORDS:/tmp/cfk-log-records.json:ro")
+        cfk_mounts+=("$CFK_ANALYSIS_LOG_RECORDS:/tmp/cfk-log-records.json")
         cli_args+=(--log-records /tmp/cfk-log-records.json)
     fi
 
-    docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
-    local exit_code=$?
+    local exit_code=0
+    run_cfk_analysis "$image" analyzer_cli.py "${cli_args[@]}" || exit_code=$?
     case $exit_code in
         0) ;;
         64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
@@ -7917,33 +8044,32 @@ function compare_cfk_bundles() {
     local json_out="$1"
     local output_dir="$2"
     shift 2
-    local analyzer_dir="$root_folder/cfk-analysis"
-    local image_tag
-    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
-    local image="cfk-bundle-analyzer:$image_tag"
-    local docker_args=(--rm --user "$(id -u):$(id -g)" --entrypoint python
-        -v "$analyzer_dir:/tmp/cfk-analysis:ro" -v "$root_folder/tools/report-common:/tmp/report-common:ro")
+    local image
+    image=$(cfk_analyzer_image) || return 1
+    local cfk_mounts=()
+    local cfk_env=()
     local args=()
     local i=0
     local file
     for file in "$@"
     do
-        docker_args+=(-v "$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file"):/tmp/input/analysis-$i.json:ro")
+        cfk_mounts+=("$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file"):/tmp/input/analysis-$i.json")
         args+=("/tmp/input/analysis-$i.json")
         i=$((i + 1))
     done
     if [[ -n "$json_out" ]]
     then
-        docker run "${docker_args[@]}" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" --json
-        return $?
+        local rc=0
+        run_cfk_analysis "$image" compare.py "${args[@]}" --json || rc=$?
+        return $rc
     fi
     mkdir -p "$output_dir"
     local output_dir_abs
     output_dir_abs=$(cd "$output_dir" && pwd -P)
     local html_out="cfk-bundles-comparison-$(date '+%Y%m%d-%H%M%S').html"
-    docker run "${docker_args[@]}" -v "$output_dir_abs:/tmp/output" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" \
-        --html-out "/tmp/output/$html_out"
-    local exit_code=$?
+    cfk_mounts+=("$output_dir_abs:/tmp/output")
+    local exit_code=0
+    run_cfk_analysis "$image" compare.py "${args[@]}" --html-out "/tmp/output/$html_out" || exit_code=$?
     # CFK_COMPARISON_HTML: the report written, opened unless CFK_ANALYSIS_NO_OPEN (see analyze_cfk_bundle)
     CFK_COMPARISON_HTML=""
     if [[ $exit_code -eq 0 && -f "$output_dir_abs/$html_out" ]]

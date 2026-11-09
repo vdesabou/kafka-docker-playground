@@ -1,0 +1,11 @@
+# the context is the whole repository: only the files of playground analyze logs (see Dockerfile)
+*
+!scripts/cli/playground
+!tools/log-analyzer
+!tools/report-common
+!tools/streams-analyzer
+!cfk-analysis
+!tools/analyze-logs-image/entrypoint.sh
+**/__pycache__
+**/*.pyc
+**/tests

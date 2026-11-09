@@ -141,7 +141,10 @@ sharing it.
 - `problem.py` — `--problem` (🎯 matched against the bundle) and the 📥 Data to request section.
 - `analyzer_cli.py` — CLI entrypoint: safe extraction → analyze → sanitize → render.
 - `Dockerfile` / `requirements.txt` — runtime image (`python:3.12-slim` + `PyYAML`). The playground builds it
-  once (tag derived from these two files) and mounts the code at run time.
+  once (tag derived from these two files) and mounts the code at run time. Without a container engine, with PyYAML
+  installed, or with `CFK_ANALYSIS_LOCAL=1` (always in the `kdp-analyze-logs` image, `tools/analyze-logs-image`), the
+  playground runs the same scripts with the local python3 instead (`run_cfk_analysis` in
+  `scripts/cli/src/lib/cli_function.sh`: same arguments and environment variables, host paths instead of the mounts).
 
 ## Exit codes
 

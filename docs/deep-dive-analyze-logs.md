@@ -733,8 +733,44 @@ cd kafka-docker-playground && git sparse-checkout set scripts tools cfk-analysis
 | awk (gawk, mawk, busybox or macOS awk), gzip, tar | the digest, the archives |
 | optional: unzip | a `.zip` (without it, python3 extracts it) |
 | optional: zip | the 📤 Share `.zip` of the report |
-| optional: Docker | the ☸️ sections of a CFK support bundle (without it, its pod logs are still in the report) |
+| optional: Docker, or PyYAML (`pip install PyYAML`) | the ☸️ sections of a CFK support bundle (without either, its pod logs are still in the report) |
 
 Checked on Ubuntu 24.04 and 20.04 (Python 3.8, mawk), RHEL UBI 9 and Alpine (busybox), without Docker. On Windows: WSL.
 `analyze gc-logs`, `analyze thread-dump` and `analyze oracle-xstream-report` on files work the same way.
+
+#### With nothing installed but Docker: the `kdp-analyze-logs` image
+
+`ghcr.io/vdesabou/kdp-analyze-logs` is `playground analyze logs` in an image (linux/amd64 and linux/arm64): no git, no
+bash 4, no python, no jq, no clone. It reads the current folder and writes the report and the summary for a ticket in
+`./log-analysis-output/`, on the host. Every flag works the same (`--sanitize`, `--connector`, `--compare`, `--json`…):
+
+```bash
+# macOS / Linux
+docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f case-12345-bundle.zip --sanitize
+```
+
+```powershell
+# Windows PowerShell (no WSL needed)
+docker run --rm --network none -v "${PWD}:/data" -e KDP_HOST_DIR="${PWD}" ghcr.io/vdesabou/kdp-analyze-logs -f case-12345-bundle.zip --sanitize
+```
+
+| Part of the command | Why |
+| --- | --- |
+| `-v "$PWD":/data` | the folder of the logs: the paths of `-f` are relative to it, the report is written in it |
+| `--network none` | the analysis needs no network: the logs cannot leave the machine, enforced by Docker |
+| `-e KDP_HOST_DIR="$PWD"` | optional: the paths printed and the ✏️ links of the report are those of the host (without it, the paths are printed relative to the folder and the report has no ✏️ link) |
+| `--user "$(id -u):$(id -g)"` | on Linux, so that the report belongs to you and not to root (Docker Desktop does it already) |
+
+A CFK support bundle gets its ☸️ sections in the image (PyYAML is in it, no Docker in Docker). There is no browser in a
+container: open the path printed after `🔗 Open in browser`. `docker pull ghcr.io/vdesabou/kdp-analyze-logs` updates it;
+`:<commit sha>` and `:<date>` (`:2026-11-09`) tags pin a version. The image is built from `tools/analyze-logs-image`,
+tested and published by the `analyze logs image` workflow on each change on master and every week.
+
+| | A clone | The image |
+| --- | --- | --- |
+| Needs | bash 4.2+, python3, jq, git | Docker only |
+| Windows | WSL | PowerShell, as it is |
+| ☸️ sections of a CFK bundle | with Docker or PyYAML | always |
+| Report opened in the browser | yes | no, the path is printed |
+| Network during the analysis | none needed | none, enforced with `--network none` |
 

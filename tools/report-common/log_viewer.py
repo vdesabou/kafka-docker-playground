@@ -185,9 +185,38 @@ def editor() -> Tuple[str, str]:
     return EDITORS.get(name, EDITORS["code"])
 
 
+def host_path(path: str) -> str:
+    """the path of a file on the host, for the ✏️ links. Inside the kdp-analyze-logs image (tools/analyze-logs-image),
+    PLAYGROUND_HOST_PATH_MAP=<folder in the container>=<folder on the host> (/data=$PWD of docker run, -e KDP_HOST_DIR):
+    a file under the mounted folder gets its host path (a Windows folder C:\\x becomes /C:/x, the form of the editor
+    URLs); "" when the host folder is not known (/data=.) or the file is elsewhere in the container: no ✏️ link, an
+    editor cannot open a path of the container. Unchanged without the variable."""
+    mapping = os.environ.get("PLAYGROUND_HOST_PATH_MAP", "")
+    if not path or "=" not in mapping:
+        return path
+    inside, host = mapping.split("=", 1)
+    host = host.replace("\\", "/").rstrip("/")
+    if re.match(r"^[A-Za-z]:", host):
+        host = "/" + host
+    if not host.startswith("/"):
+        return ""
+    if path == inside:
+        return host or "/"
+    if path.startswith(inside.rstrip("/") + "/"):
+        return host + path[len(inside.rstrip("/")):]
+    return ""
+
+
 def editor_url(path: str, line="{line}") -> str:
-    """URL opening a file of the host at a line in the editor; line "{line}" is left for the script of the page"""
-    return editor()[1].replace("{path}", quote(path)).replace("{line}", str(line))
+    """URL opening a file of the host at a line in the editor; line "{line}" is left for the script of the page;
+    "" when the file has no path on the host (host_path)"""
+    path = host_path(path)
+    if not path:
+        return ""
+    # a Windows drive keeps its colon (/C:/x, not /C%3A/x); any other colon is encoded, it would read as the line
+    drive = re.match(r"^/[A-Za-z]:(?=/)", path)
+    quoted = (drive.group(0) + quote(path[drive.end():])) if drive else quote(path)
+    return editor()[1].replace("{path}", quoted).replace("{line}", str(line))
 
 
 def write_page(path: str, out_path: str, label: str, hits: Iterable[int], report_name: str, editor_path: str = "",
@@ -277,6 +306,9 @@ def write_pages(report_path: str, files: List[Tuple[str, str, Iterable[int], Opt
         # a .gz is opened decompressed
         copy = not original or original.endswith(".gz")
         editor_path = os.path.join(host_dir, folder, name[:-len(".html")]) if copy else original
+        # no ✏️ link for a file without a path on the host (inside the kdp-analyze-logs image, host_path)
+        if not host_path(editor_path):
+            editor_path = ""
         if write_page(path, os.path.join(report_dir, folder, name), label, hits, report_name, editor_path, copy):
             # percent-encoded: the report is named after the input, a # or a ? in its name would cut the URL
             hrefs[label] = f"{quote(folder)}/{quote(name)}"

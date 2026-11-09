@@ -1022,6 +1022,31 @@ def test_other_files_copy_button():
                                             "pdftotext -layout /x/d.pdf /tmp/pdf.log &amp;&amp; playground analyze logs -f /tmp/pdf.log"], cmds)
 
 
+def test_host_path_map():
+    """the ✏️ links inside the kdp-analyze-logs image (tools/analyze-logs-image): /data is the folder of the host"""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
+    import log_viewer
+    saved = os.environ.pop("PLAYGROUND_HOST_PATH_MAP", None)
+    try:
+        check("no map: unchanged", log_viewer.editor_url("/Users/me/a:b.log", 3) == "vscode://file/Users/me/a%3Ab.log:3",
+              log_viewer.editor_url("/Users/me/a:b.log", 3))
+        os.environ["PLAYGROUND_HOST_PATH_MAP"] = "/data=/home/me/case/"
+        check("under /data", log_viewer.editor_url("/data/out/x.log", 7) == "vscode://file/home/me/case/out/x.log:7",
+              log_viewer.editor_url("/data/out/x.log", 7))
+        check("/data itself", log_viewer.host_path("/data") == "/home/me/case", log_viewer.host_path("/data"))
+        check("not /database", log_viewer.editor_url("/database/x.log", 1) == "", log_viewer.editor_url("/database/x.log", 1))
+        check("elsewhere in the container", log_viewer.editor_url("/tmp/pg-x/a.log", 1) == "")
+        os.environ["PLAYGROUND_HOST_PATH_MAP"] = "/data=C:\\Users\\me\\case"
+        check("Windows folder", log_viewer.editor_url("/data/a b.log", 2) == "vscode://file/C:/Users/me/case/a%20b.log:2",
+              log_viewer.editor_url("/data/a b.log", 2))
+        os.environ["PLAYGROUND_HOST_PATH_MAP"] = "/data=."
+        check("host folder not known: no link", log_viewer.editor_url("/data/a.log", 2) == "")
+    finally:
+        os.environ.pop("PLAYGROUND_HOST_PATH_MAP", None)
+        if saved is not None:
+            os.environ["PLAYGROUND_HOST_PATH_MAP"] = saved
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
