@@ -1,12 +1,15 @@
 name: Tools tests
 
-# the unit tests of the Python helpers of the reports (sanitizer, known causes, exports of log events, overview) and the log
-# digest with every awk: plain asserts, no dependency, a few seconds. On the pull requests and pushes that change them
+# the unit tests of the Python helpers of the reports (sanitizer, known causes, exports of log events, overview), the same
+# with Python 3.8 (the oldest supported), and the log digest with every awk: plain asserts, no dependency, a few seconds.
+# On the pull requests and pushes that change them
 on:
   pull_request:
     paths:
       - "tools/report-common/**"
       - "tools/log-analyzer/**"
+      - "tools/streams-analyzer/**"
+      - "cfk-analysis/**"
       - "scripts/cli/src/lib/cli_function.sh"
       - ".github/workflows/tools-tests.yml"
   push:
@@ -15,6 +18,8 @@ on:
     paths:
       - "tools/report-common/**"
       - "tools/log-analyzer/**"
+      - "tools/streams-analyzer/**"
+      - "cfk-analysis/**"
       - "scripts/cli/src/lib/cli_function.sh"
       - ".github/workflows/tools-tests.yml"
   workflow_dispatch:
@@ -38,6 +43,17 @@ jobs:
 
       - name: Exports of log events, overview, progress
         run: python3 -I tools/log-analyzer/test_log_analyzer.py
+
+      # python3 3.8 is the oldest version analyze logs supports (Ubuntu 20.04; also UBI 9 and macOS /usr/bin/python3 are
+      # 3.9): a construct of a newer Python (a 3.12 f-string with nested quotes, a match statement) made every run fail
+      # there with a SyntaxError, the tests above use 3.12. Every file must compile with 3.8, and the tests pass with it
+      - name: Python 3.8, the oldest supported version
+        run: |
+          docker run --rm -v "$PWD":/src:ro -w /src -e PYTHONPYCACHEPREFIX=/tmp/pyc python:3.8-slim sh -ec '
+            python -m compileall -q tools/log-analyzer tools/report-common tools/streams-analyzer cfk-analysis
+            python -I tools/report-common/test_sanitizer.py
+            python -I tools/log-analyzer/test_log_analyzer.py
+          '
 
       # the digest of analyze logs, container logs --errors, get-ci-result: mawk is the default awk of Debian / Ubuntu, a
       # construct it refuses made the whole digest fail there (records of every file lost)

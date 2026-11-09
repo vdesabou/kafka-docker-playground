@@ -45,7 +45,7 @@ OpenSearch hits with `fields` instead of `_source`, Splunk `_time` (its newest-f
 and the `stack_trace` of an event without level. A message is taken as an already formatted log line only when it has
 a level word **and** a time near its start (`"Task failed: WARN threshold"` of an ERROR event keeps its level, logger
 and stack trace). A CSV cell holding JSON is merged only when it is a log line (it has a message), and times with an
-offset are compared in UTC to detect a newest-first export. Tests: `python3 -I tools/log-analyzer/test_log_analyzer.py`, run with `tools/report-common/test_sanitizer.py` by the Tools tests workflow (`.github/workflows/tools-tests.yml`) on the pull requests that change `tools/log-analyzer/` or `tools/report-common/`.
+offset are compared in UTC to detect a newest-first export. Tests: `python3 -I tools/log-analyzer/test_log_analyzer.py`, run with `tools/report-common/test_sanitizer.py` by the Tools tests workflow (`.github/workflows/tools-tests.yml`) on the pull requests that change `tools/log-analyzer/`, `tools/report-common/`, `tools/streams-analyzer/` or `cfk-analysis/`: once with Python 3.12, once in a `python:3.8-slim` container (3.8 is the oldest supported version) after `compileall` of the four folders, so that a construct of a newer Python (a 3.12 f-string with nested quotes) fails the PR instead of every run on Ubuntu 20.04, UBI 9 or the `/usr/bin/python3` of macOS.
 
 ## Without Docker, without the playground
 
