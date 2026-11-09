@@ -1127,9 +1127,9 @@ PLUGIN_PACKAGES = (
     ("com.wepay.kafka.connect.bigquery", "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector"),
     ("com.snowflake.kafka.connector", "com.snowflake.kafka.connector.SnowflakeSinkConnector"),
 )
-# packages of a line of a task that are not its plugin: a library (license, Hadoop client…) or a part of every connector of
-# a family; never shown as "the plugin package" when no class matches
-SHARED_PACKAGES = re.compile(r"^(io\.confluent\.(license|connect\.(utils|common|cloud\.storage|storage|connector\.common))|"
+# packages of a line of a task that are not its plugin: the runtime (its sink / source task classes), a library (license,
+# Hadoop client…) or a part of every connector of a family; never shown as "the plugin package" when no class matches
+SHARED_PACKAGES = re.compile(r"^(org\.apache\.kafka|io\.confluent\.(license|connect\.(utils|common|cloud\.storage|storage|connector\.common))|"
                              r"io\.debezium\.(util|pipeline|config|jdbc|relational|storage|service|schema|connector\.common|"
                              r"embedded|transforms|heartbeat|snapshot|function|processors|spi|bean))(\.|$)")
 
@@ -1276,6 +1276,26 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
                 if m:
                     c["jdbc"], c["jdbc_from"] = scheme, m.group(0)
                     break
+    # a sink or a source when nothing names its plugin: the task class of the runtime that logged its lines, the record of
+    # an error reported by the runtime (consumed: sink, produced: source), the clients it owns
+    for f in files:
+        for ev in f.get("events") or []:
+            c = cards.get(ev.get("connector"))
+            if not c or c.get("direction"):
+                continue
+            if ev["kind"] == "connector_hint" and (ev["detail"] or "").startswith("direction "):
+                c["direction"] = ev["detail"].split(" ", 1)[1]
+                c["direction_from"] = "LogReporter, " + ("consumed record" if c["direction"] == "sink" else "source record")
+            elif ev["kind"] == "plugin_logger" and re.search(r"\.(Abstract|ExactlyOnce)?Worker(Sink|Source)Task$", ev["detail"] or ""):
+                c["direction"] = "sink" if "Sink" in ev["detail"] else "source"
+                c["direction_from"] = ev["detail"].split(".")[-1]
+    for c in cards.values():
+        if c.get("direction"):
+            continue
+        kinds = {m.group(1) for x in c["clients"] for m in [re.match(r"^connector-(consumer|producer)-", x)] if m}
+        if len(kinds) == 1:
+            c["direction"] = "sink" if kinds == {"consumer"} else "source"
+            c["direction_from"] = f"its connector-{kinds.pop()}- client"
     for c in cards.values():
         if c.get("versions") and c.get("class") and c.get("cp"):
             st = support_dates.connector_status(c["class"], c["versions"][-1], c["cp"])
@@ -2608,7 +2628,10 @@ def conn_class_text(c: dict) -> str:
         return f"{short} (inferred from its log lines: {c['class_inferred_from']})"
     if short:
         return short
-    return f"plugin package {c['plugin_package']} (from its log lines)" if c.get("plugin_package") else ""
+    direction = f"a {c['direction']} connector (from {c['direction_from']})" if c.get("direction") else ""
+    if c.get("plugin_package"):
+        return f"plugin package {c['plugin_package']} (from its log lines)" + (f", {direction}" if direction else "")
+    return f"{direction}, plugin unknown" if direction else ""
 
 
 def conn_class_html(c: dict) -> str:
@@ -2619,9 +2642,12 @@ def conn_class_html(c: dict) -> str:
                 f"inferred from its log lines (<span class='mono'>{e(c['class_inferred_from'])}</span>)</span></div>")
     if c.get("class"):
         return f"<div class='fi-meta'>🏷️ <span class='mono' title='{e(c['class'])}'>{e(c['class'].split('.')[-1])}</span> · version unknown</div>"
+    direction = (f" · a {e(c['direction'])} connector (from {e(c['direction_from'])})" if c.get("direction") else "")
     if c.get("plugin_package"):
         return (f"<div class='fi-meta'>🔎 plugin package <span class='mono'>{e(c['plugin_package'])}</span> "
-                "(from its log lines, class unknown)</div>")
+                f"(from its log lines, class unknown){direction}</div>")
+    if c.get("direction"):
+        return f"<div class='fi-meta'>🔎 a {e(c['direction'])} connector, plugin unknown (from {e(c['direction_from'])})</div>"
     return ""
 
 
