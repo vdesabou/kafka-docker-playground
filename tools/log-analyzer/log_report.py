@@ -2264,7 +2264,7 @@ def task_workers_html(tw: Optional[dict]) -> str:
                             f"title='{e(t['task'])} on {e(r['worker'])}: {e(stamp(r['from']))} → {e(stamp(r['to']))}, "
                             f"{r['starts']} start(s)'></i>")
             n = t["task"][len(t["connector"]):] if t["task"].startswith(t["connector"]) else t["task"]
-            lanes.append(f"<div class='tw-lane'><span title='task {e(t["task"])}'>{e(n)}</span><div class='tw-track'>{''.join(segs)}</div></div>")
+            lanes.append(f"<div class='tw-lane'><span title='task {e(t['task'])}'>{e(n)}</span><div class='tw-track'>{''.join(segs)}</div></div>")
         if len(ts) > TW_LANES:
             lanes.append(f"<div class='tw-sub'>+ {len(ts) - TW_LANES} more task(s)</div>")
         ews = []
