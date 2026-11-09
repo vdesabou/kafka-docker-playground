@@ -246,7 +246,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 | 🗂️ files and 🕰️ log coverage | per file and per folder of rotated logs, with the hours a folder has no log |
 | 📄 records of each file | every distinct record, its exception chain colored, 📄 / ✏️ to the line |
 | ⚙️ configuration | the configs logged at startup (one block per config class, the keys that differ between dumps, the keys changed between restarts) and the `.properties` / connector JSON of the input |
-| 📤 Share | a card per action: the `.zip` of the report and its pages, 💬 the summary to paste, **🎫 Copy for a ticket** (Markdown, always sanitized), 🔗 the path, ✉️ an email, the sanitization state first |
+| 📤 Share | a card per action: the `.zip` of the report and its pages, 💬 the summary to paste, **🎫 Copy for a ticket** (Markdown, always sanitized), the same **🧵 for Slack** (bold, links, a bullet per row: Slack has no tables) and **📝 as rich text** (HTML with real tables, pastes formatted in Zendesk, Gmail, Confluence, Google Docs), 🔗 the path, ✉️ an email, the sanitization state first |
 
 ### The filters, the search, and links to a view
 
@@ -255,7 +255,7 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
   📈) combine; the charts, root causes, files, records and timeline follow.
 - **🕐 Period**, a row of the filter bar, as the time picker of Grafana: **⏱ Quick ranges** relative to the **end of
   the logs** (not to now: `Last 15 min of the logs`, `First 1 h of the logs`) and the times of the analysis (`± 5 min
-  around the first ERROR`, `the peak`, `± 5 min around the first <known cause>`), **from → to** (type them, or paste
+  around the first ERROR`, `the peak`, `± 5 min around the first <known cause>`), **from → to** (📅 opens the date and time picker of the browser, or type them, or paste
   `2026-10-14 09:02 → 09:08` in from; `HH:MM` alone is the last day of the logs with that time), **Around** a time
   the customer gives (`09:05`, `± 5 min`), **⊖** zoom out, **◀ ▶** half a period earlier / later (keys `t ←`,
   `t →`, `t z`), ⤺ whole period, and the recent periods. **⏱️** on a row of the 🗓️ incident timeline: ± 2 min

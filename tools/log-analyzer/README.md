@@ -193,7 +193,7 @@ once the page is scrolled down. The jumps use a quick scroll (`pgScrollTo()`, 25
 The sanitization state (⚠️ Not sanitized, 🔒 Sanitization) is a line under the verdict, not a section, and 📥 Data to
 request is the last section.
 📤 Share is a button of the header, of the sticky filter bar (next to 🔗 Link to this view) and of the 🧭 Sections panel,
-and the S key; all open the same dialog (.zip, summary, summary for a ticket, path, email).
+and the S key; all open the same dialog (.zip, summary, summary for a ticket, path, email). The summary for a ticket (`ticket_markdown()`, sanitized) is also offered for Slack and as rich text: `tools/report-common/share_formats.py` converts that Markdown, `md_to_slack()` to text pasted in the Slack message box (`*bold*`, `code`, a bullet per table row, a link as `text (url)`, nothing escaped: the box shows `&lt;` and `<url|text>` as written) and `md_to_html()` to HTML with inline styles, copied as `text/html` (`ClipboardItem`, a selected contenteditable as the fallback) with the Markdown as `text/plain`.
 
 ## Sections of a CFK support bundle
 

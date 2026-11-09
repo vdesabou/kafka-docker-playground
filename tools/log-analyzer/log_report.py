@@ -42,6 +42,7 @@ import known_causes  # noqa: E402
 import connector_icons  # noqa: E402
 import log_viewer  # noqa: E402
 import log_search  # noqa: E402
+import share_formats  # noqa: E402
 from known_causes import KILLED_TASK_TITLE  # noqa: E402
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
@@ -3694,15 +3695,24 @@ def share_html(summary: str, share_zip: str, sanitized: bool, title: str, ticket
                 if share_zip else
                 "<p class='sc-note'>📦 No .zip was written with this report: send the .html together with its "
                 "<span class='mono'>-files/</span> folder.</p>")
-    return (SHARE_CSS + f"<script type='text/plain' id='pg-share-summary'>{safe}</script>"
-            + (f"<script type='text/plain' id='pg-share-ticket'>{ticket.replace('<', chr(92) + 'u003c')}</script>" if ticket else "") +
+    # the summary for a ticket in the other formats of the dialog: Slack mrkdwn, and HTML copied as rich text
+    def embed(id_: str, text: str) -> str:
+        return f"<script type='text/plain' id='{id_}'>{text.replace('<', chr(92) + 'u003c')}</script>"
+    formats = (embed("pg-share-ticket", ticket) + embed("pg-share-slack", share_formats.md_to_slack(ticket))
+               + embed("pg-share-html", share_formats.md_to_html(ticket))) if ticket else ""
+    return (SHARE_CSS + f"<script type='text/plain' id='pg-share-summary'>{safe}</script>" + formats +
             f"<dialog class='share-dlg' data-title='{e(title)}'><div class='sd-head'><h3>📤 Share this report</h3>"
             "<button type='button' class='share-close sd-x' aria-label='close'>✕</button></div>"
             f"<div class='sd-body'>{state}{zip_item}<div class='share-grid'>"
             + card("button", "type='button' data-share='summary'", "💬", "Copy the summary",
-                   "verdict, period, known causes and root causes as text: paste it in Slack")
+                   "verdict, period, known causes and root causes as plain text, like the terminal")
             + (card("button", "type='button' data-share='ticket'", "🎫", "Copy for a ticket",
-                    "Markdown tables, secrets / IPs / hostnames replaced: paste it in Zendesk or Jira") if ticket else "")
+                    "Markdown tables, secrets / IPs / hostnames replaced: paste it in Zendesk or Jira")
+               + card("button", "type='button' data-share='slack'", "🧵", "Copy for Slack",
+                      "the same, in Slack formatting (bold, links, a bullet per row): paste it in a Slack message")
+               + card("button", "type='button' data-share='html'", "📝", "Copy as rich text (HTML)",
+                      "the same, formatted with real tables: paste it in Zendesk, Gmail, Confluence or Google Docs")
+               if ticket else "")
             + card("button", "type='button' data-share='path'", "🔗", "Copy the path", "where the report is on this machine")
             + card("button", "type='button' data-share='mail'", "✉️", "Email the summary", "a new mail with the summary: attach the .zip")
             + "</div><p class='share-done' aria-live='polite'></p></div>"
@@ -3802,6 +3812,29 @@ document.addEventListener("DOMContentLoaded", function () {
       navigator.clipboard.writeText(text).then(ok, () => fallback(text, what));
     } else fallback(text, what);
   }
+  function embedded(id) { return document.getElementById(id).textContent.replace(/\\\\u003c/g, "<"); }
+  // rich text: text/html for the editors that take it (Zendesk, Gmail, Confluence, Docs), the Markdown as text/plain
+  function copyRich(htmlText, plain, what) {
+    const ok = () => { done.textContent = "✅ " + what + " copied to the clipboard"; };
+    if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+      navigator.clipboard.write([new ClipboardItem({"text/html": new Blob([htmlText], {type: "text/html"}),
+                                                    "text/plain": new Blob([plain], {type: "text/plain"})})])
+        .then(ok, () => fallbackRich(htmlText, what));
+    } else fallbackRich(htmlText, what);
+  }
+  function fallbackRich(htmlText, what) {
+    const box = document.createElement("div");
+    box.contentEditable = "true";
+    box.style.cssText = "position:fixed;left:-9999px;top:0";
+    box.innerHTML = htmlText;
+    dlg.appendChild(box);
+    const range = document.createRange(), sel = window.getSelection();
+    range.selectNodeContents(box); sel.removeAllRanges(); sel.addRange(range);
+    try { document.execCommand("copy"); done.textContent = "✅ " + what + " copied to the clipboard"; }
+    catch (e) { done.textContent = "the copy failed: use 🎫 Copy for a ticket"; }
+    sel.removeAllRanges();
+    box.remove();
+  }
   function fallback(text, what) {
     const ta = document.createElement("textarea");
     ta.value = text; dlg.appendChild(ta); ta.select();
@@ -3824,7 +3857,9 @@ document.addEventListener("DOMContentLoaded", function () {
       copy("cd " + q(dir) + " && zip -qr " + q(zip) + " " + q(page) + " " + q(page.replace(/\\.html$/, "-files")), "the zip command");
     }
     else if (b.dataset.share === "summary") copy(summary, "the summary");
-    else if (b.dataset.share === "ticket") copy(document.getElementById("pg-share-ticket").textContent.replace(/\\\\u003c/g, "<"), "the summary for a ticket");
+    else if (b.dataset.share === "ticket") copy(embedded("pg-share-ticket"), "the summary for a ticket");
+    else if (b.dataset.share === "slack") copy(embedded("pg-share-slack"), "the summary for Slack");
+    else if (b.dataset.share === "html") copyRich(embedded("pg-share-html"), embedded("pg-share-ticket"), "the summary as rich text");
     else if (b.dataset.share === "path") copy(path, "the path");
     else if (b.dataset.share === "mail") {
       const body = "Log analysis report: " + path.split("/").pop() + " (attached .zip)\\n\\n" + summary;

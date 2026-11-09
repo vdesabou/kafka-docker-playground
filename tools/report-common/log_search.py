@@ -292,6 +292,12 @@ def search_html(index: Optional[dict]) -> str:
             f"<script type='application/json' id='pg-log-index'>{data}</script>")
 
 
+# 📅 in a from / to box: the date and time picker of the browser (a datetime-local input, opened with showPicker(),
+# min / max the period of the logs); the text box stays for a pasted time or "a → b"
+CAL = ("<button type='button' class='pp-cal' title='pick a date and a time'>📅</button>"
+       "<input class='pp-dt' type='datetime-local' step='1' tabindex='-1' aria-hidden='true'>")
+
+
 def period_row(lo: Optional[float], hi: Optional[float], marks: List[dict]) -> str:
     """the 🕐 Period row of the filter bar; marks: {label, from, to} of the analysis (first error, peak...)"""
     if lo is None or hi is None or hi <= lo:
@@ -310,9 +316,10 @@ def period_row(lo: Optional[float], hi: Optional[float], marks: List[dict]) -> s
     data = e(json.dumps(marks, separators=(",", ":")))
     return (PERIOD_CSS + f"<div class='fb-row pg-period' data-lo='{int(lo)}' data-hi='{int(hi)}' data-marks='{data}'>"
             "<span class='fb-label'>🕐 Period</span>" + sel
-            + "<input class='pp-from' type='text' spellcheck='false' placeholder='from: 2026-10-14 09:02 (or paste a → b)' "
-            "title='the start of the period, in the time of the logs: YYYY-MM-DD HH:MM[:SS], HH:MM[:SS] (the last day of the logs with that time), an epoch; paste \"a → b\" for both. Enter applies'>"
-            "<span class='fb-label'>→</span><input class='pp-to' type='text' spellcheck='false' placeholder='to' title='the end of the period. Enter applies'>"
+            + "<span class='pp-field'><input class='pp-from' type='text' spellcheck='false' placeholder='from: 2026-10-14 09:02 (or paste a → b)' "
+            "title='the start of the period, in the time of the logs: YYYY-MM-DD HH:MM[:SS], HH:MM[:SS] (the last day of the logs with that time), an epoch; paste \"a → b\" for both. Enter applies'>" + CAL + "</span>"
+            "<span class='fb-label'>→</span><span class='pp-field'><input class='pp-to' type='text' spellcheck='false' placeholder='to' "
+            "title='the end of the period. Enter applies'>" + CAL + "</span>"
             "<button type='button' class='pill pp-apply' title='use from / to as the period of the report'>Apply</button>"
             "<span class='pp-nav'><button type='button' class='pill pp-out' title='zoom out: twice as long, same middle (t z)'>⊖</button>"
             "<button type='button' class='pill pp-prev' title='half a period earlier (t ←)'>◀</button>"
@@ -326,7 +333,7 @@ def period_row(lo: Optional[float], hi: Optional[float], marks: List[dict]) -> s
 
 
 PERIOD_CSS = ("<style>.pg-period input{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;padding:5px 9px;border-radius:8px;"
-              "border:1px solid #d1d5db;background:#fff;color:#1e293b;width:13.2em}.pg-period .pp-at{width:7em}"
+              "border:1px solid #d1d5db;background:#fff;color:#1e293b;width:14.6em}.pg-period .pp-at{width:7em}"
               ".pg-period select{max-width:170px;font-family:inherit;font-size:.78rem;padding:4px 26px 4px 10px;border-radius:8px;border:1px solid #cbd5e1;"
               "background-color:#fff;color:#1e293b;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url(\"data:image/svg+xml,"
               "%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E\");"
@@ -337,6 +344,12 @@ PERIOD_CSS = ("<style>.pg-period input{font-family:ui-monospace,SFMono-Regular,M
               ".pg-period.pp-on .pp-all{border-color:#6366f1;color:#4338ca}"
               "html[data-theme=dark] .pg-period input{background:#0f172a;border-color:#334155;color:#e2e8f0}"
               "html[data-theme=dark] .pg-period .pp-info b{color:#e2e8f0}"
+              ".pg-period .pp-field{position:relative;display:inline-flex;align-items:center}"
+              ".pg-period .pp-field input[type=text]{padding-right:28px}"
+              ".pg-period .pp-cal{position:absolute;right:4px;border:0;background:none;cursor:pointer;font-size:.85rem;padding:2px;opacity:.7}"
+              ".pg-period .pp-cal:hover{opacity:1}"
+              ".pg-period .pp-dt{position:absolute;left:0;bottom:0;width:100%;height:0;padding:0;border:0;opacity:0;pointer-events:none}"
+              "html[data-theme=dark] .pg-period .pp-dt{color-scheme:dark}"
               "button.tl-around{border:0;background:none;cursor:pointer;padding:0 0 0 4px;font-size:.8rem;opacity:.55}button.tl-around:hover{opacity:1}"
               "</style>")
 
@@ -528,6 +541,25 @@ var pgPeriod = null, pgPeriodSetting = false;
     const t = +b.closest("tr").dataset.t;
     pgSetPeriod(t - 120, t + 120);
     row.scrollIntoView({block: "nearest"});
+  });
+  // 📅 the picker of the browser: opened on the current from / to, applied once a date and a time are picked
+  const isoOf = t => pgStamp(t).replace(" ", "T");
+  row.querySelectorAll(".pp-field").forEach(function (field) {
+    const text = field.querySelector("input[type=text]"), dt = field.querySelector(".pp-dt"), btn = field.querySelector(".pp-cal");
+    if (!dt || !btn) return;
+    dt.min = isoOf(LO); dt.max = isoOf(HI + 1);
+    let timer = null;
+    btn.addEventListener("click", function () {
+      const p = current();
+      dt.value = isoOf(text === fromIn ? p[0] : Math.min(p[1], HI + 1));
+      try { dt.showPicker(); } catch (e) { dt.style.pointerEvents = "auto"; dt.focus(); }
+    });
+    dt.addEventListener("change", function () {
+      if (!dt.value) return;
+      text.value = dt.value.replace("T", " ") + (dt.value.length === 16 ? ":00" : "");
+      clearTimeout(timer);
+      timer = setTimeout(applyFromTo, 400);
+    });
   });
   fillRecent();
   document.addEventListener("DOMContentLoaded", function () { if (pgWindow && !pgPeriod) pgPeriod = [Math.floor(pgWindow[0]), Math.ceil(pgWindow[1])]; show(); });
