@@ -582,6 +582,23 @@ def harmless_html(items: List[dict]) -> str:
             f"<tbody>{rows}</tbody></table></details></div>")
 
 
+OCR_SUFFIX = " (📷 OCR)"
+
+
+def ocr_text(labels: List[str]) -> str:
+    return (f"📷 {len(labels)} screenshot(s) read by OCR ({', '.join(l[:-len(OCR_SUFFIX)] for l in labels[:4])}"
+            f"{' …' if len(labels) > 4 else ''}): their records are approximate, a character can be misread "
+            "(orq.apache, a digit): check the picture before quoting a value")
+
+
+def ocr_html(labels: List[str]) -> str:
+    if not labels:
+        return ""
+    return (f"<div class='table-card' id='ocr'><h2>📷 Read by OCR</h2><p class='legend'>{e(ocr_text(labels))}. Their lines "
+            "are in the file page of each <span class='mono'>(📷 OCR)</span> file; the timestamps and the counts of a "
+            "screenshot only cover what it shows.</p></div>")
+
+
 def jvm_versions(files: List[dict]) -> List[dict]:
     """☕ the JVMs of the logs: [{version, vendor, files}] (jvm.spec of a Connect worker, java.version=, the Version: of a
     GC log, the header of a thread dump; with --from-containers, java -version of each container: --jvm-versions)"""
@@ -974,6 +991,8 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["summary"]["kafka_versions"] = kafka_versions(files)
     res["summary"]["librdkafka_versions"] = kafka_versions(files, "librdkafka_version")
     res["summary"]["jvm_versions"] = jvm_versions(files)
+    # 📷 the screenshots read by OCR (analyze logs --ocr): their records are approximate
+    res["summary"]["ocr_files"] = [f["label"] for f in files if f["label"].endswith(OCR_SUFFIX)]
     res["lifecycle"] = lifecycle(res, files)
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
@@ -2341,6 +2360,14 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
             out.append({"what": what, "why": why, "how": how})
     for i in s.get("incomplete_inputs") or []:
         ask(f"a complete copy of {i['file']}", f"it was not fully read ({i['reason']}): the missing part may hold the errors")
+    # 📷 screenshots: the log files themselves first, they bring the startup, a longer window and the exact characters
+    ocr_files = s.get("ocr_files") or []
+    if ocr_files:
+        ask("the logs as text files rather than screenshots (" + ", ".join(l[:-len(OCR_SUFFIX)] for l in ocr_files[:4])
+            + (" …" if len(ocr_files) > 4 else "") + ")",
+            "a screenshot only shows a few lines, and OCR can misread a character: the log files give the whole window, "
+            "the startup of the component (config, plugin versions) and the exact values",
+            "the files of the log folder of the component (connect.log, server.log…), or a zip of it")
     if s.get("connect_without_mdc"):
         ask("the Connect logs with the connector context (MDC), after the fix of the log4j pattern of the workers",
             "the lines of the tasks do not say their connector: the errors cannot all be tied to the connector that "
@@ -2357,6 +2384,7 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
     # only Connect workers and brokers: they log their config at startup (the clients of other languages, a Kafka
     # Streams application do not)
     no_start = sorted({worker_of(f["label"]) for f in res["files"] if file_component(f["label"]) in ("connect", "kafka")
+                       and not f["label"].endswith(OCR_SUFFIX)
                        and any(r["level"] in ("ERROR", "FATAL") for r in f["records"])} - with_start)
     if no_start:
         ask("the logs since the last (re)start of " + ", ".join(no_start[:4]) + (" …" if len(no_start) > 4 else "")
@@ -3409,6 +3437,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append(covered)
     if time_zone_note(s):
         out.append("   " + time_zone_note(s))
+    if s.get("ocr_files"):
+        out.append("   " + ocr_text(s["ocr_files"]))
     if s.get("connect_without_mdc"):
         out.append("   " + mdc_text(s["connect_without_mdc"]) + f". Fix: {MDC_HOW}")
     if s.get("kafka_versions"):
@@ -6982,7 +7012,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
             lifecycle_html(res.get("lifecycle"), viewers), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files")),
-            harmless_html(res.get("harmless") or [])]
+            harmless_html(res.get("harmless") or []), ocr_html(res["summary"].get("ocr_files") or [])]
     # the sanitization state (⚠️ Not sanitized, 🔒 Sanitization of analyze logs) is a line under the verdict, not a section
     notes = [(t, text) for t, text in sections if t.startswith(("⚠️ Not sanitized", "🔒 Sanitization"))]
     for t, text in notes:

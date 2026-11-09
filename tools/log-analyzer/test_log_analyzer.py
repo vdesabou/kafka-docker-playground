@@ -19,6 +19,7 @@ import bundle_triage  # noqa: E402
 import json_log_export as jle  # noqa: E402
 import log_overview  # noqa: E402
 import log_report  # noqa: E402
+import ocr  # noqa: E402
 import progress  # noqa: E402
 
 
@@ -986,6 +987,26 @@ def test_confluent_connect_logs():
         check("context kept", "ERROR [other|task-3] Task is being killed" in lines(already), lines(already))
     finally:
         os.environ.pop("PG_LOG_CONNECTOR_NAME", None)
+
+
+def test_ocr_rebuild():
+    """📷 the lines of a screenshot (ocr.py): the brackets of a timestamp, the {} of a task id, the tab of a frame, the
+    spaces tesseract adds inside a Java name, the usual g/q j/i misreadings of a package; a line wrapped by the terminal
+    joined to its record; never a digit (task-@ stays: a regex would invent the value)"""
+    raw = ["|2026-11-09 10:00:05,4561 ERROR [jdbc-sink|task-0] WorkerSinkTaskiid=jdbc-sink-0; Task threw an uncaught and",
+           "unrecoverable exception. (orq.apache.kafka.connect.runtime.WorkerTask: 234)",
+           "org.apache. kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.",
+           "at org.apache. kafka. connect. runtime.WorkerSinkTask.deliverMessages (WorkerSinkTask. java: 632)",
+           "Caused by: java.sql.SQLException: ORA-01017: invalid username/password; logon denied",
+           "[2026-11-09 10:00:06,000] WARN [s|task-@] (orq.apache.kafka.connect.ison.JsonConverterConfiq:375)"]
+    out = ocr.rebuild([ocr.fix_line(l) for l in raw])
+    check("record", out[0] == "[2026-11-09 10:00:05,456] ERROR [jdbc-sink|task-0] WorkerSinkTask{id=jdbc-sink-0} Task threw an "
+          "uncaught and unrecoverable exception. (org.apache.kafka.connect.runtime.WorkerTask:234)", out[0])
+    check("exception", out[1] == "org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.", out[1])
+    check("frame", out[2] == "\tat org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:632)", out[2])
+    check("caused by", out[3].startswith("Caused by: java.sql.SQLException: ORA-01017"), out[3])
+    check("package names, not digits", out[4] == "[2026-11-09 10:00:06,000] WARN [s|task-@] (org.apache.kafka.connect.json.JsonConverterConfig:375)", out[4])
+    check("prose kept", ocr.fix_line("Node may not be available. Retrying.") == "Node may not be available. Retrying.")
 
 
 if __name__ == "__main__":
