@@ -25,6 +25,7 @@ cat > "$tmp/events.log" << 'EOF'
 2026-11-07T10:26:00.000+0000: 12.3: [Full GC (Allocation Failure) [PSYoungGen: 1K->0K(2K)] 900K->800K(1000K), 1.8234560 secs] [Times: user=1 sys=0, real=1.82 secs]
 [2026-11-07 10:28:00,000] INFO [jdbc-sink|task-0] Initializing writer using SQL dialect: SqlServerDatabaseDialect (io.confluent.connect.jdbc.sink.JdbcSinkTask:72)
 [2026-11-07 10:28:00,001] INFO [jdbc-sink|task-0] Initializing writer using SQL dialect: SqlServerDatabaseDialect (io.confluent.connect.jdbc.sink.JdbcSinkTask:72)
+[2026-11-07 10:28:00,001] INFO [jdbc-source|task-0] Using JDBC dialect PostgreSql (io.confluent.connect.jdbc.source.JdbcSourceTask:135)
 [2026-11-07 10:28:00,002] INFO [jdbc-sink|task-0] Committing offsets (org.apache.kafka.connect.runtime.WorkerSinkTask:330)
 2026-11-07T10:27:00.000+0000: 13.0: [GC (Allocation Failure) [ParNew: 26240K->1637K(29504K), 0.0053837 secs] 26240K->1637K(95040K), 0.0128474 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
 EOF
@@ -65,6 +66,13 @@ do
     if [ "$got" != "hdfs-sink io.confluent.connect.hdfs3.TopicPartitionWriter,jdbc-sink io.confluent.connect.jdbc.sink.JdbcSinkTask," ]
     then
         echo "❌ $awk_cmd: plugin_logger events of events.log: $got"
+        failed=1
+    fi
+    # the SQL dialect of a JDBC connector (sink and source wording), each once
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "connector_hint" {print $5, $6}' "$out.records" | sort | tr '\n' ',')
+    if [ "$got" != "jdbc-sink dialect SqlServerDatabaseDialect,jdbc-source dialect PostgreSql," ]
+    then
+        echo "❌ $awk_cmd: connector_hint events of events.log: $got"
         failed=1
     fi
     if [ -z "$reference" ]

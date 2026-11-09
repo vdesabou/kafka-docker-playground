@@ -6843,6 +6843,7 @@ function install_confluent_plugin() {
 #   @@PGEVT@@<tab>plugin_version<tab>line<tab>timestamp<tab>connector<tab>version class ("Instantiated connector|task …")
 #   @@PGEVT@@<tab>plugin_logger<tab>line<tab>timestamp<tab>connector<tab>logger class of a line of its tasks (its plugin
 #              when the logs miss its startup), each once, 40 per connector at most
+#   @@PGEVT@@<tab>connector_hint<tab>line<tab>timestamp<tab>connector<tab>dialect <name>: the SQL dialect of a JDBC connector
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
 #   @@PGEVT@@<tab>librdkafka_version<tab>line<tab>timestamp<tab><tab>version ("librdkafka v2.3.0" of a non-Java client)
 #   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
@@ -7365,6 +7366,19 @@ function summarize_log_errors() {
                     pl_line = NR
                     ev[++nev] = "plugin_logger\t" pl_line "\t" timestamp_of($0) "\t" pl_conn "\t" pl_logger
                 }
+            }
+        }
+        # the database of a JDBC connector without connection.url in the logs: its SQL dialect, "Initializing writer using SQL
+        # dialect: SqlServerDatabaseDialect" (sink), "Using JDBC dialect SqlServer" (source), once per connector and dialect
+        if (records_file != "" && (index($0, "SQL dialect: ") || index($0, "Using JDBC dialect ")) && match($0, /(SQL dialect: |Using JDBC dialect )[A-Za-z0-9]+/)) {
+            ch_dialect = substr($0, RSTART, RLENGTH)
+            sub(/.* /, "", ch_dialect)
+            ch_conn = ""
+            if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { ch_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", ch_conn) }
+            if (ch_conn != "" && !(("dialect" SUBSEP ch_conn SUBSEP ch_dialect) in ev_seen)) {
+                ev_seen["dialect" SUBSEP ch_conn SUBSEP ch_dialect] = 1
+                ch_line = NR
+                ev[++nev] = "connector_hint\t" ch_line "\t" timestamp_of($0) "\t" ch_conn "\tdialect " ch_dialect
             }
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and

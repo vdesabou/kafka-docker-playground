@@ -1134,6 +1134,25 @@ SHARED_PACKAGES = re.compile(r"^(io\.confluent\.(license|connect\.(utils|common|
                              r"embedded|transforms|heartbeat|snapshot|function|processors|spi|bean))(\.|$)")
 
 
+# the jdbc: scheme of a JDBC connector (its icon, connector_icons.json) from its SQL dialect: SqlServerDatabaseDialect
+# (sink), SqlServer (source); Generic tells nothing
+DIALECT_SCHEMES = {"sqlserver": "sqlserver", "postgresql": "postgresql", "mysql": "mysql", "oracle": "oracle", "db2": "db2",
+                   "saphana": "sap", "vertica": "vertica", "redshift": "redshift", "mariadb": "mariadb"}
+# the exception of a database driver in the records of a JDBC connector (no dialect line, no connection.url)
+DRIVER_EXCEPTIONS = (
+    (re.compile(r"\bSQLServerException\b|com\.microsoft\.sqlserver\.jdbc\.[A-Za-z]+"), "sqlserver"),
+    (re.compile(r"\bPSQLException\b|org\.postgresql\.[A-Za-z.]+"), "postgresql"),
+    (re.compile(r"\bORA-\d{5}\b|oracle\.jdbc\.[A-Za-z.]+"), "oracle"),
+    (re.compile(r"org\.mariadb\.jdbc\.[A-Za-z.]+"), "mariadb"),
+    (re.compile(r"com\.mysql\.(cj\.)?jdbc\.[A-Za-z.]+|com\.mysql\.cj\.[A-Za-z.]+"), "mysql"),
+    (re.compile(r"\bDB2 SQL Error\b|com\.ibm\.db2\.[A-Za-z.]+"), "db2"),
+)
+
+
+def jdbc_scheme_of_dialect(dialect: str) -> Optional[str]:
+    return DIALECT_SCHEMES.get(re.sub(r"DatabaseDialect$", "", dialect or "").lower())
+
+
 def plugin_of_loggers(loggers: Sequence[str]) -> Tuple[Optional[str], Optional[str]]:
     """(class, package that tells it) from the loggers of the lines of a connector: the longest prefix of PLUGIN_PACKAGES
     one of their packages starts with; (None, package) when none matches: its plugin package (it has .connect or
@@ -1238,6 +1257,25 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
             c["class"], c["class_inferred_from"] = cls, pkg
         elif pkg:
             c["plugin_package"] = pkg
+    # the database of a JDBC connector without connection.url in the logs (its icon): its SQL dialect, else the exception
+    # of its database driver in its records
+    for f in files:
+        for ev in f.get("events") or []:
+            if ev["kind"] == "connector_hint" and ev.get("connector") in cards and (ev["detail"] or "").startswith("dialect "):
+                c = cards[ev["connector"]]
+                scheme = jdbc_scheme_of_dialect(ev["detail"].split(" ", 1)[1])
+                if scheme and not c.get("jdbc"):
+                    c["jdbc"], c["jdbc_from"] = scheme, ev["detail"].split(" ", 1)[1]
+    for f in files:
+        for r in f["records"]:
+            c = cards.get(r.get("connector"))
+            if not c or c.get("jdbc") or ("jdbc" not in (c.get("class") or "jdbc").lower()):
+                continue
+            for rx, scheme in DRIVER_EXCEPTIONS:
+                m = rx.search(r["text"])
+                if m:
+                    c["jdbc"], c["jdbc_from"] = scheme, m.group(0)
+                    break
     for c in cards.values():
         if c.get("versions") and c.get("class") and c.get("cp"):
             st = support_dates.connector_status(c["class"], c["versions"][-1], c["cp"])
@@ -2587,6 +2625,18 @@ def conn_class_html(c: dict) -> str:
     return ""
 
 
+DATABASE_NAMES = {"sqlserver": "SQL Server", "jtds": "SQL Server", "postgresql": "PostgreSQL", "mysql": "MySQL", "oracle": "Oracle",
+                  "db2": "Db2", "sap": "SAP HANA", "vertica": "Vertica", "redshift": "Redshift", "mariadb": "MariaDB"}
+
+
+def conn_database_html(c: dict) -> str:
+    """🗄️ the database of a JDBC connector found without its connection.url: its SQL dialect or a driver exception"""
+    if not c.get("jdbc_from"):
+        return ""
+    return (f"<div class='fi-meta'>🗄️ {e(DATABASE_NAMES.get(c['jdbc'], c['jdbc']))} · <span title='no connection.url in the "
+            f"logs: told by its SQL dialect or the exception of its database driver'>from <span class='mono'>{e(c['jdbc_from'])}</span></span></div>")
+
+
 def connectors_health_html(cards: List[dict]) -> str:
     """the 🔌 Connectors section: a card per connector, ▶ only this connector sets the connector filter"""
     if not cards:
@@ -2612,6 +2662,7 @@ def connectors_health_html(cards: List[dict]) -> str:
                f"data-cmd='{e(changelog_command(c))}' title='copy the command that lists what changed in the plugin since "
                f"this version: is it fixed in a newer version?'>📋 changelog since {e(c['versions'][-1])}</button></div>"
                if c.get("versions") else conn_class_html(c))
+            + conn_database_html(c)
             # 🛟 the plugin version against the minimum supported on the CP release of the worker (supported-connector-version)
             + (f"<div class='conn-support {'bad' if c['support']['state'] == 'unsupported' else 'good'}'>🛟 "
                f"<a href='{e(c['support']['doc'])}' title='the minimum {e(c['support']['row'])} version supported on Confluent Platform "
@@ -2681,6 +2732,8 @@ def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
             bits.append(f"🏷️ {' → '.join(c['versions'])} ({c.get('class', '').split('.')[-1]})")
         elif conn_class_text(c):
             bits.append(f"🔎 {conn_class_text(c)}")
+        if c.get("jdbc_from"):
+            bits.append(f"🗄️ {DATABASE_NAMES.get(c['jdbc'], c['jdbc'])} (from {c['jdbc_from']})")
         out.append(f"   {c['connector']}: {', '.join(bits)}" + (f" · {', '.join(c['known_causes'][:3])}" if c["known_causes"] else ""))
         if changelog_command(c) and (lv["FATAL"] + lv["ERROR"]):
             out.append(f"      👉 fixed in a newer version? {changelog_command(c)}")
