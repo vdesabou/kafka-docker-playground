@@ -78,25 +78,63 @@ then
     log "⏱️ Only the lines logged ${since:+at or after ${since/T/ }}${since:+${until_ts:+ and }}${until_ts:+before ${until_ts/T/ }} (--since / --until)"
 fi
 
+# the librdkafka lines carry an epoch time ("%3|1793896102.923|FAIL|…"): the window as epoch seconds, read as UTC
+# (empty without python3: those lines then count as lines without a time)
+function window_epoch () {
+    [[ -n "$1" ]] && command -v python3 > /dev/null 2>&1 || return 0
+    python3 -I -c 'import calendar, sys, time; print(calendar.timegm(time.strptime(sys.argv[1], "%Y-%m-%dT%H:%M:%S")))' "$1" 2> /dev/null
+}
+since_epoch=$(window_epoch "$since")
+until_epoch=$(window_epoch "$until_ts")
+
 # the lines out of the window of --since / --until become empty lines (the line numbers stay those of the file, for the
-# links of the report); a line without its own time (a stack frame, the next line of a message) follows the line before
+# links of the report); a line without its own time (a stack frame, the next line of a message) follows the line before,
+# and the lines before the first time of the file follow it. A file where no time is found in its first
+# PG_LOG_WINDOW_MAX_UNTIMED lines (20000) is kept whole, not dropped, and noted in the file $1: the window could not be applied
 function log_window_filter () {
     if [[ -z "$since" && -z "$until_ts" ]]
     then
         cat
         return
     fi
-    LC_ALL=C awk -v since="$since" -v until_ts="$until_ts" '
-        {
-            h = substr($0, 1, 120)
+    LC_ALL=C awk -v since="$since" -v until_ts="$until_ts" -v since_epoch="$since_epoch" -v until_epoch="$until_epoch" \
+        -v note_file="${1:-}" -v max_untimed="${PG_LOG_WINDOW_MAX_UNTIMED:-20000}" '
+        # 1: in the window, 0: out of it, -1: no time on this line
+        function in_window(h,    t, e) {
             if (match(h, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) {
                 t = substr(h, RSTART, RLENGTH)
                 sub(/ /, "T", t)
-                keep = (since == "" || t >= since) && (until_ts == "" || t < until_ts)
-            } else if (NR == 1) {
-                keep = (since == "")
+                return (since == "" || t >= since) && (until_ts == "" || t < until_ts)
+            }
+            if ((since == "" || since_epoch != "") && (until_ts == "" || until_epoch != "") && match(h, /%[0-7]\|[0-9]+\.[0-9]+\|/)) {
+                e = substr(h, RSTART + 3, RLENGTH - 3)
+                sub(/\|.*/, "", e)
+                e = e + 0
+                return (since == "" || e >= since_epoch + 0) && (until_ts == "" || e < until_epoch + 0)
+            }
+            return -1
+        }
+        function flush_untimed(k,    i) {
+            for (i = 1; i <= nuntimed; i++) print (k ? untimed[i] : "")
+            nuntimed = 0
+            split("", untimed)
+        }
+        {
+            if (whole) { print; next }
+            k = in_window(substr($0, 1, 120))
+            if (k != -1) {
+                if (!timed) { timed = 1; flush_untimed(k) }
+                keep = k
+            } else if (!timed) {
+                untimed[++nuntimed] = $0
+                if (nuntimed >= max_untimed + 0) { whole = 1; flush_untimed(1) }
+                next
             }
             print (keep ? $0 : "")
+        }
+        END {
+            if (!timed && nuntimed > 0) { whole = 1; flush_untimed(1) }
+            if (whole && note_file != "") print "no time found in its lines: kept whole" > note_file
         }'
 }
 
@@ -571,7 +609,7 @@ function analyze_logs_digest () {
     fi
 }
 
-# $1: label, $2: path, $3: origin, $4: gz, $5: part (files written: .out, .rc, .records, .gzerr), $6: 1 in the foreground
+# $1: label, $2: path, $3: origin, $4: gz, $5: part (files written: .out, .rc, .records, .gzerr, .window), $6: 1 in the foreground
 function digest_one () {
     local label="$1" path="$2" origin="$3" gz="$4" part="$5" foreground="$6"
     local reader=(cat "$path")
@@ -588,9 +626,9 @@ function digest_one () {
         # converted file only moves the bar of the file
         local counts=1
         [ "$origin" != "$path" ] && counts=0
-        "${reader[@]}" 2> "$part.gzerr" | PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
+        "${reader[@]}" 2> "$part.gzerr" | PG_PROGRESS_COUNTS="$counts" PG_PROGRESS_STEP="🔎 ERROR/FATAL digest of $label" python3 -I "$root_folder/tools/log-analyzer/progress.py" cat --label "$label" "${size_args[@]}" | log_window_filter "$part.window" | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
     else
-        "${reader[@]}" 2> "$part.gzerr" | log_window_filter | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
+        "${reader[@]}" 2> "$part.gzerr" | log_window_filter "$part.window" | PG_LOG_DIGEST_RECORDS_FILE="$part.records" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings" > "$part.out"
     fi
     echo "${PIPESTATUS[-1]}" > "$part.rc"
 }
@@ -608,6 +646,11 @@ function report_digest () {
     then
         # the first line that is not empty: GNU gzip starts its message with a new line
         note_incomplete "$label" "truncated or corrupt gzip, read only up to the error ($(grep -m 1 . "$part.gzerr" | sed 's/^gzip: //'))"
+    fi
+    # --since / --until found no time it reads in the lines of the file: kept whole rather than reported clean
+    if [ -s "$part.window" ]
+    then
+        logwarn "⏱️ $label: no time found in its lines (YYYY-MM-DD hh:mm:ss, librdkafka epoch), --since / --until not applied: the whole file is analyzed"
     fi
     if [ "$rc" != "0" ]
     then

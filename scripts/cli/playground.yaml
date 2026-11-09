@@ -4632,7 +4632,8 @@ subcommands:
       of that host), \U0001FA79 the known bugs of a plugin fixed in a later version
       whose error is in the logs, with a verdict from the version each connector runs
       (affected: upgrade to …; it has the fix: another cause; version unknown), \U0001F504
-      the restarts, stops, worker rebalances, consumer rejoins, active controller
+      the restarts, stops, worker rebalances, consumer rejoins, members removed by
+      the group coordinator of a broker (session or rebalance timeout), active controller
       changes and GC pauses of 1 s or more counted from the INFO lines and the GC
       logs (\U0001F300 a storm when the rebalances repeat), \U0001F4A5 the bursts
       of errors right after a GC pause, a stop, a restart or a controller change,
@@ -4802,8 +4803,10 @@ subcommands:
       argument: SINCE
       description: |-
         ⏱️ Only the lines logged at or after this time: "2026-11-06 10:00", "2026-11-06T10:00:00" or "2026-11-06". The times
-        are compared as written in the logs; a line without its own time (a stack frame) follows the line before it. The
-        line numbers of the digest and of the report stay those of the files
+        are compared as written in the logs, and the epoch times of the librdkafka lines ("%3|1793896102.923|…") as UTC; a
+        line without its own time (a stack frame) follows the line before it, the lines before the first time of a file
+        follow it. A file where no time is found is analyzed whole, with a warning, rather than dropped. The line numbers
+        of the digest and of the report stay those of the files
     - names:
       - "--until"
       argument: UNTIL

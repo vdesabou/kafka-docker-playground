@@ -6852,6 +6852,8 @@ function install_confluent_plugin() {
 #   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
 #              line<tab>timestamp<tab>connector<tab>group, reason or what started / stopped: the lifecycle of the INFO lines,
 #              300 of each kind at most
+#   @@PGEVT@@<tab>member_eviction<tab>line<tab>timestamp<tab>connector<tab>group · timeout: members of a classic consumer group
+#              removed by the group coordinator of a broker (session timeout, rebalance timeout, pending sync expired)
 #   @@PGEVT@@<tab>gc_pause<tab>line<tab>timestamp<tab><tab><ms> <what>: a GC pause of 1 s or more (GC log, unified or legacy)
 #   @@PGEVTN@@<tab>kind<tab>connector or group<tab>count: how many of them in the whole file
 function summarize_log_errors() {
@@ -7445,7 +7447,7 @@ function summarize_log_errors() {
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and
         # tasks started, a worker or a broker (re)started. Counted, and the first 300 of each kind noted with their time
-        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Becoming the active controller|elected as the controller|Pause |GC pause|Full GC|\[GC \(/) {
+        if (records_file != "" && $0 ~ /Rebalance started|Request joining group|Starting connector |Starting task |Kafka Connect started|Kafka Connect (distributed )?worker initialization took|Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED|\] shutting down \(kafka\.server|to SHUTTING_DOWN|Kafka Connect stopping|Becoming the active controller|elected as the controller|has failed, removing it from the group|members who haven.t joined|on pending sync request expiration|Pause |GC pause|Full GC|\[GC \(/) {
             lc_kind = ""; lc_who = ""; lc_detail = ""
             lc_conn = ""
             if (match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) { lc_conn = substr($0, RSTART + 1, RLENGTH - 1); sub(/\|.*/, "", lc_conn) }
@@ -7477,6 +7479,20 @@ function summarize_log_errors() {
                     lc_detail = "node " lc_detail " became the active controller"
                 }
                 if (match($0, /epoch [0-9]+/)) lc_detail = lc_detail " (" substr($0, RSTART, RLENGTH) ")"
+            } else if ($0 ~ /has failed, removing it from the group|members who haven.t joined|on pending sync request expiration/) {
+                # the group coordinator of a broker removed members of a classic group, logged at INFO: "Member … in group … has
+                # failed, removing it from the group" (session timeout), "Group … removed dynamic members who have not joined: …"
+                # (rebalance timeout, one line per round: the obvious grep of the first one misses it), "Removing [...] on
+                # pending sync request expiration" (joined but did not sync). Recent brokers prefix them with [GroupId …]
+                lc_kind = "member_eviction"; lc_who = "?"
+                if (match($0, /\[GroupId [^]]+\]/)) lc_who = substr($0, RSTART + 9, RLENGTH - 10)
+                else if (match($0, /in group [^ ]+ has failed/)) { lc_who = substr($0, RSTART + 9, RLENGTH - 9); sub(/ .*/, "", lc_who) }
+                else if (match($0, /[Gg]roup [^ ]+ removed /)) { lc_who = substr($0, RSTART + 6, RLENGTH - 6); sub(/ .*/, "", lc_who) }
+                else if (match($0, /rebalance group [^ ]+/)) lc_who = substr($0, RSTART + 16, RLENGTH - 16)
+                if (index($0, "has failed, removing it")) lc_detail = lc_who " · session timeout (no heartbeat)"
+                else if (index($0, "pending sync request expiration")) lc_detail = lc_who " · rebalance timeout (joined, did not sync)"
+                else lc_detail = lc_who " · rebalance timeout (did not rejoin)"
+                if (lc_conn == "" && lc_who ~ /^connect-/) lc_conn = substr(lc_who, 9)
             } else if ($0 ~ /GC\([0-9]+\) .*Pause .*[0-9]ms *$/ && match($0, /[0-9.]+ms *$/)) {
                 # unified JVM logging: "[2026-…+0000][gc] GC(12) Pause Full (G1 Compaction Pause) 900M->850M(1G) 2345.678ms"
                 gc_ms = substr($0, RSTART, RLENGTH); sub(/ms *$/, "", gc_ms); gc_ms = gc_ms + 0
@@ -7492,7 +7508,7 @@ function summarize_log_errors() {
                 if (gc_ms >= 1000) { lc_kind = "gc_pause"; lc_who = "jvm"; lc_detail = int(gc_ms) " " gc_what }
             }
             if (lc_kind != "") {
-                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_stop|controller_change|gc_pause)$/ ? lc_who : lc_conn)
+                lc_key = lc_kind "\t" (lc_kind == "worker_rebalance" || lc_kind == "consumer_rejoin" || lc_kind ~ /^(process_start|process_stop|controller_change|gc_pause|member_eviction)$/ ? lc_who : lc_conn)
                 if (!(lc_key in lc_count)) lc_keys[++nlc_keys] = lc_key
                 lc_count[lc_key]++
                 # a consumer closed on purpose (a short-lived consumer of a connector, opened and closed again and again):

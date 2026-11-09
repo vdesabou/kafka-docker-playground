@@ -687,6 +687,34 @@ def test_consumer_leaving_not_a_storm():
     check("the leaving group last", order[-1] == "cdc-orcl-39-T24-FUSP", order)
 
 
+def test_member_eviction():
+    """🚪 the members of a consumer group removed by the group coordinator (broker log): a 🔄 row per group with the
+    timeout as its reason, tied to the sink connector of a connect-<name> group, and in the timeline, not a 💥 trigger"""
+    text = ("@@PGFILE@@|broker.log|1000|1|1|2026-11-07T10:00:00|2026-11-07T11:00:00\n"
+            "@@PGREC@@|ERROR|1|1|1|2026-11-07T10:40:00|2026-11-07T10:40:00\n"
+            "[2026-11-07 10:40:00,000] ERROR boom (x)\n"
+            "@@PGTS@@|2026-11-07T10:40:00\n"
+            "@@PGEVT@@|member_eviction|5|2026-11-07T10:30:05|s3-sink|connect-s3-sink · rebalance timeout (did not rejoin)\n"
+            "@@PGEVT@@|member_eviction|6|2026-11-07T10:31:05|s3-sink|connect-s3-sink · rebalance timeout (did not rejoin)\n"
+            "@@PGEVT@@|member_eviction|7|2026-11-07T10:32:00||payments · session timeout (no heartbeat)\n"
+            "@@PGEVTN@@|member_eviction|connect-s3-sink|2\n"
+            "@@PGEVTN@@|member_eviction|payments|1\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    rows = {r["who"]: r for r in res["lifecycle"]["rows"] if r["kind"] == "member_eviction"}
+    check("a row per group", set(rows) == {"connect-s3-sink", "payments"}, rows)
+    s3 = rows["connect-s3-sink"]
+    check("count and reason", s3["count"] == 2 and s3["reason"] == "rebalance timeout (did not rejoin)", s3)
+    check("tied to its connector", log_report.lifecycle_connector(s3) == "s3-sink", s3)
+    check("not a storm", not s3["storm"], s3)
+    tl = [ev for ev in res["timeline"] if ev["text"].startswith("🚪")]
+    check("in the timeline", len(tl) == 3 and all(ev["kind"] == "lifecycle" for ev in tl), tl)
+    check("timeline text", any(ev["text"] == "🚪 members of group payments removed by the coordinator: session timeout (no heartbeat)"
+                               for ev in tl), [ev["text"] for ev in tl])
+    check("text summary", any("group members removed by the coordinator" in x for x in log_report.lifecycle_text(res["lifecycle"])),
+          log_report.lifecycle_text(res["lifecycle"]))
+
+
 def test_connect_without_mdc():
     """⚠️ a Connect log whose task lines have no [connector|task-0] context is reported, not one that has it (also
     with a scope, [c|task-0|redoLog]), nor a broker log, nor a Connect log with too few task lines to tell"""
