@@ -250,7 +250,7 @@ A customer sends a support bundle, a CFK bundle, a CloudWatch / Kibana / Splunk 
     <a href="reports/aws-costs.html#s3-details" target="_blank" rel="noopener"><img src="images/reports/aws-costs.png" alt="🪣 AWS costs report" loading="lazy"></a>
     <div class="report-body">
       <h3><a href="#/playground%20cloud-resources%20aws%20costs-history">🪣 AWS costs</a></h3>
-      <p>What do the AWS resources of the playground cost? The same cost report per month and per service and usage type, plus the Amazon S3 details when S3 costs something: what each GB costs (storage, requests, retrieval fees, data sent to the Internet or to another region) per month and per destination, the buckets with their size, access logging and lifecycle, and hints such as "99% of the cost is downloads". This one uses dummy data.</p>
+      <p>What do the AWS resources of the playground cost? The same cost report per month and per service and usage type, plus the Amazon S3 details when S3 costs something: what each GB costs (storage, requests, retrieval fees, data sent to the Internet or to another region) per month and per destination, the buckets with their size, access logging and lifecycle, and hints such as "99% of the cost is downloads"; the cost per day of the last 60 days with the usage types whose cost per day stepped up or down since a given day (did a change work?), and the docker pulls billed by ECR. This one uses dummy data.</p>
       <p><code>playground cloud-resources aws costs-history</code> (resources tagged <code>cflt_managed_id=&lt;user&gt;</code>)</p>
       <p>Try it: <code>playground cloud-resources aws costs-history --sample aws_dummy</code></p>
     </div>

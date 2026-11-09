@@ -2172,8 +2172,12 @@ function remove_cdb_oracle_image() {
 # Private ECR repository holding the Oracle prebuilt images (pull allowed to the Confluent AWS organization only).
 # The tag is the local image name with ':' replaced by '-': db-prebuilt-2943665357:19.3.0-ee -> db-prebuilt-2943665357-19.3.0-ee
 # It is in us-west-2 because the engineering Semaphore agents run there: same-region pulls are free and go through their VPC endpoints.
-# Images are pushed there by hand (skopeo, gzip layers). An image built by CI for a new 01_user-setup.sh checksum is only
-# uploaded to the S3 bucket, which stays the fallback until it is pushed to ECR too.
+# The first images were pushed by hand (skopeo, gzip layers). Since then CI pushes the ones it is missing
+# (push_oracle_image_to_ecr): an image built for a new 01_user-setup.sh checksum (also uploaded to the S3 bucket), or one it
+# had to download from S3. The S3 bucket stays the fallback.
+# The other pullers of the images (CloudTrail BatchGetImage events of us-west-2): the Semaphore agents (another account of
+# the organization, same region: free) and the GitHub-hosted runners and laptops (outside AWS: ECR data sent to the
+# Internet, the USW2-DataTransfer-Out-Bytes line of 'playground cloud-resources aws costs-history').
 ORACLE_ECR_REGION="us-west-2"
 ORACLE_ECR_REGISTRY="995646271469.dkr.ecr.${ORACLE_ECR_REGION}.amazonaws.com"
 ORACLE_ECR_REPOSITORY="kafka-docker-playground/oracle-db-prebuilt"
@@ -2233,6 +2237,44 @@ function pull_oracle_image_from_ecr() {
   # only removes the ECR tag, the image stays under its local name
   docker image rm "$ecr_image" > /dev/null 2>&1
   log "📄 image $image has been pulled from ECR in $(( SECONDS - start )) seconds"
+  return 0
+}
+
+# CI only (GitHub Actions): push $1 (local image name) to the ECR repository when its tag is missing there, so that the
+# next runs pull it from ECR instead of downloading the S3 tar. Called when CI has just built the image (a new
+# 01_user-setup.sh checksum) or downloaded it from S3 (an image not pushed yet). The tags are immutable: an existing tag
+# is never pushed again. Best effort: a failure is only a warning.
+function push_oracle_image_to_ecr() {
+  local image="$1"
+  if [ -z "$GITHUB_RUN_NUMBER" ] || ! command -v aws > /dev/null 2>&1
+  then
+    return 0
+  fi
+  local ecr_image
+  ecr_image=$(oracle_ecr_image "$image")
+  local tag="${ecr_image##*:}"
+
+  if aws ecr describe-images --region "$ORACLE_ECR_REGION" --registry-id "${ORACLE_ECR_REGISTRY%%.*}" --repository-name "$ORACLE_ECR_REPOSITORY" --image-ids "imageTag=$tag" > /dev/null 2>&1
+  then
+    return 0
+  fi
+  if ! oracle_ecr_login
+  then
+    logwarn "could not log in to ECR registry $ORACLE_ECR_REGISTRY, $image is not pushed to ECR: next runs download it from S3"
+    return 1
+  fi
+
+  log "📤 pushing $image to ECR as $ecr_image, so that next runs pull it from ECR instead of S3"
+  local start=$SECONDS
+  docker tag "$image" "$ecr_image" || return 1
+  if docker push -q "$ecr_image" > /dev/null
+  then
+    log "📤 $ecr_image has been pushed to ECR in $(( SECONDS - start )) seconds"
+  else
+    logwarn "could not push $ecr_image to ECR (push rights of the CI credentials?): next runs download $image from S3"
+  fi
+  # only removes the ECR tag, the image stays under its local name
+  docker image rm "$ecr_image" > /dev/null 2>&1
   return 0
 }
 
@@ -2311,6 +2353,8 @@ function create_or_get_oracle_image() {
           if [ $? -eq 0 ]
           then
             log "📄 image $ORACLE_IMAGE has been installed locally"
+            # not in ECR (or ECR failed): CI pushes it there for the next runs
+            push_oracle_image_to_ecr "$ORACLE_IMAGE"
           fi
 
           if [[ "$OSTYPE" == "darwin"* ]]
@@ -2457,6 +2501,8 @@ function create_or_get_oracle_image() {
                     log "📄 </tmp/$ORACLE_IMAGE.tar> was uploaded to S3 bucket"
               fi
           fi
+          # a new 01_user-setup.sh checksum: without it, every run would download the S3 tar until someone pushes it by hand
+          push_oracle_image_to_ecr "$ORACLE_IMAGE"
           set -e
       fi
   fi

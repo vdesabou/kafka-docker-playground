@@ -2,6 +2,7 @@ detailed="${args[--detailed]}"
 output_dir="${args[--output-dir]}"
 no_open="${args[--no-open]}"
 sample="${args[--sample]}"
+days="${args[--days]}"
 
 if [[ -n "$sample" ]]
 then
@@ -90,6 +91,25 @@ while true; do
     # Move to the next range
     current_date="$end_date"
 done
+
+# cost per day of the last $days days, for the cost per day section of the report (daily.json: one more request, a few
+# pages with the usage types): it shows a change a few days after it, which a month mixing the days before and after cannot
+if [[ "${days:-0}" -gt 0 ]]
+then
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        daily_start=$(date -v-${days}d +%Y-%m-%d)
+    else
+        daily_start=$(date -d "$days days ago" +%Y-%m-%d)
+    fi
+    # the cost API goes back one year at most
+    if [[ "$daily_start" < "$start_date" ]]
+    then
+        daily_start="$start_date"
+    fi
+    log "📆 fetching the cost per day from $daily_start"
+    playground --output-level ERROR cloud-resources aws costs --start-date "$daily_start" --end-date "$(date +%Y-%m-%d)" --display-only-total-cost --granularity DAILY --raw-output-file "$data_dir/daily.json" > /dev/null
+fi
 
 # the S3 buckets behind the S3 costs, for the "Amazon S3 details" of the report
 if jq -s -e '[.[].ResultsByTime[]?.Groups[] | select(.Keys[0] == "Amazon Simple Storage Service") | .Metrics.UnblendedCost.Amount | tonumber] | add > 0' "$data_dir"/*.json > /dev/null 2>&1

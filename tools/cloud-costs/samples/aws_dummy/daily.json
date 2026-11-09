@@ -1,0 +1,5767 @@
+{
+ "GroupDefinitions": [
+  {
+   "Type": "DIMENSION",
+   "Key": "SERVICE"
+  },
+  {
+   "Type": "DIMENSION",
+   "Key": "USAGE_TYPE"
+  }
+ ],
+ "ResultsByTime": [
+  {
+   "TimePeriod": {
+    "Start": "2026-08-28",
+    "End": "2026-08-29"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0896307182",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "404.4815359116",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.0112889501",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "22.3476550013",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.2682919091",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "426.8291909129",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-08-29",
+    "End": "2026-08-30"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.9332069187",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "346.6603459335",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.9963787446",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "66.6264304953",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.1328677643",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "413.2867764288",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-08-30",
+    "End": "2026-08-31"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.0502888714",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.6698763491",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.1166987635",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.6698763491",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-08-31",
+    "End": "2026-09-01"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.9342043727",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "446.7102186336",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.8380800649",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "9.3120007208",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.5602221935",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "456.0222193544",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-01",
+    "End": "2026-09-02"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.5947701448",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "429.7385072423",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.1730036340",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "13.0333737111",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.4277188095",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "442.7718809534",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-02",
+    "End": "2026-09-03"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.0172798614",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "350.8639930691",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.8437736076",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "53.8197067514",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.0468369982",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "404.6836998205",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-03",
+    "End": "2026-09-04"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.4035197735",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "520.1759886746",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.7313502979",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "19.2372255322",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.3941321421",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "539.4132142068",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Elastic Compute Cloud - Compute",
+      "EUW3-BoxUsage:t3.2xlarge"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0300000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-04",
+    "End": "2026-09-05"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.6268992372",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "381.3449618596",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.9439338519",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "77.1548205766",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.5849978244",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "458.4997824363",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Elastic Compute Cloud - Compute",
+      "EUW3-BoxUsage:t3.2xlarge"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0300000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-05",
+    "End": "2026-09-06"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.2546735636",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "462.7336781820",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.5556429126",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "50.6182545848",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.1335193277",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "513.3519327669",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-06",
+    "End": "2026-09-07"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.8142803308",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "340.7140165421",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.3351485512",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "103.7238727906",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.4443788933",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "444.4378893327",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-07",
+    "End": "2026-09-08"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.9322027171",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "396.6101358563",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.9430401127",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "21.5893345861",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.1819947044",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "418.1994704424",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-08",
+    "End": "2026-09-09"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.1418442952",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "357.0922147580",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "3.6427868795",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "40.4754097717",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "3.9756762453",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "397.5676245297",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-09",
+    "End": "2026-09-10"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.3541812520",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "517.7090625976",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.3205180322",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "25.7835336913",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.4349259629",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "543.4925962889",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-10",
+    "End": "2026-09-11"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.2753607528",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "463.7680376424",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.0627544034",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "78.4750489265",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.4224308657",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "542.2430865689",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-11",
+    "End": "2026-09-12"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.3130286965",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "415.6514348269",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.1191552201",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "67.9906135566",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.8364204838",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "483.6420483835",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-12",
+    "End": "2026-09-13"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.0668721092",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.8541345461",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.1185413455",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.8541345461",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-13",
+    "End": "2026-09-14"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.4921397224",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "83.2459969159",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.8324599692",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "83.2459969159",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-14",
+    "End": "2026-09-15"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.5669246061",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "428.3462303040",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "3.7014232134",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "41.1269245933",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.6947315490",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "469.4731548973",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-15",
+    "End": "2026-09-16"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.2935845721",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "464.6792286068",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.1404582954",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "57.1162032826",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.2179543189",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "521.7954318894",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-16",
+    "End": "2026-09-17"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.9789281856",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "398.9464092786",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.6718276338",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "96.3536403751",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.9530004965",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "495.3000496537",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-17",
+    "End": "2026-09-18"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.8153743952",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "490.7687197578",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.9763988860",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "33.0710987330",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.2383981849",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "523.8398184908",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Elastic Compute Cloud - Compute",
+      "EUW3-BoxUsage:t3.2xlarge"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0300000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-18",
+    "End": "2026-09-19"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.2423490672",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "462.1174533595",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.8857838144",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "65.3975979383",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.2751505130",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "527.5150512978",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-19",
+    "End": "2026-09-20"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.9554483314",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "497.7724165710",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "3.4301558666",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "38.1128429624",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.3588525953",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "535.8852595334",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-20",
+    "End": "2026-09-21"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.1431025800",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "357.1551289986",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.7775712055",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "53.0841245053",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.1023925350",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "410.2392535039",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-21",
+    "End": "2026-09-22"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.0828482760",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "504.1424138000",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.0230399337",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "22.4782214860",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.2662063529",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "526.6206352860",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-22",
+    "End": "2026-09-23"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.8492302622",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "442.4615131094",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.8557951104",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "9.5088345605",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.5197034767",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "451.9703476699",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-23",
+    "End": "2026-09-24"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.6737929401",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "483.6896470029",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.3633084653",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "92.9256496145",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.7661529662",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "576.6152966174",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-24",
+    "End": "2026-09-25"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.2359193253",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "461.7959662638",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.5111953524",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "105.6799483606",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.6747591462",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "567.4759146244",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-25",
+    "End": "2026-09-26"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0432385591",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "402.1619279551",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.6463070409",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "84.9589671215",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.8712089508",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "487.1208950765",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-26",
+    "End": "2026-09-27"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.2675179397",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "463.3758969850",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.1717251790",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "57.4636130997",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.2083951008",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "520.8395100846",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-27",
+    "End": "2026-09-28"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.9455330375",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "547.2766518748",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.3569177923",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "59.5213088033",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.0679796068",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "606.7979606781",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-28",
+    "End": "2026-09-29"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.6551001452",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "482.7550072592",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.0779285756",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.9769841737",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.9473199143",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "494.7319914329",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-29",
+    "End": "2026-09-30"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.8268632980",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "491.3431649000",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.1477836444",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "79.4198182707",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.7076298317",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "570.7629831707",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-09-30",
+    "End": "2026-10-01"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "11.1682413215",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "558.4120660773",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.9569215414",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "99.5213504601",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.5793341654",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "657.9334165374",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-01",
+    "End": "2026-10-02"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.9091394476",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "395.4569723817",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.4429414293",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "49.3660158814",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.4482298826",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "444.8229882630",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-02",
+    "End": "2026-10-03"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.6758024931",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "483.7901246534",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.6835263054",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "7.5947367264",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.9138486138",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "491.3848613798",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-03",
+    "End": "2026-10-04"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.1893007217",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.3255635743",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.2432556357",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.3255635743",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Elastic Compute Cloud - Compute",
+      "EUW3-BoxUsage:t3.2xlarge"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0300000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-04",
+    "End": "2026-10-05"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.0601782401",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.7797582231",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.1177975822",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.7797582231",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Elastic Compute Cloud - Compute",
+      "EUW3-BoxUsage:t3.2xlarge"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0300000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-05",
+    "End": "2026-10-06"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.1338717470",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "506.6935873487",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.7886712979",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "19.8741255321",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.2656771288",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "526.5677128808",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-06",
+    "End": "2026-10-07"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.7390282350",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "386.9514117503",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.4963294274",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "49.9592158603",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.3691062761",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "436.9106276106",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-07",
+    "End": "2026-10-08"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.6085410810",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "530.4270540490",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.2840164674",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "14.2668496380",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.4469390369",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "544.6939036871",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-08",
+    "End": "2026-10-09"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.6662620444",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "433.3131022183",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.1367030596",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "68.1855895516",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.0149869177",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "501.4986917699",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-09",
+    "End": "2026-10-10"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.6635656016",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "533.1782800815",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.9295463216",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "99.2171813511",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.3239546143",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "632.3954614327",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-10",
+    "End": "2026-10-11"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.8807368968",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "394.0368448382",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.7483189531",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "52.7590994793",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.4679594432",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "446.7959443175",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-11",
+    "End": "2026-10-12"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "9.6013957615",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "106.6821751278",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.0668217513",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "106.6821751278",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-12",
+    "End": "2026-10-13"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "11.0055635382",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "550.2781769117",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.0120313749",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "22.3559041660",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.7263408108",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "572.6340810777",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-13",
+    "End": "2026-10-14"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.4106015511",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "370.5300775528",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.8507535716",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "31.6750396842",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.0220511724",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "402.2051172370",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-14",
+    "End": "2026-10-15"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0680003300",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "3.4000165021",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.5474282636",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "72.7492029292",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.7614921943",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "76.1492194313",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.0093993719",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "44.5488819102",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-15",
+    "End": "2026-10-16"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0715295943",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "3.5764797158",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.7860962866",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "53.1788476294",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.5675532735",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "56.7553273452",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.7110527291",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "30.1228081016",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-16",
+    "End": "2026-10-17"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0843104287",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "4.2155214374",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "10.3145635292",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "114.6062614354",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "1.1882178287",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "118.8217828728",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.2291213040",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "46.9902367112",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-17",
+    "End": "2026-10-18"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.1228592389",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "6.1429619428",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.7853363323",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "64.2815148031",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.7042447675",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "70.4244767460",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Elastic Compute Cloud - Compute",
+      "EUW3-BoxUsage:t3.2xlarge"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.0300000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-18",
+    "End": "2026-10-19"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.1141111299",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "5.7055564965",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.4486708534",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "82.7630094817",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.8846856598",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "88.4685659781",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-19",
+    "End": "2026-10-20"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0464791472",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.3239573593",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "8.5226842288",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "94.6964914312",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.9702044879",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "97.0204487905",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.1287391272",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "56.9859903017",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-20",
+    "End": "2026-10-21"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.1449415821",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "7.2470791048",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.5111216863",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "50.1235742925",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.5737065340",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "57.3706533973",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.8542574272",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "53.9361936359",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-21",
+    "End": "2026-10-22"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0878774599",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "4.3938729939",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "7.0148970048",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "77.9433000539",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.8233717305",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "82.3371730478",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.9795501530",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "33.1061128113",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-22",
+    "End": "2026-10-23"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0474697386",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.3734869297",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.6106989694",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "29.0077663263",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.3138125326",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "31.3812532560",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.8818385628",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "32.0204284753",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-23",
+    "End": "2026-10-24"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0594763825",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.9738191266",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.9941575003",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "11.0461944474",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.1402001357",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "14.0200135740",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "3.6181448610",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "40.2016095670",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-24",
+    "End": "2026-10-25"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0400279938",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.0013996914",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "2.0155920491",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "22.3954672121",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.2439686690",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "24.3968669035",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": true
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-25",
+    "End": "2026-10-26"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0521757242",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.6087862081",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "4.2133626931",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "46.8151410340",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.4942392724",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "49.4239272421",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": true
+  },
+  {
+   "TimePeriod": {
+    "Start": "2026-10-26",
+    "End": "2026-10-27"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "USE1-USW2-AWS-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0430601064",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.1530053200",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "6.8056140236",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "75.6179335957",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Retrieval-SIA"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.7777093892",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "77.7709389157",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "TimedStorage-SIA-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0340000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "2.7000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Simple Storage Service",
+      "Requests-SIA-Tier2"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0600000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "60000.0000000000",
+       "Unit": "Requests"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-DataTransfer-Out-Bytes"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "5.0606974189",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "56.2299713212",
+       "Unit": "GB"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon EC2 Container Registry (ECR)",
+      "USW2-TimedStorage-ByteHrs"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.0067000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "0.4000000000",
+       "Unit": "GB-Month"
+      }
+     }
+    }
+   ],
+   "Estimated": true
+  }
+ ],
+ "DimensionValueAttributes": []
+}
