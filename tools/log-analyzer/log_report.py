@@ -3832,10 +3832,15 @@ function pgScrollTo(el) {
   const nav = document.querySelector(".quick-links");
   if (!nav) return;
   let n = 0;
+  const linked = new Set();
   document.querySelectorAll(".findings > .section-title, .table-card > h2, .chart-card > h2").forEach(function (h) {
     const sec = h.parentElement;
     // not the records of each file (one card per file): 🗂️ Files with findings links them
     if (sec.closest("dialog") || sec.classList.contains("file-records")) return;
+    // the top sections only: not the cards of an embedded view (🌊 Kafka Streams: findings, instances… of each
+    // application, hundreds of links with many applications), nor a second title of a section already linked
+    if (linked.has(sec) || (sec.parentElement && sec.parentElement.closest(".findings, .table-card, .chart-card"))) return;
+    linked.add(sec);
     const c = h.cloneNode(true);
     c.querySelectorAll(".fi-meta, .rc-range, button, select, input").forEach(x => x.remove());
     let label = c.textContent.replace(/\\s+/g, " ").trim().split(/ \\(| · |: /)[0];
@@ -4525,7 +4530,11 @@ function pgTimelineChart(rows) {
   const scale = avail / linear;
   function x(t) {
     let off = 0, nb = 0;
-    for (const b of breaks) { if (t >= b[1]) { off += b[1] - b[0]; nb++; } }
+    for (const b of breaks) {
+      if (t >= b[1]) { off += b[1] - b[0]; nb++; }
+      // a time in a cut: across its width, else x() is not monotonic and timeAt() (the drag) lands in the cut, no event
+      else if (t > b[0]) return labelW + pad + (b[0] - t0 - off) * scale + nb * breakW + (t - b[0]) / (b[1] - b[0]) * breakW;
+    }
     return labelW + pad + (span === 0 ? avail / 2 : (t - t0 - off) * scale) + nb * breakW;
   }
   const svg = document.createElementNS(ns, "svg");
