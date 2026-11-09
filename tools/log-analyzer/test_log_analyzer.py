@@ -824,6 +824,38 @@ def test_connector_name_hints():
     check("card", "💡 same name prefix as mdm_sink_tidb_syncme (JdbcSinkConnector)" in html and "💡 its name suggests HDFS" in html, "")
 
 
+def test_connector_plugins_and_data_to_request():
+    """📥 a connector without known class or version: ask for /connectors?expand=info and /connector-plugins; a
+    /connector-plugins of the input gives the version of a class (inferred too), the support check follows"""
+    text = ("@@PGFILE@@|connect.log|20|2|2|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            "@@PGREC@@|ERROR|1|3|3|2026-11-07T10:01:00|2026-11-07T10:01:00\n"
+            "[2026-11-07 10:01:00,000] ERROR [jdbc|task-0] boom (x)\n@@PGTS@@|2026-11-07T10:01:00\n"
+            "@@PGREC@@|ERROR|1|4|4|2026-11-07T10:02:00|2026-11-07T10:02:00\n"
+            "[2026-11-07 10:02:00,000] ERROR [mystery|task-0] boom (x)\n@@PGTS@@|2026-11-07T10:02:00\n"
+            "@@PGEVT@@|kafka_version|1|2026-11-07T10:00:00||7.9.1-ce\n"
+            "@@PGEVT@@|plugin_logger|1|2026-11-07T10:00:00|jdbc|io.confluent.connect.jdbc.sink.JdbcSinkTask\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    asks = [x["what"] for x in log_report.data_to_request(res, res["files"])]
+    check("ask the configs", any(a.startswith("the configuration of the connectors (2 whose class is inferred or unknown") for a in asks), asks)
+    check("ask the versions", any(a.startswith("the version of the connector plugin of") for a in asks), asks)
+    how = next(x["how"] for x in log_report.data_to_request(res, res["files"]) if x["what"].startswith("the configuration"))
+    check("expand=info", "connectors?expand=info&expand=status" in how, how)
+    plugins = ("@@PGCFG@@|connector plugins|file|||connector-plugins.json\n"
+               "@@PGCFGL@@|io.confluent.connect.jdbc.JdbcSinkConnector=10.7.4\n"
+               "@@PGCFGL@@|io.confluent.connect.s3.S3SinkConnector=10.5.13\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text + plugins)))
+    card = next(c for c in res["connectors"] if c["connector"] == "jdbc")
+    check("version installed", card.get("versions") == ["10.7.4"] and card.get("version_from") == "GET /connector-plugins", card)
+    check("support", (card.get("support") or {}).get("state") == "unsupported", card.get("support"))
+    html = log_report.connectors_health_html(res["connectors"])
+    check("card", "version from GET /connector-plugins" in html and "class inferred from its log lines" in html, "")
+    asks = [x["what"] for x in log_report.data_to_request(res, res["files"])]
+    check("version of mystery still asked", any("mystery" in a for a in asks if a.startswith("the version")), asks)
+    check("not jdbc", not any("jdbc" in a for a in asks if a.startswith("the version")), asks)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
