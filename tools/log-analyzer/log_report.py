@@ -2736,7 +2736,7 @@ def timeline_html(events: List[dict], viewers: Dict[str, str], shown: int = 30) 
             "html[data-theme=dark] tr.tl-config_change td{background:#33300a}"
             ".tl-time{white-space:nowrap}.tl-delta{white-space:nowrap;color:#64748b;font-size:.8rem}.tl-delta.tl-big{color:#b91c1c;font-weight:700}"
             "html[data-theme=dark] .tl-delta.tl-big{color:#fca5a5}"
-            ".tl-chart{margin:6px 0 4px}.tl-chart svg{display:block;font-size:11px}.tl-lane{fill:#f8fafc}.tl-lane-alt{fill:#f1f5f9}"
+            ".tl-chart{margin:6px 0 4px}.tl-chart svg{display:block;font-size:12px}.tl-lane{fill:#f8fafc}.tl-lane-alt{fill:#f1f5f9}"
             ".tl-lane-label{fill:#334155;font-weight:600}.tl-tick{fill:#64748b}.tl-axis{stroke:#94a3b8}.tl-grid{stroke:#e2e8f0}"
             ".tl-break{fill:#e2e8f0;opacity:.7}.tl-break-edge{stroke:#94a3b8;stroke-dasharray:3 3}"
             ".tl-break-label{fill:#64748b;font-weight:600;cursor:help}.tl-ev{cursor:pointer}.tl-ev:hover>*,.tl-ev:focus>*{stroke:#0f172a;stroke-width:2}"
@@ -4633,8 +4633,7 @@ function pgTimelineChart(rows) {
     if (g >= 120 && g >= span * 0.25) breaks.push([times[i - 1], times[i]]);
   }
   const cut = breaks.reduce(function (s, b) { return s + b[1] - b[0]; }, 0);
-  const W = Math.max(box.clientWidth || 900, 480), labelW = 120, pad = 16, right = 16 + pad, laneH = 40, top = 8, axisH = 30, breakW = 34;
-  const H = top + lanes.length * laneH + axisH;
+  const W = Math.max(box.clientWidth || 900, 480), labelW = 120, pad = 16, right = 16 + pad, top = 8, axisH = 30, breakW = 34;
   const avail = W - labelW - pad - right - breaks.length * breakW;
   const linear = Math.max(span - cut, 1);
   const scale = avail / linear;
@@ -4647,6 +4646,32 @@ function pgTimelineChart(rows) {
     }
     return labelW + pad + (span === 0 ? avail / 2 : (t - t0 - off) * scale) + nb * breakW;
   }
+  // the marks placed first: one that would touch another one of its lane goes above or below it (0, -1, +1, -2, +2…
+  // slots of SLOT px), then each lane is as high as its deepest stack, and a chart of one or two lanes is not a strip
+  const SLOT = 16, MAX_SLOTS = 9;
+  const placed = lanes.map(function () { return []; }), deepest = lanes.map(function () { return 0; });
+  evs.forEach(function (ev) {
+    const lane = lanes.indexOf(ev.comp), ex = x(ev.t);
+    // at most MAX_SLOTS (±4): past them a dense moment overlaps, in the slot with the fewest marks near it (the tooltip
+    // and the table have every event), rather than a chart thousands of px high
+    let best = 0, bestN = Infinity;
+    for (let k = 0; k < MAX_SLOTS; k++) {
+      const slot = k === 0 ? 0 : (k % 2 ? -1 : 1) * Math.ceil(k / 2);
+      const n = placed[lane].filter(function (p) { return Math.abs(p[0] - ex) < 16 && p[1] === slot; }).length;
+      if (n === 0) { best = slot; bestN = 0; break; }
+      if (n < bestN) { best = slot; bestN = n; }
+    }
+    ev.slot = best;
+    ev.ex = ex;
+    placed[lane].push([ex, ev.slot]);
+    deepest[lane] = Math.max(deepest[lane], Math.abs(ev.slot));
+  });
+  const minLane = lanes.length === 1 ? 110 : lanes.length === 2 ? 76 : 54;
+  const laneHs = deepest.map(function (d) { return Math.max(minLane, (2 * d + 1) * SLOT + 22); });
+  const laneY = [];
+  let plotH = 0;
+  laneHs.forEach(function (h) { laneY.push(top + plotH); plotH += h; });
+  const H = top + plotH + axisH;
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", "0 0 " + W + " " + H);
   svg.setAttribute("width", "100%");
@@ -4660,15 +4685,17 @@ function pgTimelineChart(rows) {
   }
   // lanes
   lanes.forEach(function (comp, i) {
-    const y = top + i * laneH;
+    const y = laneY[i], laneH = laneHs[i];
     el("rect", { x: labelW, y: y, width: W - labelW - right + pad, height: laneH, "class": "tl-lane" + (i % 2 ? " tl-lane-alt" : "") });
     const label = el("text", { x: labelW - 8, y: y + laneH / 2 + 4, "text-anchor": "end", "class": "tl-lane-label" });
     label.textContent = lanes["_" + comp] || comp;
   });
-  const axisY = top + lanes.length * laneH;
+  const axisY = top + plotH;
   el("line", { x1: labelW, x2: W - right + pad, y1: axisY, y2: axisY, "class": "tl-axis" });
   // ticks: a round step giving ~1 tick per 110 px, in each part between the cuts
-  const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 604800];
+  // up to a year: logs over years (an old file in the input) drew a line and a label every week, unreadable
+  const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 21600, 43200, 86400, 172800, 604800,
+                 1209600, 2592000, 7776000, 15552000, 31536000];
   const want = linear / Math.max(avail / 110, 1);
   const step = steps.find(function (s) { return s >= want; }) || steps[steps.length - 1];
   const parts = [];
@@ -4681,7 +4708,8 @@ function pgTimelineChart(rows) {
       const tx = x(t), s = pgStamp(t);
       el("line", { x1: tx, x2: tx, y1: top, y2: axisY + 4, "class": "tl-grid" });
       const label = el("text", { x: tx, y: axisY + 17, "text-anchor": "middle", "class": "tl-tick" });
-      label.textContent = (multiDay && step >= 3600 ? s.slice(5, 10) + " " : "") + (step >= 60 ? s.slice(11, 16) : s.slice(11, 19));
+      label.textContent = step >= 7776000 ? s.slice(0, 7) : step >= 2592000 ? s.slice(0, 10) : step >= 86400 ? s.slice(5, 10)
+        : (multiDay && step >= 3600 ? s.slice(5, 10) + " " : "") + (step >= 60 ? s.slice(11, 16) : s.slice(11, 19));
     }
   });
   if (span > 0 && parts.every(function (p) { return Math.ceil(p[0] / step) * step > p[1]; })) {
@@ -4694,39 +4722,32 @@ function pgTimelineChart(rows) {
   // the cuts
   breaks.forEach(function (b) {
     const bx = x(b[0]);
-    el("rect", { x: bx + 4, y: top, width: breakW - 8, height: lanes.length * laneH, "class": "tl-break" });
+    el("rect", { x: bx + 4, y: top, width: breakW - 8, height: plotH, "class": "tl-break" });
     el("line", { x1: bx + 4, x2: bx + 4, y1: top, y2: axisY, "class": "tl-break-edge" });
     el("line", { x1: bx + breakW - 4, x2: bx + breakW - 4, y1: top, y2: axisY, "class": "tl-break-edge" });
     // its duration, vertical in the cut: never over a lane label or a tick
-    const cx = bx + breakW / 2, cy = top + lanes.length * laneH / 2;
+    const cx = bx + breakW / 2, cy = top + plotH / 2;
     const label = el("text", { x: cx, y: cy, "text-anchor": "middle", "dominant-baseline": "middle",
                                transform: "rotate(-90 " + cx + " " + cy + ")", "class": "tl-break-label" });
     label.textContent = "⫽ " + pgDur(b[1] - b[0]);
     const tip = el("title", {}, label);
     tip.textContent = pgDur(b[1] - b[0]) + " without event (" + pgStamp(b[0]) + " → " + pgStamp(b[1]) + "), cut";
   });
-  // the events: a mark that would touch another one of its lane goes above or below it
-  const placed = lanes.map(function () { return []; });
-  const offsets = [0, -10, 10, -17, 17];
+  // the events, at the slot placed above
   let prev = null;
   evs.forEach(function (ev) {
     const lane = lanes.indexOf(ev.comp);
-    const ex = x(ev.t);
-    let dy = offsets.find(function (o) {
-      return placed[lane].every(function (p) { return Math.abs(p[0] - ex) >= 12 || Math.abs(p[1] - o) >= 7; });
-    });
-    if (dy === undefined) dy = 0;
-    placed[lane].push([ex, dy]);
-    const ey = top + lane * laneH + laneH / 2 + dy;
+    const ex = ev.ex;
+    const ey = laneY[lane] + laneHs[lane] / 2 + ev.slot * SLOT;
     const spec = PG_TL_KINDS[ev.kind];
     const g = el("g", { "class": "tl-ev", tabindex: "0" });
     let shape;
-    if (spec[0] === "circle") shape = el("circle", { cx: ex, cy: ey, r: ev.kind === "warn" ? 4 : 5, fill: spec[1] }, g);
-    else if (spec[0] === "ring") shape = el("circle", { cx: ex, cy: ey, r: 4.5, fill: "none", stroke: spec[1], "stroke-width": 2 }, g);
-    else if (spec[0] === "square") shape = el("rect", { x: ex - 4.5, y: ey - 4.5, width: 9, height: 9, fill: spec[1] }, g);
-    else if (spec[0] === "cross") shape = el("path", { d: "M" + (ex - 5) + " " + (ey - 5) + "L" + (ex + 5) + " " + (ey + 5) + "M" + (ex + 5) + " " + (ey - 5) + "L" + (ex - 5) + " " + (ey + 5), stroke: spec[1], "stroke-width": 3, fill: "none" }, g);
-    else if (spec[0] === "triangle") shape = el("path", { d: "M" + ex + " " + (ey - 6) + "L" + (ex + 6) + " " + (ey + 5) + "L" + (ex - 6) + " " + (ey + 5) + "Z", fill: spec[1] }, g);
-    else shape = el("path", { d: "M" + ex + " " + (ey - 7) + "L" + (ex + 7) + " " + ey + "L" + ex + " " + (ey + 7) + "L" + (ex - 7) + " " + ey + "Z", fill: spec[1], "class": "tl-known-mark" }, g);
+    if (spec[0] === "circle") shape = el("circle", { cx: ex, cy: ey, r: ev.kind === "warn" ? 5 : 6, fill: spec[1] }, g);
+    else if (spec[0] === "ring") shape = el("circle", { cx: ex, cy: ey, r: 5.5, fill: "none", stroke: spec[1], "stroke-width": 2.5 }, g);
+    else if (spec[0] === "square") shape = el("rect", { x: ex - 5.5, y: ey - 5.5, width: 11, height: 11, rx: 1.5, fill: spec[1] }, g);
+    else if (spec[0] === "cross") shape = el("path", { d: "M" + (ex - 6) + " " + (ey - 6) + "L" + (ex + 6) + " " + (ey + 6) + "M" + (ex + 6) + " " + (ey - 6) + "L" + (ex - 6) + " " + (ey + 6), stroke: spec[1], "stroke-width": 3.5, fill: "none" }, g);
+    else if (spec[0] === "triangle") shape = el("path", { d: "M" + ex + " " + (ey - 7.5) + "L" + (ex + 7.5) + " " + (ey + 6) + "L" + (ex - 7.5) + " " + (ey + 6) + "Z", fill: spec[1] }, g);
+    else shape = el("path", { d: "M" + ex + " " + (ey - 8.5) + "L" + (ex + 8.5) + " " + ey + "L" + ex + " " + (ey + 8.5) + "L" + (ex - 8.5) + " " + ey + "Z", fill: spec[1], "class": "tl-known-mark" }, g);
     const tip = el("title", {}, g);
     tip.textContent = pgStamp(ev.t) + "  (+" + pgDur(ev.t - t0) + " after the first" + (prev === null ? "" : ", +" + pgDur(ev.t - prev) + " after the previous") + ")\\n"
       + ev.compLabel + " · " + spec[2] + "\\n" + ev.what;
@@ -4743,7 +4764,7 @@ function pgTimelineChart(rows) {
     g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
   });
   // 🔍 drag over the chart: a band follows the mouse, the period selected becomes the zoom (a click stays a click)
-  const sel = el("rect", { x: 0, y: top, width: 0, height: lanes.length * laneH, "class": "tl-sel", visibility: "hidden" });
+  const sel = el("rect", { x: 0, y: top, width: 0, height: plotH, "class": "tl-sel", visibility: "hidden" });
   function svgX(ev) {
     const r = svg.getBoundingClientRect();
     return (ev.clientX - r.left) * W / r.width;
