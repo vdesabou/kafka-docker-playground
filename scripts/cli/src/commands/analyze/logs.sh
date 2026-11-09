@@ -1,5 +1,7 @@
 eval "file_array=(${args[--file]})"
 eval "sample_array=(${args[--sample]})"
+from_containers="${args[--from-containers]}"
+eval "from_container_array=(${args[--container]})"
 # the WARN records are reported by default (--errors-only leaves them out): the Kafka clients log real problems at WARN
 # (consumer poll timeout, records expiring in the producer); --include-warnings is kept for compatibility, and for a CFK
 # bundle it still adds the WARN records that match no known category (cfk-analysis --include-warnings)
@@ -44,9 +46,9 @@ then
     logerror "❌ Provide either --file or --sample, not both"
     exit 1
 fi
-if [[ ${#file_array[@]} -eq 0 && ${#sample_array[@]} -eq 0 ]]
+if [[ ${#file_array[@]} -eq 0 && ${#sample_array[@]} -eq 0 && -z "$from_containers" ]]
 then
-    logerror "❌ Must provide --file <log file, folder or bundle> (or --sample connect_task_failure to try it)"
+    logerror "❌ Must provide --file <log file, folder or bundle>, --from-containers (the running example) or --sample connect_task_failure to try it"
     exit 1
 fi
 
@@ -117,6 +119,69 @@ do
         cfk_rollout_after) file_array+=("$root_folder/cfk-analysis/samples/cfk-support-bundle-rollout-after.tar.gz") ;;
     esac
 done
+
+# ── --from-containers: the logs of the running example, saved in a folder (kept: for --compare after a fix, or to share)
+# and analyzed as one. One <container>.log each; with the cfk environment, the pods of the namespace confluent (all their
+# containers), plus <pod>-previous.log for a restarted pod
+if [[ -n "$from_containers" ]]
+then
+    get_environment_used
+    if [[ ${#from_container_array[@]} -gt 0 ]]
+    then
+        for i in "${!from_container_array[@]}"
+        do
+            from_container_array[$i]=$(resolve_container_name_for_environment "${from_container_array[$i]}")
+        done
+    else
+        read -ra from_container_array <<< "$(playground get-container-list 2>/dev/null | tr '\n' ' ')"
+    fi
+    if [[ ${#from_container_array[@]} -eq 0 ]]
+    then
+        logerror "❌ --from-containers: no running container, start an example with 'playground run' (or analyze a file with --file)"
+        exit 1
+    fi
+    example_name=$(basename "$(playground state get run.test_file 2>/dev/null)" .sh 2>/dev/null)
+    containers_dir="/tmp/playground-container-logs-${example_name:-containers}-$(date '+%Y%m%d-%H%M%S')"
+    mkdir -p "$containers_dir"
+    for container in "${from_container_array[@]}"
+    do
+        container_log="$containers_dir/${container}.log"
+        if [[ "$environment" == cfk* ]]
+        then
+            fetch_status=0
+            kubectl -n confluent logs "$container" --all-containers=true > "$container_log" 2>&1 || fetch_status=$?
+            # a pod that restarted: the logs of its previous instance (none otherwise, not an error)
+            if kubectl -n confluent logs "$container" --all-containers=true --previous > "$containers_dir/${container}-previous.log" 2>/dev/null \
+                && [ -s "$containers_dir/${container}-previous.log" ]
+            then
+                log "🔄 $container restarted: the logs of its previous instance are in ${container}-previous.log"
+            else
+                rm -f "$containers_dir/${container}-previous.log"
+            fi
+        else
+            fetch_status=0
+            docker container logs "$container" > "$container_log" 2>&1 || fetch_status=$?
+        fi
+        if [[ $fetch_status -ne 0 ]]
+        then
+            logwarn "⚠️ --from-containers: could not get the logs of $container: $(head -1 "$container_log")"
+            rm -f "$container_log"
+        elif [ ! -s "$container_log" ]
+        then
+            rm -f "$container_log"
+        fi
+    done
+    nb_saved=$(find "$containers_dir" -type f -name '*.log' | wc -l | tr -d ' ')
+    if [[ "$nb_saved" -eq 0 ]]
+    then
+        logerror "❌ --from-containers: no logs to analyze (${from_container_array[*]})"
+        rmdir "$containers_dir" 2>/dev/null
+        exit 1
+    fi
+    log "🐳 Logs of $nb_saved container(s) ($(du -sh "$containers_dir" 2>/dev/null | cut -f1 | tr -d ' ')) saved in $containers_dir"
+    log "🎓 Kept for later: playground analyze logs -f <logs after a fix> --compare $containers_dir"
+    file_array+=("$containers_dir")
+fi
 
 # the TAB picker of --file (get-log-files-with-fzf) answers "<typed>@<path>": the path is what follows the first @, unless
 # the value is an existing path as it is

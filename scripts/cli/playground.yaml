@@ -4461,10 +4461,12 @@ subcommands:
     description: "\U0001F525 Show a digest of ERROR/FATAL records found in log files,
       folders or zip bundles\n\nThe offline counterpart of 'playground container logs
       --errors', for\nlogs that do not come from a running container: a customer support\nbundle,
-      a CI artifact, a log file you were sent.\n\nRepeated records are de-duplicated
-      with an occurrence count, stack\ntraces are collapsed to the exception chain
-      (\"Caused by:\") plus a few\nframes of the deepest cause. Only records with
-      an explicit level are\nreported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"),
+      a CI artifact, a log file you were sent. \U0001F433 --from-containers\ngives
+      the same full report for the running example: the logs of its\ncontainers are
+      saved in a folder, then analyzed.\n\nRepeated records are de-duplicated with
+      an occurrence count, stack\ntraces are collapsed to the exception chain (\"Caused
+      by:\") plus a few\nframes of the deepest cause. Only records with an explicit
+      level are\nreported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"),
       plus\nuncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\nlevel-less
       lines that merely contain \"error\" or \"failed\", never are.\n\n\U0001F9F0
       The logs of every Kafka client of Confluent are read, not only Java:\nthe librdkafka
@@ -4688,6 +4690,23 @@ subcommands:
         the log files, exports, archives and folders of Downloads, Desktop and the
         current folder, newest first\n\nRepeatable: ✓ Yes"
     - names:
+      - "--from-containers"
+      argument: ''
+      description: "\U0001F433 Analyze the logs of the running example: the logs of
+        its containers (the pods of the namespace confluent with the cfk environment,
+        previous logs of restarted pods included) are saved in /tmp/playground-container-logs-<example>-<date>/,
+        one <container>.log each, then analyzed as a folder: the full report (restarts,
+        rebalances, configs, connectors, --connector, --since...), not only the digest
+        of 'playground container logs --errors'\n\n\U0001F393 Tip: --container keeps
+        some of them. The folder is kept: give it to --compare after a fix, or to
+        a colleague\n\nConflicts with: --sample"
+    - names:
+      - "--container"
+      argument: CONTAINER
+      description: "\U0001F433 With --from-containers, only the logs of this container
+        (or pod with the cfk environment), instead of all of them\n\n\U0001F393 Tip:
+        can be set several times\n\nRepeatable: ✓ Yes"
+    - names:
       - "--compare"
       argument: BEFORE
       description: "\U0001F501 Compare with another input: the logs before a fix,
@@ -4741,7 +4760,8 @@ subcommands:
         \                        complete): --sample cfk_rollout --sample cfk_rollout_after
         compares the two\n\nRepeatable: ✓ Yes\nAllowed values: connect_task_failure,
         connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix,
-        cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after"
+        cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after\nConflicts
+        with: --from-containers"
     - names:
       - "--errors-only"
       argument: ''
@@ -6175,7 +6195,9 @@ subcommands:
       description: "\U0001F310 With --errors, also write a self-contained HTML report
         of the digest in /tmp/playground-log-reports (known causes, zoomable timeline,
         root causes, every distinct record), opened in the browser in an interactive
-        terminal"
+        terminal\n\n\U0001F393 Tip: for the full report of playground analyze logs
+        (restarts, rebalances, configs, connector cards, --compare), use playground
+        analyze logs --from-containers"
   - name: display-error-all
     description: "\U0001F525 Display all ERROR/FATAL logs in all containers/pods.
       Useful for quick troubleshooting\n\nThe first command to run when an example
@@ -6210,7 +6232,9 @@ subcommands:
       description: "\U0001F310 Also write a self-contained HTML report of all the
         containers in /tmp/playground-log-reports (known causes, zoomable timeline,
         root causes, every distinct record), opened in the browser in an interactive
-        terminal"
+        terminal\n\n\U0001F393 Tip: for the full report of playground analyze logs
+        (restarts, rebalances, configs, connector cards, --compare), use playground
+        analyze logs --from-containers"
   - name: ssh
     description: "\U0001F6EC SSH into container\n\nInteractive shell inside the container,
       as the user the component runs\nwith. Use 'playground container exec' instead

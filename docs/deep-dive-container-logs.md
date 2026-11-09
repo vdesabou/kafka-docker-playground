@@ -21,6 +21,7 @@ Takes about 15 minutes to read and run.
 | to block until a line shows up (scripts) | `-c connect --wait-for-log "<text>" --max-wait 120` |
 | the whole log in your editor | `-c connect --open` |
 | the digest of files, folders, `.zip` / `.tar.gz` / `.7z` bundles | `playground analyze logs -f <path>` (repeat `-f`) |
+| the full `analyze logs` report of the running example | `playground analyze logs --from-containers` (`--container <c>` to keep some) |
 
 ---
 
@@ -171,6 +172,18 @@ playground analyze logs --sample support_bundle                     # try it on 
 ```
 
 The hands-on lab below does exactly that (step 5).
+
+`--from-containers` does it in one step for the running example: the logs of every container (the pods of the
+`confluent` namespace with the `cfk` environment, plus `<pod>-previous.log` for a pod that restarted) are saved in
+`/tmp/playground-container-logs-<example>-<date>/`, one `<container>.log` each, then analyzed as a folder. You get the
+full report (restarts and rebalances, configs, connector cards, `--connector`, `--since`), not only the digest of
+`--errors`. The folder is kept: give it to `--compare` after a fix.
+
+```bash
+playground analyze logs --from-containers                                         # every container of the example
+playground analyze logs --from-containers --container connect --connector bad-sink  # one container, one connector
+playground analyze logs -f /tmp/playground-container-logs-<after> --compare /tmp/playground-container-logs-<before>
+```
 
 ---
 
