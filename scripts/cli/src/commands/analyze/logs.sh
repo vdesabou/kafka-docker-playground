@@ -402,6 +402,48 @@ function analyze_logs_export () {
     return 1
 }
 
+# logs a customer pasted in a Word / LibreOffice Writer document, or a sheet a log tool exported to Excel / LibreOffice
+# Calc (tools/log-analyzer/office_export.py, standard library): converted back to log lines and analyzed as a log file;
+# the pictures of the document (screenshots of a log) are extracted and walked, so that 🧰 Other files of the input
+# lists them. $1: path, $2: label
+function analyze_logs_office () {
+    local path="$1"
+    local label="$2"
+    local converted out rc fmt nb pictures media img
+    nb_extracted=$((nb_extracted+1))
+    converted="$tmp_dir/$nb_extracted/$(basename "$path").log"
+    media="$tmp_dir/$nb_extracted/media"
+    mkdir -p "$(dirname "$converted")"
+    out=$(python3 -I "$root_folder/tools/log-analyzer/office_export.py" "$path" "$converted" "$media" 2> "$converted.err")
+    rc=$?
+    IFS=$'\t' read -r fmt nb pictures <<< "$out"
+    if [ $rc -eq 0 ]
+    then
+        log "📄 $label: $([[ "$fmt" == *export ]] && echo "$fmt, ${nb} log events" || echo "$fmt document, ${nb} lines") ($(file_size_human "$path")), analyzed as log lines"
+        # a sheet of a log console: like the JSON / CSV exports (the overview says the console exported the newest rows)
+        if [[ "$fmt" == *export ]]
+        then
+            printf '%s\t%s\t%s\n' "$label" "$fmt" "$nb" >> "$exports_file"
+        fi
+        analyze_logs_digest "$label" "$converted" "$path"
+    elif [ $rc -eq 2 ]
+    then
+        logwarn "⚠️ $label: $fmt document without text: nothing to analyze"
+        nb_skipped=$((nb_skipped+1))
+    else
+        logwarn "⚠️ $label: cannot read this document ($(head -n 1 "$converted.err")): save it again as .docx / .xlsx, or ask for the logs as text"
+        nb_skipped=$((nb_skipped+1))
+    fi
+    if [[ "${pictures:-0}" =~ ^[1-9][0-9]*$ ]]
+    then
+        logwarn "🖼️ $label holds $pictures picture(s) (screenshots of a log?): not analyzed, listed in 🧰 Other files of the input"
+        for img in "$media"/*
+        do
+            [ -f "$img" ] && printf '%s\t%s\n' "$label:$(basename "$img")" "$img" >> "$walked_file"
+        done
+    fi
+}
+
 # the digest of each file runs in the background, PLAYGROUND_LOG_PARALLELISM at a time (4 by default, 1: one at a time,
 # with the progress bar of a large file), each into its own part files; collect_digests merges them in the order of the
 # input: the records file, the counters and the output are the same as one at a time
@@ -809,6 +851,13 @@ function analyze_logs_path_entry () {
             fi
             progress_add_extracted "$path" "$extract_dir"
             analyze_logs_path "$extract_dir" "$label:"
+            ;;
+        *.docx|*.DOCX|*.odt|*.xlsx|*.XLSX|*.xlsm|*.ods)
+            # logs pasted in a document, or exported to a spreadsheet: converted back to log lines
+            if ! is_duplicate_file "$path" "$label"
+            then
+                analyze_logs_office "$path" "$label"
+            fi
             ;;
         *.json|*.jsonl|*.ndjson|*.json.gz|*.jsonl.gz|*.ndjson.gz|*.csv|*.csv.gz)
             # a JSON or CSV export of log events (CloudWatch Logs Insights, Elasticsearch / OpenSearch, Kibana Discover CSV, structured JSON logs):

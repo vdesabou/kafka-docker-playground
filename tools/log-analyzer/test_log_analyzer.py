@@ -572,6 +572,74 @@ def test_log_search_index():
         check("next record", time_of(4) == 1791968460, time_of(4))
 
 
+def make_xlsx(path, rows, date_col=None, images=0):
+    """a minimal .xlsx as Excel writes it: shared strings, a date format (numFmtId 22) on date_col, the sheet through
+    workbook.xml.rels; rows of str / float (a float in date_col: an Excel date)"""
+    import zipfile
+    from xml.sax.saxutils import escape
+    shared, cells_xml = [], []
+    for r, row in enumerate(rows, start=1):
+        cells = []
+        for c, v in enumerate(row):
+            ref = chr(65 + c) + str(r)
+            if isinstance(v, float):
+                style = ' s="1"' if c == date_col else ""
+                cells.append(f'<c r="{ref}"{style}><v>{v}</v></c>')
+            else:
+                shared.append(v)
+                cells.append(f'<c r="{ref}" t="s"><v>{len(shared) - 1}</v></c>')
+        cells_xml.append(f'<row r="{r}">{"".join(cells)}</row>')
+    ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("[Content_Types].xml", "<Types/>")
+        z.writestr("xl/workbook.xml", f'<workbook {ns} xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                   '<sheets><sheet name="export" sheetId="1" r:id="rId1"/></sheets></workbook>')
+        z.writestr("xl/_rels/workbook.xml.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                   '<Relationship Id="rId1" Target="worksheets/sheet1.xml" Type="x"/></Relationships>')
+        z.writestr("xl/sharedStrings.xml", f'<sst {ns}>' + "".join(f"<si><t>{escape(s)}</t></si>" for s in shared) + "</sst>")
+        z.writestr("xl/styles.xml", f'<styleSheet {ns}><cellXfs><xf numFmtId="0"/><xf numFmtId="22"/></cellXfs></styleSheet>')
+        z.writestr("xl/worksheets/sheet1.xml", f'<worksheet {ns}><sheetData>{"".join(cells_xml)}</sheetData></worksheet>')
+        for i in range(images):
+            z.writestr(f"xl/media/image{i + 1}.png", b"\x89PNG")
+
+
+def test_office_export():
+    """📄 logs in a Word document (a paragraph a line, a line break, a tab, the non-breaking spaces) and in an Excel
+    export (newest first, Excel dates, level column) back to log lines; a sheet that is not an export gives its rows"""
+    import zipfile
+    import office_export
+    with tempfile.TemporaryDirectory() as d:
+        docx = os.path.join(d, "pasted.docx")
+        ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+        body = ("<w:p><w:r><w:t>[2026-10-14 09:00:00,001] ERROR boom (x)</w:t></w:r></w:p>"
+                "<w:p><w:r><w:t>java.lang.IllegalStateException: boom</w:t><w:br/><w:tab/><w:t>at a.b.C(C.java:1)</w:t></w:r></w:p>"
+                "<w:p/><w:p><w:r><w:t xml:space=\"preserve\">[2026-10-14 09:00:01,000] WARN later</w:t></w:r></w:p><w:p/>")
+        with zipfile.ZipFile(docx, "w") as z:
+            z.writestr("word/document.xml", f"<w:document {ns}><w:body>{body}</w:body></w:document>")
+            z.writestr("word/media/image1.png", b"\x89PNG")
+        out = os.path.join(d, "a.log")
+        fmt, nb, pictures = office_export.convert(docx, out)
+        lines = open(out).read().split("\n")
+        check("word", (fmt, nb, pictures) == ("Word", 4, 1), (fmt, nb, pictures))
+        check("word lines", lines[:5] == ["[2026-10-14 09:00:00,001] ERROR boom (x)", "java.lang.IllegalStateException: boom",
+                                          "\tat a.b.C(C.java:1)", "", "[2026-10-14 09:00:01,000] WARN later"], lines)
+        # an export of Kibana, newest first; 45944.375 = 2025-10-14 09:00:00 (days since 1899-12-30)
+        xlsx = os.path.join(d, "export.xlsx")
+        make_xlsx(xlsx, [["@timestamp", "log.level", "message"],
+                         [45944.375 + 1 / 86400, "WARN", "later"],
+                         [45944.375, "ERROR", "Task threw an uncaught and unrecoverable exception"]], date_col=0, images=2)
+        fmt, nb, pictures = office_export.convert(xlsx, out)
+        lines = open(out).read().splitlines()
+        check("excel export", (fmt, nb, pictures) == ("Excel export", 2, 2), (fmt, nb, pictures))
+        check("excel oldest first, dates", lines == ["[2025-10-14T09:00:00.000] ERROR Task threw an uncaught and unrecoverable exception",
+                                                     "[2025-10-14T09:00:01.000] WARN later"], lines)
+        plain = os.path.join(d, "lines.xlsx")
+        make_xlsx(plain, [["[2026-10-14 09:00:00,001] ERROR boom (x)"], ["[2026-10-14 09:00:02,000] INFO ok"]])
+        fmt, nb, _ = office_export.convert(plain, out)
+        check("a sheet of log lines", (fmt, nb) == ("Excel", 2) and open(out).read().startswith("[2026-10-14 09:00:00,001] ERROR boom"),
+              (fmt, nb, open(out).read()))
+
+
 def test_share_formats():
     """📤 the summary for a ticket as text to paste in Slack (a table row as a bullet, links "text (url)", nothing escaped: the message box shows &lt; as is) and as HTML
     with inline styles (real tables, a cell with an escaped |, the text escaped)"""

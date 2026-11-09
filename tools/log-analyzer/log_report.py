@@ -2195,7 +2195,10 @@ def other_files_html(of: Optional[dict]) -> str:
             "<div class='table-card'><h2>🧰 Other files of the input, for another analyzer</h2><p class='legend'>"
             "Files of the input that another playground analyzer reads better than this log digest: GC logs (pauses, "
             "Full GC, heap trend), thread dumps (deadlocks, stuck threads), heap dumps, flight recordings, network "
-            "captures, Oracle XStream diagnostics reports. Run the command of each."
+            "captures, Oracle XStream diagnostics reports. Run the command of each. 🖼️ Screenshots (also the pictures "
+            "of a Word document) and 📄 documents analyze logs does not convert (PDF, .doc, .xls, .pptx) are not "
+            "analyzed: the lines they show are not in this report. Transcribe the screenshots to a .log file (a Claude "
+            "Code session reads pictures: /kdp-case) and run analyze logs on it; the documents: the command says how."
             + (" The ones extracted from an archive were kept next to this report (&lt;report&gt;-other-files/)." if kept else "")
             + "</p><table><tr><th>What</th><th>Files</th><th>Command</th></tr>" + rows + "</table></div>")
 

@@ -2,7 +2,8 @@
 """
 Bundle triage of playground analyze logs: the files of the input that another analyzer of the playground reads better
 than the log digest (GC logs, thread dumps, heap dumps, flight recordings, network captures, Oracle XStream diagnostics
-reports), each with the command to run on it.
+reports), each with the command to run on it; and the ones no analyzer reads (screenshots, the pictures of a Word
+document, PDF, .doc / .xls / .pptx), with what to do instead.
 
 Customers send them in the same zip as the logs: today the binary ones are counted as "binary files skipped", and a
 GC log or a thread dump is only read as log lines.
@@ -34,6 +35,9 @@ KINDS = {
     "flight_recording": ("🛩️", "flight recording", "playground analyze flight-recorder", False),
     "network_capture": ("🦈", "network capture", "playground analyze tcp-dump", False),
     "xstream_report": ("🅾️", "Oracle XStream diagnostics report", "playground analyze oracle-xstream-report", True),
+    # no analyzer reads them: what to do instead (command_of)
+    "screenshot": ("🖼️", "screenshot / picture (not analyzed)", "open", True),
+    "document": ("📄", "document (not analyzed)", "", False),
 }
 ORDER = list(KINDS)
 
@@ -82,8 +86,19 @@ def is_text(data: bytes) -> bool:
     return b"\0" not in data[:8192]
 
 
+# the files no analyzer reads, listed with what to do rather than counted as "binary files skipped": pictures (a log sent
+# as screenshots, or the pictures of a Word document), documents that analyze logs does not convert (.docx / .xlsx /
+# .odt / .ods are converted by office_export.py)
+IMAGE_NAME = re.compile(r"\.(?:png|jpe?g|gif|bmp|tiff?|webp|heic|emf|wmf)$", re.I)
+DOCUMENT_NAME = re.compile(r"\.(?:pdf|doc|xls|ppt|pptx|pages|numbers|key)$", re.I)
+
+
 def kind_of(label: str, path: str) -> Optional[str]:
     name = os.path.basename(label).lower()
+    if IMAGE_NAME.search(name):
+        return "screenshot"
+    if DOCUMENT_NAME.search(name):
+        return "document"
     data = head(path)
     if not data:
         return None
@@ -167,7 +182,9 @@ def triage(walked: str, keep_dir: Optional[str], tmp_dir: Optional[str], linked_
         icon, what, cmd, _ = KINDS[kind]
         items.sort(key=lambda f: f["label"])
         paths = [f["path"] for f in items]
-        if all(paths):
+        if kind in ("screenshot", "document"):
+            command = command_of(kind, items, paths)
+        elif all(paths):
             command = cmd + "".join(f" -f {shlex.quote(p)}" for p in paths[:20])
         else:
             command = f"{cmd} -f <extract {items[0]['label'].split(':', 1)[0]} first>"
@@ -175,6 +192,21 @@ def triage(walked: str, keep_dir: Optional[str], tmp_dir: Optional[str], linked_
                          "folder": folder if KINDS[kind][3] else os.path.dirname(folder),
                          "files": [f["label"] for f in items], "command": command})
     return {"files": files, "commands": commands}
+
+
+def command_of(kind: str, items: List[dict], paths: List[Optional[str]]) -> str:
+    """what to do with the files no analyzer reads: look at the pictures, turn a document into text"""
+    where = [shlex.quote(p) if p else f"<extract {f['label'].split(':', 1)[0]} first>" for f, p in zip(items, paths)]
+    if kind == "screenshot":
+        return "open " + " ".join(where[:20])
+    name = items[0]["label"].lower()
+    if name.endswith(".pdf"):
+        return (f"pdftotext -layout {where[0]} /tmp/pdf.log && playground analyze logs -f /tmp/pdf.log "
+                "(pdftotext: brew install poppler / apt install poppler-utils; a scanned PDF is pictures: transcribe them)")
+    if name.endswith((".pptx", ".ppt", ".key")):
+        return f"copy the log lines of the slides of {where[0]} to a .log file, then playground analyze logs -f <it>"
+    return (f"save {where[0]} again as .docx / .xlsx (or ask for the logs as text): playground analyze logs converts "
+            "those")
 
 
 def main() -> int:

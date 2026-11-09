@@ -386,24 +386,32 @@ def main() -> int:
     except (OSError, EOFError, UnicodeError) as e:
         print(f"cannot read {sys.argv[1]}: {e}", file=sys.stderr)
         return 1
-    events = events_of(data)
-    if not events:
+    nb = write_events(events_of(data), sys.argv[2])
+    if not nb:
         return 2
+    print(nb)
+    return 0
+
+
+def write_events(events: Optional[List[dict]], out_path: str) -> int:
+    """the log events as log lines, oldest first, in out_path: their number, 0 when they are not log events (most of
+    them without a message). Also used by office_export.py for the sheet of an Excel export"""
+    if not events:
+        return 0
     converted = [to_lines(e) for e in events]
     # a log export: most events have a message
     with_message = [c for c in converted if c[1]]
     if len(with_message) < max(1, len(converted) // 2):
-        return 2
+        return 0
     # newest first (console exports): reverse, which keeps the lines of a same millisecond in their order
     first, last = sortable(with_message[0][0]), sortable(with_message[-1][0])
     if first is not None and last is not None and type(first) is type(last) and first > last:
         with_message.reverse()
-    with open(sys.argv[2], "w", encoding="utf-8") as out:
+    with open(out_path, "w", encoding="utf-8") as out:
         for _, lines in with_message:
             for line in lines:
                 out.write(line + "\n")
-    print(len(with_message))
-    return 0
+    return len(with_message)
 
 
 if __name__ == "__main__":

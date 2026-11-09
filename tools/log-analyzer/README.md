@@ -9,6 +9,21 @@ to their `Caused by:` chain.
 when one of them errors or finds other records (the Tools tests workflow runs it): the digest must stay portable, mawk
 (the default awk of Debian / Ubuntu) refuses a function and a parameter of the same name, for example.
 
+## Word and Excel documents, screenshots
+
+`office_export.py <document> <output> [<folder for its pictures>]` reads the logs a customer sent in an office document,
+standard library only (these files are zips of XML): a Word `.docx` / LibreOffice `.odt` they were pasted in (a paragraph
+is a line, a line break a new line, a tab a tab, the non-breaking spaces of Word spaces), an Excel `.xlsx` / `.xlsm` /
+LibreOffice `.ods` sheet a log tool exported (the sheet with the most rows: with the columns of an export it goes through
+`json_log_export.write_events()`, oldest first, the Excel dates of the cells with a date format as ISO times; else its rows
+are the lines, cells joined by a tab). It prints `<format>\t<lines or events>\t<pictures>`, exit `2` without text, `1`
+when the document cannot be read. `analyze logs` converts every such file of the input (`analyze_logs_office`), and walks
+the pictures of a document (`word/media/…`, `xl/media/…`) so that `bundle_triage.py` lists them. The files no analyzer
+reads are listed in 🧰 Other files of the input instead of being counted as "binary files skipped": 🖼️ screenshots and
+pictures (`open` them; transcribe the lines to a `.log`), 📄 PDF (`pdftotext -layout`), `.doc` / `.xls` / `.ppt` / `.pptx`
+(save as `.docx` / `.xlsx`). No OCR: tried with the Vision framework of macOS, it reads monospace log lines with errors
+that matter (`org.apache` read `orq.apache`, `json` read `ison`, a highlighted or wrapped line split in two).
+
 ## JSON and CSV exports of log events
 
 `json_log_export.py <input> <output>` turns an export of log events back into plain log lines, oldest first, before
