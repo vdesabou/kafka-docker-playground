@@ -6843,7 +6843,8 @@ function install_confluent_plugin() {
 #   @@PGEVT@@<tab>plugin_version<tab>line<tab>timestamp<tab>connector<tab>version class ("Instantiated connector|task …")
 #   @@PGEVT@@<tab>plugin_logger<tab>line<tab>timestamp<tab>connector<tab>logger class of a line of its tasks (its plugin
 #              when the logs miss its startup), each once, 40 per connector at most
-#   @@PGEVT@@<tab>connector_hint<tab>line<tab>timestamp<tab>connector<tab>dialect <name>: the SQL dialect of a JDBC connector
+#   @@PGEVT@@<tab>connector_hint<tab>line<tab>timestamp<tab>connector<tab>dialect <name>: the SQL dialect of a JDBC connector;
+#              direction sink|source: the record of an error reported by the runtime (LogReporter) was consumed or produced
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
 #   @@PGEVT@@<tab>librdkafka_version<tab>line<tab>timestamp<tab><tab>version ("librdkafka v2.3.0" of a non-Java client)
 #   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
@@ -7347,7 +7348,7 @@ function summarize_log_errors() {
         # the plugin of a connector whose logs miss its startup (no "Instantiated connector" line, no config dump): the
         # loggers of the lines of its tasks, "(io.confluent.connect.jdbc.sink.JdbcSinkTask:72)" at the end of a line with
         # its [connector|task-0] context. Each logger once per connector, 40 per connector at most; not the ones of the
-        # runtime, of the JDK nor of the converters (every connector has them)
+        # runtime (but its sink / source task classes), of the JDK nor of the converters (every connector has them)
         # (the connector read with index(), not a regex: this runs on most lines of a Connect log)
         if (records_file != "" && ((pl_last = substr($0, length($0))) == ")" || pl_last == "\r") && ((pl_p = index($0, "|task-")) || (pl_p = index($0, "|worker]")))) {
             pl_conn = substr($0, 1, pl_p - 1)
@@ -7359,7 +7360,8 @@ function summarize_log_errors() {
                 sub(/\r$/, "", pl_logger)
                 sub(/\)$/, "", pl_logger)
                 sub(/:[0-9]+$/, "", pl_logger)
-                if (pl_logger !~ /^(org\.apache\.kafka\.|java\.|javax\.|jdk\.|sun\.|org\.slf4j\.|com\.fasterxml\.|io\.confluent\.kafka\.(serializers|schemaregistry)\.|io\.confluent\.connect\.(avro|json|protobuf|schema)\.)/ && !((pl_conn SUBSEP pl_logger) in pl_seen)) {
+                # the task classes of the runtime say a sink from a source: kept
+                if ((pl_logger ~ /^org\.apache\.kafka\.connect\.runtime\.(Abstract|ExactlyOnce)?Worker(Sink|Source)Task$/ || pl_logger !~ /^(org\.apache\.kafka\.|java\.|javax\.|jdk\.|sun\.|org\.slf4j\.|com\.fasterxml\.|io\.confluent\.kafka\.(serializers|schemaregistry)\.|io\.confluent\.connect\.(avro|json|protobuf|schema)\.)/) && !((pl_conn SUBSEP pl_logger) in pl_seen)) {
                     pl_seen[pl_conn SUBSEP pl_logger] = 1
                     pl_n[pl_conn]++
                     pl_quiet[pl_conn] = 0
@@ -7379,6 +7381,18 @@ function summarize_log_errors() {
                 ev_seen["dialect" SUBSEP ch_conn SUBSEP ch_dialect] = 1
                 ch_line = NR
                 ev[++nev] = "connector_hint\t" ch_line "\t" timestamp_of($0) "\t" ch_conn "\tdialect " ch_dialect
+            }
+        }
+        # a sink from a source when nothing names the plugin: the record of an error reported by the runtime (LogReporter),
+        # ", where consumed record is {topic=…}" (sink) or ", where source record is = …" (source), once per connector
+        if (records_file != "" && (index($0, "where consumed record is") || index($0, "where source record is")) && match($0, /\[[^] |]+\|(task-[0-9]+|worker)/)) {
+            ch_conn = substr($0, RSTART + 1, RLENGTH - 1)
+            sub(/\|.*/, "", ch_conn)
+            ch_dir = index($0, "where consumed record is") ? "sink" : "source"
+            if (!(("direction" SUBSEP ch_conn SUBSEP ch_dir) in ev_seen)) {
+                ev_seen["direction" SUBSEP ch_conn SUBSEP ch_dir] = 1
+                ch_line = NR
+                ev[++nev] = "connector_hint\t" ch_line "\t" timestamp_of($0) "\t" ch_conn "\tdirection " ch_dir
             }
         }
         # the lifecycle of the INFO lines: rebalances of the worker group, rejoins of the consumer groups, connectors and

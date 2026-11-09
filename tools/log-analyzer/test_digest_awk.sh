@@ -27,6 +27,8 @@ cat > "$tmp/events.log" << 'EOF'
 [2026-11-07 10:28:00,001] INFO [jdbc-sink|task-0] Initializing writer using SQL dialect: SqlServerDatabaseDialect (io.confluent.connect.jdbc.sink.JdbcSinkTask:72)
 [2026-11-07 10:28:00,001] INFO [jdbc-source|task-0] Using JDBC dialect PostgreSql (io.confluent.connect.jdbc.source.JdbcSourceTask:135)
 [2026-11-07 10:28:00,002] INFO [jdbc-sink|task-0] Committing offsets (org.apache.kafka.connect.runtime.WorkerSinkTask:330)
+[2026-11-07 10:28:00,002] INFO [jdbc-sink|task-0] Committing offsets asynchronously (org.apache.kafka.connect.runtime.WorkerCoordinator:330)
+[2026-11-07 10:28:00,002] ERROR [mdm-sink|task-1] Error encountered in task mdm-sink-1. Executing stage 'TRANSFORMATION' with class 'org.apache.kafka.connect.runtime.TransformationStage', where consumed record is {topic='t', partition=1, offset=4, timestamp=1, timestampType=CreateTime}. (org.apache.kafka.connect.runtime.errors.LogReporter:70)
 2026-11-07T10:27:00.000+0000: 13.0: [GC (Allocation Failure) [ParNew: 26240K->1637K(29504K), 0.0053837 secs] 26240K->1637K(95040K), 0.0128474 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
 EOF
 # a line of a log written on Windows (CRLF)
@@ -61,16 +63,17 @@ do
         failed=1
     fi
     # the loggers of the lines of the tasks (the plugin of a connector whose startup is not in the logs): each once, not the
-    # ones of the runtime, a CRLF line too
+    # ones of the runtime but its sink / source task classes, a CRLF line too
     got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "plugin_logger" && ($5 == "jdbc-sink" || $5 == "hdfs-sink") {print $5, $6}' "$out.records" | sort | tr '\n' ',')
-    if [ "$got" != "hdfs-sink io.confluent.connect.hdfs3.TopicPartitionWriter,jdbc-sink io.confluent.connect.jdbc.sink.JdbcSinkTask," ]
+    if [ "$got" != "hdfs-sink io.confluent.connect.hdfs3.TopicPartitionWriter,jdbc-sink io.confluent.connect.jdbc.sink.JdbcSinkTask,jdbc-sink org.apache.kafka.connect.runtime.WorkerSinkTask," ]
     then
         echo "❌ $awk_cmd: plugin_logger events of events.log: $got"
         failed=1
     fi
-    # the SQL dialect of a JDBC connector (sink and source wording), each once
+    # the SQL dialect of a JDBC connector (sink and source wording), each once; the record of an error of the runtime
+    # (LogReporter): a sink
     got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "connector_hint" {print $5, $6}' "$out.records" | sort | tr '\n' ',')
-    if [ "$got" != "jdbc-sink dialect SqlServerDatabaseDialect,jdbc-source dialect PostgreSql," ]
+    if [ "$got" != "jdbc-sink dialect SqlServerDatabaseDialect,jdbc-source dialect PostgreSql,mdm-sink direction sink," ]
     then
         echo "❌ $awk_cmd: connector_hint events of events.log: $got"
         failed=1

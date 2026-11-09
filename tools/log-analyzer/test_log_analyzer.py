@@ -779,6 +779,27 @@ def test_jdbc_database_without_url():
     check("card", "🗄️ SQL Server" in html, "")
 
 
+def test_connector_sink_or_source():
+    """🔎 a sink or a source when nothing names the plugin: the record of an error reported by the runtime, the task class
+    of the runtime, the clients it owns; nothing when the class is known"""
+    def rec(conn, t):
+        return (f"@@PGREC@@|ERROR|1|3|3|2026-11-07T10:0{t}:00|2026-11-07T10:0{t}:00\n"
+                f"[2026-11-07 10:0{t}:00,000] ERROR [{conn}|task-0] boom (x)\n@@PGTS@@|2026-11-07T10:0{t}:00\n")
+    text = ("@@PGFILE@@|connect.log|20|4|4|2026-11-07T10:00:00|2026-11-07T10:10:00\n"
+            + rec("logreporter", 1) + rec("runtime", 2) + rec("known", 3)
+            + "@@PGEVT@@|connector_hint|1|2026-11-07T10:00:00|logreporter|direction sink\n"
+            + "@@PGEVT@@|plugin_logger|1|2026-11-07T10:00:00|runtime|org.apache.kafka.connect.runtime.AbstractWorkerSourceTask\n"
+            + "@@PGEVT@@|plugin_logger|1|2026-11-07T10:00:00|known|io.confluent.connect.jdbc.sink.JdbcSinkTask\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    cards = {c["connector"]: c for c in res["connectors"]}
+    check("LogReporter: sink", cards["logreporter"].get("direction") == "sink", cards["logreporter"])
+    check("runtime task: source", cards["runtime"].get("direction") == "source", cards["runtime"])
+    html = log_report.connectors_health_html(res["connectors"])
+    check("card", "a sink connector, plugin unknown" in html and "a source connector, plugin unknown (from AbstractWorkerSourceTask)" in html, "")
+    check("class known: no direction line", "JdbcSinkConnector" in html and html.count("plugin unknown") == 2, "")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0
