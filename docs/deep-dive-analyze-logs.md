@@ -284,6 +284,16 @@ browser from a terminal, with a page per file with findings in `<report>-files/`
 > in the selection (`▸ 340 of 1200 occurrence(s) here`), and the ones with nothing in it are hidden, with a
 > `🙈 5 finding(s) with nothing in this selection hidden` **show them** to bring them back.
 
+> [!WARNING]
+> The connector of a record is the **connector context** of the Connect log line (`[orders-sink|task-0]`, the MDC
+> `%X{connector.context}` of the log4j pattern of the workers), or a `WorkerSinkTask{id=orders-sink-0}` in its text.
+> When the Connect logs have lines of tasks (`Instantiated task`, `Creating task`, `WorkerSinkTask{id=…}`, the
+> connector configs) but no context at all, the pattern was changed: the report says so (`⚠️ No connector context
+> (MDC) in the Connect logs of connect-0.log…`, under the verdict, in the summary, `.summary.connect_without_mdc` of
+> `--json`) and 📥 Data to request gives the fix, `%X{connector.context}` back in the pattern (`connect-log4j2.yaml`
+> on CP 8, `connect-log4j.properties` before, `spec.configOverrides.log4j` with CFK). Until then most records of the
+> tasks count as "no connector context" in the 🔌 cards and the Connector filter.
+
 Times are shown **as written in the logs**, whatever the time zone of your browser; when the files mix offsets
 (`+02:00` Connect logs and `Z` broker logs), they are converted to UTC so that the files line up (`🌐 UTC` on the 🕐
 tile).

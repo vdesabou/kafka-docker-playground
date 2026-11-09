@@ -1431,6 +1431,62 @@ def lifecycle_html(lc: Optional[dict]) -> str:
             + "".join(row(r) for r in lc["rows"]) + "</table></div>")
 
 
+# ⚠️ Connect logs without the connector context (the MDC %X{connector.context} of the log4j pattern of the workers,
+# KIP-449): a line of a task thread (WorkerSinkTask{id=orders-sink-0} Committing offsets…) starts with
+# [orders-sink|task-0] when the pattern has it (and Instantiated task, Creating task, the connector configs). Several such lines and no context at all in a file: the pattern was
+# changed, and most records of the tasks cannot be tied to their connector (🔌 cards, Connector filter, counts)
+MDC_RE = re.compile(rb"\[[^\s|\]]+\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]")
+# the lines a worker logs in the context of a connector or a task (not "Starting task", logged by the herder without one)
+MDC_TASK_LINE_RE = re.compile(rb"(?:Worker(?:Source|Sink)Task|WorkerTask)\{id=|Instantiated (?:connector|task) |Creating task "
+                              rb"|Finished creating connector |(?:Sink|Source)?ConnectorConfig values|TaskConfig values")
+MDC_MIN_TASK_LINES = 3
+# a file is read until its first context, or MDC_ENOUGH task lines without one, or MDC_SCAN_BYTES
+MDC_ENOUGH = 200
+MDC_SCAN_BYTES = 64 * 1024 * 1024
+MDC_HOW = ("add %X{connector.context} to the layout pattern of the workers: CP 8 (log4j2, connect-log4j2.yaml): "
+           "pattern: \"[%d] %p %X{connector.context}%m (%c:%L)%n\"; CP 7 and before (log4j, connect-log4j.properties): "
+           "log4j.appender.stdout.layout.ConversionPattern=[%d] %p %X{connector.context}%m (%c:%L)%n; "
+           "CFK: the log4j overrides of the Connect CR (spec.configOverrides.log4j)")
+
+
+def connect_without_mdc(sources_file: str, files: List[dict]) -> List[dict]:
+    """the Connect log files whose lines of task threads have no connector context: [{file, task_lines}]"""
+    out = []
+    for en in log_search.entries_from(sources_file, files, {}, file_component):
+        path = en.get("path")
+        if en["comp"] != "connect" or not path or not os.path.isfile(path):
+            continue
+        task, read, mdc = 0, 0, False
+        try:
+            with log_search.open_log(path) as fh:
+                for line in fh:
+                    read += len(line)
+                    if MDC_RE.search(line):
+                        mdc = True
+                        break
+                    if MDC_TASK_LINE_RE.search(line):
+                        task += 1
+                        if task >= MDC_ENOUGH:
+                            break
+                    if read > MDC_SCAN_BYTES:
+                        break
+        except (OSError, EOFError, ValueError):
+            continue
+        if not mdc and task >= MDC_MIN_TASK_LINES:
+            out.append({"file": en["label"], "task_lines": task})
+    return out
+
+
+def mdc_text(items: List[dict]) -> str:
+    """⚠️ the warning of the Connect logs without connector context"""
+    names = list(OrderedDict((i["file"].rsplit("/", 1)[-1], True) for i in items))
+    files = ", ".join(names[:4]) + (f" (+{len(names) - 4})" if len(names) > 4 else "")
+    return (f"⚠️ No connector context (MDC) in the Connect logs of {files}" + (f", {len(items)} files" if len(items) > len(names) else "")
+            + ": the log4j pattern of the workers has no %X{connector.context}, so the lines of the tasks do not say "
+            "their connector ([orders-sink|task-0]). The records only tied by a WorkerSinkTask{id=…} are attributed, the "
+            "others count as \"no connector context\" (🔌 cards, Connector filter, counts per connector)")
+
+
 def worker_of(label: str) -> str:
     """the worker a log file belongs to: its label without the rotation suffix (worker-1/connect.log.1 and
     worker-1/connect.log.2.gz are worker-1/connect.log; connect-1.log and connect-2.log are two workers)"""
@@ -1832,6 +1888,10 @@ def data_to_request(res: dict, files: List[dict]) -> List[dict]:
             out.append({"what": what, "why": why, "how": how})
     for i in s.get("incomplete_inputs") or []:
         ask(f"a complete copy of {i['file']}", f"it was not fully read ({i['reason']}): the missing part may hold the errors")
+    if s.get("connect_without_mdc"):
+        ask("the Connect logs with the connector context (MDC), after the fix of the log4j pattern of the workers",
+            "the lines of the tasks do not say their connector: the errors cannot all be tied to the connector that "
+            "logged them", MDC_HOW)
     dur = s.get("log_duration_seconds")
     if dur is not None and dur < SHORT_PERIOD_SECONDS:
         ask("logs over a longer window, starting well before the incident",
@@ -2807,6 +2867,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append(covered)
     if time_zone_note(s):
         out.append("   " + time_zone_note(s))
+    if s.get("connect_without_mdc"):
+        out.append("   " + mdc_text(s["connect_without_mdc"]) + f". Fix: {MDC_HOW}")
     if s.get("kafka_versions"):
         out.append(f"   🏷️ Kafka {' → '.join(s['kafka_versions'])} (the version the components log at startup)")
     for v in cp_versions(s, res.get("_cfk_bundles") or []):
@@ -6312,6 +6374,13 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        f"<p class='san-note {cls}'>{e(icon)} {e(text.strip())}</p>")
     # ⛔ end of support: right under the verdict, above everything else
     body.insert(1, SUPPORT_CSS + support_banner_html(s, res.get("_cfk_bundles") or [], res.get("connectors") or []))
+    # ⚠️ Connect logs without the connector context: the connector views below miss records
+    if s.get("connect_without_mdc"):
+        body.insert(2, "<style>.mdc-note{margin:6px 0 2px;font-size:.82rem;padding:6px 12px;border-radius:8px;border-left:4px solid #d97706;"
+                       "background:#fffbeb;color:#92400e}html[data-theme=dark] .mdc-note{background:#3a2406;color:#fcd34d}"
+                       ".mdc-note code{font-size:.76rem}</style>"
+                       f"<p class='mdc-note' title='{e(chr(10).join(i['file'] for i in s['connect_without_mdc']))}'>{e(mdc_text(s['connect_without_mdc']))}. "
+                       f"Fix (📥 Data to request): <code>%X{{connector.context}}</code> in the log4j pattern of the workers.</p>")
     # 📖 the story of the logs first, right under the header
     body.insert(0, story_html(res, levels))
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections if (t, text) not in notes]
@@ -6596,6 +6665,9 @@ def main() -> int:
                 res["other_files"] = json.load(fh)
         except (OSError, ValueError) as ex:
             print(f"⚠️ --other-files: cannot read {args.other_files}: {ex}", file=sys.stderr)
+    # ⚠️ the Connect logs without connector context (MDC): read again from the sources file
+    if args.sources:
+        res["summary"]["connect_without_mdc"] = connect_without_mdc(args.sources, files)
     # what to ask the customer for next: from the gaps of the input and its findings (📥, .data_to_request of --json)
     res["data_to_request"] = data_to_request(res, files)
     res["_cfk_bundles"] = getattr(files, "cfk_bundles", None) or []

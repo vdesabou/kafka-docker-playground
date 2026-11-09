@@ -449,7 +449,7 @@ highlighted with the CSS Custom Highlight API, `pgHighlight()`, the page itself 
 finding card that does not contain it gets `.pg-nomatch`, never the `hidden` attribute of the severity chips). The filters are written in the URL of the page (`#pg:lvl=1&comp=connect&conn=s3-sink&q=timeout&t=<from>-<to>`,
 `pgStateWrite()` / `pgStateRead()`, the URL wins over the component remembered in `localStorage`; `t` is the period asked,
 `lq` the query of 🔎 Search every log line): 🔗 **Link to this view**
-copies it, and the link opens the report on the same view. The 🕐 **period picker** and 🔎 **Search every log line** live
+copies it, and the link opens the report on the same view. ⚠️ `connect_without_mdc()` reads the Connect files of the sources file again (until their first `[connector|task-0]` context, 200 lines of tasks without one, or 64 MB): 3 lines of tasks or more (`MDC_TASK_LINE_RE`: `Instantiated task`, `Creating task`, `WorkerSinkTask{id=…}`, the connector configs; not `Starting task`, logged by the herder without context) and no context in the file is `.summary.connect_without_mdc`: a note under the verdict, a line of the summary and an item of 📥 Data to request with the log4j fix (`MDC_HOW`). analyze logs passes `--sources` to every run of the report for it (summary, `--json`, HTML). The 🕐 **period picker** and 🔎 **Search every log line** live
 in `tools/report-common/log_search.py` (`period_row()` + `PERIOD_SCRIPT`, `write_index()` + `search_html()` +
 `SEARCH_SCRIPT`, emitted right after `FILTER_SCRIPT`). Every way of picking a period ends in `pgSetPeriod(from, to)`: it
 zooms the occurrences chart on the part of the period the chart holds (`box.range()` of `zoom_chart.js`: `show()` would

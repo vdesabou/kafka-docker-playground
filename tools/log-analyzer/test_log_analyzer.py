@@ -572,6 +572,36 @@ def test_log_search_index():
         check("next record", time_of(4) == 1791968460, time_of(4))
 
 
+def test_connect_without_mdc():
+    """⚠️ a Connect log whose task lines have no [connector|task-0] context is reported, not one that has it (also
+    with a scope, [c|task-0|redoLog]), nor a broker log, nor a Connect log with too few task lines to tell"""
+    with tempfile.TemporaryDirectory() as d:
+        task_lines = ("[2026-10-14 09:00:00,001] INFO {ctx}Instantiated task orders-sink-0 with version 1 (org.apache.kafka.connect.runtime.Worker:1)\n"
+                      "[2026-10-14 09:00:00,002] INFO {ctx}Creating task orders-sink-0 (org.apache.kafka.connect.runtime.Worker:1)\n"
+                      "[2026-10-14 09:00:01,003] INFO {ctx}WorkerSinkTask{{id=orders-sink-0}} Sink task finished initialization and its start (x:1)\n")
+        paths = {}
+        for name, ctx in (("without/connect.log", ""), ("with/connect.log", "[orders-sink|task-0] "),
+                          ("scoped/connect.log", "[orders-sink|task-0|redoLog] ")):
+            paths[name] = os.path.join(d, name.replace("/", "-"))
+            with open(paths[name], "w") as fh:
+                fh.write(task_lines.format(ctx=ctx))
+        paths["few/connect.log"] = os.path.join(d, "few.log")
+        with open(paths["few/connect.log"], "w") as fh:
+            fh.write(task_lines.format(ctx="").splitlines(True)[0])
+        paths["broker/server.log"] = os.path.join(d, "server.log")
+        with open(paths["broker/server.log"], "w") as fh:
+            fh.write(task_lines.format(ctx=""))
+        sources = os.path.join(d, "sources")
+        with open(sources, "w") as fh:
+            fh.writelines(f"{label}\t{path}\t1\n" for label, path in paths.items())
+        out = log_report.connect_without_mdc(sources, [])
+        check("only the Connect log without context", [i["file"] for i in out] == ["without/connect.log"], out)
+        check("its task lines", out[0]["task_lines"] == 3, out)
+        res = {"summary": {"connect_without_mdc": out}}
+        check("warning text", "No connector context (MDC)" in log_report.mdc_text(out) and "connect.log" in log_report.mdc_text(out))
+        check("fix", "%X{connector.context}" in log_report.MDC_HOW and res)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

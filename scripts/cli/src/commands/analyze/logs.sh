@@ -1193,6 +1193,9 @@ then
     title="sample ${sample_array[*]}"
 fi
 report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped" --incomplete "$incomplete_file" --bytes-read "$nb_bytes")
+# the files of the input, read again by the report: the file pages and 🔎 Search every log line of the HTML report, and
+# the check of the connector context (MDC) of the Connect logs, also in the summary and --json
+report_args+=(--sources "$sources_file")
 # the changes of the cluster of each CFK bundle (pods terminated or restarted, custom resources edited, rollouts) join the
 # incident timeline of the log report: 🔗 and 💥 link the errors of the pod logs to them
 for cfk_events_json in "${cfk_json_files[@]}" "${cfk_compare_files[@]}"
@@ -1409,7 +1412,6 @@ elif [ -f "$streams_text_file" ]
 then
     report_args+=(--section "🌊 Kafka Streams" "$streams_text_file")
 fi
-report_args+=(--sources "$sources_file")
 export PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)"
 progress_step "📝 writing the HTML report"
 # 📤 Share in the report: the .zip of the report and its file pages, written next to it (when zip is there)

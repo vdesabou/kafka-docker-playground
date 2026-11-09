@@ -46,6 +46,11 @@ def max_bytes() -> int:
         return DEFAULT_MAX_MB * 1024 * 1024
 
 
+def open_log(path: str):
+    """a log file of the input as bytes lines, a .gz (or a gzip without the extension) decompressed"""
+    return _open(path)
+
+
 def _open(path: str):
     with open(path, "rb") as fh:
         magic = fh.read(2)
