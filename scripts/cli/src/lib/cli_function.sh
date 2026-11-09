@@ -8074,11 +8074,11 @@ function find_commands() {
     # text is searched with weight, extra (the usage, with its flags) with weight 1.
     # Generic terms (connector, kafka...) add to the score but do not count to reach the coverage needed,
     # otherwise "memory issue with connector" matches anything that says connector.
-    function add(cmd, matched, usage, url, source, weight, text, extra,    t, low, lowx, hits, score, path_hits, need, s, hit, phit, gw_factor) {
+    function add(cmd, matched, usage, url, source, weight, text, extra,    t, low, lowx, hits, score, path_hits, need, s, hit, phit, gw_factor, typed_hits) {
         if (cmd == "" || !(cmd in known)) return
         low = tolower(text)
         lowx = tolower(extra)
-        hits = 0; score = 0; path_hits = 0
+        hits = 0; score = 0; path_hits = 0; typed_hits = 0
         for (t = 1; t <= nterms; t++) {
             hit = 0; phit = 0
             gw_factor = (t in generic ? 0.5 : 1)
@@ -8091,6 +8091,9 @@ function find_commands() {
             if (index(" " cmd, " " terms[t]) > 0) { phit = 1; score += 2 * gw_factor }
             if (nsig > 0 && (t in generic)) continue
             hits += hit; path_hits += phit
+            # the word as typed ("working"), not only its stem ("work", also in "worker"); a synonym is enough for a
+            # term of a synonym group ("memory" → "heap")
+            if (phit || (hit && ((t in syn) || index(low, word[t]) > 0 || index(lowx, word[t]) > 0))) typed_hits++
         }
         need = (ncount <= 2 ? 1 : int((ncount + 1) / 2))
         if (hits < need && path_hits < need) return
@@ -8104,8 +8107,10 @@ function find_commands() {
             if (url != "") burl[cmd] = url
         }
         # only the rows that match every specific term of the question add to the score: a page with many rows
-        # repeating one word of it ("logs") must not outrank the command that matches the whole question
-        if ((hits > path_hits ? hits : path_hits) >= ncount) full[cmd]++
+        # repeating one word of it ("logs") must not outrank the command that matches the whole question. The words
+        # must be the ones typed: with one specific term ("why is my connector not working"), every row with "work" or
+        # "worker" would otherwise match the whole question
+        if ((hits > path_hits ? hits : path_hits) >= ncount && typed_hits >= ncount) full[cmd]++
     }
     BEGIN {
         split("a about an and any are as at be by can could do does doing for from get got has have having help how i if in into is issue it its me my no not of on or please problem show so some tell that the their them there these this to trouble was we what when where which who why will with without you your", sw, " ")
