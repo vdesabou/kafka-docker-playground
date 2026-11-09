@@ -1141,11 +1141,15 @@ cfk_parallelism="${PLAYGROUND_CFK_PARALLELISM:-4}"
 [[ "$cfk_parallelism" =~ ^[1-9][0-9]*$ ]] || cfk_parallelism=4
 if [ ${#cfk_bundles[@]} -gt 0 ]
 then
-    # built once, not by each job. Without a container engine (a laptop without Docker): the ☸️ sections of the bundles
+    # built once, not by each job. Without a container engine (a laptop without Docker): cfk-analysis runs with the local
+    # python3 when PyYAML is installed (and always in the kdp-analyze-logs image), else the ☸️ sections of the bundles
     # are left out, their pod logs are in the report all the same (walk_cfk_bundle_logs), not a failure
-    if ! command -v docker > /dev/null 2>&1 || ! docker info > /dev/null 2>&1
+    # set -e: the return code of cfk_analysis_local is 1 with a container engine
+    cfk_local_rc=0
+    cfk_analysis_local || cfk_local_rc=$?
+    if [ $cfk_local_rc -eq 2 ]
     then
-        logwarn "⚠️ no container engine (docker): the ☸️ sections of the CFK support bundle(s) (pods, custom resources, events, versions) are left out, their pod and operator logs are in the report"
+        logwarn "⚠️ no container engine (docker) and no PyYAML (pip install PyYAML): the ☸️ sections of the CFK support bundle(s) (pods, custom resources, events, versions) are left out, their pod and operator logs are in the report"
         cfk_bundles=()
     elif ! cfk_analyzer_image > /dev/null
     then
@@ -1254,13 +1258,14 @@ do
         then
             CFK_ANALYSIS_LOG_RECORDS="$tmp_dir/cfk-records-$i.json"
         fi
+        # set -e: a failed analysis (64, invalid bundle) is a result, not the end of the job
+        rc=0
         if [[ -n "$json_out" ]]
         then
-            analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+            analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out" || rc=$?
         else
-            analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+            analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1 || rc=$?
         fi
-        rc=$?
         printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
         mv "$tmp_dir/cfk-$i.result.tmp" "$tmp_dir/cfk-$i.result"
         exit 0
@@ -1287,7 +1292,7 @@ then
     log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
     progress_step "🔁 comparing the ${#cfk_compare_files[@]} CFK support bundles"
     CFK_COMPARISON_HTML=""
-    compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
+    compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}" || logwarn "⚠️ the comparison of the CFK support bundles failed"
 elif [ ${#cfk_json_files[@]} -ge 2 ]
 then
     compare_cfk_bundles "1" "" "${cfk_json_files[@]}" > "$cfk_comparison" || echo "[]" > "$cfk_comparison"
@@ -1534,7 +1539,7 @@ then
         compare_cfk_bundles "1" "" "${compare_cfk_files[@]}" "${current_cfk_files[@]}" > "$cfk_comparison" 2> /dev/null || echo "[]" > "$cfk_comparison"
     else
         CFK_COMPARISON_HTML=""
-        compare_cfk_bundles "" "$output_dir" "${compare_cfk_files[@]}" "${current_cfk_files[@]}"
+        compare_cfk_bundles "" "$output_dir" "${compare_cfk_files[@]}" "${current_cfk_files[@]}" || logwarn "⚠️ the comparison of the CFK support bundles failed"
     fi
 fi
 for connector in "${connector_array[@]}"
@@ -1692,7 +1697,7 @@ report_args+=(--ticket-out "$output_dir/${stem}-ticket.md")
 write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
 if [ -s "$output_dir/${stem}-ticket.md" ]
 then
-    log "📋 For a ticket (Markdown, sanitized: review it): $output_dir/${stem}-ticket.md"
+    log "📋 For a ticket (Markdown, sanitized: review it): $(shown_path "$output_dir/${stem}-ticket.md")"
 fi
 # the .zip to send to a colleague (📤 Share of the report): only when the file pages are under 200 MB (a page holds a
 # whole log file: 1 GB of logs makes 1 GB of pages), else the command to make it
@@ -1727,10 +1732,10 @@ then
         fi
         if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
         then
-            log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"
+            log "📤 To share it: $(shown_path "$output_dir/$share_zip") (the report and its file pages, 📤 Share in the report)"
         fi
     else
-        log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$output_dir\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
+        log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$(shown_path "$output_dir")\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
     fi
 fi
 exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))

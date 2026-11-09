@@ -10071,7 +10071,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent. 🐳 --from-containers\n  gives the same full report for the running example: the logs of its\n  containers are saved in a folder, then analyzed.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  🙈 Known harmless records (telemetry not set up, Self-Balancing on a\n  KRaft controller node, Jersey startup notices) and the warnings of the\n  JDK launcher on stderr (\"WARNING: sun.misc.Unsafe::…\") are left out\n  (--include-harmless keeps the first ones); 🌅 the connection failures of\n  a component that starts before the broker, and stop once it is up, are\n  a LOW known cause of their own, not the HIGH 🔌 Connection failure.\n  ✅ Every connector of the logs gets its card, the ones without an\n  error too, and ☕ the JDK is shown when the logs give it.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. Logs pasted in a Word document (.docx, .odt)\n  or exported to a spreadsheet (.xlsx, .xlsm, .ods: the columns of the\n  export, Excel dates converted) are converted the same way. 📷 With\n  --ocr, the screenshots (and the pictures of a document) are read by OCR\n  (the Vision framework of macOS, else tesseract, else tesseract in a\n  container) and analyzed as \"<picture> (📷 OCR)\", approximate lines;\n  without it, and for the PDF and the old .doc / .xls / .pptx files,\n  🧰 Other files of the input lists them with what to do. So are JSON lines\n  whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). ⚠️ An input not fully read (a truncated or\n  corrupt .gz, an archive that does not fully extract) is listed at the\n  end, in the HTML report and in --json (.summary.incomplete_inputs):\n  never a silent ✅, and exit code 1 when nothing could be read at all.\n  Bytes that are not UTF-8 (a Latin-1 character) are read as they are.\n  🌍 It works offline, without Docker: bash 4.2+, python3 3.8+, jq, awk,\n  gzip and tar are enough (a CFK bundle then has no ☸️ sections, its pod\n  logs are still read). Without the playground: a sparse clone of\n  scripts/, tools/ and cfk-analysis/ (see the deep dive, \"Without the\n  playground\").\n  🧰 The files of the input that another analyzer reads better (GC logs,\n  thread dumps, heap dumps, flight recordings, network captures, Oracle\n  XStream diagnostics reports, found by their content or name) are listed\n  with the playground analyze command to run on each, in the summary, the\n  HTML report and --json (.other_files); the ones extracted from an\n  archive are kept next to the report (<input>-other-files/).\n  Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, a bar for the file\n  being read and one for the whole input, elapsed time, speed, ETA of the file\n  and of the whole input) that becomes the report when the analysis ends. The\n  last line\n  gives the size read and the time it took. 📤 Share in the report: the\n  .zip of the report and its file pages (written next to it when they are\n  under 200 MB), the summary to paste, an email. An archive (.tar, .tar.gz,\n  .tgz…) shows a bar while it is extracted.\n  \n  🗂️ One report: the sections of each CFK support bundle of the input\n  (pods, custom resources, events, versions, recent changes, issues by\n  category) are in the log report, right after its verdict; the comparison\n  of several bundles is linked from it. Several CFK bundles are analyzed in\n  parallel, 4 at a time (PLAYGROUND_CFK_PARALLELISM to change it), their\n  output printed in order.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole by the CFK analyzer (a\n  container image built on first use): Warning events, pods (phase, waiting\n  reasons, restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 --sanitize replaces secrets, IPs,\n  hostnames, emails and LDAP DNs by placeholders (best effort: review before\n  sharing). 🔥 One report: its pod and operator logs go through the regular log\n  digest, and the log report (root causes, timeline, connector cards and plugin\n  versions, restarts, known bugs fixed later, which pod ran which task, data to\n  request, summary for a ticket) has the ☸️ sections of the bundle right after\n  its verdict (with --json: the bundle JSON, with .log_analysis); the issues of\n  its log records come from the same records, and the ☸️ changes of the cluster\n  (pods terminated or restarted, custom resources edited, rollouts) join its\n  incident timeline, so that 🔗 and 💥 link the errors of the pod logs to them.\n  One output for the case: <input>-ticket.md has a ☸️ section per bundle\n  (environment, issues by severity, known CFK issues with their public links,\n  critical and high issues), the 📥 data to request of the bundle joins the one\n  of the logs, and --compare <before bundle> compares both the bundles\n  (versions, CR changes, issues fixed / new / still there) and their pod logs.\n  The ⚙️ configuration of the log report also has what only the bundle has: the\n  properties rendered by CFK (ConfigMap <cr>-shared-config), the configOverrides\n  of each CR and the Connector CRs (--show-config <connector> prints the CR with\n  the config logged, config lint checks it), and 🔀 the keys of a Connector CR\n  whose value differs from the config the worker logged when it started the\n  connector (the operator did not apply a change). --logs-only gives only the\n  log report, of every file of the bundle. 🎯 --problem \"<component, symptom,\n  since when>\" matches the bundle against what the customer reports: the issues\n  that explain it first, a verdict (explained, not explained, not covered by the\n  logs), the changes before the date. 📥 A Data to request section says what to\n  ask the customer for next, with why and the command: from the gaps of the\n  bundle (logs that start too late, previous logs of restarted containers, no\n  events, no operator log), from its findings (OOMKilled, Pending pods, TLS,\n  failed connectors) and from the symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do (📚 and a Confluent knowledge-base\n  article for many of them, 🔒 the internal runbooks of Confluent support when\n  the private reproduction-models repository is there), root causes no known\n  cause explains, and the configuration logged at startup (connectors,\n  components, clients) with the keys changed between restarts. Also: 🏷️ the\n  version of each connector plugin (with the playground connector-plugin\n  changelog command since that version) and of Kafka, 📥 the data to request next\n  from the customer, each with why and how (a complete copy of a file not fully\n  read, a longer window, the logs since the last restart of a worker whose\n  startup is missing, the broker or Schema Registry logs when the findings point\n  there, a heap dump, GC logs, thread dumps or the TLS debug output for the\n  known causes they explain, and the exact DEBUG logger to set for the errors no\n  known cause explains), also in <input>-ticket.md, 🖥️ which worker ran which\n  task and when (from the \"Starting task\" lines of each worker's logs), with 🎯 a\n  connector whose errors all come from one worker while its tasks ran on another\n  one at the same time without error (a DNS, truststore, plugin path or network\n  difference of that host), 🩹 the known bugs of a plugin fixed in a later\n  version whose error is in the logs, with a verdict from the version each\n  connector runs (affected: upgrade to …; it has the fix: another cause; version\n  unknown), 🔄 the restarts, stops, worker rebalances, consumer rejoins, members\n  removed by the group coordinator of a broker (session or rebalance timeout),\n  active controller changes and GC pauses of 1 s or more counted from the INFO\n  lines and the GC logs (🌀 a storm when the rebalances repeat), 💥 the bursts of\n  errors right after a GC pause, a stop, a restart or a controller change, 🔗 the\n  errors that came right after a change (config key, restart) of the same\n  connector, and 🧪 a config lint of each connector (errors.tolerance=all without\n  a DLQ, a DLQ with replication factor 1, max.poll.records too high for\n  max.poll.interval.ms, acks not all…). --connector keeps one connector,\n  --show-config prints a configuration, --since / --until keep a window of time.\n  📋 <input>-ticket.md, next to the report: the same summary in Markdown, always\n  sanitized, to paste in a ticket (also in 📤 Share of the report). 📈 With\n  --compare repeated (oldest first), a trend over every input.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  errors.tolerance exceeded, authentication, TLS, wrong security.protocol,\n  unknown magic byte, OutOfMemoryError, fenced producer, rebalances, throttling,\n  offsets not committed in time, task not stopped in time...), an incident\n  timeline (all files merged: first occurrence of each error and known cause,\n  restarts, connectors reconfigured, config changes, processes stopped, active\n  controller changes and GC pauses of 1 s or more read from the GC logs of the\n  input, 💥 with the burst of ERROR / WARN of every file in the 60 s after one of\n  them when it is well above the usual rate (\"39 Partition leadership changed\n  right after broker 2 shut down\"); a chart places them in time, one lane per\n  component, long gaps cut, and a Δ column gives the time between them), a card\n  per connector (errors, task killed, known causes, config changes, its plugin\n  class: 🔎 inferred from the loggers of the lines of its tasks when the logs\n  miss its startup), occurrences over time, root causes (deepest exception of\n  each record), files with findings, and every distinct record. Everything below\n  the filter bar is one view of the same records: the level chips, the component\n  chips, the connector picker, the search box and the period selected by\n  dragging over the occurrences chart (all kept in the URL: 🔗 Link to this view\n  opens the report on the same view) all recount the two charts, the root\n  causes, the files with findings and the record cards (double-click the chart,\n  or ⤺ whole period, to go back). The findings keep the figures of the whole\n  report, say how much of each of them is in the selection, and the ones with\n  nothing in it are hidden (show them brings them back). With a connector\n  picked, the 🔌 Connectors section keeps its card only. ⚠️ Connect logs whose\n  task lines have no connector context ([orders-sink|task-0], the MDC\n  %%X{connector.context} of the log4j pattern) are reported, with the fix: their\n  records cannot all be tied to their connector. 🕐 Period, a row of the filter\n  bar, picks the period as the time picker of Grafana: quick ranges relative to\n  the end of the logs (last 15 min of the logs…) and the times of the analysis\n  (around the first error, the peak), from → to (paste \"09:02 → 09:08\"), around\n  a time (± 5 min), ⊖ zoom out, ◀ ▶ shift (t ← / t →), ⏱️ on a row of the\n  incident timeline. 🔎 Search every log line searches every line of every file,\n  INFO and DEBUG included, in the browser and offline (words, \"a phrase\",\n  /regex/, -exclude, level:INFO, file:connect-0, comp:connect): a histogram of\n  the matches (drag: the period of the report), the counts per level and file,\n  the lines sorted by time, a click for the lines around one. The lines are\n  written compressed next to the report (in the 📤 Share .zip) within\n  PLAYGROUND_LOG_SEARCH_MAX_MB (200 MB of lines by default, the files with\n  findings first, 0 to turn it off), not with --sanitize.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n  🎬 Bite size session (--compare):\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%81-did-the-fix-work-analyze-the-logs-before-and-after-it\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent. 🐳 --from-containers\n  gives the same full report for the running example: the logs of its\n  containers are saved in a folder, then analyzed.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  🙈 Known harmless records (telemetry not set up, Self-Balancing on a\n  KRaft controller node, Jersey startup notices) and the warnings of the\n  JDK launcher on stderr (\"WARNING: sun.misc.Unsafe::…\") are left out\n  (--include-harmless keeps the first ones); 🌅 the connection failures of\n  a component that starts before the broker, and stop once it is up, are\n  a LOW known cause of their own, not the HIGH 🔌 Connection failure.\n  ✅ Every connector of the logs gets its card, the ones without an\n  error too, and ☕ the JDK is shown when the logs give it.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. Logs pasted in a Word document (.docx, .odt)\n  or exported to a spreadsheet (.xlsx, .xlsm, .ods: the columns of the\n  export, Excel dates converted) are converted the same way. 📷 With\n  --ocr, the screenshots (and the pictures of a document) are read by OCR\n  (the Vision framework of macOS, else tesseract, else tesseract in a\n  container) and analyzed as \"<picture> (📷 OCR)\", approximate lines;\n  without it, and for the PDF and the old .doc / .xls / .pptx files,\n  🧰 Other files of the input lists them with what to do. So are JSON lines\n  whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). ⚠️ An input not fully read (a truncated or\n  corrupt .gz, an archive that does not fully extract) is listed at the\n  end, in the HTML report and in --json (.summary.incomplete_inputs):\n  never a silent ✅, and exit code 1 when nothing could be read at all.\n  Bytes that are not UTF-8 (a Latin-1 character) are read as they are.\n  🌍 It works offline, without Docker: bash 4.2+, python3 3.8+, jq, awk,\n  gzip and tar are enough (a CFK bundle gets its ☸️ sections when PyYAML\n  is installed, else its pod logs are still read). Without the\n  playground: a sparse clone of scripts/, tools/ and cfk-analysis/, or\n  with nothing installed but Docker, the ghcr.io/vdesabou/kdp-analyze-logs\n  image: docker run --rm --network none -v \"\$PWD\":/data -e\n  KDP_HOST_DIR=\"\$PWD\" ghcr.io/vdesabou/kdp-analyze-logs -f bundle.zip\n  (see the deep dive, \"Without the playground\").\n  🧰 The files of the input that another analyzer reads better (GC logs,\n  thread dumps, heap dumps, flight recordings, network captures, Oracle\n  XStream diagnostics reports, found by their content or name) are listed\n  with the playground analyze command to run on each, in the summary, the\n  HTML report and --json (.other_files); the ones extracted from an\n  archive are kept next to the report (<input>-other-files/).\n  Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, a bar for the file\n  being read and one for the whole input, elapsed time, speed, ETA of the file\n  and of the whole input) that becomes the report when the analysis ends. The\n  last line\n  gives the size read and the time it took. 📤 Share in the report: the\n  .zip of the report and its file pages (written next to it when they are\n  under 200 MB), the summary to paste, an email. An archive (.tar, .tar.gz,\n  .tgz…) shows a bar while it is extracted.\n  \n  🗂️ One report: the sections of each CFK support bundle of the input\n  (pods, custom resources, events, versions, recent changes, issues by\n  category) are in the log report, right after its verdict; the comparison\n  of several bundles is linked from it. Several CFK bundles are analyzed in\n  parallel, 4 at a time (PLAYGROUND_CFK_PARALLELISM to change it), their\n  output printed in order.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole by the CFK analyzer (a\n  container image built on first use): Warning events, pods (phase, waiting\n  reasons, restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 --sanitize replaces secrets, IPs,\n  hostnames, emails and LDAP DNs by placeholders (best effort: review before\n  sharing). 🔥 One report: its pod and operator logs go through the regular log\n  digest, and the log report (root causes, timeline, connector cards and plugin\n  versions, restarts, known bugs fixed later, which pod ran which task, data to\n  request, summary for a ticket) has the ☸️ sections of the bundle right after\n  its verdict (with --json: the bundle JSON, with .log_analysis); the issues of\n  its log records come from the same records, and the ☸️ changes of the cluster\n  (pods terminated or restarted, custom resources edited, rollouts) join its\n  incident timeline, so that 🔗 and 💥 link the errors of the pod logs to them.\n  One output for the case: <input>-ticket.md has a ☸️ section per bundle\n  (environment, issues by severity, known CFK issues with their public links,\n  critical and high issues), the 📥 data to request of the bundle joins the one\n  of the logs, and --compare <before bundle> compares both the bundles\n  (versions, CR changes, issues fixed / new / still there) and their pod logs.\n  The ⚙️ configuration of the log report also has what only the bundle has: the\n  properties rendered by CFK (ConfigMap <cr>-shared-config), the configOverrides\n  of each CR and the Connector CRs (--show-config <connector> prints the CR with\n  the config logged, config lint checks it), and 🔀 the keys of a Connector CR\n  whose value differs from the config the worker logged when it started the\n  connector (the operator did not apply a change). --logs-only gives only the\n  log report, of every file of the bundle. 🎯 --problem \"<component, symptom,\n  since when>\" matches the bundle against what the customer reports: the issues\n  that explain it first, a verdict (explained, not explained, not covered by the\n  logs), the changes before the date. 📥 A Data to request section says what to\n  ask the customer for next, with why and the command: from the gaps of the\n  bundle (logs that start too late, previous logs of restarted containers, no\n  events, no operator log), from its findings (OOMKilled, Pending pods, TLS,\n  failed connectors) and from the symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do (📚 and a Confluent knowledge-base\n  article for many of them, 🔒 the internal runbooks of Confluent support when\n  the private reproduction-models repository is there), root causes no known\n  cause explains, and the configuration logged at startup (connectors,\n  components, clients) with the keys changed between restarts. Also: 🏷️ the\n  version of each connector plugin (with the playground connector-plugin\n  changelog command since that version) and of Kafka, 📥 the data to request next\n  from the customer, each with why and how (a complete copy of a file not fully\n  read, a longer window, the logs since the last restart of a worker whose\n  startup is missing, the broker or Schema Registry logs when the findings point\n  there, a heap dump, GC logs, thread dumps or the TLS debug output for the\n  known causes they explain, and the exact DEBUG logger to set for the errors no\n  known cause explains), also in <input>-ticket.md, 🖥️ which worker ran which\n  task and when (from the \"Starting task\" lines of each worker's logs), with 🎯 a\n  connector whose errors all come from one worker while its tasks ran on another\n  one at the same time without error (a DNS, truststore, plugin path or network\n  difference of that host), 🩹 the known bugs of a plugin fixed in a later\n  version whose error is in the logs, with a verdict from the version each\n  connector runs (affected: upgrade to …; it has the fix: another cause; version\n  unknown), 🔄 the restarts, stops, worker rebalances, consumer rejoins, members\n  removed by the group coordinator of a broker (session or rebalance timeout),\n  active controller changes and GC pauses of 1 s or more counted from the INFO\n  lines and the GC logs (🌀 a storm when the rebalances repeat), 💥 the bursts of\n  errors right after a GC pause, a stop, a restart or a controller change, 🔗 the\n  errors that came right after a change (config key, restart) of the same\n  connector, and 🧪 a config lint of each connector (errors.tolerance=all without\n  a DLQ, a DLQ with replication factor 1, max.poll.records too high for\n  max.poll.interval.ms, acks not all…). --connector keeps one connector,\n  --show-config prints a configuration, --since / --until keep a window of time.\n  📋 <input>-ticket.md, next to the report: the same summary in Markdown, always\n  sanitized, to paste in a ticket (also in 📤 Share of the report). 📈 With\n  --compare repeated (oldest first), a trend over every input.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  errors.tolerance exceeded, authentication, TLS, wrong security.protocol,\n  unknown magic byte, OutOfMemoryError, fenced producer, rebalances, throttling,\n  offsets not committed in time, task not stopped in time...), an incident\n  timeline (all files merged: first occurrence of each error and known cause,\n  restarts, connectors reconfigured, config changes, processes stopped, active\n  controller changes and GC pauses of 1 s or more read from the GC logs of the\n  input, 💥 with the burst of ERROR / WARN of every file in the 60 s after one of\n  them when it is well above the usual rate (\"39 Partition leadership changed\n  right after broker 2 shut down\"); a chart places them in time, one lane per\n  component, long gaps cut, and a Δ column gives the time between them), a card\n  per connector (errors, task killed, known causes, config changes, its plugin\n  class: 🔎 inferred from the loggers of the lines of its tasks when the logs\n  miss its startup), occurrences over time, root causes (deepest exception of\n  each record), files with findings, and every distinct record. Everything below\n  the filter bar is one view of the same records: the level chips, the component\n  chips, the connector picker, the search box and the period selected by\n  dragging over the occurrences chart (all kept in the URL: 🔗 Link to this view\n  opens the report on the same view) all recount the two charts, the root\n  causes, the files with findings and the record cards (double-click the chart,\n  or ⤺ whole period, to go back). The findings keep the figures of the whole\n  report, say how much of each of them is in the selection, and the ones with\n  nothing in it are hidden (show them brings them back). With a connector\n  picked, the 🔌 Connectors section keeps its card only. ⚠️ Connect logs whose\n  task lines have no connector context ([orders-sink|task-0], the MDC\n  %%X{connector.context} of the log4j pattern) are reported, with the fix: their\n  records cannot all be tied to their connector. 🕐 Period, a row of the filter\n  bar, picks the period as the time picker of Grafana: quick ranges relative to\n  the end of the logs (last 15 min of the logs…) and the times of the analysis\n  (around the first error, the peak), from → to (paste \"09:02 → 09:08\"), around\n  a time (± 5 min), ⊖ zoom out, ◀ ▶ shift (t ← / t →), ⏱️ on a row of the\n  incident timeline. 🔎 Search every log line searches every line of every file,\n  INFO and DEBUG included, in the browser and offline (words, \"a phrase\",\n  /regex/, -exclude, level:INFO, file:connect-0, comp:connect): a histogram of\n  the matches (drag: the period of the report), the counts per level and file,\n  the lines sorted by time, a click for the lines around one. The lines are\n  written compressed next to the report (in the 📤 Share .zip) within\n  PLAYGROUND_LOG_SEARCH_MAX_MB (200 MB of lines by default, the files with\n  findings first, 0 to turn it off), not with --sanitize.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n  🎬 Bite size session (--compare):\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%81-did-the-fix-work-analyze-the-logs-before-and-after-it\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -10235,7 +10235,7 @@ playground_analyze_logs_usage() {
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "PLAYGROUND_CFK_PARALLELISM")"
-    printf "    ⚡ CFK support bundles analyzed at the same time, a container each (default\n    4)\n"
+    printf "    ⚡ CFK support bundles analyzed at the same time, a container each, or a\n    python3 process with CFK_ANALYSIS_LOCAL (default 4)\n"
     echo
 
     # :environment_variable.usage
@@ -10247,6 +10247,19 @@ playground_analyze_logs_usage() {
     printf "  %s\n" "$(cyan "PLAYGROUND_CFK_RUNBOOKS_FILE")"
     printf "    📕 CFK support bundle: JSON file with the internal runbook links of the known\n    CFK issues, shown with a 🔒 in the terminal, the HTML report and --json\n    (default\n    reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json,\n    format in cfk-analysis/runbooks.py)\n"
     echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "CFK_ANALYSIS_LOCAL")"
+    printf "    ☸️ CFK support bundle: 1 runs cfk-analysis with the python3 of the machine\n    (PyYAML needed) instead of its Docker image, 0 always in the image (default:\n    the image, the local python3 when there is no container engine and PyYAML is\n    installed; 1 in the kdp-analyze-logs image)\n"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "PLAYGROUND_HOST_PATH_MAP")"
+      printf "    <folder in the container>=<folder on the host>: set by the kdp-analyze-logs\n    image (/data=KDP_HOST_DIR), the paths printed and the ✏️ links of the report\n    are those of the host\n"
+      echo
+
+    fi
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
@@ -27609,7 +27622,7 @@ function filter_docker_running() {
     # the offline analyzers read files: they work without a container engine (a customer bundle on a laptop without
     # Docker, a colleague who only wants the log report); the parts that need one say it themselves (the CFK analysis
     # of a support bundle is skipped, its pod logs are still read)
-    analyze\ logs|analyze\ gc-logs|analyze\ thread-dump|analyze\ oracle-xstream-report|find-command|find-example)
+    analyze\ logs|analyze\ cfk-bundle|analyze\ gc-logs|analyze\ thread-dump|analyze\ oracle-xstream-report|find-command|find-example)
       return 0
     ;;
   esac
@@ -31015,8 +31028,19 @@ function summarize_log_errors() {
 function open_html_report() {
     local report="$1"
     local no_open="$2"
-    log "✅ HTML report saved: $report"
-    if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+    log "✅ HTML report saved: $(shown_path "$report")"
+    if [ -n "${PLAYGROUND_HOST_PATH_MAP:-}" ]
+    then
+        # the kdp-analyze-logs image: no browser in it, the path on the host (a relative one when the host folder is not
+        # known: -e KDP_HOST_DIR="$PWD" gives the absolute one)
+        local shown
+        shown=$(shown_path "$report")
+        case "$shown" in
+            /*) log "🔗 Open in browser: file://$(python3 -I -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$shown" 2>/dev/null || echo "$shown")" ;;
+            [A-Za-z]:/*) log "🔗 Open in browser: file:///$(python3 -I -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe="/:"))' "$shown" 2>/dev/null || echo "$shown")" ;;
+            *) log "🔗 Open in browser: $shown, in the folder where docker run was started" ;;
+        esac
+    elif { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
     then
         log "🌐 Opening $report in browser..."
         if command -v open > /dev/null 2>&1
@@ -31138,10 +31162,65 @@ function write_ccloud_costs_range_report() {
     open_html_report "$report" "$no_open"
 }
 
+# A path for the messages of the CLI: inside the kdp-analyze-logs image (tools/analyze-logs-image), the folder mounted
+# in /data is shown as the folder of the host (PLAYGROUND_HOST_PATH_MAP=/data=<host folder>, from docker run -e
+# KDP_HOST_DIR="$PWD"), or as . when the host folder is not known. Unchanged outside the image. $1: path
+function shown_path() {
+    local path="$1"
+    local map="${PLAYGROUND_HOST_PATH_MAP:-}"
+    if [[ -z "$map" || "$map" != *=* ]]
+    then
+        echo "$path"
+        return
+    fi
+    local from="${map%%=*}"
+    local to="${map#*=}"
+    # a Windows folder (PowerShell ${PWD}): C:\Users\me -> C:/Users/me
+    to="${to//\\//}"
+    to="${to%/}"
+    if [[ "$path" == "$from" ]]
+    then
+        echo "${to:-/}"
+    elif [[ "$path" == "$from"/* ]]
+    then
+        echo "${to}${path#"$from"}"
+    else
+        echo "$path"
+    fi
+}
+
+# Whether cfk-analysis runs with the python3 of the machine instead of its Docker image. CFK_ANALYSIS_LOCAL=1: always
+# (the kdp-analyze-logs image, which has PyYAML), 0: never; unset: when there is no container engine and PyYAML is
+# installed (a laptop without Docker). The answer is kept in CFK_ANALYSIS_LOCAL for the next calls (docker info is slow).
+# Returns 1 with a message when it can run neither way
+function cfk_analysis_local() {
+    case "${CFK_ANALYSIS_LOCAL:-}" in
+        1) return 0 ;;
+        0) return 1 ;;
+    esac
+    if command -v docker > /dev/null 2>&1 && docker info > /dev/null 2>&1
+    then
+        export CFK_ANALYSIS_LOCAL=0
+        return 1
+    fi
+    if python3 -c 'import yaml' > /dev/null 2>&1
+    then
+        export CFK_ANALYSIS_LOCAL=1
+        return 0
+    fi
+    return 2
+}
+
 # Prints the image of cfk-analysis, built on first use: dependencies baked once, code mounted at run time. The tag changes
 # when the Dockerfile or requirements change, so the image is rebuilt only then. playground analyze logs calls it once
-# before analyzing several bundles in parallel (a single build). Messages on stderr: stdout is the image name
+# before analyzing several bundles in parallel (a single build). Messages on stderr: stdout is the image name.
+# With cfk_analysis_local, nothing to build: prints "local"
 function cfk_analyzer_image() {
+    if cfk_analysis_local
+    then
+        echo "local"
+        return 0
+    fi
     local analyzer_dir="$root_folder/cfk-analysis"
     local image_tag
     image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
@@ -31160,8 +31239,64 @@ function cfk_analyzer_image() {
     echo "$image"
 }
 
-# Runs cfk-analysis (Docker image built on first use) on a CFK support bundle: prints the text digest and writes the
-# HTML report in the output dir (opened in an interactive terminal), or prints the JSON on stdout.
+# Runs a script of cfk-analysis: in its Docker image (code and files mounted read-only, as the current user), or with the
+# python3 of the machine (cfk_analysis_local). Reads the arrays cfk_mounts ("<host path>:<path in the container>", the
+# local run uses the host paths) and cfk_env ("NAME=value") of the caller (bash locals are visible to the functions it
+# calls; no nameref, bash 4.2 is supported). $1: image (cfk_analyzer_image), then the script (relative to cfk-analysis/)
+# and its arguments, which use the container paths (mapped back to the host paths for a local run)
+function run_cfk_analysis() {
+    local image="$1"
+    shift
+    local script="$1"
+    shift
+    local analyzer_dir="$root_folder/cfk-analysis"
+    local mount arg
+    if [[ "$image" == "local" ]]
+    then
+        local local_args=()
+        for arg in "$@"
+        do
+            for mount in "${cfk_mounts[@]}"
+            do
+                local host="${mount%:*}" container="${mount##*:}"
+                if [[ "$arg" == "$container" || "$arg" == "$container"/* ]]
+                then
+                    arg="${host}${arg#"$container"}"
+                    break
+                fi
+            done
+            local_args+=("$arg")
+        done
+        # -E -s as in the image: no PYTHONPATH nor user site-packages; not -I, the scripts import their neighbours.
+        # rc: playground analyze logs runs it under set -e, a failed analysis must not end the job silently
+        local rc=0
+        env "${cfk_env[@]}" python3 -E -s "$analyzer_dir/$script" "${local_args[@]}" || rc=$?
+        return $rc
+    fi
+    local docker_args=(--rm --user "$(id -u):$(id -g)" --entrypoint python
+        -v "$analyzer_dir:/tmp/cfk-analysis:ro" -v "$root_folder/tools/report-common:/tmp/report-common:ro")
+    for mount in "${cfk_mounts[@]}"
+    do
+        # the output folder is written, the rest is read-only
+        if [[ "${mount##*:}" == "/tmp/output" ]]
+        then
+            docker_args+=(-v "$mount")
+        else
+            docker_args+=(-v "$mount:ro")
+        fi
+    done
+    for arg in "${cfk_env[@]}"
+    do
+        docker_args+=(-e "$arg")
+    done
+    local rc=0
+    docker run "${docker_args[@]}" "$image" -E -s "/tmp/cfk-analysis/$script" "$@" || rc=$?
+    return $rc
+}
+
+# Runs cfk-analysis (Docker image built on first use, or the local python3: cfk_analysis_local) on a CFK support bundle:
+# prints the text digest and writes the HTML report in the output dir (opened in an interactive terminal), or prints the
+# JSON on stdout.
 # Used by playground analyze logs (CFK bundle detected) and its hidden alias playground analyze cfk-bundle.
 # $1: bundle (directory or archive), $2: non-empty for --json, $3: non-empty to not sanitize (no --sanitize), $4: minimal severity,
 # $5: max issues per category in text mode, $6: output dir, $7: non-empty for --include-warnings, then the components
@@ -31216,19 +31351,20 @@ function analyze_cfk_bundle() {
     done
 
     # run as the current user: it can read the bundle and write the HTML report
-    local docker_args=(
-        --rm
-        --user "$(id -u):$(id -g)"
-        -v "$analyzer_dir:/tmp/cfk-analysis:ro"
-        -v "$root_folder/tools/report-common:/tmp/report-common:ro"
-        -v "$bundle_abs:$bundle_container:ro"
-    )
+    local cfk_mounts=("$bundle_abs:$bundle_container")
+    local cfk_env=()
     # internal links of the known CFK issues (cfk-analysis/runbooks.py), kept by Confluent support in the private
     # reproduction-models repository
     local runbooks_file="${PLAYGROUND_CFK_RUNBOOKS_FILE:-$root_folder/reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json}"
     if [[ -f "$runbooks_file" ]]
     then
-        docker_args+=(-v "$runbooks_file:/tmp/cfk-runbooks-private.json:ro" -e CFK_RUNBOOKS_PRIVATE=/tmp/cfk-runbooks-private.json)
+        if [[ "$image" == "local" ]]
+        then
+            cfk_env+=(CFK_RUNBOOKS_PRIVATE="$runbooks_file")
+        else
+            cfk_mounts+=("$runbooks_file:/tmp/cfk-runbooks-private.json")
+            cfk_env+=(CFK_RUNBOOKS_PRIVATE=/tmp/cfk-runbooks-private.json)
+        fi
     fi
 
     # the HTML report is always written (not with --json: stdout must stay JSON)
@@ -31252,7 +31388,7 @@ function analyze_cfk_bundle() {
         if [[ -n "${CFK_ANALYSIS_EMBEDDED:-}" ]]
         then
             html_out="${output_dir_abs}/${bundle_basename}${CFK_ANALYSIS_REPORT_SUFFIX:-}-cfk.html"
-            docker_args+=(-e CFK_ANALYSIS_EMBEDDED=1)
+            cfk_env+=(CFK_ANALYSIS_EMBEDDED=1)
         fi
         cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
         # the JSON of the analysis next to the report: playground analyze logs compares several bundles with it
@@ -31260,11 +31396,15 @@ function analyze_cfk_bundle() {
         cli_args+=(--json-out "/tmp/output/$(basename "$CFK_ANALYSIS_JSON")")
         # the ✏️ links of the report open the files in the editor, at their path on the host: the files of the bundle
         # folder, or copies next to the report for an archive or a folder extracted by playground analyze logs
-        docker_args+=(-v "$output_dir_abs:/tmp/output" -e PLAYGROUND_REPORT_HOST_DIR="$output_dir_abs"
-                      -e PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)")
+        cfk_mounts+=("$output_dir_abs:/tmp/output")
+        cfk_env+=(PLAYGROUND_REPORT_HOST_DIR="$output_dir_abs" PLAYGROUND_EDITOR="$(playground config get editor 2>/dev/null)")
+        if [[ -n "${PLAYGROUND_HOST_PATH_MAP:-}" ]]
+        then
+            cfk_env+=(PLAYGROUND_HOST_PATH_MAP="$PLAYGROUND_HOST_PATH_MAP")
+        fi
         if [[ -d "$bundle" && -z "${CFK_ANALYSIS_TEMPORARY:-}" ]]
         then
-            docker_args+=(-e PLAYGROUND_BUNDLE_HOST_DIR="$bundle_abs")
+            cfk_env+=(PLAYGROUND_BUNDLE_HOST_DIR="$bundle_abs")
         fi
     fi
     if [[ -n "${CFK_ANALYSIS_LABEL:-}" ]]
@@ -31280,12 +31420,12 @@ function analyze_cfk_bundle() {
     # [records]}), the issues of these files come from them (the same records as the log report)
     if [[ -n "${CFK_ANALYSIS_LOG_RECORDS:-}" ]] && [[ -s "$CFK_ANALYSIS_LOG_RECORDS" ]]
     then
-        docker_args+=(-v "$CFK_ANALYSIS_LOG_RECORDS:/tmp/cfk-log-records.json:ro")
+        cfk_mounts+=("$CFK_ANALYSIS_LOG_RECORDS:/tmp/cfk-log-records.json")
         cli_args+=(--log-records /tmp/cfk-log-records.json)
     fi
 
-    docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
-    local exit_code=$?
+    local exit_code=0
+    run_cfk_analysis "$image" analyzer_cli.py "${cli_args[@]}" || exit_code=$?
     case $exit_code in
         0) ;;
         64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
@@ -31315,33 +31455,32 @@ function compare_cfk_bundles() {
     local json_out="$1"
     local output_dir="$2"
     shift 2
-    local analyzer_dir="$root_folder/cfk-analysis"
-    local image_tag
-    image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
-    local image="cfk-bundle-analyzer:$image_tag"
-    local docker_args=(--rm --user "$(id -u):$(id -g)" --entrypoint python
-        -v "$analyzer_dir:/tmp/cfk-analysis:ro" -v "$root_folder/tools/report-common:/tmp/report-common:ro")
+    local image
+    image=$(cfk_analyzer_image) || return 1
+    local cfk_mounts=()
+    local cfk_env=()
     local args=()
     local i=0
     local file
     for file in "$@"
     do
-        docker_args+=(-v "$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file"):/tmp/input/analysis-$i.json:ro")
+        cfk_mounts+=("$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file"):/tmp/input/analysis-$i.json")
         args+=("/tmp/input/analysis-$i.json")
         i=$((i + 1))
     done
     if [[ -n "$json_out" ]]
     then
-        docker run "${docker_args[@]}" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" --json
-        return $?
+        local rc=0
+        run_cfk_analysis "$image" compare.py "${args[@]}" --json || rc=$?
+        return $rc
     fi
     mkdir -p "$output_dir"
     local output_dir_abs
     output_dir_abs=$(cd "$output_dir" && pwd -P)
     local html_out="cfk-bundles-comparison-$(date '+%Y%m%d-%H%M%S').html"
-    docker run "${docker_args[@]}" -v "$output_dir_abs:/tmp/output" "$image" -E -s /tmp/cfk-analysis/compare.py "${args[@]}" \
-        --html-out "/tmp/output/$html_out"
-    local exit_code=$?
+    cfk_mounts+=("$output_dir_abs:/tmp/output")
+    local exit_code=0
+    run_cfk_analysis "$image" compare.py "${args[@]}" --html-out "/tmp/output/$html_out" || exit_code=$?
     # CFK_COMPARISON_HTML: the report written, opened unless CFK_ANALYSIS_NO_OPEN (see analyze_cfk_bundle)
     CFK_COMPARISON_HTML=""
     if [[ $exit_code -eq 0 && -f "$output_dir_abs/$html_out" ]]
@@ -64109,11 +64248,15 @@ playground_analyze_logs_command() {
   [[ "$cfk_parallelism" =~ ^[1-9][0-9]*$ ]] || cfk_parallelism=4
   if [ ${#cfk_bundles[@]} -gt 0 ]
   then
-      # built once, not by each job. Without a container engine (a laptop without Docker): the ☸️ sections of the bundles
+      # built once, not by each job. Without a container engine (a laptop without Docker): cfk-analysis runs with the local
+      # python3 when PyYAML is installed (and always in the kdp-analyze-logs image), else the ☸️ sections of the bundles
       # are left out, their pod logs are in the report all the same (walk_cfk_bundle_logs), not a failure
-      if ! command -v docker > /dev/null 2>&1 || ! docker info > /dev/null 2>&1
+      # set -e: the return code of cfk_analysis_local is 1 with a container engine
+      cfk_local_rc=0
+      cfk_analysis_local || cfk_local_rc=$?
+      if [ $cfk_local_rc -eq 2 ]
       then
-          logwarn "⚠️ no container engine (docker): the ☸️ sections of the CFK support bundle(s) (pods, custom resources, events, versions) are left out, their pod and operator logs are in the report"
+          logwarn "⚠️ no container engine (docker) and no PyYAML (pip install PyYAML): the ☸️ sections of the CFK support bundle(s) (pods, custom resources, events, versions) are left out, their pod and operator logs are in the report"
           cfk_bundles=()
       elif ! cfk_analyzer_image > /dev/null
       then
@@ -64222,13 +64365,14 @@ playground_analyze_logs_command() {
           then
               CFK_ANALYSIS_LOG_RECORDS="$tmp_dir/cfk-records-$i.json"
           fi
+          # set -e: a failed analysis (64, invalid bundle) is a result, not the end of the job
+          rc=0
           if [[ -n "$json_out" ]]
           then
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out" || rc=$?
           else
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1 || rc=$?
           fi
-          rc=$?
           printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
           mv "$tmp_dir/cfk-$i.result.tmp" "$tmp_dir/cfk-$i.result"
           exit 0
@@ -64255,7 +64399,7 @@ playground_analyze_logs_command() {
       log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
       progress_step "🔁 comparing the ${#cfk_compare_files[@]} CFK support bundles"
       CFK_COMPARISON_HTML=""
-      compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
+      compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}" || logwarn "⚠️ the comparison of the CFK support bundles failed"
   elif [ ${#cfk_json_files[@]} -ge 2 ]
   then
       compare_cfk_bundles "1" "" "${cfk_json_files[@]}" > "$cfk_comparison" || echo "[]" > "$cfk_comparison"
@@ -64502,7 +64646,7 @@ playground_analyze_logs_command() {
           compare_cfk_bundles "1" "" "${compare_cfk_files[@]}" "${current_cfk_files[@]}" > "$cfk_comparison" 2> /dev/null || echo "[]" > "$cfk_comparison"
       else
           CFK_COMPARISON_HTML=""
-          compare_cfk_bundles "" "$output_dir" "${compare_cfk_files[@]}" "${current_cfk_files[@]}"
+          compare_cfk_bundles "" "$output_dir" "${compare_cfk_files[@]}" "${current_cfk_files[@]}" || logwarn "⚠️ the comparison of the CFK support bundles failed"
       fi
   fi
   for connector in "${connector_array[@]}"
@@ -64660,7 +64804,7 @@ playground_analyze_logs_command() {
   write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
   if [ -s "$output_dir/${stem}-ticket.md" ]
   then
-      log "📋 For a ticket (Markdown, sanitized: review it): $output_dir/${stem}-ticket.md"
+      log "📋 For a ticket (Markdown, sanitized: review it): $(shown_path "$output_dir/${stem}-ticket.md")"
   fi
   # the .zip to send to a colleague (📤 Share of the report): only when the file pages are under 200 MB (a page holds a
   # whole log file: 1 GB of logs makes 1 GB of pages), else the command to make it
@@ -64695,10 +64839,10 @@ playground_analyze_logs_command() {
           fi
           if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
           then
-              log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"
+              log "📤 To share it: $(shown_path "$output_dir/$share_zip") (the report and its file pages, 📤 Share in the report)"
           fi
       else
-          log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$output_dir\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
+          log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$(shown_path "$output_dir")\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
       fi
   fi
   exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))
@@ -67210,11 +67354,15 @@ playground_debug_analyze_logs_command() {
   [[ "$cfk_parallelism" =~ ^[1-9][0-9]*$ ]] || cfk_parallelism=4
   if [ ${#cfk_bundles[@]} -gt 0 ]
   then
-      # built once, not by each job. Without a container engine (a laptop without Docker): the ☸️ sections of the bundles
+      # built once, not by each job. Without a container engine (a laptop without Docker): cfk-analysis runs with the local
+      # python3 when PyYAML is installed (and always in the kdp-analyze-logs image), else the ☸️ sections of the bundles
       # are left out, their pod logs are in the report all the same (walk_cfk_bundle_logs), not a failure
-      if ! command -v docker > /dev/null 2>&1 || ! docker info > /dev/null 2>&1
+      # set -e: the return code of cfk_analysis_local is 1 with a container engine
+      cfk_local_rc=0
+      cfk_analysis_local || cfk_local_rc=$?
+      if [ $cfk_local_rc -eq 2 ]
       then
-          logwarn "⚠️ no container engine (docker): the ☸️ sections of the CFK support bundle(s) (pods, custom resources, events, versions) are left out, their pod and operator logs are in the report"
+          logwarn "⚠️ no container engine (docker) and no PyYAML (pip install PyYAML): the ☸️ sections of the CFK support bundle(s) (pods, custom resources, events, versions) are left out, their pod and operator logs are in the report"
           cfk_bundles=()
       elif ! cfk_analyzer_image > /dev/null
       then
@@ -67323,13 +67471,14 @@ playground_debug_analyze_logs_command() {
           then
               CFK_ANALYSIS_LOG_RECORDS="$tmp_dir/cfk-records-$i.json"
           fi
+          # set -e: a failed analysis (64, invalid bundle) is a result, not the end of the job
+          rc=0
           if [[ -n "$json_out" ]]
           then
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out"
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "1" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.json" 2> "$tmp_dir/cfk-$i.out" || rc=$?
           else
-              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1
+              analyze_cfk_bundle "${cfk_bundles[$i]}" "" "$no_sanitize" "$severity" "" "$output_dir" "$cfk_include_warnings" "${component_array[@]}" > "$tmp_dir/cfk-$i.out" 2>&1 || rc=$?
           fi
-          rc=$?
           printf '%s\t%s\t%s\n' "$rc" "$CFK_ANALYSIS_JSON" "$CFK_ANALYSIS_HTML" > "$tmp_dir/cfk-$i.result.tmp"
           mv "$tmp_dir/cfk-$i.result.tmp" "$tmp_dir/cfk-$i.result"
           exit 0
@@ -67356,7 +67505,7 @@ playground_debug_analyze_logs_command() {
       log "🔁 Comparing the ${#cfk_compare_files[@]} CFK support bundles (sorted by collection time)"
       progress_step "🔁 comparing the ${#cfk_compare_files[@]} CFK support bundles"
       CFK_COMPARISON_HTML=""
-      compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}"
+      compare_cfk_bundles "" "$output_dir" "${cfk_compare_files[@]}" || logwarn "⚠️ the comparison of the CFK support bundles failed"
   elif [ ${#cfk_json_files[@]} -ge 2 ]
   then
       compare_cfk_bundles "1" "" "${cfk_json_files[@]}" > "$cfk_comparison" || echo "[]" > "$cfk_comparison"
@@ -67603,7 +67752,7 @@ playground_debug_analyze_logs_command() {
           compare_cfk_bundles "1" "" "${compare_cfk_files[@]}" "${current_cfk_files[@]}" > "$cfk_comparison" 2> /dev/null || echo "[]" > "$cfk_comparison"
       else
           CFK_COMPARISON_HTML=""
-          compare_cfk_bundles "" "$output_dir" "${compare_cfk_files[@]}" "${current_cfk_files[@]}"
+          compare_cfk_bundles "" "$output_dir" "${compare_cfk_files[@]}" "${current_cfk_files[@]}" || logwarn "⚠️ the comparison of the CFK support bundles failed"
       fi
   fi
   for connector in "${connector_array[@]}"
@@ -67761,7 +67910,7 @@ playground_debug_analyze_logs_command() {
   write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "$report_no_open" "${report_args[@]:2}"
   if [ -s "$output_dir/${stem}-ticket.md" ]
   then
-      log "📋 For a ticket (Markdown, sanitized: review it): $output_dir/${stem}-ticket.md"
+      log "📋 For a ticket (Markdown, sanitized: review it): $(shown_path "$output_dir/${stem}-ticket.md")"
   fi
   # the .zip to send to a colleague (📤 Share of the report): only when the file pages are under 200 MB (a page holds a
   # whole log file: 1 GB of logs makes 1 GB of pages), else the command to make it
@@ -67796,10 +67945,10 @@ playground_debug_analyze_logs_command() {
           fi
           if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
           then
-              log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"
+              log "📤 To share it: $(shown_path "$output_dir/$share_zip") (the report and its file pages, 📤 Share in the report)"
           fi
       else
-          log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$output_dir\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
+          log "📤 To share it with its file pages ($(( share_kb / 1024 )) MB, not zipped automatically): cd \"$(shown_path "$output_dir")\" && zip -qr \"$share_zip\" \"${stem}-log-report.html\" \"$share_files\""
       fi
   fi
   exit $(( cfk_exit != 0 ? cfk_exit : incomplete_exit ))
@@ -118046,6 +118195,8 @@ playground_analyze_logs_parse_requirements() {
   env_var_names+=("PLAYGROUND_CFK_PARALLELISM")
   env_var_names+=("PLAYGROUND_LOG_RUNBOOKS_FILE")
   env_var_names+=("PLAYGROUND_CFK_RUNBOOKS_FILE")
+  env_var_names+=("CFK_ANALYSIS_LOCAL")
+  env_var_names+=("PLAYGROUND_HOST_PATH_MAP")
 
   # :command.dependencies_filter
   missing_deps=

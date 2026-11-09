@@ -53,9 +53,15 @@ offset are compared in UTC to detect a newest-first export. Tests: `python3 -I t
 `find-example`) skip the container engine check of the CLI (`filter_docker_running`), and the CLI has no global `docker`
 dependency anymore. It needs bash 4.2+, python3 3.8+ (standard library), the `jq` binary (checked with `type -P`: the `jq`
 function of the playground runs it in a container), awk, gzip and tar. A `.zip` without `unzip` is extracted with
-`python3 -m zipfile`. Without a container engine, a CFK bundle has no ☸️ sections (a warning, not a failure), its pod logs
-are read. A shallow sparse clone of `scripts`, `tools` and `cfk-analysis` (about 33 MB) is enough: see "Without the
-playground" in the deep dive.
+`python3 -m zipfile`. Without a container engine, cfk-analysis runs with the local python3 when PyYAML is installed
+(`cfk_analysis_local`, `CFK_ANALYSIS_LOCAL=1` forces it), else a CFK bundle has no ☸️ sections (a warning, not a failure),
+its pod logs are read. A shallow sparse clone of `scripts`, `tools` and `cfk-analysis` (about 33 MB) is enough: see
+"Without the playground" in the deep dive.
+
+With nothing installed but Docker: the `ghcr.io/vdesabou/kdp-analyze-logs` image (`tools/analyze-logs-image`), the same
+code. Inside it, `PLAYGROUND_HOST_PATH_MAP=/data=<KDP_HOST_DIR>` maps the folder mounted in `/data` to the folder of the
+host: `shown_path` (CLI) for the paths printed, `host_path` of `tools/report-common/log_viewer.py` for the ✏️ links (none
+when the host folder is not known, an editor cannot open a path of the container).
 
 ## Digests in parallel
 

@@ -4510,31 +4510,34 @@ subcommands:
       a silent ✅, and exit code 1 when nothing could be read at all.\nBytes that are
       not UTF-8 (a Latin-1 character) are read as they are.\n\U0001F30D It works offline,
       without Docker: bash 4.2+, python3 3.8+, jq, awk,\ngzip and tar are enough (a
-      CFK bundle then has no ☸️ sections, its pod\nlogs are still read). Without the
-      playground: a sparse clone of\nscripts/, tools/ and cfk-analysis/ (see the deep
-      dive, \"Without the\nplayground\").\n\U0001F9F0 The files of the input that
-      another analyzer reads better (GC logs,\nthread dumps, heap dumps, flight recordings,
-      network captures, Oracle\nXStream diagnostics reports, found by their content
-      or name) are listed\nwith the playground analyze command to run on each, in
-      the summary, the\nHTML report and --json (.other_files); the ones extracted
-      from an\narchive are kept next to the report (<input>-other-files/).\nOnly files
-      with findings are\nshown. \U0001F52D When no file has findings, an overview
-      says what the logs\ncontain (period covered, records by level, top messages
-      and loggers) and\nwhat to ask for next (a longer window, the logs of the component
-      that\nfails, a new export of a log console). The HTML report also has\nthe configuration:
-      the configs logged at startup (KafkaConfig values:,\nDistributedConfig, connector
-      and client configs…) and the .properties\nand connector JSON files of the input.\n\n⏳
-      A large file (20 MB or more) shows a progress bar in the terminal\n(MB read,
-      speed, ETA), and with 20 MB or more of input the report opens\nin the browser
-      right away as a progress page (step, a bar for the file\nbeing read and one
-      for the whole input, elapsed time, speed, ETA of the file and of the whole input)
-      that becomes the report when the analysis ends. The last line\ngives the size
-      read and the time it took. \U0001F4E4 Share in the report: the\n.zip of the
-      report and its file pages (written next to it when they are\nunder 200 MB),
-      the summary to paste, an email. An archive (.tar, .tar.gz,\n.tgz…) shows a bar
-      while it is extracted.\n\n\U0001F5C2️ One report: the sections of each CFK support
-      bundle of the input\n(pods, custom resources, events, versions, recent changes,
-      issues by\ncategory) are in the log report, right after its verdict; the comparison\nof
+      CFK bundle gets its ☸️ sections when PyYAML\nis installed, else its pod logs
+      are still read). Without the\nplayground: a sparse clone of scripts/, tools/
+      and cfk-analysis/, or\nwith nothing installed but Docker, the ghcr.io/vdesabou/kdp-analyze-logs\nimage:
+      docker run --rm --network none -v \"\\$PWD\":/data -e\nKDP_HOST_DIR=\"\\$PWD\"
+      ghcr.io/vdesabou/kdp-analyze-logs -f bundle.zip\n(see the deep dive, \"Without
+      the playground\").\n\U0001F9F0 The files of the input that another analyzer
+      reads better (GC logs,\nthread dumps, heap dumps, flight recordings, network
+      captures, Oracle\nXStream diagnostics reports, found by their content or name)
+      are listed\nwith the playground analyze command to run on each, in the summary,
+      the\nHTML report and --json (.other_files); the ones extracted from an\narchive
+      are kept next to the report (<input>-other-files/).\nOnly files with findings
+      are\nshown. \U0001F52D When no file has findings, an overview says what the
+      logs\ncontain (period covered, records by level, top messages and loggers) and\nwhat
+      to ask for next (a longer window, the logs of the component that\nfails, a new
+      export of a log console). The HTML report also has\nthe configuration: the configs
+      logged at startup (KafkaConfig values:,\nDistributedConfig, connector and client
+      configs…) and the .properties\nand connector JSON files of the input.\n\n⏳ A
+      large file (20 MB or more) shows a progress bar in the terminal\n(MB read, speed,
+      ETA), and with 20 MB or more of input the report opens\nin the browser right
+      away as a progress page (step, a bar for the file\nbeing read and one for the
+      whole input, elapsed time, speed, ETA of the file and of the whole input) that
+      becomes the report when the analysis ends. The last line\ngives the size read
+      and the time it took. \U0001F4E4 Share in the report: the\n.zip of the report
+      and its file pages (written next to it when they are\nunder 200 MB), the summary
+      to paste, an email. An archive (.tar, .tar.gz,\n.tgz…) shows a bar while it
+      is extracted.\n\n\U0001F5C2️ One report: the sections of each CFK support bundle
+      of the input\n(pods, custom resources, events, versions, recent changes, issues
+      by\ncategory) are in the log report, right after its verdict; the comparison\nof
       several bundles is linked from it. Several CFK bundles are analyzed in\nparallel,
       4 at a time (PLAYGROUND_CFK_PARALLELISM to change it), their\noutput printed
       in order.\n\n☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent

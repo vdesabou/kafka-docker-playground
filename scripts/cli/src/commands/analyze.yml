@@ -148,10 +148,13 @@ commands:
     never a silent ✅, and exit code 1 when nothing could be read at all.
     Bytes that are not UTF-8 (a Latin-1 character) are read as they are.
     🌍 It works offline, without Docker: bash 4.2+, python3 3.8+, jq, awk,
-    gzip and tar are enough (a CFK bundle then has no ☸️ sections, its pod
-    logs are still read). Without the playground: a sparse clone of
-    scripts/, tools/ and cfk-analysis/ (see the deep dive, "Without the
-    playground").
+    gzip and tar are enough (a CFK bundle gets its ☸️ sections when PyYAML
+    is installed, else its pod logs are still read). Without the
+    playground: a sparse clone of scripts/, tools/ and cfk-analysis/, or
+    with nothing installed but Docker, the ghcr.io/vdesabou/kdp-analyze-logs
+    image: docker run --rm --network none -v "\$PWD":/data -e
+    KDP_HOST_DIR="\$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f bundle.zip
+    (see the deep dive, "Without the playground").
     🧰 The files of the input that another analyzer reads better (GC logs,
     thread dumps, heap dumps, flight recordings, network captures, Oracle
     XStream diagnostics reports, found by their content or name) are listed
@@ -198,11 +201,16 @@ commands:
   - name: PLAYGROUND_LOG_PARALLELISM
     help: "⚡ Files digested at the same time, merged in the order of the input (default 4; 1: one at a time, with the progress bar of a large file)"
   - name: PLAYGROUND_CFK_PARALLELISM
-    help: "⚡ CFK support bundles analyzed at the same time, a container each (default 4)"
+    help: "⚡ CFK support bundles analyzed at the same time, a container each, or a python3 process with CFK_ANALYSIS_LOCAL (default 4)"
   - name: PLAYGROUND_LOG_RUNBOOKS_FILE
     help: "🔒 JSON file with the internal runbooks of Confluent support (GTS Confluence pages, internal KB articles) by known cause, shown with a 🔒 next to the 📚 KB in the terminal summary, the HTML report and --json (known_causes[].internal_links), never in the summary for a ticket (default reproduction-models/_miscellaneous/log-analysis/runbooks-internal.json, format in tools/report-common/known_causes.py)"
   - name: PLAYGROUND_CFK_RUNBOOKS_FILE
     help: "📕 CFK support bundle: JSON file with the internal runbook links of the known CFK issues, shown with a 🔒 in the terminal, the HTML report and --json (default reproduction-models/_miscellaneous/cfk-analysis/runbooks-internal.json, format in cfk-analysis/runbooks.py)"
+  - name: CFK_ANALYSIS_LOCAL
+    help: "☸️ CFK support bundle: 1 runs cfk-analysis with the python3 of the machine (PyYAML needed) instead of its Docker image, 0 always in the image (default: the image, the local python3 when there is no container engine and PyYAML is installed; 1 in the kdp-analyze-logs image)"
+  - name: PLAYGROUND_HOST_PATH_MAP
+    private: true
+    help: "<folder in the container>=<folder on the host>: set by the kdp-analyze-logs image (/data=KDP_HOST_DIR), the paths printed and the ✏️ links of the report are those of the host"
   flags:
 <%= File.read('src/flags/analyze-logs-flags.yml').gsub(/^(?=.)/, '    ') %>
   examples:
