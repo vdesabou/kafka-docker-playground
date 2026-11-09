@@ -7,8 +7,9 @@ RUN chmod 755 /etc/rndc.key
 # named runs as user named: it needs to write to its directory and pid-file folder (named.conf)
 RUN mkdir -p /etc/named /run/named && chown named:named /etc/named /run/named
 
-EXPOSE 53/UDP
-EXPOSE 53/TCP
+# lowercase protocol: podman refuses to inspect an image with "53/UDP" (invalid port proto "TCP" in "53/TCP")
+EXPOSE 53/udp
+EXPOSE 53/tcp
 
 COPY named.conf /etc/bind/
 COPY ${DOMAIN_FILE} /etc/bind/master/confluent.io
