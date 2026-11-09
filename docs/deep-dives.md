@@ -108,6 +108,7 @@ CLI change that makes a page wrong shows up as a failing test.
 - 📖 [Read the deep dive](/deep-dive-analyze-logs.md)
 - 🧠 Commands: `analyze logs` (`--connector`, `--show-config`, `--compare`, `--json`, `--sanitize`)
 - 📸 [A tour of the report](/deep-dive-analyze-logs.md?id=📸-a-tour-of-the-report), section by section
+- 🐳 [With nothing installed but Docker](/deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker): `ghcr.io/vdesabou/kdp-analyze-logs`, to share with a customer or a colleague
 - 📊 Example reports: [support bundle](reports/logs.html), [Connect worker](reports/logs-connect.html), [many connectors](reports/logs-many-connectors.html), [non-Java clients](reports/logs-clients.html), [Kafka Streams](reports/logs-streams.html), [before / after a fix](reports/logs-compare.html), [CFK bundle](reports/cfk-bundle.html), [two CFK bundles](reports/logs-cfk-rollout.html), [CFK KRaft migration](reports/logs-cfk-kraft-migration.html)
 - 🎬 Bite size sessions: [🔁 Did the fix work?](/sessions?id=🔁-did-the-fix-work-analyze-the-logs-before-and-after-it), [🕵️ A connector failed: read the logs](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle)
 

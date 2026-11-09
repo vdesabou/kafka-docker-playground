@@ -26,6 +26,8 @@ A customer sends a support bundle, a CFK bundle, a CloudWatch / Kibana / Splunk 
 
 👉 The [🍪 deep dive](deep-dive-analyze-logs.md) has a [📸 tour of the report](deep-dive-analyze-logs.md?id=📸-a-tour-of-the-report), section by section.
 
+🐳 No playground? The same report with Docker only, for a customer or a colleague: `docker run --rm --network none -v "$PWD":/data ghcr.io/vdesabou/kdp-analyze-logs -f bundle.zip` ([how](deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker)).
+
 <div class="report-hero">
 <div class="report-gallery">
   <div class="report-card">

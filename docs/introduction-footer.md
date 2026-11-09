@@ -10,6 +10,7 @@
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
 - 🎩 One keystroke away on macOS with the kdp [Alfred workflow](https://kafka-docker-playground.io/#/cli?id=%f0%9f%8e%a9-alfred-workflow-macos): find the command that answers a question, find and run examples, pick a connector plugin version or a config key, act on the running connectors, output streamed right in Alfred
 - 📈 [Benchmark](https://kafka-docker-playground.io/#/toolkit-performance?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
+- 🐳 Share the log analyzer with anyone, a customer included: [`playground analyze logs` with nothing installed but Docker](https://kafka-docker-playground.io/#/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker), offline (`--network none`), on macOS, Linux and Windows
 - 📊 Find what is wrong with shareable [reports](https://kafka-docker-playground.io/#/reports): thread dumps, GC logs, flight recordings, network captures, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
 - 🎬 Learn with [bite size sessions](https://kafka-docker-playground.io/#/sessions): short narrated videos, each about one thing the playground does for you, with the commands to copy
 - 🍪 Master a family of commands with the [deep dives](https://kafka-docker-playground.io/#/deep-dives): mental model, what runs under the hood, gotchas, a hands-on lab replayed nightly by CI, and recipes for support repros
@@ -30,6 +31,16 @@ Real reports, generated from the samples shipped in the repository: browse them 
 <a href="#/reports"><img src="images/reports/thread-dump.png" alt="thread dump report" width="32%"></a>
 <a href="#/reports"><img src="images/reports/benchmark.png" alt="connector benchmark report" width="32%"></a>
 <a href="#/reports"><img src="images/reports/oracle-xstream-report.png" alt="Oracle XStream report" width="32%"></a>
+
+## 🐳 Analyze logs with nothing installed but Docker
+
+Someone without the playground (a customer, a colleague, a partner) can run `playground analyze logs` on their own logs, from the folder that holds them:
+
+```bash
+docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f bundle.zip --sanitize
+```
+
+The report and the summary for a ticket land in `./log-analysis-output/`. `--network none`: the logs never leave the machine. Windows PowerShell, a message ready to send to a customer, and the details: [🐳 with nothing installed but Docker](/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker).
 
 ## 🍿 See it in action
 

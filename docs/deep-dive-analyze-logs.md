@@ -25,6 +25,88 @@ no Confluent Cloud, nothing to set up.
 | something to paste in a ticket outside Confluent | `… --sanitize` |
 | JSON for `jq`, a script or an agent | `… --json [--json-sections summary,known_causes,timeline]` |
 | to try it now | `playground analyze logs --sample support_bundle` |
+| someone without the playground to run it (a customer, a colleague) | `docker run --rm --network none -v "$PWD":/data ghcr.io/vdesabou/kdp-analyze-logs -f <path>`: [🐳 with nothing installed but Docker](deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker) |
+
+## 🐳 With nothing installed but Docker
+
+The same `analyze logs`, packaged as an image: **`ghcr.io/vdesabou/kdp-analyze-logs`**. Anyone with Docker can run it
+on their own logs: a customer before sending a bundle, a colleague of another team, a partner, Windows without WSL, a
+locked-down laptop. No git, no clone, no bash 4, no python, no jq, no login: the image is public (linux/amd64 and
+linux/arm64, Apple silicon included).
+
+From the folder that holds the logs:
+
+```bash
+# macOS / Linux
+docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f case-12345-bundle.zip --sanitize
+```
+
+```powershell
+# Windows PowerShell (no WSL needed)
+docker run --rm --network none -v "${PWD}:/data" -e KDP_HOST_DIR="${PWD}" ghcr.io/vdesabou/kdp-analyze-logs -f case-12345-bundle.zip --sanitize
+```
+
+The report, the summary for a ticket and the 📤 Share `.zip` are written in `./log-analysis-output/`, on the host. Open
+the path printed after `🔗 Open in browser` (there is no browser in a container). Every flag of this page works the same:
+`-f` repeated, a folder, `--connector`, `--compare`, `--since`, `--json`…
+
+To try it without a bundle, on a sample shipped in the image:
+
+```bash
+cd /tmp && docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs --sample support_bundle
+```
+
+(`--sample cfk_bundle` for a CFK support bundle, `--sample cfk_rollout --sample cfk_rollout_after` for two bundles compared.)
+
+| Part of the command | Why |
+| --- | --- |
+| `-v "$PWD":/data` | the folder of the logs: the paths of `-f` are relative to it, and the report is written in it. A file outside it (`../x.zip`, another absolute path) is not seen: run the command from a folder that holds everything |
+| `--network none` | the analysis needs no network: **the logs cannot leave the machine**, and Docker enforces it, it is not just a promise |
+| `-e KDP_HOST_DIR="$PWD"` | optional: the paths printed and the ✏️ links of the report (open a file at the line in VS Code) are those of the host. Without it, the paths are printed relative to the folder and the report has no ✏️ link |
+| `--sanitize` | secrets, IPs, hostnames, emails and LDAP DNs replaced by placeholders, in the report, the summary and `--json`. Best effort: review before sharing |
+| `--user "$(id -u):$(id -g)"` | add it on Linux, so that the report belongs to you and not to root (Docker Desktop on macOS and Windows does it already) |
+
+Good to know:
+
+- **CFK support bundles** get their ☸️ sections (pods, custom resources, events, versions, recent changes) in the image,
+  as with the playground: nothing else to install.
+- **Updates**: `docker pull ghcr.io/vdesabou/kdp-analyze-logs`. It is rebuilt on each change of the analysis and every
+  week. To name or pin the version used in a case, use the `:<date>` (`:2026-11-09`) or `:<commit sha>` tags.
+- **Which version is it?** `docker image inspect ghcr.io/vdesabou/kdp-analyze-logs --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'`
+  gives the commit of kafka-docker-playground it was built from.
+
+### Send it to a customer
+
+Ready to paste in a ticket or an email:
+
+```text
+To get a first analysis of your logs before sending them (or instead of sending them), you can run our log analyzer
+on your machine. It only needs Docker, and it runs without network access, so your logs never leave your machine.
+
+From the folder that contains your logs (a .zip, a .tar.gz, a folder or a single file):
+
+  macOS / Linux:
+  docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f <your-bundle.zip> --sanitize
+
+  Windows PowerShell:
+  docker run --rm --network none -v "${PWD}:/data" -e KDP_HOST_DIR="${PWD}" ghcr.io/vdesabou/kdp-analyze-logs -f <your-bundle.zip> --sanitize
+
+It writes an HTML report and a summary in a log-analysis-output folder. --sanitize replaces passwords, IPs, hostnames
+and emails with placeholders: please review the summary (<your-bundle>-ticket.md) and send it to us.
+More details: https://kafka-docker-playground.io/#/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker
+```
+
+| | The playground (or a [clone of 3 folders](deep-dive-analyze-logs.md?id=without-the-playground)) | The image |
+| --- | --- | --- |
+| Needs | bash 4.2+, python3, jq, git | Docker only |
+| Windows | WSL | PowerShell, as it is |
+| ☸️ sections of a CFK bundle | with Docker or PyYAML | always |
+| Report opened in the browser | yes | no, the path is printed |
+| `--from-containers` (the running example) | yes | no: files only |
+| Network during the analysis | none needed | none, enforced with `--network none` |
+
+The image is built from [`tools/analyze-logs-image`](https://github.com/vdesabou/kafka-docker-playground/tree/master/tools/analyze-logs-image),
+then tested and published by the `analyze logs image` workflow.
 
 ## ⭐ Why it changes a support case
 
@@ -738,39 +820,6 @@ cd kafka-docker-playground && git sparse-checkout set scripts tools cfk-analysis
 Checked on Ubuntu 24.04 and 20.04 (Python 3.8, mawk), RHEL UBI 9 and Alpine (busybox), without Docker. On Windows: WSL.
 `analyze gc-logs`, `analyze thread-dump` and `analyze oracle-xstream-report` on files work the same way.
 
-#### With nothing installed but Docker: the `kdp-analyze-logs` image
-
-`ghcr.io/vdesabou/kdp-analyze-logs` is `playground analyze logs` in an image (linux/amd64 and linux/arm64): no git, no
-bash 4, no python, no jq, no clone. It reads the current folder and writes the report and the summary for a ticket in
-`./log-analysis-output/`, on the host. Every flag works the same (`--sanitize`, `--connector`, `--compare`, `--json`…):
-
-```bash
-# macOS / Linux
-docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f case-12345-bundle.zip --sanitize
-```
-
-```powershell
-# Windows PowerShell (no WSL needed)
-docker run --rm --network none -v "${PWD}:/data" -e KDP_HOST_DIR="${PWD}" ghcr.io/vdesabou/kdp-analyze-logs -f case-12345-bundle.zip --sanitize
-```
-
-| Part of the command | Why |
-| --- | --- |
-| `-v "$PWD":/data` | the folder of the logs: the paths of `-f` are relative to it, the report is written in it |
-| `--network none` | the analysis needs no network: the logs cannot leave the machine, enforced by Docker |
-| `-e KDP_HOST_DIR="$PWD"` | optional: the paths printed and the ✏️ links of the report are those of the host (without it, the paths are printed relative to the folder and the report has no ✏️ link) |
-| `--user "$(id -u):$(id -g)"` | on Linux, so that the report belongs to you and not to root (Docker Desktop does it already) |
-
-A CFK support bundle gets its ☸️ sections in the image (PyYAML is in it, no Docker in Docker). There is no browser in a
-container: open the path printed after `🔗 Open in browser`. `docker pull ghcr.io/vdesabou/kdp-analyze-logs` updates it;
-`:<commit sha>` and `:<date>` (`:2026-11-09`) tags pin a version. The image is built from `tools/analyze-logs-image`,
-tested and published by the `analyze logs image` workflow on each change on master and every week.
-
-| | A clone | The image |
-| --- | --- | --- |
-| Needs | bash 4.2+, python3, jq, git | Docker only |
-| Windows | WSL | PowerShell, as it is |
-| ☸️ sections of a CFK bundle | with Docker or PyYAML | always |
-| Report opened in the browser | yes | no, the path is printed |
-| Network during the analysis | none needed | none, enforced with `--network none` |
+With nothing installed but Docker (a customer, Windows without WSL, a locked-down laptop): the
+[`kdp-analyze-logs` image](deep-dive-analyze-logs.md?id=🐳-with-nothing-installed-but-docker).
 
