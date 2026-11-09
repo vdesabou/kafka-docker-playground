@@ -21,6 +21,7 @@ want_sanitize="${args[--sanitize]}"
 eval "component_array=(${args[--component]})"
 eval "connector_array=(${args[--connector]})"
 with_worker="${args[--with-worker]}"
+include_harmless="${args[--include-harmless]}"
 show_config="${args[--show-config]}"
 json_sections="${args[--json-sections]}"
 problem="${args[--problem]}"
@@ -178,6 +179,30 @@ then
         rmdir "$containers_dir" 2>/dev/null
         exit 1
     fi
+    # ☕ the JDK of each container that has one (java -version, in parallel; the JVM options of the component are not
+    # applied: JAVA_TOOL_OPTIONS can load an agent that binds a port), label<tab>version<tab>vendor for the report.
+    # Outside the folder of the logs: it is not a log
+    jvm_versions_file="$(dirname "$containers_dir")/.$(basename "$containers_dir").jvm"
+    : > "$jvm_versions_file"
+    for container in "${from_container_array[@]}"
+    do
+        [ -f "$containers_dir/${container}.log" ] || continue
+        (
+            if [[ "$environment" == cfk* ]]
+            then
+                java_out=$(kubectl -n confluent exec "$container" -- sh -c 'command -v java > /dev/null && env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS java -XshowSettings:properties -version 2>&1' 2>/dev/null)
+            else
+                java_out=$(docker exec "$container" sh -c 'command -v java > /dev/null && env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS java -XshowSettings:properties -version 2>&1' 2>/dev/null)
+            fi
+            java_version=$(printf '%s\n' "$java_out" | sed -n 's/^ *java\.runtime\.version = //p' | head -1)
+            java_vendor=$(printf '%s\n' "$java_out" | sed -n 's/^ *java\.vendor = //p' | head -1)
+            if [ -n "$java_version" ]
+            then
+                printf '%s\t%s\t%s\n' "${container}.log" "$java_version" "$java_vendor" >> "$jvm_versions_file"
+            fi
+        ) &
+    done
+    wait
     log "🐳 Logs of $nb_saved container(s) ($(du -sh "$containers_dir" 2>/dev/null | cut -f1 | tr -d ' ')) saved in $containers_dir"
     log "🎓 Kept for later: playground analyze logs -f <logs after a fix> --compare $containers_dir"
     file_array+=("$containers_dir")
@@ -1386,6 +1411,7 @@ do
         [[ -n "$logs_only" ]] && compare_cmd+=(--logs-only)
         [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
         [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+        [[ -n "$include_harmless" ]] && compare_cmd+=(--include-harmless)
         [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
         for connector in "${connector_array[@]}"
         do
@@ -1428,6 +1454,15 @@ done
 if [[ -n "$with_worker" ]]
 then
     report_args+=(--with-worker)
+fi
+if [[ -n "$include_harmless" ]]
+then
+    report_args+=(--include-harmless)
+fi
+# ☕ the JDK of each container (--from-containers): most components do not log it
+if [[ -n "${jvm_versions_file:-}" && -s "$jvm_versions_file" ]]
+then
+    report_args+=(--jvm-versions "$jvm_versions_file")
 fi
 # 🧰 the files of the input for another analyzer (GC logs, thread dumps, heap dumps, flight recordings, network captures,
 # XStream reports), with the command to run on each. The ones extracted from an archive are kept next to the report

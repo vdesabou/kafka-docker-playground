@@ -856,6 +856,89 @@ def test_connector_plugins_and_data_to_request():
     check("not jdbc", not any("jdbc" in a for a in asks if a.startswith("the version")), asks)
 
 
+def test_max_poll_not_on_config_check():
+    """🐢 max.poll.interval.ms exceeded: the real messages, not a config check that names the key"""
+    rx = next(re.compile(p) for p, _, t, _ in log_report.HINTS if t.startswith("🐢"))
+    check("config check", not rx.search("WARN Configuration 'connections.max.idle.ms' with value '540000' is lower than "
+                                        "configuration 'max.poll.interval.ms' with value '21600000'. This may cause…"))
+    check("CommitFailedException", rx.search("CommitFailedException: … the time between subsequent calls to poll() was longer "
+                                             "than the configured max.poll.interval.ms, which typically implies…"))
+    check("librdkafka", rx.search("%4|1|MAXPOLL|rdkafka#consumer-1| Application maximum poll interval (300000ms) exceeded"))
+
+
+def test_startup_connection_retries():
+    """🌅 the connection failures of a component that starts before the broker: LOW, apart from the HIGH 🔌 ones that
+    come back after the startup"""
+    retry = "WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/172.27.0.5:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient:992)"
+    later = "WARN [Producer clientId=p] Connection to node 2 (broker2/10.0.0.2:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient:992)"
+    text = ("@@PGFILE@@|connect.log|100|2|9|2026-11-09T13:00:51|2026-11-09T14:00:00\n"
+            "@@PGREC@@|WARN|7|10|40|2026-11-09T13:00:51|2026-11-09T13:00:54\n"
+            f"[2026-11-09 13:00:51,509] {retry}\n"
+            "@@PGTS@@|2026-11-09T13:00:51 2026-11-09T13:00:54\n"
+            "@@PGREC@@|WARN|2|80|90|2026-11-09T13:30:00|2026-11-09T13:31:00\n"
+            f"[2026-11-09 13:30:00,000] {later}\n"
+            "@@PGTS@@|2026-11-09T13:30:00 2026-11-09T13:31:00\n"
+            "@@PGCFG@@|DistributedConfig||50|2026-11-09T13:01:05|\n"
+            "@@PGCFGL@@|group.id = connect-cluster\n"
+            "@@PGEVT@@|process_start|60|2026-11-09T13:01:06||Kafka Connect worker started\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+    causes = {h["title"]: (h["severity"], h["occurrences"]) for h in res["known_causes"]}
+    check("startup retries", causes.get(log_report.STARTUP_CONNECTION_TITLE) == ("LOW", 7), causes)
+    check("later failure stays HIGH", causes.get(log_report.CONNECTION_TITLE) == ("HIGH", 2), causes)
+    # no start in the file (a rotated customer log): the HIGH one, as before
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text.split("@@PGCFG@@")[0])))
+    causes = {h["title"]: (h["severity"], h["occurrences"]) for h in res["known_causes"]}
+    check("no start: HIGH", causes.get(log_report.CONNECTION_TITLE) == ("HIGH", 9) and log_report.STARTUP_CONNECTION_TITLE not in causes, causes)
+
+
+def test_harmless_left_out():
+    """🙈 the known harmless records: left out of the findings and the counts, listed with their reason"""
+    text = ("@@PGFILE@@|broker.log|100|2|4|2026-11-09T13:00:51|2026-11-09T13:02:00\n"
+            "@@PGREC@@|ERROR|3|10|12|2026-11-09T13:00:54|2026-11-09T13:00:55\n"
+            "[2026-11-09 13:00:54,795] ERROR Unable to submit events without credentials (io.confluent.telemetry.events.exporter.http.HttpExporter)\n"
+            "@@PGTS@@|2026-11-09T13:00:54\n"
+            "@@PGREC@@|ERROR|1|20|20|2026-11-09T13:01:00|2026-11-09T13:01:00\n"
+            "[2026-11-09 13:01:00,000] ERROR Disk error while writing (kafka.log.LogManager)\n"
+            "@@PGTS@@|2026-11-09T13:01:00\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        files = log_report.parse_records(records_file(tmp, text))
+        left = log_report.drop_harmless(files)
+        res = log_report.analyze(files)
+    check("left out", [(h["occurrences"], h["files"]) for h in left] == [(3, ["broker.log"])], left)
+    check("counts", (res["summary"]["distinct"], res["summary"]["occurrences"]) == (1, 1), res["summary"])
+    check("text", "🙈 3 occurrence(s)" in log_report.harmless_text(left)[0], log_report.harmless_text(left))
+    check("html", "id='harmless'" in log_report.harmless_html(left))
+
+
+def test_healthy_connector_card_and_jvm():
+    """✅ a connector without an error or a warning has its card (its start, plugin version, config); ☕ the JDK of the
+    logs and of --jvm-versions"""
+    text = ("@@PGFILE@@|connect.log|100|0|0|2026-11-09T13:00:51|2026-11-09T13:02:00\n"
+            "@@PGEVT@@|connector_start|10|2026-11-09T13:01:16|http-sink|http-sink\n"
+            "@@PGEVT@@|plugin_version|11|2026-11-09T13:01:16|http-sink|1.7.14 io.confluent.connect.http.HttpSinkConnector\n"
+            "@@PGEVT@@|connector_start|12|2026-11-09T13:01:16|other|other\n"
+            "@@PGEVT@@|jvm_version|5|2026-11-09T13:01:05||25.0.4.1+1-LTS Eclipse Adoptium\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        res = log_report.analyze(log_report.parse_records(records_file(tmp, text)))
+        jvm = os.path.join(tmp, "jvm")
+        with open(jvm, "w") as fh:
+            fh.write("connect.log\t25.0.4.1+1-LTS\tEclipse Adoptium\nbroker.log\t21.0.9+10-LTS\tAzul Systems, Inc.\n")
+        jvms = log_report.add_jvm_versions(res["summary"]["jvm_versions"], jvm)
+        files = log_report.parse_records(records_file(tmp, text))
+        log_report.filter_connectors(files, ["http-sink"])
+        filtered = log_report.analyze(files)
+    card = next((c for c in res["connectors"] if c["connector"] == "http-sink"), None)
+    check("healthy card", card and card["records"] == 0 and card.get("versions") == ["1.7.14"], card)
+    check("text", any("http-sink: ✅ no error or warning" in l for l in log_report.connectors_text(res["connectors"])),
+          log_report.connectors_text(res["connectors"]))
+    check("--connector keeps its card only", [c["connector"] for c in filtered["connectors"]] == ["http-sink"], filtered["connectors"])
+    check("jvm merged", [(j["version"], j["files"]) for j in jvms] == [("25.0.4.1+1-LTS", ["connect.log"]), ("21.0.9+10-LTS", ["broker.log"])], jvms)
+    res["summary"]["jvm_versions"] = jvms
+    check("tile", "☕ JDK" in log_report.jvm_tile(res["summary"]) and "25 / 21" in log_report.jvm_tile(res["summary"]), log_report.jvm_tile(res["summary"]))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     failed = 0

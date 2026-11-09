@@ -90,6 +90,8 @@ def iso(seconds: float) -> str:
 class Files(list):
     """the files of a records file, with time_zone: the offsets of their timestamps (see normalize_times)"""
     time_zone: Optional[dict] = None
+    # the connectors of --connector (filter_connectors)
+    connector_filter: Optional[set] = None
 
 
 def normalize_times(files: List[dict]) -> dict:
@@ -352,6 +354,8 @@ def filter_connectors(files: List[dict], names: List[str], with_worker: bool = F
     """Keeps only the records and configs of these connectors (and those without a connector context with_worker),
     in place: --connector of playground analyze logs"""
     wanted = set(names)
+    if isinstance(files, Files):
+        files.connector_filter = wanted
     for f in files:
         f["records"] = [r for r in f["records"] if (r["connector"] in wanted) or (with_worker and not r["connector"])]
         f["distinct"] = len(f["records"])
@@ -438,51 +442,187 @@ def reading_list(h: dict) -> List[str]:
 
 def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
     out = []
+    marks = startup_marks(files)
     for pattern, severity, title, advice in HINTS:
         rx = re.compile(pattern)
         matches = [(i, f, r) for i, f in enumerate(files) for r in f["records"] if rx.search(r["text"])]
-        if not matches:
-            continue
-        occurrences = sum(r["count"] for _, _, r in matches)
-        labels = list(OrderedDict((f["label"], True) for _, f, _ in matches))
-        _, first_f, first_r = earliest(matches)
-        first = f"line {first_r['first_line']}" + (f", {first_r['first_ts'].replace('T', ' ')}" if first_r["first_ts"] else "")
-        where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
-                 else f"in {first_f['label']} (first at {first})")
-        hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
-                "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}",
-                "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
-                # the records it matched (index set by analyze()): how much of it is in the current selection
-                "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
-        # what to read about it: a knowledge-base article and / or a docs page
-        # (an article of a variant only when one of the records matched is that variant)
-        texts = [r["text"] for _, _, r in matches]
-        hint.update(known_causes.links(title, texts))
-        # the internal runbooks of Confluent support (🔒, private file): not in the summary for a ticket
-        internal = known_causes.internal_links(title, texts)
-        if internal:
-            hint["internal_links"] = internal
-        # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed
-        # tasks have them there, as before)
-        hint["_chains"] = killed_task_chains(matches)
-        if title == KILLED_TASK_TITLE:
-            # the exception that killed the tasks is what to fix: one line per distinct chain
-            chains = hint["_chains"]
-            hint["chains"] = chains
-            hint["text"] = (f"{title}: {occurrences} occurrence(s) {where}, {len(chains)} distinct exception chain(s) "
-                            f"(below, in order of first occurrence): {advice}")
-            details = []
-            for c in chains:
-                who = ", ".join(c["connectors"][:5]) + (f" (+{len(c['connectors']) - 5} more)" if len(c["connectors"]) > 5 else "")
-                details.append(f"×{c['occurrences']} {c['exception'][:250]}"
-                               + (f" ⬅️ Caused by: {c['caused_by'][:250]}" if c["caused_by"] else "")
-                               + (f" · {len(c['connectors'])} connector(s): {who}" if c["connectors"] else "")
-                               + f" · first at {c['first_file'] + ' ' if len(labels) > 1 else ''}line {c['first_line']}"
-                               + (f" ({c['first_timestamp'].replace('T', ' ')})" if c["first_timestamp"] else ""))
-            hint["details"] = details
-        out.append(hint)
+        groups = [(severity, title, advice, matches)]
+        # 🌅 the connection failures of a component that starts before the broker is up, and that stop once it is: not
+        # the HIGH 🔌 Connection failure (it keeps the ones that last or come back later)
+        if title == CONNECTION_TITLE and matches:
+            early = [m for m in matches if startup_only(m[1], m[2], marks)]
+            if early:
+                groups = [(severity, title, advice, [m for m in matches if not any(m is x for x in early)]),
+                          ("LOW", STARTUP_CONNECTION_TITLE, STARTUP_CONNECTION_ADVICE, early)]
+        for severity, title, advice, matches in groups:
+            if not matches:
+                continue
+            occurrences = sum(r["count"] for _, _, r in matches)
+            labels = list(OrderedDict((f["label"], True) for _, f, _ in matches))
+            _, first_f, first_r = earliest(matches)
+            first = f"line {first_r['first_line']}" + (f", {first_r['first_ts'].replace('T', ' ')}" if first_r["first_ts"] else "")
+            where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
+                     else f"in {first_f['label']} (first at {first})")
+            hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
+                    "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}",
+                    "first": {"file": first_f["label"], "line": first_r["first_line"], "timestamp": first_r["first_ts"]},
+                    # the records it matched (index set by analyze()): how much of it is in the current selection
+                    "records": [r["index"] for _, _, r in matches if r.get("index") is not None]}
+            # what to read about it: a knowledge-base article and / or a docs page
+            # (an article of a variant only when one of the records matched is that variant)
+            texts = [r["text"] for _, _, r in matches]
+            hint.update(known_causes.links(title, texts))
+            # the internal runbooks of Confluent support (🔒, private file): not in the summary for a ticket
+            internal = known_causes.internal_links(title, texts)
+            if internal:
+                hint["internal_links"] = internal
+            # the exception chains of every known cause, for the cards of the HTML report (not in --json: only the killed
+            # tasks have them there, as before)
+            hint["_chains"] = killed_task_chains(matches)
+            if title == KILLED_TASK_TITLE:
+                # the exception that killed the tasks is what to fix: one line per distinct chain
+                chains = hint["_chains"]
+                hint["chains"] = chains
+                hint["text"] = (f"{title}: {occurrences} occurrence(s) {where}, {len(chains)} distinct exception chain(s) "
+                                f"(below, in order of first occurrence): {advice}")
+                details = []
+                for c in chains:
+                    who = ", ".join(c["connectors"][:5]) + (f" (+{len(c['connectors']) - 5} more)" if len(c["connectors"]) > 5 else "")
+                    details.append(f"×{c['occurrences']} {c['exception'][:250]}"
+                                   + (f" ⬅️ Caused by: {c['caused_by'][:250]}" if c["caused_by"] else "")
+                                   + (f" · {len(c['connectors'])} connector(s): {who}" if c["connectors"] else "")
+                                   + f" · first at {c['first_file'] + ' ' if len(labels) > 1 else ''}line {c['first_line']}"
+                                   + (f" ({c['first_timestamp'].replace('T', ' ')})" if c["first_timestamp"] else ""))
+                hint["details"] = details
+            out.append(hint)
     out.sort(key=lambda h: SEVERITY_ORDER.index(h["severity"]))
     return out
+
+
+CONNECTION_TITLE = "🔌 Connection failure"
+STARTUP_CONNECTION_TITLE = "🌅 Connections retried while starting"
+STARTUP_CONNECTION_ADVICE = ("expected: the component started before the broker (or the service it connects to) was ready, "
+                             "retried, and the failures stopped once it was connected. Only a problem if they come back after "
+                             "the startup (🔌 Connection failure)")
+# the start of a component: the config it dumps when its JVM starts, and the "started" line logged at the end of its startup
+STARTUP_CONFIGS = {"DistributedConfig", "StandaloneConfig", "KafkaConfig", "KafkaRestConfig", "SchemaRegistryConfig",
+                   "KsqlConfig", "KsqlRestConfig", "ControlCenterConfig"}
+# a connection failure within this window around a start (the readiness check of the image runs before the JVM dumps
+# its config: 15 s before DistributedConfig in a Connect container) is a retry while starting
+STARTUP_BEFORE_S = 180
+STARTUP_AFTER_S = 60
+
+
+def startup_marks(files: List[dict]) -> Dict[int, List[float]]:
+    """the times a component of each file started (id of the file: epoch seconds): its config dumped at startup, its
+    "started" line (process_start)"""
+    out: Dict[int, List[float]] = {}
+    for f in files:
+        times = [ts_seconds(c.get("time")) for c in f.get("configs") or [] if c.get("title") in STARTUP_CONFIGS]
+        times += [ts_seconds(ev.get("time")) for ev in f.get("events") or [] if ev["kind"] == "process_start"]
+        times = sorted(t for t in times if t is not None)
+        if times:
+            out[id(f)] = times
+    return out
+
+
+def startup_only(f: dict, r: dict, marks: Dict[int, List[float]]) -> bool:
+    """every occurrence of the record r of the file f is close to a start of its component (startup_marks)"""
+    starts = marks.get(id(f))
+    times = epochs(list(r.get("timestamps") or []) + [t for t in (r.get("first_ts"), r.get("last_ts")) if t])
+    if not starts or not times:
+        return False
+    return all(any(s - STARTUP_BEFORE_S <= t <= s + STARTUP_AFTER_S for s in starts) for t in times)
+
+
+def drop_harmless(files: List[dict]) -> List[dict]:
+    """🙈 removes the known harmless records (known_causes.HARMLESS) from the files, in place: [{reason, occurrences,
+    records, files, example}] of what was left out"""
+    by_reason: "OrderedDict[str, dict]" = OrderedDict()
+    for f in files:
+        kept = []
+        for r in f["records"]:
+            reason = known_causes.harmless(r["text"])
+            if not reason:
+                kept.append(r)
+                continue
+            h = by_reason.setdefault(reason, {"reason": reason, "occurrences": 0, "records": 0, "files": [],
+                                              "example": short_message(r["message"])[:300]})
+            h["occurrences"] += r["count"]
+            h["records"] += 1
+            if f["label"] not in h["files"]:
+                h["files"].append(f["label"])
+        if len(kept) != len(f["records"]):
+            f["records"] = kept
+            f["distinct"] = len(kept)
+            f["occurrences"] = sum(r["count"] for r in kept)
+    return sorted(by_reason.values(), key=lambda h: -h["occurrences"])
+
+
+def harmless_text(items: List[dict]) -> List[str]:
+    if not items:
+        return []
+    n = sum(h["occurrences"] for h in items)
+    return [f"🙈 {n} occurrence(s) of known harmless records left out (--include-harmless shows them): "
+            + " · ".join(f"{h['reason']} ×{h['occurrences']}" for h in items[:6])
+            + (f" (+{len(items) - 6} more)" if len(items) > 6 else "")]
+
+
+def harmless_html(items: List[dict]) -> str:
+    if not items:
+        return ""
+    n = sum(h["occurrences"] for h in items)
+    rows = "".join(f"<tr><td>{e(h['reason'])}</td><td>{h['occurrences']:,}</td><td class='mono'>{e(', '.join(h['files'][:4]))}"
+                   f"{' …' if len(h['files']) > 4 else ''}</td><td class='mono'>{e(h['example'])}</td></tr>" for h in items)
+    return (f"<div class='table-card' id='harmless'><details><summary><b>🙈 Known harmless</b>: {n:,} occurrence(s) of "
+            f"{sum(h['records'] for h in items)} record(s) left out</summary><p class='legend'>Records that say nothing about "
+            "a problem (telemetry not set up, Self-Balancing on a controller node, startup notices of the REST layer…): not in "
+            "the findings, the counts or the charts. <span class='mono'>--include-harmless</span> keeps them.</p>"
+            "<table><thead><tr><th>Why it is harmless</th><th>Occurrences</th><th>Files</th><th>Example</th></tr></thead>"
+            f"<tbody>{rows}</tbody></table></details></div>")
+
+
+def jvm_versions(files: List[dict]) -> List[dict]:
+    """☕ the JVMs of the logs: [{version, vendor, files}] (jvm.spec of a Connect worker, java.version=, the Version: of a
+    GC log, the header of a thread dump; with --from-containers, java -version of each container: --jvm-versions)"""
+    out: "OrderedDict[Tuple[str, str], dict]" = OrderedDict()
+    for f in files:
+        for ev in f.get("events") or []:
+            if ev["kind"] != "jvm_version" or not ev["detail"]:
+                continue
+            version, _, vendor = ev["detail"].partition(" ")
+            j = out.setdefault((version, vendor), {"version": version, "vendor": vendor, "files": []})
+            if f["label"] not in j["files"]:
+                j["files"].append(f["label"])
+    return list(out.values())
+
+
+def add_jvm_versions(found: List[dict], path: str) -> List[dict]:
+    """the JVM versions of --jvm-versions (label<tab>version<tab>vendor, java -version of the containers) merged with the
+    ones of the logs"""
+    by_key = {(j["version"], j["vendor"]): j for j in found}
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                label, version, vendor = (line.rstrip("\n").split("\t") + ["", "", ""])[:3]
+                if not version:
+                    continue
+                # the same JVM already read from the logs, without its vendor: one entry
+                j = by_key.get((version, vendor)) or next((x for x in found if x["version"] == version and (not x["vendor"] or not vendor)), None)
+                if j is None:
+                    j = by_key[(version, vendor)] = {"version": version, "vendor": vendor, "files": []}
+                    found.append(j)
+                j["vendor"] = j["vendor"] or vendor
+                if label and label not in j["files"]:
+                    j["files"].append(label)
+    except OSError:
+        pass
+    return found
+
+
+def jvm_text(jvms: List[dict]) -> str:
+    return " · ".join(f"{j['version']}" + (f" ({j['vendor']})" if j["vendor"] else "")
+                      + f" in {', '.join(j['files'][:4])}" + (" …" if len(j["files"]) > 4 else "") for j in jvms)
 
 
 def short_message(message: str) -> str:
@@ -833,6 +973,7 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     res["connectors"] = connector_health(res, files)
     res["summary"]["kafka_versions"] = kafka_versions(files)
     res["summary"]["librdkafka_versions"] = kafka_versions(files, "librdkafka_version")
+    res["summary"]["jvm_versions"] = jvm_versions(files)
     res["lifecycle"] = lifecycle(res, files)
     res["fixed_bugs"] = fixed_bugs_found(res, files)
     res["task_workers"] = task_workers(res, files)
@@ -1234,6 +1375,19 @@ def connector_health(res: dict, files: List[dict]) -> List[dict]:
             for t in titles:
                 if t not in c["known_causes"]:
                     c["known_causes"].append(t)
+    # ✅ the connectors that ran without an error or a warning: their start, the version of their plugin, their config
+    # dump (the --connector filter of filter_connectors keeps the configs of its connectors only, not the events)
+    wanted = getattr(files, "connector_filter", None)
+    for f in files:
+        for ev in f.get("events") or []:
+            name = ev.get("connector")
+            if name and ev["kind"] in ("connector_start", "task_start", "plugin_version") and (not wanted or name in wanted):
+                card(name)
+    for cfg in res["configuration"]:
+        name = config_connector(cfg)
+        if name and (is_connector_config(cfg["title"]) or re.match(r"\[[^\s|\]]+\|", cfg.get("context") or "")) \
+                and (not wanted or name in wanted):
+            card(name)
     for cfg in res["configuration"]:
         name = config_connector_of(cfg)
         if not name or name not in cards:
@@ -2832,7 +2986,7 @@ def connectors_text(cards: List[dict], top: int = 6) -> List[str]:
     out = [f"🔌 Connectors ({len(cards)}, most errors first)"]
     for c in cards[:top]:
         lv = c["by_level"]
-        bits = [f"{lv['FATAL'] + lv['ERROR']} ERROR/FATAL", f"{lv['WARN']} WARN"]
+        bits = ([f"{lv['FATAL'] + lv['ERROR']} ERROR/FATAL", f"{lv['WARN']} WARN"] if c["records"] else ["✅ no error or warning"])
         if c["task_killed"]:
             bits.append(f"🧨 {c['task_killed']} task kill(s)")
         if c["config_changes"]:
@@ -3252,6 +3406,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
         out.append("   " + mdc_text(s["connect_without_mdc"]) + f". Fix: {MDC_HOW}")
     if s.get("kafka_versions"):
         out.append(f"   🏷️ Kafka {' → '.join(s['kafka_versions'])} (the version the components log at startup)")
+    if s.get("jvm_versions"):
+        out.append(f"   ☕ JDK {jvm_text(s['jvm_versions'])}")
     for v in cp_versions(s, res.get("_cfk_bundles") or []):
         st = cp_support(s, v)
         if is_community(s, v):
@@ -3320,6 +3476,8 @@ def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
     out += fixed_bugs_text(res.get("fixed_bugs") or [])
     # the files for another analyzer (🧰 of the HTML report, .other_files of --json)
     out += other_files_text(res.get("other_files"))
+    # the known harmless records left out (🙈 of the HTML report, .harmless of --json)
+    out += harmless_text(res.get("harmless") or [])
     configs = res.get("configuration") or []
     if configs:
         out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
@@ -3705,6 +3863,19 @@ def client_versions(s: dict) -> List[Tuple[str, str, dict]]:
     return out
 
 
+def jvm_tile(s: dict) -> str:
+    """☕ the JDK of the components: logged (jvm.spec of a Connect worker, java.version=, GC log, thread dump) or asked
+    to the containers (--from-containers)"""
+    jvms = s.get("jvm_versions") or []
+    if not jvms:
+        return ""
+    majors = list(OrderedDict((re.match(r"(?:1\.)?(\d+)", j["version"]).group(1) if re.match(r"(?:1\.)?(\d+)", j["version"]) else j["version"], True)
+                              for j in jvms))
+    return kpi("☕ JDK", majors[0] if len(majors) == 1 else " / ".join(majors[:3]),
+               " · ".join(f"{j['version']}" + (f" {j['vendor']}" if j["vendor"] else "") for j in jvms[:3]) + (" …" if len(jvms) > 3 else ""),
+               "", "the Java runtime of the components: " + jvm_text(jvms))
+
+
 def clients_tile(s: dict) -> str:
     clients = client_versions(s)
     if not clients:
@@ -3928,6 +4099,8 @@ def ticket_markdown(res: dict, title: str, levels: str, unit: str = "file") -> s
                + f" (FATAL {s['by_level']['FATAL']} · ERROR {s['by_level']['ERROR']} · WARN {s['by_level']['WARN']})")
     if s.get("kafka_versions"):
         out.append(f"**Kafka version:** {' → '.join(s['kafka_versions'])}")
+    if s.get("jvm_versions"):
+        out.append(f"**JDK:** {jvm_text(s['jvm_versions'])}")
     for v in cp_versions(s, res.get("_cfk_bundles") or []):
         st = cp_support(s, v)
         if is_community(s, v):
@@ -6770,7 +6943,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
         go("files-with-findings", kpi(f"🗂️ {Unit}s scanned", s["files_scanned"], f"{s['lines']:,} lines"
                                       + (f", {human_size(s['bytes_read'])}" if s.get("bytes_read") is not None else "")
                                       + (f", {skipped} binary skipped" if unit == "file" else ""))),
-        version_tile(s, res.get("_cfk_bundles") or []), clients_tile(s), connector_versions_tile(res.get("connectors") or []),
+        version_tile(s, res.get("_cfk_bundles") or []), jvm_tile(s), clients_tile(s), connector_versions_tile(res.get("connectors") or []),
         go("files-with-findings", kpi(f"🔥 {Unit}s with findings", s["files_with_findings"], f"{levels} records", "danger" if errors else "warn" if s["files_with_findings"] else "ok")),
         go("all-root-causes", kpi("🧬 Distinct records", s["distinct"], "after de-duplication")),
         # the counts by level: the level chips of the filter bar have them too, one tile instead of three
@@ -6801,7 +6974,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             .replace("<div class='recs-list'>", findings_overview_html(findings_view, s["occurrences"]) + "<div class='recs-list'>", 1),
             fixed_bugs_html(res.get("fixed_bugs") or [], viewers),
             timeline_html(res.get("timeline") or [], viewers), connectors_health_html(res.get("connectors") or []),
-            lifecycle_html(res.get("lifecycle"), viewers), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files"))]
+            lifecycle_html(res.get("lifecycle"), viewers), task_workers_html(res.get("task_workers")), other_files_html(res.get("other_files")),
+            harmless_html(res.get("harmless") or [])]
     # the sanitization state (⚠️ Not sanitized, 🔒 Sanitization of analyze logs) is a line under the verdict, not a section
     notes = [(t, text) for t, text in sections if t.startswith(("⚠️ Not sanitized", "🔒 Sanitization"))]
     for t, text in notes:
@@ -7048,12 +7222,17 @@ def main() -> int:
                          "per file with findings next to the report (<report>-files/), linked from its locations")
     ap.add_argument("--connector", action="append", default=[], help="keep only the records and configs of this connector")
     ap.add_argument("--with-worker", action="store_true", help="with --connector, also keep what has no connector context")
+    ap.add_argument("--include-harmless", action="store_true",
+                    help="keep the known harmless records (known_causes.HARMLESS), left out and counted in 🙈 by default")
+    ap.add_argument("--jvm-versions", metavar="FILE",
+                    help="label<tab>version<tab>vendor of each component (java -version of the containers), with the JDK "
+                         "versions of the logs")
     ap.add_argument("--text-summary", action="store_true", help="print the bounded text summary of the terminal digest")
     ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
     ap.add_argument("--json-sections", metavar="LIST",
                     help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
                          "files_without_findings,coverage,configuration,timeline,connectors,comparison,trend,lifecycle,config_lint,"
-                         "other_files,fixed_bugs,task_workers,data_to_request,config_drift (default: all)")
+                         "other_files,fixed_bugs,task_workers,data_to_request,config_drift,harmless (default: all)")
     args = ap.parse_args()
 
     files = parse_records(args.records)
@@ -7082,7 +7261,11 @@ def main() -> int:
         return 0
     if args.connector:
         filter_connectors(files, args.connector, args.with_worker)
+    harmless_items = [] if args.include_harmless else drop_harmless(files)
     res = analyze(files, args.unit)
+    res["harmless"] = harmless_items
+    if args.jvm_versions:
+        res["summary"]["jvm_versions"] = add_jvm_versions(res["summary"]["jvm_versions"], args.jvm_versions)
     if args.connector:
         res["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
     res["summary"]["binary_files_skipped"] = args.skipped

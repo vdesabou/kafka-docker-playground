@@ -14,7 +14,7 @@
   required: false
   conflicts: [--sample]
   help: |-
-    🐳 Analyze the logs of the running example: the logs of its containers (the pods of the namespace confluent with the cfk environment, previous logs of restarted pods included) are saved in /tmp/playground-container-logs-<example>-<date>/, one <container>.log each, then analyzed as a folder: the full report (restarts, rebalances, configs, connectors, --connector, --since...), not only the digest of 'playground container logs --errors'
+    🐳 Analyze the logs of the running example: the logs of its containers (the pods of the namespace confluent with the cfk environment, previous logs of restarted pods included) are saved in /tmp/playground-container-logs-<example>-<date>/, one <container>.log each, then analyzed as a folder: the full report (restarts, rebalances, configs, connectors, --connector, --since...), not only the digest of 'playground container logs --errors'. ☕ The JDK of each container (java -version) joins the one the logs give
 
     🎓 Tip: --container keeps some of them. The folder is kept: give it to --compare after a fix, or to a colleague
 - long: --container
@@ -88,6 +88,10 @@
   conflicts: [--include-warnings]
   help: |-
     🔴 Only the ERROR/FATAL records: the WARN records are reported by default (the Kafka clients log some real problems at WARN: consumer poll timeout, records expiring in the producer, network errors), sorted after the errors
+- long: --include-harmless
+  required: false
+  help: |-
+    🙈 Keep the known harmless records (telemetry not set up, Self-Balancing on a KRaft controller node, Jersey startup notices…): left out by default, counted in a 🙈 Known harmless section of the report and in .harmless of --json
 - long: --include-warnings
   required: false
   conflicts: [--errors-only]

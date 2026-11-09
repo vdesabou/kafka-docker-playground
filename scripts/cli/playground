@@ -10071,7 +10071,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent. 🐳 --from-containers\n  gives the same full report for the running example: the logs of its\n  containers are saved in a folder, then analyzed.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. Logs pasted in a Word document (.docx, .odt)\n  or exported to a spreadsheet (.xlsx, .xlsm, .ods: the columns of the\n  export, Excel dates converted) are converted the same way; the pictures\n  of a document, the screenshots, the PDF and the old .doc / .xls / .pptx\n  files are not analyzed: 🧰 Other files of the input lists them with what\n  to do. So are JSON lines whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). ⚠️ An input not fully read (a truncated or\n  corrupt .gz, an archive that does not fully extract) is listed at the\n  end, in the HTML report and in --json (.summary.incomplete_inputs):\n  never a silent ✅, and exit code 1 when nothing could be read at all.\n  Bytes that are not UTF-8 (a Latin-1 character) are read as they are.\n  🌍 It works offline, without Docker: bash 4.2+, python3 3.8+, jq, awk,\n  gzip and tar are enough (a CFK bundle then has no ☸️ sections, its pod\n  logs are still read). Without the playground: a sparse clone of\n  scripts/, tools/ and cfk-analysis/ (see the deep dive, \"Without the\n  playground\").\n  🧰 The files of the input that another analyzer reads better (GC logs,\n  thread dumps, heap dumps, flight recordings, network captures, Oracle\n  XStream diagnostics reports, found by their content or name) are listed\n  with the playground analyze command to run on each, in the summary, the\n  HTML report and --json (.other_files); the ones extracted from an\n  archive are kept next to the report (<input>-other-files/).\n  Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, a bar for the file\n  being read and one for the whole input, elapsed time, speed, ETA of the file\n  and of the whole input) that becomes the report when the analysis ends. The\n  last line\n  gives the size read and the time it took. 📤 Share in the report: the\n  .zip of the report and its file pages (written next to it when they are\n  under 200 MB), the summary to paste, an email. An archive (.tar, .tar.gz,\n  .tgz…) shows a bar while it is extracted.\n  \n  🗂️ One report: the sections of each CFK support bundle of the input\n  (pods, custom resources, events, versions, recent changes, issues by\n  category) are in the log report, right after its verdict; the comparison\n  of several bundles is linked from it. Several CFK bundles are analyzed in\n  parallel, 4 at a time (PLAYGROUND_CFK_PARALLELISM to change it), their\n  output printed in order.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole by the CFK analyzer (a\n  container image built on first use): Warning events, pods (phase, waiting\n  reasons, restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 --sanitize replaces secrets, IPs,\n  hostnames, emails and LDAP DNs by placeholders (best effort: review before\n  sharing). 🔥 One report: its pod and operator logs go through the regular log\n  digest, and the log report (root causes, timeline, connector cards and plugin\n  versions, restarts, known bugs fixed later, which pod ran which task, data to\n  request, summary for a ticket) has the ☸️ sections of the bundle right after\n  its verdict (with --json: the bundle JSON, with .log_analysis); the issues of\n  its log records come from the same records, and the ☸️ changes of the cluster\n  (pods terminated or restarted, custom resources edited, rollouts) join its\n  incident timeline, so that 🔗 and 💥 link the errors of the pod logs to them.\n  One output for the case: <input>-ticket.md has a ☸️ section per bundle\n  (environment, issues by severity, known CFK issues with their public links,\n  critical and high issues), the 📥 data to request of the bundle joins the one\n  of the logs, and --compare <before bundle> compares both the bundles\n  (versions, CR changes, issues fixed / new / still there) and their pod logs.\n  The ⚙️ configuration of the log report also has what only the bundle has: the\n  properties rendered by CFK (ConfigMap <cr>-shared-config), the configOverrides\n  of each CR and the Connector CRs (--show-config <connector> prints the CR with\n  the config logged, config lint checks it), and 🔀 the keys of a Connector CR\n  whose value differs from the config the worker logged when it started the\n  connector (the operator did not apply a change). --logs-only gives only the\n  log report, of every file of the bundle. 🎯 --problem \"<component, symptom,\n  since when>\" matches the bundle against what the customer reports: the issues\n  that explain it first, a verdict (explained, not explained, not covered by the\n  logs), the changes before the date. 📥 A Data to request section says what to\n  ask the customer for next, with why and the command: from the gaps of the\n  bundle (logs that start too late, previous logs of restarted containers, no\n  events, no operator log), from its findings (OOMKilled, Pending pods, TLS,\n  failed connectors) and from the symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do (📚 and a Confluent knowledge-base\n  article for many of them, 🔒 the internal runbooks of Confluent support when\n  the private reproduction-models repository is there), root causes no known\n  cause explains, and the configuration logged at startup (connectors,\n  components, clients) with the keys changed between restarts. Also: 🏷️ the\n  version of each connector plugin (with the playground connector-plugin\n  changelog command since that version) and of Kafka, 📥 the data to request next\n  from the customer, each with why and how (a complete copy of a file not fully\n  read, a longer window, the logs since the last restart of a worker whose\n  startup is missing, the broker or Schema Registry logs when the findings point\n  there, a heap dump, GC logs, thread dumps or the TLS debug output for the\n  known causes they explain, and the exact DEBUG logger to set for the errors no\n  known cause explains), also in <input>-ticket.md, 🖥️ which worker ran which\n  task and when (from the \"Starting task\" lines of each worker's logs), with 🎯 a\n  connector whose errors all come from one worker while its tasks ran on another\n  one at the same time without error (a DNS, truststore, plugin path or network\n  difference of that host), 🩹 the known bugs of a plugin fixed in a later\n  version whose error is in the logs, with a verdict from the version each\n  connector runs (affected: upgrade to …; it has the fix: another cause; version\n  unknown), 🔄 the restarts, stops, worker rebalances, consumer rejoins, active\n  controller changes and GC pauses of 1 s or more counted from the INFO lines\n  and the GC logs (🌀 a storm when the rebalances repeat), 💥 the bursts of errors\n  right after a GC pause, a stop, a restart or a controller change, 🔗 the errors\n  that came right after a change (config key, restart) of the same connector,\n  and 🧪 a config lint of each connector (errors.tolerance=all without a DLQ, a\n  DLQ with replication factor 1, max.poll.records too high for\n  max.poll.interval.ms, acks not all…). --connector keeps one connector,\n  --show-config prints a configuration, --since / --until keep a window of time.\n  📋 <input>-ticket.md, next to the report: the same summary in Markdown, always\n  sanitized, to paste in a ticket (also in 📤 Share of the report). 📈 With\n  --compare repeated (oldest first), a trend over every input.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  errors.tolerance exceeded, authentication, TLS, wrong security.protocol,\n  unknown magic byte, OutOfMemoryError, fenced producer, rebalances, throttling,\n  offsets not committed in time, task not stopped in time...), an incident\n  timeline (all files merged: first occurrence of each error and known cause,\n  restarts, connectors reconfigured, config changes, processes stopped, active\n  controller changes and GC pauses of 1 s or more read from the GC logs of the\n  input, 💥 with the burst of ERROR / WARN of every file in the 60 s after one of\n  them when it is well above the usual rate (\"39 Partition leadership changed\n  right after broker 2 shut down\"); a chart places them in time, one lane per\n  component, long gaps cut, and a Δ column gives the time between them), a card\n  per connector (errors, task killed, known causes, config changes, its plugin\n  class: 🔎 inferred from the loggers of the lines of its tasks when the logs\n  miss its startup), occurrences over time, root causes (deepest exception of\n  each record), files with findings, and every distinct record. Everything below\n  the filter bar is one view of the same records: the level chips, the component\n  chips, the connector picker, the search box and the period selected by\n  dragging over the occurrences chart (all kept in the URL: 🔗 Link to this view\n  opens the report on the same view) all recount the two charts, the root\n  causes, the files with findings and the record cards (double-click the chart,\n  or ⤺ whole period, to go back). The findings keep the figures of the whole\n  report, say how much of each of them is in the selection, and the ones with\n  nothing in it are hidden (show them brings them back). With a connector\n  picked, the 🔌 Connectors section keeps its card only. ⚠️ Connect logs whose\n  task lines have no connector context ([orders-sink|task-0], the MDC\n  %%X{connector.context} of the log4j pattern) are reported, with the fix: their\n  records cannot all be tied to their connector. 🕐 Period, a row of the filter\n  bar, picks the period as the time picker of Grafana: quick ranges relative to\n  the end of the logs (last 15 min of the logs…) and the times of the analysis\n  (around the first error, the peak), from → to (paste \"09:02 → 09:08\"), around\n  a time (± 5 min), ⊖ zoom out, ◀ ▶ shift (t ← / t →), ⏱️ on a row of the\n  incident timeline. 🔎 Search every log line searches every line of every file,\n  INFO and DEBUG included, in the browser and offline (words, \"a phrase\",\n  /regex/, -exclude, level:INFO, file:connect-0, comp:connect): a histogram of\n  the matches (drag: the period of the report), the counts per level and file,\n  the lines sorted by time, a click for the lines around one. The lines are\n  written compressed next to the report (in the 📤 Share .zip) within\n  PLAYGROUND_LOG_SEARCH_MAX_MB (200 MB of lines by default, the files with\n  findings first, 0 to turn it off), not with --sanitize.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n  🎬 Bite size session (--compare):\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%81-did-the-fix-work-analyze-the-logs-before-and-after-it\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent. 🐳 --from-containers\n  gives the same full report for the running example: the logs of its\n  containers are saved in a folder, then analyzed.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  🙈 Known harmless records (telemetry not set up, Self-Balancing on a\n  KRaft controller node, Jersey startup notices) and the warnings of the\n  JDK launcher on stderr (\"WARNING: sun.misc.Unsafe::…\") are left out\n  (--include-harmless keeps the first ones); 🌅 the connection failures of\n  a component that starts before the broker, and stop once it is up, are\n  a LOW known cause of their own, not the HIGH 🔌 Connection failure.\n  ✅ Every connector of the logs gets its card, the ones without an\n  error too, and ☕ the JDK is shown when the logs give it.\n  \n  🧰 The logs of every Kafka client of Confluent are read, not only Java:\n  the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript\n  clients (\"%%3|1793896102.923|FAIL|rdkafka#producer-1| …\", by their\n  syslog level, timestamp included, also the Node.js objects of the\n  JavaScript client logger), the .NET console logger (\"fail:\", \"crit:\")\n  and inner exceptions (\" ---> \"), Python tracebacks (chained ones as one\n  record, deepest cause last) and KafkaError{code=…}, Go and Rust panics,\n  uncaught Node.js errors (KafkaJS, \"[cause]:\"), the tracing lines of the\n  Rust client. The known causes include the client ones (records not\n  delivered in time, producer buffer full, max.poll.interval.ms exceeded,\n  wrong security.protocol, idle connection closed by the broker).\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). A JSON export of log events (.json, .jsonl, .ndjson, also\n  gzipped: AWS CloudWatch Logs Insights @timestamp/@message, CloudWatch\n  events, Elasticsearch / OpenSearch hits, structured JSON logs with\n  level/logger_name/message/stack_trace) and a CSV export of log events\n  (.csv, also gzipped: Kibana / OpenSearch Dashboards Discover, Splunk,\n  Datadog, Grafana: one event per row, a cell holding the JSON log line of\n  the container is parsed) are converted back to log lines, oldest first,\n  and analyzed as a log file. Logs pasted in a Word document (.docx, .odt)\n  or exported to a spreadsheet (.xlsx, .xlsm, .ods: the columns of the\n  export, Excel dates converted) are converted the same way; the pictures\n  of a document, the screenshots, the PDF and the old .doc / .xls / .pptx\n  files are not analyzed: 🧰 Other files of the input lists them with what\n  to do. So are JSON lines whatever the extension (a\n  fluentd / Kubernetes / logstash dump saved as .log: streamed, a dump of\n  several GB is converted in seconds and the digest reads its messages,\n  not the metadata). ⚠️ An input not fully read (a truncated or\n  corrupt .gz, an archive that does not fully extract) is listed at the\n  end, in the HTML report and in --json (.summary.incomplete_inputs):\n  never a silent ✅, and exit code 1 when nothing could be read at all.\n  Bytes that are not UTF-8 (a Latin-1 character) are read as they are.\n  🌍 It works offline, without Docker: bash 4.2+, python3 3.8+, jq, awk,\n  gzip and tar are enough (a CFK bundle then has no ☸️ sections, its pod\n  logs are still read). Without the playground: a sparse clone of\n  scripts/, tools/ and cfk-analysis/ (see the deep dive, \"Without the\n  playground\").\n  🧰 The files of the input that another analyzer reads better (GC logs,\n  thread dumps, heap dumps, flight recordings, network captures, Oracle\n  XStream diagnostics reports, found by their content or name) are listed\n  with the playground analyze command to run on each, in the summary, the\n  HTML report and --json (.other_files); the ones extracted from an\n  archive are kept next to the report (<input>-other-files/).\n  Only files with findings are\n  shown. 🔭 When no file has findings, an overview says what the logs\n  contain (period covered, records by level, top messages and loggers) and\n  what to ask for next (a longer window, the logs of the component that\n  fails, a new export of a log console). The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ⏳ A large file (20 MB or more) shows a progress bar in the terminal\n  (MB read, speed, ETA), and with 20 MB or more of input the report opens\n  in the browser right away as a progress page (step, a bar for the file\n  being read and one for the whole input, elapsed time, speed, ETA of the file\n  and of the whole input) that becomes the report when the analysis ends. The\n  last line\n  gives the size read and the time it took. 📤 Share in the report: the\n  .zip of the report and its file pages (written next to it when they are\n  under 200 MB), the summary to paste, an email. An archive (.tar, .tar.gz,\n  .tgz…) shows a bar while it is extracted.\n  \n  🗂️ One report: the sections of each CFK support bundle of the input\n  (pods, custom resources, events, versions, recent changes, issues by\n  category) are in the log report, right after its verdict; the comparison\n  of several bundles is linked from it. Several CFK bundles are analyzed in\n  parallel, 4 at a time (PLAYGROUND_CFK_PARALLELISM to change it), their\n  output printed in order.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/; or a flat\n  collection of kubectl outputs with a confluent-operator-*.log or the YAML of a\n  platform.confluent.io custom resource at its top), alone or inside a folder or\n  an archive, is detected and analyzed as a whole by the CFK analyzer (a\n  container image built on first use): Warning events, pods (phase, waiting\n  reasons, restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. 📕 The log messages and events of\n  known CFK problems (CFK triage table of Confluent support: roll blocked by the\n  pre-roll checks, expired certificate, INCONSISTENT_CLUSTER_ID, ZooKeeper to\n  KRaft migration, authorizer timeout, license secret…) are listed first, with\n  what they mean and the KB / docs to read; PLAYGROUND_CFK_RUNBOOKS_FILE adds\n  the internal runbook links of Confluent support (🔒 in the terminal, the HTML\n  report and --json). 🔄 A CR whose image is not what its StatefulSet or pods run\n  (operator did not apply it, roll not complete) is one finding, the exceeded\n  quota events become one finding per ResourceQuota, each Warning event is\n  counted once (event.txt and event.yaml) and a copy of the bundle inside the\n  bundle is analyzed once. 🕰️ The time range of each log is listed, with a\n  finding when a log starts long after its pod or after the last change of the\n  CRs, and CRs that keep the \"Reconcile is blocked\" condition after the\n  annotation was removed are one finding. 🕒 The changes of the CRs in the hour\n  before the first critical / high issue are marked and listed in one finding. 🧩\n  A Connect whose spec.build.onDemand plugins cannot be installed\n  (config-init-container failing, install error, slow init) and a Connector CR\n  whose class is not installed are findings with next steps. 🔁 With several CFK\n  bundles (-f a.tgz -f b.tgz), they are compared, sorted by collection time:\n  same cluster or not, versions, changes of the CRs between them, issues fixed /\n  new / still there, known CFK issues, with a verdict (HTML report, \"comparison\"\n  in --json). 🚚 A ZooKeeper to KRaft migration gets its own finding: phase /\n  sub-phase of the KRaftMigrationJob, how long it has been there (events,\n  operator requeues), its last error and the next steps of that sub-phase\n  (DUAL-WRITE waiting for the finalize annotation is low). Probe failures and\n  back-offs of a pod that is Running and Ready in the bundle are low and marked\n  transient. Each issue is attributed to a component and an instance (CR name),\n  and to its connector: --component keeps some of them, the HTML report has\n  Component / Instance / Connector filters. 🔒 --sanitize replaces secrets, IPs,\n  hostnames, emails and LDAP DNs by placeholders (best effort: review before\n  sharing). 🔥 One report: its pod and operator logs go through the regular log\n  digest, and the log report (root causes, timeline, connector cards and plugin\n  versions, restarts, known bugs fixed later, which pod ran which task, data to\n  request, summary for a ticket) has the ☸️ sections of the bundle right after\n  its verdict (with --json: the bundle JSON, with .log_analysis); the issues of\n  its log records come from the same records, and the ☸️ changes of the cluster\n  (pods terminated or restarted, custom resources edited, rollouts) join its\n  incident timeline, so that 🔗 and 💥 link the errors of the pod logs to them.\n  One output for the case: <input>-ticket.md has a ☸️ section per bundle\n  (environment, issues by severity, known CFK issues with their public links,\n  critical and high issues), the 📥 data to request of the bundle joins the one\n  of the logs, and --compare <before bundle> compares both the bundles\n  (versions, CR changes, issues fixed / new / still there) and their pod logs.\n  The ⚙️ configuration of the log report also has what only the bundle has: the\n  properties rendered by CFK (ConfigMap <cr>-shared-config), the configOverrides\n  of each CR and the Connector CRs (--show-config <connector> prints the CR with\n  the config logged, config lint checks it), and 🔀 the keys of a Connector CR\n  whose value differs from the config the worker logged when it started the\n  connector (the operator did not apply a change). --logs-only gives only the\n  log report, of every file of the bundle. 🎯 --problem \"<component, symptom,\n  since when>\" matches the bundle against what the customer reports: the issues\n  that explain it first, a verdict (explained, not explained, not covered by the\n  logs), the changes before the date. 📥 A Data to request section says what to\n  ask the customer for next, with why and the command: from the gaps of the\n  bundle (logs that start too late, previous logs of restarted containers, no\n  events, no operator log), from its findings (OOMKilled, Pending pods, TLS,\n  failed connectors) and from the symptoms of --problem.\n  \n  🔒 With --sanitize, passwords and other secrets (password=…, JAAS configs,\n  tokens, keys, credentials in URLs), IPs, hostnames, emails and LDAP DNs are\n  replaced by placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the\n  digest, the report and the JSON). Off by default: use it before sharing the\n  output outside Confluent, and review it anyway (best effort).\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do (📚 and a Confluent knowledge-base\n  article for many of them, 🔒 the internal runbooks of Confluent support when\n  the private reproduction-models repository is there), root causes no known\n  cause explains, and the configuration logged at startup (connectors,\n  components, clients) with the keys changed between restarts. Also: 🏷️ the\n  version of each connector plugin (with the playground connector-plugin\n  changelog command since that version) and of Kafka, 📥 the data to request next\n  from the customer, each with why and how (a complete copy of a file not fully\n  read, a longer window, the logs since the last restart of a worker whose\n  startup is missing, the broker or Schema Registry logs when the findings point\n  there, a heap dump, GC logs, thread dumps or the TLS debug output for the\n  known causes they explain, and the exact DEBUG logger to set for the errors no\n  known cause explains), also in <input>-ticket.md, 🖥️ which worker ran which\n  task and when (from the \"Starting task\" lines of each worker's logs), with 🎯 a\n  connector whose errors all come from one worker while its tasks ran on another\n  one at the same time without error (a DNS, truststore, plugin path or network\n  difference of that host), 🩹 the known bugs of a plugin fixed in a later\n  version whose error is in the logs, with a verdict from the version each\n  connector runs (affected: upgrade to …; it has the fix: another cause; version\n  unknown), 🔄 the restarts, stops, worker rebalances, consumer rejoins, active\n  controller changes and GC pauses of 1 s or more counted from the INFO lines\n  and the GC logs (🌀 a storm when the rebalances repeat), 💥 the bursts of errors\n  right after a GC pause, a stop, a restart or a controller change, 🔗 the errors\n  that came right after a change (config key, restart) of the same connector,\n  and 🧪 a config lint of each connector (errors.tolerance=all without a DLQ, a\n  DLQ with replication factor 1, max.poll.records too high for\n  max.poll.interval.ms, acks not all…). --connector keeps one connector,\n  --show-config prints a configuration, --since / --until keep a window of time.\n  📋 <input>-ticket.md, next to the report: the same summary in Markdown, always\n  sanitized, to paste in a ticket (also in 📤 Share of the report). 📈 With\n  --compare repeated (oldest first), a trend over every input.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  errors.tolerance exceeded, authentication, TLS, wrong security.protocol,\n  unknown magic byte, OutOfMemoryError, fenced producer, rebalances, throttling,\n  offsets not committed in time, task not stopped in time...), an incident\n  timeline (all files merged: first occurrence of each error and known cause,\n  restarts, connectors reconfigured, config changes, processes stopped, active\n  controller changes and GC pauses of 1 s or more read from the GC logs of the\n  input, 💥 with the burst of ERROR / WARN of every file in the 60 s after one of\n  them when it is well above the usual rate (\"39 Partition leadership changed\n  right after broker 2 shut down\"); a chart places them in time, one lane per\n  component, long gaps cut, and a Δ column gives the time between them), a card\n  per connector (errors, task killed, known causes, config changes, its plugin\n  class: 🔎 inferred from the loggers of the lines of its tasks when the logs\n  miss its startup), occurrences over time, root causes (deepest exception of\n  each record), files with findings, and every distinct record. Everything below\n  the filter bar is one view of the same records: the level chips, the component\n  chips, the connector picker, the search box and the period selected by\n  dragging over the occurrences chart (all kept in the URL: 🔗 Link to this view\n  opens the report on the same view) all recount the two charts, the root\n  causes, the files with findings and the record cards (double-click the chart,\n  or ⤺ whole period, to go back). The findings keep the figures of the whole\n  report, say how much of each of them is in the selection, and the ones with\n  nothing in it are hidden (show them brings them back). With a connector\n  picked, the 🔌 Connectors section keeps its card only. ⚠️ Connect logs whose\n  task lines have no connector context ([orders-sink|task-0], the MDC\n  %%X{connector.context} of the log4j pattern) are reported, with the fix: their\n  records cannot all be tied to their connector. 🕐 Period, a row of the filter\n  bar, picks the period as the time picker of Grafana: quick ranges relative to\n  the end of the logs (last 15 min of the logs…) and the times of the analysis\n  (around the first error, the peak), from → to (paste \"09:02 → 09:08\"), around\n  a time (± 5 min), ⊖ zoom out, ◀ ▶ shift (t ← / t →), ⏱️ on a row of the\n  incident timeline. 🔎 Search every log line searches every line of every file,\n  INFO and DEBUG included, in the browser and offline (words, \"a phrase\",\n  /regex/, -exclude, level:INFO, file:connect-0, comp:connect): a histogram of\n  the matches (drag: the period of the report), the counts per level and file,\n  the lines sorted by time, a click for the lines around one. The lines are\n  written compressed next to the report (in the 📤 Share .zip) within\n  PLAYGROUND_LOG_SEARCH_MAX_MB (200 MB of lines by default, the files with\n  findings first, 0 to turn it off), not with --sanitize.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-analyze-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n  🎬 Bite size session (--compare):\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%81-did-the-fix-work-analyze-the-logs-before-and-after-it\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -10094,7 +10094,7 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--from-containers")"
-    printf "    🐳 Analyze the logs of the running example: the logs of its containers (the\n    pods of the namespace confluent with the cfk environment, previous logs of\n    restarted pods included) are saved in\n    /tmp/playground-container-logs-<example>-<date>/, one <container>.log each,\n    then analyzed as a folder: the full report (restarts, rebalances, configs,\n    connectors, --connector, --since...), not only the digest of 'playground\n    container logs --errors'\n    \n    🎓 Tip: --container keeps some of them. The folder is kept: give it to\n    --compare after a fix, or to a colleague\n"
+    printf "    🐳 Analyze the logs of the running example: the logs of its containers (the\n    pods of the namespace confluent with the cfk environment, previous logs of\n    restarted pods included) are saved in\n    /tmp/playground-container-logs-<example>-<date>/, one <container>.log each,\n    then analyzed as a folder: the full report (restarts, rebalances, configs,\n    connectors, --connector, --since...), not only the digest of 'playground\n    container logs --errors'. ☕ The JDK of each container (java -version) joins\n    the one the logs give\n    \n    🎓 Tip: --container keeps some of them. The folder is kept: give it to\n    --compare after a fix, or to a colleague\n"
     printf "    %s\n" "Conflicts: --sample"
     echo
 
@@ -10120,6 +10120,11 @@ playground_analyze_logs_usage() {
     printf "  %s\n" "$(magenta "--errors-only")"
     printf "    🔴 Only the ERROR/FATAL records: the WARN records are reported by default\n    (the Kafka clients log some real problems at WARN: consumer poll timeout,\n    records expiring in the producer, network errors), sorted after the errors\n"
     printf "    %s\n" "Conflicts: --include-warnings"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-harmless")"
+    printf "    🙈 Keep the known harmless records (telemetry not set up, Self-Balancing on a\n    KRaft controller node, Jersey startup notices…): left out by default,\n    counted in a 🙈 Known harmless section of the report and in .harmless of\n    --json\n"
     echo
 
     # :flag.usage
@@ -11275,7 +11280,7 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--from-containers")"
-    printf "    🐳 Analyze the logs of the running example: the logs of its containers (the\n    pods of the namespace confluent with the cfk environment, previous logs of\n    restarted pods included) are saved in\n    /tmp/playground-container-logs-<example>-<date>/, one <container>.log each,\n    then analyzed as a folder: the full report (restarts, rebalances, configs,\n    connectors, --connector, --since...), not only the digest of 'playground\n    container logs --errors'\n    \n    🎓 Tip: --container keeps some of them. The folder is kept: give it to\n    --compare after a fix, or to a colleague\n"
+    printf "    🐳 Analyze the logs of the running example: the logs of its containers (the\n    pods of the namespace confluent with the cfk environment, previous logs of\n    restarted pods included) are saved in\n    /tmp/playground-container-logs-<example>-<date>/, one <container>.log each,\n    then analyzed as a folder: the full report (restarts, rebalances, configs,\n    connectors, --connector, --since...), not only the digest of 'playground\n    container logs --errors'. ☕ The JDK of each container (java -version) joins\n    the one the logs give\n    \n    🎓 Tip: --container keeps some of them. The folder is kept: give it to\n    --compare after a fix, or to a colleague\n"
     printf "    %s\n" "Conflicts: --sample"
     echo
 
@@ -11301,6 +11306,11 @@ playground_debug_analyze_logs_usage() {
     printf "  %s\n" "$(magenta "--errors-only")"
     printf "    🔴 Only the ERROR/FATAL records: the WARN records are reported by default\n    (the Kafka clients log some real problems at WARN: consumer poll timeout,\n    records expiring in the producer, network errors), sorted after the errors\n"
     printf "    %s\n" "Conflicts: --include-warnings"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-harmless")"
+    printf "    🙈 Keep the known harmless records (telemetry not set up, Self-Balancing on a\n    KRaft controller node, Jersey startup notices…): left out by default,\n    counted in a 🙈 Known harmless section of the report and in .harmless of\n    --json\n"
     echo
 
     # :flag.usage
@@ -30211,6 +30221,8 @@ function install_confluent_plugin() {
 #              direction sink|source: the record of an error reported by the runtime (LogReporter) was consumed or produced
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
 #   @@PGEVT@@<tab>librdkafka_version<tab>line<tab>timestamp<tab><tab>version ("librdkafka v2.3.0" of a non-Java client)
+#   @@PGEVT@@<tab>jvm_version<tab>line<tab>timestamp<tab><tab>version [vendor] (jvm.spec of a Connect worker, java.version=,
+#             the Version: of a GC log, the header of a thread dump)
 #   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
 #              line<tab>timestamp<tab>connector<tab>group, reason or what started / stopped: the lifecycle of the INFO lines,
 #              300 of each kind at most
@@ -30260,6 +30272,10 @@ function summarize_log_errors() {
     # ("fail: Program[0]"), and crashes of the other languages have their own first line
     function level_of(head,    h, lvl) {
         h = substr(head, 1, 200)
+        # the warnings of the JDK launcher on stderr, not log records: JDK 24+ when a library uses sun.misc.Unsafe or
+        # loads a native library ("WARNING: A terminally deprecated method in sun.misc.Unsafe has been called", "WARNING:
+        # Use --enable-native-access=ALL-UNNAMED…"), illegal reflective access (JDK 9-16), agents, Security Manager
+        if (h ~ /^WARNING: (A terminally deprecated method in sun\.misc\.Unsafe|sun\.misc\.Unsafe::|Please consider reporting this to the maintainers of|A restricted method in java\.lang\.|java\.lang\.System::load|Use --enable-native-access|Restricted methods will be blocked|An illegal reflective access operation|Illegal reflective access by|Use --illegal-access=warn|All illegal access operations will be denied|A Java agent has been loaded dynamically|If a serviceability tool is|Dynamic loading of agents will be disallowed|Using incubator modules|A command line option has enabled the Security Manager|The Security Manager is deprecated|System::setSecurityManager)/) return ""
         if (match(h, /%[0-7]\|[0-9]+\.[0-9]+\|/)) {
             lvl = substr(h, RSTART + 1, 1) + 0
             return lvl <= 2 ? "FATAL" : lvl == 3 ? "ERROR" : lvl == 4 ? "WARN" : ""
@@ -30476,17 +30492,36 @@ function summarize_log_errors() {
             }
         }
     }
+    # seconds of a 2026-11-09T13:00:54 timestamp within its month (day, hour, minute, second): enough to compare two
+    # dumps a few seconds apart (no mktime in mawk nor in the awk of macOS)
+    function day_seconds(ts) {
+        return substr(ts, 9, 2) * 86400 + substr(ts, 12, 2) * 3600 + substr(ts, 15, 2) * 60 + substr(ts, 18, 2)
+    }
     function cfg_end(    key) {
         if (!cfg_on) return
         cfg_on = 0
         if (cfg_buf == "") return
         key = cfg_cls "|" cfg_ctx "|" cfg_id
+        # a second dump of the config the component logs when it starts: it restarted (Schema Registry and Control Center
+        # log no "started" line). Its own one: the first of them in the file (a broker and Control Center also dump the
+        # SchemaRegistryConfig / KafkaRestConfig of the services they embed, several times)
+        # 30 s at least after the previous one: a broker dumps its KafkaConfig twice in one startup (KafkaRaftServer, then
+        # BrokerServer)
+        if (cfg_cls ~ /^(DistributedConfig|StandaloneConfig|KafkaConfig|KafkaRestConfig|SchemaRegistryConfig|KsqlConfig|KsqlRestConfig|ControlCenterConfig)$/) {
+            if (own_start_cfg == "") own_start_cfg = cfg_cls
+            else if (cfg_cls == own_start_cfg && (cfg_ts == "" || own_start_ts == "" || day_seconds(cfg_ts) - day_seconds(own_start_ts) >= 30 || day_seconds(cfg_ts) < day_seconds(own_start_ts))) run_gen++
+            if (cfg_cls == own_start_cfg) own_start_ts = cfg_ts
+        }
         if (!(key in cfg_text)) {
             if (ncfg >= 50) return
             cfg_order[++ncfg] = key
-        } else if (cfg_text[key] != cfg_buf) {
+        } else if (cfg_text[key] != cfg_buf && (cfg_gen[key] != run_gen || (cfg_ctx != "" && cfg_cls !~ /(Producer|Consumer|AdminClient|Converter|Serializer|Deserializer)Config$/))) {
+            # a change between restarts only: two dumps of the same class in one run are two instances (two telemetry
+            # exporters of a broker, the readiness check of the image then the worker, the key, value and header
+            # converters), not a new config. The config of a connector itself changes without a restart (reconfigured)
             cfg_diff(key, cfg_text[key], cfg_buf)
         }
+        cfg_gen[key] = run_gen
         cfg_text[key] = cfg_buf
         cfg_head[key] = cfg_cls "\t" cfg_ctx "\t" cfg_ln "\t" cfg_ts "\t" cfg_id
     }
@@ -30698,6 +30733,29 @@ function summarize_log_errors() {
                 ev[++nev] = "kafka_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version
             }
         }
+        # the JVM that runs the component: "jvm.spec = Eclipse Adoptium, OpenJDK 64-Bit Server VM, 21.0.5, 21.0.5+11-LTS" of
+        # the WorkerInfo of a Connect worker, "java.version=17.0.9" (ZooKeeper environment, system property dumps), the
+        # "Version: 17.0.9+9 (release)" of a unified GC log, "Full thread dump OpenJDK 64-Bit Server VM (17.0.9+9 mixed mode"
+        if (records_file != "" && (index($0, "jvm.spec = ") || index($0, "java.version") || index($0, "java.runtime.version") || index($0, "Full thread dump ") || index($0, "] Version: "))) {
+            ev_version = ""; ev_vendor = ""
+            if (match($0, /jvm\.spec = [^,]+, [^,]+, [^,]+, [^ ,]+/)) {
+                split(substr($0, RSTART + 11, RLENGTH - 11), evj, ", ")
+                ev_version = evj[4]; ev_vendor = evj[1]
+            } else if (match($0, /java\.runtime\.version ?[=:] ?[0-9][^ ,;]*/) || match($0, /java\.version ?[=:] ?[0-9][^ ,;]*/)) {
+                ev_version = substr($0, RSTART, RLENGTH); sub(/^[^=:]*[=:] ?/, "", ev_version)
+            } else if (match($0, /Full thread dump [^(]*\([0-9][^ ]*/)) {
+                ev_version = substr($0, RSTART, RLENGTH); sub(/^[^(]*\(/, "", ev_version)
+            } else if (index($0, "gc") && match($0, /\] Version: [0-9][^ ]* \(/)) {
+                ev_version = substr($0, RSTART + 11, RLENGTH - 13)
+            }
+            if (ev_version != "") {
+                ev_key = "jvm_version|" ev_version "|" ev_vendor
+                if (!(ev_key in ev_seen)) {
+                    ev_seen[ev_key] = 1
+                    ev[++nev] = "jvm_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version (ev_vendor != "" ? " " ev_vendor : "")
+                }
+            }
+        }
         # the librdkafka version of a non-Java client: "librdkafka v2.3.0 (0x20300ff) rdkafka#producer-1 initialized"
         # (debug INIT line), "confluent-kafka 2.16.1, librdkafka 2.16.0" (the startup line of a client)
         if (records_file != "" && index($0, "librdkafka ") && match($0, /librdkafka v?[0-9]+\.[0-9]+\.[0-9]+/)) {
@@ -30779,13 +30837,13 @@ function summarize_log_errors() {
                 # the task id: which worker ran which task, and when (🖥️ Tasks by worker)
                 lc_detail = lc_who
             } else if ($0 ~ /Kafka Connect started|Kafka Connect (distributed )?worker initialization took/) {
-                lc_kind = "process_start"; lc_who = "connect"; lc_detail = "Kafka Connect worker started"
+                lc_kind = "process_start"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker started"
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
-                lc_kind = "process_start"; lc_who = "broker"; lc_detail = "Kafka broker started"
+                lc_kind = "process_start"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker started"
             } else if (index($0, "Kafka Connect stopping")) {
-                lc_kind = "process_stop"; lc_who = "connect"; lc_detail = "Kafka Connect worker stopping"
+                lc_kind = "process_stop"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker stopping"
             } else if ($0 ~ /\] shutting down \(kafka\.server|to SHUTTING_DOWN/) {
-                lc_kind = "process_stop"; lc_who = "broker"; lc_detail = "Kafka broker shutting down"
+                lc_kind = "process_stop"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker shutting down"
             } else if ($0 ~ /Becoming the active controller|elected as the controller/) {
                 lc_kind = "controller_change"; lc_who = "controller"; lc_detail = "a new active controller"
                 if (match($0, /(QuorumController|KafkaController) id=[0-9]+/)) {
@@ -62891,6 +62949,7 @@ playground_analyze_logs_command() {
   eval "component_array=(${args[--component]})"
   eval "connector_array=(${args[--connector]})"
   with_worker="${args[--with-worker]}"
+  include_harmless="${args[--include-harmless]}"
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
@@ -63048,6 +63107,30 @@ playground_analyze_logs_command() {
           rmdir "$containers_dir" 2>/dev/null
           exit 1
       fi
+      # ☕ the JDK of each container that has one (java -version, in parallel; the JVM options of the component are not
+      # applied: JAVA_TOOL_OPTIONS can load an agent that binds a port), label<tab>version<tab>vendor for the report.
+      # Outside the folder of the logs: it is not a log
+      jvm_versions_file="$(dirname "$containers_dir")/.$(basename "$containers_dir").jvm"
+      : > "$jvm_versions_file"
+      for container in "${from_container_array[@]}"
+      do
+          [ -f "$containers_dir/${container}.log" ] || continue
+          (
+              if [[ "$environment" == cfk* ]]
+              then
+                  java_out=$(kubectl -n confluent exec "$container" -- sh -c 'command -v java > /dev/null && env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS java -XshowSettings:properties -version 2>&1' 2>/dev/null)
+              else
+                  java_out=$(docker exec "$container" sh -c 'command -v java > /dev/null && env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS java -XshowSettings:properties -version 2>&1' 2>/dev/null)
+              fi
+              java_version=$(printf '%s\n' "$java_out" | sed -n 's/^ *java\.runtime\.version = //p' | head -1)
+              java_vendor=$(printf '%s\n' "$java_out" | sed -n 's/^ *java\.vendor = //p' | head -1)
+              if [ -n "$java_version" ]
+              then
+                  printf '%s\t%s\t%s\n' "${container}.log" "$java_version" "$java_vendor" >> "$jvm_versions_file"
+              fi
+          ) &
+      done
+      wait
       log "🐳 Logs of $nb_saved container(s) ($(du -sh "$containers_dir" 2>/dev/null | cut -f1 | tr -d ' ')) saved in $containers_dir"
       log "🎓 Kept for later: playground analyze logs -f <logs after a fix> --compare $containers_dir"
       file_array+=("$containers_dir")
@@ -64256,6 +64339,7 @@ playground_analyze_logs_command() {
           [[ -n "$logs_only" ]] && compare_cmd+=(--logs-only)
           [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
           [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+          [[ -n "$include_harmless" ]] && compare_cmd+=(--include-harmless)
           [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
           for connector in "${connector_array[@]}"
           do
@@ -64298,6 +64382,15 @@ playground_analyze_logs_command() {
   if [[ -n "$with_worker" ]]
   then
       report_args+=(--with-worker)
+  fi
+  if [[ -n "$include_harmless" ]]
+  then
+      report_args+=(--include-harmless)
+  fi
+  # ☕ the JDK of each container (--from-containers): most components do not log it
+  if [[ -n "${jvm_versions_file:-}" && -s "$jvm_versions_file" ]]
+  then
+      report_args+=(--jvm-versions "$jvm_versions_file")
   fi
   # 🧰 the files of the input for another analyzer (GC logs, thread dumps, heap dumps, flight recordings, network captures,
   # XStream reports), with the command to run on each. The ones extracted from an archive are kept next to the report
@@ -65862,6 +65955,7 @@ playground_debug_analyze_logs_command() {
   eval "component_array=(${args[--component]})"
   eval "connector_array=(${args[--connector]})"
   with_worker="${args[--with-worker]}"
+  include_harmless="${args[--include-harmless]}"
   show_config="${args[--show-config]}"
   json_sections="${args[--json-sections]}"
   problem="${args[--problem]}"
@@ -66019,6 +66113,30 @@ playground_debug_analyze_logs_command() {
           rmdir "$containers_dir" 2>/dev/null
           exit 1
       fi
+      # ☕ the JDK of each container that has one (java -version, in parallel; the JVM options of the component are not
+      # applied: JAVA_TOOL_OPTIONS can load an agent that binds a port), label<tab>version<tab>vendor for the report.
+      # Outside the folder of the logs: it is not a log
+      jvm_versions_file="$(dirname "$containers_dir")/.$(basename "$containers_dir").jvm"
+      : > "$jvm_versions_file"
+      for container in "${from_container_array[@]}"
+      do
+          [ -f "$containers_dir/${container}.log" ] || continue
+          (
+              if [[ "$environment" == cfk* ]]
+              then
+                  java_out=$(kubectl -n confluent exec "$container" -- sh -c 'command -v java > /dev/null && env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS java -XshowSettings:properties -version 2>&1' 2>/dev/null)
+              else
+                  java_out=$(docker exec "$container" sh -c 'command -v java > /dev/null && env -u JAVA_TOOL_OPTIONS -u JDK_JAVA_OPTIONS -u _JAVA_OPTIONS java -XshowSettings:properties -version 2>&1' 2>/dev/null)
+              fi
+              java_version=$(printf '%s\n' "$java_out" | sed -n 's/^ *java\.runtime\.version = //p' | head -1)
+              java_vendor=$(printf '%s\n' "$java_out" | sed -n 's/^ *java\.vendor = //p' | head -1)
+              if [ -n "$java_version" ]
+              then
+                  printf '%s\t%s\t%s\n' "${container}.log" "$java_version" "$java_vendor" >> "$jvm_versions_file"
+              fi
+          ) &
+      done
+      wait
       log "🐳 Logs of $nb_saved container(s) ($(du -sh "$containers_dir" 2>/dev/null | cut -f1 | tr -d ' ')) saved in $containers_dir"
       log "🎓 Kept for later: playground analyze logs -f <logs after a fix> --compare $containers_dir"
       file_array+=("$containers_dir")
@@ -67227,6 +67345,7 @@ playground_debug_analyze_logs_command() {
           [[ -n "$logs_only" ]] && compare_cmd+=(--logs-only)
           [[ -n "$errors_only" ]] && compare_cmd+=(--errors-only)
           [[ -n "$with_worker" ]] && compare_cmd+=(--with-worker)
+          [[ -n "$include_harmless" ]] && compare_cmd+=(--include-harmless)
           [[ -n "$sanitize" ]] && compare_cmd+=(--sanitize)
           for connector in "${connector_array[@]}"
           do
@@ -67269,6 +67388,15 @@ playground_debug_analyze_logs_command() {
   if [[ -n "$with_worker" ]]
   then
       report_args+=(--with-worker)
+  fi
+  if [[ -n "$include_harmless" ]]
+  then
+      report_args+=(--include-harmless)
+  fi
+  # ☕ the JDK of each container (--from-containers): most components do not log it
+  if [[ -n "${jvm_versions_file:-}" && -s "$jvm_versions_file" ]]
+  then
+      report_args+=(--jvm-versions "$jvm_versions_file")
   fi
   # 🧰 the files of the input for another analyzer (GC logs, thread dumps, heap dumps, flight recordings, network captures,
   # XStream reports), with the command to run on each. The ones extracted from an archive are kept next to the report
@@ -117765,6 +117893,14 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --include-harmless)
+
+        # :flag.case_no_arg
+        args['--include-harmless']=1
+        shift
+        ;;
+
+      # :flag.case
       --include-warnings)
         # :flag.conflicts
         if [[ -n "${args['--errors-only']:-}" ]]; then
@@ -120765,6 +120901,14 @@ playground_debug_analyze_logs_parse_requirements() {
 
         # :flag.case_no_arg
         args['--errors-only']=1
+        shift
+        ;;
+
+      # :flag.case
+      --include-harmless)
+
+        # :flag.case_no_arg
+        args['--include-harmless']=1
         shift
         ;;
 
@@ -160989,6 +161133,11 @@ playground_analyze_logs_completion() {
 
         shift
         ;;
+      --include-harmless)
+        completion_blocked_flags["--include-harmless"]=1
+
+        shift
+        ;;
       --include-warnings)
         completion_blocked_flags["--include-warnings"]=1
         completion_blocked_flags["--errors-only"]=1
@@ -161147,6 +161296,7 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --errors-only "$completion_current" --errors-only
+    completion_flag_candidates --include-harmless "$completion_current" --include-harmless
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --since "$completion_current" --since
@@ -162536,6 +162686,11 @@ playground_debug_analyze_logs_completion() {
 
         shift
         ;;
+      --include-harmless)
+        completion_blocked_flags["--include-harmless"]=1
+
+        shift
+        ;;
       --include-warnings)
         completion_blocked_flags["--include-warnings"]=1
         completion_blocked_flags["--errors-only"]=1
@@ -162694,6 +162849,7 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --errors-only "$completion_current" --errors-only
+    completion_flag_candidates --include-harmless "$completion_current" --include-harmless
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
     completion_flag_candidates --since "$completion_current" --since

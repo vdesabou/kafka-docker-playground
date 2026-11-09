@@ -83,7 +83,9 @@ KNOWN_ERRORS = [
      "the thread lost the ownership of its tasks (rebalance while it was processing, fenced producer, consumer "
      "kicked out of the group): Kafka Streams rejoins the group and recovers. Frequent occurrences point at long "
      "processing between polls (max.poll.interval.ms), GC pauses or unstable members"),
-    ("poll_interval", r"max\.poll\.interval\.ms|consumer poll timeout has expired",
+    # not the key alone: "Configuration 'connections.max.idle.ms' … is lower than configuration 'max.poll.interval.ms'" is
+    # a config check of the client, not a thread leaving the group
+    ("poll_interval", r"longer than the configured max\.poll\.interval\.ms|consumer poll timeout has expired",
      "⏱️ max.poll.interval.ms exceeded",
      "a stream thread did not poll within max.poll.interval.ms and left the group: the processing of one batch is too "
      "slow (a slow external call in a processor, a large max.poll.records, RocksDB stalls). Raise "
@@ -124,6 +126,8 @@ KNOWN_ERRORS = [
      "SHUTDOWN_APPLICATION). The cause is in the exception chain of the record"),
 ]
 KNOWN_ERRORS = [(key, re.compile(pattern, re.IGNORECASE), title, advice) for key, pattern, title, advice in KNOWN_ERRORS]
+# a line of a "<Class>Config values:" dump: indented "key = value"
+CONFIG_KEY_LINE = re.compile(r"^\s+[a-z][\w.-]* = ")
 ERROR_STATES = {"ERROR", "PENDING_ERROR", "DEAD", "PENDING_SHUTDOWN", "NOT_RUNNING"}
 
 
@@ -224,7 +228,8 @@ class Parser:
         for line_no, line in enumerate(lines, 1):
             if "[" not in line and pending_assignment is None:
                 # a line of a stack trace ("Caused by: …TaskMigratedException"): only the errors are looked for
-                if "Exception" in line or "Error" in line:
+                # (not a key of a config dump: "\tproduction.exception.handler = class …DefaultProductionExceptionHandler")
+                if ("Exception" in line or "Error" in line) and not CONFIG_KEY_LINE.match(line):
                     self.error(label, line, self.current_ts, line_no)
                 continue
             ts = timestamp(line)
@@ -323,7 +328,9 @@ class Parser:
                     for p in PROGRESS_PART.finditer(m.group("parts")):
                         c.progress[p.group("changelog")] = {k: int(p.group(k)) for k in ("position", "end", "restored")} | {"at": ts}
                 continue
-            if re.search(r"ERROR|WARN|Exception", line):
+            # not a key of a config dump ("\tdefault.production.exception.handler = class …DefaultProductionExceptionHandler"
+            # of StreamsConfig values: Control Center logs it at startup), which names handlers and timeouts
+            if re.search(r"ERROR|WARN|Exception", line) and not CONFIG_KEY_LINE.match(line):
                 self.error(label, line, ts, line_no)
 
     def client_transition(self, c, src, dst, ts):

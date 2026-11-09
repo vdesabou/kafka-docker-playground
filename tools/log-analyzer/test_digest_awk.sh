@@ -30,10 +30,29 @@ cat > "$tmp/events.log" << 'EOF'
 [2026-11-07 10:28:00,002] INFO [jdbc-sink|task-0] Committing offsets asynchronously (org.apache.kafka.connect.runtime.WorkerCoordinator:330)
 [2026-11-07 10:28:00,002] ERROR [mdm-sink|task-1] Error encountered in task mdm-sink-1. Executing stage 'TRANSFORMATION' with class 'org.apache.kafka.connect.runtime.TransformationStage', where consumed record is {topic='t', partition=1, offset=4, timestamp=1, timestampType=CreateTime}. (org.apache.kafka.connect.runtime.errors.LogReporter:70)
 2026-11-07T10:27:00.000+0000: 13.0: [GC (Allocation Failure) [ParNew: 26240K->1637K(29504K), 0.0053837 secs] 26240K->1637K(95040K), 0.0128474 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+	jvm.spec = Eclipse Adoptium, OpenJDK 64-Bit Server VM, 25.0.4.1, 25.0.4.1+1-LTS
+[2026-11-07 10:29:00,000] INFO Client environment:java.version=17.0.9 (org.apache.zookeeper.ZooKeeper)
+[0.004s][info][gc,init] Version: 21.0.5+11-LTS (release)
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf.UnsafeUtil
 EOF
 # a line of a log written on Windows (CRLF)
 printf '%s\r\n' '[2026-11-07 10:28:00,003] INFO [hdfs-sink|task-1] Starting commit and rotation (io.confluent.connect.hdfs3.TopicPartitionWriter:298)' >> "$tmp/events.log"
 samples+=("$tmp/events.log")
+# config changes between restarts only: two instances of a class in one run are not a change (the readiness check of the
+# image then the worker), a restart with another value is, and so is a connector reconfigured without a restart
+{
+    printf '%s\n' '[2026-11-07 11:00:00,000] INFO AdminClientConfig values: ' $'\tbootstrap.servers = [broker:9092]' $'\tclient.id = ' \
+        '[2026-11-07 11:00:10,000] INFO DistributedConfig values: ' $'\toffset.flush.interval.ms = 10000' \
+        '[2026-11-07 11:00:11,000] INFO AdminClientConfig values: ' $'\tbootstrap.servers = [PLAINTEXT://broker:9092]' $'\tclient.id = ' \
+        '[2026-11-07 11:00:12,000] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect:77)' \
+        '[2026-11-07 11:01:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: ' $'\tname = s3-sink' $'\ttasks.max = 1' \
+        '[2026-11-07 11:02:00,000] INFO [s3-sink|worker] SinkConnectorConfig values: ' $'\tname = s3-sink' $'\ttasks.max = 4' \
+        '[2026-11-07 11:10:00,000] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect:83)' \
+        '[2026-11-07 11:11:00,000] INFO DistributedConfig values: ' $'\toffset.flush.interval.ms = 60000' \
+        '[2026-11-07 11:11:05,000] ERROR boom (x.Y)'
+} > "$tmp/config-changes.log"
+samples+=("$tmp/config-changes.log")
 failed=0
 reference=""
 for awk_cmd in "$@"
@@ -55,7 +74,7 @@ do
         grep -E '^🔎 ' "$out.digest" | sed "s|^|$(basename "$f"): |" >> "$out"
     done
     grep -E '^@@PGEVTN?@@' "$out.records" >> "$out"
-    expected=$'gc_pause 2\nprocess_stop 3\ncontroller_change 1'
+    expected=$'gc_pause 2\nprocess_stop 4\ncontroller_change 1'
     got=$(grep -E '^@@PGEVT@@'$'\t''(gc_pause|process_stop|controller_change)' "$out.records" | cut -f2 | sort | uniq -c | awk '{print $2, $1}' | sort -r -k1,1)
     if [ "$got" != "$(printf '%s\n' "$expected" | sort -r -k1,1)" ]
     then
@@ -76,6 +95,25 @@ do
     if [ "$got" != "jdbc-sink dialect SqlServerDatabaseDialect,jdbc-source dialect PostgreSql,mdm-sink direction sink," ]
     then
         echo "❌ $awk_cmd: connector_hint events of events.log: $got"
+        failed=1
+    fi
+    # the JVM of the components (jvm.spec of a Connect worker, java.version=, the Version: of a GC log), and the warnings of
+    # the JDK launcher on stderr ("WARNING: sun.misc.Unsafe::…") are not records
+    got=$(awk -F '\t' '$1 == "@@PGEVT@@" && $2 == "jvm_version" {print $6}' "$out.records" | sort | tr '\n' ',')
+    if [ "$got" != "17.0.9,21.0.5+11-LTS,25.0.4.1+1-LTS Eclipse Adoptium," ]
+    then
+        echo "❌ $awk_cmd: jvm_version events of events.log: $got"
+        failed=1
+    fi
+    got=$(awk -F '\t' '$1 == "@@PGCFGCHG@@" {print $4 "->" $5}' "$out.records" | sort | tr '\n' ',')
+    if [ "$got" != "offset.flush.interval.ms=10000->offset.flush.interval.ms=60000,tasks.max=1->tasks.max=4," ]
+    then
+        echo "❌ $awk_cmd: config changes of config-changes.log: $got"
+        failed=1
+    fi
+    if grep -q 'sun\.misc\.Unsafe' "$out.records"
+    then
+        echo "❌ $awk_cmd: a WARNING: line of the JDK launcher is a record"
         failed=1
     fi
     if [ -z "$reference" ]

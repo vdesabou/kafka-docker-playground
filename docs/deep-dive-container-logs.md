@@ -177,7 +177,7 @@ The hands-on lab below does exactly that (step 5).
 `confluent` namespace with the `cfk` environment, plus `<pod>-previous.log` for a pod that restarted) are saved in
 `/tmp/playground-container-logs-<example>-<date>/`, one `<container>.log` each, then analyzed as a folder. You get the
 full report (restarts and rebalances, configs, connector cards, `--connector`, `--since`), not only the digest of
-`--errors`. The folder is kept: give it to `--compare` after a fix.
+`--errors`, with ☕ the JDK of each container (`java -version`). The folder is kept: give it to `--compare` after a fix.
 
 ```bash
 playground analyze logs --from-containers                                         # every container of the example

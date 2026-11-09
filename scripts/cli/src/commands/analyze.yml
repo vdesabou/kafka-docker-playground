@@ -100,6 +100,14 @@ commands:
     reported (" ERROR ", "[ERROR]", level=error, "level":"error"), plus
     uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and
     level-less lines that merely contain "error" or "failed", never are.
+    🙈 Known harmless records (telemetry not set up, Self-Balancing on a
+    KRaft controller node, Jersey startup notices) and the warnings of the
+    JDK launcher on stderr ("WARNING: sun.misc.Unsafe::…") are left out
+    (--include-harmless keeps the first ones); 🌅 the connection failures of
+    a component that starts before the broker, and stop once it is up, are
+    a LOW known cause of their own, not the HIGH 🔌 Connection failure.
+    ✅ Every connector of the logs gets its card, the ones without an
+    error too, and ☕ the JDK is shown when the logs give it.
 
     🧰 The logs of every Kafka client of Confluent are read, not only Java:
     the librdkafka lines of the C/C++, Python, Go, .NET and JavaScript

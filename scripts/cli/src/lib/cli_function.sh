@@ -6847,6 +6847,8 @@ function install_confluent_plugin() {
 #              direction sink|source: the record of an error reported by the runtime (LogReporter) was consumed or produced
 #   @@PGEVT@@<tab>kafka_version<tab>line<tab>timestamp<tab><tab>version ("Kafka version: 8.3.2-ce" of AppInfoParser)
 #   @@PGEVT@@<tab>librdkafka_version<tab>line<tab>timestamp<tab><tab>version ("librdkafka v2.3.0" of a non-Java client)
+#   @@PGEVT@@<tab>jvm_version<tab>line<tab>timestamp<tab><tab>version [vendor] (jvm.spec of a Connect worker, java.version=,
+#             the Version: of a GC log, the header of a thread dump)
 #   @@PGEVT@@<tab>worker_rebalance|consumer_rejoin|connector_start|task_start|process_start|process_stop|controller_change<tab>
 #              line<tab>timestamp<tab>connector<tab>group, reason or what started / stopped: the lifecycle of the INFO lines,
 #              300 of each kind at most
@@ -6896,6 +6898,10 @@ function summarize_log_errors() {
     # ("fail: Program[0]"), and crashes of the other languages have their own first line
     function level_of(head,    h, lvl) {
         h = substr(head, 1, 200)
+        # the warnings of the JDK launcher on stderr, not log records: JDK 24+ when a library uses sun.misc.Unsafe or
+        # loads a native library ("WARNING: A terminally deprecated method in sun.misc.Unsafe has been called", "WARNING:
+        # Use --enable-native-access=ALL-UNNAMED…"), illegal reflective access (JDK 9-16), agents, Security Manager
+        if (h ~ /^WARNING: (A terminally deprecated method in sun\.misc\.Unsafe|sun\.misc\.Unsafe::|Please consider reporting this to the maintainers of|A restricted method in java\.lang\.|java\.lang\.System::load|Use --enable-native-access|Restricted methods will be blocked|An illegal reflective access operation|Illegal reflective access by|Use --illegal-access=warn|All illegal access operations will be denied|A Java agent has been loaded dynamically|If a serviceability tool is|Dynamic loading of agents will be disallowed|Using incubator modules|A command line option has enabled the Security Manager|The Security Manager is deprecated|System::setSecurityManager)/) return ""
         if (match(h, /%[0-7]\|[0-9]+\.[0-9]+\|/)) {
             lvl = substr(h, RSTART + 1, 1) + 0
             return lvl <= 2 ? "FATAL" : lvl == 3 ? "ERROR" : lvl == 4 ? "WARN" : ""
@@ -7112,17 +7118,36 @@ function summarize_log_errors() {
             }
         }
     }
+    # seconds of a 2026-11-09T13:00:54 timestamp within its month (day, hour, minute, second): enough to compare two
+    # dumps a few seconds apart (no mktime in mawk nor in the awk of macOS)
+    function day_seconds(ts) {
+        return substr(ts, 9, 2) * 86400 + substr(ts, 12, 2) * 3600 + substr(ts, 15, 2) * 60 + substr(ts, 18, 2)
+    }
     function cfg_end(    key) {
         if (!cfg_on) return
         cfg_on = 0
         if (cfg_buf == "") return
         key = cfg_cls "|" cfg_ctx "|" cfg_id
+        # a second dump of the config the component logs when it starts: it restarted (Schema Registry and Control Center
+        # log no "started" line). Its own one: the first of them in the file (a broker and Control Center also dump the
+        # SchemaRegistryConfig / KafkaRestConfig of the services they embed, several times)
+        # 30 s at least after the previous one: a broker dumps its KafkaConfig twice in one startup (KafkaRaftServer, then
+        # BrokerServer)
+        if (cfg_cls ~ /^(DistributedConfig|StandaloneConfig|KafkaConfig|KafkaRestConfig|SchemaRegistryConfig|KsqlConfig|KsqlRestConfig|ControlCenterConfig)$/) {
+            if (own_start_cfg == "") own_start_cfg = cfg_cls
+            else if (cfg_cls == own_start_cfg && (cfg_ts == "" || own_start_ts == "" || day_seconds(cfg_ts) - day_seconds(own_start_ts) >= 30 || day_seconds(cfg_ts) < day_seconds(own_start_ts))) run_gen++
+            if (cfg_cls == own_start_cfg) own_start_ts = cfg_ts
+        }
         if (!(key in cfg_text)) {
             if (ncfg >= 50) return
             cfg_order[++ncfg] = key
-        } else if (cfg_text[key] != cfg_buf) {
+        } else if (cfg_text[key] != cfg_buf && (cfg_gen[key] != run_gen || (cfg_ctx != "" && cfg_cls !~ /(Producer|Consumer|AdminClient|Converter|Serializer|Deserializer)Config$/))) {
+            # a change between restarts only: two dumps of the same class in one run are two instances (two telemetry
+            # exporters of a broker, the readiness check of the image then the worker, the key, value and header
+            # converters), not a new config. The config of a connector itself changes without a restart (reconfigured)
             cfg_diff(key, cfg_text[key], cfg_buf)
         }
+        cfg_gen[key] = run_gen
         cfg_text[key] = cfg_buf
         cfg_head[key] = cfg_cls "\t" cfg_ctx "\t" cfg_ln "\t" cfg_ts "\t" cfg_id
     }
@@ -7334,6 +7359,29 @@ function summarize_log_errors() {
                 ev[++nev] = "kafka_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version
             }
         }
+        # the JVM that runs the component: "jvm.spec = Eclipse Adoptium, OpenJDK 64-Bit Server VM, 21.0.5, 21.0.5+11-LTS" of
+        # the WorkerInfo of a Connect worker, "java.version=17.0.9" (ZooKeeper environment, system property dumps), the
+        # "Version: 17.0.9+9 (release)" of a unified GC log, "Full thread dump OpenJDK 64-Bit Server VM (17.0.9+9 mixed mode"
+        if (records_file != "" && (index($0, "jvm.spec = ") || index($0, "java.version") || index($0, "java.runtime.version") || index($0, "Full thread dump ") || index($0, "] Version: "))) {
+            ev_version = ""; ev_vendor = ""
+            if (match($0, /jvm\.spec = [^,]+, [^,]+, [^,]+, [^ ,]+/)) {
+                split(substr($0, RSTART + 11, RLENGTH - 11), evj, ", ")
+                ev_version = evj[4]; ev_vendor = evj[1]
+            } else if (match($0, /java\.runtime\.version ?[=:] ?[0-9][^ ,;]*/) || match($0, /java\.version ?[=:] ?[0-9][^ ,;]*/)) {
+                ev_version = substr($0, RSTART, RLENGTH); sub(/^[^=:]*[=:] ?/, "", ev_version)
+            } else if (match($0, /Full thread dump [^(]*\([0-9][^ ]*/)) {
+                ev_version = substr($0, RSTART, RLENGTH); sub(/^[^(]*\(/, "", ev_version)
+            } else if (index($0, "gc") && match($0, /\] Version: [0-9][^ ]* \(/)) {
+                ev_version = substr($0, RSTART + 11, RLENGTH - 13)
+            }
+            if (ev_version != "") {
+                ev_key = "jvm_version|" ev_version "|" ev_vendor
+                if (!(ev_key in ev_seen)) {
+                    ev_seen[ev_key] = 1
+                    ev[++nev] = "jvm_version\t" NR "\t" timestamp_of($0) "\t\t" ev_version (ev_vendor != "" ? " " ev_vendor : "")
+                }
+            }
+        }
         # the librdkafka version of a non-Java client: "librdkafka v2.3.0 (0x20300ff) rdkafka#producer-1 initialized"
         # (debug INIT line), "confluent-kafka 2.16.1, librdkafka 2.16.0" (the startup line of a client)
         if (records_file != "" && index($0, "librdkafka ") && match($0, /librdkafka v?[0-9]+\.[0-9]+\.[0-9]+/)) {
@@ -7415,13 +7463,13 @@ function summarize_log_errors() {
                 # the task id: which worker ran which task, and when (🖥️ Tasks by worker)
                 lc_detail = lc_who
             } else if ($0 ~ /Kafka Connect started|Kafka Connect (distributed )?worker initialization took/) {
-                lc_kind = "process_start"; lc_who = "connect"; lc_detail = "Kafka Connect worker started"
+                lc_kind = "process_start"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker started"
             } else if ($0 ~ /Kafka Server started|\] started \(kafka\.server|Transition from STARTING to STARTED/) {
-                lc_kind = "process_start"; lc_who = "broker"; lc_detail = "Kafka broker started"
+                lc_kind = "process_start"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker started"
             } else if (index($0, "Kafka Connect stopping")) {
-                lc_kind = "process_stop"; lc_who = "connect"; lc_detail = "Kafka Connect worker stopping"
+                lc_kind = "process_stop"; lc_who = "connect"; cfg_end(); run_gen++; lc_detail = "Kafka Connect worker stopping"
             } else if ($0 ~ /\] shutting down \(kafka\.server|to SHUTTING_DOWN/) {
-                lc_kind = "process_stop"; lc_who = "broker"; lc_detail = "Kafka broker shutting down"
+                lc_kind = "process_stop"; lc_who = "broker"; cfg_end(); run_gen++; lc_detail = "Kafka broker shutting down"
             } else if ($0 ~ /Becoming the active controller|elected as the controller/) {
                 lc_kind = "controller_change"; lc_who = "controller"; lc_detail = "a new active controller"
                 if (match($0, /(QuorumController|KafkaController) id=[0-9]+/)) {

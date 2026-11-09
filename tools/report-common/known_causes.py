@@ -273,9 +273,12 @@ KNOWN_CAUSES = [
                "then queue.buffering.max.messages / queue.buffering.max.kbytes (librdkafka) or buffer.memory / "
                "max.block.ms (Java)"},
     # librdkafka "Application maximum poll interval (300000ms) exceeded by 123ms" (MAX_POLL_EXCEEDED), Java "consumer poll
-    # timeout has expired", CommitFailedException ("…longer than the configured max.poll.interval.ms…")
+    # timeout has expired", CommitFailedException ("…longer than the configured max.poll.interval.ms…"). Not the key alone:
+    # the client config check "Configuration 'connections.max.idle.ms' with value '540000' is lower than configuration
+    # 'max.poll.interval.ms'…" (Control Center logs it 48 times at startup) is not a consumer leaving its group
     {"name": "client_max_poll_exceeded", "severity": "high", "category": "Kafka Issues",
-     "pattern": r"maximum poll interval|MAX_POLL_EXCEEDED|poll timeout has expired|max\.poll\.interval\.ms",
+     "pattern": r"maximum poll interval|MAX_POLL_EXCEEDED|poll timeout has expired"
+                r"|longer than the configured max\.poll\.interval\.ms",
      "title": "🐢 Consumer left its group: max.poll.interval.ms exceeded",
      "advice": "the application took longer than max.poll.interval.ms between two polls (slow processing, a blocking "
                "call, a GC pause): the consumer leaves the group, its partitions are reassigned and its commits fail. "
@@ -682,3 +685,36 @@ def error_patterns():
     """Patterns of the CFK analyzer: {name: {pattern, severity, category}}, in declaration order"""
     return {c["name"]: {"pattern": c["pattern"], "severity": c["severity"], "category": c["category"]}
             for c in KNOWN_CAUSES}
+
+
+# 🙈 records that say nothing about a problem, whatever the deployment: left out of the log report (counted, and listed
+# in a 🙈 Known harmless section), unless --include-harmless. Keep it short and specific: a record hidden here is never
+# seen by the reader, so no WARN that is a real misconfiguration in production (replication factor 1, a deprecated key)
+HARMLESS = [
+    (r"Unable to submit events without credentials \(io\.confluent\.telemetry",
+     "telemetry events to Confluent without a Confluent Cloud API key: telemetry is not set up"),
+    (r"No client metrics available in request, skipping export", "telemetry: no client metrics to export yet"),
+    (r"Ignoring redefinition of existing telemetry label", "telemetry: a label defined twice"),
+    (r"no telemetry exporters are enabled", "telemetry is not set up"),
+    (r"A provider [\w.$]+ registered in SERVER runtime does not implement any provider interfaces applicable in the SERVER runtime",
+     "Jersey: a REST resource registered as a provider at startup"),
+    # a dedicated KRaft controller: Self-Balancing runs on the brokers ("DataBalancer is disabled -- ignoring" on the same node)
+    (r"Bootstrap server endpoint was not provided in engine initialization context",
+     "Self-Balancing started on a KRaft controller node, which has no client listener (the balancer runs on the brokers)"),
+    (r"but DataBalancer is disabled -- ignoring", "Self-Balancing is disabled on this node"),
+    (r"Topic View deletion guard disabled because endpointUrl is: null", "topic view deletion guard not configured"),
+    (r"REST security extensions are not configured", "REST security plugins not installed (RBAC is not used)"),
+    (r"Auto topic creation failed for _confluent-command with error 'TOPIC_ALREADY_EXISTS'",
+     "an internal topic created by another component first, at startup"),
+    (r"Processing exception handler is not enabled for the GlobalThread",
+     "Kafka Streams recommendation logged by every Streams application of 4.1+ (Control Center included)"),
+]
+_HARMLESS_RX = [(re.compile(p), reason) for p, reason in HARMLESS]
+
+
+def harmless(text):
+    """the reason why the record `text` is known harmless, else None"""
+    for rx, reason in _HARMLESS_RX:
+        if rx.search(text):
+            return reason
+    return None
