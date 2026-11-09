@@ -10,6 +10,26 @@
     🗒️  Log file, folder, .zip, .tar(.gz|.bz2|.xz), .7z or .gz file to analyze
 
     🎓 Tip: can be set several times. TAB lists the log files, exports, archives and folders of Downloads, Desktop and the current folder, newest first
+- long: --from-containers
+  required: false
+  conflicts: [--sample]
+  help: |-
+    🐳 Analyze the logs of the running example: the logs of its containers (the pods of the namespace confluent with the cfk environment, previous logs of restarted pods included) are saved in /tmp/playground-container-logs-<example>-<date>/, one <container>.log each, then analyzed as a folder: the full report (restarts, rebalances, configs, connectors, --connector, --since...), not only the digest of 'playground container logs --errors'
+
+    🎓 Tip: --container keeps some of them. The folder is kept: give it to --compare after a fix, or to a colleague
+- long: --container
+  required: false
+  repeatable: true
+  unique: true
+  arg: container
+  needs: [--from-containers]
+  completions:
+    dynamic:
+    - playground get-container-list
+  help: |-
+    🐳 With --from-containers, only the logs of this container (or pod with the cfk environment), instead of all of them
+
+    🎓 Tip: can be set several times
 - long: --compare
   required: false
   repeatable: true
@@ -31,6 +51,7 @@
   short: -s
   required: false
   repeatable: true
+  conflicts: [--from-containers]
   arg: sample
   allowed: [connect_task_failure, connect_many_connectors, support_bundle, kafka_streams, kafka_clients, compare_fix, cfk_bundle, cfk_kraft_migration, cfk_rollout, cfk_rollout_after]
   help: |-

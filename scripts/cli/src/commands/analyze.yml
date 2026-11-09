@@ -90,7 +90,9 @@ commands:
 
     The offline counterpart of 'playground container logs --errors', for
     logs that do not come from a running container: a customer support
-    bundle, a CI artifact, a log file you were sent.
+    bundle, a CI artifact, a log file you were sent. 🐳 --from-containers
+    gives the same full report for the running example: the logs of its
+    containers are saved in a folder, then analyzed.
 
     Repeated records are de-duplicated with an occurrence count, stack
     traces are collapsed to the exception chain ("Caused by:") plus a few
@@ -198,6 +200,8 @@ commands:
   - playground analyze logs --sample connect_many_connectors
   - playground analyze logs --sample support_bundle
   - playground analyze logs --file connect.log
+  - playground analyze logs --from-containers
+  - playground analyze logs --from-containers --container connect --container broker --connector my-jdbc-sink
   - playground analyze logs --file connect-logs.zip --errors-only
   - playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
   - playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports

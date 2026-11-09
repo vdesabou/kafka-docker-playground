@@ -18,6 +18,7 @@ no Confluent Cloud, nothing to set up.
 | You want | Command |
 | --- | --- |
 | what is failing in a bundle, a folder, a file | `playground analyze logs -f <path>` (repeat `-f`) |
+| the same report for the running example | `playground analyze logs --from-containers` (`--container <c>` to keep some) |
 | only one connector | `… --connector <name>` (`--with-worker` to keep the worker records) |
 | the configuration a component logged at startup | `… --show-config <connector\|config class\|client id>` |
 | whether the fix worked | `playground analyze logs -f <after> --compare <before>` |
