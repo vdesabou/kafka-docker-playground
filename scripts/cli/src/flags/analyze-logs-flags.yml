@@ -88,6 +88,10 @@
   conflicts: [--include-warnings]
   help: |-
     🔴 Only the ERROR/FATAL records: the WARN records are reported by default (the Kafka clients log some real problems at WARN: consumer poll timeout, records expiring in the producer, network errors), sorted after the errors
+- long: --ocr
+  required: false
+  help: |-
+    📷 Read the screenshots of the input by OCR (.png, .jpg, .gif, .bmp, .tiff, .webp, .heic, and the pictures of a Word document): the Vision framework of macOS (offline, compiled once into ~/.cache/playground), else tesseract (brew install tesseract, apt install tesseract-ocr), else tesseract in a container built on first use. Their lines are digested as "<picture> (📷 OCR)": approximate, a character can be misread, check the picture before quoting a value. Without it, the screenshots are listed in 🧰 Other files of the input
 - long: --include-harmless
   required: false
   help: |-

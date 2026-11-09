@@ -198,7 +198,10 @@ def command_of(kind: str, items: List[dict], paths: List[Optional[str]]) -> str:
     """what to do with the files no analyzer reads: look at the pictures, turn a document into text"""
     where = [shlex.quote(p) if p else f"<extract {f['label'].split(':', 1)[0]} first>" for f, p in zip(items, paths)]
     if kind == "screenshot":
-        return "open " + " ".join(where[:20])
+        # OCR them (approximate lines, marked 📷 in the report), or look at them
+        readable = [w for w in where if not w.startswith("<extract")]
+        return ("playground analyze logs --ocr" + "".join(f" -f {w}" for w in readable[:20]) + " (or: open " + " ".join(where[:20]) + ")"
+                if readable else "open " + " ".join(where[:20]))
     name = items[0]["label"].lower()
     if name.endswith(".pdf"):
         return (f"pdftotext -layout {where[0]} /tmp/pdf.log && playground analyze logs -f /tmp/pdf.log "

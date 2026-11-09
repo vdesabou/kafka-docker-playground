@@ -22,6 +22,7 @@ eval "component_array=(${args[--component]})"
 eval "connector_array=(${args[--connector]})"
 with_worker="${args[--with-worker]}"
 include_harmless="${args[--include-harmless]}"
+ocr="${args[--ocr]}"
 show_config="${args[--show-config]}"
 json_sections="${args[--json-sections]}"
 problem="${args[--problem]}"
@@ -385,6 +386,9 @@ incomplete_file="$tmp_dir/incomplete"
 # label<tab>path of every file of the input (archives extracted): the 🧰 bundle triage looks there for the GC logs,
 # thread dumps, heap dumps, flight recordings, network captures and XStream reports (tools/log-analyzer/bundle_triage.py)
 walked_file="$tmp_dir/walked"
+# the screenshots read by --ocr: not listed in 🧰 Other files of the input
+ocr_done_file="$tmp_dir/ocr-done"
+: > "$ocr_done_file"
 : > "$walked_file"
 # $1: label, $2: reason
 function note_incomplete () {
@@ -568,12 +572,48 @@ function analyze_logs_office () {
     fi
     if [[ "${pictures:-0}" =~ ^[1-9][0-9]*$ ]]
     then
-        logwarn "🖼️ $label holds $pictures picture(s) (screenshots of a log?): not analyzed, listed in 🧰 Other files of the input"
+        if [[ -n "$ocr" ]]
+        then
+            log "🖼️ $label holds $pictures picture(s): read by OCR (--ocr)"
+        else
+            logwarn "🖼️ $label holds $pictures picture(s) (screenshots of a log?): not analyzed (--ocr reads them), listed in 🧰 Other files of the input"
+        fi
         for img in "$media"/*
         do
-            [ -f "$img" ] && printf '%s\t%s\n' "$label:$(basename "$img")" "$img" >> "$walked_file"
+            [ -f "$img" ] || continue
+            printf '%s\t%s\n' "$label:$(basename "$img")" "$img" >> "$walked_file"
+            [[ -n "$ocr" ]] && analyze_logs_ocr "$img" "$label:$(basename "$img")"
         done
     fi
+}
+
+# 📷 a screenshot of a log, read by OCR (--ocr, tools/log-analyzer/ocr.py: the Vision framework of macOS, else tesseract,
+# else tesseract in a container): its lines are digested as "<label> (📷 OCR)", approximate (a character can be misread),
+# and the report says so. $1: path, $2: label. Returns 1 when no text could be read (the picture stays in 🧰)
+function analyze_logs_ocr () {
+    local path="$1"
+    local label="$2"
+    local converted out rc engine nb
+    nb_extracted=$((nb_extracted+1))
+    converted="$tmp_dir/$nb_extracted/$(basename "$path").ocr.log"
+    mkdir -p "$(dirname "$converted")"
+    progress_step "📷 OCR of $label"
+    out=$(python3 -I "$root_folder/tools/log-analyzer/ocr.py" "$path" "$converted" 2> "$converted.err")
+    rc=$?
+    IFS=$'\t' read -r engine nb <<< "$out"
+    if [ $rc -eq 0 ]
+    then
+        log "📷 $label: $nb line(s) read by OCR ($engine), approximate: a character can be misread, check the picture before quoting a value"
+        printf '%s\n' "$label" >> "$ocr_done_file"
+        analyze_logs_digest "$label (📷 OCR)" "$converted" "$path"
+        return 0
+    elif [ $rc -eq 2 ]
+    then
+        logwarn "⚠️ $label: no text found by OCR ($engine)"
+    else
+        logwarn "⚠️ $label: not read by OCR: $(grep -v '^🏗️' "$converted.err" | tail -n 1)"
+    fi
+    return 1
 }
 
 # the digest of each file runs in the background, PLAYGROUND_LOG_PARALLELISM at a time (4 by default, 1: one at a time,
@@ -1032,6 +1072,13 @@ function analyze_logs_path_entry () {
             if ! is_duplicate_file "$path" "$label"
             then
                 analyze_logs_gzip "$label" "$path"
+            fi
+            ;;
+        *.png|*.PNG|*.jpg|*.JPG|*.jpeg|*.JPEG|*.gif|*.GIF|*.bmp|*.BMP|*.tif|*.TIF|*.tiff|*.TIFF|*.webp|*.WEBP|*.heic|*.HEIC)
+            # 📷 a screenshot of a log: read by OCR with --ocr, else listed in 🧰 Other files of the input
+            if [[ -z "$ocr" ]] || is_duplicate_file "$path" "$label" || ! analyze_logs_ocr "$path" "$label"
+            then
+                nb_skipped=$((nb_skipped+1))
             fi
             ;;
         *)
@@ -1511,6 +1558,11 @@ fi
 # XStream reports), with the command to run on each. The ones extracted from an archive are kept next to the report
 # (<stem>-other-files/): the tmp dir is deleted at the end. Not with --json, which writes nothing in --output-dir
 other_files_json="$tmp_dir/other-files.json"
+# the screenshots read by OCR are in the report, not in 🧰 Other files of the input
+if [ -s "$ocr_done_file" ]
+then
+    awk -F '\t' 'NR == FNR { done[$0] = 1; next } !($1 in done)' "$ocr_done_file" "$walked_file" > "$walked_file.ocr" && mv "$walked_file.ocr" "$walked_file"
+fi
 triage_args=(--walked "$walked_file" --tmp-dir "$tmp_dir" --sources "$sources_file")
 if [[ -z "$json_out" ]]
 then
