@@ -75,36 +75,6 @@ Good to know:
 - **Which version is it?** `docker image inspect ghcr.io/vdesabou/kdp-analyze-logs --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'`
   gives the commit of kafka-docker-playground it was built from.
 
-### Send it to a customer
-
-Ready to paste in a ticket or an email:
-
-```text
-To get a first analysis of your logs before sending them (or instead of sending them), you can run our log analyzer
-on your machine. It only needs Docker, and it runs without network access, so your logs never leave your machine.
-
-From the folder that contains your logs (a .zip, a .tar.gz, a folder or a single file):
-
-  macOS / Linux:
-  docker run --rm --network none -v "$PWD":/data -e KDP_HOST_DIR="$PWD" ghcr.io/vdesabou/kdp-analyze-logs -f <your-bundle.zip> --sanitize
-
-  Windows PowerShell:
-  docker run --rm --network none -v "${PWD}:/data" -e KDP_HOST_DIR="${PWD}" ghcr.io/vdesabou/kdp-analyze-logs -f <your-bundle.zip> --sanitize
-
-It writes an HTML report and a summary in a log-analysis-output folder. --sanitize replaces passwords, IPs, hostnames
-and emails with placeholders: please review the summary (<your-bundle>-ticket.md) and send it to us.
-More details: https://kafka-docker-playground.io/#/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker
-```
-
-| | The playground (or a [clone of 3 folders](deep-dive-analyze-logs.md?id=without-the-playground)) | The image |
-| --- | --- | --- |
-| Needs | bash 4.2+, python3, jq, git | Docker only |
-| Windows | WSL | PowerShell, as it is |
-| ☸️ sections of a CFK bundle | with Docker or PyYAML | always |
-| Report opened in the browser | yes | no, the path is printed |
-| `--from-containers` (the running example) | yes | no: files only |
-| Network during the analysis | none needed | none, enforced with `--network none` |
-
 The image is built from [`tools/analyze-logs-image`](https://github.com/vdesabou/kafka-docker-playground/tree/master/tools/analyze-logs-image),
 then tested and published by the `analyze logs image` workflow.
 

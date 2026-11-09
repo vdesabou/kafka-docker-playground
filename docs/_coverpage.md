@@ -7,7 +7,6 @@
 
 [⚡ Install in one command](/how-to-use?id=%e2%9a%a1-install-in-one-command)
 [🌐 Try in your browser](/how-to-use?id=%f0%9f%8c%90-in-your-browser-github-codespaces)
-[🐳 Analyze logs with Docker only](/deep-dive-analyze-logs?id=🐳-with-nothing-installed-but-docker)
 [🐳 Introduction](/introduction.md)
 [👾 Content](/content.md)
 [🚀 How to Use](/how-to-use.md)
