@@ -6246,6 +6246,10 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
     with a connector context). FILTER_SCRIPT, which applies them, is emitted by html_report()."""
     present = [lvl for lvl, _ in LEVEL_PILLS if by_level.get(lvl)]
     rows = []
+    # 📱 a narrow screen (a phone): the bar folds into its first row (this button and the search box); the button opens it,
+    # with the number of filters in use (MOBILE_FILTER)
+    toggle = ("<button type='button' class='pill fb-toggle' aria-expanded='false' title='show or hide the filters'>"
+              "🎛️ Filters<span class='fb-badge' hidden></span></button>")
     first = ["<button type='button' class='pill lvl-all active' title='every level'>📋 All</button>"]
     if len(present) >= 2:
         first += [f"<button type='button' class='pill lvl-chip' data-level='{lvl}' data-level-code='{LEVEL_ORDER[lvl]}' "
@@ -6256,7 +6260,7 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
                  "-word: without it; \"two words\": that phrase; /regex/ (or -/regex/): a regular expression. The matches are highlighted'>")
     first.append("<button type='button' class='pill pg-copy-view' title='the filters are in the URL of the page: copy the link "
                  "that opens this report on the same view'>🔗 Link to this view</button>")
-    rows.append("<div class='fb-row'>" + "".join(first if len(present) >= 2 else first[1:]) + "</div>")
+    rows.append("<div class='fb-row'>" + toggle + "".join(first if len(present) >= 2 else first[1:]) + "</div>")
     second = []
     counts: "OrderedDict[str, int]" = OrderedDict()
     for f in files or []:
@@ -6283,7 +6287,64 @@ def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_
     # 🕐 the period picker (log_search.period_row)
     if period:
         rows.append(period)
-    return FILTER_CSS + "<div class='lvl-filter'>" + "".join(rows) + "</div>"
+    return FILTER_CSS + MOBILE_FILTER + "<div class='lvl-filter'>" + "".join(rows) + "</div>"
+
+
+# 📱 on a phone the sticky bar took half of the screen (levels, search, share, fold, components, connector, period: a
+# dozen wrapped rows): under 760 px it folds into one row, 🎛️ Filters (and the number of filters in use) and the search
+# box; a tap opens it, a tap or a scroll down folds it again. Desktop: unchanged
+MOBILE_FILTER = """<style>.fb-toggle{display:none}.fb-badge{margin-left:6px;min-width:18px;padding:0 6px;border-radius:999px;
+background:#2563eb;color:#fff;font-size:.7rem;font-weight:700;line-height:18px;text-align:center}
+@media (max-width:760px){.fb-toggle{display:inline-flex;align-items:center}.lvl-filter{padding:8px 10px;gap:6px}
+.lvl-filter:not(.fb-open)>:not(.fb-row:first-child){display:none!important}
+.lvl-filter:not(.fb-open)>.fb-row:first-child>:not(.fb-toggle):not(.pg-search){display:none!important}
+.lvl-filter:not(.fb-open) .pg-search{min-width:0;flex:1}.lvl-filter.fb-open{max-height:70vh;overflow-y:auto}}</style>
+<script>
+(function () {
+  function bar() { return document.querySelector(".lvl-filter"); }
+  // the filters in use: a level, the search, a component, a connector, a period
+  window.pgFilterBadge = function () {
+    const b = document.querySelector(".fb-badge");
+    if (!b) return;
+    let n = 0;
+    if (document.querySelector(".lvl-all") && !document.querySelector(".lvl-all.active")) n++;
+    const q = document.querySelector(".pg-search");
+    if (q && q.value.trim()) n++;
+    if (document.querySelector(".comp-chip.active:not([data-component=''])")) n++;
+    const c = document.querySelector(".conn-filter");
+    if (c && c.value) n++;
+    try { if ((typeof pgPeriod !== "undefined" && pgPeriod) || (typeof pgWindow !== "undefined" && pgWindow)) n++; } catch (e) {}
+    b.textContent = n;
+    b.hidden = !n;
+  };
+  function fold(open) {
+    const f = bar(), t = document.querySelector(".fb-toggle");
+    if (!f || !t) return;
+    f.classList.toggle("fb-open", open);
+    t.setAttribute("aria-expanded", open ? "true" : "false");
+    openedAt = window.scrollY;
+    if (typeof pgStickyOffset === "function") pgStickyOffset();
+  }
+  let openedAt = 0;
+  document.addEventListener("click", function (ev) {
+    if (ev.target.closest(".fb-toggle")) fold(!bar().classList.contains("fb-open"));
+  });
+  // a scroll of the report (not of the open bar itself) folds it again
+  window.addEventListener("scroll", function () {
+    const f = bar();
+    if (f && f.classList.contains("fb-open") && Math.abs(window.scrollY - openedAt) > 250) fold(false);
+  }, {passive: true});
+  document.addEventListener("DOMContentLoaded", function () {
+    if (typeof pgApply === "function") {
+      const apply = pgApply;
+      pgApply = function () { const r = apply.apply(this, arguments); window.pgFilterBadge(); return r; };
+    }
+    document.addEventListener("input", function (ev) { if (ev.target.closest(".pg-search")) window.pgFilterBadge(); });
+    window.pgFilterBadge();
+    if (typeof pgStickyOffset === "function") pgStickyOffset();
+  });
+})();
+</script>"""
 
 
 # 📖 the story of the logs, right under the header: logs start → first error → peak → main cause → connectors hit → end,
