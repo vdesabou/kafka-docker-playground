@@ -64232,14 +64232,17 @@ playground_analyze_logs_command() {
       {
           printf '%s\t%s\n' "🔁 comparison of the ${#cfk_compare_files[@]} bundles" "$CFK_COMPARISON_HTML"
       } | python3 -I -c '
-  import html, sys, urllib.parse
+  import html, os, sys, urllib.parse
   rows = [l.rstrip("\n").split("\t", 1) for l in sys.stdin if l.strip()]
   print("<p>The comparison of the CFK support bundles of the input (same cluster?, versions, changes of the CRs, issues fixed / new / still there):</p><ul>")
   for label, path in rows:
       if path:
-          href = html.escape("file://" + urllib.parse.quote(path))
+          # next to the report (the output dir): a relative link, which keeps working in the .zip of the report, on a
+          # website, and holds no local path
+          same = os.path.dirname(os.path.realpath(path)) == os.path.realpath(sys.argv[1])
+          href = html.escape(urllib.parse.quote(os.path.basename(path)) if same else "file://" + urllib.parse.quote(path))
           print(f"<li><a href=\"{href}\" target=\"_blank\" rel=\"noopener\">{html.escape(label)}</a></li>")
-  print("</ul>")' > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "🔁 CFK support bundles compared" "$tmp_dir/cfk-reports.html")
+  print("</ul>")' "$output_dir" > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "🔁 CFK support bundles compared" "$tmp_dir/cfk-reports.html")
   fi
   # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
   if [ -f "$tmp_dir/kafka-streams.html" ]
@@ -64296,6 +64299,11 @@ playground_analyze_logs_command() {
                   ln -s "${cfk_json%.json}-files" "$share_stage/$(basename "${cfk_json%.json}-files")"
               fi
           done
+          # the comparison of the CFK bundles, linked from the report by its name
+          if [ -n "${CFK_COMPARISON_HTML:-}" ] && [ -f "$CFK_COMPARISON_HTML" ]
+          then
+              ln -s "$CFK_COMPARISON_HTML" "$share_stage/$(basename "$CFK_COMPARISON_HTML")"
+          fi
           if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
           then
               log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"
@@ -67116,14 +67124,17 @@ playground_debug_analyze_logs_command() {
       {
           printf '%s\t%s\n' "🔁 comparison of the ${#cfk_compare_files[@]} bundles" "$CFK_COMPARISON_HTML"
       } | python3 -I -c '
-  import html, sys, urllib.parse
+  import html, os, sys, urllib.parse
   rows = [l.rstrip("\n").split("\t", 1) for l in sys.stdin if l.strip()]
   print("<p>The comparison of the CFK support bundles of the input (same cluster?, versions, changes of the CRs, issues fixed / new / still there):</p><ul>")
   for label, path in rows:
       if path:
-          href = html.escape("file://" + urllib.parse.quote(path))
+          # next to the report (the output dir): a relative link, which keeps working in the .zip of the report, on a
+          # website, and holds no local path
+          same = os.path.dirname(os.path.realpath(path)) == os.path.realpath(sys.argv[1])
+          href = html.escape(urllib.parse.quote(os.path.basename(path)) if same else "file://" + urllib.parse.quote(path))
           print(f"<li><a href=\"{href}\" target=\"_blank\" rel=\"noopener\">{html.escape(label)}</a></li>")
-  print("</ul>")' > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "🔁 CFK support bundles compared" "$tmp_dir/cfk-reports.html")
+  print("</ul>")' "$output_dir" > "$tmp_dir/cfk-reports.html" && report_args+=(--html-section "🔁 CFK support bundles compared" "$tmp_dir/cfk-reports.html")
   fi
   # a page per file with findings in <report>-files/, its ✏️ open the file in the editor of playground config editor
   if [ -f "$tmp_dir/kafka-streams.html" ]
@@ -67180,6 +67191,11 @@ playground_debug_analyze_logs_command() {
                   ln -s "${cfk_json%.json}-files" "$share_stage/$(basename "${cfk_json%.json}-files")"
               fi
           done
+          # the comparison of the CFK bundles, linked from the report by its name
+          if [ -n "${CFK_COMPARISON_HTML:-}" ] && [ -f "$CFK_COMPARISON_HTML" ]
+          then
+              ln -s "$CFK_COMPARISON_HTML" "$share_stage/$(basename "$CFK_COMPARISON_HTML")"
+          fi
           if (cd "$tmp_dir/share" && zip -qr "$output_dir/$share_zip" "${stem}-log-report") 2>/dev/null
           then
               log "📤 To share it: $output_dir/$share_zip (the report and its file pages, 📤 Share in the report)"

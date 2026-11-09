@@ -103,11 +103,12 @@ CLI change that makes a page wrong shows up as a failing test.
 
 ## 🔍 Logs and JVM diagnostics
 
-### 🔥 Analyze the logs you were sent: bundles, exports, clients, did the fix work?
+### 🔥 Analyze the logs you were sent: bundles, exports, clients, did the fix work? ⭐
 
 - 📖 [Read the deep dive](/deep-dive-analyze-logs.md)
 - 🧠 Commands: `analyze logs` (`--connector`, `--show-config`, `--compare`, `--json`, `--sanitize`)
-- 📊 Example reports: [support bundle](reports/logs.html), [Connect worker](reports/logs-connect.html), [non-Java clients](reports/logs-clients.html), [before / after a fix](reports/logs-compare.html)
+- 📸 [A tour of the report](/deep-dive-analyze-logs.md?id=📸-a-tour-of-the-report), section by section
+- 📊 Example reports: [support bundle](reports/logs.html), [Connect worker](reports/logs-connect.html), [many connectors](reports/logs-many-connectors.html), [non-Java clients](reports/logs-clients.html), [Kafka Streams](reports/logs-streams.html), [before / after a fix](reports/logs-compare.html), [CFK bundle](reports/cfk-bundle.html), [two CFK bundles](reports/logs-cfk-rollout.html), [CFK KRaft migration](reports/logs-cfk-kraft-migration.html)
 - 🎬 Bite size sessions: [🔁 Did the fix work?](/sessions?id=🔁-did-the-fix-work-analyze-the-logs-before-and-after-it), [🕵️ A connector failed: read the logs](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle)
 
 ### 📜 Read logs: live digest, waiting for a line

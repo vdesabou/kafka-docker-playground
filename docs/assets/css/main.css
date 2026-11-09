@@ -97,6 +97,73 @@ figure.thumbnails img {
     overflow-wrap: anywhere;
 }
 
+/* ⭐ the featured report of the gallery (reports.md): its examples in smaller cards, in a highlighted block */
+.report-hero {
+    border: 1px solid rgba(251, 146, 60, 0.45);
+    border-radius: 10px;
+    padding: 1.1em 1.3em 0.2em;
+    margin: 1.2em 0 2em;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.10), rgba(168, 85, 247, 0.08));
+}
+
+.report-hero .report-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(15em, 1fr));
+    gap: 1em;
+    margin-top: 0.4em;
+}
+
+.report-hero .report-card {
+    background: rgba(15, 23, 42, 0.35);
+}
+
+/* 📸 the tour of a report (deep dives): a screenshot of one section, linked to the live report, and what it shows */
+.report-tour {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17em, 1fr));
+    gap: 1.2em;
+    margin: 1.5em 0;
+}
+
+.report-tour figure {
+    margin: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.report-tour figure img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 14 / 9;
+    object-fit: cover;
+    object-position: top;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    transition: opacity 0.2s;
+}
+
+.report-tour figure a:hover img {
+    opacity: 0.85;
+}
+
+.report-tour figcaption {
+    padding: 0.7em 0.9em 0.8em;
+    font-size: 0.88em;
+    line-height: 1.45;
+}
+
+.report-tour figcaption b {
+    display: block;
+    font-size: 1.05em;
+    margin-bottom: 0.25em;
+}
+
+.markdown-section .report-tour code {
+    font-size: 0.85em;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+}
+
 /* "On this page" table of contents (plugin in index.html): only shown when the screen has room for it next to the content */
 .page-toc {
     display: none;

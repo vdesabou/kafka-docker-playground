@@ -20,6 +20,91 @@ report and click around: this is what you get on your own data.
 > in the cost per day chart, which also has last 7 / 30 / 90 days buttons: the tiles then follow the selected range
 > (totals, top product, cost per product and environment, top resources, line types).
 
+## ⭐ The star: `playground analyze logs`
+
+A customer sends a support bundle, a CFK bundle, a CloudWatch / Kibana / Splunk export, logs pasted in a Word document or an Excel sheet, the logs of their Python or .NET client. **One command reads all of it** and tells you what is failing, since when, where, and what to do: the known causes with the fix and the 📚 KB article, an incident timeline of every file, a card per connector, the restarts and rebalances, a 🔎 search of every log line (INFO included, offline), `--compare` to know whether the fix worked, and a summary to paste in a ticket, in Slack or as rich text. Everything below is the real output of the samples shipped with the playground: open a report and click around.
+
+👉 The [🍪 deep dive](deep-dive-analyze-logs.md) has a [📸 tour of the report](deep-dive-analyze-logs.md?id=📸-a-tour-of-the-report), section by section.
+
+<div class="report-hero">
+<div class="report-gallery">
+  <div class="report-card">
+    <a href="reports/logs.html" target="_blank" rel="noopener"><img src="images/reports/logs.png" alt="🔥 A support bundle" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs.html" target="_blank" rel="noopener">🔥 A support bundle</a></h3>
+      <p>Brokers, Connect workers and clients zipped together: the verdict, 📖 what happened, the known causes with what to do, the incident timeline of all the files, the root causes, and every distinct ERROR / WARN record.</p>
+      <p><code>playground analyze logs --sample support_bundle --include-warnings</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-connect.html" target="_blank" rel="noopener"><img src="images/reports/logs-connect.png" alt="🔌 A connector task killed" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-connect.html" target="_blank" rel="noopener">🔌 A connector task killed</a></h3>
+      <p>One Connect worker log: the task killed, its exception chain, the configuration the connector logged at startup, and the plugin version with its changelog.</p>
+      <p><code>playground analyze logs --sample connect_task_failure</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-many-connectors.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-connectors.png" alt="🧩 A worker with many connectors" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-many-connectors.html" target="_blank" rel="noopener">🧩 A worker with many connectors</a></h3>
+      <p>A card per connector (errors, task kills, known causes, versions below the minimum supported), the 🔄 restarts and rebalances with a link to each line, the config lint.</p>
+      <p><code>playground analyze logs --sample connect_many_connectors</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-clients.html" target="_blank" rel="noopener"><img src="images/reports/logs-clients.png" alt="🧰 Non-Java clients" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-clients.html" target="_blank" rel="noopener">🧰 Non-Java clients</a></h3>
+      <p>librdkafka, Python, Go, .NET, JavaScript and Rust clients: their errors read like the Java ones, with the client versions and their end of support.</p>
+      <p><code>playground analyze logs --sample kafka_clients</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-streams.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-streams.png" alt="🌊 Kafka Streams instances" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-streams.html" target="_blank" rel="noopener">🌊 Kafka Streams instances</a></h3>
+      <p>Three instances of a Streams application: the state of each instance over time, the stream threads that died, the poison pill, the task assignment.</p>
+      <p><code>playground analyze logs --sample kafka_streams</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-compare.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-compare.png" alt="🔁 Did the fix work?" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-compare.html" target="_blank" rel="noopener">🔁 Did the fix work?</a></h3>
+      <p>The day after a fix compared with the day before: what is new, gone, growing or shrinking, per hour when the periods differ.</p>
+      <p><code>playground analyze logs --sample compare_fix</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/cfk-bundle.html" target="_blank" rel="noopener"><img src="images/reports/cfk-bundle.png" alt="☸️ A CFK support bundle" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/cfk-bundle.html" target="_blank" rel="noopener">☸️ A CFK support bundle</a></h3>
+      <p>Pods, custom resources, events and the pod logs of a Confluent for Kubernetes bundle in one report: the ☸️ issues as findings (crash loops, OOMKilled, certificates), and the errors of the pods.</p>
+      <p><code>playground analyze logs --sample cfk_bundle</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-cfk-rollout.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-cfk-compare.png" alt="🔀 Two CFK bundles of a rollout" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-cfk-rollout.html" target="_blank" rel="noopener">🔀 Two CFK bundles of a rollout</a></h3>
+      <p>The bundles before and after a rollout: same cluster?, versions, the custom resources changed, the issues fixed, new or still there.</p>
+      <p><code>playground analyze logs --sample cfk_rollout --sample cfk_rollout_after</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/logs-cfk-kraft-migration.html" target="_blank" rel="noopener"><img src="images/reports/logs-cfk-kraft-migration.png" alt="🦘 A CFK KRaft migration" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="reports/logs-cfk-kraft-migration.html" target="_blank" rel="noopener">🦘 A CFK KRaft migration</a></h3>
+      <p>A ZooKeeper to KRaft migration that does not finish: the phase it is stuck in and what to check.</p>
+      <p><code>playground analyze logs --sample cfk_kraft_migration</code></p>
+    </div>
+  </div>
+</div>
+</div>
+
+## 📊 All the reports
+
 <div class="report-gallery">
   <div class="report-card">
     <a href="reports/connector-diagnose.html" target="_blank" rel="noopener"><img src="images/reports/connector-diagnose.png" alt="🩺 Connector diagnose report" loading="lazy"></a>
@@ -27,15 +112,6 @@ report and click around: this is what you get on your own data.
       <h3><a href="#/playground%20connector%20diagnose">🩺 Connector diagnose</a></h3>
       <p>Why is this connector not working? Status and traces of the tasks, the worker errors that name the connector, lag per partition or offsets, next steps and the configuration (secrets masked), on one page to attach to a case.</p>
       <p><code>playground connector diagnose --connector http-sink</code></p>
-    </div>
-  </div>
-  <div class="report-card">
-    <a href="reports/logs.html" target="_blank" rel="noopener"><img src="images/reports/logs.png" alt="🔥 Log analysis report" loading="lazy"></a>
-    <div class="report-body">
-      <h3><a href="#/playground%20analyze%20logs">🔥 Log analysis</a></h3>
-      <p>What is failing in this customer bundle? Known causes with what to do (task killed, errors.tolerance, authentication, TLS, fenced producer, rebalances…), an incident timeline of all the files, a card per connector, occurrences over time, root causes, and every distinct ERROR / FATAL / WARN record of each file. Filters for levels, component, connector, search (<code>-word</code>, <code>/regex/</code>) and period, kept in the URL (🔗 Link to this view); <code>--compare &lt;before&gt;</code> says what is new, gone, growing or shrinking. Also the version of each connector and of Kafka (with the changelog since that version), restarts and rebalances, errors right after a config change, a config lint, a 📚 KB article per known cause, and a sanitized summary to paste in a ticket. More examples in the <a href="#/deep-dive-analyze-logs">🍪 deep dive</a>.</p>
-      <p><code>playground analyze logs -f support-bundle.zip</code></p>
-      <p>Try it: <code>playground analyze logs --sample support_bundle</code></p>
     </div>
   </div>
   <div class="report-card">
@@ -147,15 +223,6 @@ report and click around: this is what you get on your own data.
       <p>What does this <code>orclcdc_diag</code> report say? Prerequisites, capture, LogMiner, outbound server, streams pool, open transactions: findings with the exact values and the SQL to fix them.</p>
       <p><code>playground analyze oracle-xstream-report -f orclcdc_diag_&lt;date&gt;.html</code></p>
       <p>Try it: <code>playground analyze oracle-xstream-report --sample synthetic_failures</code></p>
-    </div>
-  </div>
-  <div class="report-card">
-    <a href="reports/cfk-bundle.html" target="_blank" rel="noopener"><img src="images/reports/cfk-bundle.png" alt="📦 CFK support bundle report" loading="lazy"></a>
-    <div class="report-body">
-      <h3><a href="#/playground%20analyze%20logs">📦 CFK support bundle</a></h3>
-      <p>What is wrong in this Confluent for Kubernetes bundle? Crash-looping pods, expired certificates, pending volumes, OOMKilled containers, failed connector tasks, operator errors, with next steps.</p>
-      <p><code>playground analyze logs -f support-bundle.tar.gz</code></p>
-      <p>Try it: <code>playground analyze logs --sample cfk_bundle</code></p>
     </div>
   </div>
   <div class="report-card">

@@ -25,12 +25,64 @@ no Confluent Cloud, nothing to set up.
 | JSON for `jq`, a script or an agent | `… --json [--json-sections summary,known_causes,timeline]` |
 | to try it now | `playground analyze logs --sample support_bundle` |
 
-📊 **Example reports** (open them, they are the real output of the samples):
-[🔥 a support bundle](reports/logs.html) ·
-[🔌 a Connect worker](reports/logs-connect.html) ·
-[🧰 the non-Java clients](reports/logs-clients.html) ·
-[🔁 a comparison before / after a fix](reports/logs-compare.html) ·
-[🌊 Kafka Streams](reports/kafka-streams.html). All the reports of the playground are in the [📊 reports gallery](reports.md).
+## ⭐ Why it changes a support case
+
+- **One command, whatever the customer sent**: a zip / tar / 7z bundle, folders of rotated logs, `.gz` files, a CFK
+  support bundle, a CloudWatch, OpenSearch, Kibana, Splunk or Datadog export (JSON, CSV), logs pasted in a Word
+  document or exported to Excel, the logs of a Python, Go, .NET, JavaScript or Rust client, Kafka Streams instances.
+- **An answer, not 40,000 lines**: the verdict and the 📖 story (first error, peak, main cause, still failing?), the
+  known causes with what to do and the 📚 KB article, every distinct error grouped by its deepest exception.
+- **What came first**: one timeline of every file, the errors right after a restart, a config change or a GC pause,
+  the restarts and rebalances with a link to each line.
+- **Per connector**: its errors, its plugin version against the minimum supported and the changelog since, the
+  configuration it logged, a config lint.
+- **Every line, offline**: a search of every line of the logs (INFO included) in the browser, a period picked like in
+  Grafana.
+- **Did the fix work?** `--compare` with the logs before it, or two CFK bundles.
+- **Ready to share**: the `.zip` of the report, a sanitized summary for a ticket, Slack or rich text, a link to a view;
+  `--sanitize` for outside Confluent; `--json` for scripts and agents.
+- **Nothing to install**: awk and the Python standard library; the report is one HTML file that opens offline (Docker
+  only for the ☸️ sections of a CFK bundle).
+
+## 📸 A tour of the report
+
+Each screenshot is a section of a real report, generated from the samples of the playground: click it to open the
+report on that section and try it (filters, zoom, search, links to the lines).
+
+<div class="report-tour">
+<figure><a href="reports/logs/support_bundle-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-story.png" alt="📖 What happened, at a glance" loading="lazy"></a><figcaption><b>📖 What happened, at a glance</b>The verdict, the story of the logs (first error, peak, main cause, still failing at the end?), the versions and their end of support, the findings by severity.</figcaption></figure>
+<figure><a href="reports/logs/support_bundle-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-findings.png" alt="🔎 Findings: what to look at first" loading="lazy"></a><figcaption><b>🔎 Findings: what to look at first</b>The known causes with what to do, a 📚 KB article and the internal runbooks, then the most frequent errors no known cause explains, with their exception chain.</figcaption></figure>
+<figure><a href="reports/logs/support_bundle-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-filters.png" alt="🕐 Filters and the period" loading="lazy"></a><figcaption><b>🕐 Filters and the period</b>Levels, component, connector, a search, and a period picked like in Grafana (quick ranges from the end of the logs, from → to with a 📅 picker, around a time): every section follows, and the URL keeps it.</figcaption></figure>
+<figure><a href="reports/logs/support_bundle-log-report.html#incident-timeline" target="_blank" rel="noopener"><img src="images/reports/logs-tour-timeline.png" alt="🗓️ Incident timeline" loading="lazy"></a><figcaption><b>🗓️ Incident timeline</b>What happened first, all files merged: first errors, known causes, restarts, connectors reconfigured, config changes, GC pauses, a lane per component; drag to zoom, ⏱️ for ± 2 min around an event.</figcaption></figure>
+<figure><a href="reports/logs/support_bundle-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-occurrences.png" alt="📈 Occurrences over time" loading="lazy"></a><figcaption><b>📈 Occurrences over time</b>ERROR / WARN over time, zoom down to the second (a burst of a few seconds in a 3-day bundle), and the top root causes next to it.</figcaption></figure>
+<figure><a href="reports/logs/support_bundle-log-report.html#all-root-causes" target="_blank" rel="noopener"><img src="images/reports/logs-tour-root-causes.png" alt="🌳 Every distinct error" loading="lazy"></a><figcaption><b>🌳 Every distinct error</b>Grouped by deepest exception, with its occurrences, files, connectors and the finding that explains it: the long tail.</figcaption></figure>
+<figure><a href="reports/logs/support_bundle-log-report.html#pg:lq=level%3AINFO" target="_blank" rel="noopener"><img src="images/reports/logs-tour-search.png" alt="🔎 Search every log line" loading="lazy"></a><figcaption><b>🔎 Search every log line</b>INFO and DEBUG included, in the browser, offline: <code>level:</code>, <code>file:</code>, <code>comp:</code>, <code>/regex/</code>, a histogram of the matches (drag: the period), a click for the lines around one.</figcaption></figure>
+<figure><a href="reports/logs-many-connectors/connect_many_connectors-log-report.html#connectors" target="_blank" rel="noopener"><img src="images/reports/logs-tour-connectors.png" alt="🔌 A card per connector" loading="lazy"></a><figcaption><b>🔌 A card per connector</b>Errors, task kills, known causes, the plugin version (below the minimum supported?) with its changelog since that version, its configuration; ▶ only this connector.</figcaption></figure>
+<figure><a href="reports/logs-many-connectors/connect_many_connectors-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-rebalances.png" alt="🔄 Restarts and rebalances" loading="lazy"></a><figcaption><b>🔄 Restarts and rebalances</b>Worker group rebalances, consumer group rejoins with their reason, task starts, 🌀 storms; a click on a row shows it alone and lists each occurrence with a link to its line.</figcaption></figure>
+<figure><a href="reports/logs-many-connectors/connect_many_connectors-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-config.png" alt="⚙️ The configuration logged" loading="lazy"></a><figcaption><b>⚙️ The configuration logged</b>The configs each component logged at startup, the keys changed between restarts, a config lint, the Connector CR of a CFK bundle compared with the config the worker logged.</figcaption></figure>
+<figure><a href="reports/logs-connect/connect_task_failure-log-report-files/001-connect-oracle-xstream-task-failure.log.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-file-page.png" alt="📄 The log file itself" loading="lazy"></a><figcaption><b>📄 The log file itself</b>Every file with findings has its page: line numbers, the findings highlighted, ▲ ▼ to go from one to the next. Each file:line of the report opens it.</figcaption></figure>
+<figure><a href="reports/logs-compare/compare_fix-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-compare.png" alt="🔁 Did the fix work?" loading="lazy"></a><figcaption><b>🔁 Did the fix work?</b><code>--compare &lt;before&gt;</code>: the root causes, known causes and connectors new, gone, growing or shrinking, per hour when the periods differ; a trend over several inputs.</figcaption></figure>
+<figure><a href="reports/logs-streams/kafka_streams-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-streams.png" alt="🌊 Kafka Streams" loading="lazy"></a><figcaption><b>🌊 Kafka Streams</b>The instances of a Streams application: their states over time, rebalances, the tasks, the stream threads that died, the known Streams errors with what to do.</figcaption></figure>
+<figure><a href="reports/cfk-bundle/cfk_bundle-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-cfk.png" alt="☸️ A CFK support bundle" loading="lazy"></a><figcaption><b>☸️ A CFK support bundle</b>Pods, custom resources, events and pod logs in one report: the ☸️ issues as findings (crash loops, OOMKilled, certificates, pending volumes), the versions of CFK and CP.</figcaption></figure>
+<figure><a href="reports/logs-cfk-rollout/cfk_rollout-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-cfk-compare.png" alt="🔀 Two CFK bundles compared" loading="lazy"></a><figcaption><b>🔀 Two CFK bundles compared</b>Same cluster?, the versions, the custom resources changed between them, the issues fixed, new or still there.</figcaption></figure>
+<figure><a href="reports/logs/support_bundle-log-report.html" target="_blank" rel="noopener"><img src="images/reports/logs-tour-share.png" alt="📤 Share it" loading="lazy"></a><figcaption><b>📤 Share it</b>The .zip of the report and its pages, a sanitized summary for a ticket (Markdown), for Slack or as rich text, the path, an email. 🔗 Link to this view opens the report on the same filters.</figcaption></figure>
+</div>
+
+## 🗂️ Example reports
+
+| Example | What it shows | Try it | Report |
+| --- | --- | --- | --- |
+| 🔥 A support bundle | brokers and Connect zipped together, a task killed, an Oracle error, the known causes | `playground analyze logs --sample support_bundle --include-warnings` | [open](reports/logs/support_bundle-log-report.html) |
+| 🔌 A connector task killed | one Connect worker log, the exception chain, the configuration logged | `playground analyze logs --sample connect_task_failure` | [open](reports/logs-connect/connect_task_failure-log-report.html) |
+| 🧩 A worker with many connectors | a card per connector, versions below the minimum supported, restarts and rebalances, config lint | `playground analyze logs --sample connect_many_connectors` | [open](reports/logs-many-connectors/connect_many_connectors-log-report.html) |
+| 🧰 Non-Java clients | librdkafka, Python, Go, .NET, JavaScript and Rust clients, their versions | `playground analyze logs --sample kafka_clients` | [open](reports/logs-clients/kafka_clients-log-report.html) |
+| 🌊 Kafka Streams instances | the states of three instances, a poison pill, a stream thread that died | `playground analyze logs --sample kafka_streams` | [open](reports/logs-streams/kafka_streams-log-report.html) |
+| 🔁 Did the fix work? | the day after a fix compared with the day before | `playground analyze logs --sample compare_fix` | [open](reports/logs-compare/compare_fix-log-report.html) |
+| ☸️ A CFK support bundle | the ☸️ issues of the cluster and the errors of the pods in one report | `playground analyze logs --sample cfk_bundle` | [open](reports/cfk-bundle/cfk_bundle-log-report.html) |
+| 🔀 Two CFK bundles of a rollout | the bundles before and after a rollout compared | `playground analyze logs --sample cfk_rollout --sample cfk_rollout_after` | [open](reports/logs-cfk-rollout/cfk_rollout-log-report.html) |
+| 🦘 A CFK KRaft migration | a ZooKeeper to KRaft migration that does not finish | `playground analyze logs --sample cfk_kraft_migration` | [open](reports/logs-cfk-kraft-migration/cfk_kraft_migration-log-report.html) |
+
+All the reports of the playground are in the [📊 reports gallery](reports.md).
 
 ---
 
@@ -120,7 +172,7 @@ killed**, and the 🗓️ timeline says what came first: the wrong password at 1
 second later, then the connector reconfigured twice. The 🔌 card says which **version** of the connector runs (read from
 `Instantiated connector … with version 1.6.0`) with the command that lists what changed since: here 1.6.1 fixes a
 `NullPointerException` of the task. The report of this run is
-[🔌 a Connect worker](reports/logs-connect.html).
+[🔌 a Connect worker](reports/logs-connect/connect_task_failure-log-report.html).
 
 A worker that runs many connectors, each failing its own way, is `--sample connect_many_connectors` (CP 8.1.2, 8
 connectors: JDBC, S3, Elasticsearch, Debezium MySQL, HTTP, ServiceNow, a custom one). Each 🔌 card has the icon of its
@@ -199,7 +251,7 @@ that refuses connections or does not resolve:
    [MEDIUM] 📥 Producer buffer full ×1 in synthetic-crashes/python-logging.log (first at line 2, 2026-11-05 16:30:02)
 ```
 
-[🧰 Its report](reports/logs-clients.html).
+[🧰 Its report](reports/logs-clients/kafka_clients-log-report.html).
 
 ### Kafka Streams
 
@@ -225,7 +277,7 @@ time ([🌊 the same view](reports/kafka-streams.html), from `playground streams
 
 Written in `--output-dir` (`./log-analysis-output` by default) as `<first input>-log-report.html`, opened in the
 browser from a terminal, with a page per file with findings in `<report>-files/` (📄 links open the file at the line,
-✏️ opens it in your editor). Open [🔥 the support bundle report](reports/logs.html) next to this table:
+✏️ opens it in your editor). Open [🔥 the support bundle report](reports/logs/support_bundle-log-report.html) next to this table:
 
 | Section | What it answers |
 | --- | --- |
@@ -466,7 +518,7 @@ playground analyze logs --sample compare_fix          # the log of a worker the 
 The fix removed the fenced producer, the throttling and the policy error, but the JDBC source now loses its database
 connection and the sink rebalances 7 times instead of once: not done yet. A change is at least ×1.5 and 3
 occurrences; when the two inputs cover different periods (a day of logs before, an hour after), the counts are
-compared **per hour** and the rates are shown (`1 → 7 (6.67/h → 0.3/h)`). The [🔁 comparison report](reports/logs-compare.html)
+compared **per hour** and the rates are shown (`1 → 7 (6.67/h → 0.3/h)`). The [🔁 comparison report](reports/logs-compare/compare_fix-log-report.html)
 links each root cause to its row. Also in `.comparison` of `--json`.
 
 📈 **A trend over several days**: give `--compare` several times, oldest first. The comparison is with the last one, and
